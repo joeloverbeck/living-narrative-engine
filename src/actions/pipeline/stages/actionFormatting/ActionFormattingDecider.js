@@ -158,7 +158,8 @@ export class ActionFormattingDecider {
    */
   #sortStrategies() {
     const comparator =
-      this.#comparator ?? ((a, b) => this.#getPriority(b) - this.#getPriority(a));
+      this.#comparator ??
+      ((a, b) => this.#getPriority(b) - this.#getPriority(a));
 
     this.#strategies.sort((left, right) => {
       try {
@@ -292,14 +293,7 @@ export class ActionFormattingDecider {
    * @param {TraceLike} [options.trace] - Optional trace context.
    * @returns {ValidationFailure} Structured validation failure.
    */
-  #buildValidationFailure({
-    code,
-    message,
-    missing,
-    task,
-    actorId,
-    trace,
-  }) {
+  #buildValidationFailure({ code, message, missing, task, actorId, trace }) {
     const errorPayload = {
       error: new Error(message),
       details: {

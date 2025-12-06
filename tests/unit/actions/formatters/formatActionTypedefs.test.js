@@ -4,12 +4,11 @@
  */
 
 import { describe, expect, it } from '@jest/globals';
-import {
-  __formatActionTypedefs,
-} from '../../../../src/actions/formatters/formatActionTypedefs.js';
+import { __formatActionTypedefs } from '../../../../src/actions/formatters/formatActionTypedefs.js';
 import * as formatActionTypedefsModule from '../../../../src/actions/formatters/formatActionTypedefs.js';
 
-const MODULE_RELATIVE_PATH = '../../../../src/actions/formatters/formatActionTypedefs.js';
+const MODULE_RELATIVE_PATH =
+  '../../../../src/actions/formatters/formatActionTypedefs.js';
 const MODULE_SUFFIX = 'src/actions/formatters/formatActionTypedefs.js';
 
 describe('formatActionTypedefs module', () => {
@@ -19,7 +18,7 @@ describe('formatActionTypedefs module', () => {
 
     const descriptor = Object.getOwnPropertyDescriptor(
       formatActionTypedefsModule,
-      '__formatActionTypedefs',
+      '__formatActionTypedefs'
     );
 
     expect(descriptor).toMatchObject({
@@ -60,7 +59,7 @@ describe('formatActionTypedefs module', () => {
   it('registers statement coverage for the sentinel export', () => {
     const coverageEntries = Object.entries(globalThis.__coverage__ ?? {});
     const [coverageKey, fileCoverage] = coverageEntries.find(([key]) =>
-      key.endsWith(MODULE_SUFFIX),
+      key.endsWith(MODULE_SUFFIX)
     ) ?? [undefined, undefined];
 
     if (!coverageKey || !fileCoverage) {
@@ -73,7 +72,7 @@ describe('formatActionTypedefs module', () => {
     expect(fileCoverage.statementMap['0']).toEqual(
       expect.objectContaining({
         start: expect.objectContaining({ line: 43 }),
-      }),
+      })
     );
     expect(fileCoverage.s['0']).toBeGreaterThan(0);
   });
@@ -98,7 +97,8 @@ describe('formatActionTypedefs module', () => {
         return {
           ok: false,
           error: 'Missing entityId in context',
-          details: 'Formatter requires context.entityId to build the command string.',
+          details:
+            'Formatter requires context.entityId to build the command string.',
         };
       },
     };
@@ -106,15 +106,20 @@ describe('formatActionTypedefs module', () => {
     const successResult = formatters.success(
       'greet {target}',
       { entityId: 'npc-1', placeholder: 'friend' },
-      { logger: 'mock' },
+      { logger: 'mock' }
     );
-    const failureResult = formatters.failure('command {target}', {}, { logger: 'mock' });
+    const failureResult = formatters.failure(
+      'command {target}',
+      {},
+      { logger: 'mock' }
+    );
 
     expect(successResult).toEqual({ ok: true, value: 'greet npc-1' });
     expect(failureResult).toEqual({
       ok: false,
       error: 'Missing entityId in context',
-      details: 'Formatter requires context.entityId to build the command string.',
+      details:
+        'Formatter requires context.entityId to build the command string.',
     });
   });
 
@@ -125,5 +130,4 @@ describe('formatActionTypedefs module', () => {
       __formatActionTypedefs = false;
     }).toThrow(/read-only/i);
   });
-
 });

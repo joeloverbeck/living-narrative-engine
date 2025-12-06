@@ -88,10 +88,13 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     expect(result.error).toContain('unresolved placeholders');
 
     const warnCalls = mockLogger.warn.mock.calls;
-    expect(warnCalls[0][0]).toContain('No target found in non-empty array for key: primary');
+    expect(warnCalls[0][0]).toContain(
+      'No target found in non-empty array for key: primary'
+    );
 
     const placeholderWarning = warnCalls.find(
-      ([message]) => message === 'Template still contains placeholders after formatting:'
+      ([message]) =>
+        message === 'Template still contains placeholders after formatting:'
     );
     expect(placeholderWarning).toBeDefined();
     expect(placeholderWarning[1].remainingPlaceholders).toContain('item');
@@ -123,7 +126,9 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('No valid target combinations could be generated');
+    expect(result.error).toContain(
+      'No valid target combinations could be generated'
+    );
   });
 
   it('surfaced context-dependent errors when no primary targets exist', () => {
@@ -164,7 +169,9 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('No valid target combinations could be generated');
+    expect(result.error).toContain(
+      'No valid target combinations could be generated'
+    );
   });
 
   it('logs a warning when independent targets are provided via array-like collections', () => {
@@ -209,7 +216,9 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
 
     expect(arrayGuardWarning).toBeDefined();
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('No valid target combinations could be generated');
+    expect(result.error).toContain(
+      'No valid target combinations could be generated'
+    );
   });
 
   it('falls back to the base target value when dot-notation omits a property path', () => {
@@ -255,9 +264,7 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     };
 
     const resolvedTargets = {
-      primary: [
-        { id: 'actor-1', displayName: 'Alex' },
-      ],
+      primary: [{ id: 'actor-1', displayName: 'Alex' }],
       secondary: [
         { id: 'duty-1', displayName: 'Gate watch', contextFromId: 'actor-1' },
         { id: 'duty-2', displayName: 'Night patrol', contextFromId: 'actor-1' },
@@ -312,12 +319,14 @@ describe('MultiTargetActionFormatter uncovered branches', () => {
     };
 
     const resolvedTargets = {
-      primary: [
-        { id: 'actor-2', displayName: 'Jamie' },
-      ],
+      primary: [{ id: 'actor-2', displayName: 'Jamie' }],
       secondary: [
         { id: 'task-1', displayName: 'Repair duty', contextFromId: 'actor-2' },
-        { id: 'task-2', displayName: 'Scout mission', contextFromId: 'actor-2' },
+        {
+          id: 'task-2',
+          displayName: 'Scout mission',
+          contextFromId: 'actor-2',
+        },
       ],
       tertiary: [
         { id: 'zone-1', displayName: 'Workshop', contextFromId: 'actor-2' },

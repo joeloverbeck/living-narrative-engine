@@ -58,9 +58,9 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     generateBtn.click();
     await flushMicrotasksOnly();
 
-    expect(document.getElementById('direction-selector-error').textContent).toContain(
-      'Please select a thematic direction first'
-    );
+    expect(
+      document.getElementById('direction-selector-error').textContent
+    ).toContain('Please select a thematic direction first');
     expect(eventBus.events).toHaveLength(initialEventCount);
     expect(service.generateTraitsCalls).toHaveLength(0);
 
@@ -88,14 +88,22 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     generateBtn.click();
     await flushMicrotasksOnly();
 
-    const validationMessage = document.getElementById('input-validation-error').textContent;
-    expect(validationMessage).toContain('Core motivation must be at least 10 characters');
-    expect(validationMessage).toContain('Internal contradiction must be at least 10 characters');
-    expect(validationMessage).toContain('Central question must be at least 10 characters');
-    expect(service.generateTraitsCalls).toHaveLength(0);
-    expect(document.getElementById('screen-reader-announcement').textContent).toBe(
-      'Please fix validation errors before generating traits'
+    const validationMessage = document.getElementById(
+      'input-validation-error'
+    ).textContent;
+    expect(validationMessage).toContain(
+      'Core motivation must be at least 10 characters'
     );
+    expect(validationMessage).toContain(
+      'Internal contradiction must be at least 10 characters'
+    );
+    expect(validationMessage).toContain(
+      'Central question must be at least 10 characters'
+    );
+    expect(service.generateTraitsCalls).toHaveLength(0);
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toBe('Please fix validation errors before generating traits');
 
     await flushAsyncOperations();
 
@@ -113,7 +121,9 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     // Preselection should have populated the selector and cleared errors
     const selector = document.getElementById('direction-selector');
     expect(selector.value).toBe(defaultDirectionItem.direction.id);
-    expect(document.getElementById('direction-selector-error').textContent).toBe('');
+    expect(
+      document.getElementById('direction-selector-error').textContent
+    ).toBe('');
 
     // Provide valid inputs
     document.getElementById('core-motivation-input').value =
@@ -123,9 +133,15 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     document.getElementById('central-question-input').value =
       'How can communities heal while honoring past sacrifices?';
 
-    document.getElementById('core-motivation-input').dispatchEvent(new Event('input'));
-    document.getElementById('internal-contradiction-input').dispatchEvent(new Event('input'));
-    document.getElementById('central-question-input').dispatchEvent(new Event('input'));
+    document
+      .getElementById('core-motivation-input')
+      .dispatchEvent(new Event('input'));
+    document
+      .getElementById('internal-contradiction-input')
+      .dispatchEvent(new Event('input'));
+    document
+      .getElementById('central-question-input')
+      .dispatchEvent(new Event('input'));
     await flushAsyncOperations();
 
     const generateBtn = document.getElementById('generate-btn');
@@ -139,7 +155,9 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     expect(resultsHtml).toContain('Character Names');
     expect(resultsHtml).toContain('Based on Your Inputs');
 
-    expect(document.getElementById('export-btn').style.display).toBe('inline-block');
+    expect(document.getElementById('export-btn').style.display).toBe(
+      'inline-block'
+    );
 
     expect(service.generateTraitsCalls).toHaveLength(1);
     const eventNames = eventBus.events.map((evt) => evt.name);
@@ -178,7 +196,11 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
 
     // Keyboard shortcut: Ctrl+Shift+Delete clears selection
     document.dispatchEvent(
-      new KeyboardEvent('keydown', { ctrlKey: true, shiftKey: true, key: 'Delete' })
+      new KeyboardEvent('keydown', {
+        ctrlKey: true,
+        shiftKey: true,
+        key: 'Delete',
+      })
     );
     await flushAsyncOperations();
     expect(selector.value).toBe('');
@@ -195,9 +217,15 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     document.getElementById('central-question-input').value =
       'Can trust be rebuilt faster than the next crisis arrives?';
 
-    document.getElementById('core-motivation-input').dispatchEvent(new Event('input'));
-    document.getElementById('internal-contradiction-input').dispatchEvent(new Event('input'));
-    document.getElementById('central-question-input').dispatchEvent(new Event('input'));
+    document
+      .getElementById('core-motivation-input')
+      .dispatchEvent(new Event('input'));
+    document
+      .getElementById('internal-contradiction-input')
+      .dispatchEvent(new Event('input'));
+    document
+      .getElementById('central-question-input')
+      .dispatchEvent(new Event('input'));
     await flushAsyncOperations();
 
     document.dispatchEvent(
@@ -206,7 +234,9 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     await flushAsyncOperations();
 
     expect(service.generateTraitsCalls).toHaveLength(2);
-    expect(logger.warn).not.toHaveBeenCalledWith('Traits results container not found');
+    expect(logger.warn).not.toHaveBeenCalledWith(
+      'Traits results container not found'
+    );
 
     await controller.destroy();
   });
@@ -292,14 +322,20 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     await flushAsyncOperations();
 
     expect(service.generateTraitsCalls).toHaveLength(1);
-    expect(logger.warn).toHaveBeenCalledWith('Traits results container not found');
-    expect(document.getElementById('results-state').style.display).toBe('block');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Traits results container not found'
+    );
+    expect(document.getElementById('results-state').style.display).toBe(
+      'block'
+    );
 
     await controller.destroy();
   });
 
   it('should handle display enhancer failures gracefully and emit failure events', async () => {
-    const invalidResolver = async () => ({ generatedAt: new Date().toISOString() });
+    const invalidResolver = async () => ({
+      generatedAt: new Date().toISOString(),
+    });
     const { controller, logger, service, eventBus } = createControllerSetup({
       traitsResolver: invalidResolver,
     });
@@ -331,7 +367,9 @@ describe('TraitsGeneratorController Integration - Additional Flows', () => {
     );
     const failureEvent = eventBus.events.at(-1);
     expect(failureEvent.name).toBe('core:traits_generation_failed');
-    expect(failureEvent.payload.directionId).toBe(defaultDirectionItem.direction.id);
+    expect(failureEvent.payload.directionId).toBe(
+      defaultDirectionItem.direction.id
+    );
     expect(document.getElementById('error-state').style.display).toBe('flex');
 
     await controller.destroy();

@@ -394,7 +394,9 @@ describe('Description Regeneration Performance', () => {
 
       // Performance should not degrade worse than O(n²)
       // Allow 2x variance buffer for JavaScript GC, JIT, and measurement overhead
-      expect(scalingFactor).toBeLessThan(itemIncreaseFactor * itemIncreaseFactor * 0.1); // < 90
+      expect(scalingFactor).toBeLessThan(
+        itemIncreaseFactor * itemIncreaseFactor * 0.1
+      ); // < 90
 
       // Log: Scaling curve for analysis
       console.log('Scaling results:');

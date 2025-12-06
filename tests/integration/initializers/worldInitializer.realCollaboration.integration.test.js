@@ -301,13 +301,17 @@ describe('WorldInitializer integration with production collaborators', () => {
 
     try {
       await expect(
-        harness.worldInitializer.initializeWorldEntities('integration:test-world')
-      ).rejects.toThrow('World \'integration:test-world\' not found');
+        harness.worldInitializer.initializeWorldEntities(
+          'integration:test-world'
+        )
+      ).rejects.toThrow("World 'integration:test-world' not found");
 
       expect(harness.systemErrors.length).toBeGreaterThanOrEqual(1);
       expect(harness.systemErrors[0]).toEqual(
         expect.objectContaining({
-          message: expect.stringContaining("World 'integration:test-world' not found"),
+          message: expect.stringContaining(
+            "World 'integration:test-world' not found"
+          ),
         })
       );
     } finally {

@@ -128,19 +128,32 @@ describe('thrust_at_target outcome resolution rule', () => {
       expect(ifOps.length).toBe(4);
 
       // Verify each outcome has its own top-level IF
-      expect(findIfByOutcome(thrustAtTargetRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
-      expect(findIfByOutcome(thrustAtTargetRule.actions, 'SUCCESS')).toBeDefined();
-      expect(findIfByOutcome(thrustAtTargetRule.actions, 'FUMBLE')).toBeDefined();
-      expect(findIfByOutcome(thrustAtTargetRule.actions, 'FAILURE')).toBeDefined();
+      expect(
+        findIfByOutcome(thrustAtTargetRule.actions, 'CRITICAL_SUCCESS')
+      ).toBeDefined();
+      expect(
+        findIfByOutcome(thrustAtTargetRule.actions, 'SUCCESS')
+      ).toBeDefined();
+      expect(
+        findIfByOutcome(thrustAtTargetRule.actions, 'FUMBLE')
+      ).toBeDefined();
+      expect(
+        findIfByOutcome(thrustAtTargetRule.actions, 'FAILURE')
+      ).toBeDefined();
     });
 
     it('should delegate CRITICAL_SUCCESS to handleMeleeCritical macro', () => {
-      const criticalSuccessIf = findIfByOutcome(thrustAtTargetRule.actions, 'CRITICAL_SUCCESS');
+      const criticalSuccessIf = findIfByOutcome(
+        thrustAtTargetRule.actions,
+        'CRITICAL_SUCCESS'
+      );
       expect(criticalSuccessIf).toBeDefined();
 
       const condition = criticalSuccessIf.parameters.condition;
       expect(condition['==']).toBeDefined();
-      expect(condition['=='][0]).toEqual({ var: 'context.attackResult.outcome' });
+      expect(condition['=='][0]).toEqual({
+        var: 'context.attackResult.outcome',
+      });
       expect(condition['=='][1]).toBe('CRITICAL_SUCCESS');
 
       // Verify macro reference in rule
@@ -376,10 +389,18 @@ describe('thrust_at_target outcome resolution rule', () => {
     });
 
     it('should have all macros with valid schema references', () => {
-      expect(handleMeleeCritical.$schema).toBe('schema://living-narrative-engine/macro.schema.json');
-      expect(handleMeleeHit.$schema).toBe('schema://living-narrative-engine/macro.schema.json');
-      expect(handleMeleeFumble.$schema).toBe('schema://living-narrative-engine/macro.schema.json');
-      expect(handleMeleeMiss.$schema).toBe('schema://living-narrative-engine/macro.schema.json');
+      expect(handleMeleeCritical.$schema).toBe(
+        'schema://living-narrative-engine/macro.schema.json'
+      );
+      expect(handleMeleeHit.$schema).toBe(
+        'schema://living-narrative-engine/macro.schema.json'
+      );
+      expect(handleMeleeFumble.$schema).toBe(
+        'schema://living-narrative-engine/macro.schema.json'
+      );
+      expect(handleMeleeMiss.$schema).toBe(
+        'schema://living-narrative-engine/macro.schema.json'
+      );
     });
 
     it('should have all macros with proper ID format', () => {

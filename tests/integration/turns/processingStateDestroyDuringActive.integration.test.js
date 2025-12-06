@@ -251,10 +251,11 @@ describe('ProcessingCommandState - Destroy During Active Processing', () => {
 
     // Assert: Verify the debug message was logged (changed from warn to debug)
     const debugMessages = logger.calls.debug.flat();
-    const destroyDebug = debugMessages.find((msg) =>
-      typeof msg === 'string' &&
-      msg.includes('Destroyed during active processing') &&
-      msg.includes(actor.id)
+    const destroyDebug = debugMessages.find(
+      (msg) =>
+        typeof msg === 'string' &&
+        msg.includes('Destroyed during active processing') &&
+        msg.includes(actor.id)
     );
 
     expect(destroyDebug).toBeTruthy();
@@ -278,8 +279,10 @@ describe('ProcessingCommandState - Destroy During Active Processing', () => {
 
     // Assert: No debug message should be logged (changed from warn to debug)
     const debugMessages = logger.calls.debug.flat();
-    const destroyDebug = debugMessages.find((msg) =>
-      typeof msg === 'string' && msg.includes('Destroyed during active processing')
+    const destroyDebug = debugMessages.find(
+      (msg) =>
+        typeof msg === 'string' &&
+        msg.includes('Destroyed during active processing')
     );
 
     expect(destroyDebug).toBeUndefined();
@@ -339,7 +342,9 @@ describe('ProcessingCommandState - Destroy During Active Processing', () => {
     );
 
     expect(exactDebug).toBeTruthy();
-    expect(exactDebug).toMatch(/ProcessingCommandState.*Destroyed during active processing.*test-actor/);
+    expect(exactDebug).toMatch(
+      /ProcessingCommandState.*Destroyed during active processing.*test-actor/
+    );
 
     // Processing should be cleared
     expect(state.isProcessing).toBe(false);

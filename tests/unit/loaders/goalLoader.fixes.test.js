@@ -130,7 +130,10 @@ describe('GoalLoader', () => {
       const modId = 'test-mod';
       const filename = 'goal1.json';
       const resolvedPath = '/mods/test-mod/goals/goal1.json';
-      const goalData = createGoalFixture({ id: 'goal-1', description: 'Test goal' });
+      const goalData = createGoalFixture({
+        id: 'goal-1',
+        description: 'Test goal',
+      });
       const registryKey = 'goals';
 
       // Act: Call the method with the full set of 5 arguments, as the base class does.

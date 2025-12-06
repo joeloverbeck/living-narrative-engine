@@ -5,7 +5,9 @@
 ## Outcome
 
 ### What Was Originally Planned
+
 The original ticket assumed the existence of generic files like:
+
 - `generic_limb.entity.json`
 - `generic_organ.entity.json`
 - `generic_appendage.entity.json`
@@ -30,15 +32,18 @@ The ticket was updated to reflect the actual file inventory discovered:
 6. **Excluded**: `blueprint_slot.entity.json` (correctly excluded - no `anatomy:part` component)
 
 **Code Changes:**
+
 - Added `items:weight` component to 62 entity definition files
 - All weights are biologically realistic values based on part type
 
 **Tests Added:**
+
 - Created `tests/integration/mods/anatomy/utilityEntityWeightValidation.test.js` (65 tests)
 - Tests validate weight presence, positive values, and realistic ranges for all utility entity types
 - Includes coverage completeness test ensuring all 62 in-scope files have weight
 
 ### Validation Results
+
 - `npm run validate`: PASSED
 - Weight validation tests: 65 tests PASSED
 - All 5 weight validation test suites: 268 tests PASSED
@@ -70,7 +75,9 @@ done
 ### Actual Files (63 total, 62 requiring weight)
 
 #### Humanoid Base Parts (36 files)
+
 Generic humanoid body parts used as base definitions:
+
 - `humanoid_arm*.entity.json` (17 variants)
 - `humanoid_head*.entity.json` (12 variants)
 - `humanoid_hand*.entity.json` (4 variants)
@@ -81,6 +88,7 @@ Generic humanoid body parts used as base definitions:
 - `humanoid_teeth.entity.json`
 
 #### Cephalopod Parts (9 files)
+
 - `beak.entity.json` - Kraken beak (5.0 kg)
 - `ink_reservoir.entity.json` - Kraken ink reservoir (2.0 kg)
 - `kraken_head.entity.json`, `kraken_mantle.entity.json`, `kraken_tentacle.entity.json`
@@ -88,6 +96,7 @@ Generic humanoid body parts used as base definitions:
 - `squid_mantle.entity.json`, `squid_tentacle.entity.json`
 
 #### Spider Parts (5 files)
+
 - `spider_abdomen.entity.json`
 - `spider_cephalothorax.entity.json`
 - `spider_leg.entity.json`
@@ -95,6 +104,7 @@ Generic humanoid body parts used as base definitions:
 - `spider_spinneret.entity.json`
 
 #### Tortoise Parts (11 files)
+
 - `tortoise_arm.entity.json`, `tortoise_hand.entity.json`
 - `tortoise_leg.entity.json`, `tortoise_foot.entity.json`
 - `tortoise_head.entity.json`, `tortoise_beak.entity.json`, `tortoise_eye.entity.json`
@@ -102,6 +112,7 @@ Generic humanoid body parts used as base definitions:
 - `tortoise_tail.entity.json`
 
 #### Utility/Template Files (2 files)
+
 - `equipment_mount.entity.json` - Equipment attachment point (0.5 kg, has anatomy:part)
 - `blueprint_slot.entity.json` - **EXCLUDED** (no anatomy:part, not a body part)
 
@@ -113,7 +124,7 @@ The following are **explicitly NOT part of this ticket**:
 
 - Human entity definitions starting with `human_` (DISBODPARSPA-010, 011, 012)
 - Chicken entity definitions starting with `chicken_` (DISBODPARSPA-013)
-- Creature entity definitions - centaur_, dragon_, eldritch_, cat_, feline_, horse_ (DISBODPARSPA-014)
+- Creature entity definitions - centaur*, dragon*, eldritch*, cat*, feline*, horse* (DISBODPARSPA-014)
 - `blueprint_slot.entity.json` - This is a structural template without anatomy:part, not a body part
 - Schema changes to `anatomy:part` component
 - Any source code files
@@ -128,24 +139,34 @@ The following are **explicitly NOT part of this ticket**:
 For each file, add the `items:weight` component to the `components` object:
 
 **Before:**
+
 ```json
 {
   "id": "anatomy:humanoid_arm",
   "components": {
     "anatomy:part": { "subType": "arm", "hit_probability_weight": 8 },
-    "anatomy:part_health": { "currentHealth": 25, "maxHealth": 25, "state": "healthy" },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
     "core:name": { "text": "arm" }
   }
 }
 ```
 
 **After:**
+
 ```json
 {
   "id": "anatomy:humanoid_arm",
   "components": {
     "anatomy:part": { "subType": "arm", "hit_probability_weight": 8 },
-    "anatomy:part_health": { "currentHealth": 25, "maxHealth": 25, "state": "healthy" },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
     "core:name": { "text": "arm" },
     "items:weight": { "weight": 4.0 }
   }
@@ -154,47 +175,47 @@ For each file, add the `items:weight` component to the `components` object:
 
 ### Weight Guidelines
 
-| Part Category | Weight (kg) | Notes |
-|---------------|-------------|-------|
-| **Humanoid Parts** | | |
-| humanoid_arm (all variants) | 4.0 | Average human arm |
-| humanoid_head (all variants) | 5.0 | Average human head |
-| humanoid_hand (all variants) | 0.4 | Average human hand |
-| humanoid_face | 0.3 | Facial tissue only |
-| humanoid_ear | 0.01 | Ear cartilage |
-| humanoid_mouth | 0.05 | Oral tissue |
-| humanoid_nose (all variants) | 0.03 | Nasal cartilage |
-| humanoid_teeth | 0.05 | Full set teeth |
-| **Cephalopod Parts** | | |
-| beak (kraken) | 5.0 | Large chitinous beak |
-| ink_reservoir | 2.0 | Large organ with fluid |
-| kraken_head | 50.0 | Titanic head |
-| kraken_mantle | 200.0 | Massive body |
-| kraken_tentacle | 100.0 | Massive limb |
-| octopus_mantle | 15.0 | Medium body |
-| octopus_tentacle | 3.0 | Medium limb |
-| squid_mantle | 10.0 | Medium body |
-| squid_tentacle | 2.0 | Medium limb |
-| **Spider Parts** | | |
-| spider_abdomen | 0.02 | Medium spider |
-| spider_cephalothorax | 0.015 | Head-thorax |
-| spider_leg | 0.002 | Single leg |
-| spider_pedipalp | 0.001 | Small appendage |
-| spider_spinneret | 0.005 | Silk organ |
-| **Tortoise Parts** | | |
-| tortoise_arm | 1.5 | Front limb |
-| tortoise_hand | 0.3 | Front foot |
-| tortoise_leg | 2.0 | Rear limb |
-| tortoise_foot | 0.4 | Rear foot |
-| tortoise_head | 0.8 | Head |
-| tortoise_beak | 0.05 | Horny beak |
-| tortoise_eye | 0.02 | Eye |
-| tortoise_torso_with_shell | 15.0 | Body with shell |
-| tortoise_carapace | 5.0 | Top shell |
-| tortoise_plastron | 3.0 | Bottom shell |
-| tortoise_tail | 0.2 | Short tail |
-| **Utility** | | |
-| equipment_mount | 0.5 | Abstract mount point |
+| Part Category                | Weight (kg) | Notes                  |
+| ---------------------------- | ----------- | ---------------------- |
+| **Humanoid Parts**           |             |                        |
+| humanoid_arm (all variants)  | 4.0         | Average human arm      |
+| humanoid_head (all variants) | 5.0         | Average human head     |
+| humanoid_hand (all variants) | 0.4         | Average human hand     |
+| humanoid_face                | 0.3         | Facial tissue only     |
+| humanoid_ear                 | 0.01        | Ear cartilage          |
+| humanoid_mouth               | 0.05        | Oral tissue            |
+| humanoid_nose (all variants) | 0.03        | Nasal cartilage        |
+| humanoid_teeth               | 0.05        | Full set teeth         |
+| **Cephalopod Parts**         |             |                        |
+| beak (kraken)                | 5.0         | Large chitinous beak   |
+| ink_reservoir                | 2.0         | Large organ with fluid |
+| kraken_head                  | 50.0        | Titanic head           |
+| kraken_mantle                | 200.0       | Massive body           |
+| kraken_tentacle              | 100.0       | Massive limb           |
+| octopus_mantle               | 15.0        | Medium body            |
+| octopus_tentacle             | 3.0         | Medium limb            |
+| squid_mantle                 | 10.0        | Medium body            |
+| squid_tentacle               | 2.0         | Medium limb            |
+| **Spider Parts**             |             |                        |
+| spider_abdomen               | 0.02        | Medium spider          |
+| spider_cephalothorax         | 0.015       | Head-thorax            |
+| spider_leg                   | 0.002       | Single leg             |
+| spider_pedipalp              | 0.001       | Small appendage        |
+| spider_spinneret             | 0.005       | Silk organ             |
+| **Tortoise Parts**           |             |                        |
+| tortoise_arm                 | 1.5         | Front limb             |
+| tortoise_hand                | 0.3         | Front foot             |
+| tortoise_leg                 | 2.0         | Rear limb              |
+| tortoise_foot                | 0.4         | Rear foot              |
+| tortoise_head                | 0.8         | Head                   |
+| tortoise_beak                | 0.05        | Horny beak             |
+| tortoise_eye                 | 0.02        | Eye                    |
+| tortoise_torso_with_shell    | 15.0        | Body with shell        |
+| tortoise_carapace            | 5.0         | Top shell              |
+| tortoise_plastron            | 3.0         | Bottom shell           |
+| tortoise_tail                | 0.2         | Short tail             |
+| **Utility**                  |             |                        |
+| equipment_mount              | 0.5         | Abstract mount point   |
 
 ---
 

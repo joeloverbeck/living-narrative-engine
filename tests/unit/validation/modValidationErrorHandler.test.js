@@ -320,7 +320,11 @@ describe('ModValidationErrorHandler', () => {
 
   it('records errors when event dispatching fails before recovery', () => {
     const logger = createMockLogger();
-    const eventBus = { dispatch: jest.fn(() => { throw new Error('dispatch failed'); }) };
+    const eventBus = {
+      dispatch: jest.fn(() => {
+        throw new Error('dispatch failed');
+      }),
+    };
     const handler = new ModValidationErrorHandler({ logger, eventBus });
 
     expect(() =>

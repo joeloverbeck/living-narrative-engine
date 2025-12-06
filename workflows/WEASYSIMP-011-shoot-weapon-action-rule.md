@@ -13,11 +13,13 @@ Create the `weapons:shoot_weapon` action, condition, and rule handler. This is t
 ## Files to Create
 
 ### 1. Action
+
 **File:** `data/mods/weapons/actions/shoot_weapon.action.json`
 
 Spec reference: Lines 572-607
 
 Key fields:
+
 - Required components: actor (items:inventory), secondary (weapons:weapon, weapons:ammunition, items:aimed_at)
 - Forbidden components: secondary (weapons:jammed)
 - Targets: primary (aimed target), secondary (ready firearm)
@@ -25,16 +27,19 @@ Key fields:
 - Visual: Arctic Steel color scheme (#112a46 bg, #e6f1ff text)
 
 ### 2. Condition
+
 **File:** `data/mods/weapons/conditions/event-is-action-shoot-weapon.condition.json`
 
 Standard action condition pattern checking for `weapons:shoot_weapon` action.
 
 ### 3. Rule
+
 **File:** `data/mods/weapons/rules/handle_shoot_weapon.rule.json`
 
 Spec reference: Lines 1458-1610
 
 Operations sequence:
+
 1. QUERY_COMPONENT (get ammo data)
 2. MATH (subtract 1 from currentAmmo)
 3. MODIFY_COMPONENT (set new ammo count)

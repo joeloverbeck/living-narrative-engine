@@ -209,9 +209,8 @@ describe('Scope-DSL context validation and merging integration', () => {
       'depthGuard',
       'customService',
     ];
-    const customValidator = ContextValidator.withCriticalProperties(
-      customCritical
-    );
+    const customValidator =
+      ContextValidator.withCriticalProperties(customCritical);
     const customMerger = new ContextMerger(customCritical, customValidator);
 
     const baseContext = createBaseContext({

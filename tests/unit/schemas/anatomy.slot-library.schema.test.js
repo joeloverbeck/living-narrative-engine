@@ -405,7 +405,13 @@ describe('JSON-Schema – Anatomy Slot Library Definition', () => {
         clothingDefinitions: {
           all_layers: {
             blueprintSlots: ['torso'],
-            allowedLayers: ['underwear', 'base', 'outer', 'armor', 'accessories'],
+            allowedLayers: [
+              'underwear',
+              'base',
+              'outer',
+              'armor',
+              'accessories',
+            ],
           },
         },
       };

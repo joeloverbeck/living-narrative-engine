@@ -434,10 +434,11 @@ describe('TraitsRewriterDisplayEnhancer', () => {
 
       expect(sections).toHaveLength(2);
       expect(
-        sections.find(section => section.key === 'custom:nullTrait').content
+        sections.find((section) => section.key === 'custom:nullTrait').content
       ).toBe('');
       expect(
-        sections.find(section => section.key === 'custom:undefinedTrait').content
+        sections.find((section) => section.key === 'custom:undefinedTrait')
+          .content
       ).toBe('');
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });

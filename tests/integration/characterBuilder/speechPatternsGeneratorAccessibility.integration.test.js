@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import {
   ERROR_CATEGORIES,
@@ -67,7 +74,8 @@ class ExportAwareSpeechPatternsGeneratorController extends SpeechPatternsGenerat
  */
 function ensureAnimationFramePolyfill() {
   if (!global.requestAnimationFrame) {
-    global.requestAnimationFrame = (callback) => setTimeout(() => callback(Date.now()), 16);
+    global.requestAnimationFrame = (callback) =>
+      setTimeout(() => callback(Date.now()), 16);
     global.cancelAnimationFrame = (handle) => clearTimeout(handle);
   }
 }
@@ -153,7 +161,9 @@ function createCharacterBuilderService() {
   return {
     initialize: jest.fn().mockResolvedValue(),
     getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-    createCharacterConcept: jest.fn().mockResolvedValue({ id: 'integration-id' }),
+    createCharacterConcept: jest
+      .fn()
+      .mockResolvedValue({ id: 'integration-id' }),
     updateCharacterConcept: jest.fn().mockResolvedValue(),
     deleteCharacterConcept: jest.fn().mockResolvedValue(),
     getCharacterConcept: jest.fn().mockResolvedValue(null),
@@ -237,11 +247,14 @@ function createLifecycleOrchestrator(logger) {
         }
       };
     }),
-    createControllerMethodHook: jest.fn((controller, methodName) => async (...args) => {
-      if (typeof controller[methodName] === 'function') {
-        return controller[methodName](...args);
-      }
-    }),
+    createControllerMethodHook: jest.fn(
+      (controller, methodName) =>
+        async (...args) => {
+          if (typeof controller[methodName] === 'function') {
+            return controller[methodName](...args);
+          }
+        }
+    ),
     async initialize() {
       orchestrator._isInitializing = true;
       const phases = [
@@ -368,7 +381,8 @@ function createDependencies({
   const validationService = new ValidationService({
     schemaValidator,
     logger,
-    handleError: (error, context) => logger.error('Validation error', error, context),
+    handleError: (error, context) =>
+      logger.error('Validation error', error, context),
     errorCategories: ERROR_CATEGORIES,
   });
   const controllerLifecycleOrchestrator = createLifecycleOrchestrator(logger);
@@ -437,8 +451,18 @@ function createDisplayEnhancerStub() {
     formatForExport: jest.fn(() => 'formatted-content'),
     generateExportFilename: jest.fn(() => 'speech_patterns.txt'),
     getSupportedExportFormats: jest.fn(() => [
-      { id: 'txt', name: 'Plain Text', description: 'Text export', extension: 'txt' },
-      { id: 'json', name: 'JSON', description: 'JSON export', extension: 'json' },
+      {
+        id: 'txt',
+        name: 'Plain Text',
+        description: 'Text export',
+        extension: 'txt',
+      },
+      {
+        id: 'json',
+        name: 'JSON',
+        description: 'JSON export',
+        extension: 'json',
+      },
     ]),
     getAvailableTemplates: jest.fn(() => [
       { id: 'default', name: 'Default', description: 'Default template' },
@@ -453,7 +477,8 @@ function createDisplayEnhancerStub() {
  *
  */
 function createValidCharacterDefinition() {
-  const background = 'An academic with a passion for linguistics and storytelling.'.repeat(2);
+  const background =
+    'An academic with a passion for linguistics and storytelling.'.repeat(2);
   return {
     components: {
       'core:name': { text: 'Professor Ada Lovette' },
@@ -523,7 +548,10 @@ async function enterValidCharacterDefinition({ useFakeTimers = false } = {}) {
  * @param root0.duration
  * @param root0.useFakeTimers
  */
-async function waitForGeneration({ duration = 650, useFakeTimers = false } = {}) {
+async function waitForGeneration({
+  duration = 650,
+  useFakeTimers = false,
+} = {}) {
   if (useFakeTimers) {
     await jest.advanceTimersByTimeAsync(duration);
     await Promise.resolve();
@@ -574,9 +602,11 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
       generateSpeechPatterns: jest
         .fn()
         .mockImplementationOnce(() =>
-          Promise.reject(Object.assign(new Error('Service crashed'), {
-            name: 'SpeechPatternsGenerationError',
-          }))
+          Promise.reject(
+            Object.assign(new Error('Service crashed'), {
+              name: 'SpeechPatternsGenerationError',
+            })
+          )
         )
         .mockResolvedValueOnce(createSuccessfulResult()),
     };
@@ -600,7 +630,9 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
       schemaValidator,
       displayEnhancer: displayEnhancerStub,
     });
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     activeControllers.add(controller);
     controller._disableEnhancedValidation();
     await controller.initialize();
@@ -611,7 +643,9 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
     await jest.advanceTimersByTimeAsync(50);
     await Promise.resolve();
 
-    expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(1);
+    expect(
+      speechPatternsGenerator.generateSpeechPatterns
+    ).toHaveBeenCalledTimes(1);
     expect(document.getElementById('error-message').textContent).toContain(
       'Failed to generate speech patterns: Service crashed'
     );
@@ -621,8 +655,12 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
     await jest.advanceTimersByTimeAsync(50);
     await Promise.resolve();
 
-    expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(2);
-    expect(document.getElementById('results-state').style.display).toBe('block');
+    expect(
+      speechPatternsGenerator.generateSpeechPatterns
+    ).toHaveBeenCalledTimes(2);
+    expect(document.getElementById('results-state').style.display).toBe(
+      'block'
+    );
     expect(
       announcementHistory.some((msg) =>
         msg.includes('Generated 3 speech patterns')
@@ -633,15 +671,24 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
 
   it.each([
     [
-      { name: 'SpeechPatternsResponseProcessingError', message: 'Malformed response received' },
+      {
+        name: 'SpeechPatternsResponseProcessingError',
+        message: 'Malformed response received',
+      },
       'Failed to process response: Malformed response received',
     ],
     [
-      { name: 'SpeechPatternsValidationError', message: 'Output did not pass schema validation' },
+      {
+        name: 'SpeechPatternsValidationError',
+        message: 'Output did not pass schema validation',
+      },
       'Generated content validation failed: Output did not pass schema validation',
     ],
     [
-      { name: 'Error', message: 'Service temporarily unavailable due to maintenance' },
+      {
+        name: 'Error',
+        message: 'Service temporarily unavailable due to maintenance',
+      },
       'Speech pattern service is currently unavailable. Please try again later.',
     ],
     [
@@ -649,33 +696,41 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
       'Generation timed out. Please try again.',
     ],
     [
-      { name: 'Error', message: 'Post-generation validation failed at rule set 3' },
+      {
+        name: 'Error',
+        message: 'Post-generation validation failed at rule set 3',
+      },
       'Generated content did not meet quality standards. Please try again.',
     ],
-  ])('maps %o to the expected user-facing error message', async (error, expectedMessage) => {
-    jest.useRealTimers();
-    setupDom();
+  ])(
+    'maps %o to the expected user-facing error message',
+    async (error, expectedMessage) => {
+      jest.useRealTimers();
+      setupDom();
 
-    const schemaValidator = createSchemaValidator();
-    const speechPatternsGenerator = {
-      getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockRejectedValueOnce(error),
-    };
+      const schemaValidator = createSchemaValidator();
+      const speechPatternsGenerator = {
+        getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
+        generateSpeechPatterns: jest.fn().mockRejectedValueOnce(error),
+      };
 
-    const controller = new ExportAwareSpeechPatternsGeneratorController(
-      createDependencies({ speechPatternsGenerator, schemaValidator })
-    );
-    activeControllers.add(controller);
-    controller._disableEnhancedValidation();
-    await controller.initialize();
+      const controller = new ExportAwareSpeechPatternsGeneratorController(
+        createDependencies({ speechPatternsGenerator, schemaValidator })
+      );
+      activeControllers.add(controller);
+      controller._disableEnhancedValidation();
+      await controller.initialize();
 
-    await enterValidCharacterDefinition();
+      await enterValidCharacterDefinition();
 
-    document.getElementById('generate-btn').click();
-    await waitForGeneration({ duration: 700 });
+      document.getElementById('generate-btn').click();
+      await waitForGeneration({ duration: 700 });
 
-    expect(document.getElementById('error-message').textContent).toContain(expectedMessage);
-  });
+      expect(document.getElementById('error-message').textContent).toContain(
+        expectedMessage
+      );
+    }
+  );
 
   it('displays validation errors with formatting and clears them when input becomes valid', async () => {
     jest.useRealTimers();
@@ -684,7 +739,9 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
     const schemaValidator = createSchemaValidator();
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+      generateSpeechPatterns: jest
+        .fn()
+        .mockResolvedValue(createSuccessfulResult()),
     };
 
     const controller = new ExportAwareSpeechPatternsGeneratorController(
@@ -720,7 +777,9 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
     const schemaValidator = createSchemaValidator();
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+      generateSpeechPatterns: jest
+        .fn()
+        .mockResolvedValue(createSuccessfulResult()),
     };
 
     const validationResult = {
@@ -745,7 +804,9 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
 
     const errorContainer = document.getElementById('character-input-error');
     expect(errorContainer.style.display).toBe('block');
-    expect(errorContainer.textContent).toContain('Excellent character definition!');
+    expect(errorContainer.textContent).toContain(
+      'Excellent character definition!'
+    );
 
     const textarea = document.getElementById('character-definition');
     expect(textarea.classList.contains('success')).toBe(true);
@@ -763,7 +824,9 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
     const schemaValidator = createSchemaValidator();
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+      generateSpeechPatterns: jest
+        .fn()
+        .mockResolvedValue(createSuccessfulResult()),
     };
 
     const validationResult = {
@@ -788,8 +851,12 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
 
     const errorContainer = document.getElementById('character-input-error');
     expect(errorContainer.querySelector('.validation-section')).not.toBeNull();
-    expect(errorContainer.querySelector('.quality-score.fair').textContent).toContain('45%');
-    expect(errorContainer.querySelector('.quality-level').textContent).toContain('Fair');
+    expect(
+      errorContainer.querySelector('.quality-score.fair').textContent
+    ).toContain('45%');
+    expect(
+      errorContainer.querySelector('.quality-level').textContent
+    ).toContain('Fair');
 
     const textarea = document.getElementById('character-definition');
     expect(textarea.classList.contains('warning')).toBe(true);
@@ -804,13 +871,21 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
     expect(warningSectionTitle.getAttribute('aria-expanded')).toBe('true');
 
     warningSectionTitle.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(warningSectionTitle.getAttribute('aria-expanded')).toBe('false');
     expect(warningList.style.display).toBe('none');
 
     warningSectionTitle.dispatchEvent(
-      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: ' ',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(warningSectionTitle.getAttribute('aria-expanded')).toBe('true');
     expect(warningList.style.display).toBe('block');
@@ -825,7 +900,9 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
     const schemaValidator = createSchemaValidator();
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+      generateSpeechPatterns: jest
+        .fn()
+        .mockResolvedValue(createSuccessfulResult()),
     };
 
     const validationResult = {
@@ -864,7 +941,9 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
     const schemaValidator = createSchemaValidator();
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockResolvedValue(createSuccessfulResult()),
+      generateSpeechPatterns: jest
+        .fn()
+        .mockResolvedValue(createSuccessfulResult()),
     };
 
     const validationResult = {
@@ -888,9 +967,13 @@ describe('SpeechPatternsGeneratorController integration - enhanced validation fe
     await enterValidCharacterDefinition({ useFakeTimers: true });
 
     const errorContainer = document.getElementById('character-input-error');
-    const qualityScore = errorContainer.querySelector('.quality-score.excellent');
+    const qualityScore = errorContainer.querySelector(
+      '.quality-score.excellent'
+    );
     expect(qualityScore.textContent).toContain('88%');
-    expect(errorContainer.querySelector('.quality-level').textContent).toContain('Excellent');
+    expect(
+      errorContainer.querySelector('.quality-level').textContent
+    ).toContain('Excellent');
 
     const textarea = document.getElementById('character-definition');
     expect(textarea.classList.contains('warning')).toBe(true);
@@ -953,7 +1036,9 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
       displayEnhancer: displayEnhancerStub,
     });
 
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     activeControllers.add(controller);
     controller._disableEnhancedValidation();
     await controller.initialize();
@@ -961,7 +1046,12 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
     await enterValidCharacterDefinition({ useFakeTimers: true });
 
     dispatchFromBody(
-      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
     );
     await waitForGeneration({ duration: 1200, useFakeTimers: true });
     await expect(generationPromises[0]).resolves.toMatchObject({
@@ -970,17 +1060,29 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
 
     await jest.runOnlyPendingTimersAsync();
 
-    expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(1);
+    expect(
+      speechPatternsGenerator.generateSpeechPatterns
+    ).toHaveBeenCalledTimes(1);
 
     dispatchFromBody(
-      new KeyboardEvent('keydown', { key: 'e', ctrlKey: true, bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'e',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(displayEnhancerStub.formatForExport).toHaveBeenCalledTimes(1);
     expect(displayEnhancerStub.generateExportFilename).toHaveBeenCalledTimes(2);
     expect(displayEnhancerStub.enhanceForDisplay).toHaveBeenCalled();
 
     dispatchFromBody(
-      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
     );
     await jest.advanceTimersByTimeAsync(500);
 
@@ -996,9 +1098,9 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
 
     const textarea = document.getElementById('character-definition');
     expect(textarea.value).toBe('');
-    expect(document.getElementById('screen-reader-announcement').textContent).toBe(
-      'All content cleared'
-    );
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toBe('All content cleared');
 
     await jest.advanceTimersByTimeAsync(1000);
 
@@ -1026,7 +1128,9 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
         const rawPromise = new Promise((resolve, reject) => {
           if (options.abortSignal) {
             options.abortSignal.addEventListener('abort', () =>
-              reject(Object.assign(new Error('Aborted'), { name: 'AbortError' }))
+              reject(
+                Object.assign(new Error('Aborted'), { name: 'AbortError' })
+              )
             );
           }
         });
@@ -1052,7 +1156,12 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
     await enterValidCharacterDefinition({ useFakeTimers: true });
 
     dispatchFromBody(
-      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
     );
     await waitForGeneration({ duration: 1200, useFakeTimers: true });
     await Promise.resolve();
@@ -1064,50 +1173,83 @@ describe('SpeechPatternsGeneratorController integration - keyboard accessibility
     firstPattern.focus();
 
     firstPattern.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(document.activeElement).toBe(patterns[1]);
-    expect(document.getElementById('screen-reader-announcement').textContent).toContain('Pattern 2');
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toContain('Pattern 2');
 
     patterns[1].dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'j', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'j',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(document.activeElement).toBe(patterns[2]);
 
     patterns[2].dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'ArrowUp',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(document.activeElement).toBe(patterns[1]);
 
     patterns[1].dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'k', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'k',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(document.activeElement).toBe(firstPattern);
 
     firstPattern.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'End',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(document.activeElement).toBe(patterns[patterns.length - 1]);
 
     document.activeElement.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'Home',
+        bubbles: true,
+        cancelable: true,
+      })
     );
     expect(document.activeElement).toBe(patterns[0]);
 
     dispatchFromBody(
-      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
     );
     await jest.advanceTimersByTimeAsync(400);
 
-    dispatchFromBody(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    dispatchFromBody(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    );
     await expect(navigationPromises[0]).resolves.toMatchObject({
       speechPatterns: expect.any(Array),
     });
     await expect(navigationPromises[1]).rejects.toThrow('Aborted');
 
     expect(pendingAbortSignal.aborted).toBe(true);
-    expect(document.getElementById('screen-reader-announcement').textContent).toBe(
-      'Generation cancelled'
-    );
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toBe('Generation cancelled');
   });
 });

@@ -213,7 +213,9 @@ describe('SlotResolver', () => {
 
       // Reset mocks before second call
       mockCache.get.mockReset();
-      mockCache.get.mockImplementation((type, key) => [{ entityId: 'cached_entity' }]);
+      mockCache.get.mockImplementation((type, key) => [
+        { entityId: 'cached_entity' },
+      ]);
 
       // Second call should use cache
       const cachedResult = await slotResolver.resolve(

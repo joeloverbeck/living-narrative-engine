@@ -26,6 +26,7 @@
 - **Underlying Fragility**: The fix required manual edits to 6+ files. Any future state name or threshold change requires coordinated updates across all locations, creating regression risk.
 
 **Test files that caught the failures:**
+
 - `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` (lines 425-428, 456-458)
 - `tests/unit/logic/operationHandlers/modifyPartHealthHandler.test.js` (lines 660, 1186)
 - `tests/integration/anatomy/damage-application.integration.test.js` (lines 377-393)
@@ -78,12 +79,14 @@
 ## API Contracts
 
 ### What Stays Stable
+
 - State string values: `healthy`, `scratched`, `wounded`, `injured`, `critical`, `destroyed`
 - Threshold percentages: 81%, 61%, 41%, 21%, 1%, 0%
 - Event payload shape for `anatomy:part_health_changed` and `anatomy:part_state_changed`
 - Public methods on `InjuryNarrativeFormatterService`: `formatFirstPerson()`, `formatDamageEvent()`
 
 ### What is Allowed to Change
+
 - Internal threshold storage structure (object vs array vs enum)
 - Description text for states (narrative wording)
 - Additional metadata per state (e.g., CSS classes, severity levels, icon names)
@@ -95,6 +98,7 @@
 ## Which Tests Must Be Updated/Added
 
 ### New Unit Tests
+
 1. **`tests/unit/anatomy/registries/healthStateRegistry.test.js`** (new file)
    - Verify all 6 states are defined with correct thresholds
    - Verify `calculateStateFromPercentage()` returns correct state at each boundary
@@ -109,6 +113,7 @@
    - Verify schema enum matches registry enum
 
 ### Updated Unit Tests
+
 3. **`tests/unit/logic/operationHandlers/applyDamageHandler.test.js`**
    - Update to import state names from registry
    - Add test verifying handler uses registry for state calculation
@@ -126,6 +131,7 @@
    - Add test verifying formatter uses registry for all state mappings
 
 ### New Integration Tests
+
 7. **`tests/integration/anatomy/healthStateRegistryConsistency.integration.test.js`** (new file)
    - Load actual schema, verify enum matches registry
    - Create parts with each state, verify narrative output exists
@@ -194,15 +200,15 @@ export function getThirdPersonDescription(state) { ... }
 
 ## Files to Modify (Implementation Phase)
 
-| File | Change Required |
-|------|-----------------|
-| `src/anatomy/registries/healthStateRegistry.js` | **CREATE** - single source of truth |
-| `src/logic/operationHandlers/applyDamageHandler.js` | Import from registry, remove local constant |
-| `src/logic/operationHandlers/modifyPartHealthHandler.js` | Import from registry, remove local constant |
-| `src/logic/operationHandlers/updatePartHealthStateHandler.js` | Import from registry, remove local arrays |
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Import descriptions from registry |
-| `src/anatomy/services/injuryAggregationService.js` | Import state names for comparisons |
-| `src/anatomy/validators/healthStateValidator.js` | **CREATE** - validates schema-registry consistency |
+| File                                                          | Change Required                                    |
+| ------------------------------------------------------------- | -------------------------------------------------- |
+| `src/anatomy/registries/healthStateRegistry.js`               | **CREATE** - single source of truth                |
+| `src/logic/operationHandlers/applyDamageHandler.js`           | Import from registry, remove local constant        |
+| `src/logic/operationHandlers/modifyPartHealthHandler.js`      | Import from registry, remove local constant        |
+| `src/logic/operationHandlers/updatePartHealthStateHandler.js` | Import from registry, remove local arrays          |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`     | Import descriptions from registry                  |
+| `src/anatomy/services/injuryAggregationService.js`            | Import state names for comparisons                 |
+| `src/anatomy/validators/healthStateValidator.js`              | **CREATE** - validates schema-registry consistency |
 
 ## Backward Compatibility
 

@@ -34,8 +34,10 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
           return { success: true, value: new Set() };
         }
 
-        const furniture = testFixture.entityManager.getEntityInstance(furnitureId);
-        const sittingComponent = furniture?.components?.['positioning:allows_sitting'];
+        const furniture =
+          testFixture.entityManager.getEntityInstance(furnitureId);
+        const sittingComponent =
+          furniture?.components?.['positioning:allows_sitting'];
         if (!sittingComponent || !Array.isArray(sittingComponent.spots)) {
           return { success: true, value: new Set() };
         }
@@ -52,9 +54,14 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
           }
 
           // Check if this occupant has positioning:sitting_on component
-          const occupant = testFixture.entityManager.getEntityInstance(occupantId);
+          const occupant =
+            testFixture.entityManager.getEntityInstance(occupantId);
           const sittingOn = occupant?.components?.['positioning:sitting_on'];
-          if (!sittingOn || sittingOn.furniture_id !== furnitureId || sittingOn.spot_index !== i) {
+          if (
+            !sittingOn ||
+            sittingOn.furniture_id !== furnitureId ||
+            sittingOn.spot_index !== i
+          ) {
             continue; // Not sitting on this furniture at this index
           }
 
@@ -85,7 +92,11 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       }
 
       // Fall back to original resolver for other scopes
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
 
     // Configure action discovery (required for discovery tests)
@@ -103,7 +114,9 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
   describe('Action metadata validation', () => {
     it('should have correct action structure', () => {
       expect(sitDownAtDistanceAction).toBeDefined();
-      expect(sitDownAtDistanceAction.id).toBe('personal-space:sit_down_at_distance');
+      expect(sitDownAtDistanceAction.id).toBe(
+        'personal-space:sit_down_at_distance'
+      );
       expect(sitDownAtDistanceAction.name).toBe('Sit Down With Space');
       expect(sitDownAtDistanceAction.description).toBe(
         'Sit on available furniture while leaving a one-seat buffer from a selected occupant.'
@@ -228,7 +241,9 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
       expect(sitAtDistanceActions.length).toBeGreaterThan(0);
       // Verify the action has the correct template with both placeholders
       const action = sitAtDistanceActions[0];
-      expect(action.template).toBe('sit down on {seat} at a distance from {occupant}');
+      expect(action.template).toBe(
+        'sit down on {seat} at a distance from {occupant}'
+      );
     });
 
     it('should coexist with legacy sit_down action when appropriate', () => {
@@ -493,16 +508,15 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         },
         target: {
           id: 'bench1',
-          components: testFixture.entityManager.getEntityInstance('bench1')
-            .components,
+          components:
+            testFixture.entityManager.getEntityInstance('bench1').components,
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'personal-space:actors_sitting_with_space_to_right',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'personal-space:actors_sitting_with_space_to_right',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['bob1']);
@@ -556,16 +570,15 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         },
         target: {
           id: 'bench1',
-          components: testFixture.entityManager.getEntityInstance('bench1')
-            .components,
+          components:
+            testFixture.entityManager.getEntityInstance('bench1').components,
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'personal-space:actors_sitting_with_space_to_right',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'personal-space:actors_sitting_with_space_to_right',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       // Only Charlie should be returned (rightmost with 2 spaces)
@@ -620,16 +633,15 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         },
         target: {
           id: 'bench1',
-          components: testFixture.entityManager.getEntityInstance('bench1')
-            .components,
+          components:
+            testFixture.entityManager.getEntityInstance('bench1').components,
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'personal-space:actors_sitting_with_space_to_right',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'personal-space:actors_sitting_with_space_to_right',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual([]);
@@ -675,16 +687,15 @@ describe('personal-space:sit_down_at_distance action discovery', () => {
         },
         target: {
           id: 'bench1',
-          components: testFixture.entityManager.getEntityInstance('bench1')
-            .components,
+          components:
+            testFixture.entityManager.getEntityInstance('bench1').components,
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'personal-space:actors_sitting_with_space_to_right',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'personal-space:actors_sitting_with_space_to_right',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['bob1']);

@@ -4,7 +4,10 @@
  * @description Calculates predicted energy = current energy + buffered energy from digestion
  */
 
-import { resolveEntityPath, hasValidEntityId } from '../utils/entityPathResolver.js';
+import {
+  resolveEntityPath,
+  hasValidEntityId,
+} from '../utils/entityPathResolver.js';
 import jsonLogic from 'json-logic-js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -92,10 +95,17 @@ export class PredictedEnergyOperator {
 
         if (!resolved.isValid) {
           // Check if this looks like a context path
-          const commonContextKeys = ['entity', 'actor', 'location', 'target', 'targets', 'event', 'self'];
+          const commonContextKeys = [
+            'entity',
+            'actor',
+            'location',
+            'target',
+            'targets',
+            'event',
+            'self',
+          ];
           const looksLikeContextPath =
-            commonContextKeys.includes(entityPath) ||
-            entityPath.includes('.');
+            commonContextKeys.includes(entityPath) || entityPath.includes('.');
 
           if (looksLikeContextPath) {
             this.#logger.warn(
@@ -111,7 +121,10 @@ export class PredictedEnergyOperator {
           }
         } else {
           // Check if resolved to object without id
-          if (typeof resolved.entity === 'object' && !hasValidEntityId(resolved.entity)) {
+          if (
+            typeof resolved.entity === 'object' &&
+            !hasValidEntityId(resolved.entity)
+          ) {
             this.#logger.debug(
               `${this.#operatorName}: Resolved "${entityPath}" to object without id, treating original path as entity ID`
             );

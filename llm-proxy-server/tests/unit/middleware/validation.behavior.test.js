@@ -42,7 +42,7 @@ describe('Validation middleware behavior', () => {
         llmId: 'openai-gpt4',
         targetPayload: { prompt: 'Hello' },
         targetHeaders: {
-          '__proto__': 'bad',
+          __proto__: 'bad',
           'X-Safe-Header': 'value',
           'Bad\r\nHeader': 'ignored',
           'Set-Cookie': 'session',
@@ -197,7 +197,9 @@ describe('Validation middleware behavior', () => {
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
-      expect(errors.array()[0].msg).toContain('Content-Type header is required');
+      expect(errors.array()[0].msg).toContain(
+        'Content-Type header is required'
+      );
     });
   });
 
@@ -299,7 +301,9 @@ describe('Validation middleware behavior', () => {
 
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(false);
-      expect(errors.array()[0].msg).toContain('Unexpected fields in request body');
+      expect(errors.array()[0].msg).toContain(
+        'Unexpected fields in request body'
+      );
     });
   });
 

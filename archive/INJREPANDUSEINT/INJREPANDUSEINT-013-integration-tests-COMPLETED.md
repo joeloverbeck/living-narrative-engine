@@ -11,6 +11,7 @@ Create comprehensive integration tests for the full injury reporting and death s
 **Original assumption**: Create `deathSystem.integration.test.js` from scratch.
 
 **Reality**: `deathCheckIntegration.test.js` (555 lines) already exists and covers most death system tests:
+
 - Vital organ destruction → death flow (heart, brain)
 - Critical health (< 10%) → dying state
 - `anatomy:entity_died` event with correct payload
@@ -22,13 +23,14 @@ Create comprehensive integration tests for the full injury reporting and death s
 
 ## File List
 
-| File | Action | Rationale |
-|------|--------|-----------|
-| `tests/integration/anatomy/injuryReportingFlow.integration.test.js` | CREATE | New - no existing coverage |
-| `tests/integration/anatomy/deathCheckIntegration.test.js` | EXTEND | Add stabilization + countdown tests |
-| `tests/unit/prompting/characterDataXmlBuilder.test.js` | EXISTING | Already has 20 tests covering Physical Condition Section (lines 871-1100+) |
+| File                                                                | Action   | Rationale                                                                  |
+| ------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
+| `tests/integration/anatomy/injuryReportingFlow.integration.test.js` | CREATE   | New - no existing coverage                                                 |
+| `tests/integration/anatomy/deathCheckIntegration.test.js`           | EXTEND   | Add stabilization + countdown tests                                        |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js`              | EXISTING | Already has 20 tests covering Physical Condition Section (lines 871-1100+) |
 
 **Note on characterHealthStateXml.integration.test.js**: The ticket originally requested creating a separate integration test file for LLM health state integration. However, the unit tests in `characterDataXmlBuilder.test.js` already comprehensively cover this functionality:
+
 - Healthy characters with null healthState (no physical_condition section)
 - Injured characters with populated healthState (full XML output)
 - CharacterDataXmlBuilder produces correct `<physical_condition>` section
@@ -128,6 +130,7 @@ See `specs/injury-reporting-and-user-interface.md` section 9.2 for integration t
 ### Test Results
 
 All integration tests pass:
+
 - `tests/integration/anatomy/` - 240 test suites, 2008 tests passed
 - `tests/integration/anatomy/deathCheckIntegration.test.js` - 13 tests (7 original + 6 new)
 - `tests/integration/anatomy/injuryReportingFlow.integration.test.js` - 14 tests

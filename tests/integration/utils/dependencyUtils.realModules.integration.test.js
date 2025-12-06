@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import {
   SystemInitializationError,
@@ -192,20 +187,21 @@ describe('dependencyUtils integration coverage', () => {
 
   describe('WorldInitializer dependency validation', () => {
     it('constructs successfully when all dependencies satisfy assertions', () => {
-      expect(() =>
-        new WorldInitializer({
-          entityManager: new StubEntityManager(),
-          worldContext: { id: 'world:demo' },
-          gameDataRepository: new StubRepository(),
-          validatedEventDispatcher: new StubEventDispatcher(),
-          eventDispatchService: new StubEventDispatchService(),
-          logger,
-          scopeRegistry: new StubScopeRegistry(),
-          config: {
-            isFeatureEnabled: () => true,
-            getValue: () => 5,
-          },
-        })
+      expect(
+        () =>
+          new WorldInitializer({
+            entityManager: new StubEntityManager(),
+            worldContext: { id: 'world:demo' },
+            gameDataRepository: new StubRepository(),
+            validatedEventDispatcher: new StubEventDispatcher(),
+            eventDispatchService: new StubEventDispatchService(),
+            logger,
+            scopeRegistry: new StubScopeRegistry(),
+            config: {
+              isFeatureEnabled: () => true,
+              getValue: () => 5,
+            },
+          })
       ).not.toThrow();
     });
 
@@ -255,40 +251,46 @@ describe('dependencyUtils integration coverage', () => {
     it('logs errors when injected services do not provide required functions', () => {
       const failingLogger = new MemoryLogger('Initialization: ');
 
-      expect(() =>
-        new InitializationService({
-          log: { logger: failingLogger },
-          events: {
-            validatedEventDispatcher: {},
-            safeEventDispatcher: new StubSafeEventDispatcher(),
-          },
-          llm: { llmAdapter: new StubLlmAdapter(), llmConfigLoader: new StubLlmConfigLoader() },
-          persistence: {
-            entityManager: new StubEntityManager(),
-            domUiFacade: new StubDomUiFacade(),
-            actionIndex: new StubActionIndex(),
-            gameDataRepository: new StubGameDataRepository(),
-            thoughtListener: new StubListener(),
-            notesListener: new StubListener(),
-            spatialIndexManager: new StubSpatialIndexManager(),
-          },
-          coreSystems: {
-            modsLoader: new StubModsLoader(),
-            scopeRegistry: new StubScopeRegistry(),
-            dataRegistry: new StubDataRegistry(),
-            systemInitializer: new StubSystemInitializer(),
-            worldInitializer: new StubWorldInitializer(),
-            contentDependencyValidator: new StubContentDependencyValidator(),
-            llmAdapterInitializer: new StubLlmAdapterInitializer(),
-            anatomyFormattingService: new StubAnatomyFormattingService(),
-          },
-        })
+      expect(
+        () =>
+          new InitializationService({
+            log: { logger: failingLogger },
+            events: {
+              validatedEventDispatcher: {},
+              safeEventDispatcher: new StubSafeEventDispatcher(),
+            },
+            llm: {
+              llmAdapter: new StubLlmAdapter(),
+              llmConfigLoader: new StubLlmConfigLoader(),
+            },
+            persistence: {
+              entityManager: new StubEntityManager(),
+              domUiFacade: new StubDomUiFacade(),
+              actionIndex: new StubActionIndex(),
+              gameDataRepository: new StubGameDataRepository(),
+              thoughtListener: new StubListener(),
+              notesListener: new StubListener(),
+              spatialIndexManager: new StubSpatialIndexManager(),
+            },
+            coreSystems: {
+              modsLoader: new StubModsLoader(),
+              scopeRegistry: new StubScopeRegistry(),
+              dataRegistry: new StubDataRegistry(),
+              systemInitializer: new StubSystemInitializer(),
+              worldInitializer: new StubWorldInitializer(),
+              contentDependencyValidator: new StubContentDependencyValidator(),
+              llmAdapterInitializer: new StubLlmAdapterInitializer(),
+              anatomyFormattingService: new StubAnatomyFormattingService(),
+            },
+          })
       ).toThrow(SystemInitializationError);
 
       expect(failingLogger.entries.error.length).toBeGreaterThan(0);
       expect(
         failingLogger.entries.error.some(({ message }) =>
-          message.includes('InitializationService: Missing or invalid required dependency')
+          message.includes(
+            'InitializationService: Missing or invalid required dependency'
+          )
         )
       ).toBe(true);
     });
@@ -311,7 +313,9 @@ describe('dependencyUtils integration coverage', () => {
       });
 
       prefixed.debug('initialized');
-      expect(logger.entries.debug[0].message).toBe('InventoryService: initialized');
+      expect(logger.entries.debug[0].message).toBe(
+        'InventoryService: initialized'
+      );
       expect(logger.entries.error).toHaveLength(0);
     });
 
@@ -348,7 +352,9 @@ describe('dependencyUtils integration coverage', () => {
 
       expect(
         logger.entries.error.some(({ message }) =>
-          message.includes('Missing required dependency: MissingDependencyService: missing')
+          message.includes(
+            'Missing required dependency: MissingDependencyService: missing'
+          )
         )
       ).toBe(true);
     });
@@ -367,7 +373,9 @@ describe('dependencyUtils integration coverage', () => {
 
       expect(
         logger.entries.error.some(({ message }) =>
-          message.includes("Dependency 'CallableCheckService: callable' must be a function")
+          message.includes(
+            "Dependency 'CallableCheckService: callable' must be a function"
+          )
         )
       ).toBe(true);
     });
@@ -375,7 +383,9 @@ describe('dependencyUtils integration coverage', () => {
     it('falls back to console logging when logger lacks an error method', () => {
       const setup = new ServiceSetup();
       const silentLogger = { debug: () => {} };
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       expect(() =>
         setup.validateDeps('ConsoleFallbackService', silentLogger, {
@@ -394,18 +404,26 @@ describe('dependencyUtils integration coverage', () => {
 
     it('returns immediately when no dependency specifications are provided', () => {
       const setup = new ServiceSetup();
-      expect(() => setup.validateDeps('OptionalService', logger, undefined)).not.toThrow();
+      expect(() =>
+        setup.validateDeps('OptionalService', logger, undefined)
+      ).not.toThrow();
       expect(logger.entries.error).toHaveLength(0);
     });
   });
 
   describe('idValidation integration', () => {
     it('validates identifiers and reports issues through dependencyUtils helpers', () => {
-      expect(idValidation.isValidId('npc:hero', 'test-context', logger)).toBe(true);
+      expect(idValidation.isValidId('npc:hero', 'test-context', logger)).toBe(
+        true
+      );
       expect(idValidation.isValidId('   ', 'test-context', logger)).toBe(false);
 
       expect(() =>
-        idValidation.validateInstanceAndComponent('npc:hero', 'component:vision', logger)
+        idValidation.validateInstanceAndComponent(
+          'npc:hero',
+          'component:vision',
+          logger
+        )
       ).not.toThrow();
 
       expect(() =>
@@ -414,7 +432,9 @@ describe('dependencyUtils integration coverage', () => {
 
       expect(logger.entries.error.length).toBeGreaterThan(0);
       expect(
-        logger.entries.error.some(({ message }) => message.includes('integration: Invalid'))
+        logger.entries.error.some(({ message }) =>
+          message.includes('integration: Invalid')
+        )
       ).toBe(true);
     });
   });
@@ -426,7 +446,9 @@ describe('dependencyUtils integration coverage', () => {
         logger,
       });
 
-      expect(() => service.dispatchWithLogging('event', { payload: true })).not.toThrow();
+      expect(() =>
+        service.dispatchWithLogging('event', { payload: true })
+      ).not.toThrow();
     });
 
     it('throws default errors when required dependencies are missing', () => {
@@ -446,9 +468,13 @@ describe('dependencyUtils integration coverage', () => {
         { dependency: args.runner, name: 'runner', methods: ['run'] },
       ]);
 
-      expect(() => new Decorated({ runner: { run: () => true } })).not.toThrow();
+      expect(
+        () => new Decorated({ runner: { run: () => true } })
+      ).not.toThrow();
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
       expect(() => new Decorated({ runner: {} })).toThrow(InvalidArgumentError);
       consoleSpy.mockRestore();
     });
@@ -492,15 +518,19 @@ describe('dependencyUtils integration coverage', () => {
       expect(payload.actorId).toBe('npc:hero');
       expect(payload.targets).toEqual({ primary: 'npc:hero' });
 
-      const failingBuilder = new MultiTargetEventBuilder({ logger: builderLogger });
+      const failingBuilder = new MultiTargetEventBuilder({
+        logger: builderLogger,
+      });
 
       expect(() => failingBuilder.setActor('  ')).toThrow(InvalidArgumentError);
       expect(() => failingBuilder.setTargets(null)).toThrow(Error);
 
       expect(builderLogger.entries.error.length).toBeGreaterThan(0);
       expect(
-        builderLogger.entries.error.some(({ message }) =>
-          message.includes('Invalid actorId') || message.includes('Targets object is required')
+        builderLogger.entries.error.some(
+          ({ message }) =>
+            message.includes('Invalid actorId') ||
+            message.includes('Targets object is required')
         )
       ).toBe(true);
     });

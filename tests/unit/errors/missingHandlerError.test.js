@@ -129,7 +129,8 @@ describe('MissingHandlerError', () => {
 
       expect(json).toMatchObject({
         name: 'MissingHandlerError',
-        message: "Cannot execute operation 'OP_TYPE' in rule 'rule:id': handler not found",
+        message:
+          "Cannot execute operation 'OP_TYPE' in rule 'rule:id': handler not found",
         code: 'MISSING_HANDLER',
         context: {
           operationType: 'OP_TYPE',

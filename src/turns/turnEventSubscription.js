@@ -68,9 +68,7 @@ export default class TurnEventSubscription {
    */
   subscribe(cb) {
     if (typeof cb !== 'function') {
-      throw new TypeError(
-        'TurnEventSubscription: callback must be a function'
-      );
+      throw new TypeError('TurnEventSubscription: callback must be a function');
     }
     if (this.#unsub) return;
     const wrapped = (ev) => {

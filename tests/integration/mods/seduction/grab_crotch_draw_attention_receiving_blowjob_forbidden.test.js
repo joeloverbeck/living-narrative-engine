@@ -110,22 +110,21 @@ function loadScenario(
  */
 describe('grab_crotch_draw_attention forbidden when receiving blowjob', () => {
   let testFixture;
-    beforeEach(async () => {
+  beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
-      });
+  });
 
   afterEach(() => {
     if (testFixture) {
-      
       testFixture.cleanup();
     }
   });
 
   describe('Action structure validation', () => {
     it('grab_crotch_draw_attention should have positioning:receiving_blowjob as forbidden component', () => {
-      expect(grabCrotchDrawAttentionAction.forbidden_components.actor).toContain(
-        'positioning:receiving_blowjob'
-      );
+      expect(
+        grabCrotchDrawAttentionAction.forbidden_components.actor
+      ).toContain('positioning:receiving_blowjob');
     });
   });
 

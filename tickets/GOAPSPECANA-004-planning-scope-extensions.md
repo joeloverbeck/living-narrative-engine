@@ -27,6 +27,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
 ## Tasks
 
 ### 1. Analyze Current ScopeDsl Limitations
+
 - [ ] Review existing scopeDsl documentation (`docs/scopeDsl/`)
 - [ ] List current assumptions:
   - Same-location queries (actor and targets in same location)
@@ -38,8 +39,10 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
   - Potential accessibility (not current accessibility)
 
 ### 2. Define World-Wide Query Extension
+
 - [ ] Specify new query scope: `world:*` vs `location:*`
 - [ ] Example syntax:
+
   ```
   // Execution-time (current):
   items:examinable_items_here
@@ -47,6 +50,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
   // Planning-time (new):
   items:known_nourishing_items_anywhere
   ```
+
 - [ ] Define scope resolution differences:
   - `_here` suffix → current location only
   - `_anywhere` suffix → world-wide search
@@ -54,6 +58,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
 - [ ] Specify performance bounds (max entities scanned)
 
 ### 3. Define Knowledge-Aware Query Extension
+
 - [ ] Specify `known_to` filter operator:
   ```
   items:nourishing_items_anywhere[known_to(actor)]
@@ -66,6 +71,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
 - [ ] Document knowledge update mechanism (reference GOAPSPECANA-011)
 
 ### 4. Define Reachability Query Extension
+
 - [ ] Specify `reachable_from` filter operator:
   ```
   locations:safe_locations[reachable_from(actor.location)]
@@ -77,6 +83,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
 - [ ] Specify caching strategy for reachability checks
 
 ### 5. Specify Potential vs Actual Accessibility
+
 - [ ] Define distinction:
   - **Actual accessibility** (execution-time): "Can actor use this target RIGHT NOW?"
     - Considers: same location, not in container, permissions, actor posture
@@ -87,6 +94,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
 - [ ] Specify scope naming convention to distinguish
 
 ### 6. Backward Compatibility Analysis
+
 - [ ] Ensure existing execution-time scopes unaffected
 - [ ] Define migration path for ambiguous scopes
 - [ ] Specify scope context parameter:
@@ -94,11 +102,12 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
   scopeEngine.resolve(scopeId, {
     context: 'planning' | 'execution',
     actor: actorId,
-    worldState: snapshot  // for planning
+    worldState: snapshot, // for planning
   });
   ```
 
 ### 7. Performance Implications
+
 - [ ] Estimate query costs:
   - World-wide scan: O(all_entities)
   - Knowledge filter: O(matching_entities)
@@ -112,7 +121,9 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
   - Lazy evaluation of expensive filters
 
 ### 8. Create Example Planning Scopes
+
 - [ ] Example 1: Known nourishing items anywhere
+
   ```json
   {
     "id": "items:known_nourishing_items_anywhere",
@@ -123,6 +134,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
   ```
 
 - [ ] Example 2: Reachable safe locations
+
   ```json
   {
     "id": "locations:safe_reachable_locations",
@@ -143,6 +155,7 @@ Specify complete extensions to scopeDsl to support planning-time target selectio
   ```
 
 ### 9. Document in Specification
+
 - [ ] Replace lines 137-142 with complete extension specification
 - [ ] Add planning scope section with syntax and semantics
 - [ ] Include performance requirements

@@ -2,7 +2,14 @@
  * @file Advanced integration tests for PortraitModalRenderer accessibility and image handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { PortraitModalRenderer } from '../../../src/domUI/portraitModalRenderer.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
@@ -295,11 +302,15 @@ describe('PortraitModalRenderer accessibility integration', () => {
 
     expect(overlay.getAttribute('role')).toBe('dialog');
     expect(overlay.getAttribute('aria-modal')).toBe('true');
-    expect(overlay.getAttribute('aria-labelledby')).toBe('portrait-modal-title');
+    expect(overlay.getAttribute('aria-labelledby')).toBe(
+      'portrait-modal-title'
+    );
 
     expect(spinnerElement.getAttribute('role')).toBe('status');
     expect(spinnerElement.getAttribute('aria-live')).toBe('polite');
-    expect(spinnerElement.getAttribute('aria-label')).toBe('Loading portrait image');
+    expect(spinnerElement.getAttribute('aria-label')).toBe(
+      'Loading portrait image'
+    );
 
     expect(closeButton.style.minWidth).toBe('44px');
     expect(closeButton.style.minHeight).toBe('44px');
@@ -325,10 +336,14 @@ describe('PortraitModalRenderer accessibility integration', () => {
     jest.advanceTimersByTime(150);
     expect(liveRegion.textContent).toBe('Loading portrait image');
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Announced to screen reader: Opened portrait modal for Explorer')
+      expect.stringContaining(
+        'Announced to screen reader: Opened portrait modal for Explorer'
+      )
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Announced to screen reader: Loading portrait image')
+      expect.stringContaining(
+        'Announced to screen reader: Loading portrait image'
+      )
     );
 
     jest.advanceTimersByTime(1000);
@@ -535,13 +550,17 @@ describe('PortraitModalRenderer accessibility integration', () => {
 
     renderer.showModal('/error-dispatch.jpg', 'Explorer', triggerButton);
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to dispatch core:portrait_modal_opened event'),
+      expect.stringContaining(
+        'Failed to dispatch core:portrait_modal_opened event'
+      ),
       expect.any(Error)
     );
 
     renderer.hide();
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to dispatch core:portrait_modal_closed event'),
+      expect.stringContaining(
+        'Failed to dispatch core:portrait_modal_closed event'
+      ),
       expect.any(Error)
     );
 
@@ -566,7 +585,9 @@ describe('PortraitModalRenderer accessibility integration', () => {
       expect.stringContaining('Error message element not found.')
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Modal image element not found, touch handlers not added')
+      expect.stringContaining(
+        'Modal image element not found, touch handlers not added'
+      )
     );
 
     renderer.destroy();

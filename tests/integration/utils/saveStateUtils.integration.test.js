@@ -51,7 +51,9 @@ describe('saveStateUtils integration', () => {
     expect(outcome.success).toBe(false);
     expect(outcome.error).toBeInstanceOf(PersistenceError);
     expect(outcome.error.code).toBe(PersistenceErrorCodes.INVALID_GAME_STATE);
-    expect(outcome.error.message).toBe('Invalid gameState for checksum calculation.');
+    expect(outcome.error.message).toBe(
+      'Invalid gameState for checksum calculation.'
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Invalid or missing gameState property in save object.'
     );
@@ -66,7 +68,9 @@ describe('saveStateUtils integration', () => {
     expect(outcome.success).toBe(false);
     expect(outcome.error).toBeInstanceOf(PersistenceError);
     expect(outcome.error.code).toBe(PersistenceErrorCodes.INVALID_GAME_STATE);
-    expect(outcome.error.message).toBe('Invalid gameState for checksum calculation.');
+    expect(outcome.error.message).toBe(
+      'Invalid gameState for checksum calculation.'
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Invalid or missing gameState property in save object.'
     );

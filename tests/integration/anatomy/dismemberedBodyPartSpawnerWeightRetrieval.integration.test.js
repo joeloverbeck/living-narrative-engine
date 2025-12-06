@@ -7,7 +7,14 @@
  * @see data/mods/anatomy/entities/definitions/human_breast_c_cup_soft.entity.json
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import DismemberedBodyPartSpawner from '../../../src/anatomy/services/dismemberedBodyPartSpawner.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
@@ -62,27 +69,31 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
     };
 
     mockEntityLifecycleManager = {
-      createEntityInstance: jest.fn().mockResolvedValue({ id: 'spawned-entity-789' }),
+      createEntityInstance: jest
+        .fn()
+        .mockResolvedValue({ id: 'spawned-entity-789' }),
     };
 
     mockEntityManager = {
-      getComponentData: jest.fn().mockImplementation((entityId, componentId) => {
-        // Simulate anatomy:part component WITHOUT weight (matching real schema)
-        if (entityId === TEST_PART_ID && componentId === 'anatomy:part') {
-          return {
-            definitionId: TEST_DEFINITION_ID,
-            subType: 'breast',
-            // NOTE: No weight property here - this is the bug scenario
-          };
-        }
-        if (entityId === TEST_ENTITY_ID && componentId === 'core:position') {
-          return { locationId: TEST_LOCATION_ID };
-        }
-        if (entityId === TEST_ENTITY_ID && componentId === 'core:name') {
-          return { text: 'Sarah' };
-        }
-        return null;
-      }),
+      getComponentData: jest
+        .fn()
+        .mockImplementation((entityId, componentId) => {
+          // Simulate anatomy:part component WITHOUT weight (matching real schema)
+          if (entityId === TEST_PART_ID && componentId === 'anatomy:part') {
+            return {
+              definitionId: TEST_DEFINITION_ID,
+              subType: 'breast',
+              // NOTE: No weight property here - this is the bug scenario
+            };
+          }
+          if (entityId === TEST_ENTITY_ID && componentId === 'core:position') {
+            return { locationId: TEST_LOCATION_ID };
+          }
+          if (entityId === TEST_ENTITY_ID && componentId === 'core:name') {
+            return { text: 'Sarah' };
+          }
+          return null;
+        }),
     };
 
     mockGameDataRepository = {
@@ -129,7 +140,9 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
       );
 
       // Verify the created entity has the correct weight from definition
-      expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(
+        mockEntityLifecycleManager.createEntityInstance
+      ).toHaveBeenCalledWith(
         TEST_DEFINITION_ID,
         expect.objectContaining({
           componentOverrides: expect.objectContaining({
@@ -146,19 +159,21 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
 
     it('should use default weight when entity definition has no core:weight component', async () => {
       // Override mock to return definition without weight
-      mockGameDataRepository.getEntityDefinition.mockImplementation((definitionId) => {
-        if (definitionId === TEST_DEFINITION_ID) {
-          return {
-            id: TEST_DEFINITION_ID,
-            components: {
-              'anatomy:part': { subType: 'breast' },
-              'core:name': { text: 'breast' },
-              // No core:weight component
-            },
-          };
+      mockGameDataRepository.getEntityDefinition.mockImplementation(
+        (definitionId) => {
+          if (definitionId === TEST_DEFINITION_ID) {
+            return {
+              id: TEST_DEFINITION_ID,
+              components: {
+                'anatomy:part': { subType: 'breast' },
+                'core:name': { text: 'breast' },
+                // No core:weight component
+              },
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       await handleDismemberment({
         type: 'anatomy:dismembered',
@@ -171,7 +186,9 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
       });
 
       // Should use default weight of 1.0 kg
-      expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(
+        mockEntityLifecycleManager.createEntityInstance
+      ).toHaveBeenCalledWith(
         TEST_DEFINITION_ID,
         expect.objectContaining({
           componentOverrides: expect.objectContaining({
@@ -201,7 +218,9 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
       });
 
       // Should use default weight of 1.0 kg
-      expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(
+        mockEntityLifecycleManager.createEntityInstance
+      ).toHaveBeenCalledWith(
         TEST_DEFINITION_ID,
         expect.objectContaining({
           componentOverrides: expect.objectContaining({
@@ -229,18 +248,20 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
         mockGameDataRepository.getEntityDefinition.mockClear();
 
         // Set up mock for this test case
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (componentId === 'anatomy:part') {
-            return { definitionId: testCase.definitionId };
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:part') {
+              return { definitionId: testCase.definitionId };
+            }
+            if (componentId === 'core:position') {
+              return { locationId: TEST_LOCATION_ID };
+            }
+            if (componentId === 'core:name') {
+              return { text: 'Test' };
+            }
+            return null;
           }
-          if (componentId === 'core:position') {
-            return { locationId: TEST_LOCATION_ID };
-          }
-          if (componentId === 'core:name') {
-            return { text: 'Test' };
-          }
-          return null;
-        });
+        );
 
         mockGameDataRepository.getEntityDefinition.mockReturnValue({
           id: testCase.definitionId,
@@ -260,7 +281,9 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
           },
         });
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           testCase.definitionId,
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -276,22 +299,24 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
     it('should NOT look for weight on anatomy:part component', async () => {
       // Even if anatomy:part somehow had a weight property, we should
       // still get weight from the entity definition's core:weight component
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === TEST_PART_ID && componentId === 'anatomy:part') {
-          return {
-            definitionId: TEST_DEFINITION_ID,
-            subType: 'breast',
-            weight: 999.99, // Bogus weight that should be IGNORED
-          };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === TEST_PART_ID && componentId === 'anatomy:part') {
+            return {
+              definitionId: TEST_DEFINITION_ID,
+              subType: 'breast',
+              weight: 999.99, // Bogus weight that should be IGNORED
+            };
+          }
+          if (entityId === TEST_ENTITY_ID && componentId === 'core:position') {
+            return { locationId: TEST_LOCATION_ID };
+          }
+          if (entityId === TEST_ENTITY_ID && componentId === 'core:name') {
+            return { text: 'Sarah' };
+          }
+          return null;
         }
-        if (entityId === TEST_ENTITY_ID && componentId === 'core:position') {
-          return { locationId: TEST_LOCATION_ID };
-        }
-        if (entityId === TEST_ENTITY_ID && componentId === 'core:name') {
-          return { text: 'Sarah' };
-        }
-        return null;
-      });
+      );
 
       await handleDismemberment({
         type: 'anatomy:dismembered',
@@ -304,7 +329,9 @@ describe('DismemberedBodyPartSpawner - Weight Retrieval from Entity Definition',
       });
 
       // Should use the weight from entity definition (0.5), NOT the bogus 999.99
-      expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+      expect(
+        mockEntityLifecycleManager.createEntityInstance
+      ).toHaveBeenCalledWith(
         TEST_DEFINITION_ID,
         expect.objectContaining({
           componentOverrides: expect.objectContaining({

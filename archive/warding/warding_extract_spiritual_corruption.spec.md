@@ -1,9 +1,11 @@
 # Spec: Warding Spiritual Corruption Extraction Action
 
 ## Goal
+
 Add a new warding action/rule that lets an actor use a spiritual anchor item to extract the `warding:corrupted` component from a target. The action template should read: `extract spiritual corruption from {target} with {anchor} ({chance}% chance)`.
 
 ## Current References
+
 - `data/mods/warding/components/corrupted.component.json`: marker component used by `warding:corrupted_actors` scope, `warding:entity-has-corrupted-component` condition, and gating for `draw_salt_boundary`/`cross_salt_boundary`.
 - `data/mods/warding/actions/draw_salt_boundary.action.json`: supplies actor forbidden components list and modifier patterns (restrained/downed bonuses, unrestrained penalty).
 - `data/mods/warding/rules/handle_draw_salt_boundary.rule.json`: shows warding outcome handling + perception/log macros.
@@ -12,6 +14,7 @@ Add a new warding action/rule that lets an actor use a spiritual anchor item to 
 - Tests under `tests/integration/mods/warding/*draw_salt_boundary*` exercise discovery + modifiers for corrupted targets; reuse patterns for new action tests.
 
 ## New Data Assets
+
 - **Component:** `data/mods/warding/components/is_spiritual_anchor.component.json`
   - Id `warding:is_spiritual_anchor`; marker (empty schema) to tag anchor items.
   - Add to `data/mods/warding/mod-manifest.json` components array.
@@ -51,6 +54,7 @@ Add a new warding action/rule that lets an actor use a spiritual anchor item to 
 - **Manifest Updates:** Register new component, scope, condition, action, and rule in `data/mods/warding/mod-manifest.json`; register `resolve_skill` in `data/mods/skills/mod-manifest.json`.
 
 ## Testing Plan
+
 - **Action discovery (integration):** New tests under `tests/integration/mods/warding/` verifying:
   - Action surfaces only when actor has `skills:warding_skill`, target has `warding:corrupted`, and an anchor with `warding:is_spiritual_anchor` is present in location.
   - Actor forbidden components block availability (reuse list from draw_salt_boundary); no forbidden checks on primary/secondary.

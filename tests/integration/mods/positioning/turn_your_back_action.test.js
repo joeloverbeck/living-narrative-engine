@@ -696,7 +696,10 @@ describe('positioning:turn_your_back forbidden component enforcement', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('positioning', 'turn_your_back');
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'turn_your_back'
+    );
   });
 
   afterEach(() => {

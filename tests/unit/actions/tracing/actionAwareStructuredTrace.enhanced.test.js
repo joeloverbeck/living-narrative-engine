@@ -235,8 +235,8 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
         }
       );
 
-      const scopeStage = trace.getActionTrace('action:scope').stages
-        .scope_evaluation.data;
+      const scopeStage =
+        trace.getActionTrace('action:scope').stages.scope_evaluation.data;
       expect(scopeStage.entityDiscovery).toEqual([
         { componentId: 'seat', totalEntities: 2 },
       ]);
@@ -289,8 +289,9 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
         error: new Error('minimal failure'),
       });
 
-      const captured = minimalTrace.getActionTrace('core:test').stages
-        .component_filtering.data;
+      const captured =
+        minimalTrace.getActionTrace('core:test').stages.component_filtering
+          .data;
       expect(captured.error).toBe('minimal failure');
     });
 
@@ -312,8 +313,9 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
         passed: true,
       });
 
-      const captured = standardTrace.getActionTrace('core:test').stages
-        .component_filtering.data;
+      const captured =
+        standardTrace.getActionTrace('core:test').stages.component_filtering
+          .data;
       expect(captured.prerequisiteCount).toBe(2);
     });
 
@@ -330,8 +332,8 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
         { summarize: true }
       );
 
-      const data = trace.getActionTrace('core:summary').stages.summary_stage
-        .data;
+      const data =
+        trace.getActionTrace('core:summary').stages.summary_stage.data;
       expect(mockEnhancedFilter.getVerbosityLevel).toHaveBeenCalled();
       expect(data._enhanced.verbosityLevel).toBe('verbose');
     });
@@ -344,7 +346,9 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
       expect(removeSpy).toHaveBeenCalledWith('temporary');
 
       mockEnhancedFilter.getVerbosityLevel.mockReturnValue('verbose');
-      trace.captureEnhancedActionData('enhanced_stage', 'core:export', { a: 1 });
+      trace.captureEnhancedActionData('enhanced_stage', 'core:export', {
+        a: 1,
+      });
       trace.captureActionData('component_filtering', 'core:export', {
         passed: true,
       });

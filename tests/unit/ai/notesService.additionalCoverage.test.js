@@ -1,5 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 
 const createNotesComponent = () => ({
   notes: [
@@ -35,7 +37,9 @@ describe('NotesService additional coverage', () => {
       expect(() => service.addNotes({}, [])).toThrow(
         'notesComp must be an object conforming to the core:notes schema with a `notes` array.'
       );
-      expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(TypeError);
+      expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(
+        TypeError
+      );
       expect(() => service.addNotes(null, [])).toThrow(TypeError);
     });
 

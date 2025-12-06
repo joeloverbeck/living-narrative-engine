@@ -94,7 +94,11 @@ class SimpleCommandFormatter {
     }
 
     const value = `${actionDef.command}:${targetContext.entityId}`;
-    this.formatted.push({ actionId: actionDef.id, targetId: targetContext.entityId, value });
+    this.formatted.push({
+      actionId: actionDef.id,
+      targetId: targetContext.entityId,
+      value,
+    });
     return { ok: true, value };
   }
 }
@@ -136,7 +140,9 @@ class SimpleTargetContextBuilder {
       return [];
     }
 
-    const entity = this.entityManager.getEntityInstance(actionDef.target_entity.id);
+    const entity = this.entityManager.getEntityInstance(
+      actionDef.target_entity.id
+    );
     return entity
       ? [
           {
@@ -349,14 +355,17 @@ function createOrchestratorHarness({
     logger,
     entityManager,
   });
-  const targetRequiredComponentsValidator = new TargetRequiredComponentsValidator({
-    logger,
-  });
+  const targetRequiredComponentsValidator =
+    new TargetRequiredComponentsValidator({
+      logger,
+    });
 
   const safeEventDispatcher = new SimpleSafeEventDispatcher();
   const formatter = commandFormatter || new SimpleCommandFormatter();
-  const prerequisiteSvc = prerequisiteService || new SimplePrerequisiteService();
-  const resolutionStage = multiTargetStage || new SimpleMultiTargetStage(entityManager);
+  const prerequisiteSvc =
+    prerequisiteService || new SimplePrerequisiteService();
+  const resolutionStage =
+    multiTargetStage || new SimpleMultiTargetStage(entityManager);
 
   const orchestrator = new ActionPipelineOrchestrator({
     actionIndex,
@@ -435,7 +444,9 @@ describe('ActionPipelineOrchestrator end-to-end integration', () => {
 
     expect(
       harness.logger.errorMessages.some((entry) =>
-        entry.message.includes('Pipeline stage MultiTargetResolution threw an error')
+        entry.message.includes(
+          'Pipeline stage MultiTargetResolution threw an error'
+        )
       )
     ).toBe(true);
   });
@@ -501,15 +512,21 @@ describe('ActionPipelineOrchestrator target requirements integration', () => {
     expect(discoveredIds).not.toContain('friendly:multi-target');
     expect(result.errors).toHaveLength(0);
 
-    const debugMessages = harness.logger.debugMessages.map(({ message }) => message);
+    const debugMessages = harness.logger.debugMessages.map(
+      ({ message }) => message
+    );
     expect(
       debugMessages.some((message) =>
-        message.includes("Action 'friendly:blocked' filtered out: Target (target) must have component: core:blocked")
+        message.includes(
+          "Action 'friendly:blocked' filtered out: Target (target) must have component: core:blocked"
+        )
       )
     ).toBe(true);
     expect(
       debugMessages.some((message) =>
-        message.includes('No primary target entity found for required components validation')
+        message.includes(
+          'No primary target entity found for required components validation'
+        )
       )
     ).toBe(true);
   });
@@ -517,10 +534,9 @@ describe('ActionPipelineOrchestrator target requirements integration', () => {
   it('discovers actions without a trace context using the default pipeline flow', async () => {
     const harness = createOrchestratorHarness();
 
-    const result = await harness.orchestrator.discoverActions(
-      harness.actor,
-      { mood: 'calm' }
-    );
+    const result = await harness.orchestrator.discoverActions(harness.actor, {
+      mood: 'calm',
+    });
 
     expect(result.trace).toBeUndefined();
     expect(result.actions.length).toBeGreaterThan(0);

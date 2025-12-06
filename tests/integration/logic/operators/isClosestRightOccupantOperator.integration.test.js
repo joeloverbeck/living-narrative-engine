@@ -23,13 +23,20 @@ describe('IsClosestRightOccupantOperator integration with EntityManager', () => 
   };
 
   const createBench = async (instanceId, spots = undefined) => {
-    const instance = await entityManager.createEntityInstance(benchDefinition.id, {
-      instanceId,
-    });
+    const instance = await entityManager.createEntityInstance(
+      benchDefinition.id,
+      {
+        instanceId,
+      }
+    );
     if (spots !== undefined) {
-      await entityManager.addComponent(instance.id, 'positioning:allows_sitting', {
-        spots,
-      });
+      await entityManager.addComponent(
+        instance.id,
+        'positioning:allows_sitting',
+        {
+          spots,
+        }
+      );
     }
     return instance;
   };
@@ -54,7 +61,10 @@ describe('IsClosestRightOccupantOperator integration with EntityManager', () => 
     });
   };
 
-  const evaluate = (params = ['candidate', 'target', 'actor'], contextOverrides = {}) => {
+  const evaluate = (
+    params = ['candidate', 'target', 'actor'],
+    contextOverrides = {}
+  ) => {
     const context = {
       candidate: { id: candidate.id },
       target: { id: bench.id },
@@ -155,7 +165,11 @@ describe('IsClosestRightOccupantOperator integration with EntityManager', () => 
   });
 
   it('returns false when the actor sits on different furniture', async () => {
-    const otherBench = await createBench('bench-2', [actor.id, null, candidate.id]);
+    const otherBench = await createBench('bench-2', [
+      actor.id,
+      null,
+      candidate.id,
+    ]);
     await setActorSitting({ furnitureId: otherBench.id, spotIndex: 0 });
     await setCandidateSitting({ spotIndex: 2 });
     await setBenchSpots([actor.id, null, candidate.id]);

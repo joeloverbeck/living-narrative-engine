@@ -49,7 +49,9 @@ describe('WorkspaceDataFetcher integration', () => {
 
   it('fetches and parses JSON data from the workspace server', async () => {
     const targetUrl = 'https://workspace.example/success';
-    fetchMock.mockResolvedValue(createJsonResponse({ message: 'ok', value: 42 }));
+    fetchMock.mockResolvedValue(
+      createJsonResponse({ message: 'ok', value: 42 })
+    );
 
     const data = await fetcher.fetch(targetUrl);
 
@@ -127,9 +129,7 @@ describe('WorkspaceDataFetcher integration', () => {
       })
     );
 
-    await expect(fetcher.fetch(targetUrl)).rejects.toThrow(
-      /not valid JSON/i
-    );
+    await expect(fetcher.fetch(targetUrl)).rejects.toThrow(/not valid JSON/i);
 
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     const [message, error] = consoleErrorSpy.mock.calls[0];
@@ -144,7 +144,9 @@ describe('WorkspaceDataFetcher integration', () => {
     const targetUrl = 'https://workspace.example/network-error';
     fetchMock.mockRejectedValue(new TypeError('fetch failed'));
 
-    await expect(fetcher.fetch(targetUrl)).rejects.toThrow(/fetch failed|ECONNREFUSED/);
+    await expect(fetcher.fetch(targetUrl)).rejects.toThrow(
+      /fetch failed|ECONNREFUSED/
+    );
 
     expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
     const [message, error] = consoleErrorSpy.mock.calls[0];

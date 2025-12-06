@@ -78,20 +78,20 @@ describe('ActionExecutionTrace guard rail integration', () => {
     const payloadAfterEnd = createTrace();
     payloadAfterEnd.captureDispatchStart();
     payloadAfterEnd.captureDispatchResult({ success: true });
-    expect(() => payloadAfterEnd.captureEventPayload({ stage: 'late' })).toThrow(
-      'Cannot capture payload after dispatch has ended'
-    );
+    expect(() =>
+      payloadAfterEnd.captureEventPayload({ stage: 'late' })
+    ).toThrow('Cannot capture payload after dispatch has ended');
 
     const resultOrdering = createTrace();
-    expect(() => resultOrdering.captureDispatchResult({ success: true })).toThrow(
-      'Must call captureDispatchStart() before capturing result'
-    );
+    expect(() =>
+      resultOrdering.captureDispatchResult({ success: true })
+    ).toThrow('Must call captureDispatchStart() before capturing result');
 
     resultOrdering.captureDispatchStart();
     resultOrdering.captureDispatchResult({ success: true });
-    expect(() => resultOrdering.captureDispatchResult({ success: false })).toThrow(
-      'Dispatch result already captured'
-    );
+    expect(() =>
+      resultOrdering.captureDispatchResult({ success: false })
+    ).toThrow('Dispatch result already captured');
   });
 
   it('requires dispatch start before capturing errors and seeds updateError flows', () => {
@@ -135,7 +135,10 @@ describe('ActionExecutionTrace guard rail integration', () => {
 
   it('respects the testing-only processing lock guard when misused', () => {
     expect(() =>
-      ActionExecutionTrace.__setProcessingLockForTesting({ notATrace: true }, true)
+      ActionExecutionTrace.__setProcessingLockForTesting(
+        { notATrace: true },
+        true
+      )
     ).not.toThrow();
   });
 });

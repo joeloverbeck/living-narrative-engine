@@ -88,7 +88,9 @@ function setupTransitionScenario() {
   const chair = new ModEntityBuilder('test:chair')
     .withName('Kitchen Chair')
     .atLocation('kitchen')
-    .withComponent('positioning:allows_sitting', { spots: [{ occupied: false }] })
+    .withComponent('positioning:allows_sitting', {
+      spots: [{ occupied: false }],
+    })
     .build();
 
   // Add another actor for kneeling transition
@@ -118,7 +120,10 @@ describe('positioning:straighten_up action integration', () => {
   describe('basic straighten up action execution', () => {
     it('should remove bending_over component from actor when action is performed', async () => {
       // Arrange
-      const { room, actor, surface } = setupStraighteningScenario('Alice', 'Kitchen Counter');
+      const { room, actor, surface } = setupStraighteningScenario(
+        'Alice',
+        'Kitchen Counter'
+      );
       testFixture.reset([room, actor, surface]);
 
       // Verify actor is bending
@@ -128,8 +133,11 @@ describe('positioning:straighten_up action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:bending_over']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:bending_over']
+      ).toBeUndefined();
     });
 
     it('should only affect the specific bending relationship', async () => {
@@ -141,8 +149,11 @@ describe('positioning:straighten_up action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert - actor should be completely straightened up
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:bending_over']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:bending_over']
+      ).toBeUndefined();
     });
   });
 
@@ -158,17 +169,22 @@ describe('positioning:straighten_up action integration', () => {
       }).rejects.toThrow(/missing required component/);
 
       // Should not have removed any components since prerequisites weren't met
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:bending_over']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:bending_over']
+      ).toBeUndefined();
     });
 
     it('should only allow straightening from the surface being bent over', async () => {
       // Arrange
-      const { room, actor, surface, surface2 } = setupMultiSurfaceBendingScenario();
+      const { room, actor, surface, surface2 } =
+        setupMultiSurfaceBendingScenario();
       testFixture.reset([room, actor, surface, surface2]);
 
       // Actor is bending over surface1, should only straighten from surface1
-      const actorData = testFixture.entityManager.getEntityInstance('test:actor1');
+      const actorData =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorData.components['positioning:bending_over'].surface_id).toBe(
         'test:surface1'
       );
@@ -177,8 +193,11 @@ describe('positioning:straighten_up action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:bending_over']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:bending_over']
+      ).toBeUndefined();
     });
   });
 
@@ -192,8 +211,11 @@ describe('positioning:straighten_up action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert - no longer bending
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:bending_over']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:bending_over']
+      ).toBeUndefined();
 
       // Now actor should be able to sit (would need sit_down action test)
       // This just verifies the bending state was properly removed
@@ -208,8 +230,11 @@ describe('positioning:straighten_up action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert - no longer bending
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:bending_over']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:bending_over']
+      ).toBeUndefined();
 
       // Now actor should be able to kneel (would need kneel_before action test)
       // This just verifies the bending state was properly removed

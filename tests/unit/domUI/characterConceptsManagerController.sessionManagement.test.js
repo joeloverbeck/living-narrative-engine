@@ -54,7 +54,9 @@ describe('CharacterConceptsManagerController session management and utilities', 
 
     jest.advanceTimersByTime(30000);
 
-    expect(filterSpy).toHaveBeenCalledWith(controller._testExports.conceptsData);
+    expect(filterSpy).toHaveBeenCalledWith(
+      controller._testExports.conceptsData
+    );
     expect(saveSpy).toHaveBeenCalledWith('hero', 1);
     expect(debugSpy).toHaveBeenCalledWith('Periodic state save completed');
     expect(cleanupSpy).toHaveBeenCalledWith(
@@ -87,9 +89,7 @@ describe('CharacterConceptsManagerController session management and utilities', 
 
     originalBroadcastChannel =
       'BroadcastChannel' in global ? global.BroadcastChannel : 'unset';
-    global.BroadcastChannel = jest
-      .fn()
-      .mockReturnValue(broadcastInstance);
+    global.BroadcastChannel = jest.fn().mockReturnValue(broadcastInstance);
 
     const broadcastSpy = jest
       .spyOn(controller, '_broadcastMessage')
@@ -132,8 +132,9 @@ describe('CharacterConceptsManagerController session management and utilities', 
       'You have unsaved changes. Are you sure you want to leave?'
     );
     expect(
-      broadcastSpy.mock.calls.some(([payload]) =>
-        payload?.type === 'tab-closed' && payload?.wasLeader === false
+      broadcastSpy.mock.calls.some(
+        ([payload]) =>
+          payload?.type === 'tab-closed' && payload?.wasLeader === false
       )
     ).toBe(true);
   });
@@ -237,12 +238,10 @@ describe('CharacterConceptsManagerController session management and utilities', 
     jest.useFakeTimers();
 
     const conceptsResults = controller._getElement('conceptsResults');
-    conceptsResults.querySelector = HTMLElement.prototype.querySelector.bind(
-      conceptsResults
-    );
-    conceptsResults.appendChild = HTMLElement.prototype.appendChild.bind(
-      conceptsResults
-    );
+    conceptsResults.querySelector =
+      HTMLElement.prototype.querySelector.bind(conceptsResults);
+    conceptsResults.appendChild =
+      HTMLElement.prototype.appendChild.bind(conceptsResults);
     conceptsResults.innerHTML =
       '<div data-concept-id="concept-1" class="concept-card"><div class="concept-text"></div></div>';
     const card = conceptsResults.querySelector('[data-concept-id="concept-1"]');
@@ -270,9 +269,7 @@ describe('CharacterConceptsManagerController session management and utilities', 
       },
     ];
 
-    jest
-      .spyOn(controller, '_isConceptVisible')
-      .mockReturnValue(true);
+    jest.spyOn(controller, '_isConceptVisible').mockReturnValue(true);
     const updateCardSpy = jest.spyOn(controller, '_updateConceptCard');
 
     controller._handleConceptUpdated({

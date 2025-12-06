@@ -7,26 +7,14 @@
       "layer": "outer",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": [
-          "left_arm_clothing",
-          "right_arm_clothing"
-        ]
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "armor",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "armor", "outer"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "flexible"
-      ],
-      "careInstructions": [
-        "requires_oiling"
-      ]
+      "properties": ["flexible"],
+      "careInstructions": ["requires_oiling"]
     },
     "core:name": {
       "text": "field jacket"
@@ -41,9 +29,7 @@
       "texture": "burnished"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "outer"
     },
     "items:item": {},

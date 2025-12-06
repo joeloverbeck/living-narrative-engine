@@ -1,24 +1,20 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "furniture:bar_stools",
-    "description": "Bar stools at a counter or bar.",
-    "components": {
-        "core:name": {
-            "text": "bar stools"
-        },
-        "core:description": {
-            "text": "Bar stools with round seats and slim legs run the length of the counter."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/bar_stools.png",
-            "altText": "Bar stools."
-        },
-        "positioning:allows_sitting": {
-            "spots": [
-                null,
-                null,
-                null
-            ]
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:bar_stools",
+  "description": "Bar stools at a counter or bar.",
+  "components": {
+    "core:name": {
+      "text": "bar stools"
+    },
+    "core:description": {
+      "text": "Bar stools with round seats and slim legs run the length of the counter."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/bar_stools.png",
+      "altText": "Bar stools."
+    },
+    "positioning:allows_sitting": {
+      "spots": [null, null, null]
     }
+  }
 }

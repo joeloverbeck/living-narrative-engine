@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
@@ -25,7 +32,9 @@ describe('dependencyUtils error metadata', () => {
     it('throws InvalidArgumentError with diagnostic payload for blank identifiers', () => {
       const logger = { error: jest.fn() };
 
-      expect(() => assertValidId('   ', 'Pipeline', logger)).toThrow(InvalidArgumentError);
+      expect(() => assertValidId('   ', 'Pipeline', logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "Pipeline: Invalid ID '   '. Expected non-blank string.",
@@ -48,7 +57,9 @@ describe('dependencyUtils error metadata', () => {
     it('reports type metadata when identifier is not a string', () => {
       const logger = { error: jest.fn() };
 
-      expect(() => assertValidId(42, 'ActorLookup', logger)).toThrow(InvalidArgumentError);
+      expect(() => assertValidId(42, 'ActorLookup', logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "ActorLookup: Invalid ID '42'. Expected non-blank string.",
@@ -70,7 +81,9 @@ describe('dependencyUtils error metadata', () => {
       ).toThrow(InvalidArgumentError);
 
       const [message, payload] = logger.error.mock.calls[0];
-      expect(message).toBe("Formatter: Invalid componentName ''. Expected non-blank string.");
+      expect(message).toBe(
+        "Formatter: Invalid componentName ''. Expected non-blank string."
+      );
       expect(payload).toMatchObject({
         context: 'Formatter',
         parameterName: 'componentName',
@@ -93,11 +106,13 @@ describe('dependencyUtils error metadata', () => {
       const logger = { error: jest.fn() };
 
       expect(() =>
-        validateDependency({}, 'CallableFormatter', logger, { isFunction: true })
+        validateDependency({}, 'CallableFormatter', logger, {
+          isFunction: true,
+        })
       ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(
-        "Dependency 'CallableFormatter' must be a function, but got object.",
+        "Dependency 'CallableFormatter' must be a function, but got object."
       );
     });
 
@@ -114,7 +129,7 @@ describe('dependencyUtils error metadata', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Invalid or missing method 'shutdown' on dependency 'LifecycleService'.",
+        "Invalid or missing method 'shutdown' on dependency 'LifecycleService'."
       );
     });
 
@@ -138,14 +153,20 @@ describe('dependencyUtils error metadata', () => {
     it('validates every array entry and surfaces failures from later specifications', () => {
       const logger = { error: jest.fn() };
       const specs = [
-        { dependency: { init: jest.fn() }, name: 'Initializer', methods: ['init'] },
+        {
+          dependency: { init: jest.fn() },
+          name: 'Initializer',
+          methods: ['init'],
+        },
         { dependency: {}, name: 'Callable', isFunction: true },
       ];
 
-      expect(() => validateDependencies(specs, logger)).toThrow(InvalidArgumentError);
+      expect(() => validateDependencies(specs, logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenLastCalledWith(
-        "Dependency 'Callable' must be a function, but got object.",
+        "Dependency 'Callable' must be a function, but got object."
       );
     });
 
@@ -158,7 +179,11 @@ describe('dependencyUtils error metadata', () => {
        */
       function* specs() {
         sequence.push('first');
-        yield { dependency: { start: jest.fn() }, name: 'Startable', methods: ['start'] };
+        yield {
+          dependency: { start: jest.fn() },
+          name: 'Startable',
+          methods: ['start'],
+        };
 
         sequence.push('second');
         yield { dependency: {}, name: 'Broken', isFunction: true };
@@ -167,11 +192,13 @@ describe('dependencyUtils error metadata', () => {
         yield { dependency: jest.fn(), name: 'Skipped', isFunction: true };
       }
 
-      expect(() => validateDependencies(specs(), logger)).toThrow(InvalidArgumentError);
+      expect(() => validateDependencies(specs(), logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(sequence).toEqual(['first', 'second']);
       expect(logger.error).toHaveBeenLastCalledWith(
-        "Dependency 'Broken' must be a function, but got object.",
+        "Dependency 'Broken' must be a function, but got object."
       );
     });
   });

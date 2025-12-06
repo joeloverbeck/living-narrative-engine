@@ -1,26 +1,22 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "furniture:single_bed",
-    "description": "A single bed with a light wood headboard",
-    "components": {
-        "core:name": {
-            "text": "single bed"
-        },
-        "core:description": {
-            "text": "A single bed with a light wood headboard sits against the wall, made with white sheets and a teal bed runner; a small tan teddy bear rests on the pillow."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/single_bed.png",
-            "altText": "A single bed with a light wood headboard and white sheets"
-        },
-        "positioning:allows_lying_on": {},
-        "positioning:allows_sitting": {
-            "spots": [
-                null,
-                null,
-                null
-            ]
-        },
-        "positioning:allows_bending_over": {}
-    }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:single_bed",
+  "description": "A single bed with a light wood headboard",
+  "components": {
+    "core:name": {
+      "text": "single bed"
+    },
+    "core:description": {
+      "text": "A single bed with a light wood headboard sits against the wall, made with white sheets and a teal bed runner; a small tan teddy bear rests on the pillow."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/single_bed.png",
+      "altText": "A single bed with a light wood headboard and white sheets"
+    },
+    "positioning:allows_lying_on": {},
+    "positioning:allows_sitting": {
+      "spots": [null, null, null]
+    },
+    "positioning:allows_bending_over": {}
+  }
 }

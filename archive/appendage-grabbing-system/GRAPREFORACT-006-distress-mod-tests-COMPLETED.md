@@ -5,6 +5,7 @@
 ## Summary
 
 Create 2 integration test files to verify the grabbing prerequisites added in GRAPREFORACT-002:
+
 - `bury_face_in_hands_prerequisites.test.js` - tests **2-appendage** requirement
 - `clutch_onto_upper_clothing_prerequisites.test.js` - tests **1-appendage** requirement
 
@@ -16,10 +17,10 @@ Each action with grabbing prerequisites requires a dedicated integration test fi
 
 ## Files Created
 
-| File | Action Tested | Appendages |
-|------|---------------|------------|
-| `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js` | `distress:bury_face_in_hands` | 2 |
-| `tests/integration/mods/distress/clutch_onto_upper_clothing_prerequisites.test.js` | `distress:clutch_onto_upper_clothing` | 1 |
+| File                                                                               | Action Tested                         | Appendages |
+| ---------------------------------------------------------------------------------- | ------------------------------------- | ---------- |
+| `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js`         | `distress:bury_face_in_hands`         | 2          |
+| `tests/integration/mods/distress/clutch_onto_upper_clothing_prerequisites.test.js` | `distress:clutch_onto_upper_clothing` | 1          |
 
 ## Test Coverage
 
@@ -29,7 +30,9 @@ Each action with grabbing prerequisites requires a dedicated integration test fi
 describe('distress:bury_face_in_hands prerequisites', () => {
   describe('action definition structure', () => {
     test('should have prerequisites array defined');
-    test('should reference anatomy:actor-has-two-free-grabbing-appendages condition');
+    test(
+      'should reference anatomy:actor-has-two-free-grabbing-appendages condition'
+    );
     test('should have failure_message for user feedback');
     test('should preserve other action properties');
   });
@@ -63,7 +66,9 @@ describe('distress:bury_face_in_hands prerequisites', () => {
 describe('distress:clutch_onto_upper_clothing prerequisites', () => {
   describe('action definition structure', () => {
     test('should have prerequisites array defined');
-    test('should reference anatomy:actor-has-free-grabbing-appendage condition');
+    test(
+      'should reference anatomy:actor-has-free-grabbing-appendage condition'
+    );
     test('should have failure_message for user feedback');
     test('should preserve other action properties');
   });
@@ -94,16 +99,19 @@ describe('distress:clutch_onto_upper_clothing prerequisites', () => {
 ## Acceptance Criteria
 
 ### Tests Must Pass
+
 - [x] `npx jest tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js` passes
 - [x] `npx jest tests/integration/mods/distress/clutch_onto_upper_clothing_prerequisites.test.js` passes
 
 ### Test Coverage Requirements
+
 - [x] `bury_face_in_hands` tests verify 2-appendage requirement (fails with 1, passes with 2+)
 - [x] `clutch_onto_upper_clothing` tests verify 1-appendage requirement (fails with 0, passes with 1+)
 - [x] Tests verify correct condition IDs for each action
 - [x] Tests verify action structure preservation
 
 ### Invariants That Must Remain True
+
 - [x] No modifications to action files
 - [x] No modifications to condition files
 - [x] No modifications to source code
@@ -133,16 +141,19 @@ npx jest tests/integration/mods/distress/ --no-coverage
 ### What was actually changed vs originally planned
 
 **Originally Planned:**
+
 - Create 2 test files with specific test scenarios for grabbing prerequisites
 - Follow the reference test pattern from `wield_threateningly_prerequisites.test.js`
 
 **Actually Changed:**
+
 - Created `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js` (13 tests)
 - Created `tests/integration/mods/distress/clutch_onto_upper_clothing_prerequisites.test.js` (13 tests)
 - All tests pass (26 total tests across both files)
 - No discrepancies found between ticket assumptions and actual code state
 
 **Implementation Notes:**
+
 - Ticket assumptions were accurate - both action files had the prerequisite configurations as specified
 - Test patterns match the reference implementation exactly
 - No source code modifications were needed

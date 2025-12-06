@@ -123,7 +123,12 @@ describe('repairAndParse', () => {
     const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
     try {
       repairJson.mockReturnValue('{"c":3}');
-      const result = repairAndParse('{"c":3}', null, undefined, new Error('boom'));
+      const result = repairAndParse(
+        '{"c":3}',
+        null,
+        undefined,
+        new Error('boom')
+      );
       expect(result).toEqual({ c: 3 });
       expect(debugSpy).toHaveBeenCalledWith(
         'JsonRepair: ',

@@ -19,11 +19,9 @@ const mockTokens = {
 };
 
 let mockUIInstance = { initialize: jest.fn() };
-const MockAnatomyVisualizerUI = jest
-  .fn()
-  .mockImplementation(function () {
-    return mockUIInstance;
-  });
+const MockAnatomyVisualizerUI = jest.fn().mockImplementation(function () {
+  return mockUIInstance;
+});
 
 const MockCommonBootstrapper = jest.fn().mockImplementation(() => ({
   bootstrap: mockBootstrap,
@@ -172,7 +170,9 @@ describe('anatomy-visualizer bootstrap flow', () => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
       await flushPromises();
 
-      expect(mockRegisterVisualizerComponents).toHaveBeenCalledWith(mockContainer);
+      expect(mockRegisterVisualizerComponents).toHaveBeenCalledWith(
+        mockContainer
+      );
       expect(mockContainer.resolve).toHaveBeenNthCalledWith(
         1,
         mockTokens.AnatomyDescriptionService

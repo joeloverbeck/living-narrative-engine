@@ -145,46 +145,43 @@ describe('Complex Filter Expressions E2E', () => {
     ]);
 
     // Create complex test scopes for filter expressions (ONCE)
-    baseScopes = ScopeTestUtilities.createTestScopes(
-      { dslParser, logger },
-      [
-        {
-          id: 'test:deeply_nested_filter',
-          expr: 'entities(core:actor)[{"and": [{">=": [{"var": "entity.components.core:stats.level"}, 3]}, {"or": [{">=": [{"var": "entity.components.core:stats.strength"}, 20]}, {"and": [{">=": [{"var": "entity.components.core:stats.agility"}, 15]}, {"<": [{"var": "entity.components.core:health.current"}, 80]}]}]}]}]',
-          description: 'Deeply nested AND/OR filter with multiple conditions',
-        },
-        {
-          id: 'test:condition_ref_chain',
-          expr: 'entities(core:actor)[{"condition_ref": "test:complex-multilevel-condition"}]',
-          description: 'Filter using complex condition reference',
-        },
-        {
-          id: 'test:mixed_inline_and_ref',
-          expr: 'entities(core:actor)[{"and": [{"condition_ref": "test:deep-nested-condition"}, {">": [{"var": "entity.components.core:stats.level"}, 10]}]}]',
-          description: 'Mixed condition reference and inline condition',
-        },
-        {
-          id: 'test:arithmetic_filter',
-          expr: 'entities(core:actor)[{"condition_ref": "test:arithmetic-condition"}]',
-          description: 'Filter using arithmetic operations in condition',
-        },
-        {
-          id: 'test:chained_filters',
-          expr: 'entities(core:actor)[{"and": [{">": [{"var": "entity.components.core:stats.level"}, 5]}, {"<": [{"var": "entity.components.core:health.current"}, 90]}]}]',
-          description: 'Combined filter operations using AND logic',
-        },
-        {
-          id: 'test:array_filter',
-          expr: 'actor.core:inventory.items[{">": [{"var": "quantity"}, 1]}].name',
-          description: 'Filter on array elements with property access',
-        },
-        {
-          id: 'test:complex_step_filter',
-          expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target[{"condition_ref": "test:level-above-threshold"}]',
-          description: 'Complex step navigation with multiple filters',
-        },
-      ]
-    );
+    baseScopes = ScopeTestUtilities.createTestScopes({ dslParser, logger }, [
+      {
+        id: 'test:deeply_nested_filter',
+        expr: 'entities(core:actor)[{"and": [{">=": [{"var": "entity.components.core:stats.level"}, 3]}, {"or": [{">=": [{"var": "entity.components.core:stats.strength"}, 20]}, {"and": [{">=": [{"var": "entity.components.core:stats.agility"}, 15]}, {"<": [{"var": "entity.components.core:health.current"}, 80]}]}]}]}]',
+        description: 'Deeply nested AND/OR filter with multiple conditions',
+      },
+      {
+        id: 'test:condition_ref_chain',
+        expr: 'entities(core:actor)[{"condition_ref": "test:complex-multilevel-condition"}]',
+        description: 'Filter using complex condition reference',
+      },
+      {
+        id: 'test:mixed_inline_and_ref',
+        expr: 'entities(core:actor)[{"and": [{"condition_ref": "test:deep-nested-condition"}, {">": [{"var": "entity.components.core:stats.level"}, 10]}]}]',
+        description: 'Mixed condition reference and inline condition',
+      },
+      {
+        id: 'test:arithmetic_filter',
+        expr: 'entities(core:actor)[{"condition_ref": "test:arithmetic-condition"}]',
+        description: 'Filter using arithmetic operations in condition',
+      },
+      {
+        id: 'test:chained_filters',
+        expr: 'entities(core:actor)[{"and": [{">": [{"var": "entity.components.core:stats.level"}, 5]}, {"<": [{"var": "entity.components.core:health.current"}, 90]}]}]',
+        description: 'Combined filter operations using AND logic',
+      },
+      {
+        id: 'test:array_filter',
+        expr: 'actor.core:inventory.items[{">": [{"var": "quantity"}, 1]}].name',
+        description: 'Filter on array elements with property access',
+      },
+      {
+        id: 'test:complex_step_filter',
+        expr: 'location.movement:exits[{"condition_ref": "movement:exit-is-unblocked"}].target[{"condition_ref": "test:level-above-threshold"}]',
+        description: 'Complex step navigation with multiple filters',
+      },
+    ]);
 
     // Initialize scope registry with complex test scopes (ONCE)
     scopeRegistry.initialize(baseScopes);
@@ -283,7 +280,7 @@ describe('Complex Filter Expressions E2E', () => {
       description: 'Test location for complex filtering',
       components: {
         'core:position': { x: 0, y: 0 },
-        "movement:exits": [
+        'movement:exits': [
           { direction: 'north', target: 'north-location', blocked: false },
           { direction: 'south', target: 'south-location', blocked: true },
         ],

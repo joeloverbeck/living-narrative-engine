@@ -121,7 +121,9 @@ describe('GOAP Backward Compatibility', () => {
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
         priority: 10,
-        goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -134,7 +136,9 @@ describe('GOAP Backward Compatibility', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(1);
@@ -203,7 +207,9 @@ describe('GOAP Backward Compatibility', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(1);
@@ -298,7 +304,9 @@ describe('GOAP Backward Compatibility', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.tasks.length).toBeGreaterThan(0);
@@ -384,11 +392,26 @@ describe('GOAP Backward Compatibility', () => {
           and: [
             {
               or: [
-                { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
-                { '>=': [{ var: 'state.actor.components.core_needs.health' }, 80] },
+                {
+                  '<=': [
+                    { var: 'state.actor.components.core_needs.hunger' },
+                    10,
+                  ],
+                },
+                {
+                  '>=': [
+                    { var: 'state.actor.components.core_needs.health' },
+                    80,
+                  ],
+                },
               ],
             },
-            { '==': [{ var: 'state.actor.components.core_location.position' }, 'home'] },
+            {
+              '==': [
+                { var: 'state.actor.components.core_location.position' },
+                'home',
+              ],
+            },
           ],
         },
       });
@@ -403,7 +426,9 @@ describe('GOAP Backward Compatibility', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.tasks.length).toBeGreaterThan(0);

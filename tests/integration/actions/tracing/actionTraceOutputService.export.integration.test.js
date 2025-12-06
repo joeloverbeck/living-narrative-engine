@@ -3,7 +3,14 @@
  * @description Covers advanced formatting, export flows, and shutdown coordination branches
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createEnhancedMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
 class InMemoryStorageAdapter {
@@ -209,7 +216,9 @@ describe('ActionTraceOutputService export coverage integration', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to write trace',
-      expect.objectContaining({ error: expect.stringContaining('Trace must have either') })
+      expect.objectContaining({
+        error: expect.stringContaining('Trace must have either'),
+      })
     );
     expect(service.getStatistics()).toMatchObject({ totalErrors: 1 });
   });
@@ -259,7 +268,9 @@ describe('ActionTraceOutputService export coverage integration', () => {
 
     await service.__TEST_ONLY_defaultOutputHandler(baseWriteData, trace);
     await service.__TEST_ONLY_defaultOutputHandler(baseWriteData, trace);
-    await service.__TEST_ONLY_defaultOutputHandler(baseWriteData, trace).catch(() => {});
+    await service
+      .__TEST_ONLY_defaultOutputHandler(baseWriteData, trace)
+      .catch(() => {});
 
     expect(writeSpy).toHaveBeenCalledTimes(3);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -523,7 +534,8 @@ describe('ActionTraceOutputService export coverage integration', () => {
       __files: [],
       getFileHandle: jest.fn(async (fileName) => ({
         createWritable: jest.fn(async () => ({
-          write: async (content) => directoryHandle.__files.push({ fileName, content }),
+          write: async (content) =>
+            directoryHandle.__files.push({ fileName, content }),
           close: async () => {},
         })),
       })),
@@ -541,12 +553,17 @@ describe('ActionTraceOutputService export coverage integration', () => {
     );
     const targetId = storedTraces[1].id;
 
-    traceDirectoryManager.selectDirectory.mockResolvedValueOnce(directoryHandle);
+    traceDirectoryManager.selectDirectory.mockResolvedValueOnce(
+      directoryHandle
+    );
     traceDirectoryManager.ensureSubdirectoryExists.mockResolvedValueOnce(
       directoryHandle
     );
 
-    const selective = await service.exportTracesToFileSystem([targetId], 'json');
+    const selective = await service.exportTracesToFileSystem(
+      [targetId],
+      'json'
+    );
     expect(selective.exportedCount).toBe(1);
     expect(directoryHandle.__files).toHaveLength(1);
     expect(directoryHandle.__files[0].fileName).toContain('beta');
@@ -634,10 +651,7 @@ describe('ActionTraceOutputService export coverage integration', () => {
           data: {
             scope: 'global',
             timestamp: 200,
-            entityDiscovery: [
-              { foundEntities: 2 },
-              { foundEntities: 3 },
-            ],
+            entityDiscovery: [{ foundEntities: 2 }, { foundEntities: 3 }],
             filterEvaluations: [
               { filterPassed: true },
               { filterPassed: false },
@@ -683,12 +697,13 @@ describe('ActionTraceOutputService export coverage integration', () => {
     expect(outputHandler).toHaveBeenCalledTimes(1);
 
     const writtenData = outputHandler.mock.calls[0][0];
-    expect(writtenData.actions['primary-action'].enhancedScopeEvaluation.summary)
-      .toMatchObject({
-        entitiesDiscovered: 5,
-        entitiesPassed: 1,
-        entitiesFailed: 1,
-      });
+    expect(
+      writtenData.actions['primary-action'].enhancedScopeEvaluation.summary
+    ).toMatchObject({
+      entitiesDiscovered: 5,
+      entitiesPassed: 1,
+      entitiesFailed: 1,
+    });
     expect(writtenData.operatorEvaluations.totalCount).toBe(2);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Span "primary" has negative duration')
@@ -743,7 +758,9 @@ describe('ActionTraceOutputService export coverage integration', () => {
 
     const failingOutputHandler = jest.fn(
       () =>
-        new Promise((_, reject) => setTimeout(() => reject(new Error('fail')), 5))
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('fail')), 5)
+        )
     );
 
     const failingLogger = createEnhancedMockLogger();

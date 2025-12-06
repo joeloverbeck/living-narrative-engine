@@ -28,7 +28,9 @@ describe('GoapPlanner - State Management Helpers', () => {
       'evaluateCondition',
     ]);
     mockRepository = testBed.createMock('repository', ['get']);
-    mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
+    mockEntityManager = testBed.createMock('entityManager', [
+      'getEntityInstance',
+    ]);
     mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
     mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
     mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
@@ -111,18 +113,24 @@ describe('GoapPlanner - State Management Helpers', () => {
       const hash = planner.testHashState(null);
 
       expect(hash).toBe('{}');
-      expect(mockLogger.warn).toHaveBeenCalledWith('Invalid state for hashing', {
-        state: null,
-      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Invalid state for hashing',
+        {
+          state: null,
+        }
+      );
     });
 
     it('should handle undefined state gracefully', () => {
       const hash = planner.testHashState(undefined);
 
       expect(hash).toBe('{}');
-      expect(mockLogger.warn).toHaveBeenCalledWith('Invalid state for hashing', {
-        state: undefined,
-      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Invalid state for hashing',
+        {
+          state: undefined,
+        }
+      );
     });
 
     it('should handle deeply nested values in state', () => {
@@ -165,7 +173,7 @@ describe('GoapPlanner - State Management Helpers', () => {
 
       expect(hash).toBe('{}');
       const errorCall = mockLogger.error.mock.calls.find(
-        call => call[0] === 'State hashing failed'
+        (call) => call[0] === 'State hashing failed'
       );
       expect(errorCall).toBeDefined();
       expect(errorCall[1]).toBeInstanceOf(Error);
@@ -351,9 +359,10 @@ describe('GoapPlanner - State Management Helpers', () => {
 
       expect(mockJsonLogicService.evaluateCondition).toHaveBeenCalledTimes(2);
 
-      const evaluationArgs = mockJsonLogicService.evaluateCondition.mock.calls.map(
-        (call) => call[0]
-      );
+      const evaluationArgs =
+        mockJsonLogicService.evaluateCondition.mock.calls.map(
+          (call) => call[0]
+        );
       expect(evaluationArgs[0]).toEqual({
         '==': [{ var: 'state.actor.components.core.health' }, 50],
       });
@@ -361,8 +370,8 @@ describe('GoapPlanner - State Management Helpers', () => {
         '==': [{ var: 'state.actor.components.core.health' }, 50],
       });
 
-      const goalPathWarns = mockLogger.warn.mock.calls.filter(([, details]) =>
-        details?.code === 'GOAP_INVALID_GOAL_PATH'
+      const goalPathWarns = mockLogger.warn.mock.calls.filter(
+        ([, details]) => details?.code === 'GOAP_INVALID_GOAL_PATH'
       );
       expect(goalPathWarns).toHaveLength(1);
     });
@@ -377,7 +386,10 @@ describe('GoapPlanner - State Management Helpers', () => {
       const context = planner.testBuildEvaluationContext(state);
 
       expect(context['actor:core']).toEqual({ health: 50, hungry: false });
-      expect(context.state['actor:core']).toEqual({ health: 50, hungry: false });
+      expect(context.state['actor:core']).toEqual({
+        health: 50,
+        hungry: false,
+      });
       expect(context.actor).toEqual(
         expect.objectContaining({
           id: 'actor',
@@ -409,7 +421,9 @@ describe('GoapPlanner - State Management Helpers', () => {
       const context = planner.testBuildEvaluationContext(state);
 
       expect(context['actor:core:needs']).toEqual({ hunger: 80 });
-      expect(context.actor.components['core:needs']).toEqual(expect.objectContaining({ hunger: 80 }));
+      expect(context.actor.components['core:needs']).toEqual(
+        expect.objectContaining({ hunger: 80 })
+      );
     });
 
     it('should provide stable state wrapper for empty or null input', () => {
@@ -443,7 +457,9 @@ describe('GoapPlanner - State Management Helpers', () => {
           }),
         })
       );
-      expect(context.actor.components.core).toEqual(expect.objectContaining({ hunger: 80 }));
+      expect(context.actor.components.core).toEqual(
+        expect.objectContaining({ hunger: 80 })
+      );
     });
 
     it('should preserve arrays and nested objects in component data', () => {
@@ -456,7 +472,10 @@ describe('GoapPlanner - State Management Helpers', () => {
 
       const context = planner.testBuildEvaluationContext(state);
 
-      expect(context.actor.components.core.inventory).toEqual(['item-1', 'item-2']);
+      expect(context.actor.components.core.inventory).toEqual([
+        'item-1',
+        'item-2',
+      ]);
       expect(context.actor.components.core.status).toEqual({ mood: 'calm' });
     });
 

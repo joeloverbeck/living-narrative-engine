@@ -6,7 +6,10 @@
 
 import { createMinimalTestContainer } from './minimalTestContainer.js';
 import { ScopeEvaluationTracer } from '../mods/scopeEvaluationTracer.js';
-import { ModEntityBuilder, ModEntityScenarios } from '../mods/ModEntityBuilder.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../mods/scopeResolverHelpers.js';
 import UnifiedScopeResolver from '../../../src/actions/scopes/unifiedScopeResolver.js';
 
@@ -132,15 +135,21 @@ export class ScopeTracingTestBed {
         // Build proper context with actor and tracer
         const context = {
           actor: actorEntity,
-          actorLocation: actorEntity?.components?.['core:position']?.locationId || 'room1',
+          actorLocation:
+            actorEntity?.components?.['core:position']?.locationId || 'room1',
           tracer: self.#scopeTracer,
         };
-        return self.#unifiedScopeResolver.resolveSync(scopeName, context, options);
+        return self.#unifiedScopeResolver.resolveSync(
+          scopeName,
+          context,
+          options
+        );
       },
       resolve: (scopeName, actorEntity, options = {}) => {
         const context = {
           actor: actorEntity,
-          actorLocation: actorEntity?.components?.['core:position']?.locationId || 'room1',
+          actorLocation:
+            actorEntity?.components?.['core:position']?.locationId || 'room1',
           tracer: self.#scopeTracer,
         };
         return self.#unifiedScopeResolver.resolve(scopeName, context, options);
@@ -356,7 +365,7 @@ export class ScopeTracingTestBed {
   resolveSyncNoTracer(scopeName, actorEntity) {
     const env = this.testEnv;
     const originalTracer = env._scopeTracer;
-    
+
     // Temporarily disable tracer to prevent injection in ScopeResolverHelpers
     env._scopeTracer = null;
 

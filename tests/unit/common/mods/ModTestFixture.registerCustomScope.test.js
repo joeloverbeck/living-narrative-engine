@@ -131,21 +131,15 @@ describe('ModTestFixture - registerCustomScope', () => {
       // This test verifies that the option is handled, but full behavior
       // is tested in integration tests
       await expect(
-        testFixture.registerCustomScope(
-          'positioning',
-          'close_actors',
-          { loadConditions: false }
-        )
+        testFixture.registerCustomScope('positioning', 'close_actors', {
+          loadConditions: false,
+        })
       ).resolves.not.toThrow();
     });
 
     it('should handle empty options object', async () => {
       await expect(
-        testFixture.registerCustomScope(
-          'positioning',
-          'close_actors',
-          {}
-        )
+        testFixture.registerCustomScope('positioning', 'close_actors', {})
       ).resolves.not.toThrow();
     });
 
@@ -161,11 +155,9 @@ describe('ModTestFixture - registerCustomScope', () => {
 
     it('should respect maxDepth option', async () => {
       await expect(
-        testFixture.registerCustomScope(
-          'positioning',
-          'close_actors',
-          { maxDepth: 10 }
-        )
+        testFixture.registerCustomScope('positioning', 'close_actors', {
+          maxDepth: 10,
+        })
       ).resolves.not.toThrow();
     });
   });
@@ -174,7 +166,9 @@ describe('ModTestFixture - registerCustomScope', () => {
     it('should provide actionable error for missing scope file', async () => {
       await expect(
         testFixture.registerCustomScope('my-mod', 'my-scope')
-      ).rejects.toThrow(/Failed to read scope file.*data\/mods\/my-mod\/scopes\/my-scope\.scope/);
+      ).rejects.toThrow(
+        /Failed to read scope file.*data\/mods\/my-mod\/scopes\/my-scope\.scope/
+      );
     });
 
     // Note: "scope not found in file" error requires a .scope file where the scope name
@@ -198,29 +192,47 @@ describe('ModTestFixture - registerCustomScope', () => {
       await testFixture.registerCustomScope('positioning', 'close_actors');
 
       // Should be registered with mod:scope format
-      expect(testFixture.testEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
+      expect(
+        testFixture.testEnv._registeredResolvers.has('positioning:close_actors')
+      ).toBe(true);
 
       // Should NOT be registered with just the scope name
-      expect(testFixture.testEnv._registeredResolvers.has('close_actors')).toBe(false);
+      expect(testFixture.testEnv._registeredResolvers.has('close_actors')).toBe(
+        false
+      );
     });
   });
 
   describe('Multiple Scope Registration', () => {
     it('should allow registering multiple different scopes', async () => {
       await testFixture.registerCustomScope('positioning', 'close_actors');
-      await testFixture.registerCustomScope('positioning', 'actors_sitting_close');
+      await testFixture.registerCustomScope(
+        'positioning',
+        'actors_sitting_close'
+      );
 
-      expect(testFixture.testEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
-      expect(testFixture.testEnv._registeredResolvers.has('positioning:actors_sitting_close')).toBe(true);
+      expect(
+        testFixture.testEnv._registeredResolvers.has('positioning:close_actors')
+      ).toBe(true);
+      expect(
+        testFixture.testEnv._registeredResolvers.has(
+          'positioning:actors_sitting_close'
+        )
+      ).toBe(true);
     });
 
     it('should allow registering scopes from different mods', async () => {
       await testFixture.registerCustomScope('positioning', 'close_actors');
 
       // Register another positioning scope (as we know these exist)
-      await testFixture.registerCustomScope('positioning', 'actors_sitting_close');
+      await testFixture.registerCustomScope(
+        'positioning',
+        'actors_sitting_close'
+      );
 
-      expect(testFixture.testEnv._registeredResolvers.size).toBeGreaterThanOrEqual(2);
+      expect(
+        testFixture.testEnv._registeredResolvers.size
+      ).toBeGreaterThanOrEqual(2);
     });
   });
 });
@@ -268,7 +280,11 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
   describe('Scope Loading', () => {
     it('should throw clear error when scope file not found', async () => {
       await expect(
-        ScopeResolverHelpers.registerCustomScope(testEnv, 'nonexistent-mod', 'scope-name')
+        ScopeResolverHelpers.registerCustomScope(
+          testEnv,
+          'nonexistent-mod',
+          'scope-name'
+        )
       ).rejects.toThrow(/Failed to read scope file/);
     });
 
@@ -279,7 +295,11 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
   describe('Scope Registration', () => {
     it('should successfully register valid custom scope', async () => {
       await expect(
-        ScopeResolverHelpers.registerCustomScope(testEnv, 'positioning', 'close_actors')
+        ScopeResolverHelpers.registerCustomScope(
+          testEnv,
+          'positioning',
+          'close_actors'
+        )
       ).resolves.not.toThrow();
 
       // Verify scope is registered
@@ -288,7 +308,11 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
     });
 
     it('should create working resolver function', async () => {
-      await ScopeResolverHelpers.registerCustomScope(testEnv, 'positioning', 'close_actors');
+      await ScopeResolverHelpers.registerCustomScope(
+        testEnv,
+        'positioning',
+        'close_actors'
+      );
 
       const scopeId = 'positioning:close_actors';
       const resolver = testEnv._registeredResolvers.get(scopeId);
@@ -297,16 +321,26 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
     });
 
     it('should register scope with full namespaced name', async () => {
-      await ScopeResolverHelpers.registerCustomScope(testEnv, 'positioning', 'close_actors');
+      await ScopeResolverHelpers.registerCustomScope(
+        testEnv,
+        'positioning',
+        'close_actors'
+      );
 
-      expect(testEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
+      expect(testEnv._registeredResolvers.has('positioning:close_actors')).toBe(
+        true
+      );
       expect(testEnv._registeredResolvers.has('close_actors')).toBe(false);
     });
   });
 
   describe('Resolver Functionality', () => {
     it('should create resolver that returns success/failure object', async () => {
-      await ScopeResolverHelpers.registerCustomScope(testEnv, 'positioning', 'close_actors');
+      await ScopeResolverHelpers.registerCustomScope(
+        testEnv,
+        'positioning',
+        'close_actors'
+      );
 
       const scopeId = 'positioning:close_actors';
       const resolver = testEnv._registeredResolvers.get(scopeId);
@@ -320,11 +354,23 @@ describe('ScopeResolverHelpers - registerCustomScope (static method)', () => {
 
   describe('Multiple Scope Registration', () => {
     it('should allow registering multiple different scopes', async () => {
-      await ScopeResolverHelpers.registerCustomScope(testEnv, 'positioning', 'close_actors');
-      await ScopeResolverHelpers.registerCustomScope(testEnv, 'positioning', 'actors_sitting_close');
+      await ScopeResolverHelpers.registerCustomScope(
+        testEnv,
+        'positioning',
+        'close_actors'
+      );
+      await ScopeResolverHelpers.registerCustomScope(
+        testEnv,
+        'positioning',
+        'actors_sitting_close'
+      );
 
-      expect(testEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
-      expect(testEnv._registeredResolvers.has('positioning:actors_sitting_close')).toBe(true);
+      expect(testEnv._registeredResolvers.has('positioning:close_actors')).toBe(
+        true
+      );
+      expect(
+        testEnv._registeredResolvers.has('positioning:actors_sitting_close')
+      ).toBe(true);
     });
   });
 });

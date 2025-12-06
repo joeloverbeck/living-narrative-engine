@@ -64,7 +64,9 @@ class TraceRecorder {
 
   withSpanAsync(operation, fn, attributes = {}) {
     if (!this.withSpan) {
-      throw new Error('withSpanAsync should not be called when span support disabled');
+      throw new Error(
+        'withSpanAsync should not be called when span support disabled'
+      );
     }
     this.spanCalls.push({ operation, attributes });
     return fn();
@@ -127,19 +129,37 @@ describe('Pipeline integration with real stages', () => {
     expect(result.actions).toHaveLength(2);
     expect(result.errors).toHaveLength(1);
     expect(result.data.finalised).toBe(true);
-    expect(logger.debugMessages).toContain('Executing pipeline stage: StageOne');
-    expect(logger.debugMessages).toContain('Executing pipeline stage: StageThree');
-    expect(trace.infoEvents[0].message).toContain('Starting pipeline execution');
-    expect(trace.successEvents.some((event) => event.message.includes('Stage StageThree completed successfully'))).toBe(true);
-    expect(trace.infoEvents.at(-1).message).toContain('Pipeline execution completed. Actions: 2, Errors: 1');
-    expect(contexts.map((entry) => entry.stage)).toEqual(['one', 'two', 'three']);
+    expect(logger.debugMessages).toContain(
+      'Executing pipeline stage: StageOne'
+    );
+    expect(logger.debugMessages).toContain(
+      'Executing pipeline stage: StageThree'
+    );
+    expect(trace.infoEvents[0].message).toContain(
+      'Starting pipeline execution'
+    );
+    expect(
+      trace.successEvents.some((event) =>
+        event.message.includes('Stage StageThree completed successfully')
+      )
+    ).toBe(true);
+    expect(trace.infoEvents.at(-1).message).toContain(
+      'Pipeline execution completed. Actions: 2, Errors: 1'
+    );
+    expect(contexts.map((entry) => entry.stage)).toEqual([
+      'one',
+      'two',
+      'three',
+    ]);
   });
 
   it('wraps execution in a span when trace.withSpanAsync is available', async () => {
     const logger = new CollectingLogger();
     const trace = new TraceRecorder({ withSpan: true });
 
-    const stage = new Stage('SpanAwareStage', async () => PipelineResult.success());
+    const stage = new Stage('SpanAwareStage', async () =>
+      PipelineResult.success()
+    );
     const pipeline = new Pipeline([stage], logger);
 
     await pipeline.execute({
@@ -179,21 +199,31 @@ describe('Pipeline integration with real stages', () => {
 
     expect(result.success).toBe(true);
     expect(executedStages).toEqual(['halt']);
-    expect(logger.debugMessages).toContain('Executing pipeline stage: HaltingStage');
-    expect(logger.debugMessages).toContain('Stage HaltingStage indicated to stop processing');
-    expect(trace.infoEvents.some((event) => event.message.includes('Pipeline halted at stage: HaltingStage'))).toBe(true);
+    expect(logger.debugMessages).toContain(
+      'Executing pipeline stage: HaltingStage'
+    );
+    expect(logger.debugMessages).toContain(
+      'Stage HaltingStage indicated to stop processing'
+    );
+    expect(
+      trace.infoEvents.some((event) =>
+        event.message.includes('Pipeline halted at stage: HaltingStage')
+      )
+    ).toBe(true);
   });
 
   it('records warnings for stages that report failure but allow continuation', async () => {
     const logger = new CollectingLogger();
     const trace = new TraceRecorder();
 
-    const warningStage = new Stage('WarningStage', async () =>
-      new PipelineResult({
-        success: false,
-        errors: [{ code: 'FAIL', message: 'Stage incomplete' }],
-        continueProcessing: true,
-      })
+    const warningStage = new Stage(
+      'WarningStage',
+      async () =>
+        new PipelineResult({
+          success: false,
+          errors: [{ code: 'FAIL', message: 'Stage incomplete' }],
+          continueProcessing: true,
+        })
     );
 
     const finalStage = new Stage('FinalStage', async (context) => {
@@ -211,8 +241,14 @@ describe('Pipeline integration with real stages', () => {
 
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
-    expect(logger.warnMessages).toContain('Stage WarningStage completed with errors');
-    expect(trace.failureEvents.some((event) => event.message.includes('Stage WarningStage encountered errors'))).toBe(true);
+    expect(logger.warnMessages).toContain(
+      'Stage WarningStage completed with errors'
+    );
+    expect(
+      trace.failureEvents.some((event) =>
+        event.message.includes('Stage WarningStage encountered errors')
+      )
+    ).toBe(true);
   });
 
   it('merges prior results when a stage throws an error', async () => {
@@ -239,16 +275,26 @@ describe('Pipeline integration with real stages', () => {
     expect(result.actions).toHaveLength(1);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].stageName).toBe('FailingStage');
-    expect(logger.errorMessages[0].message).toContain('Pipeline stage FailingStage threw an error: Stage failure');
-    expect(trace.failureEvents.some((event) => event.message.includes('Stage FailingStage threw an error: Stage failure'))).toBe(
-      true
+    expect(logger.errorMessages[0].message).toContain(
+      'Pipeline stage FailingStage threw an error: Stage failure'
     );
+    expect(
+      trace.failureEvents.some((event) =>
+        event.message.includes(
+          'Stage FailingStage threw an error: Stage failure'
+        )
+      )
+    ).toBe(true);
   });
 
   it('throws if constructed without a valid stages array', () => {
     const logger = new CollectingLogger();
 
-    expect(() => new Pipeline([], logger)).toThrow('Pipeline requires at least one stage');
-    expect(() => new Pipeline('not-an-array', logger)).toThrow('Pipeline requires at least one stage');
+    expect(() => new Pipeline([], logger)).toThrow(
+      'Pipeline requires at least one stage'
+    );
+    expect(() => new Pipeline('not-an-array', logger)).toThrow(
+      'Pipeline requires at least one stage'
+    );
   });
 });

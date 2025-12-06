@@ -13,7 +13,12 @@ describe('seduction:cross_legs_alluringly - Rule Execution', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('seduction', ACTION_ID, rule, condition);
+    testFixture = await ModTestFixture.forAction(
+      'seduction',
+      ACTION_ID,
+      rule,
+      condition
+    );
   });
 
   afterEach(() => {
@@ -47,13 +52,17 @@ describe('seduction:cross_legs_alluringly - Rule Execution', () => {
     });
 
     it('should reference correct condition', () => {
-      expect(rule.condition.condition_ref).toBe('seduction:event-is-action-cross-legs-alluringly');
+      expect(rule.condition.condition_ref).toBe(
+        'seduction:event-is-action-cross-legs-alluringly'
+      );
     });
   });
 
   describe('Condition Validation', () => {
     it('should check for correct action ID', () => {
-      expect(condition.id).toBe('seduction:event-is-action-cross-legs-alluringly');
+      expect(condition.id).toBe(
+        'seduction:event-is-action-cross-legs-alluringly'
+      );
       expect(condition.logic['==']).toEqual([
         { var: 'event.payload.actionId' },
         ACTION_ID,
@@ -92,7 +101,9 @@ describe('seduction:cross_legs_alluringly - Rule Execution', () => {
       );
 
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.descriptionText).toBe('Elena crosses their legs alluringly.');
+      expect(perceptibleEvent.payload.descriptionText).toBe(
+        'Elena crosses their legs alluringly.'
+      );
     });
 
     it('should set correct perception type', async () => {
@@ -110,7 +121,9 @@ describe('seduction:cross_legs_alluringly - Rule Execution', () => {
       );
 
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.perceptionType).toBe('action_self_general');
+      expect(perceptibleEvent.payload.perceptionType).toBe(
+        'action_self_general'
+      );
     });
 
     it('should set location ID from actor position', async () => {

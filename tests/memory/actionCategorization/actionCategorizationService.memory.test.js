@@ -46,11 +46,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
       removeListener: jest.fn(),
     };
 
-    container.register(
-      tokens.ISafeEventDispatcher,
-      mockSafeEventDispatcher,
-      { lifecycle: 'singleton' }
-    );
+    container.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher, {
+      lifecycle: 'singleton',
+    });
 
     container.register(
       tokens.IValidatedEventDispatcher,
@@ -140,7 +138,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
       // Calculate memory metrics
       const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
       const memoryRetained = Math.max(0, finalMemory - baselineMemory);
-      
+
       // Enhanced thresholds accounting for container overhead
       const memoryThreshold = global.memoryTestUtils.getMemoryThreshold(8); // Increased base threshold from 5MB to 8MB
 
@@ -205,7 +203,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
 
         // Enhanced logging for debugging
         if (process.env.DEBUG_MEMORY) {
-          console.log(`Action count ${config.actionCount}: ${(growthPerAction / 1024).toFixed(2)}KB per action`);
+          console.log(
+            `Action count ${config.actionCount}: ${(growthPerAction / 1024).toFixed(2)}KB per action`
+          );
         }
 
         // Cleanup
@@ -236,7 +236,9 @@ describe('ActionCategorizationService - Memory Tests', () => {
 
         // Enhanced debugging information
         if (process.env.DEBUG_MEMORY) {
-          console.log(`Config ${index}: ${deviationPercent.toFixed(1)}% deviation (limit: ${tolerance}%)`);
+          console.log(
+            `Config ${index}: ${deviationPercent.toFixed(1)}% deviation (limit: ${tolerance}%)`
+          );
         }
 
         // Memory usage per action should not vary by more than the adaptive tolerance

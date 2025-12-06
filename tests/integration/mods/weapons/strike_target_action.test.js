@@ -36,7 +36,9 @@ describe('strike_target action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('positioning:wielding', { wielded_item_ids: ['practice-stick'] })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['practice-stick'],
+        })
         .withComponent('items:inventory', {
           items: ['practice-stick'],
           capacity: { maxWeight: 10, maxItems: 5 },
@@ -102,7 +104,9 @@ describe('strike_target action', () => {
         .withName('John Smith')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('positioning:wielding', { wielded_item_ids: ['heavy-mace'] })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['heavy-mace'],
+        })
         .withComponent('items:inventory', {
           items: ['heavy-mace'],
           capacity: { maxWeight: 20, maxItems: 5 },
@@ -142,7 +146,9 @@ describe('strike_target action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('positioning:wielding', { wielded_item_ids: ['spiked-mace'] })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['spiked-mace'],
+        })
         .withComponent('items:inventory', {
           items: ['spiked-mace'],
           capacity: { maxWeight: 20, maxItems: 5 },

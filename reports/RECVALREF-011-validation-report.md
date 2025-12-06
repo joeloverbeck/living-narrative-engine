@@ -18,9 +18,11 @@ The workflow file `tickets/RECVALREF-011-refactor-validators-to-standalone.md` c
 ### 1. File Size Discrepancy
 
 **Workflow Assumption:**
+
 - Overview document claims `RecipePreflightValidator.js` is 1,207 lines (violates 500-line guideline)
 
 **Actual State:**
+
 ```bash
 $ wc -l src/anatomy/validation/RecipePreflightValidator.js
 1064 src/anatomy/validation/RecipePreflightValidator.js
@@ -33,6 +35,7 @@ $ wc -l src/anatomy/validation/RecipePreflightValidator.js
 ### 2. Validator Base Class Confusion
 
 **Workflow Assumption:**
+
 - "2 using ValidationRule base class"
 - "All need to be refactored to standalone validator classes extending BaseValidator"
 
@@ -41,11 +44,13 @@ $ wc -l src/anatomy/validation/RecipePreflightValidator.js
 There are **TWO DISTINCT VALIDATION PATTERNS** serving different purposes:
 
 #### Pattern A: ValidationRule (Graph Validation - Post-Generation)
+
 **Location:** `src/anatomy/validation/validationRule.js`
 **Purpose:** Validates assembled anatomy graphs AFTER generation
 **Context:** Takes ValidationContext with entityIds, recipe, entityManager
 **Usage:** Used by validation rule chain for runtime graph validation
 **Examples:**
+
 - `cycleDetectionRule.js`
 - `jointConsistencyRule.js`
 - `orphanDetectionRule.js`
@@ -56,6 +61,7 @@ There are **TWO DISTINCT VALIDATION PATTERNS** serving different purposes:
 - `propertySchemaValidationRule.js` ✅
 
 #### Pattern B: BaseValidator (Recipe Validation - Pre-Generation)
+
 **Location:** `src/anatomy/validation/validators/BaseValidator.js`
 **Purpose:** Validates recipe definitions BEFORE generation (pre-flight checks)
 **Context:** Takes recipe object and options
@@ -69,16 +75,19 @@ There are **TWO DISTINCT VALIDATION PATTERNS** serving different purposes:
 ### 3. ComponentExistenceValidator & PropertySchemasValidator Status
 
 **Workflow Claims:**
+
 - "ComponentExistenceValidator - Already exists, needs BaseValidator migration"
 - "PropertySchemasValidator - Already exists, needs BaseValidator migration"
 
 **Actual State:**
+
 - **ComponentExistenceValidationRule** exists extending `ValidationRule` (correct pattern for graph validation)
 - **PropertySchemaValidationRule** exists extending `ValidationRule` (correct pattern for graph validation)
 - Both are **ALREADY USED** by RecipePreflightValidator via LoadTimeValidationContext wrapper
 - Migration to BaseValidator would be **INCORRECT** - they serve graph validation, not recipe validation
 
 **Code Evidence:**
+
 ```javascript
 // src/anatomy/validation/RecipePreflightValidator.js:165
 async #checkComponentExistence(recipe, results) {
@@ -104,9 +113,11 @@ async #checkComponentExistence(recipe, results) {
 ### 4. BodyDescriptorValidator Already Exists
 
 **Workflow Claims:**
+
 - "BodyDescriptorValidator - NEW (currently inline method)"
 
 **Actual State:**
+
 - **BodyDescriptorValidator EXISTS** as standalone class at `src/anatomy/validators/bodyDescriptorValidator.js`
 - Has comprehensive system validation capabilities
 - Already has test coverage at `tests/unit/anatomy/validators/bodyDescriptorValidator.test.js`
@@ -114,6 +125,7 @@ async #checkComponentExistence(recipe, results) {
 - Documentation exists: `docs/anatomy/body-descriptors-complete.md`
 
 **Current Implementation:**
+
 ```javascript
 // src/anatomy/validators/bodyDescriptorValidator.js
 export class BodyDescriptorValidator {
@@ -124,6 +136,7 @@ export class BodyDescriptorValidator {
 ```
 
 **Inline Method in RecipePreflightValidator:**
+
 ```javascript
 // Line 235-330 in RecipePreflightValidator.js
 async #checkBodyDescriptors(recipe, results) {
@@ -140,16 +153,19 @@ async #checkBodyDescriptors(recipe, results) {
 ### 5. Validator Location and Pattern
 
 **Workflow Assumption:**
+
 - All validators will be created in `src/anatomy/validation/validators/`
 - All will extend BaseValidator
 - Test files at `tests/unit/anatomy/validation/validators/{Name}Validator.test.js`
 
 **Actual State:**
+
 - `validators/` directory currently has only `BaseValidator.js`
 - Existing standalone validators are in `src/anatomy/validators/` (different directory)
 - Test directory structure already exists at `tests/unit/anatomy/validation/validators/`
 
 **Discovered Files:**
+
 ```
 src/anatomy/validators/
 ├── bodyDescriptorValidator.js ✅ EXISTS
@@ -170,10 +186,12 @@ src/anatomy/validation/rules/
 ### 6. Socket/Slot and Pattern Matching Validators
 
 **Workflow Claims:**
+
 - "SocketSlotCompatibilityValidator - External function → class migration"
 - "PatternMatchingValidator - External function → class migration"
 
 **Actual State:**
+
 - Both exist as **external functions**, not standalone validators:
 
 ```javascript
@@ -209,9 +227,7 @@ Let me verify each:
 6. ✅ `#checkEntityDefinitionLoadFailures` (line 904) - EXISTS as inline method
 7. ✅ `#checkRecipeUsage` (line 1022) - EXISTS as inline method
 
-**Additional Methods Found:**
-8. ✅ `#checkSocketSlotCompatibility` (line 381) - Calls external function
-9. ✅ `#checkPatternMatching` (line 480) - Calls external function
+**Additional Methods Found:** 8. ✅ `#checkSocketSlotCompatibility` (line 381) - Calls external function 9. ✅ `#checkPatternMatching` (line 480) - Calls external function
 
 **Impact:** LOW - Workflow correctly identifies inline methods requiring extraction.
 
@@ -259,13 +275,16 @@ Standalone Validators (System-Level)
 ## Corrected Validator Inventory
 
 ### KEEP AS ValidationRule (Graph Validation)
+
 1. ComponentExistenceValidationRule ❌ DO NOT MIGRATE
 2. PropertySchemaValidationRule ❌ DO NOT MIGRATE
 
 ### ALREADY EXISTS (Different Purpose)
+
 3. BodyDescriptorValidator ✅ EXISTS (system/registry validation)
 
 ### REQUIRES MIGRATION TO BaseValidator
+
 4. BlueprintExistenceValidator (from inline `#checkBlueprintExists`)
 5. SocketSlotCompatibilityValidator (from external function)
 6. PatternMatchingValidator (from external function)
@@ -282,6 +301,7 @@ Standalone Validators (System-Level)
 ## Testing Structure
 
 **Current State:**
+
 ```
 tests/unit/anatomy/validation/
 ├── validators/
@@ -294,6 +314,7 @@ tests/unit/anatomy/validation/
 ```
 
 **Test Pattern Discovery:**
+
 - BaseValidator tests already exist
 - ValidationRule tests already exist
 - Pattern for BaseValidator tests established
@@ -303,21 +324,25 @@ tests/unit/anatomy/validation/
 ## Integration Points Discovery
 
 ### ValidationResultBuilder
+
 **Location:** `src/anatomy/validation/core/ValidationResultBuilder.js`
 **Status:** ✅ EXISTS and DOCUMENTED
 **Features:**
+
 - Fluent API for building validation results
 - Methods: `addError()`, `addWarning()`, `addSuggestion()`, `addPassed()`, `setMetadata()`
 - Returns frozen result object
 - Full test coverage exists
 
 ### ValidatorRegistry
+
 **Location:** `src/anatomy/validation/core/ValidatorRegistry.js`
 **Status:** ✅ EXISTS
 **Purpose:** Registry for managing validators
 **Test:** `tests/unit/anatomy/validation/core/ValidatorRegistry.test.js` ✅ EXISTS
 
 ### LoadTimeValidationContext
+
 **Location:** `src/anatomy/validation/loadTimeValidationContext.js`
 **Status:** ✅ EXISTS
 **Purpose:** Context wrapper for using ValidationRule pattern at load time
@@ -328,11 +353,13 @@ tests/unit/anatomy/validation/
 ## Dependencies Discovery
 
 ### Required for All Validators
+
 - `BaseValidator` from `./BaseValidator.js`
 - `ValidationResultBuilder` from `../core/ValidationResultBuilder.js`
 - Logger validation via `validateDependency` or `ensureValidLogger`
 
 ### Service Dependencies
+
 - `IDataRegistry` - Component and entity lookups
 - `IAnatomyBlueprintRepository` - Blueprint access
 - `ISchemaValidator` - Schema validation
@@ -346,6 +373,7 @@ tests/unit/anatomy/validation/
 ### CRITICAL: Do NOT Migrate ValidationRule Classes
 
 **Validators to KEEP as ValidationRule:**
+
 - ComponentExistenceValidationRule
 - PropertySchemaValidationRule
 
@@ -354,10 +382,12 @@ tests/unit/anatomy/validation/
 ### CLARIFY: BodyDescriptorValidator Status
 
 **Current State:**
+
 - Standalone `BodyDescriptorValidator` exists for system/registry validation
 - Inline `#checkBodyDescriptors` method exists for schema validation
 
 **Recommendation:** Document that these serve different purposes:
+
 - System validator: Validates registry consistency
 - Recipe validator: Validates recipe descriptors against component schema
 
@@ -366,6 +396,7 @@ Consider creating `RecipeBodyDescriptorValidator` extending BaseValidator for th
 ### UPDATE: Validator Count and Priorities
 
 **Corrected List:**
+
 1. BlueprintExistenceValidator (P0) - from inline
 2. RecipeBodyDescriptorValidator (P0) - from inline OR reuse existing
 3. SocketSlotCompatibilityValidator (P0) - from external function
@@ -381,6 +412,7 @@ Consider creating `RecipeBodyDescriptorValidator` extending BaseValidator for th
 ### ESTABLISH: Directory Structure Convention
 
 **Recommendation:**
+
 ```
 src/anatomy/validation/
 ├── validators/           # Recipe validators (BaseValidator pattern)

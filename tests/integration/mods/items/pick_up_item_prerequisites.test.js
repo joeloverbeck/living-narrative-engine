@@ -36,7 +36,9 @@ describe('items:pick_up_item prerequisites', () => {
     jest.clearAllMocks();
 
     // Import mocked function
-    const grabbingUtils = await import('../../../../src/utils/grabbingUtils.js');
+    const grabbingUtils = await import(
+      '../../../../src/utils/grabbingUtils.js'
+    );
     mockCountFreeGrabbingAppendages = grabbingUtils.countFreeGrabbingAppendages;
 
     mockLogger = {

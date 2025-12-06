@@ -14,13 +14,19 @@ describe('logger utils optional context integration', () => {
   });
 
   it('passes through undefined contexts without invoking sanitization', async () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
 
     const baseLogger = getEnhancedConsoleLogger();
-    const debugSpy = jest.spyOn(baseLogger, 'debug').mockImplementation(() => {});
+    const debugSpy = jest
+      .spyOn(baseLogger, 'debug')
+      .mockImplementation(() => {});
     const infoSpy = jest.spyOn(baseLogger, 'info').mockImplementation(() => {});
     const warnSpy = jest.spyOn(baseLogger, 'warn').mockImplementation(() => {});
-    const errorSpy = jest.spyOn(baseLogger, 'error').mockImplementation(() => {});
+    const errorSpy = jest
+      .spyOn(baseLogger, 'error')
+      .mockImplementation(() => {});
 
     const secureLogger = createSecureLogger(baseLogger);
 

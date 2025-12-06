@@ -45,8 +45,10 @@ describe('Core Motivations Generator Entry Point', () => {
 
   const storeOriginalDomGlobals = () => {
     if (!originalDocumentReadyStateDescriptor) {
-      originalDocumentReadyStateDescriptor =
-        Object.getOwnPropertyDescriptor(document, 'readyState');
+      originalDocumentReadyStateDescriptor = Object.getOwnPropertyDescriptor(
+        document,
+        'readyState'
+      );
     }
 
     if (!originalDocumentGetElementById) {

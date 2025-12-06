@@ -638,7 +638,9 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
           }),
         };
 
-        testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
+        testBed.mockEntityManager.getEntityInstance.mockResolvedValue(
+          mockEntity
+        );
 
         // Use short intervals for testing
         const waitPromise = anatomyLoadingDetector.waitForAnatomyReady(

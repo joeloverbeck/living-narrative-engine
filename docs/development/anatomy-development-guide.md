@@ -205,11 +205,13 @@ NODE_ENV=test npx jest tests/integration/my_mod/catAnatomy.test.js
 ### V1 vs V2 Blueprints
 
 **V1** (Explicit Slots):
+
 - Manually define each slot
 - Good for simple, fixed anatomies
 - Easy to debug
 
 **V2** (Template-Based):
+
 - Generate slots from templates
 - Great for creatures with many limbs
 - More complex but flexible
@@ -223,6 +225,7 @@ NODE_ENV=test npx jest tests/integration/my_mod/catAnatomy.test.js
 **Purpose**: Single source of truth for orientation naming
 
 **Supported Schemes**:
+
 - `bilateral`: left, right
 - `quadrupedal`: left_front, right_front, left_rear, right_rear
 - `radial`: anterior, anterior_right, right, posterior_right, etc.
@@ -247,6 +250,7 @@ Recipe patterns match blueprint slots:
 ### 1. Make Changes
 
 Edit anatomy system files:
+
 - Templates: `data/mods/*/anatomy/structure-templates/`
 - Blueprints: `data/mods/*/anatomy/blueprints/`
 - Recipes: `data/mods/*/anatomy/recipes/`
@@ -281,6 +285,7 @@ NODE_ENV=test npx jest tests/unit/anatomy/orientationResolver.test.js
 ### 4. Debug
 
 Enable debug logging:
+
 ```javascript
 // Check logger configuration for anatomy services
 // Debug logs show:
@@ -305,6 +310,7 @@ git commit -m "feat(anatomy): descriptive message"
 **Steps**:
 
 1. Add scheme case to `resolveOrientation()`:
+
 ```javascript
 export class OrientationResolver {
   static resolveOrientation(scheme, index, totalCount, positions, arrangement) {
@@ -322,6 +328,7 @@ export class OrientationResolver {
 ```
 
 2. Update schema: `data/schemas/anatomy.structure-template.schema.json`
+
 ```json
 {
   "orientationScheme": {
@@ -331,6 +338,7 @@ export class OrientationResolver {
 ```
 
 3. Add unit tests:
+
 ```javascript
 describe('OrientationResolver - myNewScheme', () => {
   it('should resolve myNewScheme correctly', () => {
@@ -351,6 +359,7 @@ describe('OrientationResolver - myNewScheme', () => {
 **Steps**:
 
 1. Add matcher method:
+
 ```javascript
 #resolveMatchesX(pattern, blueprintSlots) {
   // Implementation
@@ -359,6 +368,7 @@ describe('OrientationResolver - myNewScheme', () => {
 ```
 
 2. Update `resolve()` method:
+
 ```javascript
 async resolve(blueprint, recipe) {
   // ... existing code
@@ -382,13 +392,17 @@ async resolve(blueprint, recipe) {
 **Steps**:
 
 1. Add EventBus dependency:
+
 ```javascript
 class MyService {
   constructor({ eventBus, anatomySocketIndex }) {
     this.#eventBus = eventBus;
     this.#socketIndex = anatomySocketIndex;
 
-    this.#eventBus.on('ANATOMY_GENERATED', this.#handleAnatomyGenerated.bind(this));
+    this.#eventBus.on(
+      'ANATOMY_GENERATED',
+      this.#handleAnatomyGenerated.bind(this)
+    );
   }
 
   async #handleAnatomyGenerated({ entityId, blueprintId, sockets }) {
@@ -400,6 +414,7 @@ class MyService {
 2. Register service with DI container
 
 3. Test event handling:
+
 ```javascript
 it('should handle ANATOMY_GENERATED event', async () => {
   const eventSpy = jest.fn();
@@ -422,22 +437,31 @@ it('should handle ANATOMY_GENERATED event', async () => {
 2. Check logs for "Pattern matched zero slots"
 
 3. Inspect blueprint slots:
+
 ```javascript
 const blueprint = dataRegistry.get('anatomyBlueprints', 'your:blueprint');
 console.log('Slot keys:', Object.keys(blueprint.slots));
 ```
 
 4. Verify template socket pattern:
+
 ```javascript
 const template = dataRegistry.get('anatomyStructureTemplates', 'your:template');
-console.log('Socket patterns:', template.topology.limbSets.map(ls => ls.socketPattern));
+console.log(
+  'Socket patterns:',
+  template.topology.limbSets.map((ls) => ls.socketPattern)
+);
 ```
 
 5. Test pattern resolution:
+
 ```javascript
 const recipe = dataRegistry.get('anatomyRecipes', 'your:recipe');
 const resolved = await patternResolver.resolve(blueprint, recipe);
-console.log('Resolved slots:', resolved.map(s => s.key));
+console.log(
+  'Resolved slots:',
+  resolved.map((s) => s.key)
+);
 ```
 
 6. Update recipe patterns to match actual slot keys
@@ -449,18 +473,21 @@ console.log('Resolved slots:', resolved.map(s => s.key));
 ### Test Types
 
 **Unit Tests** (70% of tests):
+
 - Fast, isolated
 - Test single functions/methods
 - Mock dependencies
 - Location: `tests/unit/anatomy/`
 
 **Integration Tests** (25% of tests):
+
 - Test component interactions
 - Real dependencies
 - Complete workflows
 - Location: `tests/integration/anatomy/`
 
 **E2E Tests** (5% of tests):
+
 - Full user workflows
 - Location: `tests/e2e/anatomy/`
 
@@ -509,14 +536,15 @@ open coverage/lcov-report/index.html
 **Critical**: Test synchronization requirements
 
 **Example**:
+
 ```javascript
 describe('SlotGenerator ↔ SocketGenerator Contract', () => {
   it('should generate synchronized keys and IDs', async () => {
     const slots = await slotGenerator.generate(template);
     const sockets = await socketGenerator.generate(template);
 
-    const slotKeys = slots.map(s => s.key).sort();
-    const socketIds = sockets.map(s => s.id).sort();
+    const slotKeys = slots.map((s) => s.key).sort();
+    const socketIds = sockets.map((s) => s.id).sort();
 
     expect(slotKeys).toEqual(socketIds);
   });
@@ -532,10 +560,15 @@ describe('SlotGenerator ↔ SocketGenerator Contract', () => {
 **Cause**: Not using OrientationResolver
 
 **Solution**: Always use OrientationResolver:
+
 ```javascript
 // ✅ Good
 import { OrientationResolver } from './shared/orientationResolver.js';
-const orientation = OrientationResolver.resolveOrientation(scheme, index, count);
+const orientation = OrientationResolver.resolveOrientation(
+  scheme,
+  index,
+  count
+);
 
 // ❌ Bad
 const orientation = index === 1 ? 'left' : 'right'; // Duplicates logic!
@@ -548,6 +581,7 @@ const orientation = index === 1 ? 'left' : 'right'; // Duplicates logic!
 **Cause**: Template socket pattern doesn't match recipe pattern
 
 **Solution**: Use `matchesGroup` or check template orientation scheme:
+
 ```json
 // Template generates: leg_left_front, leg_right_front, etc.
 {
@@ -574,6 +608,7 @@ const orientation = index === 1 ? 'left' : 'right'; // Duplicates logic!
 **Cause**: Didn't subscribe to ANATOMY_GENERATED event
 
 **Solution**: Subscribe during initialization:
+
 ```javascript
 constructor({ eventBus }) {
   eventBus.on('ANATOMY_GENERATED', this.#handleAnatomyGenerated.bind(this));
@@ -587,6 +622,7 @@ constructor({ eventBus }) {
 **Cause**: Cache not invalidated after anatomy changes
 
 **Solution**: Invalidate cache on structure changes:
+
 ```javascript
 // After modifying anatomy
 socketIndex.invalidateIndex(rootEntityId);
@@ -601,6 +637,7 @@ socketIndex.invalidateIndex(rootEntityId);
 **Cause**: JSON doesn't match schema requirements
 
 **Solution**: Validate against schemas:
+
 ```bash
 # Validate your mod files
 npm run validate:mod:my_mod
@@ -679,12 +716,14 @@ npm run validate:body-descriptors
 ```
 
 Checks:
+
 - Registry completeness
 - Formatting configuration
 - Recipe descriptor values
 - System consistency
 
 **Documentation**:
+
 - [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ## Getting Help
@@ -701,6 +740,7 @@ Checks:
 ### Code References
 
 **Key Files**:
+
 - `src/anatomy/shared/orientationResolver.js` - Orientation logic
 - `src/anatomy/workflows/anatomyGenerationWorkflow.js` - Main workflow
 - `src/anatomy/services/anatomySocketIndex.js` - Socket caching
@@ -709,6 +749,7 @@ Checks:
 - `src/anatomy/socketGenerator.js` - Socket generation (V2)
 
 **Test Examples**:
+
 - `tests/unit/anatomy/shared/orientationResolver.test.js` - Unit test example
 - `tests/integration/anatomy/anatomyGeneration.integration.test.js` - Integration test example
 - `tests/integration/anatomy/slotSocketSynchronization.contract.test.js` - Contract test example

@@ -6,18 +6,11 @@
   "template": "restrain {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "skills:grappling_skill"
-    ]
+    "actor": ["skills:grappling_skill"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:being_restrained",
-      "positioning:fallen"
-    ],
-    "primary": [
-      "positioning:being_restrained"
-    ]
+    "actor": ["positioning:being_restrained", "positioning:fallen"],
+    "primary": ["positioning:being_restrained"]
   },
   "prerequisites": [
     {

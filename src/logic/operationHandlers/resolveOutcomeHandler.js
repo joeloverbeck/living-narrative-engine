@@ -181,7 +181,8 @@ class ResolveOutcomeHandler {
       event?.payload?.targetId ||
       event?.payload?.targets?.primary?.entityId;
     const secondaryTargetId =
-      event?.payload?.secondaryId || event?.payload?.targets?.secondary?.entityId;
+      event?.payload?.secondaryId ||
+      event?.payload?.targets?.secondary?.entityId;
     const tertiaryTargetId =
       event?.payload?.tertiaryId || event?.payload?.targets?.tertiary?.entityId;
 

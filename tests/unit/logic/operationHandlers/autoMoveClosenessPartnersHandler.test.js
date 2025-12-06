@@ -26,7 +26,9 @@ beforeEach(() => {
   };
   moveHandler = { execute: jest.fn() };
   dispatcher = { dispatch: jest.fn() };
-  operationInterpreter = { execute: jest.fn().mockResolvedValue({ success: true }) };
+  operationInterpreter = {
+    execute: jest.fn().mockResolvedValue({ success: true }),
+  };
   logger = {
     debug: jest.fn(),
     info: jest.fn(),
@@ -207,8 +209,7 @@ describe('AutoMoveClosenessPartnersHandler.execute - Partner Movement', () => {
     entityManager.getComponentData.mockImplementation((id, comp) => {
       if (id === 'actor1' && comp === CLOSENESS_COMPONENT_ID)
         return { partners: ['p1', 'p2', 'p3'] };
-      if (comp === POSITION_COMPONENT_ID)
-        return { locationId: 'oldLoc' };
+      if (comp === POSITION_COMPONENT_ID) return { locationId: 'oldLoc' };
       return null;
     });
 
@@ -227,8 +228,7 @@ describe('AutoMoveClosenessPartnersHandler.execute - Partner Movement', () => {
     entityManager.getComponentData.mockImplementation((id, comp) => {
       if (id === 'actor1' && comp === CLOSENESS_COMPONENT_ID)
         return { partners: ['p1', 'p2'] };
-      if (comp === POSITION_COMPONENT_ID)
-        return { locationId: 'oldLoc' };
+      if (comp === POSITION_COMPONENT_ID) return { locationId: 'oldLoc' };
       return null;
     });
 
@@ -361,8 +361,7 @@ describe('AutoMoveClosenessPartnersHandler.execute - Error Handling', () => {
     entityManager.getComponentData.mockImplementation((id, comp) => {
       if (id === 'actor1' && comp === CLOSENESS_COMPONENT_ID)
         return { partners: ['p1', 'p2'] };
-      if (comp === POSITION_COMPONENT_ID)
-        return { locationId: 'oldLoc' };
+      if (comp === POSITION_COMPONENT_ID) return { locationId: 'oldLoc' };
       return null;
     });
 
@@ -446,7 +445,7 @@ describe('AutoMoveClosenessPartnersHandler - Bug Fix Verification', () => {
 
       // Verify core:entity_moved event has required fields
       const entityMovedCall = dispatcher.dispatch.mock.calls.find(
-        call => call[0] === 'core:entity_moved'
+        (call) => call[0] === 'core:entity_moved'
       );
       expect(entityMovedCall).toBeDefined();
       expect(entityMovedCall[1]).toMatchObject({
@@ -532,7 +531,8 @@ describe('AutoMoveClosenessPartnersHandler - Bug Fix Verification', () => {
           type: 'DISPATCH_PERCEPTIBLE_EVENT',
           parameters: expect.objectContaining({
             location_id: 'dest',
-            description_text: 'Partner Name moves with Actor Name to Destination Location.',
+            description_text:
+              'Partner Name moves with Actor Name to Destination Location.',
             perception_type: 'character_enter',
             actor_id: 'partner1',
             target_id: 'actor1',

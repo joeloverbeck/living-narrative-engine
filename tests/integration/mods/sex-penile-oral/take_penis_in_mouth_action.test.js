@@ -33,8 +33,12 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installSittingCloseUncoveredPenisScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-penile-oral',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installSittingCloseUncoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -59,10 +63,14 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
       additionalPayload: { primaryId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
@@ -155,7 +163,8 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
     });
 
     // Verify old receiving entity no longer has receiving_blowjob component
-    const oldReceiver = testFixture.entityManager.getEntityInstance('old_receiver');
+    const oldReceiver =
+      testFixture.entityManager.getEntityInstance('old_receiver');
     expect(oldReceiver).not.toHaveComponent('positioning:receiving_blowjob');
 
     // Verify old giving entity no longer has giving_blowjob component
@@ -172,13 +181,17 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
     });
 
     // Verify primary no longer has giving_blowjob, but now has receiving_blowjob
-    const updatedPrimary = testFixture.entityManager.getEntityInstance(primaryId);
+    const updatedPrimary =
+      testFixture.entityManager.getEntityInstance(primaryId);
     expect(updatedPrimary).not.toHaveComponent('positioning:giving_blowjob');
     expect(updatedPrimary).toHaveComponent('positioning:receiving_blowjob');
-    expect(updatedPrimary).toHaveComponentData('positioning:receiving_blowjob', {
-      giving_entity_id: actorId,
-      consented: true,
-    });
+    expect(updatedPrimary).toHaveComponentData(
+      'positioning:receiving_blowjob',
+      {
+        giving_entity_id: actorId,
+        consented: true,
+      }
+    );
   });
 
   it('does not fire rule for a different action', async () => {

@@ -51,7 +51,9 @@ async function buildResolutionFixture() {
   const entityTestBed = new EntityManagerTestBed();
   const { entityManager } = entityTestBed;
   const unifiedScopeResolver = { resolve: jest.fn() };
-  const targetResolver = { resolveTargets: jest.fn().mockResolvedValue({ success: true, value: [] }) };
+  const targetResolver = {
+    resolveTargets: jest.fn().mockResolvedValue({ success: true, value: [] }),
+  };
 
   const multiStage = createMultiTargetResolutionStage({
     entityManager,
@@ -99,7 +101,13 @@ async function buildResolutionFixture() {
     },
   });
 
-  entityTestBed.setupDefinitions(locationDef, actorDef, enemyOneDef, enemyTwoDef, allyDef);
+  entityTestBed.setupDefinitions(
+    locationDef,
+    actorDef,
+    enemyOneDef,
+    enemyTwoDef,
+    allyDef
+  );
 
   await entityManager.createEntityInstance('regression:room', {
     instanceId: 'regression:room',
@@ -185,32 +193,31 @@ async function buildResolutionFixture() {
   };
 }
 
-const buildPruner = () =>
-  ({
-    prune: jest.fn(({ actionDef, resolvedTargets }) => {
-      if (actionDef.id === 'regression:pruned') {
-        return {
-          keptTargets: null,
-          removedTargets: [
-            {
-              role: 'primary',
-              targetId: 'regression:enemy:2',
-              placeholder: 'primary',
-              reason: 'Missing required component',
-              reasonCode: 'missing_component',
-            },
-          ],
-          removalReasons: ['Missing required component'],
-        };
-      }
-
+const buildPruner = () => ({
+  prune: jest.fn(({ actionDef, resolvedTargets }) => {
+    if (actionDef.id === 'regression:pruned') {
       return {
-        keptTargets: resolvedTargets,
-        removedTargets: [],
-        removalReasons: [],
+        keptTargets: null,
+        removedTargets: [
+          {
+            role: 'primary',
+            targetId: 'regression:enemy:2',
+            placeholder: 'primary',
+            reason: 'Missing required component',
+            reasonCode: 'missing_component',
+          },
+        ],
+        removalReasons: ['Missing required component'],
       };
-    }),
-  });
+    }
+
+    return {
+      keptTargets: resolvedTargets,
+      removedTargets: [],
+      removalReasons: [],
+    };
+  }),
+});
 
 describe('TargetComponentValidationStage regression harness', () => {
   let entityTestBed;
@@ -223,8 +230,13 @@ describe('TargetComponentValidationStage regression harness', () => {
   });
 
   it('keeps candidateActions context aligned with adapter rebuilds across pruning', async () => {
-    const { entityTestBed: bed, logger, actor, candidateActions, resolutionResult } =
-      await buildResolutionFixture();
+    const {
+      entityTestBed: bed,
+      logger,
+      actor,
+      candidateActions,
+      resolutionResult,
+    } = await buildResolutionFixture();
     entityTestBed = bed;
 
     const componentValidator = {
@@ -288,7 +300,9 @@ describe('TargetComponentValidationStage regression harness', () => {
       'regression:multi-pass'
     );
 
-    expect(contextUpdateEmitter.applyTargetValidationResults).toHaveBeenCalledTimes(1);
+    expect(
+      contextUpdateEmitter.applyTargetValidationResults
+    ).toHaveBeenCalledTimes(1);
     const [{ metadata, validatedItems }] = emitterCalls;
     expect(validatedItems).toHaveLength(1);
     expect(metadata.stageUpdates).toEqual(
@@ -319,8 +333,12 @@ describe('TargetComponentValidationStage regression harness', () => {
   });
 
   it('rebuilds actionsWithTargets payloads while preserving target metadata', async () => {
-    const { entityTestBed: bed, logger, actor, resolutionResult } =
-      await buildResolutionFixture();
+    const {
+      entityTestBed: bed,
+      logger,
+      actor,
+      resolutionResult,
+    } = await buildResolutionFixture();
     entityTestBed = bed;
 
     const componentValidator = {
@@ -369,12 +387,14 @@ describe('TargetComponentValidationStage regression harness', () => {
 
     const context = {
       actor,
-      actionsWithTargets: resolutionResult.data.actionsWithTargets.map((entry) => ({
-        ...entry,
-        targetContexts: entry.targetContexts
-          ? entry.targetContexts.map((ctx) => ({ ...ctx }))
-          : [],
-      })),
+      actionsWithTargets: resolutionResult.data.actionsWithTargets.map(
+        (entry) => ({
+          ...entry,
+          targetContexts: entry.targetContexts
+            ? entry.targetContexts.map((ctx) => ({ ...ctx }))
+            : [],
+        })
+      ),
     };
 
     const result = await stage.executeInternal(context);
@@ -409,8 +429,12 @@ describe('TargetComponentValidationStage telemetry contract', () => {
   });
 
   it('streams validation analysis and performance data through ActionAwareStructuredTrace', async () => {
-    const { entityTestBed: bed, logger, actor, resolutionResult } =
-      await buildResolutionFixture();
+    const {
+      entityTestBed: bed,
+      logger,
+      actor,
+      resolutionResult,
+    } = await buildResolutionFixture();
     entityTestBed = bed;
 
     const componentValidator = {
@@ -482,8 +506,12 @@ describe('TargetComponentValidationStage telemetry contract', () => {
   });
 
   it('reports skip notifications when validation is disabled', async () => {
-    const { entityTestBed: bed, logger, actor, resolutionResult } =
-      await buildResolutionFixture();
+    const {
+      entityTestBed: bed,
+      logger,
+      actor,
+      resolutionResult,
+    } = await buildResolutionFixture();
     entityTestBed = bed;
 
     const componentValidator = {

@@ -3,7 +3,9 @@
   "rule_id": "handle_caress_bare_back",
   "comment": "Handles the 'caressing:caress_bare_back' action by logging sensual back caressing and ending the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "caressing:event-is-action-caress-bare-back" },
+  "condition": {
+    "condition_ref": "caressing:event-is-action-caress-bare-back"
+  },
   "actions": [
     { "type": "PREPARE_ACTION_CONTEXT", "parameters": {} },
     {

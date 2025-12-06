@@ -66,9 +66,9 @@ function formatValidationError(operationType, missingRegistrations) {
     lines.push('  Example:');
     lines.push('  ```javascript');
     lines.push('  const KNOWN_OPERATION_TYPES = [');
-    lines.push('    \'ADD_COMPONENT\',');
+    lines.push("    'ADD_COMPONENT',");
     lines.push(`    '${operationType}',  // <-- Add this line`);
-    lines.push('    \'REMOVE_COMPONENT\',');
+    lines.push("    'REMOVE_COMPONENT',");
     lines.push('  ];');
     lines.push('  ```');
   }
@@ -111,9 +111,15 @@ function formatValidationError(operationType, missingRegistrations) {
     lines.push('    "$defs": {');
     lines.push('      "Operation": {');
     lines.push('        "anyOf": [');
-    lines.push('          { "$ref": "./operations/addComponent.schema.json" },');
-    lines.push(`          { "$ref": "./operations/${schemaFileName}" },  // <-- Add this`);
-    lines.push('          { "$ref": "./operations/removeComponent.schema.json" }');
+    lines.push(
+      '          { "$ref": "./operations/addComponent.schema.json" },'
+    );
+    lines.push(
+      `          { "$ref": "./operations/${schemaFileName}" },  // <-- Add this`
+    );
+    lines.push(
+      '          { "$ref": "./operations/removeComponent.schema.json" }'
+    );
     lines.push('        ]');
     lines.push('      }');
     lines.push('    }');
@@ -135,9 +141,9 @@ function formatValidationError(operationType, missingRegistrations) {
     lines.push('  Example:');
     lines.push('  ```javascript');
     lines.push('  export const tokens = {');
-    lines.push('    AddComponentHandler: \'AddComponentHandler\',');
+    lines.push("    AddComponentHandler: 'AddComponentHandler',");
     lines.push(`    ${tokenName}: '${tokenName}',  // <-- Add this`);
-    lines.push('    RemoveComponentHandler: \'RemoveComponentHandler\',');
+    lines.push("    RemoveComponentHandler: 'RemoveComponentHandler',");
     lines.push('  };');
     lines.push('  ```');
   }
@@ -146,17 +152,23 @@ function formatValidationError(operationType, missingRegistrations) {
   if (missingRegistrations.includes('handler')) {
     lines.push('');
     lines.push('  ⚠️  STEP 5: HANDLER NOT REGISTERED IN DI');
-    lines.push('  File: src/dependencyInjection/registrations/operationHandlerRegistrations.js');
+    lines.push(
+      '  File: src/dependencyInjection/registrations/operationHandlerRegistrations.js'
+    );
     lines.push('  Action: Add handler to handlerFactories array');
     lines.push('');
     lines.push('  Step 1: Import the handler class:');
-    lines.push(`  import ${handlerClassName} from '../../logic/operationHandlers/${operationType.toLowerCase().split('_').join('')}Handler.js';`);
+    lines.push(
+      `  import ${handlerClassName} from '../../logic/operationHandlers/${operationType.toLowerCase().split('_').join('')}Handler.js';`
+    );
     lines.push('');
     lines.push('  Step 2: Add factory to handlerFactories array:');
     lines.push('  ```javascript');
     lines.push('  {');
     lines.push(`    token: tokens.${tokenName},`);
-    lines.push(`    factory: ({ logger, eventBus, ... }) => new ${handlerClassName}({`);
+    lines.push(
+      `    factory: ({ logger, eventBus, ... }) => new ${handlerClassName}({`
+    );
     lines.push('      logger,');
     lines.push('      eventBus,');
     lines.push('      // ... other dependencies');
@@ -169,19 +181,29 @@ function formatValidationError(operationType, missingRegistrations) {
   if (missingRegistrations.includes('mapping')) {
     lines.push('');
     lines.push('  ⚠️  STEP 6: OPERATION NOT MAPPED IN REGISTRY');
-    lines.push('  File: src/dependencyInjection/registrations/interpreterRegistrations.js');
+    lines.push(
+      '  File: src/dependencyInjection/registrations/interpreterRegistrations.js'
+    );
     lines.push('  Location: Registry setup in configureRegistry function');
     lines.push('  Action: Map operation type to handler token');
-    lines.push(`  Code to add: registry.register('${operationType}', bind(tokens.${tokenName}));`);
+    lines.push(
+      `  Code to add: registry.register('${operationType}', bind(tokens.${tokenName}));`
+    );
     lines.push('');
     lines.push('  Example:');
     lines.push('  ```javascript');
     lines.push('  function configureRegistry(registry, container) {');
     lines.push('    const bind = (token) => () => container.resolve(token);');
     lines.push('');
-    lines.push('    registry.register(\'ADD_COMPONENT\', bind(tokens.AddComponentHandler));');
-    lines.push(`    registry.register('${operationType}', bind(tokens.${tokenName}));  // <-- Add`);
-    lines.push('    registry.register(\'REMOVE_COMPONENT\', bind(tokens.RemoveComponentHandler));');
+    lines.push(
+      "    registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));"
+    );
+    lines.push(
+      `    registry.register('${operationType}', bind(tokens.${tokenName}));  // <-- Add`
+    );
+    lines.push(
+      "    registry.register('REMOVE_COMPONENT', bind(tokens.RemoveComponentHandler));"
+    );
     lines.push('  }');
     lines.push('  ```');
   }
@@ -190,17 +212,25 @@ function formatValidationError(operationType, missingRegistrations) {
   lines.push('🔧 Verification commands:');
   lines.push('  After fixing, run these commands to verify:');
   lines.push('  1. npm run validate          # Verify schema is valid');
-  lines.push('  2. npm run validate:strict   # Strict validation with all checks');
+  lines.push(
+    '  2. npm run validate:strict   # Strict validation with all checks'
+  );
   lines.push('  3. npm run typecheck         # TypeScript type checking');
   lines.push('  4. npm run test:unit         # Run unit tests');
   lines.push('  5. npm run test:integration  # Run integration tests');
   lines.push('');
   lines.push('📚 Complete registration guide:');
-  lines.push('  - CLAUDE.md (search "Adding New Operations - Complete Checklist")');
+  lines.push(
+    '  - CLAUDE.md (search "Adding New Operations - Complete Checklist")'
+  );
   lines.push('  - Covers all 8 steps with examples and verification');
   lines.push('');
-  lines.push('💡 Tip: Follow the 8-step checklist in CLAUDE.md for complete operation setup');
-  lines.push('  Missing Step 3 (Create handler)? Check src/logic/operationHandlers/ for examples');
+  lines.push(
+    '💡 Tip: Follow the 8-step checklist in CLAUDE.md for complete operation setup'
+  );
+  lines.push(
+    '  Missing Step 3 (Create handler)? Check src/logic/operationHandlers/ for examples'
+  );
 
   return lines.join('\n');
 }

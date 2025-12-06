@@ -5,7 +5,14 @@
  *              Prometheus registry without mocks.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const METRIC_TOKENS = 'llm_proxy_llm_tokens_processed_total';
 const METRIC_MAP_SIZE = 'llm_proxy_rate_limit_map_size_entries';
@@ -27,7 +34,8 @@ describe('MetricsService token accounting integration', () => {
 
   beforeEach(async () => {
     jest.resetModules();
-    MetricsService = (await import('../../src/services/metricsService.js')).default;
+    MetricsService = (await import('../../src/services/metricsService.js'))
+      .default;
   });
 
   afterEach(() => {

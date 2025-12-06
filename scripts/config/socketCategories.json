@@ -6,13 +6,25 @@
       "appliesTo": {
         "subTypes": ["torso"],
         "inferFrom": {
-          "any_socket": ["heart_socket", "spine_socket", "vagina", "penis", "left_chest"]
+          "any_socket": [
+            "heart_socket",
+            "spine_socket",
+            "vagina",
+            "penis",
+            "left_chest"
+          ]
         }
       }
     },
     "bipedal_base": {
       "description": "Standard humanoid torso structure",
-      "sockets": ["neck", "left_shoulder", "right_shoulder", "left_hip", "right_hip"],
+      "sockets": [
+        "neck",
+        "left_shoulder",
+        "right_shoulder",
+        "left_hip",
+        "right_hip"
+      ],
       "appliesTo": {
         "subTypes": ["torso"]
       }

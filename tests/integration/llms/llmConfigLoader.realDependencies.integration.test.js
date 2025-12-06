@@ -251,7 +251,9 @@ describe('LlmConfigLoader with real schema validator and Node data fetcher', () 
         const retryError = new Error(
           `Failed after ${attempts} attempt(s) while fetching ${identifier}`
         );
-        retryError.originalError = new Error('Retry exhaustion underlying cause');
+        retryError.originalError = new Error(
+          'Retry exhaustion underlying cause'
+        );
         retryError.lastError = lastError;
         throw retryError;
       }

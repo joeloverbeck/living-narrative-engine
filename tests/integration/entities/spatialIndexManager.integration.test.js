@@ -2,7 +2,14 @@
  * @file Integration tests for SpatialIndexManager covering sequential and batch interactions.
  * @jest-environment node
  */
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import SpatialIndexManager from '../../../src/entities/spatialIndexManager.js';
 import BatchSpatialIndexManager from '../../../src/entities/operations/BatchSpatialIndexManager.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
@@ -79,7 +86,9 @@ describe('SpatialIndexManager integration', () => {
     const spatialIndexManager = new SpatialIndexManager({ logger });
 
     spatialIndexManager.buildIndex(null);
-    expect(logger.errors[0].message).toContain('Invalid entityManager provided');
+    expect(logger.errors[0].message).toContain(
+      'Invalid entityManager provided'
+    );
 
     const entityManager = {
       entities: new Set([
@@ -97,9 +106,9 @@ describe('SpatialIndexManager integration', () => {
     expect(spatialIndexManager.getEntitiesAtLocation('location-a')).toEqual([
       'entity-1',
     ]);
-    expect(spatialIndexManager.getEntitiesAtLocation('missing-location')).toEqual(
-      []
-    );
+    expect(
+      spatialIndexManager.getEntitiesAtLocation('missing-location')
+    ).toEqual([]);
 
     const entitiesAtA = spatialIndexManager.getEntitiesInLocation('location-a');
     expect(entitiesAtA.has('entity-1')).toBe(true);
@@ -192,9 +201,9 @@ describe('SpatialIndexManager integration', () => {
     ]);
 
     expect(moveResult.totalProcessed).toBe(2);
-    expect(spatialIndexManager.getEntitiesAtLocation('fallback-destination')).toEqual([
-      'existing-2',
-    ]);
+    expect(
+      spatialIndexManager.getEntitiesAtLocation('fallback-destination')
+    ).toEqual(['existing-2']);
 
     const rebuildResult = await spatialIndexManager.rebuild([
       { entityId: 'rebuilt-1', locationId: 'rebuilt-a' },

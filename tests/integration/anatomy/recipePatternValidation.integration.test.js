@@ -215,7 +215,7 @@ describe('Recipe Pattern Validation Integration', () => {
 
       mockDataRegistry.get.mockReturnValue(template);
       mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(
-        limbSet => {
+        (limbSet) => {
           if (limbSet.id === 'front') return ['leg_fl', 'leg_fr'];
           if (limbSet.id === 'back') return ['leg_bl', 'leg_br'];
           return [];
@@ -245,9 +245,7 @@ describe('Recipe Pattern Validation Integration', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern matchesGroup: 'limbSet:leg' matched 0 slots after applying exclusions"
       );
 
@@ -417,9 +415,9 @@ describe('Recipe Pattern Validation Integration', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow("Pattern 1: matchesPattern 'nonexistent_*' matched 0 slots");
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Pattern 1: matchesPattern 'nonexistent_*' matched 0 slots"
+      );
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('matched 0 slots')
@@ -446,9 +444,7 @@ describe('Recipe Pattern Validation Integration', () => {
         slots: {},
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern 1: Slot group 'limbSet:leg' matched 0 slots in structure template 'spider:body'."
       );
 

@@ -1,4 +1,11 @@
-import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -79,7 +86,9 @@ describe('logger utils integration coverage', () => {
     });
 
     test('falls back to console logging when loader receives an invalid logger', async () => {
-      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'logger-utils-integration-'));
+      const tempDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'logger-utils-integration-')
+      );
       const configPath = path.join(tempDir, 'llm-configs.json');
       const fileContents = JSON.stringify({
         defaultConfigId: 'default-model',
@@ -101,7 +110,11 @@ describe('logger utils integration coverage', () => {
       errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       const fileReader = new NodeFileSystemReader();
-      const result = await loadProxyLlmConfigs(configPath, invalidLogger, fileReader);
+      const result = await loadProxyLlmConfigs(
+        configPath,
+        invalidLogger,
+        fileReader
+      );
 
       expect(result.error).toBe(false);
       expect(result.llmConfigs).toEqual(JSON.parse(fileContents));
@@ -133,9 +146,15 @@ describe('logger utils integration coverage', () => {
 
     test('retries leverage fallback logging when logger is invalid', async () => {
       const invalidLogger = { info: () => {} };
-      const warnSpyLocal = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const debugSpyLocal = jest.spyOn(console, 'debug').mockImplementation(() => {});
-      const infoSpyLocal = jest.spyOn(console, 'info').mockImplementation(() => {});
+      const warnSpyLocal = jest
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      const debugSpyLocal = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
+      const infoSpyLocal = jest
+        .spyOn(console, 'info')
+        .mockImplementation(() => {});
 
       const originalFetch = global.fetch;
       global.fetch = jest.fn().mockResolvedValue({
@@ -163,11 +182,15 @@ describe('logger utils integration coverage', () => {
       );
       expect(debugSpyLocal).toHaveBeenCalledWith(
         'RetryManager: ',
-        expect.stringContaining('Initiating request sequence for https://example.com/resource')
+        expect.stringContaining(
+          'Initiating request sequence for https://example.com/resource'
+        )
       );
       expect(infoSpyLocal).toHaveBeenCalledWith(
         'RetryManager: ',
-        expect.stringContaining('Successfully fetched and parsed JSON from https://example.com/resource')
+        expect.stringContaining(
+          'Successfully fetched and parsed JSON from https://example.com/resource'
+        )
       );
 
       warnSpyLocal.mockRestore();
@@ -200,10 +223,18 @@ describe('logger utils integration coverage', () => {
     test('masks sensitive data in production logs', async () => {
       process.env.NODE_ENV = 'production';
       const secureLogger = enhancedLogger.createSecure();
-      const errorSpy = jest.spyOn(enhancedLogger, 'error').mockImplementation(() => {});
-      const warnSpy = jest.spyOn(enhancedLogger, 'warn').mockImplementation(() => {});
-      const infoSpy = jest.spyOn(enhancedLogger, 'info').mockImplementation(() => {});
-      const debugSpy = jest.spyOn(enhancedLogger, 'debug').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(enhancedLogger, 'error')
+        .mockImplementation(() => {});
+      const warnSpy = jest
+        .spyOn(enhancedLogger, 'warn')
+        .mockImplementation(() => {});
+      const infoSpy = jest
+        .spyOn(enhancedLogger, 'info')
+        .mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(enhancedLogger, 'debug')
+        .mockImplementation(() => {});
 
       const app = buildTestApp(secureLogger, createSensitiveDetails());
       const response = await request(app).get('/trigger-error');
@@ -232,14 +263,17 @@ describe('logger utils integration coverage', () => {
       expect(sanitized.nested.array[5].apiKey).toBe('[UNDEFINED]');
       expect(sanitized.nested.array[6].apiKey).toBe('[EMPTY]');
 
-      secureLogger.info('manual info context', { optionalContext: null, safeValue: 'manual' });
+      secureLogger.info('manual info context', {
+        optionalContext: null,
+        safeValue: 'manual',
+      });
       secureLogger.warn('manual warn context', null);
       secureLogger.debug('manual debug context', 'trace');
 
-      expect(infoSpy).toHaveBeenCalledWith(
-        'manual info context',
-        { optionalContext: null, safeValue: 'manual' }
-      );
+      expect(infoSpy).toHaveBeenCalledWith('manual info context', {
+        optionalContext: null,
+        safeValue: 'manual',
+      });
       expect(warnSpy).toHaveBeenCalledWith('manual warn context', null);
       expect(debugSpy).toHaveBeenCalledWith('manual debug context', 'trace');
 
@@ -252,10 +286,18 @@ describe('logger utils integration coverage', () => {
     test('retains contextual structure while partially masking in development', async () => {
       process.env.NODE_ENV = 'development';
       const secureLogger = enhancedLogger.createSecure();
-      const errorSpy = jest.spyOn(enhancedLogger, 'error').mockImplementation(() => {});
-      const warnSpy = jest.spyOn(enhancedLogger, 'warn').mockImplementation(() => {});
-      const infoSpy = jest.spyOn(enhancedLogger, 'info').mockImplementation(() => {});
-      const debugSpy = jest.spyOn(enhancedLogger, 'debug').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(enhancedLogger, 'error')
+        .mockImplementation(() => {});
+      const warnSpy = jest
+        .spyOn(enhancedLogger, 'warn')
+        .mockImplementation(() => {});
+      const infoSpy = jest
+        .spyOn(enhancedLogger, 'info')
+        .mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(enhancedLogger, 'debug')
+        .mockImplementation(() => {});
 
       const app = buildTestApp(secureLogger, createSensitiveDetails());
       const response = await request(app).get('/trigger-error');
@@ -299,14 +341,17 @@ describe('logger utils integration coverage', () => {
       expect(sanitized.nested.array[5].apiKey).toBe('[UNDEFINED]');
       expect(sanitized.nested.array[6].apiKey).toBe('[EMPTY]');
 
-      secureLogger.info('manual info context', { optionalContext: null, safeValue: 'manual' });
+      secureLogger.info('manual info context', {
+        optionalContext: null,
+        safeValue: 'manual',
+      });
       secureLogger.warn('manual warn context', null);
       secureLogger.debug('manual debug context', 'trace');
 
-      expect(infoSpy).toHaveBeenCalledWith(
-        'manual info context',
-        { optionalContext: null, safeValue: 'manual' }
-      );
+      expect(infoSpy).toHaveBeenCalledWith('manual info context', {
+        optionalContext: null,
+        safeValue: 'manual',
+      });
       expect(warnSpy).toHaveBeenCalledWith('manual warn context', null);
       expect(debugSpy).toHaveBeenCalledWith('manual debug context', 'trace');
 
@@ -331,8 +376,12 @@ describe('logger utils integration coverage', () => {
     test('provides console logger with blank prefix when no logger is supplied', () => {
       const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
 
       const fallback = ensureValidLogger(undefined, '');
       fallback.info('info-event');
@@ -382,13 +431,15 @@ describe('logger utils integration coverage', () => {
 
       expect(captured.debug[0].context.apiKey).toBe('[MASKED]');
       expect(captured.debug[0].context.nested.token).toBe('[MASKED]');
-      expect(captured.debug[0].context.nested.list[0].password).toBe('[MASKED]');
+      expect(captured.debug[0].context.nested.list[0].password).toBe(
+        '[MASKED]'
+      );
       expect(captured.debug[0].context.nested.list[1].values[1].secret).toBe(
         '[MASKED]'
       );
-      expect(
-        captured.debug[0].context.mixedArray[2].authorization
-      ).toBe('[MASKED]');
+      expect(captured.debug[0].context.mixedArray[2].authorization).toBe(
+        '[MASKED]'
+      );
       expect(captured.info[0].context.api_key).toBe('[MASKED]');
       expect(captured.warn[0].context[1].secret).toBe('[EMPTY]');
       expect(captured.error[0].context).toBeUndefined();

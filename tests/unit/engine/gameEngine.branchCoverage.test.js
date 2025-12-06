@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 
@@ -77,7 +84,9 @@ describe('GameEngine uncovered branches', () => {
         processOperationFailure: jest.fn(),
       }));
 
-      const { default: GameEngine } = await import('../../../src/engine/gameEngine.js');
+      const { default: GameEngine } = await import(
+        '../../../src/engine/gameEngine.js'
+      );
 
       const logger = createLogger();
       const entityManager = { clearAll: jest.fn() };
@@ -158,7 +167,9 @@ describe('GameEngine uncovered branches', () => {
         default: persistenceMock,
       }));
 
-      const { default: GameEngine } = await import('../../../src/engine/gameEngine.js');
+      const { default: GameEngine } = await import(
+        '../../../src/engine/gameEngine.js'
+      );
 
       const logger = createLogger();
       const entityManager = { clearAll: jest.fn() };
@@ -191,7 +202,10 @@ describe('GameEngine uncovered branches', () => {
 
       expect(capturedOptions).toBeDefined();
       const errorInfo = { reason: 'corrupted data' };
-      const result = await capturedOptions.handleLoadFailure(errorInfo, 'slot-42');
+      const result = await capturedOptions.handleLoadFailure(
+        errorInfo,
+        'slot-42'
+      );
 
       expect(processOperationFailure).toHaveBeenCalledWith(
         logger,

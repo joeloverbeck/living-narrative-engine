@@ -61,15 +61,11 @@ describe('PickRandomEntityHandler', () => {
 
   test('should pick a random entity from location', async () => {
     const locationId = 'loc1';
-    const entities = [
-      { id: 'e1' },
-      { id: 'e2' },
-      { id: 'e3' },
-    ];
+    const entities = [{ id: 'e1' }, { id: 'e2' }, { id: 'e3' }];
 
     // Mock getting entities with position
     mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-    
+
     // Mock position data check
     mockEntityManager.getComponentData.mockImplementation((id, type) => {
       if (type === 'core:position') {
@@ -89,7 +85,9 @@ describe('PickRandomEntityHandler', () => {
       context
     );
 
-    expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith('core:position');
+    expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+      'core:position'
+    );
     expect(context.evaluationContext.context.result).toBe('e2');
   });
 
@@ -101,7 +99,7 @@ describe('PickRandomEntityHandler', () => {
     ];
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
-    
+
     mockEntityManager.getComponentData.mockImplementation((id, type) => {
       if (type === 'core:position') {
         return { locationId: id === 'e1' ? 'loc1' : 'loc2' };
@@ -145,7 +143,7 @@ describe('PickRandomEntityHandler', () => {
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
     mockEntityManager.getComponentData.mockReturnValue({ locationId });
-    
+
     // e1 has component, e2 does not
     mockEntityManager.hasComponent.mockImplementation((id, type) => {
       if (type === 'compA') {
@@ -172,7 +170,7 @@ describe('PickRandomEntityHandler', () => {
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
     mockEntityManager.getComponentData.mockReturnValue({ locationId });
-    
+
     // e1 has component, e2 does not
     mockEntityManager.hasComponent.mockImplementation((id, type) => {
       if (type === 'compA') {
@@ -199,7 +197,7 @@ describe('PickRandomEntityHandler', () => {
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
     mockEntityManager.getComponentData.mockReturnValue({ locationId });
-    
+
     // Exclude everything
     await handler.execute(
       {

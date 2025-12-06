@@ -74,13 +74,17 @@ describe('Filter Breakdown Integration', () => {
       expect(breakdown.hasBreakdown).toBe(true);
 
       // Should have nested clauses (e.g., 'and' with child conditions)
-      const andClause = breakdown.clauses.find(c => c.operator === 'and');
+      const andClause = breakdown.clauses.find((c) => c.operator === 'and');
       // If 'and' clause exists, it should have a description
       expect(andClause ? andClause.description : 'no-and-clause').toBeTruthy();
     });
 
     it('should capture breakdown for multiple entities', async () => {
-      const scenario = testFixture.createCloseActors(['Alice', 'Bob', 'Charlie']);
+      const scenario = testFixture.createCloseActors([
+        'Alice',
+        'Bob',
+        'Charlie',
+      ]);
 
       await testFixture.registerCustomScope('positioning', 'close_actors');
 
@@ -321,7 +325,7 @@ describe('Filter Breakdown Integration', () => {
       expect(breakdown.clauses.length).toBeGreaterThan(0);
 
       // Should have clauses showing which conditions passed/failed
-      const passedClauses = breakdown.clauses.filter(c => c.result);
+      const passedClauses = breakdown.clauses.filter((c) => c.result);
       expect(passedClauses).toBeDefined();
 
       // Each clause should have a description explaining the condition
@@ -350,7 +354,8 @@ describe('Filter Breakdown Integration', () => {
       const trace = testFixture.getScopeTraceData();
 
       const filterStep = trace.steps.find(
-        s => s.type === 'FILTER_EVALUATION' && s.entityId === scenario.target.id
+        (s) =>
+          s.type === 'FILTER_EVALUATION' && s.entityId === scenario.target.id
       );
 
       expect(filterStep).toBeDefined();
@@ -456,7 +461,7 @@ describe('Filter Breakdown Integration', () => {
       // Should have at least one clause (whether passing or failing)
       expect(breakdown.clauses.length).toBeGreaterThan(0);
       // Each clause should have description
-      breakdown.clauses.forEach(clause => {
+      breakdown.clauses.forEach((clause) => {
         expect(clause.description).toBeTruthy();
       });
     });
@@ -561,7 +566,7 @@ describe('Filter Breakdown Integration', () => {
       const allBreakdowns = testFixture.getFilterBreakdown();
 
       expect(allBreakdowns.length).toBeGreaterThan(0);
-      allBreakdowns.forEach(breakdown => {
+      allBreakdowns.forEach((breakdown) => {
         expect(breakdown.hasBreakdown).toBe(true);
         expect(breakdown.clauses).toBeDefined();
       });

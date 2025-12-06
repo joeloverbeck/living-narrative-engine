@@ -43,7 +43,9 @@ describe('ActionIndexValidationError - LLM Data Preservation', () => {
         speech: 'This is preserved speech from the LLM.',
       });
 
-      expect(error.llmData.speech).toBe('This is preserved speech from the LLM.');
+      expect(error.llmData.speech).toBe(
+        'This is preserved speech from the LLM.'
+      );
       expect(error.llmData.thoughts).toBeNull();
       expect(error.llmData.notes).toBeNull();
     });

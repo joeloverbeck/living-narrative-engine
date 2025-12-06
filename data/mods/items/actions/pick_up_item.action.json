@@ -11,9 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "forbidden_components": {
     "actor": [

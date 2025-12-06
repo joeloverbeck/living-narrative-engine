@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-002: Add Blueprint-Level Socket Collision Pre-Validation
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-002
 - **Priority**: HIGH (downgraded from CRITICAL)
 - **Severity**: P3 (downgraded from P2)
@@ -14,12 +15,16 @@
 ## Problem Statement (Corrected)
 
 ### Original Ticket Assumptions (INCORRECT)
+
 The original ticket claimed:
+
 - "No validation exists" → **FALSE**
 - "Silent corruption occurs" → **FALSE**
 
 ### Actual Current Behavior (CORRECTED)
+
 Runtime socket collision validation **already exists** in `SocketManager.validateSocketAvailability()`:
+
 ```javascript
 if (this.isSocketOccupied(parentId, socketId, socketOccupancy)) {
   const error = `Socket '${socketId}' is already occupied on parent '${parentId}'`;
@@ -32,9 +37,11 @@ if (this.isSocketOccupied(parentId, socketId, socketOccupancy)) {
 This runtime validation correctly prevents duplicate socket usage and throws a `ValidationError` when a required slot tries to use an already-occupied socket.
 
 ### Remaining Value: Early Blueprint-Level Validation
+
 The value of this ticket is providing **earlier and more helpful error messages** by validating the blueprint structure **before** entity creation begins:
 
 1. **Current error** (at runtime, after some entities created):
+
    ```
    Socket 'shoulder' is already occupied on parent 'entity-body-123'
    ```
@@ -49,14 +56,15 @@ The value of this ticket is providing **earlier and more helpful error messages*
 The proposed error is **more helpful** because it identifies **which slot keys** are conflicting, making it easier for modders to fix their blueprints.
 
 ### The Chicken Bug Scenario (Clarified)
+
 The actual chicken bug was caused by **non-unique socket IDs in the entity definition**, not by missing validation. The fix was making socket IDs unique (e.g., `left_foot`, `right_foot` instead of just `foot`). This ticket adds an **additional safety net** to catch similar configuration errors earlier.
 
 ---
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
+| File                                                             | Line(s)          | Change Type             |
+| ---------------------------------------------------------------- | ---------------- | ----------------------- |
 | `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | Before slot loop | Add validation function |
 
 ---
@@ -87,8 +95,8 @@ function validateBlueprintSocketUniqueness(blueprint) {
       const conflictingSlot = socketUsage.get(fullSocketKey);
       throw new ValidationError(
         `Socket collision detected: socket '${slot.socket}' on parent '${slot.parent}' ` +
-        `is used by both slots '${conflictingSlot}' and '${slotKey}'. ` +
-        `Each socket can only attach one child per parent entity instance.`
+          `is used by both slots '${conflictingSlot}' and '${slotKey}'. ` +
+          `Each socket can only attach one child per parent entity instance.`
       );
     }
 
@@ -158,37 +166,46 @@ Add integration test in `tests/integration/anatomy/socketCollisionPreValidation.
 ### What Was Actually Changed vs Originally Planned
 
 #### Original Plan (INCORRECT ASSUMPTIONS)
+
 The ticket assumed:
+
 - No socket collision validation existed
 - Silent data corruption occurred
 - This was a CRITICAL fix
 
 #### Actual Findings
+
 - Runtime socket collision validation **already exists** in `SocketManager.validateSocketAvailability()`
 - Collisions throw `ValidationError` at runtime (not silent)
 - The original "chicken bug" was caused by non-unique socket IDs in entity definitions, not missing validation
 
 #### What Was Actually Implemented
+
 **Enhancement** (not critical fix): Added **pre-validation** at blueprint level that:
+
 1. Runs before any entity creation
 2. Provides better error messages with slot key names
 3. Catches collisions earlier in the pipeline
 
 ### Files Modified
+
 - `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js`: Added `validateBlueprintSocketUniqueness()` function
 
 ### Tests Added
-| File | Tests | Rationale |
-|------|-------|-----------|
+
+| File                                                                                | Tests    | Rationale                                                                          |
+| ----------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------- |
 | `tests/unit/anatomy/bodyBlueprintFactory/validateBlueprintSocketUniqueness.test.js` | 12 tests | Unit tests for collision detection, valid cases, edge cases, error message quality |
-| `tests/integration/anatomy/socketCollisionPreValidation.integration.test.js` | 6 tests | Integration tests for realistic blueprints including chicken bug scenario |
+| `tests/integration/anatomy/socketCollisionPreValidation.integration.test.js`        | 6 tests  | Integration tests for realistic blueprints including chicken bug scenario          |
 
 ### Priority Adjustments
+
 - **Priority**: CRITICAL → HIGH (downgraded - existing runtime validation prevents corruption)
 - **Severity**: P2 → P3 (downgraded - enhancement not critical fix)
 - **Effort**: Medium → Low (reduced - minimal code change)
 
 ### All Tests Pass
+
 - Unit tests: 12/12 pass
 - Integration tests: 6/6 pass
 - Existing anatomy tests: unaffected

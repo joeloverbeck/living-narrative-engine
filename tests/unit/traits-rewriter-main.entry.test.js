@@ -1,9 +1,18 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 
 const MODULE_PATH = '../../src/traits-rewriter-main.js';
-const BOOTSTRAP_PATH = '../../src/characterBuilder/CharacterBuilderBootstrap.js';
-const CONTROLLER_PATH = '../../src/characterBuilder/controllers/TraitsRewriterController.js';
+const BOOTSTRAP_PATH =
+  '../../src/characterBuilder/CharacterBuilderBootstrap.js';
+const CONTROLLER_PATH =
+  '../../src/characterBuilder/controllers/TraitsRewriterController.js';
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -42,7 +51,9 @@ describe('traits-rewriter-main entrypoint', () => {
         bootstrap: bootstrapMock,
       })),
     }));
-    jest.doMock(CONTROLLER_PATH, () => ({ TraitsRewriterController: jest.fn() }));
+    jest.doMock(CONTROLLER_PATH, () => ({
+      TraitsRewriterController: jest.fn(),
+    }));
     return bootstrapMock;
   };
 
@@ -66,7 +77,9 @@ describe('traits-rewriter-main entrypoint', () => {
       getCurrentActiveLlmId: jest.fn().mockResolvedValue('llm-123'),
       getAvailableLlmOptions: jest
         .fn()
-        .mockResolvedValue([{ configId: 'llm-123', displayName: 'Friendly LLM' }]),
+        .mockResolvedValue([
+          { configId: 'llm-123', displayName: 'Friendly LLM' },
+        ]),
     };
 
     const container = {
@@ -101,7 +114,9 @@ describe('traits-rewriter-main entrypoint', () => {
 
     const llmAdapter = {
       getCurrentActiveLlmId: jest.fn().mockResolvedValue('llm-456'),
-      getAvailableLlmOptions: jest.fn().mockResolvedValue([{ configId: 'other' }]),
+      getAvailableLlmOptions: jest
+        .fn()
+        .mockResolvedValue([{ configId: 'other' }]),
     };
 
     const container = {
@@ -158,7 +173,9 @@ describe('traits-rewriter-main entrypoint', () => {
       getCurrentActiveLlmId: jest.fn().mockResolvedValue('immediate-llm'),
       getAvailableLlmOptions: jest
         .fn()
-        .mockResolvedValue([{ configId: 'immediate-llm', displayName: 'Chatty LLM' }]),
+        .mockResolvedValue([
+          { configId: 'immediate-llm', displayName: 'Chatty LLM' },
+        ]),
     };
 
     const container = {
@@ -192,7 +209,9 @@ describe('traits-rewriter-main entrypoint', () => {
       }),
     };
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     mockBootstrapModule(async (config) => {
       config.hooks?.postInit?.({ id: 'controller' });
@@ -206,7 +225,10 @@ describe('traits-rewriter-main entrypoint', () => {
     const handler = addEventListenerSpy.mock.calls[0][1];
     await handler();
 
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to update LLM display', failure);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Failed to update LLM display',
+      failure
+    );
     expect(nameElement.textContent).toBe('Unknown');
   });
 
@@ -220,7 +242,9 @@ describe('traits-rewriter-main entrypoint', () => {
       throw failure;
     });
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await jest.isolateModulesAsync(async () => {
       await import(MODULE_PATH);
@@ -231,9 +255,11 @@ describe('traits-rewriter-main entrypoint', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Failed to initialize Traits Rewriter:',
-      failure,
+      failure
     );
-    expect(errorContainer.innerHTML).toContain('Failed to initialize the application');
+    expect(errorContainer.innerHTML).toContain(
+      'Failed to initialize the application'
+    );
     expect(errorContainer.innerHTML).toContain(failure.message);
   });
 });

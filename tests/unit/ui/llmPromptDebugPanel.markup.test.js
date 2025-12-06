@@ -20,16 +20,16 @@ describe('LLM Prompt Debug Panel Markup (LLMPRODEBPAN-001)', () => {
   test('Widget should be present in the right pane', () => {
     const rightPane = document.querySelector('#right-pane');
     const widget = document.querySelector('#llm-prompt-debug-widget');
-    
+
     expect(rightPane).not.toBeNull();
     expect(widget).not.toBeNull();
     expect(rightPane.contains(widget)).toBe(true);
-    
+
     // Check if it's before game-actions-widget (as per ticket)
     // This is a bit loose, just checking if both exist
     const gameActionsWidget = document.querySelector('#game-actions-widget');
     expect(gameActionsWidget).not.toBeNull();
-    
+
     // Ideally check order
     const children = Array.from(rightPane.children);
     const debugIndex = children.indexOf(widget);
@@ -53,7 +53,7 @@ describe('LLM Prompt Debug Panel Markup (LLMPRODEBPAN-001)', () => {
 
   test('Modal should contain required elements', () => {
     const modal = document.querySelector('#llm-prompt-debug-modal');
-    
+
     const title = modal.querySelector('#llm-prompt-debug-title');
     expect(title).not.toBeNull();
     expect(title.textContent.trim()).toBe('LLM Prompt Preview');
@@ -73,6 +73,8 @@ describe('LLM Prompt Debug Panel Markup (LLMPRODEBPAN-001)', () => {
   });
 
   test('style.css should import the new component css', () => {
-    expect(cssContent).toContain("@import url('components/_llm-prompt-debug.css');");
+    expect(cssContent).toContain(
+      "@import url('components/_llm-prompt-debug.css');"
+    );
   });
 });

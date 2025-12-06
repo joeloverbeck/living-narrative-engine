@@ -19,17 +19,20 @@ Create the JSON schema for the `MODIFY_PART_HEALTH` operation, which changes a b
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned (ticket assumptions):**
+
 1. Create schema with inline parameters definition
 2. Update `operation.schema.json` only
 3. Do NOT modify `preValidationUtils.js`
 
 **Actual Implementation (after codebase analysis):**
+
 1. ✅ Created schema using `$defs/Parameters` with `$ref` pattern (matching established codebase convention)
 2. ✅ Updated `operation.schema.json` with `$ref` entry
 3. ✅ Updated `staticConfiguration.js` - **discovered requirement** (schema loader needs file registered)
 4. ✅ Updated `preValidationUtils.js` - **discovered requirement** (integration test enforces operation type completeness)
 
 **Key Discrepancies Found:**
+
 - Ticket proposed inline parameters but actual pattern uses `$defs/Parameters` with `$ref`
 - Ticket omitted `staticConfiguration.js` update requirement
 - Ticket explicitly excluded `preValidationUtils.js` but integration test `operationTypeCompleteness.test.js` requires all schemas to have matching whitelist entries
@@ -43,6 +46,7 @@ Create the JSON schema for the `MODIFY_PART_HEALTH` operation, which changes a b
 | `src/utils/preValidationUtils.js` | Modified (added to KNOWN_OPERATION_TYPES) |
 
 **Tests:**
+
 - No new tests created (schema-only ticket - existing validation tests cover this)
 - All existing tests pass: `npm run validate`, `npm run validate:strict`
 - Schema tests: 67 suites, 1241 tests passed
@@ -53,9 +57,11 @@ Create the JSON schema for the `MODIFY_PART_HEALTH` operation, which changes a b
 ## Files to Touch
 
 ### New Files
+
 - `data/schemas/operations/modifyPartHealth.schema.json`
 
 ### Modified Files
+
 - `data/schemas/operation.schema.json` (add `$ref` entry to `$defs/Operation/anyOf` array)
 - `src/configuration/staticConfiguration.js` (add `'modifyPartHealth.schema.json'` to `OPERATION_SCHEMA_FILES` array)
 - `src/utils/preValidationUtils.js` (add `'MODIFY_PART_HEALTH'` to `KNOWN_OPERATION_TYPES` array - **required by operationTypeCompleteness integration test**)
@@ -65,6 +71,7 @@ Create the JSON schema for the `MODIFY_PART_HEALTH` operation, which changes a b
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation schemas
 - Any operation handler implementation files
 - Any rule files
@@ -108,17 +115,11 @@ Create `data/schemas/operations/modifyPartHealth.schema.json`:
       "properties": {
         "part_entity_ref": {
           "description": "Reference to the body part entity. Can be a direct entity ID string or a JSON Logic expression that resolves to an entity ID.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "delta": {
           "description": "Health change amount. Negative values deal damage, positive values heal. Can be a number or JSON Logic expression.",
-          "oneOf": [
-            { "type": "number" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "number" }, { "type": "object" }]
         },
         "clamp_to_bounds": {
           "type": "boolean",
@@ -143,7 +144,7 @@ Find the correct alphabetical position in the existing `anyOf` array within the 
 { "$ref": "./operations/modifyPartHealth.schema.json" }
 ```
 
-Insert after `modifyContextArray.schema.json` and before any operations starting with "n..." (if none exist, at the end of the "mod*" group).
+Insert after `modifyContextArray.schema.json` and before any operations starting with "n..." (if none exist, at the end of the "mod\*" group).
 
 ### Design Rationale
 
@@ -164,11 +165,13 @@ Insert after `modifyContextArray.schema.json` and before any operations starting
    - `npm run validate:strict` passes without errors
 
 2. **JSON schema validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/schemas/operations/modifyPartHealth.schema.json'))"
    ```
 
 3. **operation.schema.json validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/schemas/operation.schema.json'))"
    ```

@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { CacheInvalidationManager, CacheInvalidationEvents } from '../../../src/cache/CacheInvalidationManager.js';
+import {
+  CacheInvalidationManager,
+  CacheInvalidationEvents,
+} from '../../../src/cache/CacheInvalidationManager.js';
 import { UnifiedCache } from '../../../src/cache/UnifiedCache.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { createTestBed } from '../../common/testBed.js';
@@ -17,10 +20,16 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
   let dispatcher;
 
   const createManager = (config = {}) =>
-    new CacheInvalidationManager({ logger, validatedEventDispatcher: dispatcher }, config);
+    new CacheInvalidationManager(
+      { logger, validatedEventDispatcher: dispatcher },
+      config
+    );
 
   const createCache = (config = {}) =>
-    new UnifiedCache({ logger }, { enableMetrics: true, maxSize: 100, ...config });
+    new UnifiedCache(
+      { logger },
+      { enableMetrics: true, maxSize: 100, ...config }
+    );
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -30,7 +39,7 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
       dispatch: jest.fn().mockImplementation((event) => {
         eventLog.push(event);
         return Promise.resolve(true);
-      })
+      }),
     };
   });
 
@@ -48,20 +57,26 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
     manager.registerCache('primary', primaryCache, {
       entityTypes: ['hero'],
       componentTypes: ['inventory'],
-      keyPatterns: ['hero:']
+      keyPatterns: ['hero:'],
     });
     manager.registerCache('dependent', dependentCache, {
       componentTypes: ['inventory'],
-      entityTypes: ['hero']
+      entityTypes: ['hero'],
     });
     manager.registerCache('fragile', fragileCache, {
       componentTypes: ['inventory'],
-      entityTypes: ['hero']
+      entityTypes: ['hero'],
     });
 
     primaryCache.set('hero:entity', { id: 'hero:entity', value: 1 });
-    dependentCache.set('hero:entity:summary', { id: 'hero:entity', summary: true });
-    fragileCache.set('hero:entity:secondary', { id: 'hero:entity', fragment: true });
+    dependentCache.set('hero:entity:summary', {
+      id: 'hero:entity',
+      summary: true,
+    });
+    fragileCache.set('hero:entity:secondary', {
+      id: 'hero:entity',
+      fragment: true,
+    });
 
     manager.addDependency('hero:entity', 'dependent');
     jest.spyOn(fragileCache, 'invalidate').mockImplementation(() => {
@@ -79,7 +94,8 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
     expect(dependentCache.get('hero:entity:summary')).toBeUndefined();
 
     const entityInvalidations = eventLog.filter(
-      (event) => event.type === CacheInvalidationEvents.CACHE_ENTITY_INVALIDATION
+      (event) =>
+        event.type === CacheInvalidationEvents.CACHE_ENTITY_INVALIDATION
     );
     expect(entityInvalidations).toHaveLength(1);
 
@@ -104,13 +120,19 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
       throw new Error('failure during invalidate');
     });
 
-    const results = manager.invalidatePattern('hero', ['primary', 'missing', 'failing']);
+    const results = manager.invalidatePattern('hero', [
+      'primary',
+      'missing',
+      'failing',
+    ]);
 
     expect(results.primary).toMatchObject({ success: true, invalidated: 1 });
     expect(results.failing.success).toBe(false);
     expect(results.failing.error).toBe('failure during invalidate');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Cache not found for pattern invalidation: missing')
+      expect.stringContaining(
+        'Cache not found for pattern invalidation: missing'
+      )
     );
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Pattern invalidation failed in failing'),
@@ -118,7 +140,9 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
     );
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ type: CacheInvalidationEvents.CACHE_PATTERN_INVALIDATION })
+      expect.objectContaining({
+        type: CacheInvalidationEvents.CACHE_PATTERN_INVALIDATION,
+      })
     );
   });
 
@@ -139,7 +163,12 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
       throw new Error('clear failure');
     });
 
-    const results = manager.clearCaches(['missing', 'primary', 'unstable', 'secondary']);
+    const results = manager.clearCaches([
+      'missing',
+      'primary',
+      'unstable',
+      'secondary',
+    ]);
 
     expect(results.primary).toEqual({ success: true });
     expect(results.secondary).toEqual({ success: true });
@@ -170,7 +199,9 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
     manager.removeDependency('missing');
 
     manager.addDependency('hero:entity', 'primary');
-    expect(manager.getDependencyMappings()).toEqual({ 'hero:entity': ['primary'] });
+    expect(manager.getDependencyMappings()).toEqual({
+      'hero:entity': ['primary'],
+    });
 
     manager.removeDependency('hero:entity', 'primary');
     expect(manager.getDependencyMappings()).toEqual({});
@@ -179,7 +210,9 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
     manager.removeDependency('hero:entity');
     expect(manager.getDependencyMappings()).toEqual({});
 
-    expect(() => manager.addDependency('hero:entity', 'missing')).toThrow(InvalidArgumentError);
+    expect(() => manager.addDependency('hero:entity', 'missing')).toThrow(
+      InvalidArgumentError
+    );
 
     manager.addDependency('hero:entity', 'primary');
     expect(manager.unregisterCache('primary')).toBe(true);
@@ -191,9 +224,13 @@ describe('CacheInvalidationManager integration: event-driven flows', () => {
     const manager = createManager();
     const cache = createCache();
 
-    expect(() => manager.registerCache('', cache)).toThrow(InvalidArgumentError);
+    expect(() => manager.registerCache('', cache)).toThrow(
+      InvalidArgumentError
+    );
     expect(() => manager.registerCache('valid')).toThrow(InvalidArgumentError);
-    expect(() => manager.registerCache('invalid', {})).toThrow(InvalidArgumentError);
+    expect(() => manager.registerCache('invalid', {})).toThrow(
+      InvalidArgumentError
+    );
 
     manager.registerCache('primary', cache);
     expect(() => manager.invalidateEntity('')).toThrow(InvalidArgumentError);

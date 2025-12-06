@@ -122,10 +122,7 @@ export class BaseFurnitureOperator {
 
     if (hasValidEntityId(entity)) {
       entityId = /** @type {{id: string|number}} */ (entity).id;
-    } else if (
-      typeof entity === 'string' ||
-      typeof entity === 'number'
-    ) {
+    } else if (typeof entity === 'string' || typeof entity === 'number') {
       entityId = entity;
     } else {
       this.logger.warn(

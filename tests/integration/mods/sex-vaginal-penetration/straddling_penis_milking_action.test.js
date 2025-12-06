@@ -41,13 +41,17 @@ describe('sex-vaginal-penetration:straddling_penis_milking action integration', 
    * @param additionalOptions
    */
   async function performAction(additionalOptions = {}) {
-    await testFixture.executeAction(STRADDLING_MILKING_ACTOR_ID, STRADDLING_MILKING_PRIMARY_ID, {
-      additionalPayload: {
-        primaryId: STRADDLING_MILKING_PRIMARY_ID,
-        ...additionalOptions.additionalPayload,
-      },
-      ...additionalOptions.executionOptions,
-    });
+    await testFixture.executeAction(
+      STRADDLING_MILKING_ACTOR_ID,
+      STRADDLING_MILKING_PRIMARY_ID,
+      {
+        additionalPayload: {
+          primaryId: STRADDLING_MILKING_PRIMARY_ID,
+          ...additionalOptions.additionalPayload,
+        },
+        ...additionalOptions.executionOptions,
+      }
+    );
   }
 
   it('performs the straddling milking action successfully', async () => {
@@ -55,10 +59,14 @@ describe('sex-vaginal-penetration:straddling_penis_milking action integration', 
 
     await performAction();
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
   });
 
   it('emits matching descriptive copy for the perceptible event and UI success message', async () => {
@@ -106,7 +114,8 @@ describe('sex-vaginal-penetration:straddling_penis_milking action integration', 
     const componentEvents = testFixture.events.filter(
       (event) =>
         event.eventType === 'core:component_added' &&
-        (event.payload?.componentTypeId === 'positioning:being_fucked_vaginally' ||
+        (event.payload?.componentTypeId ===
+          'positioning:being_fucked_vaginally' ||
           event.payload?.componentTypeId === 'positioning:fucking_vaginally')
     );
     expect(componentEvents).toHaveLength(0);
@@ -137,8 +146,12 @@ describe('sex-vaginal-penetration:straddling_penis_milking action integration', 
   });
 
   it('rejects execution when the actor lacks the vaginal penetration state', async () => {
-    testFixture.reset(buildStraddlingMilkingScenario({ actorBeingFucked: false }));
+    testFixture.reset(
+      buildStraddlingMilkingScenario({ actorBeingFucked: false })
+    );
 
-    await expect(performAction()).rejects.toThrow(/missing required component/i);
+    await expect(performAction()).rejects.toThrow(
+      /missing required component/i
+    );
   });
 });

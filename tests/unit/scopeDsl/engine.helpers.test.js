@@ -194,14 +194,14 @@ describe('ScopeEngine helper methods', () => {
         },
       };
 
-      runtimeCtxWithDebug.entityManager.getEntityInstance = function getEntityInstance(
-        entityId
-      ) {
-        return { id: entityId, components: {} };
-      };
+      runtimeCtxWithDebug.entityManager.getEntityInstance =
+        function getEntityInstance(entityId) {
+          return { id: entityId, components: {} };
+        };
 
       const gateway = engine._createEntitiesGateway(runtimeCtxWithDebug);
-      const locationProvider = engine._createLocationProvider(runtimeCtxWithDebug);
+      const locationProvider =
+        engine._createLocationProvider(runtimeCtxWithDebug);
       const actor = { id: 'actor-1', componentTypeIds: [] };
 
       const getEntitySpy = jest
@@ -386,7 +386,9 @@ describe('ScopeEngine helper methods', () => {
       expect(createScopeReferenceResolver).toHaveBeenCalledWith({
         scopeRegistry: {},
         cycleDetector: null,
-        errorHandler: expect.objectContaining({ handleError: expect.any(Function) }),
+        errorHandler: expect.objectContaining({
+          handleError: expect.any(Function),
+        }),
       });
       expect(resolvers[resolvers.length - 1]).toEqual({
         canResolve: expect.any(Function),
@@ -455,8 +457,12 @@ describe('ScopeEngine helper methods', () => {
         );
 
         expect(dispatcherResolve).toHaveBeenCalledTimes(3);
-        expect(cycleDetector.enter).toHaveBeenCalledWith('ScopeReference:scope-123');
-        expect(cycleDetector.enter).toHaveBeenCalledWith('ScopeReference:manual-scope');
+        expect(cycleDetector.enter).toHaveBeenCalledWith(
+          'ScopeReference:scope-123'
+        );
+        expect(cycleDetector.enter).toHaveBeenCalledWith(
+          'ScopeReference:manual-scope'
+        );
         expect(cycleDetector.leave).toHaveBeenCalledTimes(3);
       } finally {
         ensureInitializedSpy.mockRestore();

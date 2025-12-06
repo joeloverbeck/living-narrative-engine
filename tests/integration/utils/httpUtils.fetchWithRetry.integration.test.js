@@ -51,13 +51,7 @@ function createIntegrationEnvironment() {
  * @param root0.body
  * @param root0.headers
  */
-function createResponse({
-  ok,
-  status,
-  statusText = '',
-  body,
-  headers = {},
-}) {
+function createResponse({ ok, status, statusText = '', body, headers = {} }) {
   const serializedBody =
     typeof body === 'string' ? body : JSON.stringify(body ?? {});
   const headerEntries = Object.entries(headers).map(([key, value]) => [
@@ -94,7 +88,8 @@ describe('fetchWithRetry integration', () => {
   let randomSpy;
 
   beforeEach(() => {
-    ({ logger, eventBus, safeEventDispatcher } = createIntegrationEnvironment());
+    ({ logger, eventBus, safeEventDispatcher } =
+      createIntegrationEnvironment());
     randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
   });
 

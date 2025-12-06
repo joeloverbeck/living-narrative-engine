@@ -22,7 +22,9 @@ const EXPECTED_MESSAGE =
  * @param {ModTestFixture} fixture - Active test fixture instance.
  */
 function configureActionDiscovery(fixture) {
-  fixture.testEnv.actionIndex.buildIndex([nuzzlePenisThroughClothingSittingCloseAction]);
+  fixture.testEnv.actionIndex.buildIndex([
+    nuzzlePenisThroughClothingSittingCloseAction,
+  ]);
 }
 
 describe('sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action integration', () => {
@@ -30,8 +32,12 @@ describe('sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action int
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installSittingCloseCoveredPenisScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-penile-oral',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installSittingCloseCoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -48,7 +54,9 @@ describe('sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action int
 
   it('dispatches the seated clothed nuzzling narration and perceptible event', async () => {
     const { entities, actorId, primaryId, roomId, clothingId } =
-      buildBreatheTeasinglyOnPenisSittingCloseScenario({ coverPrimaryPenis: true });
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        coverPrimaryPenis: true,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -56,10 +64,14 @@ describe('sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action int
       additionalPayload: { primaryId, secondaryId: clothingId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,

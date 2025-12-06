@@ -56,7 +56,8 @@ describe('Validation middleware header sanitization edge cases (integration)', (
         targetHeaders: {
           '***': 'only punctuation should be removed',
           [oversizedHeaderName]: 'oversized header name',
-          [disguisedConstructor]: 'should be treated as dangerous after cleaning',
+          [disguisedConstructor]:
+            'should be treated as dangerous after cleaning',
           [newlineValueHeader]: 'value with\nnewline',
           'Safe-Header': 'safe-value',
           'Spacing-Allowed': 'preserved',

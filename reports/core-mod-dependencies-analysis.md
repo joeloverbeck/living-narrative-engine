@@ -11,6 +11,7 @@
 The Living Narrative Engine's core mod, which should serve as the foundational dependency-free base for all other mods, currently contains 3 references to content from other mods (`clothing`, `anatomy`, `movement`). This violates the architectural principle that core should have zero dependencies.
 
 **Violation Breakdown**:
+
 - 2 documentation/example violations (low operational impact)
 - 1 operational violation (high priority - event definition in wrong mod)
 
@@ -25,6 +26,7 @@ The Living Narrative Engine's core mod, which should serve as the foundational d
 **Type**: Documentation/Example Violation
 
 #### Context
+
 ```json
 "examples": [
   {
@@ -35,16 +37,20 @@ The Living Narrative Engine's core mod, which should serve as the foundational d
 ```
 
 #### Analysis
+
 - **Severity**: Low
 - **Nature**: This is an example value in the JSON schema's `examples` array
 - **Impact**: Documentation only - not used in operational code
 - **Purpose**: Demonstrates multi-target action structure with different entity types
 
 #### Root Cause
+
 The example was chosen to demonstrate real-world usage with the clothing system, but this creates an inappropriate dependency reference from core to the clothing mod.
 
 #### Recommended Solution
+
 Replace with a generic core-namespaced example:
+
 ```json
 "examples": [
   {
@@ -65,6 +71,7 @@ Replace with a generic core-namespaced example:
 **Type**: Documentation/Description Violation
 
 #### Context
+
 ```json
 "actionId": {
   "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
@@ -73,16 +80,20 @@ Replace with a generic core-namespaced example:
 ```
 
 #### Analysis
+
 - **Severity**: Low
 - **Nature**: Example within a description string in JSON schema
 - **Impact**: Documentation only - illustrative text
 - **Purpose**: Shows developers the expected format of namespaced action IDs
 
 #### Root Cause
+
 The documentation uses a concrete example from the movement mod to illustrate the namespaced ID pattern, inadvertently creating a reference violation.
 
 #### Recommended Solution
+
 Replace with a generic core or hypothetical example:
+
 ```json
 "description": "The underlying action definition ID (e.g. 'core:example_action' or 'mod_name:action_name')."
 ```
@@ -98,21 +109,24 @@ Replace with a generic core or hypothetical example:
 **Type**: Operational Violation (CRITICAL)
 
 #### Context
+
 ```json
 {
   "$schema": "../../../schemas/event.schema.json",
-  "id": "anatomy:limb_detached",  // <-- VIOLATION: anatomy namespace in core mod
+  "id": "anatomy:limb_detached", // <-- VIOLATION: anatomy namespace in core mod
   "description": "Dispatched when a body part is detached from its parent anatomy"
 }
 ```
 
 #### Analysis
+
 - **Severity**: High
 - **Nature**: Actual event definition with anatomy namespace located in core mod
 - **Impact**: Architectural violation - operational code in wrong location
 - **Purpose**: Defines event for anatomy system limb detachment
 
 #### Root Cause
+
 The event definition was placed in the core mod's events directory despite being namespaced and functionally belonging to the anatomy mod. This is a file organization error.
 
 #### Recommended Solution (REQUIRED)
@@ -129,6 +143,7 @@ The event definition was placed in the core mod's events directory despite being
    - Remove `"limb_detached.event.json"` from the events array
 
 **Rationale**:
+
 - Event definitions should reside in the mod they're namespaced to
 - Anatomy-specific functionality belongs in the anatomy mod
 - Core mod should only contain truly foundational, mod-agnostic events
@@ -146,6 +161,7 @@ The event definition was placed in the core mod's events directory despite being
 4. **Mod Loading Order**: Core must load first; it cannot reference later-loading mods
 
 ### Current Mod Loading Order
+
 ```
 1. core         (foundation - should have 0 dependencies)
 2. movement     (depends on core)
@@ -161,17 +177,20 @@ The event definition was placed in the core mod's events directory despite being
 ## Implementation Priority
 
 ### Phase 1: Critical Fix (IMMEDIATE)
+
 - [ ] Move `limb_detached.event.json` to anatomy mod
 - [ ] Update anatomy manifest to include the event
 - [ ] Remove from core manifest
 - [ ] Verify with `npm run validate:ecosystem`
 
 ### Phase 2: Documentation Cleanup (NEXT)
+
 - [ ] Update `attempt_action.event.json` example to use `core:item_example`
 - [ ] Update `player_turn_prompt.event.json` description to use generic example
 - [ ] Verify with `npm run validate:ecosystem`
 
 ### Phase 3: Validation (FINAL)
+
 - [ ] Run full validation suite: `npm run validate:ecosystem`
 - [ ] Confirm zero violations for core mod
 - [ ] Run integration tests to ensure no breakage
@@ -182,6 +201,7 @@ The event definition was placed in the core mod's events directory despite being
 ## Expected Outcomes
 
 ### Before Fix
+
 ```
 Extracted references for mod 'core': clothing, anatomy, movement
 Cross-reference validation for core: 3 violations
@@ -189,6 +209,7 @@ Mod core has 3 cross-reference violations
 ```
 
 ### After Fix
+
 ```
 Extracted references for mod 'core':
 Cross-reference validation for core: 0 violations
@@ -200,17 +221,22 @@ Mod core has 0 cross-reference violations
 ## Additional Recommendations
 
 ### 1. Validation as Pre-commit Hook
+
 Consider adding ecosystem validation to pre-commit hooks to catch these violations early:
+
 ```bash
 npm run validate:ecosystem
 ```
 
 ### 2. Documentation Standards
+
 Establish documentation standards that specify:
+
 - Examples in core schemas must use core-namespaced or generic identifiers
 - Cross-mod examples should be in integration documentation, not core schemas
 
 ### 3. File Organization Audit
+
 Conduct a review to ensure all event/component/action definitions are in the correct mod directory matching their namespace prefix.
 
 ---
@@ -218,16 +244,19 @@ Conduct a review to ensure all event/component/action definitions are in the cor
 ## Testing Strategy
 
 ### Validation Tests
+
 1. Run `npm run validate:ecosystem` - should report 0 violations
 2. Check that core mod has no extracted references
 3. Verify anatomy mod correctly includes limb_detached event
 
 ### Functional Tests
+
 1. Verify limb detachment events still fire correctly from anatomy mod
 2. Confirm multi-target actions work with updated examples
 3. Test player turn prompts display correctly
 
 ### Integration Tests
+
 1. Full game startup with all mods loaded
 2. Anatomy system functionality (if implemented)
 3. Action system with multi-target examples

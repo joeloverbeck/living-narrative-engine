@@ -1,8 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import NotesService, {
   normalizeNoteText,
 } from '../../../src/ai/notesService.js';
@@ -29,9 +25,7 @@ describe('notesService additional uncovered paths', () => {
     it('throws when the notes component is malformed', () => {
       const service = new NotesService();
       expect(() => service.addNotes(null, [])).toThrow(TypeError);
-      expect(() =>
-        service.addNotes({ notes: 'not-an-array' }, [])
-      ).toThrow(
+      expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(
         'notesComp must be an object conforming to the core:notes schema with a `notes` array.'
       );
     });
@@ -76,7 +70,11 @@ describe('notesService additional uncovered paths', () => {
           null,
           { text: '   ', subject: 'Ignored' },
           { text: ' existing FACT ', subject: 'Lore', subjectType: 'concept' },
-          { text: 'Fresh Insight ', subject: 'Lore', context: 'council chamber' },
+          {
+            text: 'Fresh Insight ',
+            subject: 'Lore',
+            context: 'council chamber',
+          },
         ],
         now
       );

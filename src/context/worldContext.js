@@ -264,7 +264,7 @@ class WorldContext extends IWorldContext {
     // current_location_id is an instance ID, so getComponentData is correct here.
     const exitsComponentData = this.#entityManager.getComponentData(
       current_location_id,
-      "movement:exits"
+      'movement:exits'
     );
     if (!Array.isArray(exitsComponentData)) {
       this.#logger.warn(

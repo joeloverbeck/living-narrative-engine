@@ -27,8 +27,7 @@ export class LoadTimeValidationContext {
    * @param {Object.<string, object>} params.recipes - All loaded recipes (recipeId → recipe)
    */
   constructor({ blueprints, recipes }) {
-    if (!blueprints)
-      throw new InvalidArgumentError('blueprints is required');
+    if (!blueprints) throw new InvalidArgumentError('blueprints is required');
     if (!recipes) throw new InvalidArgumentError('recipes is required');
 
     this.#blueprints = blueprints;

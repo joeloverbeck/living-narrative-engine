@@ -69,7 +69,10 @@ describe('Macro Schema - Nested Macro References Support', () => {
         Action: {
           description:
             'Either a macro reference or an operation. This is the canonical definition for any item in an action sequence.',
-          anyOf: [{ $ref: '#/$defs/MacroReference' }, { $ref: '#/$defs/Operation' }],
+          anyOf: [
+            { $ref: '#/$defs/MacroReference' },
+            { $ref: '#/$defs/Operation' },
+          ],
         },
         MacroReference: {
           type: 'object',
@@ -88,7 +91,8 @@ describe('Macro Schema - Nested Macro References Support', () => {
           additionalProperties: false,
         },
         Operation: {
-          description: 'A single, discrete operation within an action sequence.',
+          description:
+            'A single, discrete operation within an action sequence.',
           anyOf: [
             {
               type: 'object',
@@ -99,7 +103,10 @@ describe('Macro Schema - Nested Macro References Support', () => {
                   type: 'object',
                   properties: {
                     message: { type: 'string' },
-                    level: { type: 'string', enum: ['info', 'warn', 'error', 'debug'] },
+                    level: {
+                      type: 'string',
+                      enum: ['info', 'warn', 'error', 'debug'],
+                    },
                   },
                   required: ['message', 'level'],
                   additionalProperties: false,
@@ -160,18 +167,22 @@ describe('Macro Schema - Nested Macro References Support', () => {
       type: 'object',
       properties: {
         $schema: {
-          $ref: commonSchemaId + '#/definitions/BaseDefinition/properties/$schema',
+          $ref:
+            commonSchemaId + '#/definitions/BaseDefinition/properties/$schema',
         },
         id: {
           $ref: commonSchemaId + '#/definitions/BaseDefinition/properties/id',
         },
         description: {
-          $ref: commonSchemaId + '#/definitions/BaseDefinition/properties/description',
+          $ref:
+            commonSchemaId +
+            '#/definitions/BaseDefinition/properties/description',
         },
         actions: {
           type: 'array',
           minItems: 1,
-          description: 'Ordered list of Operation objects to expand when the macro is used.',
+          description:
+            'Ordered list of Operation objects to expand when the macro is used.',
           items: {
             // THE FIX: Use Action (which allows both MacroReference and Operation)
             // Instead of just Operation
@@ -330,7 +341,8 @@ describe('Macro Schema - Nested Macro References Support', () => {
         actions: [
           {
             type: 'SET_VARIABLE',
-            comment: 'Set logMessage BEFORE damage loop so success message displays first',
+            comment:
+              'Set logMessage BEFORE damage loop so success message displays first',
             parameters: {
               variable_name: 'logMessage',
               value: '{context.actorName} lands a devastating blow!',
@@ -383,7 +395,10 @@ describe('Macro Schema - Nested Macro References Support', () => {
         actions: [
           { type: 'LOG', parameters: { message: 'Start', level: 'info' } },
           { macro: 'core:logSuccessAndEndTurn' },
-          { type: 'SET_VARIABLE', parameters: { variable_name: 'x', value: 1 } },
+          {
+            type: 'SET_VARIABLE',
+            parameters: { variable_name: 'x', value: 1 },
+          },
           { macro: 'core:endTurnOnly' },
           { type: 'END_TURN', parameters: { entityId: 'test', success: true } },
         ],

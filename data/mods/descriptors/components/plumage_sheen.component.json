@@ -8,13 +8,7 @@
       "sheen": {
         "type": "string",
         "description": "The sheen or reflective quality of plumage",
-        "enum": [
-          "matte",
-          "glossy",
-          "iridescent",
-          "metallic",
-          "oily-sheen"
-        ],
+        "enum": ["matte", "glossy", "iridescent", "metallic", "oily-sheen"],
         "default": "matte"
       }
     },

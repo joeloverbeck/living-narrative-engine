@@ -123,7 +123,7 @@ describe('slotAccessResolver integration coverage enhancement', () => {
 
     const clothingEquipment = entityManager.getComponentData(
       actorId,
-      'clothing:equipment',
+      'clothing:equipment'
     );
 
     const structuredTrace = new StructuredTrace();
@@ -131,7 +131,7 @@ describe('slotAccessResolver integration coverage enhancement', () => {
     const node = { type: 'Step', field: 'torso_upper', parent };
 
     const secondaryEquipped = JSON.parse(
-      JSON.stringify(clothingEquipment.equipped),
+      JSON.stringify(clothingEquipment.equipped)
     );
     secondaryEquipped.torso_upper = {
       outer: directOuterId,
@@ -177,7 +177,7 @@ describe('slotAccessResolver integration coverage enhancement', () => {
         'archive-a',
         'archive-b',
         expect.objectContaining({ id: 'object-component' }),
-      ]),
+      ])
     );
 
     expect(dispatcher.resolve).toHaveBeenCalledWith(parent, context);
@@ -190,7 +190,7 @@ describe('slotAccessResolver integration coverage enhancement', () => {
         'candidate_collection',
         'priority_calculation',
         'final_selection',
-      ]),
+      ])
     );
   });
 
@@ -212,7 +212,7 @@ describe('slotAccessResolver integration coverage enhancement', () => {
       const dispatcher = { resolve: () => parentResults };
       return slotAccessResolver.resolve(
         { type: 'Step', field, parent },
-        { dispatcher, trace: null, structuredTrace: null },
+        { dispatcher, trace: null, structuredTrace: null }
       );
     }
 
@@ -280,7 +280,7 @@ describe('slotAccessResolver integration coverage enhancement', () => {
         dispatcher,
         trace: null,
         structuredTrace: null,
-      }),
+      })
     ).toThrow(ScopeDslError);
 
     const bufferedError = errorHandler.getErrorBuffer()[0];

@@ -39,7 +39,10 @@ describe('Bilateral Limb Generation', () => {
 
       // DEBUG: Log what parts were actually created
       console.log('[TEST DEBUG] Parts created:', Object.keys(parts));
-      console.log('[TEST DEBUG] Full parts object:', JSON.stringify(parts, null, 2));
+      console.log(
+        '[TEST DEBUG] Full parts object:',
+        JSON.stringify(parts, null, 2)
+      );
 
       // Critical assertion: Both hands should exist with proper names
       // THIS SHOULD FAIL INITIALLY - demonstrating the bilateral limb bug
@@ -113,7 +116,7 @@ describe('Bilateral Limb Generation', () => {
         parts['left hand'],
         parts['right hand'],
         parts['left foot'],
-        parts['right foot']
+        parts['right foot'],
       ];
       const uniqueExtremities = new Set(extremities);
       expect(uniqueExtremities.size).toBe(4);
@@ -145,11 +148,11 @@ describe('Bilateral Limb Generation', () => {
         'left hand',
         'right hand',
         'left foot',
-        'right foot'
+        'right foot',
       ];
 
       // THIS SHOULD FAIL FOR HANDS/FEET - demonstrating the bilateral limb bug
-      expectedBilateralParts.forEach(partName => {
+      expectedBilateralParts.forEach((partName) => {
         expect(parts[partName]).toBeDefined();
       });
     });
@@ -171,8 +174,12 @@ describe('Bilateral Limb Generation', () => {
 
       // Hand and foot parts should exist as anatomy parts
       // If these were misclassified as equipment slots, they wouldn't be created
-      const handParts = Object.keys(parts).filter(name => name.includes('hand'));
-      const footParts = Object.keys(parts).filter(name => name.includes('foot'));
+      const handParts = Object.keys(parts).filter((name) =>
+        name.includes('hand')
+      );
+      const footParts = Object.keys(parts).filter((name) =>
+        name.includes('foot')
+      );
 
       // THIS SHOULD FAIL - demonstrating the bilateral limb bug
       expect(handParts.length).toBeGreaterThan(0);

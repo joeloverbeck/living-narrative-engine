@@ -297,7 +297,10 @@ class ConsoleLogger {
     }
 
     // Namespace provided - check if it's enabled
-    if (this.#globalDebugEnabled || this.#enabledDebugNamespaces.has(namespace)) {
+    if (
+      this.#globalDebugEnabled ||
+      this.#enabledDebugNamespaces.has(namespace)
+    ) {
       console.debug(message, ...args);
     }
   }

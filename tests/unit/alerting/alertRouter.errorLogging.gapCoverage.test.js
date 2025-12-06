@@ -31,9 +31,7 @@ describe('AlertRouter error logging gap coverage', () => {
 
   it('logs an error when handleEvent fails to enqueue due to queue issues', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
-    const errorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     router.queue = null;
 
@@ -99,11 +97,9 @@ describe('AlertRouter error logging gap coverage', () => {
       },
     ];
 
-    jest
-      .spyOn(router, 'forwardToUI')
-      .mockImplementation(() => {
-        throw new Error('forward failed');
-      });
+    jest.spyOn(router, 'forwardToUI').mockImplementation(() => {
+      throw new Error('forward failed');
+    });
 
     router.notifyUIReady();
 

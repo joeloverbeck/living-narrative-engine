@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TargetManager } from '../../../src/entities/multiTarget/targetManager.js';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import EntityFactory from '../../../src/entities/factories/entityFactory.js';
@@ -48,15 +55,20 @@ describe('dependencyUtils integration across real modules', () => {
     it('logs structured errors when targets are missing and when invalid identifiers are provided', () => {
       const manager = new TargetManager({ logger });
 
-      expect(() => manager.setTargets(null)).toThrow('Targets object is required');
+      expect(() => manager.setTargets(null)).toThrow(
+        'Targets object is required'
+      );
       expect(logger.messages.error[0]).toEqual({
         message: 'Targets object is required',
         metadata: undefined,
       });
 
-      expect(() => manager.addTarget('', 'actor:missing')).toThrow(InvalidArgumentError);
+      expect(() => manager.addTarget('', 'actor:missing')).toThrow(
+        InvalidArgumentError
+      );
       expect(logger.messages.error[1]).toMatchObject({
-        message: "TargetManager.addTarget: Invalid name ''. Expected non-blank string.",
+        message:
+          "TargetManager.addTarget: Invalid name ''. Expected non-blank string.",
         metadata: {
           receivedValue: '',
           receivedType: 'string',
@@ -84,16 +96,17 @@ describe('dependencyUtils integration across real modules', () => {
       const eventDispatchService = { dispatchWithLogging: () => {} };
       const scopeRegistry = { initialize: () => {} };
 
-      expect(() =>
-        new WorldInitializer({
-          entityManager,
-          worldContext,
-          gameDataRepository: repository,
-          validatedEventDispatcher,
-          eventDispatchService,
-          logger,
-          scopeRegistry,
-        }),
+      expect(
+        () =>
+          new WorldInitializer({
+            entityManager,
+            worldContext,
+            gameDataRepository: repository,
+            validatedEventDispatcher,
+            eventDispatchService,
+            logger,
+            scopeRegistry,
+          })
       ).toThrow(WorldInitializationError);
     });
   });
@@ -102,7 +115,9 @@ describe('dependencyUtils integration across real modules', () => {
     let consoleErrorSpy;
 
     beforeEach(() => {
-      consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -111,19 +126,24 @@ describe('dependencyUtils integration across real modules', () => {
 
     it('relies on validateDependency to enforce logger contracts', () => {
       const validator = { validate: () => ({ valid: true }) };
-      const incompleteLogger = { info: () => {}, warn: () => {}, debug: () => {} }; // missing error
+      const incompleteLogger = {
+        info: () => {},
+        warn: () => {},
+        debug: () => {},
+      }; // missing error
 
-      expect(() =>
-        new EntityFactory({
-          validator,
-          logger: incompleteLogger,
-          idGenerator: () => 'id-1',
-          cloner: (value) => value,
-          defaultPolicy: {},
-        }),
+      expect(
+        () =>
+          new EntityFactory({
+            validator,
+            logger: incompleteLogger,
+            idGenerator: () => 'id-1',
+            cloner: (value) => value,
+            defaultPolicy: {},
+          })
       ).toThrow(InvalidArgumentError);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Invalid or missing method 'error' on dependency 'ILogger'.",
+        "Invalid or missing method 'error' on dependency 'ILogger'."
       );
     });
 
@@ -147,9 +167,9 @@ describe('dependencyUtils integration across real modules', () => {
 
   describe('Slot access resolver dependency enforcement', () => {
     it('rejects missing gateway dependencies before building the resolver', () => {
-      expect(() =>
-        createSlotAccessResolver({ entitiesGateway: null }),
-      ).toThrow(InvalidArgumentError);
+      expect(() => createSlotAccessResolver({ entitiesGateway: null })).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('validates provided error handlers expose required hooks', () => {
@@ -161,7 +181,7 @@ describe('dependencyUtils integration across real modules', () => {
         createSlotAccessResolver({
           entitiesGateway,
           errorHandler: { handleError: () => {} },
-        }),
+        })
       ).toThrow(InvalidArgumentError);
     });
   });
@@ -170,9 +190,12 @@ describe('dependencyUtils integration across real modules', () => {
     it('logs structured metadata when invalid identifiers are supplied', () => {
       const registry = { getEntityDefinition: () => null };
 
-      expect(() => getDefinition('   ', registry, logger)).toThrow(InvalidArgumentError);
+      expect(() => getDefinition('   ', registry, logger)).toThrow(
+        InvalidArgumentError
+      );
       expect(logger.messages.error[0]).toMatchObject({
-        message: "definitionLookup.getDefinition: Invalid ID '   '. Expected non-blank string.",
+        message:
+          "definitionLookup.getDefinition: Invalid ID '   '. Expected non-blank string.",
         metadata: {
           receivedId: '   ',
           receivedType: 'string',
@@ -188,9 +211,11 @@ describe('dependencyUtils integration across real modules', () => {
       };
 
       expect(() => getDefinition('entity:missing', registry, logger)).toThrow(
-        DefinitionNotFoundError,
+        DefinitionNotFoundError
       );
-      expect(logger.messages.warn.at(-1).message).toContain('Definition not found');
+      expect(logger.messages.warn.at(-1).message).toContain(
+        'Definition not found'
+      );
     });
   });
 
@@ -205,7 +230,8 @@ describe('dependencyUtils integration across real modules', () => {
       const actionDefinition = { id: 'inspect', template: 'Inspect {target}' };
       const targetContext = { type: 'entity', entityId: 'npc:1' };
       const entityManager = {
-        getEntityInstance: (id) => (id === 'npc:1' ? { id, name: 'Guard' } : null),
+        getEntityInstance: (id) =>
+          id === 'npc:1' ? { id, name: 'Guard' } : null,
       };
       const safeEventDispatcher = { dispatch: () => Promise.resolve(true) };
       const displayNameFn = (entity) => entity.name;
@@ -214,7 +240,7 @@ describe('dependencyUtils integration across real modules', () => {
         targetContext,
         entityManager,
         { logger, safeEventDispatcher },
-        { displayNameFn },
+        { displayNameFn }
       );
 
       expect(result).toEqual({ ok: true, value: 'Inspect Guard' });
@@ -234,11 +260,13 @@ describe('dependencyUtils integration across real modules', () => {
         targetContext,
         entityManager,
         { logger, safeEventDispatcher },
-        { displayNameFn: { not: 'a function' } },
+        { displayNameFn: { not: 'a function' } }
       );
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('getEntityDisplayName utility function is not available');
+      expect(result.error).toContain(
+        'getEntityDisplayName utility function is not available'
+      );
       expect(safeEventDispatcher.dispatch).toHaveBeenCalled();
     });
 
@@ -248,12 +276,10 @@ describe('dependencyUtils integration across real modules', () => {
       const entityManager = { getEntityInstance: () => null };
 
       expect(() =>
-        formatter.format(
-          actionDefinition,
-          targetContext,
-          entityManager,
-          { logger, safeEventDispatcher: {} },
-        ),
+        formatter.format(actionDefinition, targetContext, entityManager, {
+          logger,
+          safeEventDispatcher: {},
+        })
       ).toThrow(InvalidArgumentError);
     });
   });

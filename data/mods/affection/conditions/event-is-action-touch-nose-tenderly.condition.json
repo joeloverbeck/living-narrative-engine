@@ -3,9 +3,6 @@
   "id": "affection:event-is-action-touch-nose-tenderly",
   "description": "Checks if the triggering event is for the 'affection:touch_nose_tenderly' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "affection:touch_nose_tenderly"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "affection:touch_nose_tenderly"]
   }
 }

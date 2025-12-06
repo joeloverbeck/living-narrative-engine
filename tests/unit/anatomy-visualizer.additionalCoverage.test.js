@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -10,12 +17,19 @@ describe('anatomy-visualizer.js - additional coverage', () => {
     jest.resetModules();
     jest.clearAllMocks();
     originalWindow = global.window;
-    originalReadyStateDescriptor = Object.getOwnPropertyDescriptor(document, 'readyState');
+    originalReadyStateDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      'readyState'
+    );
   });
 
   afterEach(() => {
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     }
     document.body.innerHTML = '';
     global.window = originalWindow;
@@ -78,10 +92,12 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       jest.doMock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
         CommonBootstrapper,
       }));
-      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({
+        tokens,
+      }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -92,7 +108,10 @@ describe('anatomy-visualizer.js - additional coverage', () => {
     });
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
-    expect(addEventListenerSpy).toHaveBeenCalledWith('DOMContentLoaded', expect.any(Function));
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'DOMContentLoaded',
+      expect.any(Function)
+    );
 
     const initializationTrigger = addEventListenerSpy.mock.calls[0][1];
     await initializationTrigger();
@@ -101,9 +120,11 @@ describe('anatomy-visualizer.js - additional coverage', () => {
     expect(CommonBootstrapper).toHaveBeenCalledTimes(1);
     expect(bootstrapperInstance.bootstrap).toHaveBeenCalledTimes(1);
     expect(registerVisualizerComponents).toHaveBeenCalledWith(container);
-    expect(container.resolve).toHaveBeenCalledWith(tokens.ClothingManagementService);
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.ClothingManagementService
+    );
     expect(logger.warn).toHaveBeenCalledWith(
-      'ClothingManagementService not available - equipment panel will be disabled',
+      'ClothingManagementService not available - equipment panel will be disabled'
     );
     expect(document.getElementById('back-button')).toBeNull();
     expect(uiInitialize).toHaveBeenCalledTimes(1);
@@ -119,7 +140,10 @@ describe('anatomy-visualizer.js - additional coverage', () => {
 
     document.body.innerHTML = '<button id="back-button"></button>';
     const backButton = document.getElementById('back-button');
-    const backButtonAddEventListener = jest.spyOn(backButton, 'addEventListener');
+    const backButtonAddEventListener = jest.spyOn(
+      backButton,
+      'addEventListener'
+    );
     const documentAddEventListener = jest.spyOn(document, 'addEventListener');
 
     const tokens = {
@@ -162,15 +186,16 @@ describe('anatomy-visualizer.js - additional coverage', () => {
 
     const CommonBootstrapper = jest.fn(() => bootstrapperInstance);
 
-
     await jest.isolateModulesAsync(async () => {
       jest.doMock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
         CommonBootstrapper,
       }));
-      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({
+        tokens,
+      }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -184,13 +209,20 @@ describe('anatomy-visualizer.js - additional coverage', () => {
 
     expect(documentAddEventListener).not.toHaveBeenCalledWith(
       'DOMContentLoaded',
-      expect.any(Function),
+      expect.any(Function)
     );
-    expect(backButtonAddEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+    expect(backButtonAddEventListener).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function)
+    );
 
     const clickHandler = backButtonAddEventListener.mock.calls[0][1];
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    expect(clickHandler.toString()).toContain("window.location.href = 'index.html'");
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    expect(clickHandler.toString()).toContain(
+      "window.location.href = 'index.html'"
+    );
     const previousHref = window.location.href;
     let thrownError = null;
     try {
@@ -199,7 +231,9 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       thrownError = error;
     }
     if (thrownError) {
-      expect(thrownError.message).toContain('Not implemented: navigation (except hash changes)');
+      expect(thrownError.message).toContain(
+        'Not implemented: navigation (except hash changes)'
+      );
     } else {
       window.location.href = previousHref;
     }
@@ -207,8 +241,12 @@ describe('anatomy-visualizer.js - additional coverage', () => {
 
     expect(registerVisualizerComponents).toHaveBeenCalledWith(container);
     expect(uiInitialize).toHaveBeenCalledTimes(1);
-    expect(logger.info).toHaveBeenCalledWith('Anatomy Visualizer: Initializing UI...');
-    expect(logger.info).toHaveBeenCalledWith('Anatomy Visualizer: Initialization complete');
+    expect(logger.info).toHaveBeenCalledWith(
+      'Anatomy Visualizer: Initializing UI...'
+    );
+    expect(logger.info).toHaveBeenCalledWith(
+      'Anatomy Visualizer: Initialization complete'
+    );
 
     backButtonAddEventListener.mockRestore();
     documentAddEventListener.mockRestore();
@@ -267,10 +305,12 @@ describe('anatomy-visualizer.js - additional coverage', () => {
       jest.doMock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
         CommonBootstrapper,
       }));
-      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({
+        tokens,
+      }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -287,7 +327,7 @@ describe('anatomy-visualizer.js - additional coverage', () => {
     expect(uiInitialize).toHaveBeenCalledTimes(1);
     expect(bootstrapperInstance.displayFatalStartupError).toHaveBeenCalledWith(
       'Failed to initialize anatomy visualizer: UI failure',
-      initializationError,
+      initializationError
     );
   });
 });

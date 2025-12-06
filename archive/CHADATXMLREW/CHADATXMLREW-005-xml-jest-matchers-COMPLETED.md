@@ -12,38 +12,44 @@
 ## Outcome
 
 ### What Was Originally Planned
+
 - Create custom Jest matchers for XML validation
 - Implement 4 matchers: `toBeWellFormedXml`, `toContainXmlElement`, `toHaveXmlElementContent`, `toHaveXmlElementExactContent`
 - Create self-test file to validate matchers
 - Ticket specified paths: `tests/common/prompting/xmlMatchers.js` and `tests/unit/common/prompting/xmlMatchers.test.js`
 
 ### What Was Actually Changed
+
 - **Created**: `tests/common/prompting/xmlMatchers.js` - Custom Jest matchers with all 4 matchers
 - **Created**: `tests/unit/common/prompting/xmlMatchers.test.js` - Comprehensive test suite with 38 tests
 - **Created**: `tests/unit/common/prompting/` directory (did not exist previously)
 
 ### Implementation Notes
+
 - All 4 matchers implemented as specified
 - Added `/* global expect */` directive to satisfy ESLint
 - Test file refactored to avoid conditional expects (Jest best practice)
 - 38 tests covering all matcher behaviors, edge cases, and error messages
 
 ### Test Results
+
 - All 38 matcher self-tests pass
 - All 505 prompting unit tests pass (no regressions)
 - Related tests (xmlElementBuilder.test.js, characterDataXmlBuilder.test.js) continue to pass
 
 ### Files Created
-| File | Purpose |
-|------|---------|
-| `tests/common/prompting/xmlMatchers.js` | Custom Jest matchers for XML validation |
-| `tests/unit/common/prompting/xmlMatchers.test.js` | Self-tests for the matchers |
+
+| File                                              | Purpose                                 |
+| ------------------------------------------------- | --------------------------------------- |
+| `tests/common/prompting/xmlMatchers.js`           | Custom Jest matchers for XML validation |
+| `tests/unit/common/prompting/xmlMatchers.test.js` | Self-tests for the matchers             |
 
 ---
 
 ## Problem Statement
 
 Create custom Jest matchers for XML validation to simplify test assertions in CHADATXMLREW-002 and CHADATXMLREW-006. These matchers provide:
+
 - XML well-formedness validation
 - Element presence checking
 - Element content assertions
@@ -54,8 +60,8 @@ Without these matchers, tests would require verbose DOMParser boilerplate in eve
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                    | Purpose              |
+| --------------------------------------- | -------------------- |
 | `tests/common/prompting/xmlMatchers.js` | Custom Jest matchers |
 
 ---
@@ -63,6 +69,7 @@ Without these matchers, tests would require verbose DOMParser boilerplate in eve
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any source files in `src/`
 - Any existing test files
 - Jest configuration files
@@ -113,7 +120,7 @@ expect.extend({
       message: () =>
         doc !== null
           ? `Expected invalid XML but received well-formed XML`
-          : `Expected well-formed XML but got parse error:\n${error}`
+          : `Expected well-formed XML but got parse error:\n${error}`,
     };
   },
 
@@ -129,7 +136,7 @@ expect.extend({
     if (!doc) {
       return {
         pass: false,
-        message: () => `Cannot check for element - XML parse error:\n${error}`
+        message: () => `Cannot check for element - XML parse error:\n${error}`,
       };
     }
 
@@ -140,7 +147,7 @@ expect.extend({
       message: () =>
         element
           ? `Expected XML not to contain <${selector}> but it did`
-          : `Expected XML to contain <${selector}> but it didn't.\nXML structure:\n${received.substring(0, 500)}...`
+          : `Expected XML to contain <${selector}> but it didn't.\nXML structure:\n${received.substring(0, 500)}...`,
     };
   },
 
@@ -156,7 +163,8 @@ expect.extend({
     if (!doc) {
       return {
         pass: false,
-        message: () => `Cannot check element content - XML parse error:\n${error}`
+        message: () =>
+          `Cannot check element content - XML parse error:\n${error}`,
       };
     }
 
@@ -166,7 +174,7 @@ expect.extend({
       return {
         pass: false,
         message: () =>
-          `Expected <${selector}> to contain "${expectedContent}" but element not found`
+          `Expected <${selector}> to contain "${expectedContent}" but element not found`,
       };
     }
 
@@ -178,7 +186,7 @@ expect.extend({
       message: () =>
         pass
           ? `Expected <${selector}> not to contain "${expectedContent}" but it did`
-          : `Expected <${selector}> to contain "${expectedContent}" but got "${actualContent.substring(0, 100)}..."`
+          : `Expected <${selector}> to contain "${expectedContent}" but got "${actualContent.substring(0, 100)}..."`,
     };
   },
 
@@ -194,7 +202,8 @@ expect.extend({
     if (!doc) {
       return {
         pass: false,
-        message: () => `Cannot check element content - XML parse error:\n${error}`
+        message: () =>
+          `Cannot check element content - XML parse error:\n${error}`,
       };
     }
 
@@ -204,7 +213,7 @@ expect.extend({
       return {
         pass: false,
         message: () =>
-          `Expected <${selector}> with content "${expectedContent}" but element not found`
+          `Expected <${selector}> with content "${expectedContent}" but element not found`,
       };
     }
 
@@ -216,7 +225,7 @@ expect.extend({
       message: () =>
         pass
           ? `Expected <${selector}> not to have exact content "${expectedContent}"`
-          : `Expected <${selector}> to have exact content "${expectedContent}" but got "${actualContent}"`
+          : `Expected <${selector}> to have exact content "${expectedContent}" but got "${actualContent}"`,
     };
   },
 
@@ -250,7 +259,10 @@ describe('CharacterDataXmlBuilder', () => {
   });
 
   it('should omit empty psychology section', () => {
-    const xml = builder.buildCharacterDataXml({ name: 'Test', motivations: '' });
+    const xml = builder.buildCharacterDataXml({
+      name: 'Test',
+      motivations: '',
+    });
     expect(xml).not.toContainXmlElement('psychology');
   });
 });

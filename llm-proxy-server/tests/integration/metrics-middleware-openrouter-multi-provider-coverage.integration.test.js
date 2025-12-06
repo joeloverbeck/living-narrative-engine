@@ -61,11 +61,9 @@ describe('Metrics middleware OpenRouter hierarchical provider branch coverage', 
   });
 
   it('records metrics for OpenRouter identifiers with nested provider segments', async () => {
-    const response = await request(app)
-      .post('/llm/telemetry')
-      .send({
-        llmId: 'OpenRouter/DeepMind/Gemma-3-8B',
-      });
+    const response = await request(app).post('/llm/telemetry').send({
+      llmId: 'OpenRouter/DeepMind/Gemma-3-8B',
+    });
 
     expect(response.status).toBe(201);
     expect(metricsService.llmRequests).toHaveLength(1);

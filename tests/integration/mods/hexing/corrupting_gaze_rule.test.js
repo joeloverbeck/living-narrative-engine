@@ -12,8 +12,7 @@ import corruptingAction from '../../../../data/mods/hexing/actions/corrupting_ga
 const findBranch = (actions, outcome) =>
   actions.find(
     (op) =>
-      op.type === 'IF' &&
-      op.parameters?.condition?.['==']?.[1] === outcome
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
   );
 
 const getPerceptibleEvents = (actions) =>
@@ -27,9 +26,7 @@ describe('handle_corrupting_gaze rule', () => {
       'hexing:event-is-action-corrupting-gaze'
     );
 
-    expect(eventIsCorrupting.id).toBe(
-      'hexing:event-is-action-corrupting-gaze'
-    );
+    expect(eventIsCorrupting.id).toBe('hexing:event-is-action-corrupting-gaze');
     expect(eventIsCorrupting.logic['==']).toEqual([
       { var: 'event.payload.actionId' },
       'hexing:corrupting_gaze',
@@ -112,14 +109,16 @@ describe('handle_corrupting_gaze rule', () => {
       (op) => op.type === 'IF'
     );
     expect(branches).toHaveLength(4);
-    expect(findBranch(handleCorruptingRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
+    expect(
+      findBranch(handleCorruptingRule.actions, 'CRITICAL_SUCCESS')
+    ).toBeDefined();
     expect(findBranch(handleCorruptingRule.actions, 'SUCCESS')).toBeDefined();
     expect(findBranch(handleCorruptingRule.actions, 'FAILURE')).toBeDefined();
     expect(findBranch(handleCorruptingRule.actions, 'FUMBLE')).toBeDefined();
 
     const critEvents = getPerceptibleEvents(
-      findBranch(handleCorruptingRule.actions, 'CRITICAL_SUCCESS')
-        ?.parameters.then_actions || []
+      findBranch(handleCorruptingRule.actions, 'CRITICAL_SUCCESS')?.parameters
+        .then_actions || []
     );
     const successEvents = getPerceptibleEvents(
       findBranch(handleCorruptingRule.actions, 'SUCCESS')?.parameters
@@ -166,9 +165,9 @@ describe('handle_corrupting_gaze rule', () => {
         op.parameters.variable_name === 'logMessage'
     );
     expect(logMessage?.parameters.value).toBe(expectedPublicMessage);
-    expect(actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')).toBe(
-      true
-    );
+    expect(
+      actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
+    ).toBe(true);
   });
 
   it('adds corruption and publishes dual perception on SUCCESS', () => {
@@ -208,9 +207,9 @@ describe('handle_corrupting_gaze rule', () => {
         op.parameters.variable_name === 'logMessage'
     );
     expect(logMessage?.parameters.value).toBe(expectedPublicMessage);
-    expect(actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')).toBe(
-      true
-    );
+    expect(
+      actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
+    ).toBe(true);
   });
 
   it('logs resistance on FAILURE without altering components', () => {
@@ -233,9 +232,9 @@ describe('handle_corrupting_gaze rule', () => {
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
     expect(logMessage?.parameters.value).toBe(expectedMessage);
-    expect(actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')).toBe(
-      true
-    );
+    expect(
+      actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')
+    ).toBe(true);
   });
 
   it('adds fallen to actor and logs failure on FUMBLE', () => {
@@ -265,8 +264,8 @@ describe('handle_corrupting_gaze rule', () => {
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
     expect(logMessage?.parameters.value).toBe(expectedMessage);
-    expect(actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')).toBe(
-      true
-    );
+    expect(
+      actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')
+    ).toBe(true);
   });
 });

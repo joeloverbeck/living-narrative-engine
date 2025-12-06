@@ -33,7 +33,10 @@ describe('DEBUG: take_from_container rule matching', () => {
     console.log('\n=== LOADED RULE ===');
     console.log('Rule ID:', takeFromContainerRule.rule_id);
     console.log('Event Type:', takeFromContainerRule.event_type);
-    console.log('Condition:', JSON.stringify(takeFromContainerRule.condition, null, 2));
+    console.log(
+      'Condition:',
+      JSON.stringify(takeFromContainerRule.condition, null, 2)
+    );
 
     // Setup minimal scenario
     const room = new ModEntityBuilder('room1').asRoom('Room').build();
@@ -77,7 +80,8 @@ describe('DEBUG: take_from_container rule matching', () => {
     });
 
     // DEBUG: Check if getConditionDefinition is actually being called
-    const originalGetConditionDef = testFixture.testEnv.dataRegistry.getConditionDefinition;
+    const originalGetConditionDef =
+      testFixture.testEnv.dataRegistry.getConditionDefinition;
     testFixture.testEnv.dataRegistry.getConditionDefinition = jest.fn((id) => {
       console.log('\n=== getConditionDefinition CALLED ===');
       console.log('Requested ID:', id);
@@ -106,20 +110,32 @@ describe('DEBUG: take_from_container rule matching', () => {
 
     // DEBUG: Check operation interpreter execution
     const originalExecute = testFixture.testEnv.operationInterpreter.execute;
-    testFixture.testEnv.operationInterpreter.execute = jest.fn(async (operation, context) => {
-      console.log('\n=== Operation.execute CALLED ===');
-      console.log('Operation type:', operation.type);
-      console.log('Operation params:', JSON.stringify(operation.parameters || {}, null, 2));
-      try {
-        const result = await originalExecute.call(testFixture.testEnv.operationInterpreter, operation, context);
-        console.log('Operation result:', result);
-        console.log('Context after operation:', JSON.stringify(context, null, 2));
-        return result;
-      } catch (err) {
-        console.log('Operation FAILED:', err.message);
-        throw err;
+    testFixture.testEnv.operationInterpreter.execute = jest.fn(
+      async (operation, context) => {
+        console.log('\n=== Operation.execute CALLED ===');
+        console.log('Operation type:', operation.type);
+        console.log(
+          'Operation params:',
+          JSON.stringify(operation.parameters || {}, null, 2)
+        );
+        try {
+          const result = await originalExecute.call(
+            testFixture.testEnv.operationInterpreter,
+            operation,
+            context
+          );
+          console.log('Operation result:', result);
+          console.log(
+            'Context after operation:',
+            JSON.stringify(context, null, 2)
+          );
+          return result;
+        } catch (err) {
+          console.log('Operation FAILED:', err.message);
+          throw err;
+        }
       }
-    });
+    );
 
     // Execute action
     await testFixture.executeAction('actor1', 'container1', {
@@ -143,21 +159,29 @@ describe('DEBUG: take_from_container rule matching', () => {
     );
 
     // Check for system error events specifically
-    const errorEvents = testFixture.events.filter(e =>
-      e.eventType === 'core:system_error_occurred' ||
-      e.eventType.toLowerCase().includes('error')
+    const errorEvents = testFixture.events.filter(
+      (e) =>
+        e.eventType === 'core:system_error_occurred' ||
+        e.eventType.toLowerCase().includes('error')
     );
     if (errorEvents.length > 0) {
       console.log('\n=== ERROR EVENTS ===');
-      errorEvents.forEach(e => console.log(JSON.stringify(e, null, 2)));
+      errorEvents.forEach((e) => console.log(JSON.stringify(e, null, 2)));
     }
 
     // Check entity states after execution
     console.log('\n=== ENTITY STATES AFTER EXECUTION ===');
-    const containerAfter = testFixture.entityManager.getEntityInstance('container1');
+    const containerAfter =
+      testFixture.entityManager.getEntityInstance('container1');
     const actorAfter = testFixture.entityManager.getEntityInstance('actor1');
-    console.log('Container contents:', containerAfter.components['items:container'].contents);
-    console.log('Actor inventory:', actorAfter.components['items:inventory'].items);
+    console.log(
+      'Container contents:',
+      containerAfter.components['items:container'].contents
+    );
+    console.log(
+      'Actor inventory:',
+      actorAfter.components['items:inventory'].items
+    );
 
     // Check if rule executed (should have more than just attempt_action)
     console.log('\n=== EVENT COUNT ===');

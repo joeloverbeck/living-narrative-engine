@@ -37,7 +37,12 @@ class TestLogger {
 }
 
 class TemplateElementAssembler extends IPromptElementAssembler {
-  assemble(elementConfig, promptData, placeholderResolver, allPromptElementsMap) {
+  assemble(
+    elementConfig,
+    promptData,
+    placeholderResolver,
+    allPromptElementsMap
+  ) {
     const elementsObject = Object.fromEntries(allPromptElementsMap.entries());
     return placeholderResolver.resolve(
       elementConfig.template,
@@ -170,7 +175,6 @@ describe('PromptAssembler integration', () => {
       ].join('')
     );
     expect(errors).toEqual([]);
-
   });
 
   it('continues assembling when an element throws and records the failure', () => {

@@ -12,17 +12,17 @@ When an actor has 2-3 items in inventory and 4+ other actors are in the same loc
 
 ### Files to Migrate
 
-| Original Path | New Path | Status |
-|---------------|----------|--------|
-| `data/mods/items/actions/give_item.action.json` | `data/mods/item-transfer/actions/give_item.action.json` | Migrate + update |
-| `data/mods/items/rules/handle_give_item.rule.json` | `data/mods/item-transfer/rules/handle_give_item.rule.json` | Migrate + update |
+| Original Path                                                         | New Path                                                                      | Status           |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------- |
+| `data/mods/items/actions/give_item.action.json`                       | `data/mods/item-transfer/actions/give_item.action.json`                       | Migrate + update |
+| `data/mods/items/rules/handle_give_item.rule.json`                    | `data/mods/item-transfer/rules/handle_give_item.rule.json`                    | Migrate + update |
 | `data/mods/items/conditions/event-is-action-give-item.condition.json` | `data/mods/item-transfer/conditions/event-is-action-give-item.condition.json` | Migrate + update |
 
 ### ID Changes
 
-| Original ID | New ID |
-|-------------|--------|
-| `items:give_item` | `item-transfer:give_item` |
+| Original ID                       | New ID                                    |
+| --------------------------------- | ----------------------------------------- |
+| `items:give_item`                 | `item-transfer:give_item`                 |
 | `items:event-is-action-give-item` | `item-transfer:event-is-action-give-item` |
 
 ### Shared Resources (Not Migrated)
@@ -51,12 +51,12 @@ data/mods/item-transfer/
 
 The `item-transfer` mod requires the following dependencies:
 
-| Dependency | Version | Reason |
-|------------|---------|--------|
-| `core` | 1.0.0 | `core:actors_in_location` scope, `core:attempt_action` event, `core:display_failed_action_result` event |
-| `items` | 1.0.0 | `items:inventory` component, `items:actor_inventory_items` scope |
-| `positioning` | 1.0.0 | forbidden_components (`positioning:bending_over`, `positioning:fallen`, etc.) |
-| `anatomy` | 1.0.0 | `anatomy:actor-has-free-grabbing-appendage` prerequisite condition |
+| Dependency    | Version | Reason                                                                                                  |
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| `core`        | 1.0.0   | `core:actors_in_location` scope, `core:attempt_action` event, `core:display_failed_action_result` event |
+| `items`       | 1.0.0   | `items:inventory` component, `items:actor_inventory_items` scope                                        |
+| `positioning` | 1.0.0   | forbidden_components (`positioning:bending_over`, `positioning:fallen`, etc.)                           |
+| `anatomy`     | 1.0.0   | `anatomy:actor-has-free-grabbing-appendage` prerequisite condition                                      |
 
 ## Color Scheme
 
@@ -74,10 +74,12 @@ A new WCAG 2.1 AA/AAA compliant color scheme specifically designed for item tran
 ```
 
 **Contrast Ratios:**
+
 - Normal state: ~8.7:1 (AAA compliant)
 - Hover state: ~6.2:1 (AA compliant)
 
 **Design Rationale:**
+
 - Warm amber evokes trading and exchange (historical association with commerce)
 - Distinct from Items mod's Aurora Depths teal (#004d61)
 - Professional yet warm - suitable for collaborative actions between actors
@@ -171,10 +173,7 @@ A new WCAG 2.1 AA/AAA compliant color scheme specifically designed for item tran
   "id": "item-transfer:event-is-action-give-item",
   "description": "Checks if event is the give_item action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "item-transfer:give_item"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "item-transfer:give_item"]
   }
 }
 ```
@@ -215,12 +214,14 @@ Remove references to the migrated files from the `content` section:
 Add the Trade Amber scheme to the document:
 
 1. Add to Quick Reference table:
+
    ```
    | Item-Transfer | Trade Amber | 13.1 | `#7d5a00` | Active |
    ```
 
 2. Add new section 13 (Exchange/Transaction Colors):
-   ```markdown
+
+   ````markdown
    ### 13. Exchange/Transaction Colors
 
    #### 13.1 Trade Amber ✅ IN USE: Item-Transfer
@@ -233,11 +234,15 @@ Add the Trade Amber scheme to the document:
      "hoverTextColor": "#ffffff"
    }
    ```
+   ````
 
    - **Normal Contrast**: 8.7:1 🌟 AAA
    - **Hover Contrast**: 6.2:1 ✅ AA
    - **Use Cases**: Item exchange between characters, gift giving, trade actions
    - **Theme**: Warm amber evoking commerce and exchange
+
+   ```
+
    ```
 
 ## Test Specifications
@@ -246,27 +251,27 @@ Add the Trade Amber scheme to the document:
 
 **File:** `tests/integration/mods/item-transfer/give_item_action_discovery.test.js`
 
-| Test Case | Description | Expected Result |
-|-----------|-------------|-----------------|
-| Discovery with items and recipients | Actor has inventory items, other actors in location | Action discovered |
-| Empty inventory | Actor has no items in inventory | Action NOT discovered |
-| No recipients | No other actors in same location | Action NOT discovered |
-| Actor bending over | Actor has `positioning:bending_over` component | Action NOT discovered |
-| Actor fallen | Actor has `positioning:fallen` component | Action NOT discovered |
-| Actor being restrained | Actor has `positioning:being_restrained` component | Action NOT discovered |
-| No free grabbing appendage | Actor fails anatomy prerequisite | Action NOT discovered |
-| Combinatorial generation | 2 items, 3 recipients | 6 action combinations generated |
+| Test Case                           | Description                                         | Expected Result                 |
+| ----------------------------------- | --------------------------------------------------- | ------------------------------- |
+| Discovery with items and recipients | Actor has inventory items, other actors in location | Action discovered               |
+| Empty inventory                     | Actor has no items in inventory                     | Action NOT discovered           |
+| No recipients                       | No other actors in same location                    | Action NOT discovered           |
+| Actor bending over                  | Actor has `positioning:bending_over` component      | Action NOT discovered           |
+| Actor fallen                        | Actor has `positioning:fallen` component            | Action NOT discovered           |
+| Actor being restrained              | Actor has `positioning:being_restrained` component  | Action NOT discovered           |
+| No free grabbing appendage          | Actor fails anatomy prerequisite                    | Action NOT discovered           |
+| Combinatorial generation            | 2 items, 3 recipients                               | 6 action combinations generated |
 
 ### Integration Test: Rule Execution
 
 **File:** `tests/integration/mods/item-transfer/give_item_rule_execution.test.js`
 
-| Test Case | Description | Expected Result |
-|-----------|-------------|-----------------|
-| Successful transfer | Recipient has capacity | Item moved, perceptible event dispatched |
-| Capacity exceeded | Recipient inventory at max capacity | Transfer blocked, failure message shown |
-| Description regeneration | After successful transfer | Both actor and recipient descriptions updated |
-| Turn ending | After action completes | Actor's turn ended appropriately |
+| Test Case                | Description                         | Expected Result                               |
+| ------------------------ | ----------------------------------- | --------------------------------------------- |
+| Successful transfer      | Recipient has capacity              | Item moved, perceptible event dispatched      |
+| Capacity exceeded        | Recipient inventory at max capacity | Transfer blocked, failure message shown       |
+| Description regeneration | After successful transfer           | Both actor and recipient descriptions updated |
+| Turn ending              | After action completes              | Actor's turn ended appropriately              |
 
 ## Migration Checklist
 
@@ -288,6 +293,7 @@ Add the Trade Amber scheme to the document:
 **Risk Level:** Low
 
 **Considerations:**
+
 - File ownership is clear (3 files are `give_item`-exclusive)
 - No shared scopes need duplication
 - All dependencies have proper namespacing
@@ -298,6 +304,7 @@ Add the Trade Amber scheme to the document:
 ## Rollback Plan
 
 If issues arise, the migration can be reversed by:
+
 1. Restoring the original files to the items mod
 2. Removing the item-transfer mod directory
 3. Removing item-transfer from game.json
@@ -306,6 +313,6 @@ If issues arise, the migration can be reversed by:
 
 ## Version History
 
-| Version | Date | Description |
-|---------|------|-------------|
-| 1.0.0 | 2025-12-03 | Initial specification |
+| Version | Date       | Description           |
+| ------- | ---------- | --------------------- |
+| 1.0.0   | 2025-12-03 | Initial specification |

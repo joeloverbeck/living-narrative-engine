@@ -305,8 +305,14 @@ When working with mod content in `data/mods/`, follow the established testing pa
 
 ```javascript
 // ✅ Preferred pattern
-const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
-const scenario = fixture.createStandardActorTarget(['Actor Name', 'Target Name']);
+const fixture = await ModTestFixture.forAction(
+  'positioning',
+  'positioning:sit_down'
+);
+const scenario = fixture.createStandardActorTarget([
+  'Actor Name',
+  'Target Name',
+]);
 await fixture.executeAction(scenario.actor.id, scenario.target.id);
 
 // ❌ Deprecated and unsupported
@@ -372,6 +378,7 @@ The Body Descriptor Registry provides a centralized, single source of truth for 
 **Registry Structure**:
 
 Each descriptor contains 9 properties:
+
 - `schemaProperty` - Property name in JSON schema (camelCase)
 - `displayLabel` - Human-readable label
 - `displayKey` - Key in formatting config (snake_case)
@@ -383,10 +390,12 @@ Each descriptor contains 9 properties:
 - `required` - Whether descriptor is required
 
 **Current Descriptors** (6 total):
+
 - height (10), skinColor (20), build (30), composition (40), hairDensity (50), smell (60)
 - Next available display order: 70
 
 **Exports**:
+
 ```javascript
 import {
   BODY_DESCRIPTOR_REGISTRY,
@@ -398,11 +407,13 @@ import {
 ```
 
 **Validation**:
+
 - CLI Tool: `npm run validate:body-descriptors`
 - Validator Class: `src/anatomy/validators/bodyDescriptorValidator.js`
 - Validates: Registry completeness, formatting config, recipe descriptors
 
 **Documentation**:
+
 - [Body Descriptors Complete](docs/anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ### Clothing Layer Architecture
@@ -419,6 +430,7 @@ Layer Hierarchy (innermost to outermost):
 ```
 
 **Coverage Priority Scoring** (lower = higher visibility):
+
 - `outer`: 100 (highest visibility)
 - `armor`: 150 (protective equipment)
 - `base`: 200
@@ -428,6 +440,7 @@ Layer Hierarchy (innermost to outermost):
 **Armor Layer**: Added to support protective equipment in sword & sorcery scenarios. Armor has priority between outer garments and base clothing, allowing realistic layering (e.g., chainmail under a cloak, or visible plate armor).
 
 **Key Files**:
+
 - Priority constants: `src/scopeDsl/prioritySystem/priorityConstants.js`
 - Layer compatibility: `src/clothing/validation/layerCompatibilityService.js`
 - Coverage analysis: `src/clothing/analysis/coverageAnalyzer.js`
@@ -437,6 +450,7 @@ Layer Hierarchy (innermost to outermost):
 The blocking system enforces realistic clothing physics by preventing removal of items that are secured by other items.
 
 **Key Components**:
+
 - `clothing:blocks_removal` component (data/mods/clothing/components/blocks_removal.component.json)
 - `IsRemovalBlockedOperator` (src/logic/operators/isRemovalBlockedOperator.js)
 - `ClothingAccessibilityService` (src/clothing/services/clothingAccessibilityService.js) - **primary blocking logic**
@@ -444,6 +458,7 @@ The blocking system enforces realistic clothing physics by preventing removal of
 - ⚠️ `can-remove-item` condition NOT FOUND - may need to be created
 
 **Integration Points**:
+
 1. Component defines blocking rules in entity definitions
 2. Operator evaluates blocking in JSON Logic expressions
 3. `ClothingAccessibilityService` filters blocked items during accessibility queries
@@ -451,6 +466,7 @@ The blocking system enforces realistic clothing physics by preventing removal of
 5. ⚠️ Integration with `SlotAccessResolver` needs verification
 
 **Usage Example**:
+
 ```json
 {
   "clothing:blocks_removal": {
@@ -583,32 +599,36 @@ npx eslint <modified-files>  # Lint the modified files
 #### Common Pitfalls
 
 ❌ **Forgetting pre-validation whitelist** (Step 7)
+
 - Symptom: "Unknown operation type" error during mod loading
 - Fix: Add to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`
 
 ❌ **Type string mismatch**
+
 - Symptom: "No handler registered" error at runtime
 - Fix: Ensure type matches exactly in schema, registry, and whitelist
 
 ❌ **Missing schema $ref**
+
 - Symptom: AJV validation fails with "no matching schema"
 - Fix: Add `$ref` to `operation.schema.json`
 
 ❌ **Incomplete DI registration**
+
 - Symptom: "Cannot resolve token" error
 - Fix: Check token defined, factory registered, and operation mapped
 
 #### Quick Reference
 
-| File | Purpose | Pattern |
-|------|---------|---------|
-| `operations/[operation].schema.json` | Structure | `"const": "OPERATION_NAME"` |
-| `operation.schema.json` | Reference | `{ "$ref": "./operations/[operation].schema.json" }` in `anyOf` |
-| `[operation]Handler.js` | Logic | `class extends BaseOperationHandler` |
-| `tokens-core.js` | Token | `[Operation]Handler: '[Operation]Handler'` |
-| `operationHandlerRegistrations.js` | Factory | Factory in `handlerFactories` array |
-| `interpreterRegistrations.js` | Mapping | `registry.register('TYPE', bind(token))` |
-| `preValidationUtils.js` | Whitelist | `'OPERATION_NAME'` in `KNOWN_OPERATION_TYPES` |
+| File                                 | Purpose   | Pattern                                                         |
+| ------------------------------------ | --------- | --------------------------------------------------------------- |
+| `operations/[operation].schema.json` | Structure | `"const": "OPERATION_NAME"`                                     |
+| `operation.schema.json`              | Reference | `{ "$ref": "./operations/[operation].schema.json" }` in `anyOf` |
+| `[operation]Handler.js`              | Logic     | `class extends BaseOperationHandler`                            |
+| `tokens-core.js`                     | Token     | `[Operation]Handler: '[Operation]Handler'`                      |
+| `operationHandlerRegistrations.js`   | Factory   | Factory in `handlerFactories` array                             |
+| `interpreterRegistrations.js`        | Mapping   | `registry.register('TYPE', bind(token))`                        |
+| `preValidationUtils.js`              | Whitelist | `'OPERATION_NAME'` in `KNOWN_OPERATION_TYPES`                   |
 
 **Note**: There is currently no dedicated operation-adding documentation file. Refer to existing operation handlers in `src/logic/operationHandlers/` as examples.
 
@@ -653,10 +673,10 @@ The `MultiTargetResolutionStage` follows a service-oriented design with three sp
 
 **Service Responsibilities:**
 
-| Service | Responsibility | When to Modify |
-|---------|---------------|----------------|
-| TracingOrchestrator | Capture telemetry events | Adding new trace points |
-| ResultBuilder | Assemble pipeline results | Changing result format |
+| Service               | Responsibility                    | When to Modify            |
+| --------------------- | --------------------------------- | ------------------------- |
+| TracingOrchestrator   | Capture telemetry events          | Adding new trace points   |
+| ResultBuilder         | Assemble pipeline results         | Changing result format    |
 | ResolutionCoordinator | Resolve targets with dependencies | New resolution strategies |
 
 **Extension Patterns:**
@@ -673,11 +693,13 @@ coordinator.resolveWithNewStrategy(targets);
 ```
 
 **Testing Pattern:**
+
 - Unit test each service independently
 - Integration test service coordination
 - Mock services when testing stage orchestration
 
 **Documentation:**
+
 - Architecture: `docs/architecture/target-resolution-services.md`
 - Diagrams: `docs/architecture/diagrams/multi-target-resolution-architecture.md`
 - Migration: `docs/architecture/multi-target-resolution-migration-guide.md`

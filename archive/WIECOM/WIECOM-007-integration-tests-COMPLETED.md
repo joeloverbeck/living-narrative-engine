@@ -15,22 +15,22 @@ Create integration tests that verify the complete wielding workflow: action exec
 
 The original ticket assumed no integration tests existed. After reassessment:
 
-| Original Assumption | Actual State | Impact |
-|---------------------|--------------|--------|
-| `wieldThreateninglyRuleExecution.test.js` needs creation | `wieldingComponentWorkflow.integration.test.js` ALREADY EXISTS with rule execution coverage | Skip creation - already covered |
-| No rule execution tests exist | 285 lines of tests in `wieldingComponentWorkflow.integration.test.js` covering first wield, second wield, duplicate prevention, description regeneration, rule structure | Skip - comprehensive coverage exists |
-| Activity description tests need creation | Activity system supports `isMultiTarget`/`targetRoleIsArray` but no wielding-specific activity description tests | CREATE - this is needed |
-| Edge case tests need creation | Schema tests exist but edge cases not covered at integration level | CREATE - this is needed |
-| Action gating tests need creation | These should be stubs for future work | CREATE - stubs only |
+| Original Assumption                                      | Actual State                                                                                                                                                             | Impact                               |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| `wieldThreateninglyRuleExecution.test.js` needs creation | `wieldingComponentWorkflow.integration.test.js` ALREADY EXISTS with rule execution coverage                                                                              | Skip creation - already covered      |
+| No rule execution tests exist                            | 285 lines of tests in `wieldingComponentWorkflow.integration.test.js` covering first wield, second wield, duplicate prevention, description regeneration, rule structure | Skip - comprehensive coverage exists |
+| Activity description tests need creation                 | Activity system supports `isMultiTarget`/`targetRoleIsArray` but no wielding-specific activity description tests                                                         | CREATE - this is needed              |
+| Edge case tests need creation                            | Schema tests exist but edge cases not covered at integration level                                                                                                       | CREATE - this is needed              |
+| Action gating tests need creation                        | These should be stubs for future work                                                                                                                                    | CREATE - stubs only                  |
 
 ## Revised Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                                                     | Action              | Description                                                        |
+| ------------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------ |
 | `tests/integration/mods/weapons/wieldThreateninglyRuleExecution.test.js` | ~~CREATE~~ **SKIP** | Already covered by `wieldingComponentWorkflow.integration.test.js` |
-| `tests/integration/mods/positioning/wieldingActivityDescription.test.js` | CREATE | Activity description tests with multi-item formatting |
-| `tests/integration/mods/weapons/wieldingEdgeCases.test.js` | CREATE | Edge case tests |
-| `tests/integration/mods/weapons/wieldingActionGating.test.js` | CREATE | Action gating stubs (skipped) |
+| `tests/integration/mods/positioning/wieldingActivityDescription.test.js` | CREATE              | Activity description tests with multi-item formatting              |
+| `tests/integration/mods/weapons/wieldingEdgeCases.test.js`               | CREATE              | Edge case tests                                                    |
+| `tests/integration/mods/weapons/wieldingActionGating.test.js`            | CREATE              | Action gating stubs (skipped)                                      |
 
 ## Out of Scope
 
@@ -48,6 +48,7 @@ The original ticket assumed no integration tests existed. After reassessment:
 **File**: `tests/integration/mods/weapons/wieldingComponentWorkflow.integration.test.js`
 
 This file ALREADY provides comprehensive coverage:
+
 - ✅ First wield component creation
 - ✅ Second wield array append
 - ✅ Duplicate wield prevention
@@ -105,6 +106,7 @@ NODE_ENV=test npm run test:integration -- --testPathPattern="wield" --no-coverag
 ## Reference Files
 
 Study these for test patterns:
+
 - `tests/integration/mods/weapons/wieldingComponentWorkflow.integration.test.js` - Existing workflow test
 - `tests/integration/mods/weapons/wield_threateningly_action.test.js` - Existing action test
 - `tests/integration/mods/positioning/kneel_before_action.test.js` - Rule execution pattern
@@ -113,6 +115,7 @@ Study these for test patterns:
 ## Diff Size Estimate
 
 Creating 3 new test files (reduced from 4):
+
 - `wieldingActivityDescription.test.js`: ~100 lines
 - `wieldingEdgeCases.test.js`: ~80 lines
 - `wieldingActionGating.test.js`: ~40 lines (stubs only)
@@ -125,15 +128,16 @@ Total: ~220 lines of new test code (reduced from ~340).
 
 Successfully created 3 new integration test files as planned:
 
-| File | Tests | Lines | Status |
-|------|-------|-------|--------|
-| `tests/integration/mods/positioning/wieldingActivityDescription.test.js` | 10 | ~393 | ✅ All passing |
-| `tests/integration/mods/weapons/wieldingEdgeCases.test.js` | 8 | ~335 | ✅ All passing |
-| `tests/integration/mods/weapons/wieldingActionGating.test.js` | 10 | ~61 | ✅ Skipped (stubs) |
+| File                                                                     | Tests | Lines | Status             |
+| ------------------------------------------------------------------------ | ----- | ----- | ------------------ |
+| `tests/integration/mods/positioning/wieldingActivityDescription.test.js` | 10    | ~393  | ✅ All passing     |
+| `tests/integration/mods/weapons/wieldingEdgeCases.test.js`               | 8     | ~335  | ✅ All passing     |
+| `tests/integration/mods/weapons/wieldingActionGating.test.js`            | 10    | ~61   | ✅ Skipped (stubs) |
 
 ### Test Coverage Added
 
 **Activity Description Tests (10 tests)**:
+
 - Single weapon description generation and formatting
 - Two weapons with "and" conjunction
 - Three weapons with Oxford comma formatting
@@ -145,6 +149,7 @@ Successfully created 3 new integration test files as planned:
 - `{targets}` placeholder replacement
 
 **Edge Case Tests (8 tests)**:
+
 - Empty `wielded_item_ids` array handling
 - Namespaced weapon IDs (e.g., `weapons:silver_revolver`)
 - Mixed namespaced and simple IDs
@@ -155,6 +160,7 @@ Successfully created 3 new integration test files as planned:
 - IDs with hyphens
 
 **Action Gating Stubs (10 todo tests)**:
+
 - Wield action gating scenarios
 - Stop-wield action gating scenarios
 - Action discovery filtering

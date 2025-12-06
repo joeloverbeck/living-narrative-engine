@@ -21,6 +21,7 @@ The following discrepancies were identified and corrected during implementation:
 ## Context
 
 With armor support fully implemented and documented, practical examples are needed to demonstrate how to create armor entities. These examples serve as:
+
 1. Reference implementations for mod developers
 2. Test cases for armor functionality
 3. Validation of the armor system design
@@ -34,7 +35,7 @@ Create a collection of example armor entities covering various armor types, mate
 ### 1. Steel Cuirass (Heavy Armor)
 
 **File**: `data/mods/armor/entities/definitions/steel_cuirass.json` OR
-          `data/mods/clothing/entities/definitions/armor/steel_cuirass.json`
+`data/mods/clothing/entities/definitions/armor/steel_cuirass.json`
 
 **Description**: Polished steel chest armor - classic heavy armor piece
 
@@ -167,7 +168,12 @@ Create a collection of example armor entities covering various armor types, mate
       "texture": "metallic"
     },
     "clothing:coverage_mapping": {
-      "covers": ["torso_upper", "torso_lower", "left_arm_clothing", "right_arm_clothing"],
+      "covers": [
+        "torso_upper",
+        "torso_lower",
+        "left_arm_clothing",
+        "right_arm_clothing"
+      ],
       "coveragePriority": "armor"
     },
     "items:item": {},
@@ -347,6 +353,7 @@ data/mods/armor/
 ```
 
 **Manifest** (`mod-manifest.json`):
+
 ```json
 {
   "id": "armor",
@@ -373,6 +380,7 @@ data/mods/clothing/
 ```
 
 **Recommendation**: Use **Option A** (new armor mod) because:
+
 - Clear separation of concerns
 - Easier to disable/enable armor separately
 - Better organization for large armor collections
@@ -387,11 +395,13 @@ Choose Option A or Option B based on project needs.
 ### 2. Create Directory Structure
 
 For Option A:
+
 ```bash
 mkdir -p data/mods/armor/entities/definitions
 ```
 
 For Option B:
+
 ```bash
 mkdir -p data/mods/clothing/entities/definitions/armor
 ```
@@ -434,6 +444,7 @@ These armor entities use the `armor` layer and demonstrate proper coverage mappi
 ## Customization
 
 Feel free to modify these entities for your specific game needs. Common modifications:
+
 - Change materials (steel → iron, leather → canvas)
 - Adjust durability values
 - Modify coverage areas
@@ -485,6 +496,7 @@ npm run start
 1. Start a game session
 2. Create a character
 3. Use console commands to equip armor:
+
    ```javascript
    // Add armor to inventory
    giveItem('player', 'armor:steel_cuirass');
@@ -492,6 +504,7 @@ npm run start
    // Equip armor
    equipItem('player', 'armor:steel_cuirass');
    ```
+
 4. Verify armor appears in character description
 5. Test layering with other clothing
 
@@ -533,7 +546,7 @@ Consider adding these additional examples:
 {
   "layer": "armor",
   "material": "steel",
-  "equipmentSlots": {"primary": "legs"},
+  "equipmentSlots": { "primary": "legs" },
   "description": "Steel plate leg protection"
 }
 ```
@@ -543,7 +556,7 @@ Consider adding these additional examples:
 ```json
 {
   "layer": "armor",
-  "equipmentSlots": {"primary": "left_arm_clothing"},
+  "equipmentSlots": { "primary": "left_arm_clothing" },
   "description": "Small round shield strapped to forearm"
 }
 ```
@@ -557,12 +570,14 @@ Consider adding these additional examples:
 ## Notes
 
 These example armor entities serve multiple purposes:
+
 1. **Documentation**: Living examples of how to create armor
 2. **Testing**: Validation that armor system works correctly
 3. **Reference**: Starting point for mod developers
 4. **Content**: Ready-to-use armor for games
 
 The examples are intentionally diverse, covering:
+
 - **Materials**: Steel, iron, leather, canvas
 - **Weights**: Light (1.2 kg) to heavy (12.0 kg)
 - **Slots**: All major body slots

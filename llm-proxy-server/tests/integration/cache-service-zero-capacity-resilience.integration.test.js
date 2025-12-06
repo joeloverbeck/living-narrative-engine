@@ -91,7 +91,12 @@ describe('CacheService minimal-capacity resilience integration', () => {
       enableAutoCleanup: false,
     });
 
-    apiKeyService = new ApiKeyService(logger, fsReader, appConfig, cacheService);
+    apiKeyService = new ApiKeyService(
+      logger,
+      fsReader,
+      appConfig,
+      cacheService
+    );
   });
 
   afterEach(() => {
@@ -132,10 +137,16 @@ describe('CacheService minimal-capacity resilience integration', () => {
       apiKeyFileName: fileName,
     });
 
-    const first = await apiKeyService.getApiKey(readConfig('alpha.key'), 'llm-alpha');
+    const first = await apiKeyService.getApiKey(
+      readConfig('alpha.key'),
+      'llm-alpha'
+    );
     expect(first.apiKey).toBe('alpha-secret');
 
-    const second = await apiKeyService.getApiKey(readConfig('beta.key'), 'llm-beta');
+    const second = await apiKeyService.getApiKey(
+      readConfig('beta.key'),
+      'llm-beta'
+    );
     expect(second.apiKey).toBe('beta-secret');
 
     const statsAfterEviction = cacheService.getStats();

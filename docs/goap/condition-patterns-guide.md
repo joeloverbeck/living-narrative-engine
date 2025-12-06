@@ -27,10 +27,7 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "has_component": [
-    { "var": "actor" },
-    "items:inventory"
-  ]
+  "has_component": [{ "var": "actor" }, "items:inventory"]
 }
 ```
 
@@ -108,10 +105,7 @@ This guide provides a comprehensive reference for common condition patterns used
       "some": [
         { "var": "actor.components.items:inventory.items" },
         {
-          "has_component": [
-            { "var": "" },
-            "items:nourishing"
-          ]
+          "has_component": [{ "var": "" }, "items:nourishing"]
         }
       ]
     }
@@ -133,7 +127,9 @@ This guide provides a comprehensive reference for common condition patterns used
 {
   "and": [
     { "has_component": [{ "var": "actor" }, "positioning:position"] },
-    { "has_component": [{ "var": "task.params.target" }, "positioning:position"] },
+    {
+      "has_component": [{ "var": "task.params.target" }, "positioning:position"]
+    },
     {
       "==": [
         { "var": "actor.components.positioning:position.location" },
@@ -173,7 +169,9 @@ This guide provides a comprehensive reference for common condition patterns used
 ```json
 {
   "and": [
-    { "has_component": [{ "var": "task.params.item" }, "positioning:position"] },
+    {
+      "has_component": [{ "var": "task.params.item" }, "positioning:position"]
+    },
     {
       "==": [
         { "var": "task.params.item.components.positioning:position.container" },
@@ -217,10 +215,7 @@ This guide provides a comprehensive reference for common condition patterns used
   "and": [
     { "has_component": [{ "var": "task.params.item" }, "core:visible"] },
     {
-      "==": [
-        { "var": "task.params.item.components.core:visible" },
-        true
-      ]
+      "==": [{ "var": "task.params.item.components.core:visible" }, true]
     }
   ]
 }
@@ -289,10 +284,7 @@ This guide provides a comprehensive reference for common condition patterns used
       "<": [
         { "var": "actor.components.core:health.current" },
         {
-          "*": [
-            { "var": "actor.components.core:health.maximum" },
-            0.25
-          ]
+          "*": [{ "var": "actor.components.core:health.maximum" }, 0.25]
         }
       ]
     }
@@ -330,10 +322,7 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "hasClothingInSlot": [
-    { "var": "actor" },
-    "torso"
-  ]
+  "hasClothingInSlot": [{ "var": "actor" }, "torso"]
 }
 ```
 
@@ -345,11 +334,7 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "hasClothingInSlotLayer": [
-    { "var": "actor" },
-    "torso",
-    "outer"
-  ]
+  "hasClothingInSlotLayer": [{ "var": "actor" }, "torso", "outer"]
 }
 ```
 
@@ -376,10 +361,7 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "isSocketCovered": [
-    { "var": "actor" },
-    "torso:chest"
-  ]
+  "isSocketCovered": [{ "var": "actor" }, "torso:chest"]
 }
 ```
 
@@ -394,10 +376,7 @@ This guide provides a comprehensive reference for common condition patterns used
   "and": [
     { "has_component": [{ "var": "actor" }, "items:equipped_weapon"] },
     {
-      "!=": [
-        { "var": "actor.components.items:equipped_weapon.current" },
-        null
-      ]
+      "!=": [{ "var": "actor.components.items:equipped_weapon.current" }, null]
     }
   ]
 }
@@ -429,10 +408,7 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "canScootCloser": [
-    { "var": "actor" },
-    { "var": "task.params.target" }
-  ]
+  "canScootCloser": [{ "var": "actor" }, { "var": "task.params.target" }]
 }
 ```
 
@@ -458,9 +434,7 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "hasOtherActorsAtLocation": [
-    { "var": "actor" }
-  ]
+  "hasOtherActorsAtLocation": [{ "var": "actor" }]
 }
 ```
 
@@ -479,10 +453,7 @@ This guide provides a comprehensive reference for common condition patterns used
   "and": [
     { "has_component": [{ "var": "actor" }, "core:stamina"] },
     {
-      ">": [
-        { "var": "actor.components.core:stamina.current" },
-        20
-      ]
+      ">": [{ "var": "actor.components.core:stamina.current" }, 20]
     }
   ]
 }
@@ -538,10 +509,7 @@ This guide provides a comprehensive reference for common condition patterns used
     { "has_component": [{ "var": "actor" }, "biology:can_eat"] },
     { "has_component": [{ "var": "task.params.item" }, "items:edible"] },
     {
-      ">": [
-        { "var": "actor.components.core:hunger.level" },
-        30
-      ]
+      ">": [{ "var": "actor.components.core:hunger.level" }, 30]
     }
   ]
 }
@@ -567,10 +535,7 @@ This guide provides a comprehensive reference for common condition patterns used
 ```json
 {
   "!": {
-    "has_component": [
-      { "var": "actor" },
-      "positioning:rooted"
-    ]
+    "has_component": [{ "var": "actor" }, "positioning:rooted"]
   }
 }
 ```
@@ -590,10 +555,7 @@ This guide provides a comprehensive reference for common condition patterns used
     },
     {
       "!": {
-        "has_component": [
-          { "var": "task.params.door" },
-          "world:magical_lock"
-        ]
+        "has_component": [{ "var": "task.params.door" }, "world:magical_lock"]
       }
     }
   ]
@@ -639,16 +601,10 @@ This guide provides a comprehensive reference for common condition patterns used
   "and": [
     { "has_component": [{ "var": "actor" }, "items:inventory"] },
     {
-      "!=": [
-        { "var": "actor.components.items:inventory.items" },
-        null
-      ]
+      "!=": [{ "var": "actor.components.items:inventory.items" }, null]
     },
     {
-      ">": [
-        { "var": "actor.components.items:inventory.items.length" },
-        0
-      ]
+      ">": [{ "var": "actor.components.items:inventory.items.length" }, 0]
     }
   ]
 }
@@ -661,7 +617,9 @@ This guide provides a comprehensive reference for common condition patterns used
 ```json
 {
   "and": [
-    { "has_component": [{ "var": "task.params.item" }, "positioning:position"] },
+    {
+      "has_component": [{ "var": "task.params.item" }, "positioning:position"]
+    },
     {
       "!=": [
         { "var": "task.params.item.components.positioning:position.location" },
@@ -690,10 +648,7 @@ This guide provides a comprehensive reference for common condition patterns used
 ```json
 // BAD - fails if actor doesn't have health component
 {
-  ">": [
-    { "var": "actor.components.core:health.current" },
-    50
-  ]
+  ">": [{ "var": "actor.components.core:health.current" }, 50]
 }
 ```
 
@@ -703,10 +658,7 @@ This guide provides a comprehensive reference for common condition patterns used
   "and": [
     { "has_component": [{ "var": "actor" }, "core:health"] },
     {
-      ">": [
-        { "var": "actor.components.core:health.current" },
-        50
-      ]
+      ">": [{ "var": "actor.components.core:health.current" }, 50]
     }
   ]
 }
@@ -745,7 +697,9 @@ This guide provides a comprehensive reference for common condition patterns used
 {
   "and": [
     { "!=": [{ "var": "task.params.item" }, null] },
-    { "has_component": [{ "var": "task.params.item" }, "positioning:position"] },
+    {
+      "has_component": [{ "var": "task.params.item" }, "positioning:position"]
+    },
     {
       "==": [
         { "var": "task.params.item.components.positioning:position.location" },
@@ -762,7 +716,9 @@ This guide provides a comprehensive reference for common condition patterns used
 // BAD - multiple levels accessed without validation
 {
   ">": [
-    { "var": "actor.components.items:inventory.items[0].components.items:weight.value" },
+    {
+      "var": "actor.components.items:inventory.items[0].components.items:weight.value"
+    },
     10
   ]
 }
@@ -774,13 +730,17 @@ This guide provides a comprehensive reference for common condition patterns used
   "and": [
     { "has_component": [{ "var": "actor" }, "items:inventory"] },
     { ">": [{ "var": "actor.components.items:inventory.items.length" }, 0] },
-    { "has_component": [
-      { "var": "actor.components.items:inventory.items[0]" },
-      "items:weight"
-    ]},
+    {
+      "has_component": [
+        { "var": "actor.components.items:inventory.items[0]" },
+        "items:weight"
+      ]
+    },
     {
       ">": [
-        { "var": "actor.components.items:inventory.items[0].components.items:weight.value" },
+        {
+          "var": "actor.components.items:inventory.items[0].components.items:weight.value"
+        },
         10
       ]
     }
@@ -812,31 +772,31 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```javascript
 const condition = {
-  "and": [
-    { "has_component": [{ "var": "actor" }, "items:inventory"] },
+  and: [
+    { has_component: [{ var: 'actor' }, 'items:inventory'] },
     {
-      "in": [
-        { "var": "task.params.item" },
-        { "var": "actor.components.items:inventory.items" }
-      ]
-    }
-  ]
+      in: [
+        { var: 'task.params.item' },
+        { var: 'actor.components.items:inventory.items' },
+      ],
+    },
+  ],
 };
 
 const context = {
   actor: {
-    id: "actor_1",
+    id: 'actor_1',
     components: {
-      "items:inventory": {
-        items: ["item_7", "item_9"]
-      }
-    }
+      'items:inventory': {
+        items: ['item_7', 'item_9'],
+      },
+    },
   },
   task: {
     params: {
-      item: "item_7"
-    }
-  }
+      item: 'item_7',
+    },
+  },
 };
 
 const result = jsonLogicEvaluationService.evaluate(condition, context);
@@ -900,18 +860,18 @@ Don't check the same condition multiple times:
 
 ## Quick Reference
 
-| Pattern | Operator | Example |
-|---------|----------|---------|
-| Component exists | `has_component` | `{"has_component": [{"var": "actor"}, "core:health"]}` |
-| In array | `in` | `{"in": ["item_7", {"var": "inventory.items"}]}` |
-| Equals | `==` | `{"==": [{"var": "posture"}, "standing"]}` |
-| Greater than | `>` | `{">": [{"var": "health"}, 50]}` |
-| Less than | `<` | `{"<": [{"var": "health"}, 25]}` |
-| And | `and` | `{"and": [condition1, condition2]}` |
-| Or | `or` | `{"or": [condition1, condition2]}` |
-| Not | `!` | `{"!": condition}` |
-| Clothing in slot | `hasClothingInSlot` | `{"hasClothingInSlot": [{"var": "actor"}, "torso"]}` |
-| Removal blocked | `isRemovalBlocked` | `{"isRemovalBlocked": [{"var": "actor"}, {"var": "item"}]}` |
+| Pattern          | Operator            | Example                                                     |
+| ---------------- | ------------------- | ----------------------------------------------------------- |
+| Component exists | `has_component`     | `{"has_component": [{"var": "actor"}, "core:health"]}`      |
+| In array         | `in`                | `{"in": ["item_7", {"var": "inventory.items"}]}`            |
+| Equals           | `==`                | `{"==": [{"var": "posture"}, "standing"]}`                  |
+| Greater than     | `>`                 | `{">": [{"var": "health"}, 50]}`                            |
+| Less than        | `<`                 | `{"<": [{"var": "health"}, 25]}`                            |
+| And              | `and`               | `{"and": [condition1, condition2]}`                         |
+| Or               | `or`                | `{"or": [condition1, condition2]}`                          |
+| Not              | `!`                 | `{"!": condition}`                                          |
+| Clothing in slot | `hasClothingInSlot` | `{"hasClothingInSlot": [{"var": "actor"}, "torso"]}`        |
+| Removal blocked  | `isRemovalBlocked`  | `{"isRemovalBlocked": [{"var": "actor"}, {"var": "item"}]}` |
 
 ---
 

@@ -292,7 +292,7 @@ describe('socketExtractor', () => {
       // Entity B: 'anatomy:z_short' (starts with 'z', length shorter)
       // New Rule 2 (Alphabetical) should pick 'a_longer'.
       // Old Rule 2 (Length) would have picked 'z_short'.
-      
+
       const mockRegistry = {
         getAll: jest.fn().mockReturnValue([
           {
@@ -305,36 +305,36 @@ describe('socketExtractor', () => {
           },
         ]),
       };
-      
+
       const result = await resolveEntityId('test', mockRegistry);
       expect(result).toBe('anatomy:a_longer');
     });
 
     it('prefers shorter entity ID when underscore count AND alphabetical are equal (prefix match)', async () => {
-       // This is actually covered by alphabetical sort usually (shorter prefix comes first), 
-       // but let's ensure logic holds.
-       // 'test' vs 'test_a'
-       // 'test' comes before 'test_a' alphabetically.
-       
-       // So it's hard to find a case where alphabetical is equal but length is different 
-       // UNLESS they are identical strings (in which case length is equal).
-       // So Rule 3 (Length) is effectively unreachable or redundant if localeCompare covers it.
-       // But localeCompare might handle cases differently? 
-       // Let's keep the test simple.
-       
-       const mockRegistry = {
+      // This is actually covered by alphabetical sort usually (shorter prefix comes first),
+      // but let's ensure logic holds.
+      // 'test' vs 'test_a'
+      // 'test' comes before 'test_a' alphabetically.
+
+      // So it's hard to find a case where alphabetical is equal but length is different
+      // UNLESS they are identical strings (in which case length is equal).
+      // So Rule 3 (Length) is effectively unreachable or redundant if localeCompare covers it.
+      // But localeCompare might handle cases differently?
+      // Let's keep the test simple.
+
+      const mockRegistry = {
         getAll: jest.fn().mockReturnValue([
           {
             id: 'anatomy:test_ab',
             components: { 'anatomy:part': { subType: 'test' } },
           },
           {
-            id: 'anatomy:test_a', 
+            id: 'anatomy:test_a',
             components: { 'anatomy:part': { subType: 'test' } },
           },
         ]),
       };
-      
+
       const result = await resolveEntityId('test', mockRegistry);
       expect(result).toBe('anatomy:test_a');
     });
@@ -350,35 +350,35 @@ describe('socketExtractor', () => {
           components: { 'anatomy:part': { subType: 'head' } },
         },
         {
-          id: 'anatomy:humanoid_face', // 1 underscore, but alphabetically after 'humanoid_face' < 'humanoid_head'? 
+          id: 'anatomy:humanoid_face', // 1 underscore, but alphabetically after 'humanoid_face' < 'humanoid_head'?
           // anatomy:humanoid_face (length 21)
           // anatomy:humanoid_head (length 21)
           // 'f' < 'h', so 'humanoid_face' would win alphabetically if rule 1 & 2 tied.
           // Both have 1 underscore.
           // Both have length 21.
           // Alphabetical: face comes before head.
-        }
+        },
       ];
-      
+
       // Wait, let's test specific scenario from the ticket
       // anatomy:humanoid_face_bearded_full_trimmed (4 underscores)
       // anatomy:humanoid_head (1 underscore)
-      
+
       const entities2 = [
-         {
-            id: 'anatomy:humanoid_face_bearded_full_trimmed',
-            components: { 'anatomy:part': { subType: 'head' } },
-          },
-          {
-            id: 'anatomy:humanoid_head',
-            components: { 'anatomy:part': { subType: 'head' } },
-          }
+        {
+          id: 'anatomy:humanoid_face_bearded_full_trimmed',
+          components: { 'anatomy:part': { subType: 'head' } },
+        },
+        {
+          id: 'anatomy:humanoid_head',
+          components: { 'anatomy:part': { subType: 'head' } },
+        },
       ];
 
       const mockRegistryForward = {
         getAll: jest.fn().mockReturnValue([...entities2]),
       };
-      
+
       const mockRegistryReverse = {
         getAll: jest.fn().mockReturnValue([...entities2].reverse()),
       };
@@ -489,7 +489,9 @@ describe('socketExtractor', () => {
         expect(message).toContain('subType "head"');
         expect(message).toContain('anatomy:humanoid_head_variant');
         expect(message).toContain('anatomy:humanoid_head');
-        expect(message).toContain('priority: fewest underscores, alphabetical, shortest ID');
+        expect(message).toContain(
+          'priority: fewest underscores, alphabetical, shortest ID'
+        );
       });
 
       it('does not log when only a single candidate exists', async () => {

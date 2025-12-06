@@ -48,7 +48,9 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     realPrerequisiteService = testBed.get(tokens.PrerequisiteEvaluationService);
     realTargetResolutionService = testBed.get(tokens.ITargetResolutionService);
     realSafeEventDispatcher = testBed.get(tokens.ISafeEventDispatcher);
-    realActionErrorContextBuilder = testBed.get(tokens.IActionErrorContextBuilder);
+    realActionErrorContextBuilder = testBed.get(
+      tokens.IActionErrorContextBuilder
+    );
     traceFactory = testBed.get(tokens.TraceContextFactory);
 
     baseFormatter = new ActionCommandFormatter();
@@ -65,7 +67,8 @@ describe('ActionCandidateProcessor - integration coverage', () => {
         {
           id: 'core:nearby_actors',
           expr: 'entities(core:actor)[{"==": [{"var": "components.core:position.locationId"}, {"var": "actor.components.core:position.locationId"}]}][{"!=": [{"var": "id"}, {"var": "actor.id"}]}]',
-          description: 'Other actors in the same location (quoted keys for parser compatibility)',
+          description:
+            'Other actors in the same location (quoted keys for parser compatibility)',
         },
       ]
     );
@@ -259,10 +262,7 @@ describe('ActionCandidateProcessor - integration coverage', () => {
         logicNode.var.startsWith('actor.') &&
         !logicNode.var.startsWith('actor.components')
       ) {
-        logicNode.var = logicNode.var.replace(
-          /^actor\./,
-          'actor.components.'
-        );
+        logicNode.var = logicNode.var.replace(/^actor\./, 'actor.components.');
       }
       for (const key of Object.keys(logicNode)) {
         logicNode[key] = normalizePrerequisiteLogic(logicNode[key]);
@@ -418,9 +418,11 @@ describe('ActionCandidateProcessor - integration coverage', () => {
     expect(errorTargets).toEqual(
       expect.arrayContaining(['test-npc', 'test-follower'])
     );
-    expect(result.value.errors.every((e) => e.actionId === 'integration:bad-template')).toBe(
-      true
-    );
+    expect(
+      result.value.errors.every(
+        (e) => e.actionId === 'integration:bad-template'
+      )
+    ).toBe(true);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
         "Failed to format command for action 'integration:bad-template'"

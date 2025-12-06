@@ -14,31 +14,32 @@ This ticket series adds free grabbing appendage prerequisites to 5 existing acti
 
 ## Ticket Breakdown
 
-| Ticket | Action | Mod | Complexity | Status |
-|--------|--------|-----|------------|--------|
-| GRAPREEXP-001 | `violence:slap` | violence | Simple - add new prerequisites array | ✅ COMPLETED |
-| GRAPREEXP-002 | `violence:sucker_punch` | violence | Simple - add new prerequisites array | ✅ COMPLETED |
+| Ticket        | Action                            | Mod       | Complexity                            | Status       |
+| ------------- | --------------------------------- | --------- | ------------------------------------- | ------------ |
+| GRAPREEXP-001 | `violence:slap`                   | violence  | Simple - add new prerequisites array  | ✅ COMPLETED |
+| GRAPREEXP-002 | `violence:sucker_punch`           | violence  | Simple - add new prerequisites array  | ✅ COMPLETED |
 | GRAPREEXP-003 | `seduction:brush_hair_back_coyly` | seduction | Moderate - insert into existing array | ✅ COMPLETED |
-| GRAPREEXP-004 | `items:put_in_container` | items | Simple - add new prerequisites array | ✅ COMPLETED |
-| GRAPREEXP-005 | `items:give_item` | items | Simple - add new prerequisites array | ✅ COMPLETED |
+| GRAPREEXP-004 | `items:put_in_container`          | items     | Simple - add new prerequisites array  | ✅ COMPLETED |
+| GRAPREEXP-005 | `items:give_item`                 | items     | Simple - add new prerequisites array  | ✅ COMPLETED |
 
 ## Implementation Order
 
 Tickets can be implemented in parallel - no dependencies between them.
 
 **Recommended order for efficiency:**
+
 1. GRAPREEXP-001 and GRAPREEXP-002 (same mod, similar structure)
 2. GRAPREEXP-004 and GRAPREEXP-005 (same mod, similar structure)
 3. GRAPREEXP-003 (requires careful array insertion)
 
 ## Related Infrastructure
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Operator implementation |
-| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition definition |
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern reference |
-| `docs/testing/mod-testing-guide.md` | Testing guide |
+| File                                                                            | Purpose                 |
+| ------------------------------------------------------------------------------- | ----------------------- |
+| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`                      | Operator implementation |
+| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition definition    |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js`      | Test pattern reference  |
+| `docs/testing/mod-testing-guide.md`                                             | Testing guide           |
 
 ## Validation Commands
 
@@ -63,6 +64,7 @@ npx eslint data/mods/violence/actions/slap.action.json \
 ## Completion Criteria
 
 All tickets complete when:
+
 - [x] All 5 action files modified with prerequisites
 - [x] All 5 test files created and passing
 - [x] `npm run validate` passes

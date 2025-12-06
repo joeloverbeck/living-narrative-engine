@@ -42,11 +42,7 @@
         "description": "Number of turns until the item spoils and becomes unusable (0 = never spoils)."
       }
     },
-    "required": [
-      "energy_content",
-      "bulk",
-      "fuel_type"
-    ],
+    "required": ["energy_content", "bulk", "fuel_type"],
     "additionalProperties": false
   },
   "validationRules": {

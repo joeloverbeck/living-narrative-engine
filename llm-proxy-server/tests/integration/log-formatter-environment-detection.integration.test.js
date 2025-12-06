@@ -12,8 +12,14 @@ const originalPlatformDescriptor = Object.getOwnPropertyDescriptor(
   process,
   'platform'
 );
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 describe('Log formatter environment integration', () => {
   beforeEach(() => {

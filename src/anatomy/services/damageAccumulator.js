@@ -75,7 +75,9 @@ class DamageAccumulator extends BaseService {
    */
   createSession(entityId) {
     if (!entityId) {
-      this.#logger.warn('DamageAccumulator.createSession called without entityId');
+      this.#logger.warn(
+        'DamageAccumulator.createSession called without entityId'
+      );
     }
 
     this.#sessionCounter += 1;
@@ -87,7 +89,9 @@ class DamageAccumulator extends BaseService {
       createdAt: Date.now(),
     };
 
-    this.#logger.debug(`DamageAccumulator: Created session ${session.sessionId} for entity ${entityId}`);
+    this.#logger.debug(
+      `DamageAccumulator: Created session ${session.sessionId} for entity ${entityId}`
+    );
     return session;
   }
 
@@ -99,7 +103,9 @@ class DamageAccumulator extends BaseService {
    */
   recordDamage(session, entry) {
     if (!session) {
-      this.#logger.error('DamageAccumulator.recordDamage called without session');
+      this.#logger.error(
+        'DamageAccumulator.recordDamage called without session'
+      );
       return;
     }
 
@@ -118,7 +124,7 @@ class DamageAccumulator extends BaseService {
 
     this.#logger.debug(
       `DamageAccumulator: Recorded damage to ${entry.partType || 'unknown'} ` +
-      `(propagated: ${!!entry.propagatedFrom}) in session ${session.sessionId}`
+        `(propagated: ${!!entry.propagatedFrom}) in session ${session.sessionId}`
     );
   }
 
@@ -132,12 +138,16 @@ class DamageAccumulator extends BaseService {
    */
   recordEffect(session, partId, effect) {
     if (!session) {
-      this.#logger.error('DamageAccumulator.recordEffect called without session');
+      this.#logger.error(
+        'DamageAccumulator.recordEffect called without session'
+      );
       return;
     }
 
     if (!partId || !effect) {
-      this.#logger.warn('DamageAccumulator.recordEffect called with missing partId or effect');
+      this.#logger.warn(
+        'DamageAccumulator.recordEffect called with missing partId or effect'
+      );
       return;
     }
 
@@ -172,7 +182,9 @@ class DamageAccumulator extends BaseService {
     }
 
     if (!eventType) {
-      this.#logger.warn('DamageAccumulator.queueEvent called without eventType');
+      this.#logger.warn(
+        'DamageAccumulator.queueEvent called without eventType'
+      );
       return;
     }
 
@@ -205,7 +217,7 @@ class DamageAccumulator extends BaseService {
     const duration = Date.now() - session.createdAt;
     this.#logger.debug(
       `DamageAccumulator: Finalizing session ${session.sessionId} with ${session.entries.length} entries ` +
-      `and ${session.pendingEvents.length} pending events (duration: ${duration}ms)`
+        `and ${session.pendingEvents.length} pending events (duration: ${duration}ms)`
     );
 
     return {

@@ -245,7 +245,7 @@ describe('Performance Metrics - Calculations', () => {
 
     const metrics = testBed.getScopePerformanceMetrics();
 
-    metrics.resolverStats.forEach(stat => {
+    metrics.resolverStats.forEach((stat) => {
       expect(stat.resolver).toBeTruthy();
       expect(stat.totalTime).toBeGreaterThan(0);
       expect(stat.percentage).toBeGreaterThan(0);
@@ -396,7 +396,9 @@ describe('Performance Metrics - Regression Detection', () => {
 
     // Overhead should be reasonable
     if (metrics.overhead.percentage > 30) {
-      console.warn(`High tracing overhead: ${metrics.overhead.percentage.toFixed(1)}%`);
+      console.warn(
+        `High tracing overhead: ${metrics.overhead.percentage.toFixed(1)}%`
+      );
     }
 
     expect(metrics.overhead.percentage).toBeLessThan(50); // Hard limit

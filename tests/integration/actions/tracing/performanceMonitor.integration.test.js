@@ -153,19 +153,27 @@ describe('PerformanceMonitor integration', () => {
     const mathRandomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.99);
 
     expect(() => monitor.setThresholds()).toThrow('Thresholds are required');
-    expect(() => monitor.setThresholds('bad'))
-      .toThrow('Thresholds must be an object');
-    expect(() => monitor.setThresholds({ slowOperationMs: -1 }))
-      .toThrow('slowOperationMs must be a non-negative number');
+    expect(() => monitor.setThresholds('bad')).toThrow(
+      'Thresholds must be an object'
+    );
+    expect(() => monitor.setThresholds({ slowOperationMs: -1 })).toThrow(
+      'slowOperationMs must be a non-negative number'
+    );
     monitor.setThresholds({ slowOperationMs: 120 });
 
-    expect(() => monitor.enableSampling()).toThrow('Sampling config is required');
+    expect(() => monitor.enableSampling()).toThrow(
+      'Sampling config is required'
+    );
     monitor.enableSampling(0.3);
-    expect(() => monitor.enableSampling(-0.1))
-      .toThrow('Sampling rate must be between 0.0 and 1.0');
-    expect(() => monitor.enableSampling({ strategy: 'invalid' }))
-      .toThrow('Invalid sampling strategy. Must be one of: random, adaptive, error_biased');
-    expect(() => monitor.enableSampling('bad')).toThrow('Config must be a number or object');
+    expect(() => monitor.enableSampling(-0.1)).toThrow(
+      'Sampling rate must be between 0.0 and 1.0'
+    );
+    expect(() => monitor.enableSampling({ strategy: 'invalid' })).toThrow(
+      'Invalid sampling strategy. Must be one of: random, adaptive, error_biased'
+    );
+    expect(() => monitor.enableSampling('bad')).toThrow(
+      'Config must be a number or object'
+    );
     monitor.enableSampling({
       rate: 0.2,
       strategy: 'random',
@@ -174,10 +182,14 @@ describe('PerformanceMonitor integration', () => {
     });
 
     const stop = monitor.startMonitoring({ intervalMs: 100 });
-    expect(() => monitor.startMonitoring()).toThrow('Monitoring is already active');
+    expect(() => monitor.startMonitoring()).toThrow(
+      'Monitoring is already active'
+    );
 
     monitor.setThresholds({ maxConcurrency: 5 });
-    expect(monitor.getAlerts().some((alert) => alert.type === 'threshold_changed')).toBe(true);
+    expect(
+      monitor.getAlerts().some((alert) => alert.type === 'threshold_changed')
+    ).toBe(true);
     monitor.clearAlerts();
 
     const root = structuredTrace.startSpan('TrackedOperation');
@@ -187,8 +199,12 @@ describe('PerformanceMonitor integration', () => {
     advanceTime(150);
     structuredTrace.endSpan(root);
 
-    expect(() => monitor.recordMetric('', 1)).toThrow('Metric name must be a non-empty string');
-    expect(() => monitor.recordMetric('metric', 'bad')).toThrow('Metric value must be a valid number');
+    expect(() => monitor.recordMetric('', 1)).toThrow(
+      'Metric name must be a non-empty string'
+    );
+    expect(() => monitor.recordMetric('metric', 'bad')).toThrow(
+      'Metric value must be a valid number'
+    );
     monitor.recordMetric('custom.metric', 5);
     advanceTime(5);
     monitor.recordMetric('custom.metric', 7);
@@ -198,16 +214,26 @@ describe('PerformanceMonitor integration', () => {
     expect(recorded['custom.metric'].previousValue).toBe(5);
 
     expect(monitor.checkThreshold('fastOp', 5, 10)).toBe(false);
-    expect(() => monitor.checkThreshold('warnOp', 'bad', 10)).toThrow('Value must be a valid number');
-    expect(() => monitor.checkThreshold('warnOp', 10, 'bad')).toThrow('Threshold must be a valid number');
+    expect(() => monitor.checkThreshold('warnOp', 'bad', 10)).toThrow(
+      'Value must be a valid number'
+    );
+    expect(() => monitor.checkThreshold('warnOp', 10, 'bad')).toThrow(
+      'Threshold must be a valid number'
+    );
     const warningExceeded = monitor.checkThreshold('warnOp', 16, 10);
     expect(warningExceeded).toBe(true);
     const criticalExceeded = monitor.checkThreshold('critOp', 25, 10);
     expect(criticalExceeded).toBe(true);
 
     const alertsAfterThresholds = monitor.getAlerts();
-    expect(alertsAfterThresholds.some((alert) => alert.type === 'metric_recorded')).toBe(true);
-    expect(alertsAfterThresholds.filter((alert) => alert.type === 'threshold_exceeded').length).toBe(2);
+    expect(
+      alertsAfterThresholds.some((alert) => alert.type === 'metric_recorded')
+    ).toBe(true);
+    expect(
+      alertsAfterThresholds.filter(
+        (alert) => alert.type === 'threshold_exceeded'
+      ).length
+    ).toBe(2);
     monitor.clearAlerts();
 
     monitor.setThresholds({ slowOperationMs: 60 });
@@ -220,9 +246,16 @@ describe('PerformanceMonitor integration', () => {
 
     const operationAlerts = monitor
       .getAlerts()
-      .filter((alert) => alert.type === 'critical_operation' || alert.type === 'slow_operation');
-    expect(operationAlerts.some((alert) => alert.operation === 'slowOperation')).toBe(true);
-    expect(operationAlerts.some((alert) => alert.operation === 'moderateOperation')).toBe(true);
+      .filter(
+        (alert) =>
+          alert.type === 'critical_operation' || alert.type === 'slow_operation'
+      );
+    expect(
+      operationAlerts.some((alert) => alert.operation === 'slowOperation')
+    ).toBe(true);
+    expect(
+      operationAlerts.some((alert) => alert.operation === 'moderateOperation')
+    ).toBe(true);
 
     const metricsAfterTrack = monitor.getRecordedMetrics();
     expect(Object.keys(metricsAfterTrack)).toEqual(

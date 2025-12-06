@@ -27,20 +27,31 @@ class InvalidPropertyError extends AnatomyError {
    * @param {string} [params.suggestion] - Suggested fix value
    * @param {string} [params.schemaPath] - Path to the component schema
    */
-  constructor({ recipeId, location, componentId, property, currentValue, validValues, suggestion, schemaPath }) {
-    const fixes = [
-      `Change property value to valid enum option`,
-    ];
+  constructor({
+    recipeId,
+    location,
+    componentId,
+    property,
+    currentValue,
+    validValues,
+    suggestion,
+    schemaPath,
+  }) {
+    const fixes = [`Change property value to valid enum option`];
 
     // Add valid values to fix section first
     if (validValues && validValues.length > 0) {
-      fixes.unshift(`Valid Values: [${validValues.map(v => `"${v}"`).join(', ')}]`);
+      fixes.unshift(
+        `Valid Values: [${validValues.map((v) => `"${v}"`).join(', ')}]`
+      );
     }
 
     if (suggestion) {
       fixes.push('');
       fixes.push('Suggested Fix:');
-      fixes.push(`  "${property}": "${suggestion}"  // Changed from "${currentValue}"`);
+      fixes.push(
+        `  "${property}": "${suggestion}"  // Changed from "${currentValue}"`
+      );
     }
 
     const references = [];

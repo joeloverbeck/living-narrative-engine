@@ -8,15 +8,15 @@ Create the `damage-types` mod with marker components that indicate what types of
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/mods/damage-types/mod-manifest.json` | Mod manifest with core dependency |
+| File                                                       | Purpose                              |
+| ---------------------------------------------------------- | ------------------------------------ |
+| `data/mods/damage-types/mod-manifest.json`                 | Mod manifest with core dependency    |
 | `data/mods/damage-types/components/can_cut.component.json` | Marker for cutting damage capability |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File             | Change                               |
+| ---------------- | ------------------------------------ |
 | `data/game.json` | Add `damage-types` to the mods array |
 
 ## Implementation Details
@@ -30,13 +30,9 @@ Create the `damage-types` mod with marker components that indicate what types of
   "version": "1.0.0",
   "name": "Damage Types System",
   "description": "Marker components for entity damage capabilities",
-  "dependencies": [
-    { "id": "core", "version": ">=1.0.0" }
-  ],
+  "dependencies": [{ "id": "core", "version": ">=1.0.0" }],
   "content": {
-    "components": [
-      "can_cut.component.json"
-    ]
+    "components": ["can_cut.component.json"]
   }
 }
 ```
@@ -111,15 +107,16 @@ data/mods/damage-types/
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/core/mod-manifest.json` | Manifest pattern reference |
+| File                                                       | Purpose                                 |
+| ---------------------------------------------------------- | --------------------------------------- |
+| `data/mods/core/mod-manifest.json`                         | Manifest pattern reference              |
 | `data/mods/vampirism/components/is_vampire.component.json` | Marker component pattern (empty schema) |
-| `data/schemas/component.schema.json` | Component schema reference |
+| `data/schemas/component.schema.json`                       | Component schema reference              |
 
 ## Future Extensibility
 
 This mod is designed to support future damage types:
+
 - `can_pierce` - Piercing damage (arrows, spears)
 - `can_bludgeon` - Blunt damage (hammers, fists)
 - `can_burn` - Fire damage
@@ -135,18 +132,22 @@ These will be added in future tickets as needed.
 ### What was actually changed vs originally planned
 
 **Discrepancies Corrected in Ticket**:
+
 1. **Reference file corrected**: `data/mods/anatomy/components/grabbable.component.json` did not exist. Corrected to `data/mods/vampirism/components/is_vampire.component.json` as the marker component pattern reference.
 2. **Manifest format corrected**: The ticket's example `dependencies: ["core"]` was invalid - the correct format requires objects with `id` and `version` keys: `dependencies: [{ "id": "core", "version": ">=1.0.0" }]`
 3. **Manifest structure completed**: Added `content.components` array which was missing from original ticket example
 
 **Files Created** (as planned):
+
 - `data/mods/damage-types/mod-manifest.json`
 - `data/mods/damage-types/components/can_cut.component.json`
 
 **Files Modified** (as planned):
+
 - `data/game.json` - Added `damage-types` to mods array
 
 ### Validation Results
+
 - `npm run validate` ✅ - 44 mods validated, 0 violations
 - Unit tests: 37,158 passed (2,243 test suites)
 - Integration tests: 13,922 passed (1,835 test suites)

@@ -7,13 +7,9 @@
       "layer": "accessories",
       "equipmentSlots": {
         "primary": "left_arm_clothing",
-        "secondary": [
-          "right_arm_clothing"
-        ]
+        "secondary": ["right_arm_clothing"]
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "linen"
@@ -31,10 +27,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "left_arm_clothing",
-        "right_arm_clothing"
-      ],
+      "covers": ["left_arm_clothing", "right_arm_clothing"],
       "coveragePriority": "accessories"
     },
     "items:item": {},

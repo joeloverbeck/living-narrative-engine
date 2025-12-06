@@ -83,7 +83,10 @@ class TestEntityManager {
     if (!entity || !entity.components) {
       throw new Error(`Unknown entity: ${id}`);
     }
-    return Object.prototype.hasOwnProperty.call(entity.components, componentType);
+    return Object.prototype.hasOwnProperty.call(
+      entity.components,
+      componentType
+    );
   }
 }
 
@@ -160,7 +163,10 @@ describe('entityRefUtils integration with real execution context', () => {
     const executionContext = createExecutionContext();
 
     const resolvedActor = resolveEntityId(ACTOR_ROLE, executionContext);
-    const resolvedTarget = resolveEntityId(LEGACY_TARGET_ROLE, executionContext);
+    const resolvedTarget = resolveEntityId(
+      LEGACY_TARGET_ROLE,
+      executionContext
+    );
     const resolvedPrimary = resolveEntityId(PRIMARY_ROLE, executionContext);
     const resolvedSecondary = resolveEntityId(SECONDARY_ROLE, executionContext);
 
@@ -222,7 +228,12 @@ describe('entityRefUtils integration with real execution context', () => {
     expect(result.resolved).toEqual([PRIMARY_ROLE, SECONDARY_ROLE]);
     expect(result.missing).toEqual([TERTIARY_ROLE]);
     expect(result.available).toEqual(
-      expect.arrayContaining([PRIMARY_ROLE, SECONDARY_ROLE, TERTIARY_ROLE, LEGACY_TARGET_ROLE])
+      expect.arrayContaining([
+        PRIMARY_ROLE,
+        SECONDARY_ROLE,
+        TERTIARY_ROLE,
+        LEGACY_TARGET_ROLE,
+      ])
     );
     expect(result.errors[0]).toMatchObject({
       placeholder: TERTIARY_ROLE,

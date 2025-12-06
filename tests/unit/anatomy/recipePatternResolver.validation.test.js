@@ -136,7 +136,9 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       const resolve = () => resolver.resolveRecipePatterns(recipe, blueprint);
 
       expect(resolve).toThrow(ValidationError);
-      expect(resolve).toThrow(/multiple matchers.*matchesGroup.*matchesPattern/);
+      expect(resolve).toThrow(
+        /multiple matchers.*matchesGroup.*matchesPattern/
+      );
     });
 
     it('should throw error when pattern has no matcher', () => {
@@ -467,7 +469,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes(
               "Slot group 'limbSet:leg' not found or produced 0 slots"
@@ -476,7 +478,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       ).toBe(true);
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' && call[0].includes('matched 0 slots')
         )
       ).toBe(true);
@@ -579,7 +581,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes("Pattern 1: Pattern 'wing_*' matched 0 slots")
         )
@@ -646,9 +648,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
     it('should accept wildcards in orientation', () => {
       const recipe = {
-        patterns: [
-          { matchesAll: { orientation: 'left_*' }, partType: 'left' },
-        ],
+        patterns: [{ matchesAll: { orientation: 'left_*' }, partType: 'left' }],
       };
 
       const blueprint = {
@@ -738,7 +738,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes(
               'Pattern 1: matchesAll filter {"slotType":"wing"} matched 0 slots'
@@ -761,15 +761,17 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       mockDataRegistry.get.mockReturnValue(template);
       // Mock for all limbSet extractions - pattern and exclusion resolution
-      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation((limbSet) => {
-        // Return slot keys based on limbSet id
-        if (limbSet.id === 'front') {
-          return ['leg_fl', 'leg_fr'];
-        } else if (limbSet.id === 'back') {
-          return ['leg_bl', 'leg_br'];
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockImplementation(
+        (limbSet) => {
+          // Return slot keys based on limbSet id
+          if (limbSet.id === 'front') {
+            return ['leg_fl', 'leg_fr'];
+          } else if (limbSet.id === 'back') {
+            return ['leg_bl', 'leg_br'];
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
       const recipe = {
         patterns: [
@@ -796,7 +798,9 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       expect.assertions(4);
       try {
         resolver.resolveRecipePatterns(recipe, blueprint);
-        throw new Error('Expected ValidationError after exclusions removed slots');
+        throw new Error(
+          'Expected ValidationError after exclusions removed slots'
+        );
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
         expect(error.message).toContain(
@@ -806,7 +810,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       expect(
         mockLogger.debug.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes('Excluded') &&
             call[0].includes('limbSet:leg')
@@ -814,7 +818,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       ).toBe(true);
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes('matched 0 slots after applying exclusions')
         )
@@ -1012,7 +1016,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       expect(
         mockLogger.info.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes("Explicit slot 'leg_left' overrides Pattern")
         )
@@ -1066,7 +1070,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
 
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes("Pattern 1: Pattern 'leg_*' matched 0 slots")
         )

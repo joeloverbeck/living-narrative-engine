@@ -16,16 +16,10 @@
       "music:playing_music",
       "music:performance_mood"
     ],
-    "primary": [
-      "items:item",
-      "music:is_instrument"
-    ]
+    "primary": ["items:item", "music:is_instrument"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:being_restrained"
-    ]
+    "actor": ["positioning:closeness", "positioning:being_restrained"]
   },
   "prerequisites": [
     {
@@ -34,13 +28,7 @@
           {
             "var": "actor.components.music:performance_mood.mood"
           },
-          [
-            "triumphant",
-            "tense",
-            "mournful",
-            "tender",
-            "meditative"
-          ]
+          ["triumphant", "tense", "mournful", "tender", "meditative"]
         ]
       },
       "failure_message": "Swelling requires a mood that supports dramatic rises. Try a mood that's more expressive or emotionally dynamic."

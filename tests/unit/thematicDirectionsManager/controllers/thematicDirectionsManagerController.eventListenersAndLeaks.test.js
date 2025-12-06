@@ -32,19 +32,16 @@ jest.mock(
   })
 );
 
-jest.mock(
-  '../../../../src/shared/characterBuilder/inPlaceEditor.js',
-  () => ({
-    InPlaceEditor: jest.fn().mockImplementation((options) => {
-      const instance = {
-        destroy: jest.fn(),
-        options,
-      };
-      inPlaceEditorInstances.push(instance);
-      return instance;
-    }),
-  })
-);
+jest.mock('../../../../src/shared/characterBuilder/inPlaceEditor.js', () => ({
+  InPlaceEditor: jest.fn().mockImplementation((options) => {
+    const instance = {
+      destroy: jest.fn(),
+      options,
+    };
+    inPlaceEditorInstances.push(instance);
+    return instance;
+  }),
+}));
 
 describe('ThematicDirectionsManagerController - Event listeners and leak detection coverage', () => {
   let testBase;
@@ -213,14 +210,20 @@ describe('ThematicDirectionsManagerController - Event listeners and leak detecti
     // Trigger keyboard navigation on concept selector
     const conceptSelector = document.getElementById('concept-selector');
     conceptSelector.value = 'concept-1';
-    const escapeEvent = new Event('keydown', { bubbles: true, cancelable: true });
+    const escapeEvent = new Event('keydown', {
+      bubbles: true,
+      cancelable: true,
+    });
     escapeEvent.key = 'Escape';
     escapeEvent.preventDefault = jest.fn();
     conceptSelector.dispatchEvent(escapeEvent);
     expect(escapeEvent.preventDefault).toHaveBeenCalled();
 
     // Trigger keyboard shortcut to focus filter
-    const slashEvent = new Event('keydown', { bubbles: true, cancelable: true });
+    const slashEvent = new Event('keydown', {
+      bubbles: true,
+      cancelable: true,
+    });
     slashEvent.key = '/';
     slashEvent.ctrlKey = true;
     conceptSelector.dispatchEvent(slashEvent);
@@ -234,7 +237,10 @@ describe('ThematicDirectionsManagerController - Event listeners and leak detecti
 
     // Trigger filter clearing via keyboard shortcut
     filterInput.value = 'detective story';
-    const filterEscape = new Event('keydown', { bubbles: true, cancelable: true });
+    const filterEscape = new Event('keydown', {
+      bubbles: true,
+      cancelable: true,
+    });
     filterEscape.key = 'Escape';
     filterEscape.preventDefault = jest.fn();
     filterInput.dispatchEvent(filterEscape);
@@ -281,17 +287,27 @@ describe('ThematicDirectionsManagerController - Event listeners and leak detecti
       return 123;
     });
 
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
 
     controller._postDestroy();
 
     expect(mockPreviousItemsDropdown.destroy).toHaveBeenCalled();
     expect(testBase.mocks.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('ThematicDirectionsManagerController: Potential memory leaks detected'),
-      expect.objectContaining({ leaks: expect.arrayContaining([expect.stringContaining('InPlaceEditor instances')]) })
+      expect.stringContaining(
+        'ThematicDirectionsManagerController: Potential memory leaks detected'
+      ),
+      expect.objectContaining({
+        leaks: expect.arrayContaining([
+          expect.stringContaining('InPlaceEditor instances'),
+        ]),
+      })
     );
     expect(testBase.mocks.logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Triggering automatic memory cleanup due to detected leaks')
+      expect.stringContaining(
+        'Triggering automatic memory cleanup due to detected leaks'
+      )
     );
     expect(consoleWarnSpy).not.toHaveBeenCalled();
     expect(inPlaceEditorInstances.length).toBeGreaterThan(0);
@@ -311,20 +327,32 @@ describe('ThematicDirectionsManagerController - Event listeners and leak detecti
     await controller._initializeAdditionalServices();
     await controller.refreshDropdown();
 
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
 
     controller._postDestroy();
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       'Potential memory leaks detected:',
-      expect.arrayContaining([expect.stringContaining('InPlaceEditor instances')])
+      expect.arrayContaining([
+        expect.stringContaining('InPlaceEditor instances'),
+      ])
     );
     expect(testBase.mocks.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('ThematicDirectionsManagerController: Potential memory leaks detected'),
-      expect.objectContaining({ leaks: expect.arrayContaining([expect.stringContaining('InPlaceEditor instances')]) })
+      expect.stringContaining(
+        'ThematicDirectionsManagerController: Potential memory leaks detected'
+      ),
+      expect.objectContaining({
+        leaks: expect.arrayContaining([
+          expect.stringContaining('InPlaceEditor instances'),
+        ]),
+      })
     );
     expect(testBase.mocks.logger.info).not.toHaveBeenCalledWith(
-      expect.stringContaining('Triggering automatic memory cleanup due to detected leaks')
+      expect.stringContaining(
+        'Triggering automatic memory cleanup due to detected leaks'
+      )
     );
   });
 });

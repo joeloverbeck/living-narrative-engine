@@ -7,7 +7,10 @@ import {
   afterEach,
 } from '@jest/globals';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
-import { createPrefixedLogger, initLogger } from '../../../src/utils/loggerUtils.js';
+import {
+  createPrefixedLogger,
+  initLogger,
+} from '../../../src/utils/loggerUtils.js';
 import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
 
 jest.mock('../../../src/utils/dependencyUtils.js', () => ({

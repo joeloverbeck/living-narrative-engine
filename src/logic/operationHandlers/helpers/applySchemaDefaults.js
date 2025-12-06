@@ -23,19 +23,13 @@ export function applySchemaDefaults(value, componentDefinition, logger) {
   }
 
   const { properties } = componentDefinition.dataSchema;
-  const baseValue =
-    value && typeof value === 'object'
-      ? value
-      : {};
+  const baseValue = value && typeof value === 'object' ? value : {};
   const result = { ...baseValue };
 
   // For each property in the schema
   for (const [propName, propSchema] of Object.entries(properties)) {
     // If property is missing from value and has a default in schema
-    if (
-      result[propName] === undefined &&
-      propSchema.default !== undefined
-    ) {
+    if (result[propName] === undefined && propSchema.default !== undefined) {
       result[propName] = propSchema.default;
       logger?.debug?.(
         `applySchemaDefaults: Applied default for '${propName}'`,
@@ -84,17 +78,11 @@ export function applySchemaDefaults(value, componentDefinition, logger) {
  * @private
  */
 function applyNestedDefaults(value, schema, logger) {
-  const baseValue =
-    value && typeof value === 'object'
-      ? value
-      : {};
+  const baseValue = value && typeof value === 'object' ? value : {};
   const result = { ...baseValue };
 
   for (const [propName, propSchema] of Object.entries(schema.properties)) {
-    if (
-      result[propName] === undefined &&
-      propSchema.default !== undefined
-    ) {
+    if (result[propName] === undefined && propSchema.default !== undefined) {
       result[propName] = propSchema.default;
       logger?.debug?.(
         `applySchemaDefaults: Applied nested default for '${propName}'`,
@@ -121,7 +109,11 @@ function applyNestedDefaults(value, schema, logger) {
 
       // Recurse if object exists
       if (result[propName] !== undefined) {
-        result[propName] = applyNestedDefaults(result[propName], propSchema, logger);
+        result[propName] = applyNestedDefaults(
+          result[propName],
+          propSchema,
+          logger
+        );
       }
     }
   }

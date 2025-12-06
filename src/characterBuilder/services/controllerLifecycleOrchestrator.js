@@ -111,10 +111,7 @@ export class ControllerLifecycleOrchestrator {
    * @param {Record<string, Function|Function[]>} [dependencies.hooks]
    */
   constructor({ logger, eventBus = null, hooks = {} } = {}) {
-    this.#logger = ensureValidLogger(
-      logger,
-      'ControllerLifecycleOrchestrator'
-    );
+    this.#logger = ensureValidLogger(logger, 'ControllerLifecycleOrchestrator');
     this.#eventBus = eventBus ?? null;
 
     this.#registerHookConfiguration(hooks);
@@ -236,7 +233,8 @@ export class ControllerLifecycleOrchestrator {
     const execute = (...args) => {
       const invocationArgs = forwardArguments ? args : [];
       const method = controller[methodName];
-      const controllerName = controller.constructor?.name ?? this.#controllerName;
+      const controllerName =
+        controller.constructor?.name ?? this.#controllerName;
 
       if (typeof method !== 'function') {
         if (required) {
@@ -565,10 +563,7 @@ export class ControllerLifecycleOrchestrator {
           });
         }
       } catch (error) {
-        this.#logger.error(
-          `${this.#controllerName}: Error in ${phase}`,
-          error
-        );
+        this.#logger.error(`${this.#controllerName}: Error in ${phase}`, error);
       }
     }
   }
@@ -658,9 +653,7 @@ export class ControllerLifecycleOrchestrator {
    * @returns {Error}
    */
   #createLifecycleError(phaseName, methodName, error) {
-    const lifecycleError = new Error(
-      `${phaseName} failed: ${error.message}`
-    );
+    const lifecycleError = new Error(`${phaseName} failed: ${error.message}`);
     lifecycleError.originalError = error;
     lifecycleError.phase = phaseName;
     lifecycleError.methodName = methodName;

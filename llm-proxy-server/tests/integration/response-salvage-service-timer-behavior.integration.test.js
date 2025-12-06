@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -41,7 +48,8 @@ describe('ResponseSalvageService integration: timer and signature resilience', (
     app.use('/api/llm-request', createSalvageRoutes(controller));
 
     app.post('/api/llm-request/store-salvage', (req, res) => {
-      const { requestId, llmId, payload, responseData, statusCode, ttl } = req.body;
+      const { requestId, llmId, payload, responseData, statusCode, ttl } =
+        req.body;
 
       salvageService.salvageResponse(
         requestId,
@@ -120,7 +128,9 @@ describe('ResponseSalvageService integration: timer and signature resilience', (
 
     await jest.advanceTimersByTimeAsync(120);
 
-    const recovery = await request(app).get('/api/llm-request/salvage/timer-test');
+    const recovery = await request(app).get(
+      '/api/llm-request/salvage/timer-test'
+    );
 
     expect(recovery.status).toBe(202);
     expect(recovery.body.reply).toBe('extended copy');
@@ -152,7 +162,9 @@ describe('ResponseSalvageService integration: timer and signature resilience', (
 
     jest.setSystemTime(baseTime + 60);
 
-    const afterExpiration = await request(app).get('/api/llm-request/salvage/expire-me');
+    const afterExpiration = await request(app).get(
+      '/api/llm-request/salvage/expire-me'
+    );
 
     expect(afterExpiration.status).toBe(404);
     expect(afterExpiration.body.stage).toBe('salvage_not_found');

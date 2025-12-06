@@ -116,7 +116,8 @@ describe('Traits Generator Accessibility E2E Tests', () => {
       logger: testBed.mockLogger,
       schemaValidator: testBed.getSchemaValidator(),
       // Required service dependencies added in base controller refactor
-      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      controllerLifecycleOrchestrator:
+        testBed.mockControllerLifecycleOrchestrator,
       domElementManager: testBed.mockDOMElementManager,
       eventListenerRegistry: testBed.mockEventListenerRegistry,
       asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,

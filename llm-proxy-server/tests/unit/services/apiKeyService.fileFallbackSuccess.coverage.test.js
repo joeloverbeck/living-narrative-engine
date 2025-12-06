@@ -103,21 +103,19 @@ describe('ApiKeyService fallback success scenarios', () => {
   });
 
   it('preserves original error message when combined failure falls back to log guidance', async () => {
-    jest
-      .spyOn(apiKeyService, '_readApiKeyFromFile')
-      .mockResolvedValue({
-        key: null,
-        error: {
-          message: '',
-          stage: 'api_key_file_read_exception',
-          details: {
-            llmId: 'llm-blank-original',
-            attemptedFile: 'blank.key',
-            reason: '',
-            originalErrorMessage: 'Socket timeout after 3s',
-          },
+    jest.spyOn(apiKeyService, '_readApiKeyFromFile').mockResolvedValue({
+      key: null,
+      error: {
+        message: '',
+        stage: 'api_key_file_read_exception',
+        details: {
+          llmId: 'llm-blank-original',
+          attemptedFile: 'blank.key',
+          reason: '',
+          originalErrorMessage: 'Socket timeout after 3s',
         },
-      });
+      },
+    });
 
     const result = await apiKeyService.getApiKey(
       {

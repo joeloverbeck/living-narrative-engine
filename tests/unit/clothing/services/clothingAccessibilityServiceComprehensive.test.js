@@ -21,17 +21,17 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockEntityManager = {
       getComponentData: jest.fn(),
       hasComponent: jest.fn(),
-      setComponentData: jest.fn()
+      setComponentData: jest.fn(),
     };
 
     mockEntitiesGateway = {
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
   });
 
@@ -39,34 +39,44 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
     beforeEach(() => {
       // Setup Layla Agirre specific configuration
       const equipment = ClothingTestDataFactory.createLaylaAgirreEquipment();
-      const coverageMappings = ClothingTestDataFactory.createLaylaAgirreCoverageMappings();
-      
+      const coverageMappings =
+        ClothingTestDataFactory.createLaylaAgirreCoverageMappings();
+
       mockEntityManager.getComponentData = jest.fn(
         ClothingTestDataFactory.createMockEntityManagerImplementation(equipment)
       );
-      
+
       mockEntitiesGateway.getComponentData = jest.fn(
-        ClothingTestDataFactory.createMockEntitiesGatewayImplementation(coverageMappings)
+        ClothingTestDataFactory.createMockEntitiesGatewayImplementation(
+          coverageMappings
+        )
       );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
     it('should only return trousers as accessible in topmost mode (Layla Agirre bug fix)', () => {
-      const result = service.getAccessibleItems('layla_agirre', { mode: 'topmost' });
-      
+      const result = service.getAccessibleItems('layla_agirre', {
+        mode: 'topmost',
+      });
+
       ClothingTestAssertions.assertLaylaAgirreScenario(result);
       expect(result).toHaveLength(1);
-      expect(result[0]).toBe('clothing:dark_olive_high_rise_double_pleat_trousers');
+      expect(result[0]).toBe(
+        'clothing:dark_olive_high_rise_double_pleat_trousers'
+      );
     });
 
     it('should correctly identify boxer brief as blocked by trousers', () => {
-      const result = service.isItemAccessible('layla_agirre', 'clothing:power_mesh_boxer_brief');
-      
+      const result = service.isItemAccessible(
+        'layla_agirre',
+        'clothing:power_mesh_boxer_brief'
+      );
+
       ClothingTestAssertions.assertAccessibilityResult(
         result,
         false,
@@ -76,55 +86,70 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
     });
 
     it('should identify trousers as the blocking item for boxer brief', () => {
-      const blocker = service.getBlockingItem('layla_agirre', 'clothing:power_mesh_boxer_brief');
-      
-      expect(blocker).toBe('clothing:dark_olive_high_rise_double_pleat_trousers');
+      const blocker = service.getBlockingItem(
+        'layla_agirre',
+        'clothing:power_mesh_boxer_brief'
+      );
+
+      expect(blocker).toBe(
+        'clothing:dark_olive_high_rise_double_pleat_trousers'
+      );
     });
 
     it('should return both items in all mode', () => {
-      const result = service.getAccessibleItems('layla_agirre', { mode: 'all' });
-      
+      const result = service.getAccessibleItems('layla_agirre', {
+        mode: 'all',
+      });
+
       ClothingTestAssertions.assertContainsItems(result, [
         'clothing:dark_olive_high_rise_double_pleat_trousers',
-        'clothing:power_mesh_boxer_brief'
+        'clothing:power_mesh_boxer_brief',
       ]);
     });
 
     it('should handle priority sorting correctly for Layla Agirre equipment', () => {
-      const result = service.getAccessibleItems('layla_agirre', { 
+      const result = service.getAccessibleItems('layla_agirre', {
         mode: 'all',
-        sortByPriority: true 
+        sortByPriority: true,
       });
-      
+
       // Base layer (trousers) should come before underwear (boxer brief)
-      expect(result[0]).toBe('clothing:dark_olive_high_rise_double_pleat_trousers');
+      expect(result[0]).toBe(
+        'clothing:dark_olive_high_rise_double_pleat_trousers'
+      );
       expect(result[1]).toBe('clothing:power_mesh_boxer_brief');
     });
   });
 
   describe('Complex Multi-Layer Scenarios', () => {
     beforeEach(() => {
-      const equipment = ClothingTestDataFactory.createMultiLayerTorsoEquipment();
-      const coverageMappings = ClothingTestDataFactory.createMultiLayerCoverageMappings();
-      
+      const equipment =
+        ClothingTestDataFactory.createMultiLayerTorsoEquipment();
+      const coverageMappings =
+        ClothingTestDataFactory.createMultiLayerCoverageMappings();
+
       mockEntityManager.getComponentData = jest.fn(
         ClothingTestDataFactory.createMockEntityManagerImplementation(equipment)
       );
-      
+
       mockEntitiesGateway.getComponentData = jest.fn(
-        ClothingTestDataFactory.createMockEntitiesGatewayImplementation(coverageMappings)
+        ClothingTestDataFactory.createMockEntitiesGatewayImplementation(
+          coverageMappings
+        )
       );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
     it('should handle three-layer torso configuration correctly', () => {
-      const topmostResult = service.getAccessibleItems('test-entity', { mode: 'topmost' });
-      
+      const topmostResult = service.getAccessibleItems('test-entity', {
+        mode: 'topmost',
+      });
+
       // Only outer layer should be accessible
       ClothingTestAssertions.assertOnlyAccessibleItems(
         topmostResult,
@@ -134,33 +159,43 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
     });
 
     it('should correctly order items by layer priority', () => {
-      const result = service.getAccessibleItems('test-entity', { 
+      const result = service.getAccessibleItems('test-entity', {
         mode: 'all',
-        sortByPriority: true 
+        sortByPriority: true,
       });
-      
+
       // Should be ordered: outer > base > underwear
       expect(result).toEqual([
         'clothing:winter_coat',
         'clothing:sweater',
-        'clothing:undershirt'
+        'clothing:undershirt',
       ]);
     });
 
     it('should filter by specific layer correctly', () => {
-      const baseResult = service.getAccessibleItems('test-entity', { mode: 'base' });
-      
+      const baseResult = service.getAccessibleItems('test-entity', {
+        mode: 'base',
+      });
+
       expect(baseResult).toEqual(['clothing:sweater']);
     });
 
     it('should identify correct blocking relationships in multi-layer setup', () => {
       // Sweater is blocked by winter coat
-      const sweaterAccessibility = service.isItemAccessible('test-entity', 'clothing:sweater');
+      const sweaterAccessibility = service.isItemAccessible(
+        'test-entity',
+        'clothing:sweater'
+      );
       expect(sweaterAccessibility.accessible).toBe(false);
-      expect(sweaterAccessibility.blockingItems).toContain('clothing:winter_coat');
-      
+      expect(sweaterAccessibility.blockingItems).toContain(
+        'clothing:winter_coat'
+      );
+
       // Undershirt is blocked by both coat and sweater
-      const undershirtAccessibility = service.isItemAccessible('test-entity', 'clothing:undershirt');
+      const undershirtAccessibility = service.isItemAccessible(
+        'test-entity',
+        'clothing:undershirt'
+      );
       expect(undershirtAccessibility.accessible).toBe(false);
       // Should identify at least one blocking item
       expect(undershirtAccessibility.blockingItems.length).toBeGreaterThan(0);
@@ -170,43 +205,48 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
   describe('Cross-Area Equipment Scenarios', () => {
     beforeEach(() => {
       const equipment = ClothingTestDataFactory.createCrossAreaEquipment();
-      const coverageMappings = ClothingTestDataFactory.createMultiLayerCoverageMappings();
-      
+      const coverageMappings =
+        ClothingTestDataFactory.createMultiLayerCoverageMappings();
+
       mockEntityManager.getComponentData = jest.fn(
         ClothingTestDataFactory.createMockEntityManagerImplementation(equipment)
       );
-      
+
       mockEntitiesGateway.getComponentData = jest.fn(
-        ClothingTestDataFactory.createMockEntitiesGatewayImplementation(coverageMappings)
+        ClothingTestDataFactory.createMockEntitiesGatewayImplementation(
+          coverageMappings
+        )
       );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
     it('should not block items in different body areas', () => {
-      const result = service.getAccessibleItems('test-entity', { mode: 'topmost' });
-      
+      const result = service.getAccessibleItems('test-entity', {
+        mode: 'topmost',
+      });
+
       // Should include topmost from each area
       const expectedItems = [
-        'clothing:hat',        // head
-        'clothing:jacket',     // torso_upper
-        'clothing:pants',      // torso_lower
-        'clothing:boots'       // feet
+        'clothing:hat', // head
+        'clothing:jacket', // torso_upper
+        'clothing:pants', // torso_lower
+        'clothing:boots', // feet
       ];
-      
+
       ClothingTestAssertions.assertContainsItems(result, expectedItems);
     });
 
     it('should filter by body area correctly', () => {
       const torsoUpperResult = service.getAccessibleItems('test-entity', {
         mode: 'all',
-        bodyArea: 'torso_upper'
+        bodyArea: 'torso_upper',
       });
-      
+
       expect(torsoUpperResult).toContain('clothing:jacket');
       expect(torsoUpperResult).toContain('clothing:shirt');
       expect(torsoUpperResult).not.toContain('clothing:pants');
@@ -217,9 +257,9 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       const result = service.getAccessibleItems('test-entity', {
         mode: 'all',
         layer: 'base',
-        bodyArea: 'feet'
+        bodyArea: 'feet',
       });
-      
+
       expect(result).toEqual(['clothing:socks']);
     });
   });
@@ -231,11 +271,11 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
           torso_upper: {
             outer: 'clothing:jacket',
             base: 'clothing:shirt',
-            underwear: 'clothing:undershirt'
-          }
-        }
+            underwear: 'clothing:undershirt',
+          },
+        },
       };
-      
+
       mockEntityManager.getComponentData = jest.fn((entityId, component) => {
         if (component === 'clothing:equipment') return equipment;
         if (component === 'clothing:coverage_mapping') {
@@ -243,12 +283,14 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
         }
         return null;
       });
-      
+
       mockEntitiesGateway.getComponentData = jest.fn((itemId, component) => {
         if (component === 'clothing:coverage_mapping') {
-          const layer = itemId.includes('jacket') ? 'outer' : 
-                       itemId.includes('shirt') && !itemId.includes('under') ? 'base' : 
-                       'underwear';
+          const layer = itemId.includes('jacket')
+            ? 'outer'
+            : itemId.includes('shirt') && !itemId.includes('under')
+              ? 'base'
+              : 'underwear';
           return { covers: ['torso_upper'], coveragePriority: layer };
         }
         return null;
@@ -257,7 +299,7 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -265,9 +307,9 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       const result = service.getAccessibleItems('test-entity', {
         mode: 'all',
         sortByPriority: true,
-        context: 'removal'
+        context: 'removal',
       });
-      
+
       // Outer items get priority boost in removal context
       expect(result[0]).toBe('clothing:jacket');
     });
@@ -276,9 +318,9 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       const result = service.getAccessibleItems('test-entity', {
         mode: 'all',
         sortByPriority: true,
-        context: 'equipping'
+        context: 'equipping',
       });
-      
+
       // Should maintain standard priority order
       expect(result[0]).toBe('clothing:jacket');
       expect(result[1]).toBe('clothing:shirt');
@@ -289,9 +331,9 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       const result = service.getAccessibleItems('test-entity', {
         mode: 'all',
         sortByPriority: true,
-        context: 'unknown_context'
+        context: 'unknown_context',
       });
-      
+
       // Should fall back to standard priority
       expect(result).toHaveLength(3);
       expect(result[0]).toBe('clothing:jacket');
@@ -303,16 +345,17 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
     it('should handle malformed equipment gracefully', () => {
-      const malformedEquipment = ClothingTestDataFactory.createMalformedEquipment();
+      const malformedEquipment =
+        ClothingTestDataFactory.createMalformedEquipment();
       mockEntityManager.getComponentData.mockReturnValue(malformedEquipment);
-      
+
       const result = service.getAccessibleItems('test-entity', { mode: 'all' });
-      
+
       // Should extract valid items and ignore malformed data
       expect(result).toContain('clothing:shirt');
       expect(result).toContain('clothing:ring');
@@ -322,13 +365,13 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
 
     it('should handle missing coverage mapping gracefully', () => {
       mockEntityManager.getComponentData.mockReturnValue({
-        equipped: { torso: { base: 'item1' } }
+        equipped: { torso: { base: 'item1' } },
       });
-      
+
       mockEntitiesGateway.getComponentData.mockImplementation(() => {
         throw new Error('Coverage mapping not found');
       });
-      
+
       expect(() => {
         service.getAccessibleItems('test-entity', { mode: 'topmost' });
       }).not.toThrow();
@@ -338,9 +381,9 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       mockEntityManager.getComponentData.mockImplementation(() => {
         throw new Error('Database connection failed');
       });
-      
+
       const result = service.getAccessibleItems('test-entity');
-      
+
       expect(result).toEqual([]);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to get equipment state',
@@ -349,38 +392,49 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
     });
 
     it('should validate input parameters', () => {
-      expect(() => service.getAccessibleItems('')).toThrow(InvalidArgumentError);
-      expect(() => service.getAccessibleItems(null)).toThrow(InvalidArgumentError);
-      expect(() => service.getAccessibleItems('   ')).toThrow(InvalidArgumentError);
-      
-      expect(() => service.isItemAccessible('entity', '')).toThrow(InvalidArgumentError);
-      expect(() => service.isItemAccessible('', 'item')).toThrow(InvalidArgumentError);
-      
-      expect(() => service.getBlockingItem('entity', null)).toThrow(InvalidArgumentError);
+      expect(() => service.getAccessibleItems('')).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => service.getAccessibleItems(null)).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => service.getAccessibleItems('   ')).toThrow(
+        InvalidArgumentError
+      );
+
+      expect(() => service.isItemAccessible('entity', '')).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => service.isItemAccessible('', 'item')).toThrow(
+        InvalidArgumentError
+      );
+
+      expect(() => service.getBlockingItem('entity', null)).toThrow(
+        InvalidArgumentError
+      );
       expect(() => service.clearCache(undefined)).toThrow(InvalidArgumentError);
     });
 
     it('should handle empty equipment gracefully', () => {
       mockEntityManager.getComponentData.mockReturnValue({
-        equipped: {}
+        equipped: {},
       });
-      
+
       const result = service.getAccessibleItems('test-entity');
-      
+
       expect(result).toEqual([]);
     });
 
     it('should handle null equipped property', () => {
       mockEntityManager.getComponentData.mockReturnValue({
-        someOtherProperty: 'value'
+        someOtherProperty: 'value',
       });
-      
+
       const result = service.getAccessibleItems('test-entity');
-      
+
       expect(result).toEqual([]);
     });
   });
-
 
   describe('Mode-Specific Behavior', () => {
     beforeEach(() => {
@@ -389,24 +443,24 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
           torso_upper: {
             outer: 'clothing:coat',
             base: 'clothing:shirt',
-            underwear: 'clothing:undershirt'
+            underwear: 'clothing:undershirt',
           },
           hands: {
-            accessories: ['clothing:ring', 'clothing:bracelet']
-          }
-        }
+            accessories: ['clothing:ring', 'clothing:bracelet'],
+          },
+        },
       };
-      
+
       mockEntityManager.getComponentData.mockReturnValue(equipment);
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -414,40 +468,49 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       const results = {
         all: service.getAccessibleItems('test-entity', { mode: 'all' }),
         topmost: service.getAccessibleItems('test-entity', { mode: 'topmost' }),
-        topmost_no_accessories: service.getAccessibleItems('test-entity', { mode: 'topmost_no_accessories' }),
+        topmost_no_accessories: service.getAccessibleItems('test-entity', {
+          mode: 'topmost_no_accessories',
+        }),
         outer: service.getAccessibleItems('test-entity', { mode: 'outer' }),
         base: service.getAccessibleItems('test-entity', { mode: 'base' }),
-        underwear: service.getAccessibleItems('test-entity', { mode: 'underwear' })
+        underwear: service.getAccessibleItems('test-entity', {
+          mode: 'underwear',
+        }),
       };
-      
+
       ClothingTestAssertions.assertModeSpecificBehavior(results, {
         all: {
-          shouldContain: ['clothing:coat', 'clothing:shirt', 'clothing:undershirt', 'clothing:ring'],
-          count: 5
+          shouldContain: [
+            'clothing:coat',
+            'clothing:shirt',
+            'clothing:undershirt',
+            'clothing:ring',
+          ],
+          count: 5,
         },
         topmost: {
           shouldContain: ['clothing:coat'],
-          shouldNotContain: ['clothing:shirt', 'clothing:undershirt']
+          shouldNotContain: ['clothing:shirt', 'clothing:undershirt'],
         },
         topmost_no_accessories: {
           shouldContain: ['clothing:coat'],
-          shouldNotContain: ['clothing:ring', 'clothing:bracelet']
+          shouldNotContain: ['clothing:ring', 'clothing:bracelet'],
         },
         outer: {
           shouldContain: ['clothing:coat'],
           shouldNotContain: ['clothing:shirt', 'clothing:undershirt'],
-          count: 1
+          count: 1,
         },
         base: {
           shouldContain: ['clothing:shirt'],
           shouldNotContain: ['clothing:coat', 'clothing:undershirt'],
-          count: 1
+          count: 1,
         },
         underwear: {
           shouldContain: ['clothing:undershirt'],
           shouldNotContain: ['clothing:coat', 'clothing:shirt'],
-          count: 1
-        }
+          count: 1,
+        },
       });
     });
   });
@@ -457,7 +520,7 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -467,13 +530,13 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
         equipped: {
           torso: {
             base: 'legacy:item1',
-            underwear: 'legacy:item2'
-          }
-        }
+            underwear: 'legacy:item2',
+          },
+        },
       });
-      
+
       const result = service.getAccessibleItems('test-entity', { mode: 'all' });
-      
+
       expect(result).toContain('legacy:item1');
       expect(result).toContain('legacy:item2');
     });
@@ -482,17 +545,20 @@ describe('ClothingAccessibilityService - Comprehensive Test Suite', () => {
       // Create service without entitiesGateway
       const legacyService = new ClothingAccessibilityService({
         logger: mockLogger,
-        entityManager: mockEntityManager
+        entityManager: mockEntityManager,
       });
-      
+
       mockEntityManager.getComponentData.mockReturnValue({
-        equipped: { torso: { base: 'item1' } }
+        equipped: { torso: { base: 'item1' } },
       });
-      
+
       const result = legacyService.getAccessibleItems('test-entity');
       expect(result).toContain('item1');
-      
-      const accessibility = legacyService.isItemAccessible('test-entity', 'item1');
+
+      const accessibility = legacyService.isItemAccessible(
+        'test-entity',
+        'item1'
+      );
       expect(accessibility.accessible).toBe(true);
       expect(accessibility.reason).toBe('No coverage analyzer available');
     });

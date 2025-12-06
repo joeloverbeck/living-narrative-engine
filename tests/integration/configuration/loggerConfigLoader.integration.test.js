@@ -2,13 +2,7 @@
  * @file Integration tests for LoggerConfigLoader with real fetchWithRetry behavior.
  * @jest-environment node
  */
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
@@ -87,7 +81,7 @@ describe('LoggerConfigLoader integration', () => {
       const urlString =
         typeof input === 'string'
           ? input
-          : input?.url ?? (input instanceof URL ? input.href : null);
+          : (input?.url ?? (input instanceof URL ? input.href : null));
 
       if (!urlString || !urlString.startsWith(baseUrl)) {
         return nativeFetch(input, init);
@@ -99,8 +93,8 @@ describe('LoggerConfigLoader integration', () => {
         typeof init.body === 'string'
           ? init.body
           : init.body
-          ? JSON.stringify(init.body)
-          : undefined;
+            ? JSON.stringify(init.body)
+            : undefined;
 
       return currentHandler({ method, url, body });
     });

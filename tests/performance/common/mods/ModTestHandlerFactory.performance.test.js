@@ -476,12 +476,14 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
       // Log comparison for informational purposes
       const overhead = categoryAverageTime - directCallResults.averageTime;
-      const overheadRatio = (categoryAverageTime / directCallResults.averageTime).toFixed(2);
+      const overheadRatio = (
+        categoryAverageTime / directCallResults.averageTime
+      ).toFixed(2);
 
       console.log(
         `Category factory overhead: direct=${directCallResults.averageTime.toFixed(3)}ms, ` +
-        `category=${categoryAverageTime.toFixed(3)}ms ` +
-        `(+${overhead.toFixed(3)}ms overhead, ${overheadRatio}x ratio)`
+          `category=${categoryAverageTime.toFixed(3)}ms ` +
+          `(+${overhead.toFixed(3)}ms overhead, ${overheadRatio}x ratio)`
       );
     });
   });

@@ -277,7 +277,9 @@ describe('items:drop_item action integration', () => {
       // Verify item was dropped (has position at location)
       const item = testFixture.entityManager.getEntityInstance('test-sword');
       expect(item).toHaveComponent('core:position');
-      expect(item).toHaveComponentData('core:position', { locationId: 'tavern' });
+      expect(item).toHaveComponentData('core:position', {
+        locationId: 'tavern',
+      });
 
       // Verify item was removed from inventory
       const actorAfter =

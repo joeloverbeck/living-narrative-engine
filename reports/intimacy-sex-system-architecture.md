@@ -91,12 +91,12 @@ All actions follow a consistent JSON structure:
 
 ### Sex Actions Catalog
 
-| Action ID                                  | File                                  | Target Scope                                                    | Requirements                                                          | Effects             |
-| ------------------------------------------ | ------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------- |
-| `sex-breastplay:fondle_breasts`                       | `sex-breastplay/actions/fondle_breasts.action.json`          | `sex-breastplay:actors_with_breasts_facing_each_other_or_away`                 | Requires: `positioning:closeness`<br>Target must have exposed breasts | Sexual interaction  |
-| `sex-penile-manual:fondle_penis`           | `sex-penile-manual/actions/fondle_penis.action.json`            | `sex-core:actors_with_penis_facing_each_other`                  | Requires: `positioning:closeness`                                     | Sexual interaction  |
-| `sex-penile-manual:rub_penis_over_clothes` | `sex-penile-manual/actions/rub_penis_over_clothes.action.json`  | `sex-penile-manual:actors_with_penis_facing_each_other_covered` | Requires: `positioning:closeness`<br>Target must have covered penis   | Clothed interaction |
-| `sex-dry-intimacy:rub_vagina_over_clothes`              | `sex-dry-intimacy/actions/rub_vagina_over_clothes.action.json` | `sex-dry-intimacy:actors_with_vagina_facing_each_other_covered`                  | Requires: `positioning:closeness`<br>Target must have covered vagina  | Clothed interaction |
+| Action ID                                  | File                                                           | Target Scope                                                    | Requirements                                                          | Effects             |
+| ------------------------------------------ | -------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------- |
+| `sex-breastplay:fondle_breasts`            | `sex-breastplay/actions/fondle_breasts.action.json`            | `sex-breastplay:actors_with_breasts_facing_each_other_or_away`  | Requires: `positioning:closeness`<br>Target must have exposed breasts | Sexual interaction  |
+| `sex-penile-manual:fondle_penis`           | `sex-penile-manual/actions/fondle_penis.action.json`           | `sex-core:actors_with_penis_facing_each_other`                  | Requires: `positioning:closeness`                                     | Sexual interaction  |
+| `sex-penile-manual:rub_penis_over_clothes` | `sex-penile-manual/actions/rub_penis_over_clothes.action.json` | `sex-penile-manual:actors_with_penis_facing_each_other_covered` | Requires: `positioning:closeness`<br>Target must have covered penis   | Clothed interaction |
+| `sex-dry-intimacy:rub_vagina_over_clothes` | `sex-dry-intimacy/actions/rub_vagina_over_clothes.action.json` | `sex-dry-intimacy:actors_with_vagina_facing_each_other_covered` | Requires: `positioning:closeness`<br>Target must have covered vagina  | Clothed interaction |
 
 ## Rule System Architecture
 

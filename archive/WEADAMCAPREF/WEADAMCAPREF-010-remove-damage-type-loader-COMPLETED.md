@@ -13,18 +13,18 @@ Remove the `DamageTypeLoader` infrastructure and global damage type definition f
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/loaders/damageTypeLoader.js` | DELETE | No longer needed |
-| `data/mods/anatomy/damage-types/slashing.json` | DELETE | Data now on weapons |
-| `data/mods/anatomy/damage-types/piercing.json` | DELETE | Data now on weapons |
-| `data/mods/anatomy/damage-types/blunt.json` | DELETE | Data now on weapons |
-| `src/dependencyInjection/registrations/loadersRegistrations.js` | UPDATE | Remove DamageTypeLoader registration |
-| `src/dependencyInjection/tokens/tokens-core.js` | UPDATE | Remove DamageTypeLoader token |
-| `src/loaders/loaderMeta.js` | UPDATE | Remove damageTypes metadata entry |
-| `src/loaders/defaultLoaderConfig.js` | UPDATE | Remove damageTypeLoader parameter and mapping |
-| `data/mods/anatomy/mod-manifest.json` | UPDATE | Remove damageTypes content reference |
-| `tests/unit/loaders/damageTypeLoader.test.js` | DELETE | If exists (verified: does not exist) |
+| File                                                            | Action | Description                                   |
+| --------------------------------------------------------------- | ------ | --------------------------------------------- |
+| `src/loaders/damageTypeLoader.js`                               | DELETE | No longer needed                              |
+| `data/mods/anatomy/damage-types/slashing.json`                  | DELETE | Data now on weapons                           |
+| `data/mods/anatomy/damage-types/piercing.json`                  | DELETE | Data now on weapons                           |
+| `data/mods/anatomy/damage-types/blunt.json`                     | DELETE | Data now on weapons                           |
+| `src/dependencyInjection/registrations/loadersRegistrations.js` | UPDATE | Remove DamageTypeLoader registration          |
+| `src/dependencyInjection/tokens/tokens-core.js`                 | UPDATE | Remove DamageTypeLoader token                 |
+| `src/loaders/loaderMeta.js`                                     | UPDATE | Remove damageTypes metadata entry             |
+| `src/loaders/defaultLoaderConfig.js`                            | UPDATE | Remove damageTypeLoader parameter and mapping |
+| `data/mods/anatomy/mod-manifest.json`                           | UPDATE | Remove damageTypes content reference          |
+| `tests/unit/loaders/damageTypeLoader.test.js`                   | DELETE | If exists (verified: does not exist)          |
 
 ## Out of Scope
 
@@ -42,6 +42,7 @@ Remove `src/loaders/damageTypeLoader.js` entirely.
 ### Delete Damage Type Definitions
 
 Remove the following files:
+
 - `data/mods/anatomy/damage-types/slashing.json`
 - `data/mods/anatomy/damage-types/piercing.json`
 - `data/mods/anatomy/damage-types/blunt.json`
@@ -51,6 +52,7 @@ Also remove the `damage-types/` directory if empty after deletions.
 ### Update DI Registration
 
 In `src/dependencyInjection/registrations/loadersRegistrations.js`, remove:
+
 ```javascript
 // Remove this registration
 registerLoader(tokens.DamageTypeLoader, DamageTypeLoader);
@@ -61,6 +63,7 @@ Also remove the import statement for DamageTypeLoader.
 ### Update Tokens
 
 In `src/dependencyInjection/tokens/tokens-core.js`, remove:
+
 ```javascript
 // Remove this line
 DamageTypeLoader: 'DamageTypeLoader',
@@ -69,6 +72,7 @@ DamageTypeLoader: 'DamageTypeLoader',
 ### Update Loader Meta
 
 In `src/loaders/loaderMeta.js`, remove the damageTypes entry:
+
 ```javascript
 // Remove this entry
 damageTypes: {
@@ -82,6 +86,7 @@ damageTypes: {
 ### Update Default Loader Config
 
 In `src/loaders/defaultLoaderConfig.js`, remove:
+
 1. JSDoc parameter: `@param {BaseManifestItemLoaderInterface} deps.damageTypeLoader`
 2. Function parameter: `damageTypeLoader,`
 3. Config mapping: `damageTypes: damageTypeLoader,`
@@ -89,6 +94,7 @@ In `src/loaders/defaultLoaderConfig.js`, remove:
 ### Update Mod Manifest
 
 In `data/mods/anatomy/mod-manifest.json`, remove the `damageTypes` content section:
+
 ```json
 {
   "content": {
@@ -127,6 +133,7 @@ No test file exists for DamageTypeLoader (verified).
 ## Risk Assessment
 
 **Low Risk**: This removal is safe because:
+
 1. DamageTypeEffectsService was already refactored to not use registry (WEADAMCAPREF-004)
 2. ApplyDamageHandler was already refactored to pass damageEntry (WEADAMCAPREF-005)
 3. Weapons already have damage_capabilities data (WEADAMCAPREF-009)
@@ -146,6 +153,7 @@ No test file exists for DamageTypeLoader (verified).
 All planned changes were implemented as specified:
 
 **Files Deleted:**
+
 - `src/loaders/damageTypeLoader.js` (59 lines)
 - `data/mods/anatomy/damage-types/blunt.json`
 - `data/mods/anatomy/damage-types/piercing.json`
@@ -153,6 +161,7 @@ All planned changes were implemented as specified:
 - `data/mods/anatomy/damage-types/` directory
 
 **Files Updated:**
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Removed `DamageTypeLoader` token
 - `src/dependencyInjection/registrations/loadersRegistrations.js` - Removed import, registration, and ContentLoadManager config
 - `src/loaders/loaderMeta.js` - Removed `damageTypes` metadata entry
@@ -160,6 +169,7 @@ All planned changes were implemented as specified:
 - `data/mods/anatomy/mod-manifest.json` - Removed `damageTypes` content section
 
 **Tests Updated:**
+
 - `tests/unit/config/registrations/loadersRegistrations.additionalCoverage.test.js` - Removed DamageTypeLoader from stub values
 - `tests/unit/loaders/defaultLoaderConfig.test.js` - Removed damageTypeLoader from test deps and expectations
 - `tests/unit/anatomy/damage-types.schema.test.js` - Updated to use inline test data instead of importing deleted JSON files
@@ -174,6 +184,7 @@ All planned changes were implemented as specified:
 ### Differences From Original Plan
 
 The original ticket was missing two files that required updates:
+
 1. `src/loaders/loaderMeta.js` - Had damageTypes metadata entry
 2. `src/loaders/defaultLoaderConfig.js` - Had damageTypeLoader parameter
 

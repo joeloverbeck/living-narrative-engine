@@ -13,15 +13,18 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ## Critical Components Requiring Updates
 
 ### 1. **layerCompatibilityService.js** - NEEDS UPDATE
+
 **File**: `src/clothing/validation/layerCompatibilityService.js`
 
 **Purpose**: Validates layer compatibility, detects conflicts, handles multi-layer clothing scenarios
 
-**Current Status**: 
+**Current Status**:
+
 - Line 31: `static LAYER_ORDER = ['underwear', 'base', 'outer', 'accessories'];`
 - **MISSING**: 'armor' layer in LAYER_ORDER array
 
 **Required Changes**:
+
 1. Add 'armor' to `LAYER_ORDER` array at line 31
 2. Update `LAYER_REQUIREMENTS` static object to define armor requirements (line 38-41)
 3. Update layer ordering validation logic (line 163-201) to handle armor positioning
@@ -34,20 +37,24 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 2. **slotAccessResolver.js** - NEEDS UPDATE
+
 **File**: `src/scopeDsl/nodes/slotAccessResolver.js`
 
 **Purpose**: Handles access to specific clothing slots and coverage resolution in scope DSL
 
 **Current Status**:
+
 - Line 99-109: `getCoveragePriorityFromMode()` function missing armor mapping
 - Current mapping: `{ outer, base, underwear, accessories }`
 - **MISSING**: armor → coverage priority mapping
 
 **Required Changes**:
+
 1. Add armor mapping to `layerToCoverage` object in `getCoveragePriorityFromMode()` (line 101-106)
 2. Map armor to 'armor' coverage priority: `armor: 'armor'`
 
 **Test Coverage**: Tests exist at:
+
 - `tests/unit/scopeDsl/nodes/slotAccessResolver.test.js`
 - `tests/unit/scopeDsl/nodes/slotAccessResolver.coverageFocused.test.js`
 - `tests/unit/scopeDsl/nodes/slotAccessResolver.additionalScenarios.test.js`
@@ -57,9 +64,11 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 3. **BaseEquipmentOperator.js** - ALREADY COMPLETE ✅
+
 **File**: `src/logic/operators/base/BaseEquipmentOperator.js`
 
 **Status**: ARMOR SUPPORT ALREADY IMPLEMENTED
+
 - Line 241: `isValidLayerName()` includes 'armor'
 - Array: `['underwear', 'base', 'outer', 'accessories', 'armor']`
 - **ARMOR IS PRESENT** ✅
@@ -69,9 +78,11 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 4. **HasClothingInSlotLayerOperator.js** - ALREADY COMPLETE ✅
+
 **File**: `src/logic/operators/hasClothingInSlotLayerOperator.js`
 
 **Status**: ARMOR SUPPORT ALREADY IMPLEMENTED
+
 - Line 68: Validation message includes: "Valid layers: underwear, base, outer, accessories, armor"
 - Uses `isValidLayerName()` from BaseEquipmentOperator
 - **ARMOR IS SUPPORTED** ✅
@@ -83,9 +94,11 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ## Priority Constants (Already Updated - REFERENCE)
 
 ### **priorityConstants.js** - COMPLETE ✅
+
 **File**: `src/scopeDsl/prioritySystem/priorityConstants.js`
 
 **Status**: ARMOR FULLY INTEGRATED
+
 ```javascript
 // Line 12: armor: 150 (between outer 100 and base 200)
 // Line 24: armor: 15 (in layer priorities)
@@ -100,16 +113,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ## Secondary Components Requiring Review
 
 ### 5. **priorityCalculator.js** - VERIFY COMPLETENESS
+
 **File**: `src/scopeDsl/prioritySystem/priorityCalculator.js`
 
 **Purpose**: Calculates coverage priority scores with caching
 
 **Status**: Uses constants from `priorityConstants.js`
+
 - Imports `COVERAGE_PRIORITY`, `LAYER_PRIORITY_WITHIN_COVERAGE`, `VALID_LAYERS`
 - Since constants include armor, this file should work correctly
 - **VALIDATION NEEDED**: Test armor priority calculation
 
 **Required Actions**:
+
 1. Verify `validatePriorityInputs()` (line 71-97) handles armor correctly
 2. Check tests pass with armor values
 
@@ -118,21 +134,25 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 6. **coverageAnalyzer.js** - VERIFY COMPLETENESS
+
 **File**: `src/clothing/analysis/coverageAnalyzer.js`
 
 **Purpose**: Analyzes clothing coverage blocking for accessibility
 
 **Status**: Uses `COVERAGE_PRIORITY` from constants
+
 - Line 9: Imports `COVERAGE_PRIORITY` which includes armor
 - `doesPriorityBlock()` (line 44-55) uses priority values
 - **SHOULD WORK** if constants are correct
 
 **Required Actions**:
+
 1. Verify armor blocking logic works correctly in tests
 2. Check coverage blocking behavior with armor items
 3. Run coverage-specific tests
 
 **Test Files**:
+
 - `tests/unit/clothing/analysis/coverageAnalyzer.test.js`
 - `tests/integration/clothing/coverageMappingSlotResolution.integration.test.js`
 
@@ -141,16 +161,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 7. **layerResolutionService.js** - POTENTIALLY NEEDS UPDATE
+
 **File**: `src/clothing/services/layerResolutionService.js`
 
 **Purpose**: Resolves clothing layer with Recipe > Entity > Blueprint precedence
 
 **Status**: No hardcoded layer validation
+
 - `resolveLayer()` (line 40-59) accepts any string value
 - `validateLayerAllowed()` (line 68-90) checks against blueprint's `allowedLayers`
 - **NO HARDCODED LAYERS** ✅
 
 **Required Actions**:
+
 1. Verify blueprint schemas include 'armor' in allowedLayers when applicable
 2. Check anatomy recipe specifications include armor
 
@@ -159,16 +182,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 8. **equipmentDescriptionService.js** - REVIEW NEEDED
+
 **File**: `src/clothing/services/equipmentDescriptionService.js`
 
 **Purpose**: Generates text descriptions of worn clothing
 
-**Status**: 
+**Status**:
+
 - No hardcoded layer lists found in first 100 lines
 - Works with equipped items from component data
 - **ACTION**: Verify description generation includes armor items
 
 **Required Actions**:
+
 1. Check if armor items appear in generated descriptions
 2. Verify layer grouping includes armor when visible
 3. Run equipment description tests with armor
@@ -178,16 +204,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 9. **clothingInstantiationService.js** - REVIEW NEEDED
+
 **File**: `src/clothing/services/clothingInstantiationService.js`
 
 **Purpose**: Handles instantiation and equipment of clothing from anatomy recipes
 
 **Status**:
+
 - Line 44: Comment mentions: "layer (underwear, base, outer, accessories)"
 - **MISSING ARMOR** in comment/documentation
 - No hardcoded layer validation found in first 100 lines
 
 **Required Actions**:
+
 1. Update JSDoc comment to include 'armor' as valid layer
 2. Verify armor can be equipped during anatomy generation
 3. Test armor item instantiation in anatomy recipes
@@ -197,16 +226,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 10. **clothingAccessibilityService.js** - REVIEW NEEDED
+
 **File**: `src/clothing/services/clothingAccessibilityService.js`
 
 **Purpose**: Determines which clothing items are accessible based on coverage
 
 **Status**:
+
 - Imports and uses coverage-related components
 - Likely delegates to coverageAnalyzer which handles priorities
 - **ACTION**: Verify armor accessibility logic
 
 **Required Actions**:
+
 1. Test that armor items correctly block accessibility to lower layers
 2. Verify armor appears in accessibility queries
 3. Run accessibility integration tests with armor
@@ -216,16 +248,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 11. **clothingManagementService.js** - REVIEW NEEDED
+
 **File**: `src/clothing/services/clothingManagementService.js`
 
 **Purpose**: Facade for clothing system operations
 
-**Status**: 
+**Status**:
+
 - Line 29: JSDoc mentions `allowedLayers` - needs validation
 - Delegates to other services
 - **ACTION**: Verify armor in blueprint slot mappings
 
 **Required Actions**:
+
 1. Check blueprint clothing slot configurations include armor
 2. Verify armor items can be equipped through facade
 3. Test armor in complete clothing workflows
@@ -235,16 +270,19 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 12. **clothingHealthMonitor.js** - REVIEW NEEDED
+
 **File**: `src/clothing/monitoring/clothingHealthMonitor.js`
 
 **Purpose**: Health monitoring for clothing services
 
-**Status**: 
+**Status**:
+
 - Monitors all clothing services
 - Doesn't hardcode layers itself
 - **ACTION**: Ensure monitoring includes armor-related services
 
 **Required Actions**:
+
 1. Verify health checks cover armor-related operations
 2. Check monitoring includes coverage blocking with armor
 3. Run health check tests
@@ -254,15 +292,18 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ---
 
 ### 13. **equipmentOrchestrator.js** - REVIEW NEEDED
+
 **File**: `src/clothing/orchestration/equipmentOrchestrator.js`
 
 **Purpose**: Orchestrates complex equipment workflows
 
 **Status**: Not yet reviewed in detail
+
 - Coordinates equipment operations
 - **ACTION**: Review armor handling in workflows
 
 **Required Actions**:
+
 1. Read full file to identify armor-specific logic
 2. Verify equipment workflows handle armor layer
 3. Test armor in orchestration flows
@@ -276,6 +317,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ### Pattern Search Results
 
 **Files with layer hardcoding**:
+
 - ✅ `priorityConstants.js` - CORRECT (armor included)
 - ✅ `BaseEquipmentOperator.js` - CORRECT (armor included)
 - ✅ `HasClothingInSlotLayerOperator.js` - CORRECT (references BaseOperator)
@@ -283,11 +325,13 @@ Found **13 files** that handle clothing layers and need armor support review. **
 - ⚠️ `slotAccessResolver.js` - MISSING ARMOR MAPPING
 
 **Files using priority system**:
+
 - ✅ `priorityCalculator.js` - Uses constants (correct)
 - ✅ `coverageAnalyzer.js` - Uses constants (correct)
 - ⚠️ `slotAccessResolver.js` - Hardcoded mapping needed
 
 **Files without hardcoding** (data-driven):
+
 - ✅ `layerResolutionService.js` - Uses blueprint allowlist
 - ✅ `equipmentDescriptionService.js` - Data-driven
 - ✅ `clothingManagementService.js` - Delegates to services
@@ -298,6 +342,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ## Testing Components Found
 
 **Existing test files** that cover these components:
+
 - `tests/unit/scopeDsl/prioritySystem/priorityCalculator.test.js`
 - `tests/unit/scopeDsl/prioritySystem/priorityConstants.test.js`
 - `tests/unit/clothing/analysis/coverageAnalyzer.test.js`
@@ -307,6 +352,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
 - Integration and E2E tests for coverage workflows
 
 **Coverage for armor updates**:
+
 - Need to add armor-specific test cases to all unit tests
 - Need integration tests for armor in complete workflows
 - Need E2E tests for player-facing armor functionality
@@ -316,6 +362,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ## Recommended Update Order
 
 ### Phase 1: Critical Updates (HIGH IMPACT)
+
 1. **layerCompatibilityService.js** - Add armor to LAYER_ORDER
    - Enables armor in layer validation
    - Affects all clothing conflict detection
@@ -325,6 +372,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
    - Affects action discovery and targeting
 
 ### Phase 2: Documentation & Testing (MEDIUM PRIORITY)
+
 3. **clothingInstantiationService.js** - Update JSDoc
    - Clarify armor as valid layer
    - Document armor in recipe specs
@@ -335,6 +383,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
    - E2E tests for armor equipment
 
 ### Phase 3: Verification (LOW PRIORITY)
+
 5. Run full test suite with armor items
 6. Verify armor in anatomy recipes
 7. Test armor in action discovery and execution
@@ -360,6 +409,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
 ## Files Not Requiring Changes
 
 **Components that are armor-aware**:
+
 - `priorityConstants.js` - ✅ Complete
 - `BaseEquipmentOperator.js` - ✅ Complete
 - `HasClothingInSlotLayerOperator.js` - ✅ Complete
@@ -367,6 +417,7 @@ Found **13 files** that handle clothing layers and need armor support review. **
 - `coverageAnalyzer.js` - ✅ Uses constants
 
 **Anatomy system** (50+ files):
+
 - No hardcoded layer lists found
 - Uses entity component system
 - Should work with armor through data-driven approach
@@ -376,15 +427,15 @@ Found **13 files** that handle clothing layers and need armor support review. **
 
 ## Risk Assessment
 
-| Component | Risk | Reason |
-|-----------|------|--------|
-| layerCompatibilityService | HIGH | Direct validation logic, must handle armor |
-| slotAccessResolver | HIGH | Controls scope DSL resolution |
-| coverageAnalyzer | MEDIUM | Depends on correct priority values |
-| clothingAccessibilityService | MEDIUM | Critical for action discovery |
-| layerResolutionService | LOW | Data-driven via allowlists |
-| equipmentDescriptionService | LOW | Works with component data |
-| priorityCalculator | LOW | Uses correct constants |
+| Component                    | Risk   | Reason                                     |
+| ---------------------------- | ------ | ------------------------------------------ |
+| layerCompatibilityService    | HIGH   | Direct validation logic, must handle armor |
+| slotAccessResolver           | HIGH   | Controls scope DSL resolution              |
+| coverageAnalyzer             | MEDIUM | Depends on correct priority values         |
+| clothingAccessibilityService | MEDIUM | Critical for action discovery              |
+| layerResolutionService       | LOW    | Data-driven via allowlists                 |
+| equipmentDescriptionService  | LOW    | Works with component data                  |
+| priorityCalculator           | LOW    | Uses correct constants                     |
 
 ---
 
@@ -409,23 +460,23 @@ Found **13 files** that handle clothing layers and need armor support review. **
 
 ## Summary Table
 
-| # | File | Component | Status | Change | Risk |
-|---|------|-----------|--------|--------|------|
-| 1 | layerCompatibilityService.js | Layer validation | ❌ NEEDS UPDATE | Add armor to LAYER_ORDER | HIGH |
-| 2 | slotAccessResolver.js | Coverage mapping | ❌ NEEDS UPDATE | Add armor mapping | MEDIUM |
-| 3 | BaseEquipmentOperator.js | Equipment validation | ✅ COMPLETE | None | LOW |
-| 4 | HasClothingInSlotLayerOperator.js | Layer checking | ✅ COMPLETE | None | LOW |
-| 5 | priorityConstants.js | Priority values | ✅ COMPLETE | None | LOW |
-| 6 | priorityCalculator.js | Priority calc | ✅ USES CONST | Verify tests | LOW |
-| 7 | coverageAnalyzer.js | Coverage blocking | ✅ USES CONST | Verify tests | LOW |
-| 8 | layerResolutionService.js | Layer resolution | ✅ DATA-DRIVEN | Verify data | LOW |
-| 9 | equipmentDescriptionService.js | Description gen | ⚠️ REVIEW | Test armor | LOW |
-| 10 | clothingInstantiationService.js | Instantiation | ⚠️ REVIEW | Update docs | MEDIUM |
-| 11 | clothingAccessibilityService.js | Accessibility | ⚠️ REVIEW | Test armor | MEDIUM |
-| 12 | clothingManagementService.js | Facade | ⚠️ REVIEW | Test armor | MEDIUM |
-| 13 | equipmentOrchestrator.js | Orchestration | ⚠️ REVIEW | Test armor | MEDIUM |
+| #   | File                              | Component            | Status          | Change                   | Risk   |
+| --- | --------------------------------- | -------------------- | --------------- | ------------------------ | ------ |
+| 1   | layerCompatibilityService.js      | Layer validation     | ❌ NEEDS UPDATE | Add armor to LAYER_ORDER | HIGH   |
+| 2   | slotAccessResolver.js             | Coverage mapping     | ❌ NEEDS UPDATE | Add armor mapping        | MEDIUM |
+| 3   | BaseEquipmentOperator.js          | Equipment validation | ✅ COMPLETE     | None                     | LOW    |
+| 4   | HasClothingInSlotLayerOperator.js | Layer checking       | ✅ COMPLETE     | None                     | LOW    |
+| 5   | priorityConstants.js              | Priority values      | ✅ COMPLETE     | None                     | LOW    |
+| 6   | priorityCalculator.js             | Priority calc        | ✅ USES CONST   | Verify tests             | LOW    |
+| 7   | coverageAnalyzer.js               | Coverage blocking    | ✅ USES CONST   | Verify tests             | LOW    |
+| 8   | layerResolutionService.js         | Layer resolution     | ✅ DATA-DRIVEN  | Verify data              | LOW    |
+| 9   | equipmentDescriptionService.js    | Description gen      | ⚠️ REVIEW       | Test armor               | LOW    |
+| 10  | clothingInstantiationService.js   | Instantiation        | ⚠️ REVIEW       | Update docs              | MEDIUM |
+| 11  | clothingAccessibilityService.js   | Accessibility        | ⚠️ REVIEW       | Test armor               | MEDIUM |
+| 12  | clothingManagementService.js      | Facade               | ⚠️ REVIEW       | Test armor               | MEDIUM |
+| 13  | equipmentOrchestrator.js          | Orchestration        | ⚠️ REVIEW       | Test armor               | MEDIUM |
 
 ---
 
-*Analysis Generated: 2025-11-25*  
-*Comprehensive armor layer integration analysis for ARMSYSANA-005*
+_Analysis Generated: 2025-11-25_  
+_Comprehensive armor layer integration analysis for ARMSYSANA-005_

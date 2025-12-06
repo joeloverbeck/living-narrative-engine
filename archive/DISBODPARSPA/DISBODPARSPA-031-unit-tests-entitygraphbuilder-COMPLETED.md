@@ -29,9 +29,9 @@ Add unit tests to verify that `EntityGraphBuilder` correctly stores the `definit
 
 ## Files Touched
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Modify | Added test for root entity without anatomy:part component |
+| File                                            | Change Type | Description                                               |
+| ----------------------------------------------- | ----------- | --------------------------------------------------------- |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | Modify      | Added test for root entity without anatomy:part component |
 
 ---
 
@@ -140,19 +140,23 @@ npm run test:unit
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create 5 new test cases for `definitionId` storage
 - Tests using non-existent API methods (`buildGraph()`, `getBodyPartByType()`, etc.)
 
 **Actually Changed:**
+
 - Added **1 new test** to cover a previously uncovered branch (line 179)
 - The other 5 proposed tests were already implemented and passing
 
 **Key Differences:**
+
 1. The ticket's proposed API (`graphBuilder.buildGraph()`, `result.getBodyPartByType()`) doesn't exist - `EntityGraphBuilder` is a lower-level builder class
 2. Most tests already existed covering `definitionId` storage in both `createRootEntity()` and `createAndAttachPart()`
 3. Only one edge case (root entity without `anatomy:part` component) was missing
 
 **Metrics:**
+
 - Tests: 27 → 28 (1 new test added)
 - Branch coverage: 96.15% → 98.07% (improved by ~2%)
 - Lines/statements/functions coverage: 100% (maintained)

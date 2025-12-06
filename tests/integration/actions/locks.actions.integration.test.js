@@ -61,7 +61,9 @@ function loadScopes() {
  * @param actionFile
  */
 function loadAction(actionFile) {
-  return JSON.parse(fs.readFileSync(path.join(ACTIONS_DIR, actionFile), 'utf8'));
+  return JSON.parse(
+    fs.readFileSync(path.join(ACTIONS_DIR, actionFile), 'utf8')
+  );
 }
 
 /**
@@ -126,7 +128,8 @@ function addJsonLogicOperations(jsonLogicEval, entityManager) {
   jsonLogicEval.addOperation(
     'get_component_value',
     (entityRef, componentId, propertyPath = null) => {
-      const entityId = typeof entityRef === 'string' ? entityRef : entityRef?.id;
+      const entityId =
+        typeof entityRef === 'string' ? entityRef : entityRef?.id;
       if (!entityId) return null;
       const data = entityManager.getComponentData(entityId, componentId);
       if (!data || typeof data !== 'object') {
@@ -153,7 +156,12 @@ function addJsonLogicOperations(jsonLogicEval, entityManager) {
  */
 function toArray(result) {
   if (!result) return [];
-  const raw = result instanceof Set ? Array.from(result) : Array.isArray(result) ? result : [result];
+  const raw =
+    result instanceof Set
+      ? Array.from(result)
+      : Array.isArray(result)
+        ? result
+        : [result];
 
   return raw.map((value) => {
     if (value && typeof value === 'object') {
@@ -182,7 +190,9 @@ describe('locks connection actions', () => {
       expect.arrayContaining(['items:inventory', 'core:position'])
     );
 
-    expect(lockAction.targets.primary.scope).toBe('locks:blockers_actor_can_lock');
+    expect(lockAction.targets.primary.scope).toBe(
+      'locks:blockers_actor_can_lock'
+    );
     expect(unlockAction.targets.primary.scope).toBe(
       'locks:blockers_actor_can_unlock'
     );
@@ -237,7 +247,10 @@ describe('locks connection actions', () => {
        */
       function resolveScope(scopeName, extraCtx = {}) {
         const scope = scopeRegistry.getScope(scopeName);
-        return scopeEngine.resolve(scope.ast, actor, { ...runtimeCtx, ...extraCtx });
+        return scopeEngine.resolve(scope.ast, actor, {
+          ...runtimeCtx,
+          ...extraCtx,
+        });
       }
 
       return { resolveScope, blocker };
@@ -249,7 +262,9 @@ describe('locks connection actions', () => {
         actorHasKey: true,
       });
 
-      const unlockTargets = await resolveScope('locks:blockers_actor_can_unlock');
+      const unlockTargets = await resolveScope(
+        'locks:blockers_actor_can_unlock'
+      );
       const lockTargets = await resolveScope('locks:blockers_actor_can_lock');
       const keyTargets = await resolveScope('locks:keys_for_blocker', {
         target: blocker,
@@ -266,7 +281,9 @@ describe('locks connection actions', () => {
         actorHasKey: true,
       });
 
-      const unlockTargets = await resolveScope('locks:blockers_actor_can_unlock');
+      const unlockTargets = await resolveScope(
+        'locks:blockers_actor_can_unlock'
+      );
       const lockTargets = await resolveScope('locks:blockers_actor_can_lock');
       const keyTargets = await resolveScope('locks:keys_for_blocker', {
         target: blocker,
@@ -283,7 +300,9 @@ describe('locks connection actions', () => {
         actorHasKey: false,
       });
 
-      const unlockTargets = await resolveScope('locks:blockers_actor_can_unlock');
+      const unlockTargets = await resolveScope(
+        'locks:blockers_actor_can_unlock'
+      );
       const lockTargets = await resolveScope('locks:blockers_actor_can_lock');
       const keyTargets = await resolveScope('locks:keys_for_blocker', {
         target: blocker,

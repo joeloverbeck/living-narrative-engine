@@ -5,7 +5,14 @@
  *              parsing logic collaborates with the real middleware stack without mocks.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 

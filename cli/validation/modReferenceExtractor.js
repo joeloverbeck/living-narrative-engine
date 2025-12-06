@@ -21,7 +21,7 @@ import { parseScopeDefinitions } from '../../src/scopeDsl/scopeDefinitionParser.
  */
 class ModReferenceExtractor {
   _logger;
-   
+
   _ajvValidator; // Reserved for future schema validation in MODDEPVAL-002
 
   /**

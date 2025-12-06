@@ -138,7 +138,9 @@ describe('items:pick_up_item action integration', () => {
       await testFixture.executeAction('test:actor1', 'rope-1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).toContain('horseshoe-1');
+      expect(actor.components['items:inventory'].items).toContain(
+        'horseshoe-1'
+      );
       expect(actor.components['items:inventory'].items).toContain('rope-1');
       expect(actor.components['items:inventory'].items).toHaveLength(2);
     });
@@ -158,8 +160,12 @@ describe('items:pick_up_item action integration', () => {
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actor.components['items:inventory'].items).toHaveLength(3);
-      expect(actor.components['items:inventory'].items).toContain('existing-item-1');
-      expect(actor.components['items:inventory'].items).toContain('existing-item-2');
+      expect(actor.components['items:inventory'].items).toContain(
+        'existing-item-1'
+      );
+      expect(actor.components['items:inventory'].items).toContain(
+        'existing-item-2'
+      );
       expect(actor.components['items:inventory'].items).toContain('gold-bar-1');
     });
   });
@@ -179,7 +185,9 @@ describe('items:pick_up_item action integration', () => {
 
       // Verify item NOT added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain('heavy-rock-1');
+      expect(actor.components['items:inventory'].items).not.toContain(
+        'heavy-rock-1'
+      );
 
       // Verify item still has position at location
       const item = testFixture.entityManager.getEntityInstance('heavy-rock-1');
@@ -210,7 +218,9 @@ describe('items:pick_up_item action integration', () => {
 
       // Verify item NOT added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain('one-more-item');
+      expect(actor.components['items:inventory'].items).not.toContain(
+        'one-more-item'
+      );
       expect(actor.components['items:inventory'].items).toHaveLength(10);
     });
   });
@@ -379,7 +389,8 @@ describe('items:pick_up_item action integration', () => {
       expect(failureEvent.payload.message).toContain('max_weight_exceeded');
 
       // Verify item still at location
-      const itemAfter = testFixture.entityManager.getEntityInstance('gold-bar-1');
+      const itemAfter =
+        testFixture.entityManager.getEntityInstance('gold-bar-1');
       expect(itemAfter.components['core:position']).toBeDefined();
       expect(itemAfter.components['core:position'].locationId).toBe('saloon1');
     });
@@ -415,8 +426,11 @@ describe('items:pick_up_item action integration', () => {
       expect(failureEvent.payload.message).toContain('max_items_exceeded');
 
       // Verify item not added to inventory
-      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).not.toContain('item-3');
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfter.components['items:inventory'].items).not.toContain(
+        'item-3'
+      );
     });
   });
 });

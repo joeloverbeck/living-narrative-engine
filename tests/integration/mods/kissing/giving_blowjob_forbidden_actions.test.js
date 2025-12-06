@@ -28,7 +28,10 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('kissing', 'kissing:kiss_cheek');
+    testFixture = await ModTestFixture.forAction(
+      'kissing',
+      'kissing:kiss_cheek'
+    );
   });
 
   afterEach(() => {
@@ -101,8 +104,7 @@ describe('Kissing actions forbidden when targeting actor giving blowjob', () => 
           scope === scopeName ||
           scope === 'kissing:close_actors_facing_each_other' ||
           scope === 'kissing:actors_with_mouth_facing_each_other' ||
-          scope ===
-            'kissing:close_actors_facing_each_other_or_behind_target' ||
+          scope === 'kissing:close_actors_facing_each_other_or_behind_target' ||
           scope ===
             'kissing:close_actors_with_ear_subtype_facing_each_other_or_behind_target' ||
           scope ===

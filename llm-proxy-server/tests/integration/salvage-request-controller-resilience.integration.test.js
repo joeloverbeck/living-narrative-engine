@@ -22,7 +22,9 @@ describe('SalvageRequestController resilience integration', () => {
 
   it('returns a detailed not-found response when no salvage entry exists', async () => {
     const logger = new ConsoleLogger();
-    const salvageService = new ResponseSalvageService(logger, { defaultTtl: 50 });
+    const salvageService = new ResponseSalvageService(logger, {
+      defaultTtl: 50,
+    });
     const controller = new SalvageRequestController(logger, salvageService);
 
     const app = express();

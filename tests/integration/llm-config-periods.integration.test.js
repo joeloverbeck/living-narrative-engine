@@ -52,7 +52,10 @@ describe('LLM Config Periods - Integration Test', () => {
       };
 
       // Act - Write config to file
-      await fs.writeFile(configPath, JSON.stringify(configWithPeriods, null, 2));
+      await fs.writeFile(
+        configPath,
+        JSON.stringify(configWithPeriods, null, 2)
+      );
 
       // Read it back
       const fileContent = await fs.readFile(configPath, 'utf-8');
@@ -61,8 +64,12 @@ describe('LLM Config Periods - Integration Test', () => {
       // Assert - Config should be preserved exactly including periods
       expect(parsedConfig.defaultConfigId).toBe('claude-sonnet-4.5');
       expect(parsedConfig.configs['claude-sonnet-4.5']).toBeDefined();
-      expect(parsedConfig.configs['claude-sonnet-4.5'].configId).toBe('claude-sonnet-4.5');
-      expect(parsedConfig.configs['claude-sonnet-4.5'].modelIdentifier).toBe('anthropic/claude-sonnet-4.5');
+      expect(parsedConfig.configs['claude-sonnet-4.5'].configId).toBe(
+        'claude-sonnet-4.5'
+      );
+      expect(parsedConfig.configs['claude-sonnet-4.5'].modelIdentifier).toBe(
+        'anthropic/claude-sonnet-4.5'
+      );
     });
 
     it('should handle config key lookups with periods correctly', async () => {
@@ -150,14 +157,19 @@ describe('LLM Config Periods - Integration Test', () => {
       };
 
       // Act
-      await fs.writeFile(configPath, JSON.stringify(multiPeriodConfig, null, 2));
+      await fs.writeFile(
+        configPath,
+        JSON.stringify(multiPeriodConfig, null, 2)
+      );
       const fileContent = await fs.readFile(configPath, 'utf-8');
       const parsedConfig = JSON.parse(fileContent);
 
       // Assert
       expect(parsedConfig.defaultConfigId).toBe('api.v2.3.4.stable');
       expect(parsedConfig.configs['api.v2.3.4.stable']).toBeDefined();
-      expect(parsedConfig.configs['api.v2.3.4.stable'].configId).toBe('api.v2.3.4.stable');
+      expect(parsedConfig.configs['api.v2.3.4.stable'].configId).toBe(
+        'api.v2.3.4.stable'
+      );
       expect(parsedConfig.configs['test.1.2.3']).toBeDefined();
       expect(parsedConfig.configs['test.1.2.3'].configId).toBe('test.1.2.3');
     });

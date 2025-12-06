@@ -275,7 +275,11 @@ describe('ModReferenceExtractor - Integration Tests', () => {
           condition: {
             '>=': [
               {
-                get_component_value: ['target', 'affection:attraction', 'level'],
+                get_component_value: [
+                  'target',
+                  'affection:attraction',
+                  'level',
+                ],
               },
               { get_component_value: ['actor', 'stats_mod:charisma', 'value'] },
             ],

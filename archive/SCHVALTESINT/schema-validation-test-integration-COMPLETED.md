@@ -43,17 +43,17 @@
 
 ### 1.1 Location in Codebase
 
-| Component | Path | Purpose |
-|-----------|------|---------|
-| Schema Validation Core | `src/validation/ajvSchemaValidator.js` | Two-stage AJV validation (standard + generated validators) |
-| Pre-Validation Engine | `src/utils/preValidationUtils.js` | Fail-fast checks, KNOWN_OPERATION_TYPES whitelist, parameter rules |
-| Schema Definitions | `data/schemas/` | 120+ JSON Schema files (Draft 07) |
-| Operation Schemas | `data/schemas/operations/` | 62 operation-specific schemas |
-| Test Infrastructure | `tests/common/mods/ModTestFixture.js` | Mod testing factory (~1600 lines) |
-| Test Environment | `tests/common/engine/systemLogicTestEnv.js` | Rule test environment setup |
-| Integration Test Bed | `tests/common/integrationTestBed.js` | Full DI container for integration tests |
-| Error Formatting | `src/utils/ajvAnyOfErrorFormatter.js` | AJV error message formatting |
-| Schema Loading | `src/loaders/schemaLoader.js` | Batch schema loading and compilation |
+| Component              | Path                                        | Purpose                                                            |
+| ---------------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| Schema Validation Core | `src/validation/ajvSchemaValidator.js`      | Two-stage AJV validation (standard + generated validators)         |
+| Pre-Validation Engine  | `src/utils/preValidationUtils.js`           | Fail-fast checks, KNOWN_OPERATION_TYPES whitelist, parameter rules |
+| Schema Definitions     | `data/schemas/`                             | 120+ JSON Schema files (Draft 07)                                  |
+| Operation Schemas      | `data/schemas/operations/`                  | 62 operation-specific schemas                                      |
+| Test Infrastructure    | `tests/common/mods/ModTestFixture.js`       | Mod testing factory (~1600 lines)                                  |
+| Test Environment       | `tests/common/engine/systemLogicTestEnv.js` | Rule test environment setup                                        |
+| Integration Test Bed   | `tests/common/integrationTestBed.js`        | Full DI container for integration tests                            |
+| Error Formatting       | `src/utils/ajvAnyOfErrorFormatter.js`       | AJV error message formatting                                       |
+| Schema Loading         | `src/loaders/schemaLoader.js`               | Batch schema loading and compilation                               |
 
 ### 1.2 What This Module Does
 
@@ -142,6 +142,7 @@ Two categories of runtime errors occurred when loading the game through `game.ht
 **Case 1: Template String Type Mismatch**
 
 The schema defined `count` parameter as strict integer:
+
 ```json
 // data/schemas/operations/lockGrabbing.schema.json (BEFORE FIX)
 "count": {
@@ -151,13 +152,14 @@ The schema defined `count` parameter as strict integer:
 ```
 
 But rule files use template strings for dynamic values:
+
 ```json
 // data/mods/weapons/rules/handle_wield_threateningly.rule.json
 {
   "type": "LOCK_GRABBING",
   "parameters": {
     "actor_id": "{event.payload.actorId}",
-    "count": "{context.targetGrabbingReqs.handsRequired}",  // ← STRING at validation time
+    "count": "{context.targetGrabbingReqs.handsRequired}", // ← STRING at validation time
     "item_id": "{event.payload.targetId}"
   }
 }
@@ -168,9 +170,10 @@ At schema validation time (before template interpolation), `"{context.targetGrab
 **Case 2: Schema-Code Field Drift**
 
 Production code accesses a field not defined in the schema:
+
 ```javascript
 // src/prompting/promptDataFormatter.js
-const actionTagRules = promptTextData.actionTagRulesContent;  // ← Field used in code
+const actionTagRules = promptTextData.actionTagRulesContent; // ← Field used in code
 ```
 
 ```json
@@ -183,19 +186,19 @@ const actionTagRules = promptTextData.actionTagRulesContent;  // ← Field used 
     "finalLlmInstructionText": { "type": "string" }
     // ⚠️ actionTagRulesContent MISSING
   },
-  "additionalProperties": false  // ← Strict mode rejects extra fields
+  "additionalProperties": false // ← Strict mode rejects extra fields
 }
 ```
 
 ### 2.3 Why It Failed (Root Causes)
 
-| Root Cause | Impact | Severity | Evidence |
-|------------|--------|----------|----------|
-| **ModTestFixture bypasses schema validation** | Invalid mod data passes all tests | CRITICAL | `ModTestFixture.js:180-200` - JSON parsed but not validated |
-| **IntegrationTestBed mocks schema validator** | Integration tests skip real validation | HIGH | `integrationTestBed.js:380` - registers test-only schemas |
-| **Template strings not natively supported** | Each operation reinvents oneOf pattern | MEDIUM | Only `lockGrabbing.schema.json` has pattern |
-| **Only 4 of 62 operations have pre-validation rules** | Most operations have no parameter validation | MEDIUM | `preValidationUtils.js:220-248` - OPERATION_PARAMETER_RULES |
-| **Error messages lack context** | Hard to debug validation failures | LOW | No rule ID, line numbers, or code snippets |
+| Root Cause                                            | Impact                                       | Severity | Evidence                                                    |
+| ----------------------------------------------------- | -------------------------------------------- | -------- | ----------------------------------------------------------- |
+| **ModTestFixture bypasses schema validation**         | Invalid mod data passes all tests            | CRITICAL | `ModTestFixture.js:180-200` - JSON parsed but not validated |
+| **IntegrationTestBed mocks schema validator**         | Integration tests skip real validation       | HIGH     | `integrationTestBed.js:380` - registers test-only schemas   |
+| **Template strings not natively supported**           | Each operation reinvents oneOf pattern       | MEDIUM   | Only `lockGrabbing.schema.json` has pattern                 |
+| **Only 4 of 62 operations have pre-validation rules** | Most operations have no parameter validation | MEDIUM   | `preValidationUtils.js:220-248` - OPERATION_PARAMETER_RULES |
+| **Error messages lack context**                       | Hard to debug validation failures            | LOW      | No rule ID, line numbers, or code snippets                  |
 
 **Why Tests Didn't Catch This:**
 
@@ -220,14 +223,14 @@ The following tests were created to reproduce and verify the fixes:
 
 ## 3. Truth Sources
 
-| Source | Location | Authority | Notes |
-|--------|----------|-----------|-------|
-| JSON Schema Draft 07 | https://json-schema.org/draft-07/schema | Schema syntax specification | Defines valid schema keywords |
-| AJV Documentation | https://ajv.js.org/ | Validation behavior | v8.x used in project |
-| CLAUDE.md | Project root | Project conventions | See "Adding New Operations" checklist |
-| Existing oneOf Pattern | `data/schemas/operations/lockGrabbing.schema.json:24-28` | Template string pattern | Reference implementation |
-| Pre-validation Whitelist | `src/utils/preValidationUtils.js:KNOWN_OPERATION_TYPES` | Valid operation types | 62 registered types |
-| Operation Handler Registration | `src/dependencyInjection/registrations/interpreterRegistrations.js` | Runtime type mapping | Must match schema `const` |
+| Source                         | Location                                                            | Authority                   | Notes                                 |
+| ------------------------------ | ------------------------------------------------------------------- | --------------------------- | ------------------------------------- |
+| JSON Schema Draft 07           | https://json-schema.org/draft-07/schema                             | Schema syntax specification | Defines valid schema keywords         |
+| AJV Documentation              | https://ajv.js.org/                                                 | Validation behavior         | v8.x used in project                  |
+| CLAUDE.md                      | Project root                                                        | Project conventions         | See "Adding New Operations" checklist |
+| Existing oneOf Pattern         | `data/schemas/operations/lockGrabbing.schema.json:24-28`            | Template string pattern     | Reference implementation              |
+| Pre-validation Whitelist       | `src/utils/preValidationUtils.js:KNOWN_OPERATION_TYPES`             | Valid operation types       | 62 registered types                   |
+| Operation Handler Registration | `src/dependencyInjection/registrations/interpreterRegistrations.js` | Runtime type mapping        | Must match schema `const`             |
 
 ---
 
@@ -236,14 +239,19 @@ The following tests were created to reproduce and verify the fixes:
 ### 4.1 Normal Cases
 
 1. **ModTestFixture validates against schemas before test execution**
+
    ```javascript
    // DESIRED: forAction() validates rule file
-   const fixture = await ModTestFixture.forAction('weapons', 'weapons:wield_threateningly');
+   const fixture = await ModTestFixture.forAction(
+     'weapons',
+     'weapons:wield_threateningly'
+   );
    // → Throws ValidationError if rule violates schema
    // → Test fails immediately with clear error message
    ```
 
 2. **Template strings accepted via shared definition**
+
    ```json
    // data/schemas/common.schema.json
    {
@@ -268,16 +276,24 @@ The following tests were created to reproduce and verify the fixes:
    ```
 
 3. **All operations have generated parameter validation rules**
+
    ```javascript
    // Auto-generated from schemas at startup
    OPERATION_PARAMETER_RULES = {
-     LOCK_GRABBING: { required: ['actor_id', 'count'], templateFields: ['count', 'actor_id', 'item_id'] },
-     UNLOCK_GRABBING: { required: ['actor_id', 'count'], templateFields: ['count', 'actor_id', 'item_id'] },
+     LOCK_GRABBING: {
+       required: ['actor_id', 'count'],
+       templateFields: ['count', 'actor_id', 'item_id'],
+     },
+     UNLOCK_GRABBING: {
+       required: ['actor_id', 'count'],
+       templateFields: ['count', 'actor_id', 'item_id'],
+     },
      // ... all 62 operations
    };
    ```
 
 4. **Error messages include full context**
+
    ```
    Validation Error in rule "handle_wield_threateningly"
      File: data/mods/weapons/rules/handle_wield_threateningly.rule.json
@@ -295,24 +311,24 @@ The following tests were created to reproduce and verify the fixes:
 
 ### 4.2 Edge Cases
 
-| Input | Expected Behavior |
-|-------|-------------------|
-| Empty template `"{}"` | Rejected: "Template string cannot be empty" |
-| Nested braces `"{{x}}"` | Rejected: "Invalid template syntax" |
-| Spaces in template `"{ context.x }"` | Rejected: "Template must not contain spaces" |
-| Unknown operation `"LOCK_GRABB"` | Rejected with suggestion: "Did you mean LOCK_GRABBING?" |
-| Missing required param | Rejected: "Missing required parameter 'actor_id'" |
-| Extra unknown param | Warning (not error): "Unknown parameter 'foo' ignored" |
+| Input                                | Expected Behavior                                       |
+| ------------------------------------ | ------------------------------------------------------- |
+| Empty template `"{}"`                | Rejected: "Template string cannot be empty"             |
+| Nested braces `"{{x}}"`              | Rejected: "Invalid template syntax"                     |
+| Spaces in template `"{ context.x }"` | Rejected: "Template must not contain spaces"            |
+| Unknown operation `"LOCK_GRABB"`     | Rejected with suggestion: "Did you mean LOCK_GRABBING?" |
+| Missing required param               | Rejected: "Missing required parameter 'actor_id'"       |
+| Extra unknown param                  | Warning (not error): "Unknown parameter 'foo' ignored"  |
 
 ### 4.3 Failure Modes
 
-| Failure | Expected Error | Severity | Recovery Action |
-|---------|----------------|----------|-----------------|
-| Invalid rule in test | `ValidationError` thrown, test fails | CRITICAL | Fix rule JSON before test can run |
-| Unknown operation type | List similar types via Levenshtein distance | HIGH | Use suggested type |
-| Missing required param | Show rule context + line number | HIGH | Add missing parameter |
-| Schema $ref not found | Validation skipped with warning | MEDIUM | Fix schema reference |
-| Template resolves to wrong type | Runtime warning (not validation error) | LOW | Fix context data setup |
+| Failure                         | Expected Error                              | Severity | Recovery Action                   |
+| ------------------------------- | ------------------------------------------- | -------- | --------------------------------- |
+| Invalid rule in test            | `ValidationError` thrown, test fails        | CRITICAL | Fix rule JSON before test can run |
+| Unknown operation type          | List similar types via Levenshtein distance | HIGH     | Use suggested type                |
+| Missing required param          | Show rule context + line number             | HIGH     | Add missing parameter             |
+| Schema $ref not found           | Validation skipped with warning             | MEDIUM   | Fix schema reference              |
+| Template resolves to wrong type | Runtime warning (not validation error)      | LOW      | Fix context data setup            |
 
 ---
 
@@ -423,21 +439,21 @@ These may change without breaking compatibility:
 
 ### 7.1 Tests to Add
 
-| Test File | Purpose | Priority |
-|-----------|---------|----------|
-| `tests/integration/validation/schemaTestIntegration.test.js` | Verify ModTestFixture validates against schemas | CRITICAL |
-| `tests/unit/utils/parameterRuleGenerator.test.js` | Test auto-generation of parameter rules | HIGH |
-| `tests/unit/utils/suggestionUtils.test.js` | Test "Did you mean?" Levenshtein matching | MEDIUM |
-| `tests/unit/validation/validationErrorContext.test.js` | Test error context with line numbers | MEDIUM |
-| `tests/integration/validation/templateStringValidation.test.js` | Test template string pattern validation | HIGH |
+| Test File                                                       | Purpose                                         | Priority |
+| --------------------------------------------------------------- | ----------------------------------------------- | -------- |
+| `tests/integration/validation/schemaTestIntegration.test.js`    | Verify ModTestFixture validates against schemas | CRITICAL |
+| `tests/unit/utils/parameterRuleGenerator.test.js`               | Test auto-generation of parameter rules         | HIGH     |
+| `tests/unit/utils/suggestionUtils.test.js`                      | Test "Did you mean?" Levenshtein matching       | MEDIUM   |
+| `tests/unit/validation/validationErrorContext.test.js`          | Test error context with line numbers            | MEDIUM   |
+| `tests/integration/validation/templateStringValidation.test.js` | Test template string pattern validation         | HIGH     |
 
 ### 7.2 Tests to Update
 
-| Test File | Required Change |
-|-----------|-----------------|
-| `tests/common/mods/ModTestFixture.js` | Add schema validation in `forAction()`, `forRule()` |
-| `tests/common/engine/systemLogicTestEnv.js` | Inject real schema validator dependency |
-| `tests/common/integrationTestBed.js` | Option to use real schemas instead of mocks |
+| Test File                                   | Required Change                                     |
+| ------------------------------------------- | --------------------------------------------------- |
+| `tests/common/mods/ModTestFixture.js`       | Add schema validation in `forAction()`, `forRule()` |
+| `tests/common/engine/systemLogicTestEnv.js` | Inject real schema validator dependency             |
+| `tests/common/integrationTestBed.js`        | Option to use real schemas instead of mocks         |
 
 ### 7.3 Regression Tests
 
@@ -469,7 +485,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should accept integer count parameter', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: 2, item_id: 'item' }
+        parameters: { actor_id: 'test', count: 2, item_id: 'item' },
       };
 
       expect(() => {
@@ -486,8 +502,8 @@ describe('Schema Validation Regression Prevention', () => {
         parameters: {
           actor_id: '{event.payload.actorId}',
           count: '{context.targetGrabbingReqs.handsRequired}',
-          item_id: '{event.payload.targetId}'
-        }
+          item_id: '{event.payload.targetId}',
+        },
       };
 
       expect(() => {
@@ -501,7 +517,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject non-template string count parameter', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: 'two', item_id: 'item' }
+        parameters: { actor_id: 'test', count: 'two', item_id: 'item' },
       };
 
       expect(() => {
@@ -515,7 +531,10 @@ describe('Schema Validation Regression Prevention', () => {
 
   describe('corePromptText.json', () => {
     it('should validate against prompt-text schema', async () => {
-      const content = await readFile('data/prompts/corePromptText.json', 'utf8');
+      const content = await readFile(
+        'data/prompts/corePromptText.json',
+        'utf8'
+      );
       const data = JSON.parse(content);
 
       expect(() => {
@@ -527,7 +546,10 @@ describe('Schema Validation Regression Prevention', () => {
     });
 
     it('should contain actionTagRulesContent field', async () => {
-      const content = await readFile('data/prompts/corePromptText.json', 'utf8');
+      const content = await readFile(
+        'data/prompts/corePromptText.json',
+        'utf8'
+      );
       const data = JSON.parse(content);
 
       expect(data).toHaveProperty('actionTagRulesContent');
@@ -550,40 +572,37 @@ import fc from 'fast-check';
 describe('Template String Type Resolution Properties', () => {
   it('should resolve integer templates to integers', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 100 }),
-        (intValue) => {
-          const context = { handsRequired: intValue };
-          const resolved = resolveTemplateString('{context.handsRequired}', context);
-          return typeof resolved === 'number' && Number.isInteger(resolved);
-        }
-      )
+      fc.property(fc.integer({ min: 1, max: 100 }), (intValue) => {
+        const context = { handsRequired: intValue };
+        const resolved = resolveTemplateString(
+          '{context.handsRequired}',
+          context
+        );
+        return typeof resolved === 'number' && Number.isInteger(resolved);
+      })
     );
   });
 
   it('should preserve string values for string templates', () => {
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 100 }),
-        (strValue) => {
-          const context = { message: strValue };
-          const resolved = resolveTemplateString('{context.message}', context);
-          return typeof resolved === 'string' && resolved === strValue;
-        }
-      )
+      fc.property(fc.string({ minLength: 1, maxLength: 100 }), (strValue) => {
+        const context = { message: strValue };
+        const resolved = resolveTemplateString('{context.message}', context);
+        return typeof resolved === 'string' && resolved === strValue;
+      })
     );
   });
 
   it('should return undefined for missing context paths', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom('foo', 'bar', 'baz'),
-        (missingKey) => {
-          const context = {};
-          const resolved = resolveTemplateString(`{context.${missingKey}}`, context);
-          return resolved === undefined;
-        }
-      )
+      fc.property(fc.constantFrom('foo', 'bar', 'baz'), (missingKey) => {
+        const context = {};
+        const resolved = resolveTemplateString(
+          `{context.${missingKey}}`,
+          context
+        );
+        return resolved === undefined;
+      })
     );
   });
 });
@@ -598,6 +617,7 @@ describe('Template String Type Resolution Properties', () => {
 **Goal**: Prevent invalid mod data from passing tests
 
 **Tasks**:
+
 - [ ] Modify `ModTestFixture.forAction()` to validate rules against schema before test setup
 - [ ] Modify `ModTestFixture.forRule()` to validate rules against schema before test setup
 - [ ] Add optional `skipValidation` flag for debugging (default: `false`)
@@ -605,11 +625,13 @@ describe('Template String Type Resolution Properties', () => {
 - [ ] Update `IntegrationTestBed` to optionally use real schemas
 
 **Files**:
+
 - `tests/common/mods/ModTestFixture.js`
 - `tests/common/engine/systemLogicTestEnv.js`
 - `tests/common/integrationTestBed.js`
 
 **Acceptance Criteria**:
+
 - Running existing mod tests with invalid rule files causes immediate test failure
 - Validation errors include file path and rule ID
 
@@ -618,15 +640,18 @@ describe('Template String Type Resolution Properties', () => {
 **Goal**: Block PRs with validation failures before tests run
 
 **Tasks**:
+
 - [ ] Add `validation-gate` job to `.github/workflows/tests.yml`
 - [ ] Run `npm run validate:strict` as first step
 - [ ] Run `npm run validate:operations` to verify operation registration
 - [ ] Make all test jobs depend on validation-gate passing
 
 **Files**:
+
 - `.github/workflows/tests.yml`
 
 **Acceptance Criteria**:
+
 - PRs with invalid schemas fail in CI before tests run
 - Clear error message indicates which validation failed
 
@@ -635,6 +660,7 @@ describe('Template String Type Resolution Properties', () => {
 **Goal**: Single source of truth for template string patterns
 
 **Tasks**:
+
 - [ ] Add `templateString` definition to `common.schema.json`
 - [ ] Add `integerOrTemplate`, `stringOrTemplate` composite definitions
 - [ ] Update `lockGrabbing.schema.json` to use `$ref` to common
@@ -642,12 +668,14 @@ describe('Template String Type Resolution Properties', () => {
 - [ ] Create linting script to detect local oneOf patterns
 
 **Files**:
+
 - `data/schemas/common.schema.json`
 - `data/schemas/operations/lockGrabbing.schema.json`
 - `data/schemas/operations/unlockGrabbing.schema.json`
 - `scripts/lintSchemaPatterns.js` (new)
 
 **Acceptance Criteria**:
+
 - All template-accepting parameters use shared definitions
 - Linting script flags local oneOf patterns
 
@@ -656,6 +684,7 @@ describe('Template String Type Resolution Properties', () => {
 **Goal**: Every operation has parameter validation rules
 
 **Tasks**:
+
 - [ ] Create `src/utils/parameterRuleGenerator.js`
 - [ ] Generate rules from schema `required` and `properties`
 - [ ] Detect common mistakes (entity_id vs entity_ref)
@@ -663,10 +692,12 @@ describe('Template String Type Resolution Properties', () => {
 - [ ] Add startup assertion for coverage invariant
 
 **Files**:
+
 - `src/utils/parameterRuleGenerator.js` (new)
 - `src/utils/preValidationUtils.js`
 
 **Acceptance Criteria**:
+
 - All 62 operations have generated parameter rules
 - Startup fails if any operation lacks rules
 
@@ -675,6 +706,7 @@ describe('Template String Type Resolution Properties', () => {
 **Goal**: Validation errors include full context for debugging
 
 **Tasks**:
+
 - [ ] Create `src/validation/validationErrorContext.js` for rich error formatting
 - [ ] Add line number extraction from JSON path
 - [ ] Add code snippet generation
@@ -682,11 +714,13 @@ describe('Template String Type Resolution Properties', () => {
 - [ ] Integrate with `ajvAnyOfErrorFormatter.js`
 
 **Files**:
+
 - `src/validation/validationErrorContext.js` (new)
 - `src/utils/suggestionUtils.js` (new)
 - `src/utils/ajvAnyOfErrorFormatter.js`
 
 **Acceptance Criteria**:
+
 - Validation errors show file path, line number, and code snippet
 - Unknown operation types suggest similar valid types
 
@@ -694,20 +728,20 @@ describe('Template String Type Resolution Properties', () => {
 
 ## 9. Critical Files
 
-| File | Type | Purpose |
-|------|------|---------|
-| `tests/common/mods/ModTestFixture.js` | Modify | Add schema validation in factory methods |
-| `tests/common/engine/systemLogicTestEnv.js` | Modify | Inject schema validator dependency |
-| `tests/common/integrationTestBed.js` | Modify | Option for real schema validation |
-| `data/schemas/common.schema.json` | Modify | Add templateString definitions |
-| `data/schemas/operations/lockGrabbing.schema.json` | Modify | Use $ref to common |
-| `data/schemas/operations/unlockGrabbing.schema.json` | Modify | Use $ref to common |
-| `src/utils/preValidationUtils.js` | Modify | Integrate auto-generated rules |
-| `.github/workflows/tests.yml` | Modify | Add validation-gate job |
-| `src/utils/parameterRuleGenerator.js` | Create | Auto-generate parameter rules |
-| `src/utils/suggestionUtils.js` | Create | "Did you mean?" suggestions |
-| `src/validation/validationErrorContext.js` | Create | Rich error context |
-| `scripts/lintSchemaPatterns.js` | Create | Detect local oneOf patterns |
+| File                                                 | Type   | Purpose                                  |
+| ---------------------------------------------------- | ------ | ---------------------------------------- |
+| `tests/common/mods/ModTestFixture.js`                | Modify | Add schema validation in factory methods |
+| `tests/common/engine/systemLogicTestEnv.js`          | Modify | Inject schema validator dependency       |
+| `tests/common/integrationTestBed.js`                 | Modify | Option for real schema validation        |
+| `data/schemas/common.schema.json`                    | Modify | Add templateString definitions           |
+| `data/schemas/operations/lockGrabbing.schema.json`   | Modify | Use $ref to common                       |
+| `data/schemas/operations/unlockGrabbing.schema.json` | Modify | Use $ref to common                       |
+| `src/utils/preValidationUtils.js`                    | Modify | Integrate auto-generated rules           |
+| `.github/workflows/tests.yml`                        | Modify | Add validation-gate job                  |
+| `src/utils/parameterRuleGenerator.js`                | Create | Auto-generate parameter rules            |
+| `src/utils/suggestionUtils.js`                       | Create | "Did you mean?" suggestions              |
+| `src/validation/validationErrorContext.js`           | Create | Rich error context                       |
+| `scripts/lintSchemaPatterns.js`                      | Create | Detect local oneOf patterns              |
 
 ---
 
@@ -802,7 +836,11 @@ Invalid Examples:
     "stringOrTemplate": {
       "description": "Either a literal string or a template string",
       "oneOf": [
-        { "type": "string", "minLength": 1, "not": { "pattern": "^\\{.*\\}$" } },
+        {
+          "type": "string",
+          "minLength": 1,
+          "not": { "pattern": "^\\{.*\\}$" }
+        },
         { "$ref": "#/definitions/templateString" }
       ]
     },
@@ -833,7 +871,9 @@ Invalid Examples:
           "type": "object",
           "properties": {
             "actor_id": { "type": "string" },
-            "count": { "$ref": "../common.schema.json#/definitions/integerOrTemplate" },
+            "count": {
+              "$ref": "../common.schema.json#/definitions/integerOrTemplate"
+            },
             "item_id": { "type": "string" }
           },
           "required": ["actor_id", "count"],

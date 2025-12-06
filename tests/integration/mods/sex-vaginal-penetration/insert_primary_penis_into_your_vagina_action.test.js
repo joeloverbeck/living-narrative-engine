@@ -87,10 +87,14 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action i
       },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     const attemptEvent = testFixture.events.find(
       (event) => event.eventType === 'core:attempt_action'
@@ -147,11 +151,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action i
 
     const eventTypes = testFixture.events.map((event) => event.eventType);
     const unexpectedEvents = eventTypes.filter((type) =>
-      [
-        'core:error',
-        'core:action_failed',
-        'core:action_invalid',
-      ].includes(type)
+      ['core:error', 'core:action_failed', 'core:action_invalid'].includes(type)
     );
 
     expect(unexpectedEvents).toHaveLength(0);

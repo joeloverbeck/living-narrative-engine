@@ -64,7 +64,7 @@ export class IntegrationTestBed extends BaseTestBed {
 
     // Create mock UI elements for tests that need UI components
     const outputDiv = document.createElement('div');
-    outputDiv.id = 'outputDiv';  // Changed from 'gameArea' to match UI component expectations
+    outputDiv.id = 'outputDiv'; // Changed from 'gameArea' to match UI component expectations
 
     // Create message list container required by ActionResultRenderer and ChatAlertRenderer
     const messageList = document.createElement('div');
@@ -1451,15 +1451,20 @@ export class IntegrationTestBed extends BaseTestBed {
           description: 'Dispatched when a new entity is created.',
           payloadSchema: {
             type: 'object',
-            required: ['instanceId', 'definitionId', 'wasReconstructed', 'entity'],
+            required: [
+              'instanceId',
+              'definitionId',
+              'wasReconstructed',
+              'entity',
+            ],
             properties: {
               instanceId: { type: 'string' },
               definitionId: { type: 'string' },
               wasReconstructed: { type: 'boolean' },
-              entity: { type: 'object' }
+              entity: { type: 'object' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:component_added',
@@ -1470,10 +1475,10 @@ export class IntegrationTestBed extends BaseTestBed {
             properties: {
               entityId: { type: 'string' },
               componentType: { type: 'string' },
-              componentData: { type: 'object' }
+              componentData: { type: 'object' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:turn_started',
@@ -1484,10 +1489,10 @@ export class IntegrationTestBed extends BaseTestBed {
             properties: {
               turnNumber: { type: 'number' },
               actorId: { type: 'string' },
-              timestamp: { type: 'number' }
+              timestamp: { type: 'number' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:entity_removed',
@@ -1497,10 +1502,10 @@ export class IntegrationTestBed extends BaseTestBed {
             required: ['instanceId', 'reason'],
             properties: {
               instanceId: { type: 'string' },
-              reason: { type: 'string' }
+              reason: { type: 'string' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:entity_spoke',
@@ -1511,13 +1516,13 @@ export class IntegrationTestBed extends BaseTestBed {
             properties: {
               speakerId: { type: 'string' },
               message: { type: 'string' },
-              targets: { 
+              targets: {
                 type: 'array',
-                items: { type: 'string' }
-              }
+                items: { type: 'string' },
+              },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:attempt_action',
@@ -1528,10 +1533,10 @@ export class IntegrationTestBed extends BaseTestBed {
             properties: {
               actorId: { type: 'string' },
               actionId: { type: 'string' },
-              parameters: { type: 'object' }
+              parameters: { type: 'object' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:action_decided',
@@ -1543,10 +1548,10 @@ export class IntegrationTestBed extends BaseTestBed {
               actorId: { type: 'string' },
               actionId: { type: 'string' },
               decision: { type: 'string' },
-              reasoning: { type: 'string' }
+              reasoning: { type: 'string' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:turn_ended',
@@ -1558,10 +1563,10 @@ export class IntegrationTestBed extends BaseTestBed {
               turnNumber: { type: 'number' },
               actorId: { type: 'string' },
               timestamp: { type: 'number' },
-              summary: { type: 'string' }
+              summary: { type: 'string' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
         {
           id: 'core:component_removed',
@@ -1572,10 +1577,10 @@ export class IntegrationTestBed extends BaseTestBed {
             properties: {
               entityId: { type: 'string' },
               componentType: { type: 'string' },
-              reason: { type: 'string' }
+              reason: { type: 'string' },
             },
-            additionalProperties: false
-          }
+            additionalProperties: false,
+          },
         },
       ];
 

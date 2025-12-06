@@ -6,12 +6,12 @@ Create service that collects injury data from all body parts into an InjurySumma
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/anatomy/services/injuryAggregationService.js` | CREATE |
-| `src/dependencyInjection/tokens/tokens-core.js` | MODIFY - add token alphabetically |
+| File                                                                   | Action                                                           |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `src/anatomy/services/injuryAggregationService.js`                     | CREATE                                                           |
+| `src/dependencyInjection/tokens/tokens-core.js`                        | MODIFY - add token alphabetically                                |
 | `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | MODIFY - add registration (anatomy services are registered here) |
-| `tests/unit/anatomy/services/injuryAggregationService.test.js` | CREATE |
+| `tests/unit/anatomy/services/injuryAggregationService.test.js`         | CREATE                                                           |
 
 ## Out of Scope
 
@@ -70,14 +70,17 @@ See `specs/injury-reporting-and-user-interface.md` section 5.1 for InjurySummary
 Created `InjuryAggregationService` that collects injury data from all body parts into an `InjurySummaryDTO` structure.
 
 **Files Created:**
+
 - `src/anatomy/services/injuryAggregationService.js` - Main service implementation (511 lines)
 - `tests/unit/anatomy/services/injuryAggregationService.test.js` - Comprehensive unit tests (45 tests)
 
 **Files Modified:**
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Added `InjuryAggregationService` token (line 85)
 - `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` - Added import and registration (lines 85, 887-899)
 
 **Ticket Correction Made:**
+
 - Original ticket incorrectly referenced `orchestrationRegistrations.js` - corrected to `worldAndEntityRegistrations.js` where all anatomy services are registered
 
 ### Test Coverage

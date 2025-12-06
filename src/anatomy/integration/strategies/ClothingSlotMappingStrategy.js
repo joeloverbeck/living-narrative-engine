@@ -69,7 +69,8 @@ class ClothingSlotMappingStrategy {
    */
   canResolve(mapping) {
     const hasMapping = !!mapping;
-    const hasClothingSlotId = hasMapping && typeof mapping.clothingSlotId === 'string';
+    const hasClothingSlotId =
+      hasMapping && typeof mapping.clothingSlotId === 'string';
     const isNonEmpty = hasClothingSlotId && mapping.clothingSlotId.length > 0;
     const result = hasMapping && hasClothingSlotId && isNonEmpty;
 
@@ -203,7 +204,11 @@ class ClothingSlotMappingStrategy {
    */
   async #resolveBlueprintSlots(entityId, blueprintSlots, slotEntityMappings) {
     const mapping = { blueprintSlots };
-    return await this.#blueprintSlotStrategy.resolve(entityId, mapping, slotEntityMappings);
+    return await this.#blueprintSlotStrategy.resolve(
+      entityId,
+      mapping,
+      slotEntityMappings
+    );
   }
 
   /**

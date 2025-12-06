@@ -6,10 +6,7 @@
   "targets": "none",
   "template": "cross the salt boundary, breaking it",
   "required_components": {
-    "actor": [
-      "warding:corrupted",
-      "warding:warded_by_salt"
-    ]
+    "actor": ["warding:corrupted", "warding:warded_by_salt"]
   },
   "forbidden_components": {
     "actor": [

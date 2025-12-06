@@ -3,6 +3,7 @@
 **Reference**: [Performance Test Flakiness Analysis](./performance-test-flakiness-analysis.md)
 
 ## Status
+
 - Completed (thresholds relaxed and archived after verification)
 
 ## Summary
@@ -23,6 +24,7 @@ Despite the label "<0.01ms", the thresholds are 0.015ms per call and 15ms total.
 **Root cause**: CI environment variability, not production performance issues.
 
 **Analysis findings**:
+
 - Production code is optimized and performant
 - 30 microseconds per slot generation is imperceptible to users
 - Slot generation is infrequent (only on character creation)
@@ -32,6 +34,7 @@ Despite the label "<0.01ms", the thresholds are 0.015ms per call and 15ms total.
 ## Files Expected to Touch
 
 ### Modified Files
+
 - `tests/performance/anatomy/slotGenerator.performance.test.js`
   - Single-slot performance test near the top of the file: update description and thresholds
   - Add comment explaining the CI safety margin
@@ -39,6 +42,7 @@ Despite the label "<0.01ms", the thresholds are 0.015ms per call and 15ms total.
 ## Out of Scope
 
 **DO NOT CHANGE**:
+
 - Production code in `src/anatomy/slotGenerator.js` (no performance issues)
 - Test structure or iteration counts
 - Other performance tests in the file
@@ -96,8 +100,8 @@ it('should generate single slot efficiently (<0.05ms)', () => {
   // Original expectation: ~10-15ms local, ~30ms CI
   // Analysis shows ~0.03ms per call is normal and acceptable
   // Reference: archive/performance-test-flakiness/performance-test-flakiness-analysis.md
-  expect(totalTime).toBeLessThan(50);   // 50ms total for 1000 iterations
-  expect(avgTime).toBeLessThan(0.05);   // 0.05ms = 50 microseconds per call
+  expect(totalTime).toBeLessThan(50); // 50ms total for 1000 iterations
+  expect(avgTime).toBeLessThan(0.05); // 0.05ms = 50 microseconds per call
 });
 ```
 
@@ -106,36 +110,37 @@ it('should generate single slot efficiently (<0.05ms)', () => {
 ```javascript
 it('should generate single slot efficiently (median <0.05ms)', async () => {
   const timings = [];
-  
+
   // Run multiple samples to get stable measurement
   for (let run = 0; run < 5; run++) {
     const start = performance.now();
-    
+
     for (let i = 0; i < 1000; i++) {
       slotGenerator.generateBlueprintSlots(template);
     }
-    
+
     timings.push(performance.now() - start);
   }
-  
+
   // Use median to reduce impact of GC pauses and CPU spikes
   timings.sort((a, b) => a - b);
   const median = timings[Math.floor(timings.length / 2)];
   const avgTime = median / 1000;
-  
-  expect(median).toBeLessThan(50);      // 50ms median for 1000 iterations
-  expect(avgTime).toBeLessThan(0.05);   // 0.05ms median per call
+
+  expect(median).toBeLessThan(50); // 50ms median for 1000 iterations
+  expect(avgTime).toBeLessThan(0.05); // 0.05ms median per call
 });
 ```
 
 ### Threshold Justification
 
-| Metric | Current | Observed | Proposed | Rationale |
-|--------|---------|----------|----------|-----------|
-| Total (1000 iter) | 15ms | 29.66ms | 50ms | ~3x CI safety margin while catching regressions |
-| Per call | 0.015ms | 0.03ms | 0.05ms | Aligns test name with expectation and CI variance |
+| Metric            | Current | Observed | Proposed | Rationale                                         |
+| ----------------- | ------- | -------- | -------- | ------------------------------------------------- |
+| Total (1000 iter) | 15ms    | 29.66ms  | 50ms     | ~3x CI safety margin while catching regressions   |
+| Per call          | 0.015ms | 0.03ms   | 0.05ms   | Aligns test name with expectation and CI variance |
 
 **Performance context**:
+
 - Slot generation happens once during character blueprint initialization
 - User-facing operation (character creation) takes seconds anyway
 - 50 microseconds vs 15 microseconds is indistinguishable to users
@@ -170,6 +175,7 @@ it('should generate single slot efficiently (median <0.05ms)', async () => {
 ## Future Considerations
 
 If test continues to show flakiness after this fix:
+
 1. Implement statistical approach with multiple samples
 2. Add percentile-based assertions (p50, p95, p99)
 3. Consider warmup phase to reduce JIT variability

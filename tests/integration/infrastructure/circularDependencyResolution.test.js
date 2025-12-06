@@ -74,7 +74,9 @@ describe('Circular Dependency Resolution - Pattern 1', () => {
     });
 
     it('should resolve execution logger with ExecutionContext', () => {
-      const { ServiceSetup } = require('../../../src/utils/serviceInitializerUtils.js');
+      const {
+        ServiceSetup,
+      } = require('../../../src/utils/serviceInitializerUtils.js');
       const serviceSetup = new ServiceSetup();
 
       const executionContext = {
@@ -98,7 +100,9 @@ describe('Circular Dependency Resolution - Pattern 1', () => {
     });
 
     it('should fall back to base logger when executionContext is null', () => {
-      const { ServiceSetup } = require('../../../src/utils/serviceInitializerUtils.js');
+      const {
+        ServiceSetup,
+      } = require('../../../src/utils/serviceInitializerUtils.js');
       const serviceSetup = new ServiceSetup();
 
       const resolved = serviceSetup.resolveExecutionLogger(mockLogger, null);
@@ -107,7 +111,9 @@ describe('Circular Dependency Resolution - Pattern 1', () => {
     });
 
     it('should fall back to base logger when executionContext lacks logger', () => {
-      const { ServiceSetup } = require('../../../src/utils/serviceInitializerUtils.js');
+      const {
+        ServiceSetup,
+      } = require('../../../src/utils/serviceInitializerUtils.js');
       const serviceSetup = new ServiceSetup();
 
       const executionContext = {
@@ -231,8 +237,8 @@ describe('Circular Dependency Resolution - Entity System', () => {
 
   it('should import EntityManager class definition', () => {
     // Verify that EntityManager is accessible and is a constructor function
-    const EntityManager = require('../../../src/entities/entityManager.js')
-      .default;
+    const EntityManager =
+      require('../../../src/entities/entityManager.js').default;
     expect(EntityManager).toBeDefined();
     expect(typeof EntityManager).toBe('function');
   });
@@ -240,17 +246,19 @@ describe('Circular Dependency Resolution - Entity System', () => {
   it('should import createDefaultServicesWithConfig function', () => {
     // Verify that the default services factory is accessible
     // Note: This is a named export, not default export
-    const { createDefaultServicesWithConfig } = require('../../../src/entities/utils/createDefaultServicesWithConfig.js');
+    const {
+      createDefaultServicesWithConfig,
+    } = require('../../../src/entities/utils/createDefaultServicesWithConfig.js');
     expect(createDefaultServicesWithConfig).toBeDefined();
     expect(typeof createDefaultServicesWithConfig).toBe('function');
   });
 
   it('should import monitoring components', () => {
     // Verify that monitoring system components are accessible
-    const MonitoringCoordinator = require('../../../src/entities/monitoring/MonitoringCoordinator.js')
-      .default;
-    const MemoryMonitor = require('../../../src/entities/monitoring/MemoryMonitor.js')
-      .default;
+    const MonitoringCoordinator =
+      require('../../../src/entities/monitoring/MonitoringCoordinator.js').default;
+    const MemoryMonitor =
+      require('../../../src/entities/monitoring/MemoryMonitor.js').default;
 
     expect(MonitoringCoordinator).toBeDefined();
     expect(MemoryMonitor).toBeDefined();

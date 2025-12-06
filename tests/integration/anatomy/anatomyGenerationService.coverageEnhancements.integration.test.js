@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyGenerationService } from '../../../src/anatomy/anatomyGenerationService.js';
 import { AnatomyOrchestrator } from '../../../src/anatomy/orchestration/anatomyOrchestrator.js';
@@ -35,9 +42,7 @@ const loadMinimalAnatomyData = (testBed) => {
       components: {
         'anatomy:part': { subType: 'torso' },
         'anatomy:sockets': {
-          sockets: [
-            { id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 },
-          ],
+          sockets: [{ id: 'arm_socket', allowedTypes: ['arm'], maxCount: 2 }],
         },
       },
     },
@@ -222,9 +227,9 @@ describe('AnatomyGenerationService integration coverage enhancements', () => {
     );
     testBed.logger.warn.mockClear();
 
-    await expect(
-      service.generateAnatomyIfNeeded(noRecipe.id)
-    ).resolves.toBe(false);
+    await expect(service.generateAnatomyIfNeeded(noRecipe.id)).resolves.toBe(
+      false
+    );
     expect(testBed.logger.warn).toHaveBeenCalledWith(
       `AnatomyGenerationService: Entity '${noRecipe.id}' has anatomy:body component but no recipeId`
     );
@@ -259,9 +264,7 @@ describe('AnatomyGenerationService integration coverage enhancements', () => {
         reason: 'Anatomy already generated',
       })
     );
-    expect(
-      testBed.logger.debug
-    ).toHaveBeenCalledWith(
+    expect(testBed.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('already has generated anatomy')
     );
 
@@ -281,27 +284,31 @@ describe('AnatomyGenerationService integration coverage enhancements', () => {
       },
     });
 
-    const ready = await testBed.entityManager.createEntityInstance(
-      'test:body_ready'
-    );
+    const ready =
+      await testBed.entityManager.createEntityInstance('test:body_ready');
 
     const generationCheck = jest
       .spyOn(AnatomyOrchestrator.prototype, 'checkGenerationNeeded')
-      .mockReturnValue({ needsGeneration: true, reason: 'Ready for generation' });
+      .mockReturnValue({
+        needsGeneration: true,
+        reason: 'Ready for generation',
+      });
 
     const orchestrateSuccess = jest
       .spyOn(AnatomyOrchestrator.prototype, 'orchestrateGeneration')
       .mockImplementation(async (entityId, recipeId) => {
-        await testBed.entityManager.addComponent(entityId, ANATOMY_BODY_COMPONENT_ID, {
-          recipeId,
-          body: { root: `${entityId}-root`, parts: {} },
-        });
+        await testBed.entityManager.addComponent(
+          entityId,
+          ANATOMY_BODY_COMPONENT_ID,
+          {
+            recipeId,
+            body: { root: `${entityId}-root`, parts: {} },
+          }
+        );
         return { success: true, entityCount: 2, rootId: `${entityId}-root` };
       });
 
-    await expect(
-      service.generateAnatomyIfNeeded(ready.id)
-    ).resolves.toBe(true);
+    await expect(service.generateAnatomyIfNeeded(ready.id)).resolves.toBe(true);
 
     const bodyComponent = testBed.entityManager.getComponentData(
       ready.id,
@@ -317,17 +324,17 @@ describe('AnatomyGenerationService integration coverage enhancements', () => {
       rootId: null,
     });
 
-    await expect(
-      service.generateAnatomyIfNeeded(ready.id)
-    ).resolves.toBe(false);
+    await expect(service.generateAnatomyIfNeeded(ready.id)).resolves.toBe(
+      false
+    );
 
     orchestrateSuccess.mockRejectedValueOnce(
       new Error('Simulated orchestration error')
     );
 
-    await expect(
-      service.generateAnatomyIfNeeded(ready.id)
-    ).rejects.toThrow('Simulated orchestration error');
+    await expect(service.generateAnatomyIfNeeded(ready.id)).rejects.toThrow(
+      'Simulated orchestration error'
+    );
     expect(testBed.logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to generate anatomy for entity'),
       expect.objectContaining({ error: expect.any(Error) })

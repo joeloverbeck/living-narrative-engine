@@ -68,7 +68,10 @@ export function getRolesWithRequirements(requirements) {
   }
 
   const roles = [];
-  if (Array.isArray(requirements[LEGACY_TARGET_ROLE]) && requirements[LEGACY_TARGET_ROLE].length > 0) {
+  if (
+    Array.isArray(requirements[LEGACY_TARGET_ROLE]) &&
+    requirements[LEGACY_TARGET_ROLE].length > 0
+  ) {
     roles.push(LEGACY_TARGET_ROLE);
   }
 
@@ -96,7 +99,10 @@ export function isLegacyTargetPayload(actionDef) {
     return true;
   }
 
-  if (actionDef.resolvedTargets && actionDef.resolvedTargets[LEGACY_TARGET_ROLE]) {
+  if (
+    actionDef.resolvedTargets &&
+    actionDef.resolvedTargets[LEGACY_TARGET_ROLE]
+  ) {
     return true;
   }
 
@@ -119,15 +125,21 @@ export function isMultiTargetPayload(actionDef) {
   }
 
   if (actionDef.target_entities) {
-    return ALL_MULTI_TARGET_ROLES.some((role) => actionDef.target_entities[role]);
+    return ALL_MULTI_TARGET_ROLES.some(
+      (role) => actionDef.target_entities[role]
+    );
   }
 
   if (actionDef.resolvedTargets) {
-    return ALL_MULTI_TARGET_ROLES.some((role) => actionDef.resolvedTargets[role]);
+    return ALL_MULTI_TARGET_ROLES.some(
+      (role) => actionDef.resolvedTargets[role]
+    );
   }
 
   if (actionDef.targetDefinitions) {
-    return ALL_MULTI_TARGET_ROLES.some((role) => actionDef.targetDefinitions[role]);
+    return ALL_MULTI_TARGET_ROLES.some(
+      (role) => actionDef.targetDefinitions[role]
+    );
   }
 
   return false;

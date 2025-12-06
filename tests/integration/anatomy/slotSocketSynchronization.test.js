@@ -324,11 +324,7 @@ describe('SlotGenerator + SocketGenerator Synchronization', () => {
       const socketIds = sockets.map((s) => s.id).sort();
 
       expect(slotKeys).toEqual(socketIds);
-      expect(slotKeys).toEqual([
-        'limb_1',
-        'limb_2',
-        'limb_3',
-      ]);
+      expect(slotKeys).toEqual(['limb_1', 'limb_2', 'limb_3']);
     });
   });
 

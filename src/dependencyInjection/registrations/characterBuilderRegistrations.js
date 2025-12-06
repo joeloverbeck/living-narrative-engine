@@ -411,9 +411,10 @@ function getAsyncToolkitConfig() {
 
   const parsedWait = Number(process.env.CHARACTER_BUILDER_ASYNC_DEFAULT_WAIT);
   return {
-    defaultWait: Number.isFinite(parsedWait) ? parsedWait : defaults.defaultWait,
-    logTimerEvents:
-      process.env.CHARACTER_BUILDER_LOG_TIMER_EVENTS === 'true',
+    defaultWait: Number.isFinite(parsedWait)
+      ? parsedWait
+      : defaults.defaultWait,
+    logTimerEvents: process.env.CHARACTER_BUILDER_LOG_TIMER_EVENTS === 'true',
   };
 }
 

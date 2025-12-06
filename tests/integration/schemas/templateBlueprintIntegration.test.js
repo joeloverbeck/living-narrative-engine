@@ -35,7 +35,8 @@ describe('Template-Blueprint Integration - Spider (8 Legs)', () => {
   it('should validate spider structure template with 8-leg radial arrangement', () => {
     const spiderTemplate = {
       id: 'anatomy:structure_arachnid_8leg',
-      description: 'Eight-legged arachnid body structure with radial arrangement',
+      description:
+        'Eight-legged arachnid body structure with radial arrangement',
       topology: {
         rootType: 'cephalothorax',
         limbSets: [
@@ -67,7 +68,10 @@ describe('Template-Blueprint Integration - Spider (8 Legs)', () => {
 
     const result = validator.validate(TEMPLATE_SCHEMA_ID, spiderTemplate);
     if (!result.isValid) {
-      console.log('Template validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Template validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -98,7 +102,10 @@ describe('Template-Blueprint Integration - Spider (8 Legs)', () => {
 
     const result = validator.validate(BLUEPRINT_SCHEMA_ID, spiderBlueprint);
     if (!result.isValid) {
-      console.log('Blueprint validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Blueprint validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -158,7 +165,8 @@ describe('Template-Blueprint Integration - Dragon (Winged Quadruped)', () => {
   it('should validate dragon structure template with quadruped legs and wings', () => {
     const dragonTemplate = {
       id: 'anatomy:structure_winged_quadruped',
-      description: 'Four-legged creature with bilateral wings - classic western dragon body plan',
+      description:
+        'Four-legged creature with bilateral wings - classic western dragon body plan',
       topology: {
         rootType: 'dragon_torso',
         limbSets: [
@@ -170,7 +178,12 @@ describe('Template-Blueprint Integration - Dragon (Winged Quadruped)', () => {
               idTemplate: 'leg_{{position}}',
               orientationScheme: 'custom',
               allowedTypes: ['leg', 'dragon_leg'],
-              positions: ['front_left', 'front_right', 'rear_left', 'rear_right'],
+              positions: [
+                'front_left',
+                'front_right',
+                'rear_left',
+                'rear_right',
+              ],
             },
           },
           {
@@ -209,7 +222,10 @@ describe('Template-Blueprint Integration - Dragon (Winged Quadruped)', () => {
 
     const result = validator.validate(TEMPLATE_SCHEMA_ID, dragonTemplate);
     if (!result.isValid) {
-      console.log('Template validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Template validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -246,7 +262,10 @@ describe('Template-Blueprint Integration - Dragon (Winged Quadruped)', () => {
 
     const result = validator.validate(BLUEPRINT_SCHEMA_ID, dragonBlueprint);
     if (!result.isValid) {
-      console.log('Blueprint validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Blueprint validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -303,7 +322,10 @@ describe('Template-Blueprint Integration - Octopoid (Radial Tentacles)', () => {
 
     const result = validator.validate(TEMPLATE_SCHEMA_ID, octopusTemplate);
     if (!result.isValid) {
-      console.log('Template validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Template validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -335,7 +357,10 @@ describe('Template-Blueprint Integration - Octopoid (Radial Tentacles)', () => {
 
     const result = validator.validate(BLUEPRINT_SCHEMA_ID, octopusBlueprint);
     if (!result.isValid) {
-      console.log('Blueprint validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Blueprint validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -367,7 +392,10 @@ describe('Template-Blueprint Integration - Error Cases', () => {
       root: 'anatomy:test_torso',
     };
 
-    const result = validator.validate(BLUEPRINT_SCHEMA_ID, blueprintWithInvalidRef);
+    const result = validator.validate(
+      BLUEPRINT_SCHEMA_ID,
+      blueprintWithInvalidRef
+    );
     // Schema validation passes - runtime would handle missing template
     expect(result.isValid).toBe(true);
   });
@@ -598,7 +626,8 @@ describe('Template-Blueprint Integration - Complex Structures', () => {
   it('should validate centaur template with dual torso sections', () => {
     const centaurTemplate = {
       id: 'anatomy:structure_centaur',
-      description: 'Centaur body structure: humanoid upper torso merged with equine lower body',
+      description:
+        'Centaur body structure: humanoid upper torso merged with equine lower body',
       topology: {
         rootType: 'composite_torso',
         limbSets: [
@@ -620,7 +649,12 @@ describe('Template-Blueprint Integration - Complex Structures', () => {
               idTemplate: 'leg_{{position}}',
               orientationScheme: 'custom',
               allowedTypes: ['leg', 'equine_leg'],
-              positions: ['front_left', 'front_right', 'rear_left', 'rear_right'],
+              positions: [
+                'front_left',
+                'front_right',
+                'rear_left',
+                'rear_right',
+              ],
             },
           },
         ],
@@ -649,7 +683,10 @@ describe('Template-Blueprint Integration - Complex Structures', () => {
 
     const result = validator.validate(TEMPLATE_SCHEMA_ID, centaurTemplate);
     if (!result.isValid) {
-      console.log('Template validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Template validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -708,7 +745,10 @@ describe('Template-Blueprint Integration - Complex Structures', () => {
 
     const result = validator.validate(TEMPLATE_SCHEMA_ID, insectTemplate);
     if (!result.isValid) {
-      console.log('Template validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Template validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });

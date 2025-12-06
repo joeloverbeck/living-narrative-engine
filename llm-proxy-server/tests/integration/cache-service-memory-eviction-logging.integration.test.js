@@ -6,11 +6,7 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import {
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -179,9 +175,10 @@ describe('CacheService memory eviction and shutdown logging (integration)', () =
     );
 
     expect(
-      newInvalidationMessages.some((message) =>
-        message.includes('CacheService: Invalidated') &&
-        message.includes('pattern')
+      newInvalidationMessages.some(
+        (message) =>
+          message.includes('CacheService: Invalidated') &&
+          message.includes('pattern')
       )
     ).toBe(true);
 

@@ -337,10 +337,7 @@ describe('speech_patterns schema validation', () => {
           {
             type: 'catchphrase',
             contexts: ['frustration', 'disappointment'],
-            examples: [
-              'Well, that went sideways.',
-              'Not according to plan.',
-            ],
+            examples: ['Well, that went sideways.', 'Not according to plan.'],
           },
           {
             type: 'idiom',

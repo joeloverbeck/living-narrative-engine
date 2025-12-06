@@ -171,7 +171,9 @@ describe('physical-control:force_bend_over action discovery', () => {
 
       expect(actionIds).toContain(ACTION_ID);
 
-      const actionEntry = availableActions.find((action) => action.id === ACTION_ID);
+      const actionEntry = availableActions.find(
+        (action) => action.id === ACTION_ID
+      );
       expect(actionEntry).toBeDefined();
     });
 
@@ -255,11 +257,10 @@ describe('physical-control:force_bend_over action discovery', () => {
       setupScenario(testFixture, { surfaceAllowsBending: false });
 
       const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
-      const surfaceScope =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:available_surfaces',
-          { actor: actorEntity }
-        );
+      const surfaceScope = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'positioning:available_surfaces',
+        { actor: actorEntity }
+      );
 
       expect(surfaceScope.success).toBe(true);
       expect(Array.from(surfaceScope.value || [])).toHaveLength(0);
@@ -274,11 +275,10 @@ describe('physical-control:force_bend_over action discovery', () => {
       setupScenario(testFixture, { surfaceLocation: 'room2' });
 
       const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
-      const surfaceScope =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'positioning:available_surfaces',
-          { actor: actorEntity }
-        );
+      const surfaceScope = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'positioning:available_surfaces',
+        { actor: actorEntity }
+      );
 
       expect(surfaceScope.success).toBe(true);
       expect(Array.from(surfaceScope.value || [])).toHaveLength(0);

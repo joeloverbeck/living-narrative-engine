@@ -10,18 +10,22 @@
 ## Executive Summary
 
 ### Problem Statement
+
 Character Layla Agirre incorrectly shows two simultaneous clothing removal actions:
+
 1. Remove `clothing:dark_olive_high_rise_double_pleat_trousers` (base layer, covers torso_lower)
 2. Remove `clothing:power_mesh_boxer_brief` (underwear layer, torso_lower slot)
 
 The boxer brief should NOT be removable when trousers are equipped, as the trousers have `coveragePriority: "base"` and should block access to underlying underwear layers.
 
 ### Business Impact
+
 - **Gameplay Logic Violation**: Players can remove underwear while fully clothed
 - **Narrative Consistency**: Breaks immersion with impossible clothing interactions
 - **System Reliability**: Indicates fundamental gaps in the clothing system architecture
 
 ### Root Cause Summary
+
 The `clothing:topmost_clothing` scope system operates independently of the `coverage_mapping` component, leading to incorrect determination of accessible clothing items.
 
 ---
@@ -31,6 +35,7 @@ The `clothing:topmost_clothing` scope system operates independently of the `cove
 ### Current System Architecture
 
 #### 1. Clothing Removal Action (`remove_clothing.action.json`)
+
 ```json
 {
   "id": "clothing:remove_clothing",
@@ -43,11 +48,13 @@ The `clothing:topmost_clothing` scope system operates independently of the `cove
 ```
 
 #### 2. Topmost Clothing Scope (`topmost_clothing.scope`)
+
 ```dsl
 clothing:topmost_clothing := actor.topmost_clothing[]
 ```
 
 #### 3. Scope Resolution Chain
+
 1. **ClothingStepResolver** (`src/scopeDsl/nodes/clothingStepResolver.js:18-212`)
    - Resolves `actor.topmost_clothing` to create clothing access object
    - Mode: `'topmost'` (line 32)
@@ -60,7 +67,7 @@ clothing:topmost_clothing := actor.topmost_clothing[]
      LAYER_PRIORITY = {
        topmost: ['outer', 'base', 'underwear'],
        // ...
-     }
+     };
      ```
    - **Returns ALL items from ALL priority layers**
 
@@ -69,17 +76,18 @@ clothing:topmost_clothing := actor.topmost_clothing[]
 **Problem**: Two disconnected priority systems exist:
 
 1. **Layer Priority** (arrayIterationResolver.js:27-33)
+
    ```javascript
    const LAYER_PRIORITY = {
-     topmost: ['outer', 'base', 'underwear'],  // All layers included
+     topmost: ['outer', 'base', 'underwear'], // All layers included
    };
    ```
 
 2. **Coverage Priority** (priorityConstants.js:10-15)
    ```javascript
    export const COVERAGE_PRIORITY = Object.freeze({
-     outer: 100,    // Highest priority (lowest number)
-     base: 200,     // Medium priority  
+     outer: 100, // Highest priority (lowest number)
+     base: 200, // Medium priority
      underwear: 300, // Lowest priority (highest number)
      direct: 400,
    });
@@ -92,6 +100,7 @@ clothing:topmost_clothing := actor.topmost_clothing[]
 For Layla Agirre with the problematic clothing setup:
 
 1. **Equipment State**:
+
    ```json
    {
      "equipped": {
@@ -123,17 +132,20 @@ For Layla Agirre with the problematic clothing setup:
 ### Primary Issues
 
 #### 1. **Architectural Separation of Concerns Violation**
+
 - **Coverage Logic**: Stored in `clothing:coverage_mapping` component
 - **Accessibility Logic**: Implemented in `ArrayIterationResolver.getAllClothingItems()`
 - **Problem**: These systems don't communicate
 
-**Evidence**: 
+**Evidence**:
+
 - `coverage_mapping.js` component exists but is not referenced in clothing resolvers
 - No integration between coverage priority and layer priority systems
 
 #### 2. **Inconsistent Priority System Implementation**
 
 **Layer Priority Logic** (arrayIterationResolver.js:82-86):
+
 ```javascript
 if (mode === 'topmost') {
   break; // Only take the topmost for topmost mode
@@ -152,10 +164,12 @@ if (mode === 'topmost') {
 ### Secondary Issues
 
 #### 4. **Incomplete Priority Calculation**
+
 - `getCoveragePriorityFromMode()` function exists (arrayIterationResolver.js:42-51) but doesn't implement coverage blocking
 - Priority scores calculated but not used for accessibility determination
 
 #### 5. **Test Coverage Gaps**
+
 - Tests verify layer priority but not coverage blocking scenarios
 - Missing integration tests for coverage mapping interaction
 
@@ -190,6 +204,7 @@ Equipment Component → Coverage Analysis → Layer Priority → Available Actio
 ### 3. **Extensibility Limitations**
 
 Current architecture makes it difficult to:
+
 - Add new coverage rules (e.g., seasonal clothing)
 - Implement context-dependent accessibility (e.g., social situations)
 - Support complex layering scenarios (e.g., jackets over shirts)
@@ -243,7 +258,7 @@ function getAllClothingItems(clothingAccess, trace) {
     for (const layer of layers) {
       if (slotData[layer]) {
         const itemId = slotData[layer];
-        
+
         // NEW: Check if this item is blocked by higher priority coverage
         if (!coverageAnalysis.isAccessible(itemId, slotName, layer)) {
           continue; // Skip blocked items
@@ -293,6 +308,7 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 #### 2.2 Refactor Priority System
 
 **Consolidate**: Merge layer priority and coverage priority into single system
+
 - Single source of truth for clothing priorities
 - Consistent priority calculation across all components
 - Cached priority lookup for performance
@@ -302,7 +318,7 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 #### 3.1 Enhanced Testing Strategy
 
 - Integration tests for coverage blocking scenarios
-- Performance tests for large wardrobe configurations  
+- Performance tests for large wardrobe configurations
 - Edge case testing for complex layering
 
 #### 3.2 Extensibility Framework
@@ -316,18 +332,21 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 ## Implementation Roadmap
 
 ### Sprint 1 (Week 1): Emergency Fix
+
 - [ ] Implement coverage blocking in `getAllClothingItems()`
 - [ ] Add `analyzeCoverageBlocking()` function
 - [ ] Create integration tests for Layla Agirre scenario
 - [ ] Verify fix resolves the immediate issue
 
-### Sprint 2 (Week 2-3): System Integration  
+### Sprint 2 (Week 2-3): System Integration
+
 - [ ] Refactor priority calculation system
 - [ ] Implement unified clothing accessibility service
 - [ ] Update all clothing-related resolvers to use new service
 - [ ] Comprehensive test suite for clothing interactions
 
 ### Sprint 3 (Week 4): Enhancement & Optimization
+
 - [ ] Performance optimization for large clothing sets
 - [ ] Enhanced error handling and logging
 - [ ] Documentation and code review
@@ -340,6 +359,7 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 ### Unit Tests Required
 
 1. **Coverage Blocking Logic**:
+
    ```javascript
    describe('Coverage Blocking', () => {
      it('should block underwear when base layer covers same area', () => {
@@ -379,18 +399,18 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 
 ### Implementation Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|---------|-------------|
-| Breaking existing clothing interactions | Medium | High | Comprehensive regression testing |
-| Performance degradation | Low | Medium | Performance benchmarking and optimization |
-| Integration complexity | Medium | Medium | Phased rollout with feature flags |
+| Risk                                    | Probability | Impact | Mitigation                                |
+| --------------------------------------- | ----------- | ------ | ----------------------------------------- |
+| Breaking existing clothing interactions | Medium      | High   | Comprehensive regression testing          |
+| Performance degradation                 | Low         | Medium | Performance benchmarking and optimization |
+| Integration complexity                  | Medium      | Medium | Phased rollout with feature flags         |
 
 ### Business Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|---------|-------------|
-| User confusion during transition | Low | Low | Clear communication and documentation |
-| Gameplay balance changes | Low | Medium | Gradual rollout and user feedback |
+| Risk                             | Probability | Impact | Mitigation                            |
+| -------------------------------- | ----------- | ------ | ------------------------------------- |
+| User confusion during transition | Low         | Low    | Clear communication and documentation |
+| Gameplay balance changes         | Low         | Medium | Gradual rollout and user feedback     |
 
 ---
 
@@ -399,7 +419,7 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 ### A. Code References
 
 - **Remove Clothing Action**: `data/mods/clothing/actions/remove_clothing.action.json`
-- **Topmost Clothing Scope**: `data/mods/clothing/scopes/topmost_clothing.scope` 
+- **Topmost Clothing Scope**: `data/mods/clothing/scopes/topmost_clothing.scope`
 - **Clothing Step Resolver**: `src/scopeDsl/nodes/clothingStepResolver.js:18-212`
 - **Array Iteration Resolver**: `src/scopeDsl/nodes/arrayIterationResolver.js:60-103`
 - **Priority Constants**: `src/scopeDsl/prioritySystem/priorityConstants.js:10-15`
@@ -413,6 +433,7 @@ export function analyzeCoverageBlocking(equipped, entityId) {
 ### C. Related Issues
 
 This analysis may reveal similar issues with:
+
 - Other clothing-related scopes (`outer_clothing`, `base_clothing`, etc.)
 - Equipment systems in other domains (weapons, accessories)
 - Action availability logic in other game mechanics

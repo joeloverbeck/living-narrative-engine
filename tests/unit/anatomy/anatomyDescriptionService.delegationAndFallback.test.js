@@ -13,7 +13,9 @@ function createService(overrides = {}) {
   const defaults = {
     bodyPartDescriptionBuilder: { buildDescription: jest.fn() },
     bodyDescriptionComposer: {
-      composeDescription: jest.fn().mockResolvedValue('fallback-body-description'),
+      composeDescription: jest
+        .fn()
+        .mockResolvedValue('fallback-body-description'),
     },
     bodyGraphService: { getAllParts: jest.fn().mockReturnValue([]) },
     entityFinder: { getEntityInstance: jest.fn().mockReturnValue(null) },
@@ -50,11 +52,16 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
       partDescriptions: [{ id: 'part-1', description: 'arm description' }],
     });
 
-    expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(bodyEntity);
-    expect(persistence.updateDescription).toHaveBeenCalledWith('body-1', 'body-summary');
-    expect(persistence.updateMultipleDescriptions).toHaveBeenCalledWith(
-      [{ id: 'part-1', description: 'arm description' }],
+    expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(
+      bodyEntity
     );
+    expect(persistence.updateDescription).toHaveBeenCalledWith(
+      'body-1',
+      'body-summary'
+    );
+    expect(persistence.updateMultipleDescriptions).toHaveBeenCalledWith([
+      { id: 'part-1', description: 'arm description' },
+    ]);
   });
 
   it('skips persistence updates when orchestrator is present without a persistence service', async () => {
@@ -64,14 +71,18 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
         partDescriptions: [],
       }),
     };
-    const service = createService({ bodyDescriptionOrchestrator: orchestrator });
+    const service = createService({
+      bodyDescriptionOrchestrator: orchestrator,
+    });
     const bodyEntity = { id: 'body-2' };
 
     await expect(service.generateAllDescriptions(bodyEntity)).resolves.toEqual({
       bodyDescription: 'ignored',
       partDescriptions: [],
     });
-    expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(bodyEntity);
+    expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(
+      bodyEntity
+    );
   });
 
   it('uses partDescriptionGenerator results and persists them when available', () => {
@@ -89,7 +100,7 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     expect(generator.generatePartDescription).toHaveBeenCalledWith('part-42');
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'part-42',
-      'fresh-description',
+      'fresh-description'
     );
   });
 
@@ -122,10 +133,12 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
 
     await service.generateBodyDescription(bodyEntity);
 
-    expect(orchestrator.generateBodyDescription).toHaveBeenCalledWith(bodyEntity);
+    expect(orchestrator.generateBodyDescription).toHaveBeenCalledWith(
+      bodyEntity
+    );
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'body-3',
-      'assembled-body',
+      'assembled-body'
     );
   });
 
@@ -133,7 +146,9 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     const orchestrator = {
       generateBodyDescription: jest.fn().mockResolvedValue('ignored-body'),
     };
-    const service = createService({ bodyDescriptionOrchestrator: orchestrator });
+    const service = createService({
+      bodyDescriptionOrchestrator: orchestrator,
+    });
 
     await service.generateBodyDescription({ id: 'body-4' });
 
@@ -147,9 +162,11 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     const persistence = { updateDescription: jest.fn() };
     const entity = {
       id: 'actor-1',
-      hasComponent: jest.fn().mockImplementation((componentId) =>
-        componentId === ANATOMY_BODY_COMPONENT_ID,
-      ),
+      hasComponent: jest
+        .fn()
+        .mockImplementation(
+          (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID
+        ),
     };
     const service = createService({
       bodyDescriptionOrchestrator: orchestrator,
@@ -157,10 +174,15 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     });
 
     await expect(service.getOrGenerateBodyDescription(entity)).resolves.toBe(
-      'cached-body',
+      'cached-body'
     );
-    expect(orchestrator.getOrGenerateBodyDescription).toHaveBeenCalledWith(entity);
-    expect(persistence.updateDescription).toHaveBeenCalledWith('actor-1', 'cached-body');
+    expect(orchestrator.getOrGenerateBodyDescription).toHaveBeenCalledWith(
+      entity
+    );
+    expect(persistence.updateDescription).toHaveBeenCalledWith(
+      'actor-1',
+      'cached-body'
+    );
   });
 
   it('still returns orchestrated descriptions when the entity lacks anatomy data', async () => {
@@ -209,7 +231,9 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
       getComponentData: jest
         .fn()
         .mockImplementation((componentId) =>
-          componentId === DESCRIPTION_COMPONENT_ID ? { text: 'stored desc' } : null,
+          componentId === DESCRIPTION_COMPONENT_ID
+            ? { text: 'stored desc' }
+            : null
         ),
     };
     const service = createService();
@@ -226,15 +250,19 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     };
     const service = createService();
 
-    await expect(service.getOrGenerateBodyDescription(entity)).resolves.toBeNull();
+    await expect(
+      service.getOrGenerateBodyDescription(entity)
+    ).resolves.toBeNull();
   });
 
   it('respects cached descriptions when isDescriptionCurrent reports true', async () => {
     const entity = {
       id: 'actor-4',
-      hasComponent: jest.fn().mockImplementation((componentId) =>
-        componentId === ANATOMY_BODY_COMPONENT_ID
-      ),
+      hasComponent: jest
+        .fn()
+        .mockImplementation(
+          (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID
+        ),
       getComponentData: jest.fn().mockImplementation((componentId) => {
         if (componentId === DESCRIPTION_COMPONENT_ID) {
           return { text: 'cached-body' };
@@ -248,31 +276,44 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
     const description = await service.getOrGenerateBodyDescription(entity);
 
     expect(description).toBe('cached-body');
-    expect(service.bodyDescriptionComposer.composeDescription).not.toHaveBeenCalled();
+    expect(
+      service.bodyDescriptionComposer.composeDescription
+    ).not.toHaveBeenCalled();
   });
 
   it('propagates null when body description composition produces no result', async () => {
     const entity = {
       id: 'actor-5',
-      hasComponent: jest.fn().mockImplementation((componentId) =>
-        componentId === ANATOMY_BODY_COMPONENT_ID
-      ),
+      hasComponent: jest
+        .fn()
+        .mockImplementation(
+          (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID
+        ),
       getComponentData: jest.fn().mockReturnValue(null),
     };
     const service = createService({
-      bodyDescriptionComposer: { composeDescription: jest.fn().mockResolvedValue(null) },
+      bodyDescriptionComposer: {
+        composeDescription: jest.fn().mockResolvedValue(null),
+      },
     });
 
-    await expect(service.getOrGenerateBodyDescription(entity)).resolves.toBeNull();
+    await expect(
+      service.getOrGenerateBodyDescription(entity)
+    ).resolves.toBeNull();
   });
 
   it('delegates updateDescription to the persistence service when available', () => {
     const persistence = { updateDescription: jest.fn() };
-    const service = createService({ descriptionPersistenceService: persistence });
+    const service = createService({
+      descriptionPersistenceService: persistence,
+    });
 
     service.updateDescription('entity-42', 'latest');
 
-    expect(persistence.updateDescription).toHaveBeenCalledWith('entity-42', 'latest');
+    expect(persistence.updateDescription).toHaveBeenCalledWith(
+      'entity-42',
+      'latest'
+    );
   });
 
   it('exits early from updateDescription when the entity cannot be found', () => {
@@ -302,7 +343,9 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
 
   it('regenerateDescriptions ignores entities without anatomy components', () => {
     const entity = { hasComponent: jest.fn().mockReturnValue(false) };
-    const entityFinder = { getEntityInstance: jest.fn().mockReturnValue(entity) };
+    const entityFinder = {
+      getEntityInstance: jest.fn().mockReturnValue(entity),
+    };
     const service = createService({ entityFinder });
     service.generateAllDescriptions = jest.fn();
 
@@ -313,11 +356,15 @@ describe('AnatomyDescriptionService delegation and fallback coverage', () => {
 
   it('regenerateDescriptions forwards valid entities to generateAllDescriptions', () => {
     const entity = {
-      hasComponent: jest.fn().mockImplementation((componentId) =>
-        componentId === ANATOMY_BODY_COMPONENT_ID
-      ),
+      hasComponent: jest
+        .fn()
+        .mockImplementation(
+          (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID
+        ),
     };
-    const entityFinder = { getEntityInstance: jest.fn().mockReturnValue(entity) };
+    const entityFinder = {
+      getEntityInstance: jest.fn().mockReturnValue(entity),
+    };
     const service = createService({ entityFinder });
     service.generateAllDescriptions = jest.fn();
 

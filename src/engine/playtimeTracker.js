@@ -183,9 +183,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
     if (this.#sessionStartTime > 0) {
       const elapsedMilliseconds = Date.now() - this.#sessionStartTime;
       const currentSessionDuration =
-        elapsedMilliseconds <= 0
-          ? 0
-          : Math.floor(elapsedMilliseconds / 1000);
+        elapsedMilliseconds <= 0 ? 0 : Math.floor(elapsedMilliseconds / 1000);
       this.#accumulatedPlaytimeSeconds += currentSessionDuration;
       this.#logger.debug(
         `PlaytimeTracker: Session ended. Duration: ${currentSessionDuration}s. Accumulated playtime: ${this.#accumulatedPlaytimeSeconds}s.`
@@ -209,9 +207,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
     if (this.#sessionStartTime > 0) {
       const elapsedMilliseconds = Date.now() - this.#sessionStartTime;
       currentSessionDurationInSeconds =
-        elapsedMilliseconds <= 0
-          ? 0
-          : Math.floor(elapsedMilliseconds / 1000);
+        elapsedMilliseconds <= 0 ? 0 : Math.floor(elapsedMilliseconds / 1000);
     }
     return this.#accumulatedPlaytimeSeconds + currentSessionDurationInSeconds;
   }
@@ -234,8 +230,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
       throw new TypeError(errorMessage);
     }
     if (!Number.isFinite(seconds)) {
-      const errorMessage =
-        `PlaytimeTracker: setAccumulatedPlaytime expects a finite number, but received ${seconds}.`;
+      const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a finite number, but received ${seconds}.`;
       this.#reportValidationError(errorMessage, { seconds });
       throw new RangeError(errorMessage);
     }

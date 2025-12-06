@@ -1,4 +1,5 @@
 # Memory Test Optimization Analysis
+
 ## HighConcurrency.memory.test.js Performance Optimization
 
 **Test File**: `tests/memory/scopeDsl/HighConcurrency.memory.test.js`
@@ -18,19 +19,20 @@ The high concurrency memory test suite can be optimized to run **50-60% faster**
 
 ### Current Execution Profile
 
-| Component | Time (seconds) | % of Total |
-|-----------|---------------|------------|
-| GC operations (`forceGCAndWait`) | ~2.4s | 32% |
-| Memory monitoring (setInterval) | ~2-3s | 27-40% |
-| Phase delays (setTimeout) | ~0.5s | 7% |
-| Actual test operations | ~2-3s | 27-40% |
-| **TOTAL** | **~7.4s** | **100%** |
+| Component                        | Time (seconds) | % of Total |
+| -------------------------------- | -------------- | ---------- |
+| GC operations (`forceGCAndWait`) | ~2.4s          | 32%        |
+| Memory monitoring (setInterval)  | ~2-3s          | 27-40%     |
+| Phase delays (setTimeout)        | ~0.5s          | 7%         |
+| Actual test operations           | ~2-3s          | 27-40%     |
+| **TOTAL**                        | **~7.4s**      | **100%**   |
 
 ### Detailed Bottleneck Breakdown
 
 #### 1. GC Operations (2.4 seconds)
 
 **Current Implementation** (`memorySetup.js:forceGCAndWait`):
+
 ```javascript
 async forceGCAndWait() {
   for (let i = 0; i < 2; i++) {
@@ -48,6 +50,7 @@ async forceGCAndWait() {
 #### 2. Memory Monitoring Intervals (2-3 seconds)
 
 **Tests Using setInterval**:
+
 - **Test 1**: `setInterval(() => measureMemory(), 1000)`
 - **Test 2**: `setInterval(() => measureMemory(), 800)` (2 spikes)
 - **Test 8**: `setInterval(() => measureMemory(), 1000)`
@@ -59,6 +62,7 @@ async forceGCAndWait() {
 #### 3. Multi-Phase Delays (0.5 seconds)
 
 **Test 4** - Memory cleanup phases:
+
 ```javascript
 { delay: 10, description: '10ms cleanup' },
 { delay: 20, description: '20ms cleanup' },
@@ -67,6 +71,7 @@ async forceGCAndWait() {
 ```
 
 **Test 7** - Memory recovery phases:
+
 ```javascript
 { delay: 20, target: 'initial' },
 { delay: 40, target: 'intermediate' },
@@ -75,8 +80,9 @@ async forceGCAndWait() {
 ```
 
 **Test 9** - Spike recovery delay:
+
 ```javascript
-await new Promise(resolve => setTimeout(resolve, 50));
+await new Promise((resolve) => setTimeout(resolve, 50));
 ```
 
 **Total Impact**: ~0.5 seconds + GC overhead
@@ -100,6 +106,7 @@ await new Promise(resolve => setTimeout(resolve, 50));
 **Savings**: 30-40ms × 30 calls = **0.9-1.2 seconds**
 
 **Proposed Changes**:
+
 ```javascript
 async forceGCAndWait() {
   if (global.gc) {
@@ -118,6 +125,7 @@ async forceGCAndWait() {
 ```
 
 **Rationale**:
+
 - GC happens almost instantly in V8
 - Shorter delays are sufficient for stabilization
 - Still maintains reliability with 2 GC cycles
@@ -128,6 +136,7 @@ async forceGCAndWait() {
 **Optimized**: Snapshot-based monitoring
 
 **Proposed Pattern**:
+
 ```javascript
 // Instead of setInterval monitoring
 const memorySnapshots = [];
@@ -135,7 +144,8 @@ const startMemory = measureMemoryUsage();
 const results = await Promise.all(promises);
 const endMemory = measureMemoryUsage();
 // Peak is max of start and end
-const peakMemory = endMemory.heapUsed > startMemory.heapUsed ? endMemory : startMemory;
+const peakMemory =
+  endMemory.heapUsed > startMemory.heapUsed ? endMemory : startMemory;
 ```
 
 **Savings**: **2-3 seconds** (eliminates all interval overhead)
@@ -145,16 +155,19 @@ const peakMemory = endMemory.heapUsed > startMemory.heapUsed ? endMemory : start
 ### 3. Reduce Multi-Phase Tests (Save ~0.5 seconds)
 
 **Test 4** - Cleanup phases:
+
 - Current: 3 phases (10ms, 20ms, 30ms)
 - Optimized: 2 phases (10ms, 20ms)
 - Savings: 30ms + 1 GC call (~110ms)
 
 **Test 7** - Recovery phases:
+
 - Current: 3 phases (20ms, 40ms, 60ms)
 - Optimized: 2 phases (20ms, 40ms)
 - Savings: 60ms + 1 GC call (~140ms)
 
 **Test 9** - Spike recovery:
+
 - Current: 50ms delay
 - Optimized: 25ms delay
 - Savings: 25ms
@@ -166,11 +179,13 @@ const peakMemory = endMemory.heapUsed > startMemory.heapUsed ? endMemory : start
 ### 4. Reduce Rounds/Batches (Save ~0.5 seconds)
 
 **Test 3** - Leak detection:
+
 - Current: 3 rounds
 - Optimized: 2 rounds
 - Savings: 1 round (25ms delay + GC + operations) = ~200ms
 
 **Test 6** - GC effectiveness:
+
 - Current: 3 batches
 - Optimized: 2 batches
 - Savings: 1 batch (GC + operations) = ~200ms
@@ -182,6 +197,7 @@ const peakMemory = endMemory.heapUsed > startMemory.heapUsed ? endMemory : start
 ### 5. Reduce Operation Counts (Save ~0.3 seconds)
 
 **Current Operation Counts**:
+
 - Test 1: 8 operations
 - Test 2: 16 operations (2 × 8)
 - Test 3: 18 operations (3 × 6)
@@ -193,6 +209,7 @@ const peakMemory = endMemory.heapUsed > startMemory.heapUsed ? endMemory : start
 - Test 9: 14 operations (8 + 6)
 
 **Optimized Operation Counts** (20% reduction):
+
 - Test 1: 6 operations
 - Test 2: 12 operations (2 × 6)
 - Test 3: 12 operations (2 × 6) - also from reduced rounds
@@ -213,14 +230,14 @@ const peakMemory = endMemory.heapUsed > startMemory.heapUsed ? endMemory : start
 
 ### Performance Improvements
 
-| Optimization | Time Saved | % Improvement |
-|-------------|------------|---------------|
-| Faster GC waits | 0.9-1.2s | 12-16% |
-| Remove interval monitoring | 2-3s | 27-40% |
-| Reduce phases | 0.3-0.5s | 4-7% |
-| Reduce rounds/batches | 0.4-0.5s | 5-7% |
-| Reduce operations | 0.3s | 4% |
-| **TOTAL** | **4-5.5s** | **54-74%** |
+| Optimization               | Time Saved | % Improvement |
+| -------------------------- | ---------- | ------------- |
+| Faster GC waits            | 0.9-1.2s   | 12-16%        |
+| Remove interval monitoring | 2-3s       | 27-40%        |
+| Reduce phases              | 0.3-0.5s   | 4-7%          |
+| Reduce rounds/batches      | 0.4-0.5s   | 5-7%          |
+| Reduce operations          | 0.3s       | 4%            |
+| **TOTAL**                  | **4-5.5s** | **54-74%**    |
 
 **Current Runtime**: ~7.4 seconds
 **Expected Optimized Runtime**: ~2.5-3.5 seconds
@@ -283,16 +300,19 @@ All optimizations maintain test quality:
 ## Risk Assessment
 
 ### Low Risk ✅
+
 - Removing interval monitoring (only uses peak value)
 - Reducing operation counts (still maintains concurrency)
 - Reducing setTimeout delays (shorter is still valid)
 
 ### Moderate Risk ⚠️
+
 - Optimizing `forceGCAndWait` (affects all memory tests)
 - Reducing phases from 3 to 2 (still shows progression)
 - Reducing rounds from 3 to 2 (still detects patterns)
 
 ### Mitigation Strategy
+
 1. Implement Phase 1 optimizations first
 2. Run full memory test suite to verify
 3. Proceed to Phase 2 only if Phase 1 successful
@@ -317,15 +337,19 @@ After implementing optimizations, verify:
 ## Alternative Approaches (Not Recommended)
 
 ### ❌ Skip GC calls between operations
+
 **Why not**: Reduces reliability of memory measurements
 
 ### ❌ Reduce test count from 9 to fewer tests
+
 **Why not**: Each test validates different memory scenarios
 
 ### ❌ Increase entity pool reuse without cleanup
+
 **Why not**: Could introduce test interdependencies
 
 ### ❌ Remove multi-round tests entirely
+
 **Why not**: Single-round tests can't detect memory leaks
 
 ---
@@ -343,6 +367,7 @@ All optimizations maintain the same validation coverage and assertion logic, ens
 ---
 
 **Next Steps**:
+
 1. Review and approve optimization strategy
 2. Implement Phase 1 optimizations
 3. Validate with full test suite

@@ -53,10 +53,10 @@ describe('Psychological Components Integration', () => {
       const filePath = path.join(componentsPath, fileName);
       if (fs.existsSync(filePath)) {
         const componentData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        
+
         // Register component in data registry
         dataRegistry.store('components', componentData.id, componentData);
-        
+
         // Register schema with validator
         if (componentData.dataSchema) {
           const schemaId = `${componentData.id}#data`;
@@ -75,7 +75,10 @@ describe('Psychological Components Integration', () => {
   describe('Component Loading and Registration', () => {
     it('should load motivations component from JSON file', () => {
       // Assert
-      const component = dataRegistry.get('components', MOTIVATIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        MOTIVATIONS_COMPONENT_ID
+      );
       expect(component).toBeDefined();
       expect(component.id).toBe('core:motivations');
       expect(component.dataSchema).toBeDefined();
@@ -86,7 +89,10 @@ describe('Psychological Components Integration', () => {
 
     it('should load internal tensions component from JSON file', () => {
       // Assert
-      const component = dataRegistry.get('components', INTERNAL_TENSIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        INTERNAL_TENSIONS_COMPONENT_ID
+      );
       expect(component).toBeDefined();
       expect(component.id).toBe('core:internal_tensions');
       expect(component.dataSchema).toBeDefined();
@@ -129,7 +135,7 @@ describe('Psychological Components Integration', () => {
     it('should create entity with all psychological components', async () => {
       // This test validates that the component data structures work correctly
       // We'll test the data structures directly since entity creation requires definitions
-      
+
       // Arrange - Create mock entity data that would come from the entity system
       const mockEntityState = {
         'core:actor': { name: 'Integration Test Character' },
@@ -145,11 +151,14 @@ describe('Psychological Components Integration', () => {
       };
 
       // Act - Validate that the component data validates against schemas
-      for (const [componentId, componentData] of Object.entries(mockEntityState)) {
-        if (componentId !== 'core:actor') { // Skip actor component for this test
+      for (const [componentId, componentData] of Object.entries(
+        mockEntityState
+      )) {
+        if (componentId !== 'core:actor') {
+          // Skip actor component for this test
           const component = dataRegistry.get('components', componentId);
           expect(component).toBeDefined();
-          
+
           // Validate component data structure
           expect(componentData).toHaveProperty('text');
           expect(typeof componentData.text).toBe('string');
@@ -174,7 +183,10 @@ describe('Psychological Components Integration', () => {
 
     it('should validate component data against schemas', async () => {
       // Arrange
-      const component = dataRegistry.get('components', MOTIVATIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        MOTIVATIONS_COMPONENT_ID
+      );
       const invalidData = {
         // Missing required 'text' field
         wrongField: 'This should fail validation',
@@ -183,7 +195,7 @@ describe('Psychological Components Integration', () => {
       // Act & Assert
       expect(component).toBeDefined();
       expect(component.dataSchema.required).toContain('text');
-      
+
       // Invalid data should not have the required 'text' field
       expect(invalidData).not.toHaveProperty('text');
       expect(invalidData).toHaveProperty('wrongField');
@@ -200,7 +212,9 @@ describe('Psychological Components Integration', () => {
       expect(minimalEntityState['core:actor']).toBeDefined();
       expect(minimalEntityState['core:description']).toBeDefined();
       expect(minimalEntityState[MOTIVATIONS_COMPONENT_ID]).toBeUndefined();
-      expect(minimalEntityState[INTERNAL_TENSIONS_COMPONENT_ID]).toBeUndefined();
+      expect(
+        minimalEntityState[INTERNAL_TENSIONS_COMPONENT_ID]
+      ).toBeUndefined();
       expect(minimalEntityState[DILEMMAS_COMPONENT_ID]).toBeUndefined();
     });
 
@@ -222,7 +236,9 @@ describe('Psychological Components Integration', () => {
       expect(partialEntityState[MOTIVATIONS_COMPONENT_ID].text).toBe(
         'I just want to survive another day.'
       );
-      expect(partialEntityState[INTERNAL_TENSIONS_COMPONENT_ID]).toBeUndefined();
+      expect(
+        partialEntityState[INTERNAL_TENSIONS_COMPONENT_ID]
+      ).toBeUndefined();
       expect(partialEntityState[DILEMMAS_COMPONENT_ID]).toBeDefined();
       expect(partialEntityState[DILEMMAS_COMPONENT_ID].text).toBe(
         'Is survival enough?'
@@ -231,7 +247,10 @@ describe('Psychological Components Integration', () => {
 
     it('should handle very long psychological component text', async () => {
       // Arrange
-      const longText = 'This is a very long motivation that describes in great detail why the character does what they do. '.repeat(10);
+      const longText =
+        'This is a very long motivation that describes in great detail why the character does what they do. '.repeat(
+          10
+        );
       const longTextEntityState = {
         'core:actor': { name: 'Long Text Character' },
         'core:motivations': { text: longText },
@@ -241,8 +260,12 @@ describe('Psychological Components Integration', () => {
 
       // Act & Assert
       expect(longTextEntityState[MOTIVATIONS_COMPONENT_ID].text).toBe(longText);
-      expect(longTextEntityState[INTERNAL_TENSIONS_COMPONENT_ID].text).toBe(longText);
-      expect(longTextEntityState[DILEMMAS_COMPONENT_ID].text).toBe(longText + '?');
+      expect(longTextEntityState[INTERNAL_TENSIONS_COMPONENT_ID].text).toBe(
+        longText
+      );
+      expect(longTextEntityState[DILEMMAS_COMPONENT_ID].text).toBe(
+        longText + '?'
+      );
       expect(longText.length).toBeGreaterThan(500); // Verify it's actually long
     });
 
@@ -262,11 +285,21 @@ describe('Psychological Components Integration', () => {
       };
 
       // Act & Assert
-      expect(formattedEntityState[MOTIVATIONS_COMPONENT_ID].text).toContain('**Bold**');
-      expect(formattedEntityState[MOTIVATIONS_COMPONENT_ID].text).toContain('_italic_');
-      expect(formattedEntityState[MOTIVATIONS_COMPONENT_ID].text).toContain('- bullet points');
-      expect(formattedEntityState[INTERNAL_TENSIONS_COMPONENT_ID].text).toContain('"quotes"');
-      expect(formattedEntityState[INTERNAL_TENSIONS_COMPONENT_ID].text).toContain('&');
+      expect(formattedEntityState[MOTIVATIONS_COMPONENT_ID].text).toContain(
+        '**Bold**'
+      );
+      expect(formattedEntityState[MOTIVATIONS_COMPONENT_ID].text).toContain(
+        '_italic_'
+      );
+      expect(formattedEntityState[MOTIVATIONS_COMPONENT_ID].text).toContain(
+        '- bullet points'
+      );
+      expect(
+        formattedEntityState[INTERNAL_TENSIONS_COMPONENT_ID].text
+      ).toContain('"quotes"');
+      expect(
+        formattedEntityState[INTERNAL_TENSIONS_COMPONENT_ID].text
+      ).toContain('&');
       expect(formattedEntityState[DILEMMAS_COMPONENT_ID].text).toContain('???');
     });
   });
@@ -275,12 +308,15 @@ describe('Psychological Components Integration', () => {
     it('should handle empty text in psychological components', async () => {
       // Arrange
       const emptyTextData = { text: '' };
-      const component = dataRegistry.get('components', MOTIVATIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        MOTIVATIONS_COMPONENT_ID
+      );
 
       // Act & Assert
       expect(component).toBeDefined();
       expect(component.dataSchema.required).toContain('text');
-      
+
       // Verify empty string data structure
       expect(emptyTextData).toHaveProperty('text');
       expect(emptyTextData.text).toBe('');
@@ -290,12 +326,15 @@ describe('Psychological Components Integration', () => {
     it('should identify null text in psychological components', async () => {
       // Arrange
       const nullTextData = { text: null };
-      const component = dataRegistry.get('components', MOTIVATIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        MOTIVATIONS_COMPONENT_ID
+      );
 
       // Act & Assert
       expect(component).toBeDefined();
       expect(component.dataSchema.properties.text.type).toBe('string');
-      
+
       // Verify null data structure (should not match string type)
       expect(nullTextData.text).toBeNull();
       expect(typeof nullTextData.text).not.toBe('string');
@@ -304,12 +343,15 @@ describe('Psychological Components Integration', () => {
     it('should identify missing text field in psychological components', async () => {
       // Arrange
       const missingTextData = {};
-      const component = dataRegistry.get('components', MOTIVATIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        MOTIVATIONS_COMPONENT_ID
+      );
 
       // Act & Assert
       expect(component).toBeDefined();
       expect(component.dataSchema.required).toContain('text');
-      
+
       // Verify missing text field
       expect(missingTextData).not.toHaveProperty('text');
     });
@@ -320,12 +362,15 @@ describe('Psychological Components Integration', () => {
         text: 'Valid motivation text',
         extraField: 'This should not be allowed',
       };
-      const component = dataRegistry.get('components', MOTIVATIONS_COMPONENT_ID);
+      const component = dataRegistry.get(
+        'components',
+        MOTIVATIONS_COMPONENT_ID
+      );
 
       // Act & Assert
       expect(component).toBeDefined();
       expect(component.dataSchema.additionalProperties).toBe(false);
-      
+
       // Verify additional properties exist
       expect(extraPropsData).toHaveProperty('text');
       expect(extraPropsData).toHaveProperty('extraField');
@@ -341,17 +386,27 @@ describe('Psychological Components Integration', () => {
           id: 'optimist',
           state: {
             'core:actor': { name: 'Optimist' },
-            'core:motivations': { text: 'I believe in making the world better.' },
-            'core:internal_tensions': { text: 'Sometimes I wonder if I am being naive.' },
-            'core:dilemmas': { text: 'Can one person really make a difference?' },
+            'core:motivations': {
+              text: 'I believe in making the world better.',
+            },
+            'core:internal_tensions': {
+              text: 'Sometimes I wonder if I am being naive.',
+            },
+            'core:dilemmas': {
+              text: 'Can one person really make a difference?',
+            },
           },
         },
         {
           id: 'pessimist',
           state: {
             'core:actor': { name: 'Pessimist' },
-            'core:motivations': { text: 'I prepare for the worst to never be disappointed.' },
-            'core:internal_tensions': { text: 'I hate that I cannot hope anymore.' },
+            'core:motivations': {
+              text: 'I prepare for the worst to never be disappointed.',
+            },
+            'core:internal_tensions': {
+              text: 'I hate that I cannot hope anymore.',
+            },
             'core:dilemmas': { text: 'Is it better to expect nothing?' },
           },
         },
@@ -359,8 +414,12 @@ describe('Psychological Components Integration', () => {
           id: 'realist',
           state: {
             'core:actor': { name: 'Realist' },
-            'core:motivations': { text: 'I seek to see things as they truly are.' },
-            'core:internal_tensions': { text: 'Truth can be harsh and isolating.' },
+            'core:motivations': {
+              text: 'I seek to see things as they truly are.',
+            },
+            'core:internal_tensions': {
+              text: 'Truth can be harsh and isolating.',
+            },
             'core:dilemmas': { text: 'Should I soften the truth for others?' },
           },
         },
@@ -368,7 +427,7 @@ describe('Psychological Components Integration', () => {
 
       // Act & Assert
       expect(entities).toHaveLength(3);
-      
+
       entities.forEach((entity) => {
         expect(entity.state[MOTIVATIONS_COMPONENT_ID]).toBeDefined();
         expect(entity.state[MOTIVATIONS_COMPONENT_ID].text).toBeTruthy();
@@ -379,7 +438,9 @@ describe('Psychological Components Integration', () => {
       });
 
       // Verify each entity has unique psychological profiles
-      const motivationTexts = entities.map(e => e.state[MOTIVATIONS_COMPONENT_ID].text);
+      const motivationTexts = entities.map(
+        (e) => e.state[MOTIVATIONS_COMPONENT_ID].text
+      );
       const uniqueMotivations = new Set(motivationTexts);
       expect(uniqueMotivations.size).toBe(3); // All different
     });

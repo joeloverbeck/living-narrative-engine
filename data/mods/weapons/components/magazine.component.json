@@ -14,10 +14,7 @@
         "description": "Type of magazine compatible with this weapon (e.g., 'glock_17_mag', 'ar15_30rd', 'm1911_7rd')"
       }
     },
-    "required": [
-      "magazineInserted",
-      "magazineType"
-    ],
+    "required": ["magazineInserted", "magazineType"],
     "additionalProperties": false
   }
 }

@@ -192,7 +192,9 @@ describe('sex-breastplay:fondle_breasts_over_clothes action integration', () => 
 
   it('rule structure matches expected pattern', () => {
     // This test verifies the rule follows expected patterns through auto-loaded configuration
-    expect(testFixture.ruleFile.rule_id).toBe('handle_fondle_breasts_over_clothes');
+    expect(testFixture.ruleFile.rule_id).toBe(
+      'handle_fondle_breasts_over_clothes'
+    );
     expect(testFixture.ruleFile.event_type).toBe('core:attempt_action');
     expect(testFixture.conditionFile.id).toBe(
       'sex-breastplay:event-is-action-fondle-breasts-over-clothes'

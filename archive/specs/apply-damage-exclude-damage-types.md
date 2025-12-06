@@ -31,6 +31,7 @@ The `APPLY_DAMAGE` operation currently applies **all** damage entries from a wea
 **Example Scenario - The Problem:**
 
 Consider a weapon with multiple damage capabilities:
+
 ```json
 {
   "damage-types:damage_capabilities": {
@@ -48,17 +49,18 @@ The action `swing_at_target` represents a **swinging motion** which should reali
 
 ### Real-World Examples
 
-| Action | Physical Motion | Should Apply | Should NOT Apply |
-|--------|----------------|--------------|------------------|
-| `swing_at_target` | Swinging/cutting | slashing, fire, corruption | piercing |
-| `thrust_at_target` | Thrusting/stabbing | piercing, fire, corruption | slashing |
-| `bash_with_shield` | Blunt impact | bludgeoning | slashing, piercing |
+| Action             | Physical Motion    | Should Apply               | Should NOT Apply   |
+| ------------------ | ------------------ | -------------------------- | ------------------ |
+| `swing_at_target`  | Swinging/cutting   | slashing, fire, corruption | piercing           |
+| `thrust_at_target` | Thrusting/stabbing | piercing, fire, corruption | slashing           |
+| `bash_with_shield` | Blunt impact       | bludgeoning                | slashing, piercing |
 
 ### Current Code Analysis
 
 **File:** `data/mods/weapons/rules/handle_swing_at_target.rule.json`
 
 The rule currently iterates all damage entries without filtering:
+
 ```json
 {
   "type": "FOR_EACH",
@@ -175,9 +177,14 @@ if (excludeTypes) {
   // Resolve JSON Logic if needed
   if (typeof excludeTypes === 'object' && !Array.isArray(excludeTypes)) {
     try {
-      resolvedExcludeTypes = this.#jsonLogicService.evaluate(excludeTypes, executionContext);
+      resolvedExcludeTypes = this.#jsonLogicService.evaluate(
+        excludeTypes,
+        executionContext
+      );
     } catch (err) {
-      log.warn('APPLY_DAMAGE: Failed to evaluate exclude_damage_types', { error: err.message });
+      log.warn('APPLY_DAMAGE: Failed to evaluate exclude_damage_types', {
+        error: err.message,
+      });
       resolvedExcludeTypes = [];
     }
   }
@@ -186,9 +193,12 @@ if (excludeTypes) {
   if (Array.isArray(resolvedExcludeTypes) && resolvedExcludeTypes.length > 0) {
     const damageTypeName = resolvedDamageEntry.name;
     if (resolvedExcludeTypes.includes(damageTypeName)) {
-      log.debug(`APPLY_DAMAGE: Skipping excluded damage type '${damageTypeName}'`, {
-        excluded: resolvedExcludeTypes
-      });
+      log.debug(
+        `APPLY_DAMAGE: Skipping excluded damage type '${damageTypeName}'`,
+        {
+          excluded: resolvedExcludeTypes,
+        }
+      );
       return; // Early return - do not apply this damage
     }
   }
@@ -198,6 +208,7 @@ if (excludeTypes) {
 #### Insertion Point
 
 Insert between:
+
 - Line 280: `if (!resolvedDamageEntry.name) { ... }`
 - Line 281 (current 302): `// 3a. Resolve optional damage multiplier`
 
@@ -425,13 +436,13 @@ For complex scenarios where exclusions depend on context:
 
 ## Key Files Reference
 
-| File | Purpose | Change Type |
-|------|---------|-------------|
-| `data/schemas/operations/applyDamage.schema.json` | Operation schema | Add property |
-| `src/logic/operationHandlers/applyDamageHandler.js` | Handler implementation | Add exclusion logic |
-| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | Swing action rule | Add exclusion param |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | Unit tests | Add test cases |
-| `tests/integration/mods/weapons/applyDamageExclusionIntegration.test.js` | Integration tests | New file |
+| File                                                                     | Purpose                | Change Type         |
+| ------------------------------------------------------------------------ | ---------------------- | ------------------- |
+| `data/schemas/operations/applyDamage.schema.json`                        | Operation schema       | Add property        |
+| `src/logic/operationHandlers/applyDamageHandler.js`                      | Handler implementation | Add exclusion logic |
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json`               | Swing action rule      | Add exclusion param |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js`          | Unit tests             | Add test cases      |
+| `tests/integration/mods/weapons/applyDamageExclusionIntegration.test.js` | Integration tests      | New file            |
 
 ---
 

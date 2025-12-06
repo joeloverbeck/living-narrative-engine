@@ -182,14 +182,16 @@ class PlanningEffectsSimulator {
 
       case PlanningEffectsSimulator.MODIFICATION_MODES.INCREMENT: {
         // Default to 0 if current value is missing or non-numeric
-        const currentIncrement = typeof currentValue === 'number' ? currentValue : 0;
+        const currentIncrement =
+          typeof currentValue === 'number' ? currentValue : 0;
         result = currentIncrement + modValue;
         break;
       }
 
       case PlanningEffectsSimulator.MODIFICATION_MODES.DECREMENT: {
         // Default to 0 if current value is missing or non-numeric
-        const currentDecrement = typeof currentValue === 'number' ? currentValue : 0;
+        const currentDecrement =
+          typeof currentValue === 'number' ? currentValue : 0;
         result = currentDecrement - modValue;
         break;
       }
@@ -204,15 +206,12 @@ class PlanningEffectsSimulator {
     // Numeric validation checks (only for increment/decrement modes)
     // Check for NaN result
     if (Number.isNaN(result)) {
-      this.#logger.warn(
-        `Modification resulted in NaN, skipping modification`,
-        {
-          field: fieldName,
-          mode,
-          currentValue,
-          modValue,
-        }
-      );
+      this.#logger.warn(`Modification resulted in NaN, skipping modification`, {
+        field: fieldName,
+        mode,
+        currentValue,
+        modValue,
+      });
       return null;
     }
 
@@ -333,11 +332,14 @@ class PlanningEffectsSimulator {
             newState
           );
 
-          this.#logger.debug(`Effect ${i + 1}/${planningEffects.length} applied`, {
-            type: effect.type,
-            entity: resolvedParameters.entityId,
-            component: resolvedParameters.componentType,
-          });
+          this.#logger.debug(
+            `Effect ${i + 1}/${planningEffects.length} applied`,
+            {
+              type: effect.type,
+              entity: resolvedParameters.entityId,
+              component: resolvedParameters.componentType,
+            }
+          );
         } catch (err) {
           // Log warning but continue with remaining effects
           this.#logger.warn(
@@ -392,7 +394,9 @@ class PlanningEffectsSimulator {
     // Resolve entity reference (supports both entity_ref and entityId for backwards compatibility)
     const entityRef = parameters.entity_ref || parameters.entityId;
     if (!entityRef) {
-      throw new Error(`Critical: ${type} effect missing entity_ref or entityId parameter`);
+      throw new Error(
+        `Critical: ${type} effect missing entity_ref or entityId parameter`
+      );
     }
 
     // Preserve original entity reference for dual-format state sync
@@ -401,14 +405,14 @@ class PlanningEffectsSimulator {
     try {
       // Check if entityRef is a variable reference (contains dot or is a known variable)
       // Otherwise treat as literal entity ID (for testing and direct entity references)
-      const isReference = entityRef.includes('.') || context[entityRef] !== undefined;
+      const isReference =
+        entityRef.includes('.') || context[entityRef] !== undefined;
 
       resolved.entityId = isReference
-        ? this.#parameterResolutionService.resolve(
-            entityRef,
-            context,
-            { validateEntity: true, contextType: 'planning' }
-          )
+        ? this.#parameterResolutionService.resolve(entityRef, context, {
+            validateEntity: true,
+            contextType: 'planning',
+          })
         : entityRef; // Use literal entity ID directly
     } catch (err) {
       throw new Error(
@@ -426,10 +430,7 @@ class PlanningEffectsSimulator {
 
     // Component type is usually literal, but could be a reference
     resolved.componentType = componentType.includes('.')
-      ? this.#parameterResolutionService.resolve(
-          componentType,
-          context
-        )
+      ? this.#parameterResolutionService.resolve(componentType, context)
       : componentType;
 
     // Resolve operation-specific parameters
@@ -437,9 +438,11 @@ class PlanningEffectsSimulator {
       case PlanningEffectsSimulator.OPERATION_TYPES.ADD_COMPONENT:
         // Value can be object, boolean, or reference
         resolved.value =
-          typeof parameters.value === 'string' &&
-          parameters.value.includes('.')
-            ? this.#parameterResolutionService.resolve(parameters.value, context)
+          typeof parameters.value === 'string' && parameters.value.includes('.')
+            ? this.#parameterResolutionService.resolve(
+                parameters.value,
+                context
+              )
             : parameters.value !== undefined
               ? parameters.value
               : {};
@@ -454,9 +457,11 @@ class PlanningEffectsSimulator {
 
         // Value can be literal or reference
         resolved.value =
-          typeof parameters.value === 'string' &&
-          parameters.value.includes('.')
-            ? this.#parameterResolutionService.resolve(parameters.value, context)
+          typeof parameters.value === 'string' && parameters.value.includes('.')
+            ? this.#parameterResolutionService.resolve(
+                parameters.value,
+                context
+              )
             : parameters.value;
 
         // Type validation: Ensure modification value is numeric for increment/decrement modes
@@ -523,7 +528,8 @@ class PlanningEffectsSimulator {
           flatValue: state[flatKey],
           nestedValue: state[entityRef].components[componentType],
           flattenedValue: state[entityRef].components[flattenedComponentType],
-          areEqual: state[flatKey] === state[entityRef].components[componentType]
+          areEqual:
+            state[flatKey] === state[entityRef].components[componentType],
         }
       );
     } else {
@@ -555,7 +561,12 @@ class PlanningEffectsSimulator {
         state[stateKey] = parameters.value;
 
         // Sync to nested format for JSON Logic evaluation
-        this.#syncDualFormat(state, entityId, parameters.entityRef, componentType);
+        this.#syncDualFormat(
+          state,
+          entityId,
+          parameters.entityRef,
+          componentType
+        );
 
         this.#logger.debug(`Simulated ADD_COMPONENT: ${stateKey}`, {
           value: parameters.value,
@@ -639,13 +650,21 @@ class PlanningEffectsSimulator {
           state[baseKey] = { ...state[baseKey], [field]: newValue };
 
           // Sync to nested format for JSON Logic evaluation
-          this.#syncDualFormat(state, entityId, parameters.entityRef, componentType);
+          this.#syncDualFormat(
+            state,
+            entityId,
+            parameters.entityRef,
+            componentType
+          );
 
-          this.#logger.debug(`Simulated MODIFY_COMPONENT: ${baseKey}.${field}`, {
-            mode,
-            value,
-            result: state[baseKey][field],
-          });
+          this.#logger.debug(
+            `Simulated MODIFY_COMPONENT: ${baseKey}.${field}`,
+            {
+              mode,
+              value,
+              result: state[baseKey][field],
+            }
+          );
         }
         break;
       }

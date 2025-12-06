@@ -35,7 +35,9 @@ describe('AIPromptContentProvider.getPromptData basic scenarios', () => {
       formatNamespaceDisplayName: jest.fn((namespace) => namespace),
     };
     const characterDataXmlBuilder = {
-      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+      buildCharacterDataXml: jest.fn(
+        () => '<character_data>Mock XML</character_data>'
+      ),
     };
     const modActionMetadataProvider = {
       getMetadataForMod: jest.fn(() => null),

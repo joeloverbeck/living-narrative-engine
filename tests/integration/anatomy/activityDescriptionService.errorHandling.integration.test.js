@@ -2,7 +2,14 @@
  * @file Integration tests for ActivityDescriptionService error handling and configuration fallbacks
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
@@ -13,13 +20,23 @@ import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.j
 import ActivityContextBuildingSystem from '../../../src/anatomy/services/context/activityContextBuildingSystem.js';
 
 class FaultyActivityNLGSystem extends ActivityNLGSystem {
-  generateActivityPhrase(actorRef, activity, usePronounsForTarget = false, options = {}) {
+  generateActivityPhrase(
+    actorRef,
+    activity,
+    usePronounsForTarget = false,
+    options = {}
+  ) {
     const shouldThrow = activity?.activityMetadata?.triggerPhraseError;
     if (shouldThrow) {
       throw new Error('Simulated phrase failure');
     }
 
-    return super.generateActivityPhrase(actorRef, activity, usePronounsForTarget, options);
+    return super.generateActivityPhrase(
+      actorRef,
+      activity,
+      usePronounsForTarget,
+      options
+    );
   }
 
   buildRelatedActivityFragment(conjunction, phraseComponents, context) {
@@ -27,7 +44,11 @@ class FaultyActivityNLGSystem extends ActivityNLGSystem {
       throw new Error('Simulated fragment failure');
     }
 
-    return super.buildRelatedActivityFragment(conjunction, phraseComponents, context);
+    return super.buildRelatedActivityFragment(
+      conjunction,
+      phraseComponents,
+      context
+    );
   }
 }
 
@@ -176,7 +197,9 @@ describe('ActivityDescriptionService error handling integration', () => {
     const target = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'target-actor',
     });
-    entityManager.addComponent(target.id, 'core:name', { text: 'Target Actor' });
+    entityManager.addComponent(target.id, 'core:name', {
+      text: 'Target Actor',
+    });
 
     entityManager.addComponent(actor.id, 'test:blank_activity', {
       entityId: 'target-actor',
@@ -224,7 +247,8 @@ describe('ActivityDescriptionService error handling integration', () => {
     const eventBus = createEventBusStub();
     const service = createService({ eventBus });
 
-    const description = await service.generateActivityDescription('unknown-actor');
+    const description =
+      await service.generateActivityDescription('unknown-actor');
 
     expect(description).toBe('');
     expect(eventBus.dispatch).toHaveBeenCalledWith({
@@ -323,12 +347,16 @@ describe('ActivityDescriptionService error handling integration', () => {
 
   it('falls back to default formatting config when integration hook is missing', async () => {
     const formattingService = {};
-    const service = createService({ anatomyFormattingService: formattingService });
+    const service = createService({
+      anatomyFormattingService: formattingService,
+    });
 
     const actor = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'configless-actor',
     });
-    entityManager.addComponent(actor.id, 'core:name', { text: 'Configless Actor' });
+    entityManager.addComponent(actor.id, 'core:name', {
+      text: 'Configless Actor',
+    });
 
     entityManager.addComponent(actor.id, 'test:activity_state_generic', {
       entityId: 'configless-actor',
@@ -361,7 +389,9 @@ describe('ActivityDescriptionService error handling integration', () => {
         })),
     };
 
-    const service = createService({ anatomyFormattingService: formattingService });
+    const service = createService({
+      anatomyFormattingService: formattingService,
+    });
 
     const actor = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'cache-actor',
@@ -378,12 +408,16 @@ describe('ActivityDescriptionService error handling integration', () => {
       },
     });
 
-    const firstDescription = await service.generateActivityDescription(actor.id);
+    const firstDescription = await service.generateActivityDescription(
+      actor.id
+    );
     expect(firstDescription).toBe(
       'Activity: Cache Actor reflects on strategy.'
     );
 
-    const secondDescription = await service.generateActivityDescription(actor.id);
+    const secondDescription = await service.generateActivityDescription(
+      actor.id
+    );
     expect(secondDescription).toBe(
       'Activity: Cache Actor reflects on strategy.'
     );
@@ -440,12 +474,16 @@ describe('ActivityDescriptionService error handling integration', () => {
     const actor = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'filtered-actor',
     });
-    entityManager.addComponent(actor.id, 'core:name', { text: 'Filtered Actor' });
+    entityManager.addComponent(actor.id, 'core:name', {
+      text: 'Filtered Actor',
+    });
 
     const target = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'filtered-target',
     });
-    entityManager.addComponent(target.id, 'core:name', { text: 'Filtered Target' });
+    entityManager.addComponent(target.id, 'core:name', {
+      text: 'Filtered Target',
+    });
 
     entityManager.addComponent(actor.id, 'test:activity_state_generic', {
       entityId: target.id,
@@ -477,11 +515,9 @@ describe('ActivityDescriptionService error handling integration', () => {
       eventBus,
       metadataSystemFactory: (deps) => {
         const system = new ActivityMetadataCollectionSystem(deps);
-        jest
-          .spyOn(system, 'collectActivityMetadata')
-          .mockImplementation(() => {
-            throw new Error('metadata failure');
-          });
+        jest.spyOn(system, 'collectActivityMetadata').mockImplementation(() => {
+          throw new Error('metadata failure');
+        });
         return system;
       },
     });
@@ -525,7 +561,9 @@ describe('ActivityDescriptionService error handling integration', () => {
     const actor = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'null-group-actor',
     });
-    entityManager.addComponent(actor.id, 'core:name', { text: 'Null Group Actor' });
+    entityManager.addComponent(actor.id, 'core:name', {
+      text: 'Null Group Actor',
+    });
 
     const partner = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'null-group-partner',
@@ -548,7 +586,9 @@ describe('ActivityDescriptionService error handling integration', () => {
     const description = await service.generateActivityDescription(actor.id);
 
     expect(description).toContain('Activity:');
-    expect(description).toContain('Null Group Actor is training with Null Group Partner');
+    expect(description).toContain(
+      'Null Group Actor is training with Null Group Partner'
+    );
 
     service.destroy();
   });

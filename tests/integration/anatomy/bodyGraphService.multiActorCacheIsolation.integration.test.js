@@ -179,7 +179,10 @@ async function createEnvironment() {
   });
 
   const entityManager = new SimpleEntityManager();
-  const queryCache = new AnatomyQueryCache({ logger }, { maxSize: 32, ttl: 10_000 });
+  const queryCache = new AnatomyQueryCache(
+    { logger },
+    { maxSize: 32, ttl: 10_000 }
+  );
 
   const ids = {
     actorAlpha: 'actor:alpha',
@@ -228,7 +231,8 @@ describe('BodyGraphService multi-actor cache isolation integration', () => {
   });
 
   it('isolates caches per actor and only invalidates affected query results on detach', async () => {
-    const { service, entityManager, queryCache, safeEventDispatcher, ids } = env;
+    const { service, entityManager, queryCache, safeEventDispatcher, ids } =
+      env;
 
     const recordedEvents = [];
     const unsubscribe = safeEventDispatcher.subscribe(
@@ -300,12 +304,12 @@ describe('BodyGraphService multi-actor cache isolation integration', () => {
       ])
     );
 
-    expect(
-      service.hasPartWithComponent(alphaBody, 'equipment:glove')
-    ).toBe(true);
-    expect(
-      service.hasPartWithComponent(alphaBody, 'equipment:cloak')
-    ).toBe(false);
+    expect(service.hasPartWithComponent(alphaBody, 'equipment:glove')).toBe(
+      true
+    );
+    expect(service.hasPartWithComponent(alphaBody, 'equipment:cloak')).toBe(
+      false
+    );
 
     expect(
       service.hasPartWithComponentValue(
@@ -324,9 +328,7 @@ describe('BodyGraphService multi-actor cache isolation integration', () => {
       )
     ).toEqual({ found: false });
 
-    expect(
-      service.getPath(ids.leftHandAlpha, ids.rightArmAlpha)
-    ).toEqual([
+    expect(service.getPath(ids.leftHandAlpha, ids.rightArmAlpha)).toEqual([
       ids.leftHandAlpha,
       ids.leftArmAlpha,
       ids.torsoAlpha,
@@ -346,7 +348,9 @@ describe('BodyGraphService multi-actor cache isolation integration', () => {
       ])
     );
 
-    expect(queryCache.getCachedGetAllParts(ids.actorAlpha)).toBe(alphaPartsFirst);
+    expect(queryCache.getCachedGetAllParts(ids.actorAlpha)).toBe(
+      alphaPartsFirst
+    );
     expect(queryCache.getCachedGetAllParts(ids.actorBeta)).toBe(betaPartsFirst);
 
     const detachResult = await service.detachPart(ids.leftArmAlpha, {
@@ -363,7 +367,9 @@ describe('BodyGraphService multi-actor cache isolation integration', () => {
     expect(service.hasCache(ids.actorBeta)).toBe(true);
 
     expect(queryCache.getCachedGetAllParts(ids.actorAlpha)).toBeUndefined();
-    expect(queryCache.getCachedFindPartsByType(ids.actorAlpha, 'arm')).toBeUndefined();
+    expect(
+      queryCache.getCachedFindPartsByType(ids.actorAlpha, 'arm')
+    ).toBeUndefined();
     expect(queryCache.getCachedGetAllParts(ids.actorBeta)).toBe(betaPartsFirst);
 
     await service.buildAdjacencyCache(ids.actorAlpha);

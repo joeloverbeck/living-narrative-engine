@@ -186,27 +186,40 @@ describe('dependencyUtils helper coverage integration', () => {
       logger,
     });
 
-    expect(() =>
-      new SystemInitializer({
-        resolver: {},
-        logger,
-        validatedEventDispatcher: validatedDispatcher,
-        eventDispatchService,
-        initializationTag: 'startup',
-      })
-    ).toThrow("SystemInitializer requires a valid IServiceResolver with 'resolveByTag'.");
+    expect(
+      () =>
+        new SystemInitializer({
+          resolver: {},
+          logger,
+          validatedEventDispatcher: validatedDispatcher,
+          eventDispatchService,
+          initializationTag: 'startup',
+        })
+    ).toThrow(
+      "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
+    );
   });
 
   it('logs initialization validation failures through the provided logger', () => {
     const logger = new MemoryLogger('init:');
-    const safeDispatcher = { subscribe: () => {}, dispatch: () => {}, unsubscribe: () => {} };
+    const safeDispatcher = {
+      subscribe: () => {},
+      dispatch: () => {},
+      unsubscribe: () => {},
+    };
 
-    expect(() =>
-      new InitializationService({
-        log: { logger },
-        events: { validatedEventDispatcher: {}, safeEventDispatcher: safeDispatcher },
-      })
-    ).toThrow("InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.");
+    expect(
+      () =>
+        new InitializationService({
+          log: { logger },
+          events: {
+            validatedEventDispatcher: {},
+            safeEventDispatcher: safeDispatcher,
+          },
+        })
+    ).toThrow(
+      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
+    );
     const lastError = logger.errorMessages[logger.errorMessages.length - 1];
     expect(lastError.message).toContain('validatedEventDispatcher');
   });
@@ -251,7 +264,11 @@ describe('dependencyUtils helper coverage integration', () => {
 
     await initializer.initializeAll();
     expect(resolver.calls).toEqual(['startup']);
-    expect(logger.debugMessages.some((entry) => entry.message.includes('Starting initialization'))).toBe(true);
+    expect(
+      logger.debugMessages.some((entry) =>
+        entry.message.includes('Starting initialization')
+      )
+    ).toBe(true);
   });
 
   it('validates service dependencies and reports missing methods', () => {
@@ -266,7 +283,9 @@ describe('dependencyUtils helper coverage integration', () => {
         },
       })
     ).toThrow(InvalidArgumentError);
-    expect(logger.errorMessages.pop().message).toContain('Invalid or missing method');
+    expect(logger.errorMessages.pop().message).toContain(
+      'Invalid or missing method'
+    );
   });
 
   it('accepts valid service dependencies via setupService', () => {
@@ -322,7 +341,9 @@ describe('dependencyUtils helper coverage integration', () => {
           isFunction: true,
         },
       })
-    ).toThrow("Dependency 'AlertRouter: initializer' must be a function, but got object.");
+    ).toThrow(
+      "Dependency 'AlertRouter: initializer' must be a function, but got object."
+    );
     const errorLog = logger.errorMessages[logger.errorMessages.length - 1];
     expect(errorLog.message).toContain('must be a function');
   });
@@ -414,7 +435,9 @@ describe('dependencyUtils helper coverage integration', () => {
     const logger = new MemoryLogger('targets:');
     const builder = new MultiTargetEventBuilder({ logger });
 
-    expect(() => builder.setTargetsFromExtraction(null)).toThrow('Target extraction result is required');
+    expect(() => builder.setTargetsFromExtraction(null)).toThrow(
+      'Target extraction result is required'
+    );
     const errorLog = logger.errorMessages[logger.errorMessages.length - 1];
     expect(errorLog.message).toContain('Target extraction result is required');
   });

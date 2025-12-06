@@ -1,12 +1,12 @@
 /**
  * @file tests/e2e/anatomy/complexBlueprintProcessing.e2e.test.js
  * @description Blueprint Processing E2E Tests - Production Reality Validation
- * 
+ *
  * Tests blueprint processing scenarios that match actual production capabilities:
  * - Basic blueprint processing (simple 2-3 level hierarchies)
  * - Simple slot processing without advanced conflict resolution
  * - Equipment detection based on production socket ID heuristics
- * 
+ *
  * Updated to test current behavior rather than idealized features.
  */
 
@@ -133,7 +133,7 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
             text: { type: 'string' },
           },
         },
-      }
+      },
     });
 
     // Load required entity definitions
@@ -169,7 +169,7 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
     if (testBed?.cleanup) {
       testBed.cleanup();
     }
-    
+
     // Clear mocks
     jest.clearAllMocks();
   });
@@ -199,21 +199,25 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
 
       // === ACT ===
       const startTime = Date.now();
-      
+
       // Execute the complete pipeline through generateAnatomyIfNeeded
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
-      
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+
       const processingTime = Date.now() - startTime;
-      testBed.recordPerformanceMetrics('simpleGeneration', { 
+      testBed.recordPerformanceMetrics('simpleGeneration', {
         processingTime,
-        memoryUsage: process.memoryUsage().heapUsed 
+        memoryUsage: process.memoryUsage().heapUsed,
       });
 
       // === ASSERT ===
       expect(result).toBe(true);
 
       // Verify anatomy:body component was updated with structure
-      const anatomyData = entityManager.getComponentData(ownerId, ANATOMY_BODY_COMPONENT_ID);
+      const anatomyData = entityManager.getComponentData(
+        ownerId,
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(anatomyData).toBeDefined();
       expect(anatomyData.recipeId).toBe('test:simple_humanoid_recipe');
       expect(anatomyData.body).toBeDefined();
@@ -230,7 +234,8 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       expect(rootPartData.subType).toBe('torso');
 
       // Get all anatomy parts for validation
-      const allPartEntities = entityManager.getEntitiesWithComponent('anatomy:part');
+      const allPartEntities =
+        entityManager.getEntitiesWithComponent('anatomy:part');
       const anatomyParts = allPartEntities.filter((entity) => {
         const ownedBy = entity.getComponentData('core:owned_by');
         return ownedBy && ownedBy.ownerId === ownerId;
@@ -241,7 +246,7 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
 
       // Validate basic part types are created
       const partsByType = new Map();
-      anatomyParts.forEach(entity => {
+      anatomyParts.forEach((entity) => {
         const partData = entity.getComponentData('anatomy:part');
         if (!partsByType.has(partData.subType)) {
           partsByType.set(partData.subType, []);
@@ -264,24 +269,35 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       }
 
       // Validate processing performance is reasonable for simple hierarchy
-      const performanceValidation = testBed.validatePerformanceThresholds('simpleGeneration', {
-        maxProcessingTime: 2000, // 2 seconds max for simple hierarchy
-        maxMemoryUsage: 25 * 1024 * 1024 // 25MB max
-      });
+      const performanceValidation = testBed.validatePerformanceThresholds(
+        'simpleGeneration',
+        {
+          maxProcessingTime: 2000, // 2 seconds max for simple hierarchy
+          maxMemoryUsage: 25 * 1024 * 1024, // 25MB max
+        }
+      );
 
       if (!performanceValidation.success) {
-        console.warn('Performance thresholds exceeded:', performanceValidation.violations);
+        console.warn(
+          'Performance thresholds exceeded:',
+          performanceValidation.violations
+        );
       }
 
       // Basic structure validation
       const structureValidation = await testBed.validateSlotResolution(ownerId);
       expect(structureValidation.success).toBe(true);
-      
+
       if (structureValidation.errors.length > 0) {
-        console.error('Structure validation errors:', structureValidation.errors);
+        console.error(
+          'Structure validation errors:',
+          structureValidation.errors
+        );
       }
 
-      console.log(`✅ Simple blueprint processing completed successfully in ${processingTime}ms`);
+      console.log(
+        `✅ Simple blueprint processing completed successfully in ${processingTime}ms`
+      );
       console.log(`📊 Created ${anatomyParts.length} anatomy parts`);
     });
 
@@ -301,15 +317,19 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
         recipeId: 'test:simple_humanoid_recipe',
       });
 
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
       expect(result).toBe(true);
 
       // Verify basic blueprint processing worked
-      const anatomyData = entityManager.getComponentData(ownerId, ANATOMY_BODY_COMPONENT_ID);
+      const anatomyData = entityManager.getComponentData(
+        ownerId,
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(anatomyData.body).toBeDefined();
 
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const ownedParts = allParts.filter(e => {
+      const ownedParts = allParts.filter((e) => {
         const owned = e.getComponentData('core:owned_by');
         return owned && owned.ownerId === ownerId;
       });
@@ -317,9 +337,11 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       // Should have at least the root part
       expect(ownedParts.length).toBeGreaterThanOrEqual(1);
 
-      const partTypes = ownedParts.map(e => e.getComponentData('anatomy:part').subType);
+      const partTypes = ownedParts.map(
+        (e) => e.getComponentData('anatomy:part').subType
+      );
       expect(partTypes).toContain('torso'); // Root part
-      
+
       console.log('✅ Basic blueprint processing validated');
     });
   });
@@ -342,17 +364,21 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       });
 
       // === ACT ===
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
 
       // === ASSERT ===
       expect(result).toBe(true);
 
-      const anatomyData = entityManager.getComponentData(ownerId, ANATOMY_BODY_COMPONENT_ID);
+      const anatomyData = entityManager.getComponentData(
+        ownerId,
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(anatomyData.body).toBeDefined();
 
       // Get all created parts
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const ownedParts = allParts.filter(e => {
+      const ownedParts = allParts.filter((e) => {
         const owned = e.getComponentData('core:owned_by');
         return owned && owned.ownerId === ownerId;
       });
@@ -360,7 +386,9 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       // Basic validation - should have at least the root part
       expect(ownedParts.length).toBeGreaterThanOrEqual(1);
 
-      const partTypes = ownedParts.map(e => e.getComponentData('anatomy:part').subType);
+      const partTypes = ownedParts.map(
+        (e) => e.getComponentData('anatomy:part').subType
+      );
       expect(partTypes).toContain('torso'); // Root part should exist
 
       // Basic structure validation
@@ -387,12 +415,13 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
         recipeId: 'test:simple_recipe',
       });
 
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
       expect(result).toBe(true);
 
       // Get created parts
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const ownedParts = allParts.filter(e => {
+      const ownedParts = allParts.filter((e) => {
         const owned = e.getComponentData('core:owned_by');
         return owned && owned.ownerId === ownerId;
       });
@@ -400,11 +429,16 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       // Should have at least the root part
       expect(ownedParts.length).toBeGreaterThanOrEqual(1);
 
-      const partTypes = ownedParts.map(e => e.getComponentData('anatomy:part').subType);
+      const partTypes = ownedParts.map(
+        (e) => e.getComponentData('anatomy:part').subType
+      );
       expect(partTypes).toContain('torso'); // Root part
 
       // Basic structure validation
-      const anatomyData = entityManager.getComponentData(ownerId, ANATOMY_BODY_COMPONENT_ID);
+      const anatomyData = entityManager.getComponentData(
+        ownerId,
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(anatomyData.body.root).toBeDefined();
 
       console.log('✅ Basic anatomy structure integrity validated');
@@ -429,17 +463,21 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       });
 
       // === ACT ===
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
 
       // === ASSERT ===
       expect(result).toBe(true);
 
-      const anatomyData = entityManager.getComponentData(ownerId, ANATOMY_BODY_COMPONENT_ID);
+      const anatomyData = entityManager.getComponentData(
+        ownerId,
+        ANATOMY_BODY_COMPONENT_ID
+      );
       expect(anatomyData.body).toBeDefined();
 
       // Get all anatomy parts created
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const ownedParts = allParts.filter(e => {
+      const ownedParts = allParts.filter((e) => {
         const owned = e.getComponentData('core:owned_by');
         return owned && owned.ownerId === ownerId;
       });
@@ -447,7 +485,9 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       // Should have root + anatomy parts (not equipment parts)
       expect(ownedParts.length).toBeGreaterThanOrEqual(1);
 
-      const partTypes = ownedParts.map(e => e.getComponentData('anatomy:part').subType);
+      const partTypes = ownedParts.map(
+        (e) => e.getComponentData('anatomy:part').subType
+      );
       expect(partTypes).toContain('torso'); // Root part should exist
 
       // 'grip' socket should be detected as equipment and NOT create anatomy parts
@@ -459,7 +499,9 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       expect(rootEntity).toBeDefined();
 
       console.log('✅ Equipment detection heuristics working as expected');
-      console.log(`📊 Created ${ownedParts.length} anatomy parts, skipped equipment slots`);
+      console.log(
+        `📊 Created ${ownedParts.length} anatomy parts, skipped equipment slots`
+      );
     });
 
     it('should handle grip socket scenarios using production heuristics', async () => {
@@ -475,19 +517,19 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
                 socket: 'right_wrist',
                 requirements: {
                   partType: 'hand',
-                  components: ['anatomy:part']
-                }
+                  components: ['anatomy:part'],
+                },
               },
               // Equipment slot using 'grip' socket ID (detected by production heuristics)
               primary_weapon: {
                 socket: 'grip', // Production detects 'grip' as equipment socket
                 requirements: {
                   partType: 'weapon',
-                  components: ['equipment:weapon']
-                }
-              }
-            }
-          }
+                  components: ['equipment:weapon'],
+                },
+              },
+            },
+          },
         },
         entityDefinitions: {
           'test:weapon_handler_root': {
@@ -510,8 +552,8 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
                     max: 1,
                     nameTpl: 'Grip',
                     allowedTypes: ['weapon'],
-                  }
-                ]
+                  },
+                ],
               },
               'core:name': {
                 text: 'Weapon Handler Root',
@@ -526,18 +568,18 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
                 subType: 'hand',
               },
               'anatomy:sockets': {
-                sockets: []
+                sockets: [],
               },
               'core:name': {
                 text: 'Simple Hand',
               },
             },
-          }
+          },
         },
         recipe: {
           id: 'test:weapon_handler_recipe',
-          blueprintId: 'test:weapon_handler'
-        }
+          blueprintId: 'test:weapon_handler',
+        },
       };
 
       await testBed.loadComplexBlueprints(weaponSlotData);
@@ -553,12 +595,13 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
         recipeId: 'test:weapon_handler_recipe',
       });
 
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
       expect(result).toBe(true);
 
       // Get anatomy parts
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const ownedParts = allParts.filter(e => {
+      const ownedParts = allParts.filter((e) => {
         const owned = e.getComponentData('core:owned_by');
         return owned && owned.ownerId === ownerId;
       });
@@ -566,13 +609,17 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       // Should have at least the root part, possibly the hand
       expect(ownedParts.length).toBeGreaterThanOrEqual(1);
 
-      const partTypes = ownedParts.map(e => e.getComponentData('anatomy:part').subType);
+      const partTypes = ownedParts.map(
+        (e) => e.getComponentData('anatomy:part').subType
+      );
       expect(partTypes).toContain('weapon_master'); // Root
-      
+
       // 'grip' socket should be skipped by production heuristics
       expect(partTypes).not.toContain('weapon');
 
-      console.log(`✅ Production equipment detection validated - created ${ownedParts.length} anatomy parts`);
+      console.log(
+        `✅ Production equipment detection validated - created ${ownedParts.length} anatomy parts`
+      );
     });
 
     it('should validate equipment detection using production socket heuristics', async () => {
@@ -588,27 +635,27 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
                 socket: 'shoulder',
                 requirements: {
                   partType: 'body_part',
-                  components: ['anatomy:part']
-                }
+                  components: ['anatomy:part'],
+                },
               },
               // Equipment socket using production-detected ID - should be skipped
               equipment_grip: {
                 socket: 'grip', // Production detects 'grip' as equipment
                 requirements: {
                   partType: 'weapon',
-                  components: ['equipment:weapon']
-                }
+                  components: ['equipment:weapon'],
+                },
               },
               // Another equipment socket - should be skipped
               tool_slot: {
                 socket: 'tool', // Production detects 'tool' as equipment
                 requirements: {
                   partType: 'tool',
-                  components: ['equipment:tool']
-                }
-              }
-            }
-          }
+                  components: ['equipment:tool'],
+                },
+              },
+            },
+          },
         },
         entityDefinitions: {
           'test:production_root': {
@@ -637,8 +684,8 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
                     max: 1,
                     nameTpl: 'Tool Socket',
                     allowedTypes: ['tool'],
-                  }
-                ]
+                  },
+                ],
               },
               'core:name': {
                 text: 'Production Root',
@@ -653,18 +700,18 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
                 subType: 'body_part',
               },
               'anatomy:sockets': {
-                sockets: []
+                sockets: [],
               },
               'core:name': {
                 text: 'Body Part',
               },
             },
-          }
+          },
         },
         recipe: {
           id: 'test:production_equipment_recipe',
-          blueprintId: 'test:production_equipment'
-        }
+          blueprintId: 'test:production_equipment',
+        },
       };
 
       await testBed.loadComplexBlueprints(productionEquipmentData);
@@ -680,11 +727,12 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
         recipeId: 'test:production_equipment_recipe',
       });
 
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
+      const result =
+        await anatomyGenerationService.generateAnatomyIfNeeded(ownerId);
       expect(result).toBe(true);
 
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const ownedParts = allParts.filter(e => {
+      const ownedParts = allParts.filter((e) => {
         const owned = e.getComponentData('core:owned_by');
         return owned && owned.ownerId === ownerId;
       });
@@ -692,15 +740,21 @@ describe('Blueprint Processing E2E Tests - Production Reality Validation', () =>
       // Should have at least the root part, potentially body part if processing works
       expect(ownedParts.length).toBeGreaterThanOrEqual(1);
 
-      const partTypes = ownedParts.map(e => e.getComponentData('anatomy:part').subType);
+      const partTypes = ownedParts.map(
+        (e) => e.getComponentData('anatomy:part').subType
+      );
       expect(partTypes).toContain('production_base'); // Root
 
       // Equipment slots should NOT create anatomy parts (detected by socket ID heuristics)
       expect(partTypes).not.toContain('weapon');
       expect(partTypes).not.toContain('tool');
 
-      console.log(`✅ Production equipment detection validated - created ${ownedParts.length} anatomy parts`);
-      console.log(`📊 Skipped equipment sockets as expected by production logic`);
+      console.log(
+        `✅ Production equipment detection validated - created ${ownedParts.length} anatomy parts`
+      );
+      console.log(
+        `📊 Skipped equipment sockets as expected by production logic`
+      );
     });
   });
 });

@@ -48,8 +48,7 @@ export default class AnatomyValidationPhase extends LoaderPhase {
 
     this.#logger = logger;
     this.#blueprintRecipeValidationRule = blueprintRecipeValidationRule;
-    this.#componentExistenceValidationRule =
-      componentExistenceValidationRule;
+    this.#componentExistenceValidationRule = componentExistenceValidationRule;
     this.#propertySchemaValidationRule = propertySchemaValidationRule;
   }
 

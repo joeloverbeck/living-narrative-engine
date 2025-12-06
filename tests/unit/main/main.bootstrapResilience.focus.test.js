@@ -35,7 +35,8 @@ jest.mock('../../../src/bootstrapper/stages/index.js', () => ({
     mockStageImplementations.ensureCriticalDOMElementsStage(...args),
   setupDIContainerStage: (...args) =>
     mockStageImplementations.setupDIContainerStage(...args),
-  resolveLoggerStage: (...args) => mockStageImplementations.resolveLoggerStage(...args),
+  resolveLoggerStage: (...args) =>
+    mockStageImplementations.resolveLoggerStage(...args),
   initializeGlobalConfigStage: (...args) =>
     mockStageImplementations.initializeGlobalConfigStage(...args),
   initializeGameEngineStage: (...args) =>
@@ -51,8 +52,7 @@ jest.mock('../../../src/bootstrapper/stages/index.js', () => ({
 
 jest.mock('../../../src/utils/errorUtils.js', () => ({
   __esModule: true,
-  displayFatalStartupError: (...args) =>
-    mockDisplayFatalStartupError(...args),
+  displayFatalStartupError: (...args) => mockDisplayFatalStartupError(...args),
 }));
 
 jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
@@ -83,7 +83,9 @@ const originalAlert = global.alert;
  *
  */
 function resetStageMocks() {
-  Object.values(mockStageImplementations).forEach((mockFn) => mockFn.mockReset());
+  Object.values(mockStageImplementations).forEach((mockFn) =>
+    mockFn.mockReset()
+  );
 }
 
 /**
@@ -179,28 +181,36 @@ describe('main.js focused bootstrap coverage', () => {
     `;
 
     const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
-    const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
+    const gameEngine = {
+      showLoadGameUI: jest.fn().mockResolvedValue(undefined),
+    };
     const uiElements = makeUiElements();
 
-    mockStageImplementations.ensureCriticalDOMElementsStage.mockImplementation(async (_doc, factories) => {
-      const bootstrapper = factories.createUIBootstrapper();
-      expect(MockUIBootstrapper).toHaveBeenCalledTimes(1);
-      expect(bootstrapper).toBeInstanceOf(MockUIBootstrapper);
-      return { success: true, payload: uiElements };
-    });
+    mockStageImplementations.ensureCriticalDOMElementsStage.mockImplementation(
+      async (_doc, factories) => {
+        const bootstrapper = factories.createUIBootstrapper();
+        expect(MockUIBootstrapper).toHaveBeenCalledTimes(1);
+        expect(bootstrapper).toBeInstanceOf(MockUIBootstrapper);
+        return { success: true, payload: uiElements };
+      }
+    );
 
-    mockStageImplementations.setupDIContainerStage.mockImplementation(async (_elements, _configure, { createAppContainer }) => {
-      const container = createAppContainer();
-      expect(container).toBeInstanceOf(MockAppContainer);
-      return { success: true, payload: container };
-    });
+    mockStageImplementations.setupDIContainerStage.mockImplementation(
+      async (_elements, _configure, { createAppContainer }) => {
+        const container = createAppContainer();
+        expect(container).toBeInstanceOf(MockAppContainer);
+        return { success: true, payload: container };
+      }
+    );
 
     mockStageImplementations.resolveLoggerStage.mockResolvedValue({
       success: true,
       payload: { logger },
     });
 
-    mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({ success: true });
+    mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({
+      success: true,
+    });
 
     mockStageImplementations.initializeGameEngineStage.mockImplementation(
       async (_container, _logger, { createGameEngine }) => {
@@ -210,10 +220,18 @@ describe('main.js focused bootstrap coverage', () => {
       }
     );
 
-    mockStageImplementations.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
-    mockStageImplementations.startGameStage.mockResolvedValue({ success: true });
+    mockStageImplementations.initializeAuxiliaryServicesStage.mockResolvedValue(
+      { success: true }
+    );
+    mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStageImplementations.startGameStage.mockResolvedValue({
+      success: true,
+    });
 
     global.fetch.mockResolvedValue({
       ok: true,
@@ -228,11 +246,15 @@ describe('main.js focused bootstrap coverage', () => {
     await main.bootstrapApp();
     main.__TEST_ONLY__setCurrentPhaseForError('Post-Bootstrap Phase');
 
-    expect(mockStageImplementations.ensureCriticalDOMElementsStage).toHaveBeenCalledWith(
+    expect(
+      mockStageImplementations.ensureCriticalDOMElementsStage
+    ).toHaveBeenCalledWith(
       document,
       expect.objectContaining({ createUIBootstrapper: expect.any(Function) })
     );
-    expect(mockStageImplementations.setupGlobalEventListenersStage).toHaveBeenCalledTimes(1);
+    expect(
+      mockStageImplementations.setupGlobalEventListenersStage
+    ).toHaveBeenCalledTimes(1);
 
     await main.beginGame(true);
 
@@ -281,9 +303,17 @@ describe('main.js focused bootstrap coverage', () => {
       success: true,
       payload: uiElements,
     });
-    mockStageImplementations.setupDIContainerStage.mockResolvedValue({ success: true, payload: {} });
-    mockStageImplementations.resolveLoggerStage.mockResolvedValue({ success: true, payload: { logger } });
-    mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({ success: true });
+    mockStageImplementations.setupDIContainerStage.mockResolvedValue({
+      success: true,
+      payload: {},
+    });
+    mockStageImplementations.resolveLoggerStage.mockResolvedValue({
+      success: true,
+      payload: { logger },
+    });
+    mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({
+      success: true,
+    });
     mockStageImplementations.initializeGameEngineStage.mockResolvedValue({
       success: true,
       payload: {},
@@ -295,13 +325,21 @@ describe('main.js focused bootstrap coverage', () => {
       { service: 'MetricsCollector', error: new Error('metrics boom') },
     ];
 
-    mockStageImplementations.initializeAuxiliaryServicesStage.mockResolvedValue({
-      success: false,
-      error: stageError,
+    mockStageImplementations.initializeAuxiliaryServicesStage.mockResolvedValue(
+      {
+        success: false,
+        error: stageError,
+      }
+    );
+    mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
     });
-    mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
-    mockStageImplementations.startGameStage.mockResolvedValue({ success: true });
+    mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStageImplementations.startGameStage.mockResolvedValue({
+      success: true,
+    });
 
     global.fetch.mockResolvedValue({
       ok: false,
@@ -367,13 +405,16 @@ describe('main.js focused bootstrap coverage', () => {
       },
       {
         label: 'global configuration failure',
-        expectedPhase: 'Bootstrap Orchestration - Global Configuration Initialization',
+        expectedPhase:
+          'Bootstrap Orchestration - Global Configuration Initialization',
         expectLoggerError: true,
         applyFailure({ stageError }) {
-          mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({
-            success: false,
-            error: stageError,
-          });
+          mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue(
+            {
+              success: false,
+              error: stageError,
+            }
+          );
         },
       },
       {
@@ -392,10 +433,12 @@ describe('main.js focused bootstrap coverage', () => {
         expectedPhase: 'Bootstrap Orchestration - Menu Button Listeners Setup',
         expectLoggerError: true,
         applyFailure({ stageError }) {
-          mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({
-            success: false,
-            error: stageError,
-          });
+          mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue(
+            {
+              success: false,
+              error: stageError,
+            }
+          );
         },
       },
       {
@@ -403,59 +446,65 @@ describe('main.js focused bootstrap coverage', () => {
         expectedPhase: 'Bootstrap Orchestration - Global Event Listeners Setup',
         expectLoggerError: true,
         applyFailure({ stageError }) {
-          mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({
-            success: false,
-            error: stageError,
-          });
+          mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue(
+            {
+              success: false,
+              error: stageError,
+            }
+          );
         },
       },
     ];
 
-    it.each(failureScenarios)('handles %s', async ({
-      expectedPhase,
-      expectLoggerError,
-      applyFailure,
-    }) => {
-      document.body.innerHTML = `
+    it.each(failureScenarios)(
+      'handles %s',
+      async ({ expectedPhase, expectLoggerError, applyFailure }) => {
+        document.body.innerHTML = `
         <div id="outputDiv"></div>
         <div id="error-output"></div>
         <input id="speech-input" />
         <h1>Title</h1>
       `;
 
-      const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
-      const gameEngine = {};
-      const uiElements = makeUiElements();
-      configureHappyPathStages({ uiElements, logger, gameEngine });
-      const stageError = new Error('Stage failure');
-      applyFailure({ stageError, logger, gameEngine });
+        const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
+        const gameEngine = {};
+        const uiElements = makeUiElements();
+        configureHappyPathStages({ uiElements, logger, gameEngine });
+        const stageError = new Error('Stage failure');
+        applyFailure({ stageError, logger, gameEngine });
 
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ startWorld: 'alpha' }),
-      });
+        global.fetch.mockResolvedValue({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ startWorld: 'alpha' }),
+        });
 
-      let main;
-      await jest.isolateModulesAsync(async () => {
-        main = await import('../../../src/main.js');
-      });
+        let main;
+        await jest.isolateModulesAsync(async () => {
+          main = await import('../../../src/main.js');
+        });
 
-      await main.bootstrapApp();
+        await main.bootstrapApp();
 
-      expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-      const [, errorDetails] = mockDisplayFatalStartupError.mock.calls[0];
-      expect(errorDetails.phase).toBe(expectedPhase);
+        expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
+        const [, errorDetails] = mockDisplayFatalStartupError.mock.calls[0];
+        expect(errorDetails.phase).toBe(expectedPhase);
 
-      const expectedLogMessage =
-        `main.js: Bootstrap error caught in main orchestrator. Error Phase: "${expectedPhase}"`;
+        const expectedLogMessage = `main.js: Bootstrap error caught in main orchestrator. Error Phase: "${expectedPhase}"`;
 
-      if (expectLoggerError) {
-        expect(logger.error).toHaveBeenCalledWith(expectedLogMessage, stageError);
-      } else {
-        expect(logger.error).not.toHaveBeenCalled();
-        expect(console.error).toHaveBeenCalledWith(expectedLogMessage, stageError);
+        if (expectLoggerError) {
+          expect(logger.error).toHaveBeenCalledWith(
+            expectedLogMessage,
+            stageError
+          );
+        } else {
+          expect(logger.error).not.toHaveBeenCalled();
+          expect(console.error).toHaveBeenCalledWith(
+            expectedLogMessage,
+            stageError
+          );
+        }
       }
-    });
+    );
 
     it('falls back to application runtime phase when current phase is cleared', async () => {
       document.body.innerHTML = `
@@ -515,10 +564,12 @@ describe('main.js focused bootstrap coverage', () => {
       const stageError = new Error('logger resolution failure');
 
       let mainModule;
-      mockStageImplementations.resolveLoggerStage.mockImplementation(async () => {
-        mainModule.__TEST_ONLY__setCurrentPhaseForError(null);
-        return { success: false, error: stageError };
-      });
+      mockStageImplementations.resolveLoggerStage.mockImplementation(
+        async () => {
+          mainModule.__TEST_ONLY__setCurrentPhaseForError(null);
+          return { success: false, error: stageError };
+        }
+      );
 
       global.fetch.mockResolvedValue({
         ok: true,
@@ -590,7 +641,13 @@ describe('main.js focused bootstrap coverage', () => {
       const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
       const gameEngine = {};
       configureHappyPathStages({
-        uiElements: { outputDiv: null, errorDiv: null, inputElement: null, titleElement: null, document },
+        uiElements: {
+          outputDiv: null,
+          errorDiv: null,
+          inputElement: null,
+          titleElement: null,
+          document,
+        },
         logger,
         gameEngine,
       });
@@ -636,7 +693,9 @@ describe('main.js focused bootstrap coverage', () => {
 
     mockStageImplementations.ensureCriticalDOMElementsStage.mockResolvedValue({
       success: false,
-      error: Object.assign(new Error('ui missing'), { phase: 'UI Element Validation' }),
+      error: Object.assign(new Error('ui missing'), {
+        phase: 'UI Element Validation',
+      }),
     });
 
     global.fetch.mockResolvedValue({
@@ -660,8 +719,12 @@ describe('main.js focused bootstrap coverage', () => {
     const [fallbackElements, errorDetails, , domHelpers] =
       mockDisplayFatalStartupError.mock.calls[0];
     expect(errorDetails.phase).toBe('UI Element Validation');
-    expect(fallbackElements.outputDiv).toBe(document.getElementById('outputDiv'));
-    expect(fallbackElements.errorDiv).toBe(document.getElementById('error-output'));
+    expect(fallbackElements.outputDiv).toBe(
+      document.getElementById('outputDiv')
+    );
+    expect(fallbackElements.errorDiv).toBe(
+      document.getElementById('error-output')
+    );
     expect(fallbackElements.inputElement).toBe(
       document.getElementById('speech-input')
     );
@@ -686,7 +749,8 @@ describe('main.js focused bootstrap coverage', () => {
       'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [, errorDetails, , domHelpers] = mockDisplayFatalStartupError.mock.calls[0];
+    const [, errorDetails, , domHelpers] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(errorDetails.phase).toBe('Start Game');
 
     const helperNode = domHelpers.createElement('article');
@@ -713,19 +777,36 @@ describe('main.js focused bootstrap coverage', () => {
       success: true,
       payload: uiElements,
     });
-    mockStageImplementations.setupDIContainerStage.mockResolvedValue({ success: true, payload: {} });
-    mockStageImplementations.resolveLoggerStage.mockResolvedValue({ success: true, payload: { logger } });
-    mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({ success: true });
+    mockStageImplementations.setupDIContainerStage.mockResolvedValue({
+      success: true,
+      payload: {},
+    });
+    mockStageImplementations.resolveLoggerStage.mockResolvedValue({
+      success: true,
+      payload: { logger },
+    });
+    mockStageImplementations.initializeGlobalConfigStage.mockResolvedValue({
+      success: true,
+    });
     mockStageImplementations.initializeGameEngineStage.mockResolvedValue({
       success: true,
       payload: gameEngine,
     });
-    mockStageImplementations.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+    mockStageImplementations.initializeAuxiliaryServicesStage.mockResolvedValue(
+      { success: true }
+    );
+    mockStageImplementations.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStageImplementations.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
 
     const startError = new Error('could not start');
-    mockStageImplementations.startGameStage.mockResolvedValue({ success: false, error: startError });
+    mockStageImplementations.startGameStage.mockResolvedValue({
+      success: false,
+      error: startError,
+    });
 
     global.fetch.mockResolvedValue({
       ok: true,
@@ -748,7 +829,8 @@ describe('main.js focused bootstrap coverage', () => {
       logger
     );
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [, errorDetails, , domHelpers] = mockDisplayFatalStartupError.mock.calls[0];
+    const [, errorDetails, , domHelpers] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(errorDetails.phase).toBe('Start Game');
     expect(errorDetails.errorObject).toBe(startError);
 

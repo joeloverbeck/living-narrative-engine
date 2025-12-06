@@ -58,7 +58,8 @@
 
 /* Pulse animation for dying state */
 @keyframes pulse-dying {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

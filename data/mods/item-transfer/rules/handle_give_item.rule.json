@@ -21,10 +21,7 @@
       "comment": "Branch based on capacity validation",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.capacityCheck.valid" },
-            false
-          ]
+          "==": [{ "var": "context.capacityCheck.valid" }, false]
         },
         "then_actions": [
           {

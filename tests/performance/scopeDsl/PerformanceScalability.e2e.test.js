@@ -133,19 +133,22 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
       // Act - Measure resolution performance with robust statistical sampling
       let result;
-      const performanceStats = await measurePerformanceRobust(async () => {
-        result = await ScopeTestUtilities.resolveScopeE2E(
-          'test:high_level_actors',
-          testActor,
-          gameContext,
-          { scopeRegistry, scopeEngine }
-        );
-        return result;
-      }, {
-        warmupRuns: 2,
-        measurementRuns: 5,
-        operationName: `500-entity high-level actors filter`
-      });
+      const performanceStats = await measurePerformanceRobust(
+        async () => {
+          result = await ScopeTestUtilities.resolveScopeE2E(
+            'test:high_level_actors',
+            testActor,
+            gameContext,
+            { scopeRegistry, scopeEngine }
+          );
+          return result;
+        },
+        {
+          warmupRuns: 2,
+          measurementRuns: 5,
+          operationName: `500-entity high-level actors filter`,
+        }
+      );
 
       // Record metrics (use median for consistency)
       performanceMetrics.resolutionTimes.push(performanceStats.median);
@@ -153,7 +156,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       // Assert - Verify performance targets using median and environment-aware threshold
       const baseThreshold = 200; // Base threshold for local development
       const threshold = getPerformanceThreshold(baseThreshold, 1.5); // 1.5x for CI
-      
+
       expect(performanceStats.median).toBeLessThan(threshold);
       expect(result).toBeInstanceOf(Set);
       expect(result.size).toBeGreaterThan(0);
@@ -166,7 +169,8 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         meanTime: `${performanceStats.mean.toFixed(2)}ms`,
         threshold: `${threshold.toFixed(2)}ms`,
         resultCount: result.size,
-        performanceStatus: performanceStats.median < threshold ? 'PASS' : 'FAIL'
+        performanceStatus:
+          performanceStats.median < threshold ? 'PASS' : 'FAIL',
       });
     });
 
@@ -197,26 +201,29 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
       // Act - Measure resolution with very large dataset using robust statistical sampling
       let result;
-      const performanceStats = await measurePerformanceRobust(async () => {
-        result = await ScopeTestUtilities.resolveScopeE2E(
-          'test:complex_filter',
-          testActor,
-          gameContext,
-          { scopeRegistry, scopeEngine }
-        );
-        return result;
-      }, {
-        warmupRuns: 2,
-        measurementRuns: 5,
-        operationName: `2000-entity complex 3-condition filter`
-      });
+      const performanceStats = await measurePerformanceRobust(
+        async () => {
+          result = await ScopeTestUtilities.resolveScopeE2E(
+            'test:complex_filter',
+            testActor,
+            gameContext,
+            { scopeRegistry, scopeEngine }
+          );
+          return result;
+        },
+        {
+          warmupRuns: 2,
+          measurementRuns: 5,
+          operationName: `2000-entity complex 3-condition filter`,
+        }
+      );
 
       // Assert - Verify graceful handling using median and environment-aware threshold
       // 2000 entities with complex 3-condition filter
       // Base threshold: 800ms (proportionally reduced from original 4500ms for 10k entities)
       const baseThreshold = 800; // Base threshold for local development
       const threshold = getPerformanceThreshold(baseThreshold, 1.5); // 1.5x for CI (1200ms)
-      
+
       expect(performanceStats.median).toBeLessThan(threshold);
       expect(result).toBeInstanceOf(Set);
 
@@ -227,8 +234,9 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
         meanTime: `${performanceStats.mean.toFixed(2)}ms`,
         threshold: `${threshold.toFixed(2)}ms`,
         resultCount: result.size,
-        performanceStatus: performanceStats.median < threshold ? 'PASS' : 'FAIL',
-        variabilityPercent: `${((performanceStats.max - performanceStats.min) / performanceStats.mean * 100).toFixed(1)}%`
+        performanceStatus:
+          performanceStats.median < threshold ? 'PASS' : 'FAIL',
+        variabilityPercent: `${(((performanceStats.max - performanceStats.min) / performanceStats.mean) * 100).toFixed(1)}%`,
       });
     });
   });
@@ -548,7 +556,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     const {
       warmupRuns = 2,
       measurementRuns = 5,
-      operationName = 'operation'
+      operationName = 'operation',
     } = options;
 
     // Warm-up runs to establish JIT optimization and cache population
@@ -558,7 +566,9 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     }
 
     // Measurement runs with timing
-    logger.info(`Starting ${measurementRuns} measurement runs for ${operationName}`);
+    logger.info(
+      `Starting ${measurementRuns} measurement runs for ${operationName}`
+    );
     const times = [];
     for (let i = 0; i < measurementRuns; i++) {
       const startTime = performance.now();
@@ -580,8 +590,8 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       mean: `${mean.toFixed(2)}ms`,
       min: `${min.toFixed(2)}ms`,
       max: `${max.toFixed(2)}ms`,
-      variance: `${((max - min) / mean * 100).toFixed(1)}%`,
-      allTimes: times.map(t => `${t.toFixed(2)}ms`)
+      variance: `${(((max - min) / mean) * 100).toFixed(1)}%`,
+      allTimes: times.map((t) => `${t.toFixed(2)}ms`),
     });
 
     return { median, mean, min, max, all: times };
@@ -596,14 +606,15 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
    * @returns {number} Adjusted threshold
    */
   function getPerformanceThreshold(baseThreshold, ciMultiplier = 1.5) {
-    const isCI = process.env.CI || process.env.GITHUB_ACTIONS || process.env.JENKINS_URL;
+    const isCI =
+      process.env.CI || process.env.GITHUB_ACTIONS || process.env.JENKINS_URL;
     const threshold = isCI ? baseThreshold * ciMultiplier : baseThreshold;
-    
+
     logger.info('Performance threshold calculation', {
       baseThreshold: `${baseThreshold}ms`,
       isCI,
       ciMultiplier,
-      finalThreshold: `${threshold}ms`
+      finalThreshold: `${threshold}ms`,
     });
 
     return threshold;
@@ -679,5 +690,4 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
     return { actors: [{ id: actorDef.id }] };
   }
-
 });

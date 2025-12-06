@@ -80,7 +80,10 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       ];
 
       // This should NOT throw TypeError
-      const result = await adapter.batchAddComponentsOptimized(componentSpecs, true);
+      const result = await adapter.batchAddComponentsOptimized(
+        componentSpecs,
+        true
+      );
 
       // Verify the method executed successfully
       expect(result).toBeDefined();
@@ -89,7 +92,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       // Verify the component was added via the adapter
       const itemAfter = adapter.getEntityInstance('test-item');
       expect(itemAfter.components['core:position']).toBeDefined();
-      expect(itemAfter.components['core:position'].locationId).toBe('test-location');
+      expect(itemAfter.components['core:position'].locationId).toBe(
+        'test-location'
+      );
     });
 
     it('should successfully call batchAddComponentsOptimized without TypeError', async () => {
@@ -98,7 +103,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .asRoom('Patient Room')
         .build();
 
-      const actorBuilder = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
+      const actorBuilder = new ModEntityBuilder(
+        'p_erotica:jon_urena_daydream_instance'
+      )
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
@@ -110,7 +117,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const actor = actorBuilder.build();
       const handEntities = actorBuilder.getHandEntities();
 
-      const item = new ModEntityBuilder('p_erotica:yellowed_goodbye_letter_instance')
+      const item = new ModEntityBuilder(
+        'p_erotica:yellowed_goodbye_letter_instance'
+      )
         .withName('yellowed goodbye letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
@@ -152,7 +161,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .asRoom('Patient Room')
         .build();
 
-      const actorBuilder = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
+      const actorBuilder = new ModEntityBuilder(
+        'p_erotica:jon_urena_daydream_instance'
+      )
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
@@ -164,7 +175,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const actor = actorBuilder.build();
       const handEntities = actorBuilder.getHandEntities();
 
-      const item = new ModEntityBuilder('p_erotica:yellowed_goodbye_letter_instance')
+      const item = new ModEntityBuilder(
+        'p_erotica:yellowed_goodbye_letter_instance'
+      )
         .withName('yellowed goodbye letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})
@@ -186,15 +199,21 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
 
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
-      expect(perceptibleEvent.payload.locationId).toBe('p_erotica:patient_room_instance');
-      expect(perceptibleEvent.payload.actorId).toBe('p_erotica:jon_urena_daydream_instance');
+      expect(perceptibleEvent.payload.locationId).toBe(
+        'p_erotica:patient_room_instance'
+      );
+      expect(perceptibleEvent.payload.actorId).toBe(
+        'p_erotica:jon_urena_daydream_instance'
+      );
       expect(perceptibleEvent.payload.targetId).toBe(
         'p_erotica:yellowed_goodbye_letter_instance'
       );
       expect(perceptibleEvent.payload.involvedEntities).toEqual([]);
       expect(perceptibleEvent.payload.descriptionText).toContain('Jon Ureña');
       expect(perceptibleEvent.payload.descriptionText).toContain('drops');
-      expect(perceptibleEvent.payload.descriptionText).toContain('yellowed goodbye letter');
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        'yellowed goodbye letter'
+      );
     });
 
     it('should not emit validation warnings for item_dropped perceptionType', async () => {
@@ -249,7 +268,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         .asRoom('Patient Room')
         .build();
 
-      const actorBuilder = new ModEntityBuilder('p_erotica:jon_urena_daydream_instance')
+      const actorBuilder = new ModEntityBuilder(
+        'p_erotica:jon_urena_daydream_instance'
+      )
         .withName('Jon Ureña')
         .atLocation('p_erotica:patient_room_instance')
         .asActor()
@@ -261,7 +282,9 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       const actor = actorBuilder.build();
       const handEntities = actorBuilder.getHandEntities();
 
-      const item = new ModEntityBuilder('p_erotica:yellowed_goodbye_letter_instance')
+      const item = new ModEntityBuilder(
+        'p_erotica:yellowed_goodbye_letter_instance'
+      )
         .withName('yellowed goodbye letter')
         .withComponent('items:item', {})
         .withComponent('items:portable', {})

@@ -202,7 +202,9 @@ describe('SpatialIndexSynchronizer integration', () => {
       instanceId: 'entity-alpha',
     });
 
-    expect(getEntityIdsAtLocation(environment.spatialIndex, 'alpha')).toEqual([]);
+    expect(getEntityIdsAtLocation(environment.spatialIndex, 'alpha')).toEqual(
+      []
+    );
     expect(
       logIncludes(
         environment.logger.debugEntries,
@@ -282,14 +284,19 @@ describe('SpatialIndexSynchronizer integration', () => {
       },
     };
 
-    const environment = createEnvironment({ entityManager: erroringEntityManager });
+    const environment = createEnvironment({
+      entityManager: erroringEntityManager,
+    });
 
     expect(
-      environment.logger.errorEntries.some(([message, error]) =>
-        typeof message === 'string' &&
-        message.includes('Failed to bootstrap spatial index from existing entities') &&
-        error instanceof Error &&
-        error.message === 'bootstrap-failure'
+      environment.logger.errorEntries.some(
+        ([message, error]) =>
+          typeof message === 'string' &&
+          message.includes(
+            'Failed to bootstrap spatial index from existing entities'
+          ) &&
+          error instanceof Error &&
+          error.message === 'bootstrap-failure'
       )
     ).toBe(true);
   });
@@ -450,7 +457,9 @@ describe('SpatialIndexSynchronizer integration', () => {
       oldLocationId: 'alpha',
       newLocationId: 'beta',
     });
-    expect(getEntityIdsAtLocation(environment.spatialIndex, 'alpha')).toEqual([]);
+    expect(getEntityIdsAtLocation(environment.spatialIndex, 'alpha')).toEqual(
+      []
+    );
     expect(getEntityIdsAtLocation(environment.spatialIndex, 'beta')).toEqual([
       'entity-move',
     ]);
@@ -470,6 +479,8 @@ describe('SpatialIndexSynchronizer integration', () => {
       oldComponentData: { locationId: 'gamma' },
     });
 
-    expect(getEntityIdsAtLocation(environment.spatialIndex, 'gamma')).toEqual([]);
+    expect(getEntityIdsAtLocation(environment.spatialIndex, 'gamma')).toEqual(
+      []
+    );
   });
 });

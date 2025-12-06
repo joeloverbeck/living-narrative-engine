@@ -161,7 +161,10 @@ class SocketGenerator {
     );
 
     // Warn about custom scheme without positions (helpful for mod developers)
-    if (orientationScheme === 'custom' && (!positions || positions.length === 0)) {
+    if (
+      orientationScheme === 'custom' &&
+      (!positions || positions.length === 0)
+    ) {
       this.#logger.warn(
         'SocketGenerator: Custom orientation scheme used without positions array. ' +
           'Falling back to indexed positions. Provide positions array for proper naming.'

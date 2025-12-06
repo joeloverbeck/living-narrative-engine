@@ -72,7 +72,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -168,12 +169,12 @@ describe('BodyGraphService dependency validation', () => {
     const logger = createLogger();
     const dispatcher = new RecordingDispatcher();
 
-    expect(() => new BodyGraphService({ logger, eventDispatcher: dispatcher })).toThrow(
-      InvalidArgumentError
-    );
-    expect(() => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })).toThrow(
-      InvalidArgumentError
-    );
+    expect(
+      () => new BodyGraphService({ logger, eventDispatcher: dispatcher })
+    ).toThrow(InvalidArgumentError);
+    expect(
+      () => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })
+    ).toThrow(InvalidArgumentError);
     expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
       InvalidArgumentError
     );
@@ -250,17 +251,25 @@ describe('BodyGraphService cache validation integration', () => {
   });
 
   it('detaches parts without a resolvable anatomy root', async () => {
-    const result = await service.detachPart('floating', { cascade: false, reason: 'cleanup' });
+    const result = await service.detachPart('floating', {
+      cascade: false,
+      reason: 'cleanup',
+    });
 
     expect(result).toEqual({
       detached: ['floating'],
       parentId: null,
       socketId: 'levitate',
     });
-    expect(entityManager.getComponentData('floating', 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData('floating', 'anatomy:joint')
+    ).toBeNull();
     expect(dispatcher.events.at(-1)).toMatchObject({
       eventId: expect.any(String),
-      payload: expect.objectContaining({ detachedEntityId: 'floating', reason: 'cleanup' }),
+      payload: expect.objectContaining({
+        detachedEntityId: 'floating',
+        reason: 'cleanup',
+      }),
     });
   });
 });

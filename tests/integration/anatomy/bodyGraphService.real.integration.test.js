@@ -216,7 +216,13 @@ describe('BodyGraphService real module integration', () => {
       'actor-1',
     ]);
     expect(service.getAllDescendants('torso')).toEqual(
-      expect.arrayContaining(['arm-left', 'hand-left', 'leg-left', 'foot-left', 'heart'])
+      expect.arrayContaining([
+        'arm-left',
+        'hand-left',
+        'leg-left',
+        'foot-left',
+        'heart',
+      ])
     );
     expect(service.getPath('hand-left', 'foot-left')).toEqual([
       'hand-left',
@@ -251,7 +257,9 @@ describe('BodyGraphService real module integration', () => {
       parentId: 'torso',
       socketId: 'arm-left-socket',
     });
-    expect(entityManager.getComponentData('arm-left', 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData('arm-left', 'anatomy:joint')
+    ).toBeNull();
     expect(service.hasCache('actor-1')).toBe(false);
     expect(eventDispatcher.events).toHaveLength(1);
     const [event] = eventDispatcher.events;
@@ -264,7 +272,9 @@ describe('BodyGraphService real module integration', () => {
         reason: 'injury',
       })
     );
-    expect(logger.messages('info').some((msg) => msg.includes('Detached 2 entities'))).toBe(true);
+    expect(
+      logger.messages('info').some((msg) => msg.includes('Detached 2 entities'))
+    ).toBe(true);
   });
 
   it('supports non-cascading detach operations', async () => {
@@ -279,7 +289,9 @@ describe('BodyGraphService real module integration', () => {
       parentId: 'torso',
       socketId: 'leg-left-socket',
     });
-    expect(entityManager.getComponentData('leg-left', 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData('leg-left', 'anatomy:joint')
+    ).toBeNull();
     expect(eventDispatcher.events).toHaveLength(1);
     expect(eventDispatcher.events[0].payload.detachedCount).toBe(1);
   });
@@ -299,7 +311,9 @@ describe('BodyGraphService real module integration', () => {
       parentId: 'torso',
       socketId: 'arm-right-socket',
     });
-    entityManager.setComponent('hand-right', 'anatomy:part', { subType: 'hand' });
+    entityManager.setComponent('hand-right', 'anatomy:part', {
+      subType: 'hand',
+    });
     entityManager.setComponent('hand-right', 'anatomy:joint', {
       parentId: 'arm-right',
       socketId: 'hand-right-socket',
@@ -311,7 +325,10 @@ describe('BodyGraphService real module integration', () => {
   });
 
   it('caches all parts and prefers actor cache roots', async () => {
-    const bodyComponent = entityManager.getComponentData('actor-1', 'anatomy:body');
+    const bodyComponent = entityManager.getComponentData(
+      'actor-1',
+      'anatomy:body'
+    );
     expect(service.getAllParts(null)).toEqual([]);
     expect(service.getAllParts({ body: {} })).toEqual([]);
 
@@ -331,7 +348,14 @@ describe('BodyGraphService real module integration', () => {
 
     const blueprintParts = service.getAllParts({ body: { root: 'torso' } });
     expect(blueprintParts).toEqual(
-      expect.arrayContaining(['torso', 'arm-left', 'hand-left', 'leg-left', 'foot-left', 'heart'])
+      expect.arrayContaining([
+        'torso',
+        'arm-left',
+        'hand-left',
+        'leg-left',
+        'foot-left',
+        'heart',
+      ])
     );
 
     entityManager.setComponent('heart', 'anatomy:joint', {
@@ -346,9 +370,13 @@ describe('BodyGraphService real module integration', () => {
     const cachedAgain = service.getAllParts({ body: { root: 'torso' } });
     expect(cachedAgain).toEqual(cached);
     expect(
-      logger.messages('info').some((msg) =>
-        typeof msg === 'string' && msg.includes("CACHE HIT for cache root 'torso'")
-      )
+      logger
+        .messages('debug')
+        .some(
+          (msg) =>
+            typeof msg === 'string' &&
+            msg.includes("CACHE HIT for cache root 'torso'")
+        )
     ).toBe(true);
 
     await service.detachPart('heart');
@@ -359,11 +387,18 @@ describe('BodyGraphService real module integration', () => {
 
   it('detects components and nested values across the anatomy', async () => {
     await service.buildAdjacencyCache('actor-1');
-    const bodyComponent = entityManager.getComponentData('actor-1', 'anatomy:body');
-    expect(service.hasPartWithComponent(bodyComponent, 'anatomy:tag')).toBe(true);
+    const bodyComponent = entityManager.getComponentData(
+      'actor-1',
+      'anatomy:body'
+    );
+    expect(service.hasPartWithComponent(bodyComponent, 'anatomy:tag')).toBe(
+      true
+    );
 
     entityManager.setComponent('arm-left', 'anatomy:tag', {});
-    expect(service.hasPartWithComponent(bodyComponent, 'anatomy:tag')).toBe(false);
+    expect(service.hasPartWithComponent(bodyComponent, 'anatomy:tag')).toBe(
+      false
+    );
 
     const valueMatch = service.hasPartWithComponentValue(
       bodyComponent,
@@ -383,7 +418,9 @@ describe('BodyGraphService real module integration', () => {
   });
 
   it('retrieves body graphs and anatomy data while validating input', async () => {
-    await expect(service.getBodyGraph('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph('')).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('missing')).rejects.toThrow(
       'Entity missing has no anatomy:body component'
     );
@@ -396,13 +433,19 @@ describe('BodyGraphService real module integration', () => {
       expect.arrayContaining(['arm-left', 'leg-left', 'heart'])
     );
 
-    await expect(service.getAnatomyData('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData('')).rejects.toThrow(
+      InvalidArgumentError
+    );
     const missingData = await service.getAnatomyData('missing');
     expect(missingData).toBeNull();
     expect(
-      logger.messages('debug').some((msg) =>
-        typeof msg === 'string' && msg.includes("has no anatomy:body component")
-      )
+      logger
+        .messages('debug')
+        .some(
+          (msg) =>
+            typeof msg === 'string' &&
+            msg.includes('has no anatomy:body component')
+        )
     ).toBe(true);
 
     const anatomyData = await service.getAnatomyData('actor-1');

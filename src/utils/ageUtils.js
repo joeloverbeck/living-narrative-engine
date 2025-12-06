@@ -142,10 +142,7 @@ export class AgeUtils {
         throw new Error('bestGuess must be a number');
       }
 
-      if (
-        bestGuess < ageComponent.minAge ||
-        bestGuess > ageComponent.maxAge
-      ) {
+      if (bestGuess < ageComponent.minAge || bestGuess > ageComponent.maxAge) {
         throw new Error('bestGuess must be between minAge and maxAge');
       }
 

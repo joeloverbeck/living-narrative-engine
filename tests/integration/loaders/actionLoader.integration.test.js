@@ -142,7 +142,9 @@ class NamespacedDataRegistry extends InMemoryDataRegistry {
         return entries;
       }
 
-      const filtered = entries.filter((entry) => entry && entry._modId === modId);
+      const filtered = entries.filter(
+        (entry) => entry && entry._modId === modId
+      );
       return filtered.length > 0 ? filtered : undefined;
     }
 
@@ -372,9 +374,8 @@ describe('ActionLoader integration', () => {
 
   it('returns zero counts and no visual summary when manifest lacks valid action files', async () => {
     const fileMap = new Map();
-    const { loader, logger, schemaValidator, registry } = createActionLoader(
-      fileMap
-    );
+    const { loader, logger, schemaValidator, registry } =
+      createActionLoader(fileMap);
 
     const manifest = {
       content: {

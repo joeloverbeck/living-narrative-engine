@@ -176,9 +176,7 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Context built for UnifiedScopeResolver'
-        ),
+        expect.stringContaining('Context built for UnifiedScopeResolver'),
         expect.objectContaining({
           hasActor: true,
           actorId: 'test-actor',
@@ -187,9 +185,7 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'UnifiedScopeResolver result for sit_down'
-        ),
+        expect.stringContaining('UnifiedScopeResolver result for sit_down'),
         expect.objectContaining({
           success: true,
           hasValue: true,
@@ -227,16 +223,12 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Context built for UnifiedScopeResolver'
-        ),
+        expect.stringContaining('Context built for UnifiedScopeResolver'),
         expect.anything()
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'UnifiedScopeResolver result for sit_down'
-        ),
+        expect.stringContaining('UnifiedScopeResolver result for sit_down'),
         expect.objectContaining({
           success: true,
           hasValue: true,
@@ -411,9 +403,7 @@ describe('TargetResolutionService - Coverage for Missing Lines', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'UnifiedScopeResolver result for sit_down'
-        ),
+        expect.stringContaining('UnifiedScopeResolver result for sit_down'),
         expect.objectContaining({
           success: true,
           hasValue: true,

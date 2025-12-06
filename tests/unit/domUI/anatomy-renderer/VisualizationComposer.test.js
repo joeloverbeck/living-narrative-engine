@@ -1865,7 +1865,9 @@ describe('VisualizationComposer', () => {
       // With index approach: index building fetches each unique entity once,
       // then BFS fetches during traversal
       // The key assertion is that child is found and processed
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for root-entity');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for root-entity'
+      );
     });
 
     it('should process queue with multiple levels of depth', async () => {
@@ -2083,9 +2085,13 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.buildGraphData(bodyData);
 
       // Get nodes via internal access pattern used in tests
-      const nodes = visualizationComposer['_VisualizationComposer__nodes'] ||
-                    Array.from(Object.entries(visualizationComposer)
-                      .find(([k]) => k.includes('nodes'))?.[1] || new Map());
+      const nodes =
+        visualizationComposer['_VisualizationComposer__nodes'] ||
+        Array.from(
+          Object.entries(visualizationComposer).find(([k]) =>
+            k.includes('nodes')
+          )?.[1] || new Map()
+        );
 
       // Since nodes is a private field, we verify through logger calls
       // The implementation assigns unique display names: finger, finger [2], finger [3]
@@ -2105,8 +2111,16 @@ describe('VisualizationComposer', () => {
       };
 
       const mockRootEntity = createMockEntity('Torso');
-      const mockHeadEntity = createMockEntity('Head', 'root-entity', 'head-socket');
-      const mockArmEntity = createMockEntity('Left Arm', 'root-entity', 'arm-socket');
+      const mockHeadEntity = createMockEntity(
+        'Head',
+        'root-entity',
+        'head-socket'
+      );
+      const mockArmEntity = createMockEntity(
+        'Left Arm',
+        'root-entity',
+        'arm-socket'
+      );
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         const entities = {
@@ -2291,7 +2305,9 @@ describe('VisualizationComposer', () => {
 
       // Verify parent-child index debug message was logged
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/Built parent-child index with \d+ parent entries/)
+        expect.stringMatching(
+          /Built parent-child index with \d+ parent entries/
+        )
       );
     });
 
@@ -2327,10 +2343,14 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.buildGraphData(bodyData);
 
       // Verify children were found for root (2 children)
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 2 children for root-entity');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 2 children for root-entity'
+      );
 
       // Verify grandchild was found for child-1
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for child-1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for child-1'
+      );
     });
 
     it('should handle leaf nodes correctly (entities with no children)', async () => {
@@ -2355,11 +2375,15 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.buildGraphData(bodyData);
 
       // Root should have 1 child
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for root-entity');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for root-entity'
+      );
 
       // Leaf should have 0 children (or no log for 0 children)
       // The implementation logs "Found 0 children" for nodes without children
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 0 children for leaf-entity');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 0 children for leaf-entity'
+      );
     });
 
     it('should handle errors gracefully when entity fetch fails during index building', async () => {
@@ -2445,7 +2469,9 @@ describe('VisualizationComposer', () => {
 
       // Verify correct parent-child relationships were discovered
       // Root has 3 direct children
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 3 children for root-entity');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 3 children for root-entity'
+      );
 
       // Left arm has 1 child (left hand)
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -2490,10 +2516,18 @@ describe('VisualizationComposer', () => {
       await visualizationComposer.buildGraphData(bodyData);
 
       // Verify each level has exactly 1 child
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for level-0');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for level-1');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 1 children for level-2');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Found 0 children for level-3');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for level-0'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for level-1'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 1 children for level-2'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Found 0 children for level-3'
+      );
     });
 
     it('should handle entities with null joint component during index building', async () => {
@@ -2527,7 +2561,9 @@ describe('VisualizationComposer', () => {
 
       // Should still build index successfully (entity with no joint is skipped)
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/Built parent-child index with \d+ parent entries/)
+        expect.stringMatching(
+          /Built parent-child index with \d+ parent entries/
+        )
       );
 
       // Entity without joint should be flagged as unconnected

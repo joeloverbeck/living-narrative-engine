@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import { EventDispatchService } from '../../../src/utils/eventDispatchService.js';
 import InitializationService from '../../../src/initializers/services/initializationService.js';
@@ -113,48 +120,49 @@ describe('dependencyUtils integration guard rails', () => {
         new EventDispatchService({
           safeEventDispatcher: null,
           logger,
-        }),
+        })
     ).toThrow('EventDispatchService: safeEventDispatcher is required');
   });
 
   it('surfaces invalid validated event dispatcher through InitializationService', () => {
     const logger = new ConsoleLogger(LogLevel.DEBUG);
 
-    expect(() =>
-      new InitializationService({
-        log: { logger },
-        events: {
-          validatedEventDispatcher: {},
-          safeEventDispatcher: new MinimalSafeEventDispatcher(),
-        },
-        llm: {
-          llmAdapter: new PassiveLlmAdapter(),
-          llmConfigLoader: new PassiveLlmConfigLoader(),
-        },
-        persistence: {
-          entityManager: new PassiveEntityManager(),
-          domUiFacade: {},
-          actionIndex: new PassiveActionIndex(),
-          gameDataRepository: new PassiveGameDataRepository(),
-          thoughtListener: new PassiveListener(),
-          notesListener: new PassiveListener(),
-          spatialIndexManager: new PassiveSpatialIndexManager(),
-        },
-        coreSystems: {
-          modsLoader: new PassiveModsLoader(),
-          scopeRegistry: new PassiveScopeRegistry(),
-          dataRegistry: new PassiveDataRegistry(),
-          systemInitializer: new PassiveSystemInitializer(),
-          worldInitializer: new PassiveWorldInitializer(),
-          contentDependencyValidator: new PassiveContentDependencyValidator(),
-          llmAdapterInitializer: new PassiveLlmAdapter(),
-          anatomyFormattingService: new PassiveAnatomyFormattingService(),
-        },
-      }),
+    expect(
+      () =>
+        new InitializationService({
+          log: { logger },
+          events: {
+            validatedEventDispatcher: {},
+            safeEventDispatcher: new MinimalSafeEventDispatcher(),
+          },
+          llm: {
+            llmAdapter: new PassiveLlmAdapter(),
+            llmConfigLoader: new PassiveLlmConfigLoader(),
+          },
+          persistence: {
+            entityManager: new PassiveEntityManager(),
+            domUiFacade: {},
+            actionIndex: new PassiveActionIndex(),
+            gameDataRepository: new PassiveGameDataRepository(),
+            thoughtListener: new PassiveListener(),
+            notesListener: new PassiveListener(),
+            spatialIndexManager: new PassiveSpatialIndexManager(),
+          },
+          coreSystems: {
+            modsLoader: new PassiveModsLoader(),
+            scopeRegistry: new PassiveScopeRegistry(),
+            dataRegistry: new PassiveDataRegistry(),
+            systemInitializer: new PassiveSystemInitializer(),
+            worldInitializer: new PassiveWorldInitializer(),
+            contentDependencyValidator: new PassiveContentDependencyValidator(),
+            llmAdapterInitializer: new PassiveLlmAdapter(),
+            anatomyFormattingService: new PassiveAnatomyFormattingService(),
+          },
+        })
     ).toThrow(SystemInitializationError);
 
     expect(errorSpy).toHaveBeenCalledWith(
-      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.",
+      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
     );
   });
 
@@ -163,22 +171,28 @@ describe('dependencyUtils integration guard rails', () => {
     const serviceSetup = new ServiceSetup();
 
     const registry = new InMemoryDataRegistry({ logger });
-    expect(() => getDefinition('   ', registry, logger)).toThrow(InvalidArgumentError);
+    expect(() => getDefinition('   ', registry, logger)).toThrow(
+      InvalidArgumentError
+    );
     expect(errorSpy).toHaveBeenCalledWith(
       "definitionLookup.getDefinition: Invalid ID '   '. Expected non-blank string.",
-      expect.objectContaining({ context: 'definitionLookup.getDefinition' }),
+      expect.objectContaining({ context: 'definitionLookup.getDefinition' })
     );
 
     errorSpy.mockClear();
     const targetManager = new TargetManager({ logger });
-    expect(() => targetManager.setTargets(null)).toThrow('Targets object is required');
+    expect(() => targetManager.setTargets(null)).toThrow(
+      'Targets object is required'
+    );
     expect(errorSpy).toHaveBeenCalledWith('Targets object is required');
 
     errorSpy.mockClear();
-    expect(() => targetManager.addTarget(' ', 'actor-1')).toThrow(InvalidArgumentError);
+    expect(() => targetManager.addTarget(' ', 'actor-1')).toThrow(
+      InvalidArgumentError
+    );
     expect(errorSpy).toHaveBeenCalledWith(
       "TargetManager.addTarget: Invalid name ' '. Expected non-blank string.",
-      expect.objectContaining({ parameterName: 'name' }),
+      expect.objectContaining({ parameterName: 'name' })
     );
 
     errorSpy.mockClear();
@@ -195,20 +209,22 @@ describe('dependencyUtils integration guard rails', () => {
     expect(() =>
       serviceSetup.setupService('Probe', logger, {
         missing: { value: null },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Missing required dependency: Probe: missing.'),
+      expect.stringContaining('Missing required dependency: Probe: missing.')
     );
 
     errorSpy.mockClear();
     expect(() =>
       serviceSetup.setupService('Probe', logger, {
         callable: { value: {}, isFunction: true },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Dependency 'Probe: callable' must be a function, but got object."),
+      expect.stringContaining(
+        "Dependency 'Probe: callable' must be a function, but got object."
+      )
     );
 
     errorSpy.mockClear();
@@ -218,12 +234,12 @@ describe('dependencyUtils integration guard rails', () => {
           value: {},
           requiredMethods: ['execute'],
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Invalid or missing method 'execute' on dependency 'Probe: operations'.",
-      ),
+        "Invalid or missing method 'execute' on dependency 'Probe: operations'."
+      )
     );
 
     const Base = class {
@@ -231,9 +247,14 @@ describe('dependencyUtils integration guard rails', () => {
         this.logger = args.logger;
       }
     };
-    const Decorated = withValidatedDeps(Base, (args) => args.dependencies ?? null);
+    const Decorated = withValidatedDeps(
+      Base,
+      (args) => args.dependencies ?? null
+    );
 
     const decoratedLogger = serviceSetup.createLogger('Decorated', logger);
-    expect(() => new Decorated({ logger: decoratedLogger, dependencies: null })).not.toThrow();
+    expect(
+      () => new Decorated({ logger: decoratedLogger, dependencies: null })
+    ).not.toThrow();
   });
 });

@@ -3,7 +3,10 @@ import { UnifiedErrorHandler } from '../../../../src/actions/errors/unifiedError
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { TraceContext } from '../../../../src/actions/tracing/traceContext.js';
-import { ERROR_PHASES, FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  ERROR_PHASES,
+  FIX_TYPES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 
 class TestLogger {
   constructor() {
@@ -100,9 +103,7 @@ describe('UnifiedErrorHandler real integration', () => {
     const fixSuggestionEngine = new FixSuggestionEngine({
       logger,
       gameDataRepository: new TestGameDataRepository(),
-      actionIndex: new TestActionIndex([
-        { id: 'core:move', name: 'Move' },
-      ]),
+      actionIndex: new TestActionIndex([{ id: 'core:move', name: 'Move' }]),
     });
 
     const errorContextBuilder = new ActionErrorContextBuilder({
@@ -119,9 +120,7 @@ describe('UnifiedErrorHandler real integration', () => {
     actionDefinition = {
       id: 'core:move',
       name: 'Move',
-      prerequisites: [
-        { hasComponent: 'core:location' },
-      ],
+      prerequisites: [{ hasComponent: 'core:location' }],
     };
   });
 
@@ -133,7 +132,9 @@ describe('UnifiedErrorHandler real integration', () => {
     trace.failure('Scope resolution failed', 'TargetResolutionService', {
       scope: 'movement:adjacent',
     });
-    trace.data('Final context snapshot', 'ActionPipeline', { completed: false });
+    trace.data('Final context snapshot', 'ActionPipeline', {
+      completed: false,
+    });
 
     const error = new Error("Missing component 'core:location'");
     error.name = 'ComponentNotFoundError';
@@ -156,7 +157,9 @@ describe('UnifiedErrorHandler real integration', () => {
     expect(context.environmentContext.scope).toBe('movement');
     expect(context.environmentContext.errorName).toBe('ComponentNotFoundError');
     expect(context.evaluationTrace.steps.length).toBeGreaterThan(0);
-    expect(context.evaluationTrace.failurePoint).toBe('Scope resolution failed');
+    expect(context.evaluationTrace.failurePoint).toBe(
+      'Scope resolution failed'
+    );
 
     const missingComponentFix = context.suggestedFixes.find(
       (fix) => fix.type === FIX_TYPES.MISSING_COMPONENT
@@ -166,37 +169,51 @@ describe('UnifiedErrorHandler real integration', () => {
   });
 
   it('provides phase-specific helpers and fallback handling for missing definitions', () => {
-    const discoveryContext = handler.handleDiscoveryError(new Error('discovery failed'), {
-      actorId,
-      actionDef: actionDefinition,
-    });
+    const discoveryContext = handler.handleDiscoveryError(
+      new Error('discovery failed'),
+      {
+        actorId,
+        actionDef: actionDefinition,
+      }
+    );
     expect(discoveryContext.phase).toBe(ERROR_PHASES.DISCOVERY);
     expect(discoveryContext.environmentContext.stage).toBe('discovery');
 
-    const executionContext = handler.handleExecutionError(new Error('execution failed'), {
-      actorId,
-      actionDef: actionDefinition,
-      targetId: 'target-10',
-    });
+    const executionContext = handler.handleExecutionError(
+      new Error('execution failed'),
+      {
+        actorId,
+        actionDef: actionDefinition,
+        targetId: 'target-10',
+      }
+    );
     expect(executionContext.phase).toBe(ERROR_PHASES.EXECUTION);
     expect(executionContext.environmentContext.stage).toBe('execution');
     expect(executionContext.targetId).toBe('target-10');
 
-    const validationContext = handler.handleValidationError(new Error('validation failed'), {
-      actorId,
-      actionDef: actionDefinition,
-      targetId: 'target-11',
-    });
+    const validationContext = handler.handleValidationError(
+      new Error('validation failed'),
+      {
+        actorId,
+        actionDef: actionDefinition,
+        targetId: 'target-11',
+      }
+    );
     expect(validationContext.phase).toBe(ERROR_PHASES.VALIDATION);
     expect(validationContext.environmentContext.stage).toBe('validation');
 
-    const processingContext = handler.handleProcessingError(new Error('processing failed'), {
-      actorId,
-      stage: 'dispatch',
-      actionDef: actionDefinition,
-    });
+    const processingContext = handler.handleProcessingError(
+      new Error('processing failed'),
+      {
+        actorId,
+        stage: 'dispatch',
+        actionDef: actionDefinition,
+      }
+    );
     expect(processingContext.phase).toBe(ERROR_PHASES.EXECUTION);
-    expect(processingContext.environmentContext.stage).toBe('command_processing_dispatch');
+    expect(processingContext.environmentContext.stage).toBe(
+      'command_processing_dispatch'
+    );
 
     const fallbackContext = handler.createContext({
       error: new Error('no action provided'),

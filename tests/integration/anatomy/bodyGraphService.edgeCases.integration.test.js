@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import BodyGraphService, {
   LIMB_DETACHED_EVENT_ID,
 } from '../../../src/anatomy/bodyGraphService.js';
@@ -231,10 +238,7 @@ const createFixture = ({ queryCache } = {}) => {
     queryCache,
   });
 
-  const bodyComponent = entityManager.getComponentData(
-    actorId,
-    'anatomy:body'
-  );
+  const bodyComponent = entityManager.getComponentData(actorId, 'anatomy:body');
 
   return {
     service,
@@ -257,15 +261,15 @@ describe('BodyGraphService integration edge cases', () => {
     const logger = createLogger();
     const eventDispatcher = createEventDispatcher();
 
-    expect(
-      () => new BodyGraphService({ logger, eventDispatcher })
-    ).toThrow('entityManager is required');
+    expect(() => new BodyGraphService({ logger, eventDispatcher })).toThrow(
+      'entityManager is required'
+    );
     expect(
       () => new BodyGraphService({ entityManager, eventDispatcher })
     ).toThrow('logger is required');
-    expect(
-      () => new BodyGraphService({ entityManager, logger })
-    ).toThrow('eventDispatcher is required');
+    expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
+      'eventDispatcher is required'
+    );
   });
 
   it('builds caches once, exposes traversal helpers, and validates cache integrity', async () => {
@@ -315,7 +319,7 @@ describe('BodyGraphService integration edge cases', () => {
 
     const fallbackParts = service.getAllParts(bodyComponent, 'ghost-actor');
     expect(fallbackParts).toEqual(blueprintParts);
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         "BodyGraphService.getAllParts: Actor 'ghost-actor' -> Using blueprint root 'part-torso' as cache root"
       )
@@ -409,9 +413,9 @@ describe('BodyGraphService integration edge cases', () => {
     const cachedParts = service.getAllParts(bodyComponent, actorId);
     expect(cachedParts).toBe(parts);
 
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'equipment:grip')
-    ).toBe(true);
+    expect(service.hasPartWithComponent(bodyComponent, 'equipment:grip')).toBe(
+      true
+    );
     expect(
       service.hasPartWithComponent(bodyComponent, 'missing:component')
     ).toBe(false);
@@ -449,8 +453,14 @@ describe('BodyGraphService integration edge cases', () => {
       cacheGetAllParts: jest.fn(),
       invalidateRoot: jest.fn(),
     };
-    const { service, entityManager, eventDispatcher, actorId, partIds, bodyComponent } =
-      createFixture({ queryCache: customCache });
+    const {
+      service,
+      entityManager,
+      eventDispatcher,
+      actorId,
+      partIds,
+      bodyComponent,
+    } = createFixture({ queryCache: customCache });
 
     await service.buildAdjacencyCache(actorId);
 
@@ -527,8 +537,12 @@ describe('BodyGraphService integration edge cases', () => {
     );
     expect(bodyGraph.getConnectedParts('missing')).toEqual([]);
 
-    await expect(service.getBodyGraph(null)).rejects.toThrow(InvalidArgumentError);
-    await expect(service.getBodyGraph(123)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph(null)).rejects.toThrow(
+      InvalidArgumentError
+    );
+    await expect(service.getBodyGraph(123)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('no-body-entity')).rejects.toThrow(
       'has no anatomy:body component'
     );

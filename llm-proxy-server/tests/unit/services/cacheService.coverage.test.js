@@ -814,7 +814,9 @@ describe('CacheService - Coverage Tests', () => {
       expect(cacheService.has('user:2')).toBe(false);
       expect(
         mockLogger.info.mock.calls.some(([message]) =>
-          message.includes('Invalidated 1 cache entries matching pattern /dynamic-user/')
+          message.includes(
+            'Invalidated 1 cache entries matching pattern /dynamic-user/'
+          )
         )
       ).toBe(true);
 
@@ -939,7 +941,12 @@ describe('CacheService - Coverage Tests', () => {
       let capturedMap = null;
 
       Map.prototype.set = function patchedSet(key, value) {
-        if (!capturedMap && value && typeof value === 'object' && 'entry' in value) {
+        if (
+          !capturedMap &&
+          value &&
+          typeof value === 'object' &&
+          'entry' in value
+        ) {
           capturedMap = this;
         }
         return originalMapSet.call(this, key, value);

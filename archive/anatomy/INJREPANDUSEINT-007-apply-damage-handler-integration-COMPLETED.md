@@ -8,12 +8,12 @@ Integrate DeathCheckService into the existing ApplyDamageHandler flow. Note: Dam
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/logic/operationHandlers/applyDamageHandler.js` | MODIFY |
+| File                                                                     | Action                                    |
+| ------------------------------------------------------------------------ | ----------------------------------------- |
+| `src/logic/operationHandlers/applyDamageHandler.js`                      | MODIFY                                    |
 | `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | MODIFY - add deathCheckService dependency |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | MODIFY |
-| `tests/integration/anatomy/deathCheckIntegration.test.js` | CREATE |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js`          | MODIFY                                    |
+| `tests/integration/anatomy/deathCheckIntegration.test.js`                | CREATE                                    |
 
 ## Out of Scope
 
@@ -63,19 +63,19 @@ See `specs/injury-reporting-and-user-interface.md` section 5 for damage flow int
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `src/logic/operationHandlers/applyDamageHandler.js` | Added `#deathCheckService` field, constructor validation, and death check logic at end of execute() |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Added `deathCheckService: c.resolve(tokens.DeathCheckService)` |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | Added 5 death condition unit tests |
-| `tests/integration/anatomy/deathCheckIntegration.test.js` | Created new integration test file with 7 tests |
+| File                                                                     | Changes                                                                                             |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `src/logic/operationHandlers/applyDamageHandler.js`                      | Added `#deathCheckService` field, constructor validation, and death check logic at end of execute() |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Added `deathCheckService: c.resolve(tokens.DeathCheckService)`                                      |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js`          | Added 5 death condition unit tests                                                                  |
+| `tests/integration/anatomy/deathCheckIntegration.test.js`                | Created new integration test file with 7 tests                                                      |
 
 ### New Tests Added
 
-| Test File | Test Count | Rationale |
-|-----------|------------|-----------|
-| `applyDamageHandler.test.js` | 5 | Death check integration: top-level call only, propagated call skipped, death log, dying log, damageCauserId passing |
-| `deathCheckIntegration.test.js` | 7 | Full damage→death flow: vital organ death, dying state, death/dying event dispatch, propagation→death, already dead edge case, no anatomy edge case |
+| Test File                       | Test Count | Rationale                                                                                                                                           |
+| ------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `applyDamageHandler.test.js`    | 5          | Death check integration: top-level call only, propagated call skipped, death log, dying log, damageCauserId passing                                 |
+| `deathCheckIntegration.test.js` | 7          | Full damage→death flow: vital organ death, dying state, death/dying event dispatch, propagation→death, already dead edge case, no anatomy edge case |
 
 ### Test Results
 

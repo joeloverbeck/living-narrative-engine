@@ -44,15 +44,15 @@ The Activity Description System has been refactored from a monolithic service in
 
 ### Architecture Comparison
 
-| Aspect | Old (Monolithic) | New (Facade Pattern) |
-|--------|-----------------|---------------------|
-| **Lines of code** | ~1000+ lines | Facade: ~400, Services: ~150-300 each |
-| **Responsibilities** | All-in-one service | 7 specialized services |
-| **Testability** | Difficult (complex mocking) | Easy (isolated service tests) |
-| **Maintainability** | Low (tangled concerns) | High (clear separation) |
-| **Extensibility** | Hard (modify monolith) | Easy (extend specific service) |
-| **Caching** | Internal implementation | Dedicated ActivityCacheManager |
-| **Dependency injection** | Limited | Full DI for all services |
+| Aspect                   | Old (Monolithic)            | New (Facade Pattern)                  |
+| ------------------------ | --------------------------- | ------------------------------------- |
+| **Lines of code**        | ~1000+ lines                | Facade: ~400, Services: ~150-300 each |
+| **Responsibilities**     | All-in-one service          | 7 specialized services                |
+| **Testability**          | Difficult (complex mocking) | Easy (isolated service tests)         |
+| **Maintainability**      | Low (tangled concerns)      | High (clear separation)               |
+| **Extensibility**        | Hard (modify monolith)      | Easy (extend specific service)        |
+| **Caching**              | Internal implementation     | Dedicated ActivityCacheManager        |
+| **Dependency injection** | Limited                     | Full DI for all services              |
 
 ## Core Components
 
@@ -61,6 +61,7 @@ The Activity Description System has been refactored from a monolithic service in
 **Role**: Simplified API that orchestrates the 7 specialized services.
 
 **Responsibilities**:
+
 - Provides public API `generateActivityDescription(entityId)`
 - Coordinates service calls in proper sequence
 - Maintains backward compatibility with original API
@@ -68,6 +69,7 @@ The Activity Description System has been refactored from a monolithic service in
 - Manages lifecycle (initialization, cleanup, destruction)
 
 **Key Methods**:
+
 - `generateActivityDescription(entityId)` - Main entry point
 - `invalidateCache(entityId, cacheType)` - Cache invalidation
 - `invalidateEntities(entityIds[])` - Bulk invalidation
@@ -75,6 +77,7 @@ The Activity Description System has been refactored from a monolithic service in
 - `destroy()` - Clean shutdown
 
 **Dependencies** (all injected):
+
 - `IActivityCacheManager`
 - `IActivityIndexManager`
 - `IActivityMetadataCollectionSystem`
@@ -91,6 +94,7 @@ The Activity Description System has been refactored from a monolithic service in
 **Role**: Centralized caching with TTL and event-driven invalidation.
 
 **Responsibilities**:
+
 - Manages multiple named caches (entity names, genders, activity indexes, closeness)
 - Implements TTL (Time-To-Live) with configurable timeouts
 - LRU (Least Recently Used) pruning when caches exceed size limits
@@ -98,12 +102,14 @@ The Activity Description System has been refactored from a monolithic service in
 - Cache metrics and diagnostics
 
 **Cache Types**:
+
 - `entityName` - Resolved display names
 - `gender` - Gender component lookups
 - `activityIndex` - Activity metadata indexes
 - `closeness` - Relationship closeness data
 
 **Configuration**:
+
 ```javascript
 {
   maxSize: 1000,        // Max entries per cache
@@ -113,6 +119,7 @@ The Activity Description System has been refactored from a monolithic service in
 ```
 
 **Event Subscriptions**:
+
 - `COMPONENT_ADDED` - Invalidate affected entity caches
 - `COMPONENT_REMOVED` - Invalidate affected entity caches
 - `ENTITY_REMOVED` - Remove all caches for entity
@@ -122,6 +129,7 @@ The Activity Description System has been refactored from a monolithic service in
 **Role**: Collects activity metadata from multiple sources.
 
 **Responsibilities**:
+
 - **3-tier metadata collection**:
   1. Activity index (pre-built from dedicated metadata entities)
   2. Inline metadata (from component `activityMetadata` fields)
@@ -131,6 +139,7 @@ The Activity Description System has been refactored from a monolithic service in
 - Merges metadata from all sources
 
 **Collection Strategy**:
+
 ```
 Priority: Index > Inline > Dedicated
 Deduplication: By (action, target, group) signature
@@ -142,6 +151,7 @@ Validation: AJV schema validation
 **Role**: Natural language generation for activity phrases.
 
 **Responsibilities**:
+
 - **Self-contained pronoun resolution** (no AnatomyFormattingService dependency)
 - Template-based phrase generation
 - Softener injection (e.g., "gently", "carefully")
@@ -149,11 +159,13 @@ Validation: AJV schema validation
 - Gender-aware pronoun selection (he/she/they)
 
 **Pronoun Resolution**:
+
 - Uses `gender:gender` components directly
 - Fallback chain: component → configuration → "they"
 - Respects `nameResolution.respectGenderComponents` config
 
 **Template Processing**:
+
 - `{actorName}` → resolved actor name or pronoun
 - `{targetName}` → resolved target name or pronoun
 - `{descriptor}` → softener injection point
@@ -164,12 +176,14 @@ Validation: AJV schema validation
 **Role**: Groups sequential activities with natural language connectors.
 
 **Responsibilities**:
+
 - Groups activities by target and simultaneity
 - Priority-based conjunction selection ("and", "while also", "as well as")
 - Respects `groupByTarget` metadata flags
 - Maintains activity order and priority
 
 **Grouping Logic**:
+
 ```javascript
 // Activities with same target and close priorities group together
 "kisses her lips" + "caresses her cheek" → "kisses her lips and caresses her cheek"
@@ -179,6 +193,7 @@ Validation: AJV schema validation
 ```
 
 **Configuration**:
+
 ```javascript
 {
   simultaneityThreshold: 10,  // Max priority difference for grouping
@@ -195,12 +210,14 @@ Validation: AJV schema validation
 **Role**: Builds context for activity generation (names, relationships, tone).
 
 **Responsibilities**:
+
 - Resolves entity names from entity manager
 - Determines relationship closeness from `positioning:closeness` components
 - Adjusts tone based on relationship (intimate vs. formal)
 - Provides context objects for NLG system
 
 **Context Structure**:
+
 ```javascript
 {
   actorName: 'Alice',
@@ -213,6 +230,7 @@ Validation: AJV schema validation
 ```
 
 **Tone Adjustment**:
+
 - `closeness >= 0.7` → intimate tone (pronouns, softer language)
 - `closeness < 0.7` → formal tone (names, standard language)
 
@@ -221,12 +239,14 @@ Validation: AJV schema validation
 **Role**: Filters activities based on JSON Logic conditions.
 
 **Responsibilities**:
+
 - Evaluates `condition` fields on metadata using JsonLogicEvaluationService
 - Respects `visibility` flags
 - Context-aware filtering (considers relationship closeness)
 - Filters out failed conditions early in pipeline
 
 **Filtering Logic**:
+
 ```javascript
 // Example metadata condition
 {
@@ -242,12 +262,14 @@ Validation: AJV schema validation
 **Role**: Builds and retrieves activity indexes for fast lookups.
 
 **Responsibilities**:
+
 - Builds transient activity indexes from metadata
 - Groups by target, priority, and group keys
 - Provides fast lookups by entity ID
 - Supports cache integration with ActivityCacheManager
 
 **Index Structure**:
+
 ```javascript
 {
   byTarget: {
@@ -405,15 +427,18 @@ The new architecture follows this sequence:
 ### Cache Invalidation Strategies
 
 **Event-Driven** (automatic):
+
 - Component additions/removals trigger targeted invalidation
 - Entity removals clear all related caches
 
 **Manual** (explicit):
+
 - `invalidateCache(entityId, cacheType)` - Single entity, specific cache
 - `invalidateEntities([entityIds])` - Bulk invalidation
 - `clearAllCaches()` - Full reset (diagnostics only)
 
 **Time-Based** (TTL):
+
 - Entries expire after configured TTL (default: 60 seconds)
 - LRU pruning when cache exceeds maxSize
 
@@ -481,6 +506,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Extending Metadata Collection
 
 **ActivityMetadataCollectionSystem**:
+
 - Add new metadata schemas in `data/schemas/`
 - Extend inline metadata structure
 - Create new `activity:description_metadata` components
@@ -488,6 +514,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Customizing NLG
 
 **ActivityNLGSystem**:
+
 - Add new templates in configuration
 - Extend pronoun resolution logic
 - Add custom softener rules
@@ -495,6 +522,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Custom Filtering
 
 **ActivityFilteringSystem**:
+
 - Define custom JSON Logic operators
 - Add new context variables for conditions
 - Implement custom visibility rules
@@ -502,6 +530,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Cache Customization
 
 **ActivityCacheManager**:
+
 - Register new named caches
 - Customize TTL per cache type
 - Implement custom eviction policies
@@ -511,6 +540,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Why Facade Pattern?
 
 **Benefits**:
+
 - ✅ **Simplified API**: Single entry point maintains backward compatibility
 - ✅ **Separation of concerns**: Each service has single responsibility
 - ✅ **Testability**: Services can be tested in isolation
@@ -518,6 +548,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 - ✅ **Extensibility**: New services can be added without modifying existing ones
 
 **Trade-offs**:
+
 - ⚠️ **More files**: 7+ service files vs. 1 monolithic file
 - ⚠️ **Indirection**: Facade adds one layer between caller and services
 - ⚠️ **DI complexity**: More dependencies to inject and manage
@@ -525,6 +556,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Why Separate Cache Manager?
 
 **Rationale**:
+
 - Caching is a cross-cutting concern affecting all services
 - TTL and eviction logic deserves dedicated implementation
 - Event-driven invalidation requires centralized subscription
@@ -533,6 +565,7 @@ Mods can override these values by supplying an `activityIntegration` block insid
 ### Why Self-Contained NLG?
 
 **Rationale**:
+
 - Pronoun resolution is core to NLG, not formatting
 - Reduces dependencies (no AnatomyFormattingService coupling)
 - Simplifies testing (no external formatting service mocks)
@@ -548,15 +581,15 @@ Mods can override these values by supplying an `activityIntegration` block insid
 
 ### Service Performance
 
-| Service | Average Time | Cacheable |
-|---------|-------------|-----------|
-| ActivityCacheManager | <0.1ms (cache hit) | N/A |
-| ActivityMetadataCollectionSystem | 2-5ms | ✅ Yes (via index) |
-| ActivityIndexManager | 1-3ms | ✅ Yes |
-| ActivityFilteringSystem | 1-2ms | ❌ No (condition-dependent) |
-| ActivityContextBuildingSystem | 1-2ms | ✅ Yes (names, closeness) |
-| ActivityNLGSystem | 2-4ms | ❌ No (template-dependent) |
-| ActivityGroupingSystem | 1-2ms | ❌ No (grouping-dependent) |
+| Service                          | Average Time       | Cacheable                   |
+| -------------------------------- | ------------------ | --------------------------- |
+| ActivityCacheManager             | <0.1ms (cache hit) | N/A                         |
+| ActivityMetadataCollectionSystem | 2-5ms              | ✅ Yes (via index)          |
+| ActivityIndexManager             | 1-3ms              | ✅ Yes                      |
+| ActivityFilteringSystem          | 1-2ms              | ❌ No (condition-dependent) |
+| ActivityContextBuildingSystem    | 1-2ms              | ✅ Yes (names, closeness)   |
+| ActivityNLGSystem                | 2-4ms              | ❌ No (template-dependent)  |
+| ActivityGroupingSystem           | 1-2ms              | ❌ No (grouping-dependent)  |
 
 **Total (uncached)**: 10-20ms average
 **Total (cached)**: <1ms average

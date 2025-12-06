@@ -8,24 +8,24 @@ Register the `PickRandomEntityHandler` in the dependency injection system by add
 
 - **Status**: Completed
 - **Changes**:
-    - Added `PickRandomEntityHandler` to `src/dependencyInjection/tokens/tokens-core.js`.
-    - Added `PickRandomEntityHandler` import and factory to `src/dependencyInjection/registrations/operationHandlerRegistrations.js`.
-    - Added `PICK_RANDOM_ENTITY` mapping to `src/dependencyInjection/registrations/interpreterRegistrations.js`.
-    - Added `'PICK_RANDOM_ENTITY'` to `src/utils/preValidationUtils.js`.
-    - **Extra**: Updated `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` to include the new handler in test expectations.
-    - **Extra**: Updated `src/configuration/staticConfiguration.js` to include `pickRandomEntity.schema.json` in `OPERATION_SCHEMA_FILES` to satisfy configuration tests.
+  - Added `PickRandomEntityHandler` to `src/dependencyInjection/tokens/tokens-core.js`.
+  - Added `PickRandomEntityHandler` import and factory to `src/dependencyInjection/registrations/operationHandlerRegistrations.js`.
+  - Added `PICK_RANDOM_ENTITY` mapping to `src/dependencyInjection/registrations/interpreterRegistrations.js`.
+  - Added `'PICK_RANDOM_ENTITY'` to `src/utils/preValidationUtils.js`.
+  - **Extra**: Updated `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` to include the new handler in test expectations.
+  - **Extra**: Updated `src/configuration/staticConfiguration.js` to include `pickRandomEntity.schema.json` in `OPERATION_SCHEMA_FILES` to satisfy configuration tests.
 - **Verification**:
-    - `npm run validate` passed.
-    - `npm run test:unit` passed (relevant tests).
+  - `npm run validate` passed.
+  - `npm run test:unit` passed (relevant tests).
 
 ## Files to Modify
 
-| File | Modification |
-|------|-------------|
-| `src/dependencyInjection/tokens/tokens-core.js` | Add `PickRandomEntityHandler` token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add handler factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Add operation type mapping |
-| `src/utils/preValidationUtils.js` | Add `'PICK_RANDOM_ENTITY'` to whitelist |
+| File                                                                     | Modification                            |
+| ------------------------------------------------------------------------ | --------------------------------------- |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add `PickRandomEntityHandler` token     |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add handler factory                     |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Add operation type mapping              |
+| `src/utils/preValidationUtils.js`                                        | Add `'PICK_RANDOM_ENTITY'` to whitelist |
 
 ## Implementation Details
 
@@ -127,6 +127,7 @@ import('./src/dependencyInjection/container.js').then(async (mod) => {
 ## Reference Files
 
 For understanding DI registration patterns:
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Existing token definitions
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Existing handler factories
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` - Existing operation mappings

@@ -87,8 +87,7 @@ describe('weapons:magazine Component Definition', () => {
     });
 
     test('magazineType should be string', () => {
-      const magazineType =
-        magazineComponent.dataSchema.properties.magazineType;
+      const magazineType = magazineComponent.dataSchema.properties.magazineType;
       expect(magazineType.type).toBe('string');
     });
   });

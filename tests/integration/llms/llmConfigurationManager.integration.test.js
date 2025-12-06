@@ -53,16 +53,15 @@ function createTestLogger() {
 function createLoaderWithFixtures(fixtures, overrides = {}) {
   return new LlmConfigLoader({
     logger: overrides.logger ?? createTestLogger(),
-    schemaValidator: overrides.schemaValidator ?? new PassthroughSchemaValidator(),
-    configuration:
-      overrides.configuration ??
-      {
-        getContentTypeSchemaId: (key) => (key === 'llm-configs' ? SCHEMA_ID : undefined),
-      },
-    safeEventDispatcher:
-      overrides.safeEventDispatcher ?? {
-        dispatch: jest.fn().mockResolvedValue(true),
-      },
+    schemaValidator:
+      overrides.schemaValidator ?? new PassthroughSchemaValidator(),
+    configuration: overrides.configuration ?? {
+      getContentTypeSchemaId: (key) =>
+        key === 'llm-configs' ? SCHEMA_ID : undefined,
+    },
+    safeEventDispatcher: overrides.safeEventDispatcher ?? {
+      dispatch: jest.fn().mockResolvedValue(true),
+    },
     dataFetcher: overrides.dataFetcher ?? new InMemoryDataFetcher(fixtures),
   });
 }
@@ -131,7 +130,9 @@ describe('LLMConfigurationManager integration', () => {
   });
 
   it('prioritizes initial selection, persists changes, and exposes loader-backed operations', async () => {
-    const loader = createLoaderWithFixtures({ [FIXTURE_PATH]: baseFixtureConfig });
+    const loader = createLoaderWithFixtures({
+      [FIXTURE_PATH]: baseFixtureConfig,
+    });
     const manager = new LLMConfigurationManager({
       logger: createTestLogger(),
       initialLlmId: 'secondary',
@@ -150,7 +151,9 @@ describe('LLMConfigurationManager integration', () => {
     await manager.init({ llmConfigLoader: loader });
 
     expect(await manager.getActiveConfigId()).toBe('secondary');
-    expect(localStorage.getItem(LLMSelectionPersistence.STORAGE_KEY)).toBe('secondary');
+    expect(localStorage.getItem(LLMSelectionPersistence.STORAGE_KEY)).toBe(
+      'secondary'
+    );
 
     const activeConfig = await manager.getActiveConfiguration();
     expect(activeConfig?.configId).toBe('secondary');
@@ -163,7 +166,9 @@ describe('LLMConfigurationManager integration', () => {
     expect(await manager.setActiveConfiguration('missing')).toBe(false);
     expect(await manager.setActiveConfiguration(' ')).toBe(false);
     expect(await manager.setActiveConfiguration('primary')).toBe(true);
-    expect(localStorage.getItem(LLMSelectionPersistence.STORAGE_KEY)).toBe('primary');
+    expect(localStorage.getItem(LLMSelectionPersistence.STORAGE_KEY)).toBe(
+      'primary'
+    );
     expect(await manager.getActiveConfigId()).toBe('primary');
 
     const options = await manager.getAvailableOptions();
@@ -235,14 +240,17 @@ describe('LLMConfigurationManager integration', () => {
       expect.arrayContaining([
         {
           field: 'jsonOutputStrategy.jsonSchema',
-          reason: 'Required when jsonOutputStrategy.method is "openrouter_json_schema".',
+          reason:
+            'Required when jsonOutputStrategy.method is "openrouter_json_schema".',
         },
       ])
     );
   });
 
   it('migrates persisted ids and falls back to defaults when stored selections are invalid', async () => {
-    const loader = createLoaderWithFixtures({ [FIXTURE_PATH]: migrationFixtureConfig });
+    const loader = createLoaderWithFixtures({
+      [FIXTURE_PATH]: migrationFixtureConfig,
+    });
     const manager = new LLMConfigurationManager({ logger: createTestLogger() });
 
     localStorage.setItem(
@@ -262,7 +270,9 @@ describe('LLMConfigurationManager integration', () => {
     );
 
     localStorage.setItem(LLMSelectionPersistence.STORAGE_KEY, 'unknown-config');
-    const fallbackManager = new LLMConfigurationManager({ logger: createTestLogger() });
+    const fallbackManager = new LLMConfigurationManager({
+      logger: createTestLogger(),
+    });
     const fallbackLoader = createLoaderWithFixtures({
       [FIXTURE_PATH]: migrationFixtureConfig,
     });
@@ -271,7 +281,9 @@ describe('LLMConfigurationManager integration', () => {
 
     expect(removeSpy).toHaveBeenCalledWith(LLMSelectionPersistence.STORAGE_KEY);
     expect(await fallbackManager.getActiveConfigId()).toBe('primary');
-    expect(localStorage.getItem(LLMSelectionPersistence.STORAGE_KEY)).toBe('primary');
+    expect(localStorage.getItem(LLMSelectionPersistence.STORAGE_KEY)).toBe(
+      'primary'
+    );
 
     removeSpy.mockRestore();
   });
@@ -307,6 +319,8 @@ describe('LLMConfigurationManager integration', () => {
     });
     await expect(
       invalidDependencyManager.init({ llmConfigLoader: { invalid: true } })
-    ).rejects.toThrow('Initialization requires valid LlmConfigLoader instance.');
+    ).rejects.toThrow(
+      'Initialization requires valid LlmConfigLoader instance.'
+    );
   });
 });

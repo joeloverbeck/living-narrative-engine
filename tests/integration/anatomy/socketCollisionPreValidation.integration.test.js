@@ -18,12 +18,32 @@ describe('Socket Collision Pre-Validation (integration)', () => {
         slots: {
           body: { entityDefinition: 'anatomy:human_body' },
           // Correct: different sockets for different arms
-          left_arm: { parent: 'body', socket: 'shoulder_left', entityDefinition: 'anatomy:arm' },
+          left_arm: {
+            parent: 'body',
+            socket: 'shoulder_left',
+            entityDefinition: 'anatomy:arm',
+          },
           // ERROR: accidentally using same socket as left_arm
-          right_arm: { parent: 'body', socket: 'shoulder_left', entityDefinition: 'anatomy:arm' },
-          head: { parent: 'body', socket: 'neck', entityDefinition: 'anatomy:head' },
-          left_leg: { parent: 'body', socket: 'hip_left', entityDefinition: 'anatomy:leg' },
-          right_leg: { parent: 'body', socket: 'hip_right', entityDefinition: 'anatomy:leg' },
+          right_arm: {
+            parent: 'body',
+            socket: 'shoulder_left',
+            entityDefinition: 'anatomy:arm',
+          },
+          head: {
+            parent: 'body',
+            socket: 'neck',
+            entityDefinition: 'anatomy:head',
+          },
+          left_leg: {
+            parent: 'body',
+            socket: 'hip_left',
+            entityDefinition: 'anatomy:leg',
+          },
+          right_leg: {
+            parent: 'body',
+            socket: 'hip_right',
+            entityDefinition: 'anatomy:leg',
+          },
         },
       };
 
@@ -39,15 +59,39 @@ describe('Socket Collision Pre-Validation (integration)', () => {
         id: 'anatomy:chicken',
         slots: {
           body: { entityDefinition: 'anatomy:chicken_body' },
-          left_leg: { parent: 'body', socket: 'hip_left', entityDefinition: 'anatomy:chicken_leg' },
-          right_leg: { parent: 'body', socket: 'hip_right', entityDefinition: 'anatomy:chicken_leg' },
+          left_leg: {
+            parent: 'body',
+            socket: 'hip_left',
+            entityDefinition: 'anatomy:chicken_leg',
+          },
+          right_leg: {
+            parent: 'body',
+            socket: 'hip_right',
+            entityDefinition: 'anatomy:chicken_leg',
+          },
           // These should use different sockets on their respective parents
           // This is VALID because they have different parents (left_leg vs right_leg)
-          left_foot: { parent: 'left_leg', socket: 'ankle', entityDefinition: 'anatomy:chicken_foot' },
-          right_foot: { parent: 'right_leg', socket: 'ankle', entityDefinition: 'anatomy:chicken_foot' },
+          left_foot: {
+            parent: 'left_leg',
+            socket: 'ankle',
+            entityDefinition: 'anatomy:chicken_foot',
+          },
+          right_foot: {
+            parent: 'right_leg',
+            socket: 'ankle',
+            entityDefinition: 'anatomy:chicken_foot',
+          },
           // These are ALSO valid - different parents
-          left_spur: { parent: 'left_leg', socket: 'spur_joint', entityDefinition: 'anatomy:spur' },
-          right_spur: { parent: 'right_leg', socket: 'spur_joint', entityDefinition: 'anatomy:spur' },
+          left_spur: {
+            parent: 'left_leg',
+            socket: 'spur_joint',
+            entityDefinition: 'anatomy:spur',
+          },
+          right_spur: {
+            parent: 'right_leg',
+            socket: 'spur_joint',
+            entityDefinition: 'anatomy:spur',
+          },
         },
       };
 
@@ -63,10 +107,22 @@ describe('Socket Collision Pre-Validation (integration)', () => {
         id: 'anatomy:creature',
         slots: {
           body: { entityDefinition: 'anatomy:body' },
-          left_leg: { parent: 'body', socket: 'hip_left', entityDefinition: 'anatomy:leg' },
+          left_leg: {
+            parent: 'body',
+            socket: 'hip_left',
+            entityDefinition: 'anatomy:leg',
+          },
           // Two feet trying to attach to same socket on left_leg
-          foot1: { parent: 'left_leg', socket: 'ankle', entityDefinition: 'anatomy:foot' },
-          foot2: { parent: 'left_leg', socket: 'ankle', entityDefinition: 'anatomy:extra_foot' },
+          foot1: {
+            parent: 'left_leg',
+            socket: 'ankle',
+            entityDefinition: 'anatomy:foot',
+          },
+          foot2: {
+            parent: 'left_leg',
+            socket: 'ankle',
+            entityDefinition: 'anatomy:extra_foot',
+          },
         },
       };
 
@@ -89,8 +145,16 @@ describe('Socket Collision Pre-Validation (integration)', () => {
       const blueprint = {
         slots: {
           torso: { entityDefinition: 'body' },
-          appendage_alpha: { parent: 'torso', socket: 'attachment_point', entityDefinition: 'limb' },
-          appendage_beta: { parent: 'torso', socket: 'attachment_point', entityDefinition: 'limb' },
+          appendage_alpha: {
+            parent: 'torso',
+            socket: 'attachment_point',
+            entityDefinition: 'limb',
+          },
+          appendage_beta: {
+            parent: 'torso',
+            socket: 'attachment_point',
+            entityDefinition: 'limb',
+          },
         },
       };
 
@@ -119,14 +183,46 @@ describe('Socket Collision Pre-Validation (integration)', () => {
       const blueprint = {
         slots: {
           root: { entityDefinition: 'base' },
-          level1_a: { parent: 'root', socket: 'socket_1', entityDefinition: 'part' },
-          level1_b: { parent: 'root', socket: 'socket_2', entityDefinition: 'part' },
-          level2_aa: { parent: 'level1_a', socket: 'child_socket', entityDefinition: 'subpart' },
-          level2_ab: { parent: 'level1_a', socket: 'child_socket_2', entityDefinition: 'subpart' },
-          level2_ba: { parent: 'level1_b', socket: 'child_socket', entityDefinition: 'subpart' },
-          level2_bb: { parent: 'level1_b', socket: 'child_socket_2', entityDefinition: 'subpart' },
-          level3_aaa: { parent: 'level2_aa', socket: 'tiny_socket', entityDefinition: 'tiny' },
-          level3_bba: { parent: 'level2_bb', socket: 'tiny_socket', entityDefinition: 'tiny' },
+          level1_a: {
+            parent: 'root',
+            socket: 'socket_1',
+            entityDefinition: 'part',
+          },
+          level1_b: {
+            parent: 'root',
+            socket: 'socket_2',
+            entityDefinition: 'part',
+          },
+          level2_aa: {
+            parent: 'level1_a',
+            socket: 'child_socket',
+            entityDefinition: 'subpart',
+          },
+          level2_ab: {
+            parent: 'level1_a',
+            socket: 'child_socket_2',
+            entityDefinition: 'subpart',
+          },
+          level2_ba: {
+            parent: 'level1_b',
+            socket: 'child_socket',
+            entityDefinition: 'subpart',
+          },
+          level2_bb: {
+            parent: 'level1_b',
+            socket: 'child_socket_2',
+            entityDefinition: 'subpart',
+          },
+          level3_aaa: {
+            parent: 'level2_aa',
+            socket: 'tiny_socket',
+            entityDefinition: 'tiny',
+          },
+          level3_bba: {
+            parent: 'level2_bb',
+            socket: 'tiny_socket',
+            entityDefinition: 'tiny',
+          },
         },
       };
 
@@ -140,10 +236,22 @@ describe('Socket Collision Pre-Validation (integration)', () => {
       const blueprint = {
         slots: {
           root: { entityDefinition: 'base' },
-          level1_a: { parent: 'root', socket: 'socket_1', entityDefinition: 'part' },
-          level2_aa: { parent: 'level1_a', socket: 'child_socket', entityDefinition: 'subpart' },
+          level1_a: {
+            parent: 'root',
+            socket: 'socket_1',
+            entityDefinition: 'part',
+          },
+          level2_aa: {
+            parent: 'level1_a',
+            socket: 'child_socket',
+            entityDefinition: 'subpart',
+          },
           // Collision at level 2 - same parent, same socket
-          level2_ab: { parent: 'level1_a', socket: 'child_socket', entityDefinition: 'collision' },
+          level2_ab: {
+            parent: 'level1_a',
+            socket: 'child_socket',
+            entityDefinition: 'collision',
+          },
         },
       };
 

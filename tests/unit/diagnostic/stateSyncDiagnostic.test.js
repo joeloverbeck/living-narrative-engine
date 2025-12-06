@@ -81,9 +81,18 @@ describe('State Sync Diagnostic', () => {
     const initialState = buildDualFormatState(actor);
 
     console.log('\n=== Initial State ===');
-    console.log('Flat hash:', JSON.stringify(initialState['test_actor:core:stats']));
-    console.log('Nested (colon):', JSON.stringify(initialState.actor.components['core:stats']));
-    console.log('Nested (flattened):', JSON.stringify(initialState.actor.components['core_stats']));
+    console.log(
+      'Flat hash:',
+      JSON.stringify(initialState['test_actor:core:stats'])
+    );
+    console.log(
+      'Nested (colon):',
+      JSON.stringify(initialState.actor.components['core:stats'])
+    );
+    console.log(
+      'Nested (flattened):',
+      JSON.stringify(initialState.actor.components['core_stats'])
+    );
 
     const simResult = setup.effectsSimulator.simulateEffects(
       initialState,
@@ -93,9 +102,18 @@ describe('State Sync Diagnostic', () => {
 
     console.log('\n=== After Simulation ===');
     console.log('Simulation success:', simResult.success);
-    console.log('Flat hash:', JSON.stringify(simResult.state['test_actor:core:stats']));
-    console.log('Nested (colon):', JSON.stringify(simResult.state.actor?.components?.['core:stats']));
-    console.log('Nested (flattened):', JSON.stringify(simResult.state.actor?.components?.['core_stats']));
+    console.log(
+      'Flat hash:',
+      JSON.stringify(simResult.state['test_actor:core:stats'])
+    );
+    console.log(
+      'Nested (colon):',
+      JSON.stringify(simResult.state.actor?.components?.['core:stats'])
+    );
+    console.log(
+      'Nested (flattened):',
+      JSON.stringify(simResult.state.actor?.components?.['core_stats'])
+    );
 
     expect(simResult.success).toBe(true);
     expect(simResult.state['test_actor:core:stats'].health).toBe(40);
@@ -104,7 +122,9 @@ describe('State Sync Diagnostic', () => {
 
     const goal = createTestGoal({
       id: 'test:heal_self',
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });

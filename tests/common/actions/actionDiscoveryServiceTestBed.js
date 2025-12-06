@@ -594,7 +594,10 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
    * @param {string} [options.location] - Location ID for the actor
    * @returns {object} Validated actor entity
    */
-  createActorWithValidation(actorId, { components = {}, location = 'test-location' } = {}) {
+  createActorWithValidation(
+    actorId,
+    { components = {}, location = 'test-location' } = {}
+  ) {
     // Use ModEntityBuilder for creation
     const builder = new ModEntityBuilder(actorId).asActor();
 
@@ -630,20 +633,30 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Validate entities exist
     // Note: SimpleEntityManager uses getEntityInstance(), mock uses getEntity()
-    const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
+    const getEntityFn =
+      this.mocks.entityManager.getEntityInstance ||
+      this.mocks.entityManager.getEntity;
     const actorEntity = getEntityFn.call(this.mocks.entityManager, actorId);
     const targetEntity = getEntityFn.call(this.mocks.entityManager, targetId);
 
     if (!actorEntity) {
-      throw new Error(`Cannot establish closeness: Actor '${actorId}' not found in entity manager`);
+      throw new Error(
+        `Cannot establish closeness: Actor '${actorId}' not found in entity manager`
+      );
     }
     if (!targetEntity) {
-      throw new Error(`Cannot establish closeness: Target '${targetId}' not found in entity manager`);
+      throw new Error(
+        `Cannot establish closeness: Target '${targetId}' not found in entity manager`
+      );
     }
 
     // Get or create closeness components
-    const actorCloseness = actorEntity.components['positioning:closeness'] || { partners: [] };
-    const targetCloseness = targetEntity.components['positioning:closeness'] || { partners: [] };
+    const actorCloseness = actorEntity.components['positioning:closeness'] || {
+      partners: [],
+    };
+    const targetCloseness = targetEntity.components[
+      'positioning:closeness'
+    ] || { partners: [] };
 
     // Add bidirectional relationship
     if (!actorCloseness.partners.includes(targetId)) {
@@ -655,8 +668,16 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Update entities
     // Note: Requires SimpleEntityManager for integration tests (has addComponent method)
-    this.mocks.entityManager.addComponent(actorId, 'positioning:closeness', actorCloseness);
-    this.mocks.entityManager.addComponent(targetId, 'positioning:closeness', targetCloseness);
+    this.mocks.entityManager.addComponent(
+      actorId,
+      'positioning:closeness',
+      actorCloseness
+    );
+    this.mocks.entityManager.addComponent(
+      targetId,
+      'positioning:closeness',
+      targetCloseness
+    );
   }
 
   /**
@@ -691,7 +712,9 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
   ) {
     const actorId = typeof actor === 'string' ? actor : actor.id;
     // Note: SimpleEntityManager uses getEntityInstance(), mock uses getEntity()
-    const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
+    const getEntityFn =
+      this.mocks.entityManager.getEntityInstance ||
+      this.mocks.entityManager.getEntity;
     const actorEntity = getEntityFn.call(this.mocks.entityManager, actorId);
 
     if (!actorEntity) {
@@ -703,7 +726,9 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Optionally use traced scope resolver
     if (traceScopeResolution && traceContext && this.mocks.scopeResolver) {
-      const { createTracedScopeResolver } = await import('../scopeDsl/scopeTracingHelpers.js');
+      const { createTracedScopeResolver } = await import(
+        '../scopeDsl/scopeTracingHelpers.js'
+      );
       this.mocks.scopeResolver = createTracedScopeResolver(
         this.mocks.scopeResolver,
         traceContext
@@ -712,9 +737,13 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Call service - ActionDiscoveryService uses getValidActions method
     const service = this.service || this.createStandardDiscoveryService();
-    const result = await service.getValidActions(actorEntity, {}, {
-      trace: traceContext,
-    });
+    const result = await service.getValidActions(
+      actorEntity,
+      {},
+      {
+        trace: traceContext,
+      }
+    );
 
     if (includeDiagnostics) {
       return {
@@ -746,10 +775,10 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
 
     // Trace logs summary
     lines.push(`Trace Logs: ${diagnostics.logs.length} entries`);
-    const errorLogs = diagnostics.logs.filter(log => log.type === 'error');
+    const errorLogs = diagnostics.logs.filter((log) => log.type === 'error');
     if (errorLogs.length > 0) {
       lines.push(`  Errors: ${errorLogs.length}`);
-      errorLogs.forEach(log => {
+      errorLogs.forEach((log) => {
         lines.push(`    - ${log.message}`);
       });
     }
@@ -759,7 +788,7 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
     const opEvals = diagnostics.operatorEvaluations || [];
     lines.push(`Operator Evaluations: ${opEvals.length}`);
     if (opEvals.length > 0) {
-      opEvals.forEach(op => {
+      opEvals.forEach((op) => {
         lines.push(`  - ${op.operator}: ${op.success ? '✅' : '❌'}`);
       });
     }
@@ -769,7 +798,7 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
     const scopeEvals = diagnostics.scopeEvaluations || [];
     lines.push(`Scope Evaluations: ${scopeEvals.length}`);
     if (scopeEvals.length > 0) {
-      scopeEvals.forEach(scope => {
+      scopeEvals.forEach((scope) => {
         const resolved = scope.resolvedEntities?.length || 0;
         const candidates = scope.candidateEntities?.length || 0;
         const filtered = candidates - resolved;
@@ -821,7 +850,9 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
       this.establishClosenessWithValidation(actor, target);
 
       // Re-fetch entities after closeness establishment to get updated components
-      const getEntityFn = this.mocks.entityManager.getEntityInstance || this.mocks.entityManager.getEntity;
+      const getEntityFn =
+        this.mocks.entityManager.getEntityInstance ||
+        this.mocks.entityManager.getEntity;
       return {
         actor: getEntityFn.call(this.mocks.entityManager, actorId),
         target: getEntityFn.call(this.mocks.entityManager, targetId),

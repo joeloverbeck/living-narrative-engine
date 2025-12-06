@@ -394,7 +394,9 @@ describe('LogExporter - Core Functionality', () => {
         expect(URL.createObjectURL).toHaveBeenCalled();
         expect(appendSpy).toHaveBeenCalledWith(link);
         expect(clickSpy).toHaveBeenCalled();
-        expect(mockLogger.debug).toHaveBeenCalledWith('Downloaded logs as test.txt');
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'Downloaded logs as test.txt'
+        );
 
         expect(removeSpy).not.toHaveBeenCalled();
         jest.runAllTimers();

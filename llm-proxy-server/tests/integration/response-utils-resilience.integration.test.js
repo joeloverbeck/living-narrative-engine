@@ -40,7 +40,7 @@ describe('sendProxyError Express integration', () => {
         'Upstream service reported a failure.',
         { reason: 'integration-structured', llmId: 'llm-teapot' },
         'llm-teapot',
-        logger,
+        logger
       );
     });
 
@@ -57,7 +57,12 @@ describe('sendProxyError Express integration', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Sending error to client'),
-      expect.objectContaining({ errorDetailsSentToClient: { reason: 'integration-structured', llmId: 'llm-teapot' } }),
+      expect.objectContaining({
+        errorDetailsSentToClient: {
+          reason: 'integration-structured',
+          llmId: 'llm-teapot',
+        },
+      })
     );
   });
 
@@ -77,7 +82,7 @@ describe('sendProxyError Express integration', () => {
         'Secondary failure after write.',
         { reason: 'headers-already-sent' },
         'llm-headers',
-        logger,
+        logger
       );
 
       res.end();
@@ -89,7 +94,9 @@ describe('sendProxyError Express integration', () => {
     expect(response.text).toBe('partial-response');
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('headers were already sent'),
-      expect.objectContaining({ errorDetailsNotSentDueToHeaders: { reason: 'headers-already-sent' } }),
+      expect.objectContaining({
+        errorDetailsNotSentDueToHeaders: { reason: 'headers-already-sent' },
+      })
     );
   });
 
@@ -108,7 +115,7 @@ describe('sendProxyError Express integration', () => {
         'Unable to reach provider.',
         { targetUrl: 'https://example.invalid' },
         'llm-fallback',
-        logger,
+        logger
       );
     });
 
@@ -118,13 +125,15 @@ describe('sendProxyError Express integration', () => {
     expect(response.text).toContain('Internal Server Error');
 
     const criticalLog = logger.error.mock.calls.find(([message]) =>
-      message.includes('CRITICAL - Failed to send original error response'),
+      message.includes('CRITICAL - Failed to send original error response')
     );
     expect(criticalLog).toBeDefined();
     expect(criticalLog[1]).toEqual(
       expect.objectContaining({
-        originalErrorIntendedForClient: expect.objectContaining({ stage: 'llm_provider_unreachable' }),
-      }),
+        originalErrorIntendedForClient: expect.objectContaining({
+          stage: 'llm_provider_unreachable',
+        }),
+      })
     );
   });
 });

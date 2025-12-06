@@ -312,12 +312,10 @@ describe('EntityGraphBuilder', () => {
         mocks.entityManager.getEntityInstance = getEntityMock;
 
         let caughtError;
-        const promise = builder
-          .createRootEntity('base', {})
-          .catch((error) => {
-            caughtError = error;
-            return null;
-          });
+        const promise = builder.createRootEntity('base', {}).catch((error) => {
+          caughtError = error;
+          return null;
+        });
 
         await jest.advanceTimersByTimeAsync(10);
         await jest.advanceTimersByTimeAsync(20);
@@ -333,7 +331,9 @@ describe('EntityGraphBuilder', () => {
         );
         expect(getEntityMock).toHaveBeenCalledTimes(6);
         expect(mocks.logger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Entity creation-verification failed after 5 retries'),
+          expect.stringContaining(
+            'Entity creation-verification failed after 5 retries'
+          ),
           expect.objectContaining({
             entityId: 'entity-999',
             definitionId: 'base',

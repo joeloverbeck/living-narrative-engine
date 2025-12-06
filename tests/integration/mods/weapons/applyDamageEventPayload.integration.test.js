@@ -17,7 +17,14 @@
  *   - orientation (resolved from anatomy:part component)
  */
 
-import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  jest,
+  afterEach,
+} from '@jest/globals';
 
 /**
  * Expected payload structure for anatomy:damage_applied events
@@ -225,8 +232,12 @@ describe('APPLY_DAMAGE event payload - entity resolution', () => {
       };
 
       expect(payloadWithPropagation.propagatedDamage).toHaveLength(2);
-      expect(payloadWithPropagation.propagatedDamage[0].childPartType).toBe('heart');
-      expect(payloadWithPropagation.propagatedDamage[1].childPartType).toBe('spine');
+      expect(payloadWithPropagation.propagatedDamage[0].childPartType).toBe(
+        'heart'
+      );
+      expect(payloadWithPropagation.propagatedDamage[1].childPartType).toBe(
+        'spine'
+      );
     });
   });
 

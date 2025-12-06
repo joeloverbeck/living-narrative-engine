@@ -13,13 +13,13 @@
 
 The `LegacyStrategy` class exhibits significant structural issues that compromise maintainability, testability, and robustness to change:
 
-| Issue | Severity | Impact | Effort |
-|-------|----------|--------|--------|
-| **Massive Code Duplication** (~80% between two methods) | 🔴 Critical | High coupling, double maintenance burden | Medium |
-| **High Cyclomatic Complexity** (Multi-target logic) | 🔴 Critical | Error-prone, difficult to test | High |
-| **Large Method Sizes** (200+ line methods) | 🟡 High | Poor readability, testing challenges | Medium |
-| **9 Constructor Dependencies** | 🟡 High | High coupling, initialization complexity | Low-Medium |
-| **Nested Conditional Logic** (4+ levels) | 🟡 High | Cognitive load, maintenance burden | Medium |
+| Issue                                                   | Severity    | Impact                                   | Effort     |
+| ------------------------------------------------------- | ----------- | ---------------------------------------- | ---------- |
+| **Massive Code Duplication** (~80% between two methods) | 🔴 Critical | High coupling, double maintenance burden | Medium     |
+| **High Cyclomatic Complexity** (Multi-target logic)     | 🔴 Critical | Error-prone, difficult to test           | High       |
+| **Large Method Sizes** (200+ line methods)              | 🟡 High     | Poor readability, testing challenges     | Medium     |
+| **9 Constructor Dependencies**                          | 🟡 High     | High coupling, initialization complexity | Low-Medium |
+| **Nested Conditional Logic** (4+ levels)                | 🟡 High     | Cognitive load, maintenance burden       | Medium     |
 
 ### Overall Assessment
 
@@ -38,12 +38,14 @@ The `LegacyStrategy` class exhibits significant structural issues that compromis
 The `#formatTraced` (lines 136-383) and `#formatStandard` (lines 395-601) methods share approximately 80% identical code, differing only in trace-related operations.
 
 **Evidence:**
+
 - Lines 148-179 vs 406-426: Identical multi-target validation
 - Lines 181-256 vs 428-500: Identical formatMultiTarget logic
 - Lines 275-332 vs 516-570: Identical single-target formatting
 - Lines 356-359 vs 574-577: Identical logging
 
 **Impact:**
+
 - **Maintenance Burden**: Bug fixes must be applied in two places
 - **Inconsistency Risk**: Logic drift between methods (already observed in recent commits)
 - **Testing Overhead**: Duplicate test coverage required
@@ -88,17 +90,20 @@ if (isMultiTargetAction) {
 #### Problem: Large, Multi-Responsibility Methods
 
 **Method Size Analysis:**
+
 - `#formatTraced`: 247 lines (recommended max: 50)
 - `#formatStandard`: 206 lines (recommended max: 50)
 - Both methods handle: validation, extraction, formatting, normalization, error handling, statistics, and tracing
 
 **Cyclomatic Complexity:**
+
 - `#formatTraced`: ~18 (recommended max: 10)
 - `#formatStandard`: ~16 (recommended max: 10)
 - Multiple nested conditionals (up to 4 levels deep)
 
 **Single Responsibility Violations:**
 Each method handles:
+
 1. Visual property validation
 2. Multi-target detection
 3. Target extraction
@@ -111,6 +116,7 @@ Each method handles:
 10. Fallback coordination
 
 **Impact:**
+
 - Difficult to understand flow
 - Hard to test individual responsibilities
 - Changes ripple across unrelated concerns
@@ -165,12 +171,14 @@ if (isMultiTargetAction) {
 ```
 
 **Issues:**
+
 - 6 levels of nesting (recommended max: 3)
 - Multiple conditional branches at each level
 - Difficult to trace execution paths
 - High cognitive load for developers
 
 **Metrics:**
+
 - **Cognitive Complexity**: 35 (High - recommended max: 15)
 - **Path Coverage Required**: 127 test cases for full coverage
 - **Bug Probability**: High (proportional to nesting depth)
@@ -182,21 +190,23 @@ if (isMultiTargetAction) {
 #### Problem: High Dependency Count
 
 **Constructor Dependencies (9 total):**
+
 ```javascript
 constructor({
-  commandFormatter,         // 1. Formatting logic
-  entityManager,           // 2. Entity resolution
-  safeEventDispatcher,     // 3. Event dispatch
-  getEntityDisplayNameFn,  // 4. Display name resolution
-  logger,                  // 5. Logging
-  fallbackFormatter,       // 6. Fallback formatting
-  createError,            // 7. Error factory
+  commandFormatter, // 1. Formatting logic
+  entityManager, // 2. Entity resolution
+  safeEventDispatcher, // 3. Event dispatch
+  getEntityDisplayNameFn, // 4. Display name resolution
+  logger, // 5. Logging
+  fallbackFormatter, // 6. Fallback formatting
+  createError, // 7. Error factory
   targetNormalizationService, // 8. Target normalization
-  validateVisualProperties,   // 9. Visual validation
-})
+  validateVisualProperties, // 9. Visual validation
+});
 ```
 
 **Issues:**
+
 - **High Coupling**: Class depends on 9 external components
 - **Testing Complexity**: Must mock 9 dependencies in tests
 - **Initialization Burden**: Complex setup requirements
@@ -204,19 +214,20 @@ constructor({
 
 **Dependency Analysis:**
 
-| Dependency | Usage Frequency | Criticality | Abstraction Opportunity |
-|------------|----------------|-------------|-------------------------|
-| `commandFormatter` | High (50+ calls) | Critical | No |
-| `entityManager` | Medium (20+ calls) | Critical | No |
-| `logger` | High (30+ calls) | Medium | Yes - could use nullLogger pattern |
-| `fallbackFormatter` | Low (2 calls) | Medium | Yes - could inline or extract strategy |
-| `createError` | Medium (10+ calls) | Low | Yes - could be static utility |
-| `validateVisualProperties` | Low (2 calls) | Low | Yes - could be static utility |
-| `getEntityDisplayNameFn` | Medium (5+ calls) | Low | No |
-| `safeEventDispatcher` | Low (passthrough) | Low | Yes - could be optional |
-| `targetNormalizationService` | Medium (10+ calls) | Critical | No |
+| Dependency                   | Usage Frequency    | Criticality | Abstraction Opportunity                |
+| ---------------------------- | ------------------ | ----------- | -------------------------------------- |
+| `commandFormatter`           | High (50+ calls)   | Critical    | No                                     |
+| `entityManager`              | Medium (20+ calls) | Critical    | No                                     |
+| `logger`                     | High (30+ calls)   | Medium      | Yes - could use nullLogger pattern     |
+| `fallbackFormatter`          | Low (2 calls)      | Medium      | Yes - could inline or extract strategy |
+| `createError`                | Medium (10+ calls) | Low         | Yes - could be static utility          |
+| `validateVisualProperties`   | Low (2 calls)      | Low         | Yes - could be static utility          |
+| `getEntityDisplayNameFn`     | Medium (5+ calls)  | Low         | No                                     |
+| `safeEventDispatcher`        | Low (passthrough)  | Low         | Yes - could be optional                |
+| `targetNormalizationService` | Medium (10+ calls) | Critical    | No                                     |
 
 **Recommended Dependency Reduction:**
+
 - Move `validateVisualProperties` to static utility
 - Move `createError` to static factory
 - Make `safeEventDispatcher` optional/injectable through options
@@ -229,6 +240,7 @@ constructor({
 #### Problem: Intertwined Multi-Target and Single-Target Logic
 
 The multi-target formatting logic (lines 164-270, 412-514) contains multiple conditional branches for:
+
 1. Target extraction validation
 2. Formatter capability detection
 3. Format result processing
@@ -238,12 +250,14 @@ The multi-target formatting logic (lines 164-270, 412-514) contains multiple con
 7. Fallback coordination
 
 **Complexity Metrics:**
+
 - **Branches**: 8 distinct paths
 - **Early Exits**: 3 different exit points
 - **Fallback Triggers**: 2 different conditions
 - **Type Checks**: 5 different type validations
 
 **Impact:**
+
 - Difficult to reason about control flow
 - Hard to test all combinations
 - Brittle to requirement changes
@@ -258,6 +272,7 @@ The multi-target formatting logic (lines 164-270, 412-514) contains multiple con
 **Three Different Error Handling Patterns:**
 
 1. **Silent Skip** (lines 175-179):
+
 ```javascript
 if (!actionSpecificTargets || Object.keys(actionSpecificTargets).length === 0) {
   this.#logger.warn(...);
@@ -266,6 +281,7 @@ if (!actionSpecificTargets || Object.keys(actionSpecificTargets).length === 0) {
 ```
 
 2. **Error Collection** (lines 214-224):
+
 ```javascript
 if (normalizationResult.error) {
   errors.push(
@@ -276,6 +292,7 @@ if (normalizationResult.error) {
 ```
 
 3. **Try-Catch with Error Collection** (lines 311-330):
+
 ```javascript
 try {
   const formatResult = this.#commandFormatter.format(...);
@@ -288,6 +305,7 @@ try {
 ```
 
 **Issues:**
+
 - Inconsistent error handling strategy
 - Silent failures (pattern 1) vs recorded failures (patterns 2-3)
 - No centralized error handling logic
@@ -314,6 +332,7 @@ Statistics are tracked conditionally through the `#incrementStat` helper:
 ```
 
 **Issues:**
+
 - Statistics tracking scattered across methods (15+ call sites)
 - Optional stats object creates inconsistent behavior
 - Difficult to verify statistics accuracy
@@ -321,6 +340,7 @@ Statistics are tracked conditionally through the `#incrementStat` helper:
 - No statistics abstraction or interface
 
 **Impact:**
+
 - Hard to ensure statistics completeness
 - Testing requires mocking statistics object
 - Changes to statistics requirements affect multiple locations
@@ -473,6 +493,7 @@ async format({ actor, actionsWithTargets = [], trace, processingStats, traceSour
 ```
 
 **Benefits:**
+
 - ✅ Eliminates 400+ lines of duplication
 - ✅ Single source of truth for formatting logic
 - ✅ Trace behavior encapsulated in adapter
@@ -623,6 +644,7 @@ async #formatWithMultiTargetFormatter({
 ```
 
 **Benefits:**
+
 - ✅ Reduces cyclomatic complexity from 18 to ~8 per method
 - ✅ Clear separation of concerns
 - ✅ Each method has single responsibility
@@ -761,6 +783,7 @@ async #formatSingleTargetAction({
 ```
 
 **Benefits:**
+
 - ✅ Isolates single-target logic
 - ✅ Consistent error handling pattern
 - ✅ Easy to test edge cases
@@ -821,6 +844,7 @@ async #formatActions({ ..., processingStats }) {
 ```
 
 **Benefits:**
+
 - ✅ Centralized statistics logic
 - ✅ Easier to test statistics tracking
 - ✅ Clear API for statistics operations
@@ -877,6 +901,7 @@ constructor({
 ```
 
 **Benefits:**
+
 - ✅ Reduces constructor complexity
 - ✅ Makes optional dependencies explicit
 - ✅ Easier to test with fewer mocks
@@ -952,6 +977,7 @@ class FormattingErrorHandler {
 ```
 
 **Benefits:**
+
 - ✅ Consistent error handling across all paths
 - ✅ Centralized error logging logic
 - ✅ Easier to change error handling strategy
@@ -965,6 +991,7 @@ class FormattingErrorHandler {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1)
+
 **Goal:** Establish refactoring foundation without breaking changes
 
 1. **Create Statistics Abstraction** (0.5 days)
@@ -988,6 +1015,7 @@ class FormattingErrorHandler {
 ---
 
 ### Phase 2: Method Extraction (Week 2)
+
 **Goal:** Break down large methods into focused units
 
 4. **Extract Single-Target Formatting** (1 day)
@@ -1012,6 +1040,7 @@ class FormattingErrorHandler {
 ---
 
 ### Phase 3: Duplication Elimination (Week 3)
+
 **Goal:** Unify duplicated logic into single source of truth
 
 7. **Create Trace Adapter** (0.5-1 day)
@@ -1038,6 +1067,7 @@ class FormattingErrorHandler {
 ---
 
 ### Phase 4: Dependency Optimization (Week 4)
+
 **Goal:** Reduce coupling and improve testability
 
 10. **Optimize Constructor** (1 day)
@@ -1067,6 +1097,7 @@ class FormattingErrorHandler {
 ### Unit Test Requirements
 
 **Coverage Targets:**
+
 - Line Coverage: 95%+
 - Branch Coverage: 90%+
 - Function Coverage: 100%
@@ -1133,11 +1164,13 @@ class FormattingErrorHandler {
 ### Regression Testing
 
 **Pre-Refactoring Baseline:**
+
 - Capture current test results
 - Document expected behavior
 - Create behavior snapshots
 
 **Post-Refactoring Verification:**
+
 - All existing tests pass
 - No performance degradation
 - Same output for same inputs
@@ -1174,18 +1207,21 @@ class FormattingErrorHandler {
 ### Business Value Metrics
 
 **Maintainability:**
+
 - ✅ 60% reduction in code duplication
 - ✅ 50% reduction in method complexity
 - ✅ 80% reduction in nesting depth
 - ✅ 30% faster code comprehension (estimated)
 
 **Robustness:**
+
 - ✅ Single source of truth for formatting logic
 - ✅ Consistent error handling across all paths
 - ✅ Better test coverage in critical paths
 - ✅ Easier to validate behavioral correctness
 
 **Extensibility:**
+
 - ✅ New trace types can be added via adapter pattern
 - ✅ New formatting strategies can be added without modifying core
 - ✅ Statistics tracking can be extended without touching business logic
@@ -1242,14 +1278,17 @@ class FormattingErrorHandler {
 ## Alternative Approaches
 
 ### Option 1: Big Bang Rewrite
+
 **Approach:** Complete rewrite of LegacyStrategy from scratch
 
 **Pros:**
+
 - Clean slate, modern patterns
 - No legacy baggage
 - Optimal architecture
 
 **Cons:**
+
 - High risk of behavioral changes
 - Long development time (3-4 weeks)
 - Extensive testing required
@@ -1260,15 +1299,18 @@ class FormattingErrorHandler {
 ---
 
 ### Option 2: Gradual Refactoring (Recommended)
+
 **Approach:** Phase-by-phase refactoring as proposed in this report
 
 **Pros:**
+
 - Lower risk of breakage
 - Continuous validation
 - Can be stopped at any phase
 - Maintains backward compatibility
 
 **Cons:**
+
 - Longer timeline (4 weeks)
 - Requires discipline to complete
 - Some temporary complexity
@@ -1278,14 +1320,17 @@ class FormattingErrorHandler {
 ---
 
 ### Option 3: Minimal Refactoring
+
 **Approach:** Only extract methods, leave duplication
 
 **Pros:**
+
 - Quick to implement (1 week)
 - Low risk
 - Some improvement
 
 **Cons:**
+
 - Doesn't address root problems
 - Duplication remains
 - Limited maintainability improvement
@@ -1296,14 +1341,17 @@ class FormattingErrorHandler {
 ---
 
 ### Option 4: Replacement with New Strategy
+
 **Approach:** Create new formatting strategy, deprecate legacy
 
 **Pros:**
+
 - Modern implementation
 - No legacy constraints
 - Clean architecture
 
 **Cons:**
+
 - Requires maintaining both strategies
 - Migration path needed
 - High effort (6+ weeks)
@@ -1335,6 +1383,7 @@ The `LegacyStrategy` class exhibits significant technical debt that compromises 
 - **Phase 4 (Week 4):** Optimize dependencies and finalize
 
 **Expected Outcomes:**
+
 - 60% reduction in code duplication
 - 50% reduction in complexity
 - 95%+ test coverage
@@ -1344,12 +1393,14 @@ The `LegacyStrategy` class exhibits significant technical debt that compromises 
 ### Business Value
 
 **Short-term Benefits (Weeks 1-4):**
+
 - Easier to understand and modify
 - Faster onboarding for new developers
 - Reduced bug introduction risk
 - Better test coverage
 
 **Long-term Benefits (Months):**
+
 - Lower maintenance costs
 - Faster feature development
 - More confident refactoring
@@ -1423,4 +1474,4 @@ The `LegacyStrategy` class exhibits significant technical debt that compromises 
 
 ---
 
-*This analysis was generated on October 24, 2025, based on the current state of `LegacyStrategy.js`. Recommendations should be validated with the development team and adjusted based on project priorities and constraints.*
+_This analysis was generated on October 24, 2025, based on the current state of `LegacyStrategy.js`. Recommendations should be validated with the development team and adjusted based on project priorities and constraints._

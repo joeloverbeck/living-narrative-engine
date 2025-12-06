@@ -239,7 +239,7 @@ describe('Action Discovery Workflow Performance', () => {
               description: 'A test room for action discovery',
             },
             'core:position': { x: 0, y: 0, z: 0 },
-            "movement:exits": [
+            'movement:exits': [
               { direction: 'north', target: 'test-location-2', blocker: null },
             ],
           },
@@ -252,7 +252,7 @@ describe('Action Discovery Workflow Performance', () => {
             'core:name': { name: 'Test Room 2' },
             'core:description': { description: 'Another test room' },
             'core:position': { x: 1, y: 0, z: 0 },
-            "movement:exits": [
+            'movement:exits': [
               { direction: 'south', target: 'test-location-1', blocker: null },
             ],
           },

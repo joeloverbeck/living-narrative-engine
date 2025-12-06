@@ -13,8 +13,8 @@ Create unit tests for the `positioning:wielding` component schema validation, en
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                                                       | Action | Description             |
+| -------------------------------------------------------------------------- | ------ | ----------------------- |
 | `tests/unit/mods/positioning/components/wielding_component_schema.test.js` | CREATE | Schema validation tests |
 
 ## Out of Scope
@@ -126,18 +126,18 @@ describe('positioning:wielding Component Schema', () => {
 
 ### Test Cases Matrix
 
-| Test Case | Input | Expected |
-|-----------|-------|----------|
-| Valid: Empty array | `{ wielded_item_ids: [] }` | ✅ Pass |
-| Valid: Single item | `{ wielded_item_ids: ['sword-1'] }` | ✅ Pass |
-| Valid: Multiple items | `{ wielded_item_ids: ['sword-1', 'dagger-2'] }` | ✅ Pass |
-| Valid: Namespaced IDs | `{ wielded_item_ids: ['weapons:silver_revolver'] }` | ✅ Pass |
-| Valid: With activityMetadata | `{ wielded_item_ids: ['sword'], activityMetadata: { shouldDescribeInActivity: true } }` | ✅ Pass |
-| Invalid: Missing wielded_item_ids | `{}` | ❌ Fail |
-| Invalid: Items as string | `{ wielded_item_ids: 'sword' }` | ❌ Fail |
-| Invalid: Non-string in array | `{ wielded_item_ids: [123] }` | ❌ Fail |
-| Invalid: Additional properties | `{ wielded_item_ids: [], extra: 'bad' }` | ❌ Fail |
-| Invalid: Duplicate items | `{ wielded_item_ids: ['sword', 'sword'] }` | ❌ Fail |
+| Test Case                         | Input                                                                                   | Expected |
+| --------------------------------- | --------------------------------------------------------------------------------------- | -------- |
+| Valid: Empty array                | `{ wielded_item_ids: [] }`                                                              | ✅ Pass  |
+| Valid: Single item                | `{ wielded_item_ids: ['sword-1'] }`                                                     | ✅ Pass  |
+| Valid: Multiple items             | `{ wielded_item_ids: ['sword-1', 'dagger-2'] }`                                         | ✅ Pass  |
+| Valid: Namespaced IDs             | `{ wielded_item_ids: ['weapons:silver_revolver'] }`                                     | ✅ Pass  |
+| Valid: With activityMetadata      | `{ wielded_item_ids: ['sword'], activityMetadata: { shouldDescribeInActivity: true } }` | ✅ Pass  |
+| Invalid: Missing wielded_item_ids | `{}`                                                                                    | ❌ Fail  |
+| Invalid: Items as string          | `{ wielded_item_ids: 'sword' }`                                                         | ❌ Fail  |
+| Invalid: Non-string in array      | `{ wielded_item_ids: [123] }`                                                           | ❌ Fail  |
+| Invalid: Additional properties    | `{ wielded_item_ids: [], extra: 'bad' }`                                                | ❌ Fail  |
+| Invalid: Duplicate items          | `{ wielded_item_ids: ['sword', 'sword'] }`                                              | ❌ Fail  |
 
 ## Acceptance Criteria
 
@@ -171,6 +171,7 @@ npx eslint tests/unit/mods/positioning/components/wielding_component_schema.test
 ## Reference Files
 
 Study these for test patterns:
+
 - Look for existing component schema tests in `tests/unit/mods/`
 - `tests/common/testBed.js` - Test utilities
 - `tests/common/mods/domainMatchers.js` - Custom matchers
@@ -190,6 +191,7 @@ Creating a new test file with approximately 100-150 lines.
 **Planned**: Create unit tests with structure outlined in ticket
 
 **Actual Implementation**:
+
 - Created `tests/unit/mods/positioning/components/wielding_component_schema.test.js` with **37 tests** (exceeded the original ~15-20 suggested)
 - Followed the pattern from `doingComplexPerformance.test.js` in the same directory
 - No discrepancies found in ticket assumptions - the component schema matched expectations
@@ -197,19 +199,23 @@ Creating a new test file with approximately 100-150 lines.
 ### Tests Created
 
 **Component Definition (5 tests)**:
+
 - Schema validity, correct ID, description, wielding mention, required fields
 
 **Valid Cases (9 tests)**:
+
 - Empty array, single/multiple items, namespaced IDs, underscore/hyphen IDs
 - Minimal/full/empty activityMetadata, priority boundary values
 
 **Invalid Cases (14 tests)**:
+
 - Missing/null/string wielded_item_ids, non-string/object in array
 - Duplicate items, additional properties at root and in activityMetadata
 - Priority below/above range, non-integer priority
 - Wrong types for shouldDescribeInActivity, template, targetRoleIsArray
 
 **Edge Cases - namespacedId Pattern (9 tests)**:
+
 - Large arrays, empty/whitespace strings, IDs with spaces/special chars
 - Multi-colon namespacing, numeric-only IDs, single char IDs, mixed valid IDs
 

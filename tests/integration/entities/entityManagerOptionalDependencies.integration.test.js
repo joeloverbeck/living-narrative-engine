@@ -22,10 +22,18 @@ describe('EntityManager integration with optional dependency factories', () => {
   const consoleSpies = {};
 
   beforeAll(() => {
-    consoleSpies.debug = jest.spyOn(console, 'debug').mockImplementation(() => {});
-    consoleSpies.info = jest.spyOn(console, 'info').mockImplementation(() => {});
-    consoleSpies.warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleSpies.error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleSpies.debug = jest
+      .spyOn(console, 'debug')
+      .mockImplementation(() => {});
+    consoleSpies.info = jest
+      .spyOn(console, 'info')
+      .mockImplementation(() => {});
+    consoleSpies.warn = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    consoleSpies.error = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
   });
 
   afterAll(() => {
@@ -49,7 +57,10 @@ describe('EntityManager integration with optional dependency factories', () => {
     );
 
     await schemaValidator.loadSchemaObject(commonSchema.$id, commonSchema);
-    await schemaValidator.loadSchemaObject(componentSchema.$id, componentSchema);
+    await schemaValidator.loadSchemaObject(
+      componentSchema.$id,
+      componentSchema
+    );
     await schemaValidator.loadSchemaObject(
       allowsSittingComponent.id,
       allowsSittingComponent.dataSchema
@@ -136,7 +147,9 @@ describe('EntityManager integration with optional dependency factories', () => {
       debugSpy.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes("EntityManager.getEntitiesWithComponent('positioning:allows_sitting')")
+          message.includes(
+            "EntityManager.getEntitiesWithComponent('positioning:allows_sitting')"
+          )
       )
     ).toBe(true);
 
@@ -149,15 +162,22 @@ describe('EntityManager integration with optional dependency factories', () => {
     });
 
     expect(
-      entityManager.hasComponentOverride('bench-1', 'positioning:allows_sitting')
+      entityManager.hasComponentOverride(
+        'bench-1',
+        'positioning:allows_sitting'
+      )
     ).toBe(true);
 
     const found = entityManager.findEntities({
       withAll: ['positioning:allows_sitting'],
     });
-    expect(found.map((entity) => entity.id).sort()).toEqual(['bench-1', 'bench-2']);
+    expect(found.map((entity) => entity.id).sort()).toEqual([
+      'bench-1',
+      'bench-2',
+    ]);
 
-    const componentTypes = entityManager.getAllComponentTypesForEntity('bench-1');
+    const componentTypes =
+      entityManager.getAllComponentTypesForEntity('bench-1');
     expect(componentTypes).toEqual(
       expect.arrayContaining(['core:position', 'positioning:allows_sitting'])
     );

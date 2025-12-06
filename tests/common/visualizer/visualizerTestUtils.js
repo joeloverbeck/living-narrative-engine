@@ -14,7 +14,10 @@ const DEFAULT_TIMEOUT_MS = 120000;
  * @returns {Promise<void>} Resolves when the condition becomes true.
  * @throws {Error} If the timeout expires before the condition becomes true.
  */
-export async function waitForCondition(condition, timeout = DEFAULT_TIMEOUT_MS) {
+export async function waitForCondition(
+  condition,
+  timeout = DEFAULT_TIMEOUT_MS
+) {
   const start = Date.now();
 
   while (Date.now() - start < timeout) {
@@ -78,7 +81,9 @@ export function createFileFetchMock() {
           'kissing',
           'isekai',
         ];
-        const filteredMods = preferredMods.filter((modId) => availableMods.has(modId));
+        const filteredMods = preferredMods.filter((modId) =>
+          availableMods.has(modId)
+        );
         fileText = JSON.stringify({ ...parsed, mods: filteredMods });
         fileBuffer = Buffer.from(fileText, 'utf-8');
       } else {

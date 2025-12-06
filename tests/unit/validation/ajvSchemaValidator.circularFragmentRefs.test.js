@@ -63,12 +63,17 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
         $ref: '#/$defs/Action',
         $defs: {
           Action: {
-            anyOf: [{ $ref: '#/$defs/MacroReference' }, { $ref: '#/$defs/Operation' }],
+            anyOf: [
+              { $ref: '#/$defs/MacroReference' },
+              { $ref: '#/$defs/Operation' },
+            ],
           },
           MacroReference: {
             type: 'object',
             properties: {
-              macro: { $ref: 'schema://test/common.schema.json#/definitions/namespacedId' },
+              macro: {
+                $ref: 'schema://test/common.schema.json#/definitions/namespacedId',
+              },
               comment: { type: 'string' },
             },
             required: ['macro'],
@@ -86,7 +91,10 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
                     type: 'object',
                     properties: {
                       message: { type: 'string' },
-                      level: { type: 'string', enum: ['info', 'warn', 'error', 'debug'] },
+                      level: {
+                        type: 'string',
+                        enum: ['info', 'warn', 'error', 'debug'],
+                      },
                     },
                     required: ['message', 'level'],
                     additionalProperties: false,
@@ -133,12 +141,16 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
         type: 'object',
         properties: {
           $schema: { type: 'string' },
-          id: { $ref: 'schema://test/common.schema.json#/definitions/namespacedId' },
+          id: {
+            $ref: 'schema://test/common.schema.json#/definitions/namespacedId',
+          },
           description: { type: 'string' },
           actions: {
             type: 'array',
             minItems: 1,
-            items: { $ref: 'schema://test/operation.schema.json#/$defs/Action' },
+            items: {
+              $ref: 'schema://test/operation.schema.json#/$defs/Action',
+            },
           },
           comment: { type: 'string' },
         },
@@ -189,7 +201,10 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
               collection: 'items',
               item_variable: 'item',
               actions: [
-                { type: 'LOG', parameters: { message: 'Processing item', level: 'info' } },
+                {
+                  type: 'LOG',
+                  parameters: { message: 'Processing item', level: 'info' },
+                },
               ],
             },
           },
@@ -203,7 +218,10 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
       // because fragment resolution returns null and AJV validates against ALL operations
       expect(forEachResult.isValid).toBe(true);
       if (!forEachResult.isValid) {
-        console.error('FOR_EACH validation failed with errors:', JSON.stringify(forEachResult.errors, null, 2));
+        console.error(
+          'FOR_EACH validation failed with errors:',
+          JSON.stringify(forEachResult.errors, null, 2)
+        );
       }
     });
 
@@ -226,12 +244,17 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
         $id: 'schema://test/operation.schema.json',
         $defs: {
           Action: {
-            anyOf: [{ $ref: '#/$defs/MacroReference' }, { $ref: '#/$defs/Operation' }],
+            anyOf: [
+              { $ref: '#/$defs/MacroReference' },
+              { $ref: '#/$defs/Operation' },
+            ],
           },
           MacroReference: {
             type: 'object',
             properties: {
-              macro: { $ref: 'schema://test/common.schema.json#/definitions/namespacedId' },
+              macro: {
+                $ref: 'schema://test/common.schema.json#/definitions/namespacedId',
+              },
             },
             required: ['macro'],
             additionalProperties: false,
@@ -293,12 +316,16 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
         $id: 'schema://test/macro.schema.json',
         type: 'object',
         properties: {
-          id: { $ref: 'schema://test/common.schema.json#/definitions/namespacedId' },
+          id: {
+            $ref: 'schema://test/common.schema.json#/definitions/namespacedId',
+          },
           description: { type: 'string' },
           actions: {
             type: 'array',
             minItems: 1,
-            items: { $ref: 'schema://test/operation.schema.json#/$defs/Action' },
+            items: {
+              $ref: 'schema://test/operation.schema.json#/$defs/Action',
+            },
           },
         },
         required: ['id', 'description', 'actions'],
@@ -351,7 +378,10 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
             'ERROR CASCADE DETECTED: Fragment resolution likely failed, causing AJV to validate against all anyOf branches'
           );
         }
-        console.error('First 5 errors:', JSON.stringify(result.errors?.slice(0, 5), null, 2));
+        console.error(
+          'First 5 errors:',
+          JSON.stringify(result.errors?.slice(0, 5), null, 2)
+        );
       }
     });
 
@@ -374,12 +404,17 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
         $id: 'schema://test/operation.schema.json',
         $defs: {
           Action: {
-            anyOf: [{ $ref: '#/$defs/MacroReference' }, { $ref: '#/$defs/Operation' }],
+            anyOf: [
+              { $ref: '#/$defs/MacroReference' },
+              { $ref: '#/$defs/Operation' },
+            ],
           },
           MacroReference: {
             type: 'object',
             properties: {
-              macro: { $ref: 'schema://test/common.schema.json#/definitions/namespacedId' },
+              macro: {
+                $ref: 'schema://test/common.schema.json#/definitions/namespacedId',
+              },
             },
             required: ['macro'],
             additionalProperties: false,
@@ -399,12 +434,16 @@ describe('AjvSchemaValidator - Circular Fragment Reference Resolution', () => {
         $id: 'schema://test/macro.schema.json',
         type: 'object',
         properties: {
-          id: { $ref: 'schema://test/common.schema.json#/definitions/namespacedId' },
+          id: {
+            $ref: 'schema://test/common.schema.json#/definitions/namespacedId',
+          },
           description: { type: 'string' },
           actions: {
             type: 'array',
             minItems: 1,
-            items: { $ref: 'schema://test/operation.schema.json#/$defs/Action' },
+            items: {
+              $ref: 'schema://test/operation.schema.json#/$defs/Action',
+            },
           },
         },
         required: ['id', 'description', 'actions'],

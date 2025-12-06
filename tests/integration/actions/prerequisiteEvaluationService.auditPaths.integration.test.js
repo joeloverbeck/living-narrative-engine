@@ -235,13 +235,16 @@ describe('PrerequisiteEvaluationService integration – audit coverage', () => {
     expect(result).toBe(false);
     expect(
       logger.debug.mock.calls.some((call) =>
-        String(call[0]).includes('Could not serialize components for validation logging')
+        String(call[0]).includes(
+          'Could not serialize components for validation logging'
+        )
       )
     ).toBe(true);
     expect(
-      logger.error.mock.calls.some((call) =>
-        String(call[0]).includes('Failed to build evaluation context') &&
-        String(call[0]).includes('Do not know how to serialize a BigInt')
+      logger.error.mock.calls.some(
+        (call) =>
+          String(call[0]).includes('Failed to build evaluation context') &&
+          String(call[0]).includes('Do not know how to serialize a BigInt')
       )
     ).toBe(true);
   });
@@ -266,20 +269,28 @@ describe('PrerequisiteEvaluationService integration – audit coverage', () => {
       { logic: { '==': [{ var: 'extra' }, 42] } },
     ];
 
-    const result = service.evaluate(prerequisites, actionDefinition, actor, null, {
-      contextOverride: {
-        actor: { stance: 'crouched' },
-        context: { environment: 'rainy' },
-        extra: 42,
-        unused: undefined,
-      },
-    });
+    const result = service.evaluate(
+      prerequisites,
+      actionDefinition,
+      actor,
+      null,
+      {
+        contextOverride: {
+          actor: { stance: 'crouched' },
+          context: { environment: 'rainy' },
+          extra: 42,
+          unused: undefined,
+        },
+      }
+    );
 
     expect(result).toBe(true);
     expect(
-      logger.debug.mock.calls.some((call) =>
-        String(call[0]).includes('Applied context override for prerequisite evaluation.') &&
-        call[1]?.overrideKeys?.includes('unused')
+      logger.debug.mock.calls.some(
+        (call) =>
+          String(call[0]).includes(
+            'Applied context override for prerequisite evaluation.'
+          ) && call[1]?.overrideKeys?.includes('unused')
       )
     ).toBe(true);
   });

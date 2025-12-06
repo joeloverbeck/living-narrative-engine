@@ -33,7 +33,9 @@ describe('ActionIndexingService internals', () => {
       const valid = new Date('2024-05-24T10:15:00.000Z');
       const invalid = new Date('not-a-date');
 
-      expect(stableSerializeForKey(valid)).toBe('Date(2024-05-24T10:15:00.000Z)');
+      expect(stableSerializeForKey(valid)).toBe(
+        'Date(2024-05-24T10:15:00.000Z)'
+      );
       expect(stableSerializeForKey(invalid)).toBe('Date(Invalid)');
     });
 
@@ -60,9 +62,7 @@ describe('ActionIndexingService internals', () => {
       expect(stableSerializeForKey(circularSet)).toBe(
         'Set{"alpha","beta",[Circular]}'
       );
-      expect(stableSerializeForKey(circularObject)).toBe(
-        '{"self":[Circular]}'
-      );
+      expect(stableSerializeForKey(circularObject)).toBe('{"self":[Circular]}');
     });
 
     it('produces deterministic keys for objects with undefined members', () => {
@@ -128,17 +128,11 @@ describe('ActionIndexingService internals', () => {
     });
 
     it('deeply freezes arrays and their nested entries', () => {
-      const source = [
-        { nested: { value: 1 } },
-        ['alpha', 'beta'],
-      ];
+      const source = [{ nested: { value: 1 } }, ['alpha', 'beta']];
       const cloned = cloneAndFreezeValue(source);
 
       expect(cloned).not.toBe(source);
-      expect(cloned).toEqual([
-        { nested: { value: 1 } },
-        ['alpha', 'beta'],
-      ]);
+      expect(cloned).toEqual([{ nested: { value: 1 } }, ['alpha', 'beta']]);
       expect(Object.isFrozen(cloned)).toBe(true);
       expect(Object.isFrozen(cloned[0])).toBe(true);
       expect(Object.isFrozen(cloned[0].nested)).toBe(true);

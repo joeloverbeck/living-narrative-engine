@@ -45,14 +45,23 @@ describe('request tracking middleware without explicit logger', () => {
     expect(response.headers['x-request-id']).toBeDefined();
     expect(response.headers['x-request-id']).toBe(capturedRequestId);
 
-    expect(commitmentResults).toEqual({ firstCommit: true, secondCommit: false });
+    expect(commitmentResults).toEqual({
+      firstCommit: true,
+      secondCommit: false,
+    });
     expect(commitmentSource).toBe('manual-success');
 
-    const transitionPath = capturedTransitions.map((transition) => transition.to);
+    const transitionPath = capturedTransitions.map(
+      (transition) => transition.to
+    );
     expect(transitionPath[0]).toBe(REQUEST_STATE.PROCESSING);
     expect(transitionPath[1]).toBe(REQUEST_STATE.RESPONDING);
-    expect(transitionPath.filter((state) => state === REQUEST_STATE.COMPLETED).length).toBeGreaterThan(0);
-    expect(capturedTransitions[1].metadata).toMatchObject({ source: 'manual-success' });
+    expect(
+      transitionPath.filter((state) => state === REQUEST_STATE.COMPLETED).length
+    ).toBeGreaterThan(0);
+    expect(capturedTransitions[1].metadata).toMatchObject({
+      source: 'manual-success',
+    });
     expect(capturedTransitions[2].metadata).toMatchObject({ method: 'send' });
   });
 

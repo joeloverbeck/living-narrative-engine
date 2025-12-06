@@ -50,9 +50,9 @@ describe('targetFormatters', () => {
       );
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain("entityId is missing");
+      expect(result.error).toContain('entityId is missing');
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("entityId is missing")
+        expect.stringContaining('entityId is missing')
       );
       expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
       expect(mockDisplayNameFn).not.toHaveBeenCalled();
@@ -73,8 +73,14 @@ describe('targetFormatters', () => {
         debug: true,
       });
 
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('npc-42');
-      expect(mockDisplayNameFn).toHaveBeenCalledWith(entity, 'npc-42', mockLogger);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'npc-42'
+      );
+      expect(mockDisplayNameFn).toHaveBeenCalledWith(
+        entity,
+        'npc-42',
+        mockLogger
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         ' -> Found entity npc-42, display name: "Friendly NPC"'
       );
@@ -86,16 +92,24 @@ describe('targetFormatters', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(entity);
       mockDisplayNameFn.mockReturnValue('Quiet NPC');
 
-      const result = formatEntityTarget('observe {target}', { entityId: 'npc-7' }, {
-        actionId: 'stealth:observe',
-        entityManager: mockEntityManager,
-        displayNameFn: mockDisplayNameFn,
-        logger: mockLogger,
-        debug: false,
-      });
+      const result = formatEntityTarget(
+        'observe {target}',
+        { entityId: 'npc-7' },
+        {
+          actionId: 'stealth:observe',
+          entityManager: mockEntityManager,
+          displayNameFn: mockDisplayNameFn,
+          logger: mockLogger,
+          debug: false,
+        }
+      );
 
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('npc-7');
-      expect(mockDisplayNameFn).toHaveBeenCalledWith(entity, 'npc-7', mockLogger);
+      expect(mockDisplayNameFn).toHaveBeenCalledWith(
+        entity,
+        'npc-7',
+        mockLogger
+      );
       expect(mockLogger.debug).not.toHaveBeenCalled();
       expect(result).toEqual({ ok: true, value: 'observe Quiet NPC' });
     });
@@ -103,13 +117,17 @@ describe('targetFormatters', () => {
     it('should fall back to the entity id and warn when the entity cannot be found', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(undefined);
 
-      const result = formatEntityTarget('inspect {target}', { entityId: 'ghost' }, {
-        actionId: 'explore:inspect',
-        entityManager: mockEntityManager,
-        displayNameFn: mockDisplayNameFn,
-        logger: mockLogger,
-        debug: false,
-      });
+      const result = formatEntityTarget(
+        'inspect {target}',
+        { entityId: 'ghost' },
+        {
+          actionId: 'explore:inspect',
+          entityManager: mockEntityManager,
+          displayNameFn: mockDisplayNameFn,
+          logger: mockLogger,
+          debug: false,
+        }
+      );
 
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('ghost');
       expect(mockDisplayNameFn).not.toHaveBeenCalled();
@@ -122,11 +140,15 @@ describe('targetFormatters', () => {
 
   describe('formatNoneTarget', () => {
     it('should provide debug output and warn about stray placeholders', () => {
-      const result = formatNoneTarget('wait for {target}', {}, {
-        actionId: 'utility:wait',
-        logger: mockLogger,
-        debug: true,
-      });
+      const result = formatNoneTarget(
+        'wait for {target}',
+        {},
+        {
+          actionId: 'utility:wait',
+          logger: mockLogger,
+          debug: true,
+        }
+      );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         ' -> No target type, using template as is.'
@@ -138,11 +160,15 @@ describe('targetFormatters', () => {
     });
 
     it('should return the original command without logging when debug is disabled and there are no placeholders', () => {
-      const result = formatNoneTarget('rest now', {}, {
-        actionId: 'utility:rest',
-        logger: mockLogger,
-        debug: false,
-      });
+      const result = formatNoneTarget(
+        'rest now',
+        {},
+        {
+          actionId: 'utility:rest',
+          logger: mockLogger,
+          debug: false,
+        }
+      );
 
       expect(mockLogger.debug).not.toHaveBeenCalled();
       expect(mockLogger.warn).not.toHaveBeenCalled();

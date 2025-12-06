@@ -144,8 +144,7 @@ class RecoveryTestController extends BaseCharacterBuilderController {
   }
 
   _cancelCustomOperations() {
-    this.customCancellationCount =
-      (this.customCancellationCount || 0) + 1;
+    this.customCancellationCount = (this.customCancellationCount || 0) + 1;
   }
 
   _cleanupAdditionalServices() {
@@ -332,10 +331,9 @@ describe('BaseCharacterBuilderController recovery helpers (integration)', () => 
       ).toBe(true);
 
       expect(
-        controller.determineRecoverability(
-          new Error('temporary overload'),
-          { category: ERROR_CATEGORIES.SYSTEM }
-        )
+        controller.determineRecoverability(new Error('temporary overload'), {
+          category: ERROR_CATEGORIES.SYSTEM,
+        })
       ).toBe(true);
 
       expect(
@@ -439,7 +437,9 @@ describe('BaseCharacterBuilderController recovery helpers (integration)', () => 
       // Verify that cancelAnimationFrame was called at least once (for the pending frame)
       expect(global.cancelAnimationFrame).toHaveBeenCalled();
       // Check that the frame we scheduled was among those cancelled
-      const cancelledFrameIds = global.cancelAnimationFrame.mock.calls.map(call => call[0]);
+      const cancelledFrameIds = global.cancelAnimationFrame.mock.calls.map(
+        (call) => call[0]
+      );
       expect(cancelledFrameIds).toContain(frameToCancelDuringCleanup);
       expect(controller.customCancellationCount).toBe(1);
 
@@ -481,11 +481,10 @@ describe('BaseCharacterBuilderController recovery helpers (integration)', () => 
     try {
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
-      const debounced = controller.createDebounced(
-        () => {},
-        20,
-        { maxWait: 50, leading: false }
-      );
+      const debounced = controller.createDebounced(() => {}, 20, {
+        maxWait: 50,
+        leading: false,
+      });
 
       debounced('first-call');
 

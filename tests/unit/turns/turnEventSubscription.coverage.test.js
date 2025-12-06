@@ -41,9 +41,9 @@ describe('TurnEventSubscription - coverage', () => {
       expect(() => new TurnEventSubscription(null, logger, scheduler)).toThrow(
         'TurnEventSubscription: bus must support subscribe'
       );
-      expect(() =>
-        new TurnEventSubscription({}, logger, scheduler)
-      ).toThrow('TurnEventSubscription: bus must support subscribe');
+      expect(() => new TurnEventSubscription({}, logger, scheduler)).toThrow(
+        'TurnEventSubscription: bus must support subscribe'
+      );
     });
 
     it('requires logger with debug method', () => {
@@ -53,23 +53,24 @@ describe('TurnEventSubscription - coverage', () => {
       expect(() => new TurnEventSubscription(bus, null, scheduler)).toThrow(
         'TurnEventSubscription: logger is required'
       );
-      expect(() =>
-        new TurnEventSubscription(bus, {}, scheduler)
-      ).toThrow('TurnEventSubscription: logger is required');
+      expect(() => new TurnEventSubscription(bus, {}, scheduler)).toThrow(
+        'TurnEventSubscription: logger is required'
+      );
     });
 
     it('requires scheduler with timeout APIs', () => {
       const bus = { subscribe: jest.fn() };
       const logger = createLoggerMock();
 
-      expect(() =>
-        new TurnEventSubscription(bus, logger, null)
+      expect(() => new TurnEventSubscription(bus, logger, null)).toThrow(
+        'TurnEventSubscription: invalid scheduler'
+      );
+      expect(
+        () => new TurnEventSubscription(bus, logger, { setTimeout: jest.fn() })
       ).toThrow('TurnEventSubscription: invalid scheduler');
-      expect(() =>
-        new TurnEventSubscription(bus, logger, { setTimeout: jest.fn() })
-      ).toThrow('TurnEventSubscription: invalid scheduler');
-      expect(() =>
-        new TurnEventSubscription(bus, logger, { clearTimeout: jest.fn() })
+      expect(
+        () =>
+          new TurnEventSubscription(bus, logger, { clearTimeout: jest.fn() })
       ).toThrow('TurnEventSubscription: invalid scheduler');
     });
   });

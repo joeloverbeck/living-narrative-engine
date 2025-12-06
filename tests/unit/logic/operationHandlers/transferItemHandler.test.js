@@ -157,14 +157,11 @@ describe('TransferItemHandler', () => {
         ],
         true
       );
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_TRANSFERRED_EVENT,
-        {
-          fromEntity: 'actor1',
-          toEntity: 'actor2',
-          itemEntity: 'item2',
-        }
-      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_TRANSFERRED_EVENT, {
+        fromEntity: 'actor1',
+        toEntity: 'actor2',
+        itemEntity: 'item2',
+      });
       expect(log.debug).toHaveBeenCalledWith(
         'TransferItemHandler: Item transferred successfully',
         expect.any(Object)

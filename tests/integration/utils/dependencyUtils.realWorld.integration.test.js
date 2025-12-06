@@ -36,11 +36,12 @@ describe('dependencyUtils real module interactions', () => {
   it('guards required dependencies when constructing EventDispatchService', () => {
     const logger = new RecordingLogger();
 
-    expect(() =>
-      new EventDispatchService({
-        safeEventDispatcher: null,
-        logger,
-      }),
+    expect(
+      () =>
+        new EventDispatchService({
+          safeEventDispatcher: null,
+          logger,
+        })
     ).toThrow('EventDispatchService: safeEventDispatcher is required');
   });
 
@@ -49,10 +50,10 @@ describe('dependencyUtils real module interactions', () => {
     const manager = new TargetManager({ logger });
 
     expect(() => manager.setTargets(null)).toThrow(
-      'Targets object is required',
+      'Targets object is required'
     );
     expect(logger.records.error.at(0)?.at(0)).toBe(
-      'Targets object is required',
+      'Targets object is required'
     );
   });
 
@@ -60,7 +61,9 @@ describe('dependencyUtils real module interactions', () => {
     const logger = new RecordingLogger();
     const manager = new TargetManager({ logger });
 
-    expect(() => manager.addTarget('  ', 'actor-1')).toThrow(InvalidArgumentError);
+    expect(() => manager.addTarget('  ', 'actor-1')).toThrow(
+      InvalidArgumentError
+    );
     expect(logger.records.error.at(0)?.at(0)).toContain('Invalid name');
 
     logger.records.error.length = 0;
@@ -73,7 +76,7 @@ describe('dependencyUtils real module interactions', () => {
     const registry = new InMemoryDataRegistry({ logger });
 
     expect(() => getDefinition('   ', registry, logger)).toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
     expect(logger.records.error.at(0)?.at(0)).toContain('Invalid ID');
     expect(logger.records.warn.at(0)?.at(0)).toContain('invalid definitionId');
@@ -96,9 +99,9 @@ describe('dependencyUtils real module interactions', () => {
           validatedEventDispatcher,
           eventDispatchService,
           initializationTag: 'boot',
-        }),
+        })
     ).toThrow(
-      "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'.",
+      "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
     );
   });
 
@@ -143,7 +146,7 @@ describe('dependencyUtils real module interactions', () => {
 
     expect(attemptConstruction).toThrow(SystemInitializationError);
     expect(logger.records.error.at(0)?.at(0)).toContain(
-      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.",
+      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
     );
   });
 
@@ -161,25 +164,25 @@ describe('dependencyUtils real module interactions', () => {
           value: () => {},
           isFunction: true,
         },
-      }),
+      })
     ).not.toThrow();
 
     expect(() =>
       setup.setupService('Probe', logger, {
         missing: { value: null },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
     expect(logger.records.error.at(-1)?.at(0)).toBe(
-      'Probe: Missing required dependency: Probe: missing.',
+      'Probe: Missing required dependency: Probe: missing.'
     );
 
     expect(() =>
       setup.setupService('Probe', logger, {
         callable: { value: {}, isFunction: true },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
     expect(logger.records.error.at(-1)?.at(0)).toBe(
-      "Probe: Dependency 'Probe: callable' must be a function, but got object.",
+      "Probe: Dependency 'Probe: callable' must be a function, but got object."
     );
   });
 });

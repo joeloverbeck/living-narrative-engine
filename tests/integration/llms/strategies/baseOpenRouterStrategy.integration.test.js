@@ -8,7 +8,8 @@ import { DefaultToolSchemaHandler } from '../../../../src/llms/strategies/toolSc
 import { HttpClientError } from '../../../../src/llms/retryHttpClient.js';
 import { createEnhancedMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
-const GAME_SUMMARY = 'The scout studies the cavern entrance before making a move.';
+const GAME_SUMMARY =
+  'The scout studies the cavern entrance before making a move.';
 
 const BASE_CONFIG = Object.freeze({
   configId: 'integration-base-openrouter',
@@ -69,7 +70,11 @@ class TestOpenRouterStrategy extends BaseOpenRouterStrategy {
   }
 
   async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
-    return this.extractResponse(responseData, llmConfig, providerRequestPayload);
+    return this.extractResponse(
+      responseData,
+      llmConfig,
+      providerRequestPayload
+    );
   }
 }
 
@@ -234,9 +239,7 @@ describe('Integration: BaseOpenRouterStrategy execution pipeline', () => {
 
     const body = JSON.parse(call.options.body);
     expect(body.model).toBe(BASE_CONFIG.modelIdentifier);
-    expect(body.strategyMarker).toBe(
-      `${BASE_CONFIG.configId}-payload`
-    );
+    expect(body.strategyMarker).toBe(`${BASE_CONFIG.configId}-payload`);
     expect(body.requestOptionsSnapshot).toEqual(requestOptions);
     expect(body.messages).toHaveLength(1);
     expect(body.messages[0]).toEqual({
@@ -344,7 +347,9 @@ describe('Integration: BaseOpenRouterStrategy execution pipeline', () => {
 
   it('wraps unexpected extraction failures in an LLMStrategyError', async () => {
     const underlyingError = new Error('unexpected parser issue');
-    const httpClient = new RecordingHttpClient(async () => ({ extractedJson: null }));
+    const httpClient = new RecordingHttpClient(async () => ({
+      extractedJson: null,
+    }));
     const logger = createEnhancedMockLogger();
     const strategy = new TestOpenRouterStrategy(
       { httpClient, logger },
@@ -370,7 +375,9 @@ describe('Integration: BaseOpenRouterStrategy execution pipeline', () => {
   });
 
   it('rethrows ConfigurationError and LLMStrategyError without wrapping', async () => {
-    const httpClient = new RecordingHttpClient(async () => ({ extractedJson: null }));
+    const httpClient = new RecordingHttpClient(async () => ({
+      extractedJson: null,
+    }));
     const logger = createEnhancedMockLogger();
 
     const configurationFailure = new ConfigurationError('bad config');
@@ -440,7 +447,9 @@ describe('Integration: BaseOpenRouterStrategy execution pipeline', () => {
   });
 
   it('throws an LLMStrategyError when extraction returns null or blank content', async () => {
-    const httpClient = new RecordingHttpClient(async () => ({ extractedJson: null }));
+    const httpClient = new RecordingHttpClient(async () => ({
+      extractedJson: null,
+    }));
     const logger = createEnhancedMockLogger();
     const strategy = new TestOpenRouterStrategy(
       { httpClient, logger },

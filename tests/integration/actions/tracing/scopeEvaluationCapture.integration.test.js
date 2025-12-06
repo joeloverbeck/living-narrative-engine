@@ -118,8 +118,12 @@ describe('Scope Evaluation Capture - Integration Tests', () => {
       expect(scopeEvaluations[2].scopeId).toBe('test:third_scope');
 
       // Verify ordering is preserved (use less-than-or-equal for timing tolerance)
-      expect(scopeEvaluations[0].capturedAt).toBeLessThanOrEqual(scopeEvaluations[1].capturedAt);
-      expect(scopeEvaluations[1].capturedAt).toBeLessThanOrEqual(scopeEvaluations[2].capturedAt);
+      expect(scopeEvaluations[0].capturedAt).toBeLessThanOrEqual(
+        scopeEvaluations[1].capturedAt
+      );
+      expect(scopeEvaluations[1].capturedAt).toBeLessThanOrEqual(
+        scopeEvaluations[2].capturedAt
+      );
     });
 
     it('should capture scope evaluation with filter results', () => {
@@ -244,8 +248,14 @@ describe('Scope Evaluation Capture - Integration Tests', () => {
       const scopeEvals = trace.getScopeEvaluations();
       const operatorEvals = trace.getOperatorEvaluations();
 
-      expect(scopeEvals.map(e => e.scopeId)).toEqual(['first:scope', 'second:scope']);
-      expect(operatorEvals.map(e => e.operator)).toEqual(['firstOp', 'secondOp']);
+      expect(scopeEvals.map((e) => e.scopeId)).toEqual([
+        'first:scope',
+        'second:scope',
+      ]);
+      expect(operatorEvals.map((e) => e.operator)).toEqual([
+        'firstOp',
+        'secondOp',
+      ]);
     });
   });
 });

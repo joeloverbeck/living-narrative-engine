@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ValidationRuleChain } from '../../../src/anatomy/validation/validationRuleChain.js';
@@ -68,7 +75,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -80,9 +88,11 @@ class InMemoryEntityManager {
  */
 function createRecordingLogger() {
   const entries = [];
-  const record = (level) => (message, ...details) => {
-    entries.push({ level, message, details });
-  };
+  const record =
+    (level) =>
+    (message, ...details) => {
+      entries.push({ level, message, details });
+    };
 
   return {
     entries,
@@ -125,9 +135,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
     registerEntity(entityManager, 'root', {
       'anatomy:part': { subType: 'torso' },
       'anatomy:sockets': {
-        sockets: [
-          { id: 'arm-socket', allowedTypes: ['arm'] },
-        ],
+        sockets: [{ id: 'arm-socket', allowedTypes: ['arm'] }],
       },
     });
 
@@ -135,9 +143,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
       'anatomy:part': { subType: 'arm' },
       'anatomy:joint': { parentId: 'root', socketId: 'arm-socket' },
       'anatomy:sockets': {
-        sockets: [
-          { id: 'hand-socket', allowedTypes: ['claw'] },
-        ],
+        sockets: [{ id: 'hand-socket', allowedTypes: ['claw'] }],
       },
       'equipment:grip': { strength: 5 },
     });
@@ -152,9 +158,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
       'anatomy:part': { subType: 'tentacle' },
       'anatomy:joint': { parentId: 'cycle-b', socketId: 'loop' },
       'anatomy:sockets': {
-        sockets: [
-          { id: 'loop', allowedTypes: ['tentacle'] },
-        ],
+        sockets: [{ id: 'loop', allowedTypes: ['tentacle'] }],
       },
     });
 
@@ -162,9 +166,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
       'anatomy:part': { subType: 'tentacle' },
       'anatomy:joint': { parentId: 'cycle-a', socketId: 'loop' },
       'anatomy:sockets': {
-        sockets: [
-          { id: 'loop', allowedTypes: ['tentacle'] },
-        ],
+        sockets: [{ id: 'loop', allowedTypes: ['tentacle'] }],
       },
     });
 
@@ -187,19 +189,12 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
       'free-root',
     ];
 
-    const socketOccupancy = new Set([
-      'root:arm-socket',
-      'root:ghost-socket',
-    ]);
+    const socketOccupancy = new Set(['root:arm-socket', 'root:ghost-socket']);
 
     const recipe = {
       constraints: {
-        requires: [
-          { partTypes: ['arm'], components: ['equipment:shield'] },
-        ],
-        excludes: [
-          { components: ['equipment:grip', 'custom:module'] },
-        ],
+        requires: [{ partTypes: ['arm'], components: ['equipment:shield'] }],
+        excludes: [{ components: ['equipment:grip', 'custom:module'] }],
       },
       slots: {
         arms: { type: 'arm', count: 2 },
@@ -273,9 +268,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
     registerEntity(entityManager, 'torso', {
       'anatomy:part': { subType: 'torso' },
       'anatomy:sockets': {
-        sockets: [
-          { id: 'arm-socket', allowedTypes: ['arm'] },
-        ],
+        sockets: [{ id: 'arm-socket', allowedTypes: ['arm'] }],
       },
     });
 
@@ -283,9 +276,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
       'anatomy:part': { subType: 'arm' },
       'anatomy:joint': { parentId: 'torso', socketId: 'arm-socket' },
       'anatomy:sockets': {
-        sockets: [
-          { id: 'hand-socket', allowedTypes: ['hand', '*'] },
-        ],
+        sockets: [{ id: 'hand-socket', allowedTypes: ['hand', '*'] }],
       },
       'equipment:grip': { strength: 2 },
     });
@@ -297,9 +288,7 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
 
     const recipe = {
       constraints: {
-        requires: [
-          { partTypes: ['arm'], components: ['equipment:grip'] },
-        ],
+        requires: [{ partTypes: ['arm'], components: ['equipment:grip'] }],
       },
       slots: {
         arms: { type: 'arm', count: 1 },
@@ -316,9 +305,10 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
     expect(result.errors).toHaveLength(0);
     expect(result.warnings).toHaveLength(0);
 
-    const finalDebug = logger.entries.find((entry) =>
-      entry.level === 'debug' &&
-      entry.message.includes('Validation passed without issues')
+    const finalDebug = logger.entries.find(
+      (entry) =>
+        entry.level === 'debug' &&
+        entry.message.includes('Validation passed without issues')
     );
     expect(finalDebug).toBeDefined();
   });
@@ -344,9 +334,10 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
       ])
     );
 
-    const errorLog = logger.entries.find((entry) =>
-      entry.level === 'error' &&
-      entry.message.includes('Unexpected error during validation')
+    const errorLog = logger.entries.find(
+      (entry) =>
+        entry.level === 'error' &&
+        entry.message.includes('Unexpected error during validation')
     );
     expect(errorLog).toBeDefined();
   });
@@ -355,8 +346,8 @@ describe('GraphIntegrityValidator comprehensive integration', () => {
     expect(() => new GraphIntegrityValidator({ logger })).toThrow(
       InvalidArgumentError
     );
-    expect(
-      () => new GraphIntegrityValidator({ entityManager })
-    ).toThrow(InvalidArgumentError);
+    expect(() => new GraphIntegrityValidator({ entityManager })).toThrow(
+      InvalidArgumentError
+    );
   });
 });

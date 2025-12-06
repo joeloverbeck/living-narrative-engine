@@ -16,16 +16,10 @@
       "music:playing_music",
       "music:performance_mood"
     ],
-    "primary": [
-      "items:item",
-      "music:is_instrument"
-    ]
+    "primary": ["items:item", "music:is_instrument"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:being_restrained"
-    ]
+    "actor": ["positioning:closeness", "positioning:being_restrained"]
   },
   "prerequisites": [
     {
@@ -34,12 +28,7 @@
           {
             "var": "actor.components.music:performance_mood.mood"
           },
-          [
-            "eerie",
-            "solemn",
-            "meditative",
-            "mournful"
-          ]
+          ["eerie", "solemn", "meditative", "mournful"]
         ]
       },
       "failure_message": "Sustained drones don't work well with your current performance mood. Try a mood that's more contemplative, atmospheric, or solemn."

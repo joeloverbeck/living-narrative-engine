@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "hand",
-          "allowedTypes": [
-            "tortoise_hand"
-          ],
+          "allowedTypes": ["tortoise_hand"],
           "nameTpl": "{{orientation}} hand"
         }
       ]

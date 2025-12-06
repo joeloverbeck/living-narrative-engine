@@ -11,9 +11,7 @@ describe('deference:stand_up action integration', () => {
 
   const createStandUpScenario = (options = {}) => {
     const scenario = testFixture.createKneelingBeforeSitting({
-      seatedActors: [
-        { id: 'test:king', name: 'Test King', spotIndex: 0 },
-      ],
+      seatedActors: [{ id: 'test:king', name: 'Test King', spotIndex: 0 }],
       kneelingActors: [
         {
           id: 'test:actor1',
@@ -63,9 +61,7 @@ describe('deference:stand_up action integration', () => {
       locationId: 'castle_hall',
       roomId: 'castle_hall',
       roomName: 'Castle Hall',
-      seatedActors: [
-        { id: 'test:queen', name: 'Queen', spotIndex: 0 },
-      ],
+      seatedActors: [{ id: 'test:queen', name: 'Queen', spotIndex: 0 }],
       kneelingActors: [
         {
           id: 'test:actor1',
@@ -105,9 +101,7 @@ describe('deference:stand_up action integration', () => {
           locationId: 'room1',
         },
       ],
-      seatedActors: [
-        { id: 'test:target', name: 'Target', spotIndex: 0 },
-      ],
+      seatedActors: [{ id: 'test:target', name: 'Target', spotIndex: 0 }],
     });
 
     // Try with a different action - this should not trigger the stand_up rule
@@ -142,9 +136,7 @@ describe('deference:stand_up action integration', () => {
           locationId: 'courtyard',
         },
       ],
-      seatedActors: [
-        { id: 'test:lord', name: 'Lord', spotIndex: 0 },
-      ],
+      seatedActors: [{ id: 'test:lord', name: 'Lord', spotIndex: 0 }],
       standingActors: [
         {
           id: 'test:witness1',

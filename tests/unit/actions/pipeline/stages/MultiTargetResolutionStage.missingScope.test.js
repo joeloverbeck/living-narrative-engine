@@ -83,7 +83,10 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
 
           let resolutionOrder;
           try {
-            resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(targetDefinitions);
+            resolutionOrder =
+              mockDeps.targetDependencyResolver.getResolutionOrder(
+                targetDefinitions
+              );
           } catch (error) {
             resolutionOrder = Object.keys(targetDefinitions);
           }
@@ -108,7 +111,10 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
                     const entity = mockDeps.entityManager.getEntityInstance(id);
                     if (!entity) return null;
 
-                    const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+                    const displayName =
+                      mockDeps.targetDisplayNameResolver.getEntityDisplayName(
+                        id
+                      );
                     targetContexts.push({
                       type: 'entity',
                       entityId: id,
@@ -118,14 +124,22 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
 
                     return { id, displayName, entity };
                   })
-                  .filter(t => t !== null);
+                  .filter((t) => t !== null);
               } else {
-                const errorInfo = scopeResult.errors?.[0] || { error: 'Unknown scope resolution error' };
-                mockDeps.logger.error(`Failed to resolve scope '${targetDef.scope}':`, errorInfo);
+                const errorInfo = scopeResult.errors?.[0] || {
+                  error: 'Unknown scope resolution error',
+                };
+                mockDeps.logger.error(
+                  `Failed to resolve scope '${targetDef.scope}':`,
+                  errorInfo
+                );
                 throw errorInfo;
               }
             } catch (error) {
-              mockDeps.logger.error(`Error evaluating scope '${targetDef.scope}':`, error);
+              mockDeps.logger.error(
+                `Error evaluating scope '${targetDef.scope}':`,
+                error
+              );
               throw error;
             }
           }
@@ -133,7 +147,8 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
           const hasEmptyRequiredTarget = Object.entries(targetDefinitions).some(
             ([key, def]) => {
               const isOptional = def.optional === true;
-              const hasNoCandidates = !resolvedTargets[key] || resolvedTargets[key].length === 0;
+              const hasNoCandidates =
+                !resolvedTargets[key] || resolvedTargets[key].length === 0;
               return !isOptional && hasNoCandidates;
             }
           );
@@ -230,10 +245,15 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       expect(result.data.actionsWithTargets).toEqual([]);
       // Verify error was logged (may be logged multiple times in coordinator + stage)
       expect(mockDeps.logger.error).toHaveBeenCalled();
-      expect(mockDeps.logger.error.mock.calls.some(call =>
-        call[0].includes("Failed to resolve scope 'non_existent:scope_name'") ||
-        call[0].includes("Error evaluating scope 'non_existent:scope_name'")
-      )).toBe(true);
+      expect(
+        mockDeps.logger.error.mock.calls.some(
+          (call) =>
+            call[0].includes(
+              "Failed to resolve scope 'non_existent:scope_name'"
+            ) ||
+            call[0].includes("Error evaluating scope 'non_existent:scope_name'")
+        )
+      ).toBe(true);
     });
 
     it('should fail with clear error when legacy action references non-existent scope', async () => {
@@ -341,10 +361,13 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
 
       // The error is logged (new architecture may log at multiple levels)
       expect(mockDeps.logger.error).toHaveBeenCalled();
-      expect(mockDeps.logger.error.mock.calls.some(call =>
-        call[0].includes("Failed to resolve scope 'missing:scope'") ||
-        call[0].includes("Error evaluating scope 'missing:scope'")
-      )).toBe(true);
+      expect(
+        mockDeps.logger.error.mock.calls.some(
+          (call) =>
+            call[0].includes("Failed to resolve scope 'missing:scope'") ||
+            call[0].includes("Error evaluating scope 'missing:scope'")
+        )
+      ).toBe(true);
     });
 
     it('should log error and exclude action when scope resolution fails', async () => {
@@ -391,9 +414,11 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
 
       // The error is logged (not silent anymore)
       expect(mockDeps.logger.error).toHaveBeenCalled();
-      expect(mockDeps.logger.error.mock.calls.some(call =>
-        call[0].includes('Error evaluating scope')
-      )).toBe(true);
+      expect(
+        mockDeps.logger.error.mock.calls.some((call) =>
+          call[0].includes('Error evaluating scope')
+        )
+      ).toBe(true);
     });
 
     it('should handle multiple actions where some have missing scopes', async () => {
@@ -508,10 +533,14 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
 
       // The error is now properly logged (not silent)
       expect(mockDeps.logger.error).toHaveBeenCalled();
-      expect(mockDeps.logger.error.mock.calls.some(call =>
-        call[0].includes("Failed to resolve scope 'affection:close_actors'") ||
-        call[0].includes('Error evaluating scope')
-      )).toBe(true);
+      expect(
+        mockDeps.logger.error.mock.calls.some(
+          (call) =>
+            call[0].includes(
+              "Failed to resolve scope 'affection:close_actors'"
+            ) || call[0].includes('Error evaluating scope')
+        )
+      ).toBe(true);
     });
   });
 });

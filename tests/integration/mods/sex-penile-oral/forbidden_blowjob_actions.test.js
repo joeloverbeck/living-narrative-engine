@@ -66,7 +66,8 @@ describe('Forbidden Components - giving_blowjob', () => {
           id,
           components: {},
           hasComponent: (componentId) => componentId in entity.components,
-          getComponentData: (componentId) => entity.components[componentId] || null,
+          getComponentData: (componentId) =>
+            entity.components[componentId] || null,
         };
         entities.set(id, entity);
         return entity;
@@ -86,7 +87,8 @@ describe('Forbidden Components - giving_blowjob', () => {
         }
       },
       getAllComponentTypesForEntity: (entityId) => {
-        const entity = typeof entityId === 'string' ? entities.get(entityId) : entityId;
+        const entity =
+          typeof entityId === 'string' ? entities.get(entityId) : entityId;
         return entity ? Object.keys(entity.components || {}) : [];
       },
       clear: () => entities.clear(),

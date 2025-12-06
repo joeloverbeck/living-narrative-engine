@@ -777,8 +777,7 @@ describe('clicheGenerationPrompt', () => {
           tropesAndStereotypes: [],
         };
 
-        const result =
-          validateClicheGenerationResponseEnhanced(weakResponse);
+        const result = validateClicheGenerationResponseEnhanced(weakResponse);
 
         expect(result.recommendations.length).toBeGreaterThan(0);
         expect(result.recommendations).toEqual(
@@ -791,8 +790,9 @@ describe('clicheGenerationPrompt', () => {
       });
 
       it('should skip density recommendation when coverage is sufficient', () => {
-        const richItems = Array.from({ length: 5 }, (_, index) =>
-          `Detailed entry ${index}`
+        const richItems = Array.from(
+          { length: 5 },
+          (_, index) => `Detailed entry ${index}`
         );
 
         const robustResponse = {
@@ -811,8 +811,7 @@ describe('clicheGenerationPrompt', () => {
           ],
         };
 
-        const result =
-          validateClicheGenerationResponseEnhanced(robustResponse);
+        const result = validateClicheGenerationResponseEnhanced(robustResponse);
 
         expect(result.recommendations).not.toContain(
           'Consider generating more items per category for better coverage'

@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { register } from 'prom-client';
@@ -73,25 +80,28 @@ describe('metrics middleware fallback canonicalization for atypical LLM identifi
     const requestCounters = await metricsService.llmRequestsTotal.get();
     expect(Array.isArray(requestCounters.values)).toBe(true);
 
-    const fallbackRequest = requestCounters.values.find((entry) =>
-      entry.labels.llm_provider === 'unknown' &&
-      entry.labels.model === 'vendorx::model-prime' &&
-      entry.labels.status === 'success'
+    const fallbackRequest = requestCounters.values.find(
+      (entry) =>
+        entry.labels.llm_provider === 'unknown' &&
+        entry.labels.model === 'vendorx::model-prime' &&
+        entry.labels.status === 'success'
     );
 
     expect(fallbackRequest).toBeDefined();
     expect(fallbackRequest?.value).toBeGreaterThanOrEqual(1);
 
     const tokenCounters = await metricsService.llmTokensProcessed.get();
-    const inputTokens = tokenCounters.values.find((entry) =>
-      entry.labels.llm_provider === 'unknown' &&
-      entry.labels.model === 'vendorx::model-prime' &&
-      entry.labels.token_type === 'input'
+    const inputTokens = tokenCounters.values.find(
+      (entry) =>
+        entry.labels.llm_provider === 'unknown' &&
+        entry.labels.model === 'vendorx::model-prime' &&
+        entry.labels.token_type === 'input'
     );
-    const outputTokens = tokenCounters.values.find((entry) =>
-      entry.labels.llm_provider === 'unknown' &&
-      entry.labels.model === 'vendorx::model-prime' &&
-      entry.labels.token_type === 'output'
+    const outputTokens = tokenCounters.values.find(
+      (entry) =>
+        entry.labels.llm_provider === 'unknown' &&
+        entry.labels.model === 'vendorx::model-prime' &&
+        entry.labels.token_type === 'output'
     );
 
     expect(inputTokens?.value).toBe(19);

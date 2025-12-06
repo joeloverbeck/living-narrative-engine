@@ -33,7 +33,9 @@ function normalizeActorSet(actors) {
  */
 export function createMultiActorCompletionTracker(eventBus, options = {}) {
   if (!eventBus) {
-    throw new Error('createMultiActorCompletionTracker requires an event bus instance');
+    throw new Error(
+      'createMultiActorCompletionTracker requires an event bus instance'
+    );
   }
 
   const terminalEvents = new Set(options.terminalEvents || TERMINAL_EVENT_SET);
@@ -105,7 +107,9 @@ export function createMultiActorCompletionTracker(eventBus, options = {}) {
     }
 
     const expectedActors =
-      actors || currentTurn.expectedActors || currentTurn.events.map((entry) => entry.actorId);
+      actors ||
+      currentTurn.expectedActors ||
+      currentTurn.events.map((entry) => entry.actorId);
 
     if (!expectedActors || expectedActors.length === 0) {
       throw new Error('endTurn() requires at least one expected actor');
@@ -130,7 +134,10 @@ export function createMultiActorCompletionTracker(eventBus, options = {}) {
         );
       }
       const [event] = actorEvents;
-      if (!allowFailuresSet.has(actorId) && event.type === GOAP_EVENTS.PLANNING_FAILED) {
+      if (
+        !allowFailuresSet.has(actorId) &&
+        event.type === GOAP_EVENTS.PLANNING_FAILED
+      ) {
         throw new Error(
           `Actor "${actorId}" unexpectedly failed planning in turn "${currentTurn.label}"`
         );
@@ -158,7 +165,10 @@ export function createMultiActorCompletionTracker(eventBus, options = {}) {
         event,
       })),
       byActor: new Map(
-        Array.from(actorEventMap.entries()).map(([actorId, events]) => [actorId, events[0]])
+        Array.from(actorEventMap.entries()).map(([actorId, events]) => [
+          actorId,
+          events[0],
+        ])
       ),
     };
 

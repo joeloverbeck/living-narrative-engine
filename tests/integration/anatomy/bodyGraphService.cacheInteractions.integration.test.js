@@ -1,4 +1,7 @@
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
+import {
+  BodyGraphService,
+  LIMB_DETACHED_EVENT_ID,
+} from '../../../src/anatomy/bodyGraphService.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 
 /**
@@ -6,9 +9,11 @@ import { SimpleEntityManager } from '../../common/entities/index.js';
  */
 function createRecordingLogger() {
   const entries = [];
-  const record = (level) => (message, ...details) => {
-    entries.push({ level, message, details });
-  };
+  const record =
+    (level) =>
+    (message, ...details) => {
+      entries.push({ level, message, details });
+    };
 
   return {
     entries,
@@ -50,13 +55,17 @@ describe('BodyGraphService cache interactions integration', () => {
   let eventDispatcher;
 
   const seedAnatomy = async () => {
-    await entityManager.addComponent(ids.actor, 'core:name', { text: 'Integration Actor' });
+    await entityManager.addComponent(ids.actor, 'core:name', {
+      text: 'Integration Actor',
+    });
 
     await entityManager.addComponent(ids.torso, 'anatomy:part', {
       partType: 'torso',
       subType: 'torso',
     });
-    await entityManager.addComponent(ids.torso, 'core:description', { text: 'central torso' });
+    await entityManager.addComponent(ids.torso, 'core:description', {
+      text: 'central torso',
+    });
 
     await entityManager.addComponent(ids.leftArm, 'anatomy:part', {
       partType: 'limb',
@@ -139,19 +148,32 @@ describe('BodyGraphService cache interactions integration', () => {
     await bodyGraphService.buildAdjacencyCache(ids.torso);
 
     const buildLogs = logger.entries.filter((entry) =>
-      entry.message.includes('AnatomyCacheManager: Building cache for anatomy rooted at')
+      entry.message.includes(
+        'AnatomyCacheManager: Building cache for anatomy rooted at'
+      )
     );
     expect(buildLogs).toHaveLength(1);
 
     const armsFirst = bodyGraphService.findPartsByType(ids.torso, 'arm');
-    expect(armsFirst).toEqual(expect.arrayContaining([ids.leftArm, ids.rightArm]));
+    expect(armsFirst).toEqual(
+      expect.arrayContaining([ids.leftArm, ids.rightArm])
+    );
     const armsSecond = bodyGraphService.findPartsByType(ids.torso, 'arm');
     expect(armsSecond).toBe(armsFirst);
 
-    const bodyComponent = entityManager.getComponentData(ids.actor, 'anatomy:body');
+    const bodyComponent = entityManager.getComponentData(
+      ids.actor,
+      'anatomy:body'
+    );
     const allPartsFirst = bodyGraphService.getAllParts(bodyComponent.body);
     expect(allPartsFirst).toEqual(
-      expect.arrayContaining([ids.torso, ids.leftArm, ids.rightArm, ids.leftHand, ids.heart])
+      expect.arrayContaining([
+        ids.torso,
+        ids.leftArm,
+        ids.rightArm,
+        ids.leftHand,
+        ids.heart,
+      ])
     );
     const allPartsSecond = bodyGraphService.getAllParts(bodyComponent.body);
     expect(allPartsSecond).toBe(allPartsFirst);
@@ -159,12 +181,17 @@ describe('BodyGraphService cache interactions integration', () => {
     expect(bodyGraphService.getParent(ids.torso)).toBeNull();
 
     const graph = await bodyGraphService.getBodyGraph(ids.actor);
-    expect(graph.getAllPartIds()).toEqual(expect.arrayContaining(allPartsFirst));
+    expect(graph.getAllPartIds()).toEqual(
+      expect.arrayContaining(allPartsFirst)
+    );
     expect(graph.getConnectedParts(ids.leftArm)).toEqual([ids.leftHand]);
 
     await bodyGraphService.buildAdjacencyCache(ids.actor);
     expect(bodyGraphService.hasCache(ids.actor)).toBe(true);
-    const actorScopedParts = bodyGraphService.getAllParts(bodyComponent, ids.actor);
+    const actorScopedParts = bodyGraphService.getAllParts(
+      bodyComponent,
+      ids.actor
+    );
     expect(actorScopedParts).toEqual(
       expect.arrayContaining([...allPartsFirst, ids.actor])
     );
@@ -182,7 +209,12 @@ describe('BodyGraphService cache interactions integration', () => {
     ]);
     expect(bodyGraphService.getAllDescendants(ids.rightArm)).toEqual([]);
     expect(bodyGraphService.getAllDescendants(ids.torso)).toEqual(
-      expect.arrayContaining([ids.leftArm, ids.leftHand, ids.rightArm, ids.heart])
+      expect.arrayContaining([
+        ids.leftArm,
+        ids.leftHand,
+        ids.rightArm,
+        ids.heart,
+      ])
     );
     expect(bodyGraphService.getPath(ids.leftHand, ids.rightArm)).toEqual([
       ids.leftHand,
@@ -237,7 +269,9 @@ describe('BodyGraphService cache interactions integration', () => {
     expect(validationAfterBreak.valid).toBe(false);
     expect(validationAfterBreak.issues).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("Entity 'left-arm-1' in cache has parent but no joint component"),
+        expect.stringContaining(
+          "Entity 'left-arm-1' in cache has parent but no joint component"
+        ),
       ])
     );
 
@@ -255,7 +289,9 @@ describe('BodyGraphService cache interactions integration', () => {
     );
     expect(validationAfterFix.issues).not.toEqual(
       expect.arrayContaining([
-        expect.stringContaining("Entity 'left-arm-1' in cache has parent but no joint component"),
+        expect.stringContaining(
+          "Entity 'left-arm-1' in cache has parent but no joint component"
+        ),
       ])
     );
   });
@@ -263,9 +299,14 @@ describe('BodyGraphService cache interactions integration', () => {
   it('invalidates caches and query results when detaching anatomy parts', async () => {
     await bodyGraphService.buildAdjacencyCache(ids.torso);
 
-    const bodyComponent = entityManager.getComponentData(ids.actor, 'anatomy:body');
+    const bodyComponent = entityManager.getComponentData(
+      ids.actor,
+      'anatomy:body'
+    );
     const partsBeforeDetach = bodyGraphService.getAllParts(bodyComponent.body);
-    const cachedPartsBeforeDetach = bodyGraphService.getAllParts(bodyComponent.body);
+    const cachedPartsBeforeDetach = bodyGraphService.getAllParts(
+      bodyComponent.body
+    );
     expect(cachedPartsBeforeDetach).toBe(partsBeforeDetach);
 
     const armsBeforeDetach = bodyGraphService.findPartsByType(ids.torso, 'arm');

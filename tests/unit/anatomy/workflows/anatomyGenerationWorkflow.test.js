@@ -172,7 +172,9 @@ describe('AnatomyGenerationWorkflow', () => {
       const descriptorOwnerId = 'descriptor-owner';
       const graphResult = { rootId: 'root-entity', entities: ['root-entity'] };
 
-      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(graphResult);
+      mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
+        graphResult
+      );
 
       mockEntityManager.getEntityInstance.mockReturnValue({
         hasComponent: jest.fn().mockReturnValue(false),

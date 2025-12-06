@@ -6,7 +6,7 @@ describe('IDslParser interface contract', () => {
     const parser = new IDslParser();
 
     expect(() => parser.parse('actor.name')).toThrow(
-      new Error('IDslParser.parse method not implemented.'),
+      new Error('IDslParser.parse method not implemented.')
     );
   });
 

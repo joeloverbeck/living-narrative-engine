@@ -40,7 +40,10 @@ describe('createSalvageRoutes', () => {
     handler(req, res);
 
     expect(salvageController.handleSalvageByRequestId).toHaveBeenCalledTimes(1);
-    expect(salvageController.handleSalvageByRequestId).toHaveBeenCalledWith(req, res);
+    expect(salvageController.handleSalvageByRequestId).toHaveBeenCalledWith(
+      req,
+      res
+    );
   });
 
   it('delegates salvage stats retrieval to the controller with request and response objects', () => {

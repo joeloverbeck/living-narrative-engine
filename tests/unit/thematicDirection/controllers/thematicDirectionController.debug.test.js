@@ -88,11 +88,12 @@ describe('ThematicDirectionController - Debug', () => {
       logger: mockLogger,
     };
 
-    const controllerLifecycleOrchestrator =
-      new ControllerLifecycleOrchestrator({
+    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator(
+      {
         logger: mockLogger,
         eventBus: mockEventBus,
-      });
+      }
+    );
 
     return {
       controllerLifecycleOrchestrator,

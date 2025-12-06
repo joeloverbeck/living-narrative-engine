@@ -51,14 +51,14 @@ async function createDispatcherEnvironment() {
   registry.store(
     'events',
     systemErrorEventDefinition.id,
-    systemErrorEventDefinition,
+    systemErrorEventDefinition
   );
 
   const repository = new GameDataRepository(registry, recording.logger);
   const schemaValidator = new AjvSchemaValidator({ logger: recording.logger });
   await schemaValidator.addSchema(
     systemErrorEventDefinition.payloadSchema,
-    `${systemErrorEventDefinition.id}#payload`,
+    `${systemErrorEventDefinition.id}#payload`
   );
 
   const eventBus = new EventBus({ logger: recording.logger });
@@ -107,15 +107,10 @@ describe('commandResultUtils integration', () => {
       'Command processor encountered an unexpected condition.',
       'look around',
       'action-42',
-      false,
+      false
     );
 
-    dispatchFailure(
-      logger,
-      dispatcher,
-      failure.error,
-      failure.internalError,
-    );
+    dispatchFailure(logger, dispatcher, failure.error, failure.internalError);
 
     await flushAsync();
 
@@ -132,8 +127,8 @@ describe('commandResultUtils integration', () => {
       logEntries.error.some(
         (entry) =>
           entry.message ===
-          'Command processor encountered an unexpected condition.',
-      ),
+          'Command processor encountered an unexpected condition.'
+      )
     ).toBe(true);
 
     expect(capturedEvents).toHaveLength(1);
@@ -141,14 +136,14 @@ describe('commandResultUtils integration', () => {
     expect(event.type).toBe(SYSTEM_ERROR_OCCURRED_ID);
     expect(event.payload.message).toBe('Unable to comply with the command.');
     expect(event.payload.details.raw).toBe(
-      'Command processor encountered an unexpected condition.',
+      'Command processor encountered an unexpected condition.'
     );
     expect(new Date(event.payload.details.timestamp).toISOString()).toBe(
-      event.payload.details.timestamp,
+      event.payload.details.timestamp
     );
     expect(typeof event.payload.details.stack).toBe('string');
     expect(event.payload.details.stack).toEqual(
-      expect.stringContaining('Error'),
+      expect.stringContaining('Error')
     );
   });
 
@@ -157,14 +152,14 @@ describe('commandResultUtils integration', () => {
       undefined,
       'Internal failure without user-facing copy.',
       undefined,
-      undefined,
+      undefined
     );
 
     dispatchFailure(
       logger,
       dispatcher,
       'A fallback message was shown to the player.',
-      failure.internalError,
+      failure.internalError
     );
 
     await flushAsync();
@@ -178,20 +173,21 @@ describe('commandResultUtils integration', () => {
     expect(capturedEvents).toHaveLength(1);
     const [event] = capturedEvents;
     expect(event.payload.message).toBe(
-      'A fallback message was shown to the player.',
+      'A fallback message was shown to the player.'
     );
     expect(event.payload.details.raw).toBe(
-      'Internal failure without user-facing copy.',
+      'Internal failure without user-facing copy.'
     );
     expect(event.payload.details.timestamp).toEqual(
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/)
     );
     expect(typeof event.payload.details.stack).toBe('string');
 
     expect(
       logEntries.error.some(
-        (entry) => entry.message === 'Internal failure without user-facing copy.',
-      ),
+        (entry) =>
+          entry.message === 'Internal failure without user-facing copy.'
+      )
     ).toBe(true);
   });
 });

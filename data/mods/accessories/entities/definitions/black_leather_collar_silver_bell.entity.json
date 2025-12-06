@@ -8,15 +8,11 @@
       "equipmentSlots": {
         "primary": "head_gear"
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "flexible"
-      ]
+      "properties": ["flexible"]
     },
     "core:name": {
       "text": "collar with bell"
@@ -31,9 +27,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "head_gear"
-      ],
+      "covers": ["head_gear"],
       "coveragePriority": "accessories"
     },
     "items:item": {},

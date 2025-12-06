@@ -20,7 +20,11 @@ describe('ActionFormattingCoordinator', () => {
     const decider = {
       decide: jest.fn(() => ({
         strategy: null,
-        metadata: { selectedStrategy: 'legacy', evaluations: [], validationErrors: [] },
+        metadata: {
+          selectedStrategy: 'legacy',
+          evaluations: [],
+          validationErrors: [],
+        },
         validationFailures: [],
       })),
     };
@@ -100,7 +104,11 @@ describe('ActionFormattingCoordinator', () => {
     const decider = {
       decide: jest.fn(() => ({
         strategy,
-        metadata: { selectedStrategy: 'perAction', evaluations: [], validationErrors: [] },
+        metadata: {
+          selectedStrategy: 'perAction',
+          evaluations: [],
+          validationErrors: [],
+        },
         validationFailures: [],
       })),
     };
@@ -112,7 +120,12 @@ describe('ActionFormattingCoordinator', () => {
         actor: { id: 'actor-1', name: 'Hero' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'action-1', name: 'Action One', description: 'Test', visual: null },
+            actionDef: {
+              id: 'action-1',
+              name: 'Action One',
+              description: 'Test',
+              visual: null,
+            },
             targetContexts: [{ entityId: 'target-1' }],
             resolvedTargets: { primary: [{ entityId: 'target-1' }] },
             targetDefinitions: { primary: {} },
@@ -128,9 +141,19 @@ describe('ActionFormattingCoordinator', () => {
     const coordinator = new ActionFormattingCoordinator(dependencies);
     const result = await coordinator.run();
 
-    expect(dependencies.validateVisualProperties).toHaveBeenCalledWith(null, 'action-1');
+    expect(dependencies.validateVisualProperties).toHaveBeenCalledWith(
+      null,
+      'action-1'
+    );
     expect(decider.decide).toHaveBeenCalledWith({
-      task: expect.objectContaining({ actionDef: { id: 'action-1', name: 'Action One', description: 'Test', visual: null } }),
+      task: expect.objectContaining({
+        actionDef: {
+          id: 'action-1',
+          name: 'Action One',
+          description: 'Test',
+          visual: null,
+        },
+      }),
       actorId: 'actor-1',
       trace: undefined,
     });
@@ -188,7 +211,10 @@ describe('ActionFormattingCoordinator', () => {
 
     const fallbackFormatter = {
       prepareFallback: jest.fn(() => ({ prepared: true })),
-      formatWithFallback: jest.fn(async () => ({ ok: true, value: 'fallback-command' })),
+      formatWithFallback: jest.fn(async () => ({
+        ok: true,
+        value: 'fallback-command',
+      })),
     };
 
     const targetNormalizationService = {
@@ -208,7 +234,11 @@ describe('ActionFormattingCoordinator', () => {
     const decider = {
       decide: jest.fn(() => ({
         strategy,
-        metadata: { selectedStrategy: 'perAction', evaluations: [], validationErrors: [] },
+        metadata: {
+          selectedStrategy: 'perAction',
+          evaluations: [],
+          validationErrors: [],
+        },
         validationFailures: [],
       })),
     };
@@ -252,7 +282,8 @@ describe('ActionFormattingCoordinator', () => {
       actionId: 'action-1',
     });
     expect(commandFormatter.formatMultiTarget).toHaveBeenCalledTimes(1);
-    const formatMultiTargetArgs = commandFormatter.formatMultiTarget.mock.calls[0];
+    const formatMultiTargetArgs =
+      commandFormatter.formatMultiTarget.mock.calls[0];
     expect(formatMultiTargetArgs[0]).toEqual(
       dependencies.context.actionsWithTargets[0].actionDef
     );
@@ -328,8 +359,16 @@ describe('ActionFormattingCoordinator', () => {
         actor: { id: 'actor-42', name: 'Legacy Hero' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'legacy-action', name: 'Legacy Action', description: 'Legacy', visual: { backgroundColor: '#fff' } },
-            targetContexts: [{ entityId: 'target-a' }, { entityId: 'target-b' }],
+            actionDef: {
+              id: 'legacy-action',
+              name: 'Legacy Action',
+              description: 'Legacy',
+              visual: { backgroundColor: '#fff' },
+            },
+            targetContexts: [
+              { entityId: 'target-a' },
+              { entityId: 'target-b' },
+            ],
           },
         ],
         resolvedTargets: null,
@@ -478,26 +517,28 @@ describe('ActionFormattingCoordinator', () => {
     const commandFormatter = {
       format: jest.fn(() => ({ ok: true, value: 'legacy-command' })),
     };
-    const createTask = jest.fn(({ actionWithTargets, actor, formatterOptions }) => {
-      expect(formatterOptions).toBe(providedFormatterOptions);
+    const createTask = jest.fn(
+      ({ actionWithTargets, actor, formatterOptions }) => {
+        expect(formatterOptions).toBe(providedFormatterOptions);
 
-      if (!actionWithTargets.actionDef) {
+        if (!actionWithTargets.actionDef) {
+          return {
+            actor,
+            actionDef: undefined,
+            metadata: { source: 'legacy' },
+            targetContexts: undefined,
+          };
+        }
+
         return {
           actor,
-          actionDef: undefined,
-          metadata: { source: 'legacy' },
-          targetContexts: undefined,
+          actionDef: actionWithTargets.actionDef,
+          metadata: { source: 'legacy', hasPerActionMetadata: false },
+          targetContexts: [{ entityId: 'target-1' }],
+          formatterOptions: { injected: true },
         };
       }
-
-      return {
-        actor,
-        actionDef: actionWithTargets.actionDef,
-        metadata: { source: 'legacy', hasPerActionMetadata: false },
-        targetContexts: [{ entityId: 'target-1' }],
-        formatterOptions: { injected: true },
-      };
-    });
+    );
 
     const dependencies = buildBaseDependencies({
       accumulatorFactory: null,
@@ -586,7 +627,9 @@ describe('ActionFormattingCoordinator', () => {
       expect.objectContaining({
         errorOrResult: expect.objectContaining({
           error: expect.any(Error),
-          details: expect.objectContaining({ code: 'legacy_missing_target_contexts' }),
+          details: expect.objectContaining({
+            code: 'legacy_missing_target_contexts',
+          }),
         }),
         actionDef: dependencies.context.actionsWithTargets[0].actionDef,
         actorId: 'actor-1',
@@ -708,8 +751,12 @@ describe('ActionFormattingCoordinator', () => {
         }),
       })
     );
-    expect(dependencies.instrumentation.actionCompleted).not.toHaveBeenCalledWith(
-      expect.objectContaining({ actionDef: dependencies.context.actionsWithTargets[0].actionDef })
+    expect(
+      dependencies.instrumentation.actionCompleted
+    ).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionDef: dependencies.context.actionsWithTargets[0].actionDef,
+      })
     );
     expect(result.success).toBe(true);
     expect(result.actions).toHaveLength(0);
@@ -720,7 +767,11 @@ describe('ActionFormattingCoordinator', () => {
     const decider = {
       decide: jest.fn(() => ({
         strategy: null,
-        metadata: { selectedStrategy: 'legacy', evaluations: [], validationErrors: [] },
+        metadata: {
+          selectedStrategy: 'legacy',
+          evaluations: [],
+          validationErrors: [],
+        },
         validationFailures: null,
       })),
     };
@@ -731,7 +782,12 @@ describe('ActionFormattingCoordinator', () => {
         actor: { id: 'actor-10', name: 'Observer' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'legacy-4', name: 'Legacy Idle', description: null, visual: null },
+            actionDef: {
+              id: 'legacy-4',
+              name: 'Legacy Idle',
+              description: null,
+              visual: null,
+            },
             targetContexts: [{ entityId: 'target-0' }],
           },
         ],
@@ -743,7 +799,9 @@ describe('ActionFormattingCoordinator', () => {
 
     expect(decider.decide).toHaveBeenCalledTimes(1);
     expect(dependencies.instrumentation.actionFailed).not.toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ reason: 'validation-failed' }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({ reason: 'validation-failed' }),
+      })
     );
     expect(result.errors).toHaveLength(0);
   });

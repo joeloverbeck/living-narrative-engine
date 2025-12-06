@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import createSafeErrorLogger from '../../../src/utils/safeErrorLogger.js';
 
 describe('SafeErrorLogger loading option normalization', () => {
@@ -25,7 +32,10 @@ describe('SafeErrorLogger loading option normalization', () => {
   });
 
   afterEach(() => {
-    safeErrorLogger.disableGameLoadingMode({ force: true, reason: 'test-cleanup' });
+    safeErrorLogger.disableGameLoadingMode({
+      force: true,
+      reason: 'test-cleanup',
+    });
     jest.clearAllMocks();
   });
 

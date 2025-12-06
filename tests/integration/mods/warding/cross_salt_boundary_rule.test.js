@@ -10,7 +10,9 @@ import wardingManifest from '../../../../data/mods/warding/mod-manifest.json' as
 
 describe('handle_cross_salt_boundary rule', () => {
   it('registers rule and condition correctly', () => {
-    expect(handleCrossSaltBoundaryRule.rule_id).toBe('handle_cross_salt_boundary');
+    expect(handleCrossSaltBoundaryRule.rule_id).toBe(
+      'handle_cross_salt_boundary'
+    );
     expect(handleCrossSaltBoundaryRule.event_type).toBe('core:attempt_action');
     expect(handleCrossSaltBoundaryRule.condition.condition_ref).toBe(
       'warding:event-is-action-cross-salt-boundary'
@@ -64,7 +66,8 @@ describe('handle_cross_salt_boundary rule', () => {
   });
 
   it('dispatches correct perceptible event message', () => {
-    const expectedMessage = '{context.actorName} crosses the salt boundary, breaking it.';
+    const expectedMessage =
+      '{context.actorName} crosses the salt boundary, breaking it.';
 
     const dispatch = handleCrossSaltBoundaryRule.actions.find(
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
@@ -72,13 +75,16 @@ describe('handle_cross_salt_boundary rule', () => {
 
     expect(dispatch).toBeDefined();
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
-    expect(dispatch?.parameters.location_id).toBe('{context.actorPosition.locationId}');
+    expect(dispatch?.parameters.location_id).toBe(
+      '{context.actorPosition.locationId}'
+    );
     expect(dispatch?.parameters.perception_type).toBe('action_self_general');
     expect(dispatch?.parameters.actor_id).toBe('{event.payload.actorId}');
   });
 
   it('sets log message correctly', () => {
-    const expectedMessage = '{context.actorName} crosses the salt boundary, breaking it.';
+    const expectedMessage =
+      '{context.actorName} crosses the salt boundary, breaking it.';
 
     const logMessageVar = handleCrossSaltBoundaryRule.actions.find(
       (op) =>
@@ -143,8 +149,7 @@ describe('handle_cross_salt_boundary rule', () => {
   it('does not have target entity operations (none target scope)', () => {
     // This action targets "none", so there should be no target entity operations
     const targetNameOp = handleCrossSaltBoundaryRule.actions.find(
-      (op) =>
-        op.type === 'GET_NAME' && op.parameters.entity_ref === 'target'
+      (op) => op.type === 'GET_NAME' && op.parameters.entity_ref === 'target'
     );
     expect(targetNameOp).toBeUndefined();
   });

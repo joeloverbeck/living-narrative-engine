@@ -33,11 +33,14 @@ export class ScopeResolutionError extends BaseError {
   constructor(message, context = {}) {
     // Convert Error objects to serializable format before passing to BaseError
     const processedContext = { ...context };
-    if (processedContext.originalError && processedContext.originalError instanceof Error) {
+    if (
+      processedContext.originalError &&
+      processedContext.originalError instanceof Error
+    ) {
       processedContext.originalError = {
         name: processedContext.originalError.name,
         message: processedContext.originalError.message,
-        stack: processedContext.originalError.stack
+        stack: processedContext.originalError.stack,
       };
     }
 
@@ -76,7 +79,11 @@ export class ScopeResolutionError extends BaseError {
     const lines = [];
 
     for (const [key, value] of Object.entries(params)) {
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         lines.push(`${indentStr}${key}:`);
         const nestedLines = this.#formatParameters(value, indent + 2);
         lines.push(nestedLines);
@@ -100,7 +107,7 @@ export class ScopeResolutionError extends BaseError {
     if (!stack) return '';
 
     const lines = stack.split('\n').slice(0, maxLines);
-    return lines.map(line => `    ${line.trim()}`).join('\n');
+    return lines.map((line) => `    ${line.trim()}`).join('\n');
   }
 
   /**
@@ -175,7 +182,8 @@ export class ScopeResolutionError extends BaseError {
       } else if (typeof ctx.originalError === 'object') {
         // Handle serialized error object
         const errorName = ctx.originalError.name || 'Error';
-        const errorMessage = ctx.originalError.message || String(ctx.originalError);
+        const errorMessage =
+          ctx.originalError.message || String(ctx.originalError);
         errorMsg = `${errorName}: ${errorMessage}`;
       } else {
         errorMsg = String(ctx.originalError);
@@ -184,7 +192,11 @@ export class ScopeResolutionError extends BaseError {
     }
 
     // Add stack trace excerpt if original error has a stack
-    if (ctx.originalError && typeof ctx.originalError === 'object' && ctx.originalError.stack) {
+    if (
+      ctx.originalError &&
+      typeof ctx.originalError === 'object' &&
+      ctx.originalError.stack
+    ) {
       result += `\n  Stack Trace:`;
       result += `\n${this.#formatStackExcerpt(ctx.originalError.stack)}`;
     } else if (this.stack) {

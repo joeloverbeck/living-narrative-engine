@@ -74,8 +74,8 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       });
 
       // Assert: No warnings about missing entity_ref
-      const entityRefWarnings = warnings.filter((w) =>
-        w.includes('entity_ref') && w.includes('required')
+      const entityRefWarnings = warnings.filter(
+        (w) => w.includes('entity_ref') && w.includes('required')
       );
       expect(entityRefWarnings).toHaveLength(0);
 
@@ -148,8 +148,8 @@ describe('sit_down_at_distance - Secondary Target Resolution', () => {
       });
 
       // Assert: No entity_ref warnings (field name is correct)
-      const entityRefWarnings = warnings.filter((w) =>
-        w.includes('entity_ref') && w.includes('required')
+      const entityRefWarnings = warnings.filter(
+        (w) => w.includes('entity_ref') && w.includes('required')
       );
       expect(entityRefWarnings).toHaveLength(0);
 

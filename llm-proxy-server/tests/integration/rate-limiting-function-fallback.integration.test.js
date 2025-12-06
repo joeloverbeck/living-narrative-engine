@@ -100,12 +100,21 @@ describe('rate limiting callable request fallback integration', () => {
   });
 
   it('maintains consistent fallback behaviour for the LLM limiter with callable requests', async () => {
-    const limiter = createLlmRateLimiter({ trustProxy: true, useApiKey: false });
-    const firstReq = createCallableRequest({ url: '/llm-callable', originalUrl: '/llm-callable' });
+    const limiter = createLlmRateLimiter({
+      trustProxy: true,
+      useApiKey: false,
+    });
+    const firstReq = createCallableRequest({
+      url: '/llm-callable',
+      originalUrl: '/llm-callable',
+    });
     const firstRes = createStubResponse();
     await invokeLimiter(limiter, firstReq, firstRes);
 
-    const secondReq = createCallableRequest({ url: '/llm-callable', originalUrl: '/llm-callable' });
+    const secondReq = createCallableRequest({
+      url: '/llm-callable',
+      originalUrl: '/llm-callable',
+    });
     const secondRes = createStubResponse();
     await invokeLimiter(limiter, secondReq, secondRes);
 
@@ -125,11 +134,17 @@ describe('rate limiting callable request fallback integration', () => {
       useApiKey: false,
     });
 
-    const firstReq = createCallableRequest({ url: '/adaptive-callable', originalUrl: '/adaptive-callable' });
+    const firstReq = createCallableRequest({
+      url: '/adaptive-callable',
+      originalUrl: '/adaptive-callable',
+    });
     const firstRes = createStubResponse();
     await invokeLimiter(limiter, firstReq, firstRes);
 
-    const secondReq = createCallableRequest({ url: '/adaptive-callable', originalUrl: '/adaptive-callable' });
+    const secondReq = createCallableRequest({
+      url: '/adaptive-callable',
+      originalUrl: '/adaptive-callable',
+    });
     const secondRes = createStubResponse();
     await invokeLimiter(limiter, secondReq, secondRes);
 

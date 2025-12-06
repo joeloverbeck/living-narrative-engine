@@ -9,6 +9,7 @@ Extend the existing `chanceModifier` schema definition in `data/schemas/action.s
 ## File List
 
 Files to touch:
+
 - `data/schemas/action.schema.json` (lines 35-54: `chanceModifier` definition)
 
 ## Out of Scope
@@ -25,6 +26,7 @@ Files to touch:
 ### 1. Update `chanceModifier` Definition (lines 35-54)
 
 Replace the current definition:
+
 ```json
 "chanceModifier": {
   "type": "object",
@@ -49,6 +51,7 @@ Replace the current definition:
 ```
 
 With this new definition:
+
 ```json
 "chanceModifier": {
   "type": "object",
@@ -168,6 +171,7 @@ The `chanceModifier` schema in `data/schemas/action.schema.json` was updated as 
 ### Deviation from Ticket
 
 The ticket stated "DO NOT touch test files" in Out of Scope. However, existing tests used the old `modifier` property which was renamed to `value`. Tests were updated to:
+
 1. Use new property names (`value` instead of `modifier`)
 2. Add the now-required `tag` property
 3. Add comprehensive coverage for new properties
@@ -176,27 +180,27 @@ This deviation was necessary because the schema change made the old test data in
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `data/schemas/action.schema.json` | Schema definition updated (lines 35-67) |
-| `tests/unit/schemas/action.chanceBased.schema.test.js` | Tests updated for new schema format |
+| File                                                   | Change                                  |
+| ------------------------------------------------------ | --------------------------------------- |
+| `data/schemas/action.schema.json`                      | Schema definition updated (lines 35-67) |
+| `tests/unit/schemas/action.chanceBased.schema.test.js` | Tests updated for new schema format     |
 
 ### Tests Modified/Added
 
-| Test | Rationale |
-|------|-----------|
+| Test                                                                 | Rationale                                            |
+| -------------------------------------------------------------------- | ---------------------------------------------------- |
 | `chanceBased with modifiers array and condition_ref should validate` | Updated to use `value` + `tag` instead of `modifier` |
 | `chanceBased with modifiers using inline JSON Logic should validate` | Updated to use `value` + `tag` instead of `modifier` |
-| `missing value in modifiers should fail validation` | New: Validates `value` is required |
-| `missing tag in modifiers should fail validation` | New: Validates `tag` is required |
-| `modifier value as float should validate (numbers allowed)` | New: Confirms float values are valid |
-| `invalid modifier type enum should fail validation` | New: Tests `type` enum validation |
-| `tag exceeding maxLength (30) should fail validation` | New: Tests tag length constraint |
-| `empty tag should fail validation (minLength: 1)` | New: Tests minimum tag length |
-| `invalid targetRole enum should fail validation` | New: Tests `targetRole` enum validation |
-| `modifier with all new properties should validate` | New: Full coverage with all new properties |
-| `modifier with type flat should validate` | New: Explicit `type: flat` test |
-| `modifier with valid targetRole values should validate` | New: Tests all 5 targetRole enum values |
+| `missing value in modifiers should fail validation`                  | New: Validates `value` is required                   |
+| `missing tag in modifiers should fail validation`                    | New: Validates `tag` is required                     |
+| `modifier value as float should validate (numbers allowed)`          | New: Confirms float values are valid                 |
+| `invalid modifier type enum should fail validation`                  | New: Tests `type` enum validation                    |
+| `tag exceeding maxLength (30) should fail validation`                | New: Tests tag length constraint                     |
+| `empty tag should fail validation (minLength: 1)`                    | New: Tests minimum tag length                        |
+| `invalid targetRole enum should fail validation`                     | New: Tests `targetRole` enum validation              |
+| `modifier with all new properties should validate`                   | New: Full coverage with all new properties           |
+| `modifier with type flat should validate`                            | New: Explicit `type: flat` test                      |
+| `modifier with valid targetRole values should validate`              | New: Tests all 5 targetRole enum values              |
 
 ### Validation Results
 

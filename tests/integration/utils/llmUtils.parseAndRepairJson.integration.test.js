@@ -18,7 +18,8 @@ describe('parseAndRepairJson integration', () => {
   it('cleans conversational prefixes, parses JSON, and logs success', async () => {
     const logger = createLogger();
 
-    const rawResponse = "Here is the JSON: ```json\n{\"status\":\"ok\",\"values\":[1,2]}\n```";
+    const rawResponse =
+      'Here is the JSON: ```json\n{"status":"ok","values":[1,2]}\n```';
 
     const result = await parseAndRepairJson(rawResponse, logger);
 
@@ -42,17 +43,23 @@ describe('parseAndRepairJson integration', () => {
     };
     const dispatcher = { dispatch: jest.fn() };
 
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
-    await expect(parseAndRepairJson(123, invalidLogger, dispatcher)).rejects.toThrow(
-      new TypeError("Input 'jsonString' must be a string.")
-    );
+    await expect(
+      parseAndRepairJson(123, invalidLogger, dispatcher)
+    ).rejects.toThrow(new TypeError("Input 'jsonString' must be a string."));
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining("Input 'jsonString' must be a string."),
+        message: expect.stringContaining(
+          "Input 'jsonString' must be a string."
+        ),
         details: {},
       })
     );
@@ -71,7 +78,9 @@ describe('parseAndRepairJson integration', () => {
     );
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("parseAndRepairJson: Input 'jsonString' must be a string."),
+      expect.stringContaining(
+        "parseAndRepairJson: Input 'jsonString' must be a string."
+      )
     );
   });
 
@@ -79,9 +88,9 @@ describe('parseAndRepairJson integration', () => {
     const logger = createLogger();
     const emptyPayload = '```json\n   \n```';
 
-    await expect(parseAndRepairJson(emptyPayload, logger)).rejects.toBeInstanceOf(
-      JsonProcessingError
-    );
+    await expect(
+      parseAndRepairJson(emptyPayload, logger)
+    ).rejects.toBeInstanceOf(JsonProcessingError);
 
     expect(logger.error).toHaveBeenCalledWith(
       'parseAndRepairJson: Cleaned JSON string is null or empty, cannot parse.',
@@ -94,17 +103,15 @@ describe('parseAndRepairJson integration', () => {
     const dispatcher = { dispatch: jest.fn() };
     const emptyPayload = '```json\n\n```';
 
-    await expect(parseAndRepairJson(emptyPayload, logger, dispatcher)).rejects.toBeInstanceOf(
-      JsonProcessingError
-    );
+    await expect(
+      parseAndRepairJson(emptyPayload, logger, dispatcher)
+    ).rejects.toBeInstanceOf(JsonProcessingError);
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'parseAndRepairJson: Cleaned JSON string is null or empty, cannot parse.',
-        details: { originalInput: emptyPayload },
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message:
+        'parseAndRepairJson: Cleaned JSON string is null or empty, cannot parse.',
+      details: { originalInput: emptyPayload },
+    });
     expect(logger.error).not.toHaveBeenCalled();
   });
 
@@ -117,7 +124,9 @@ describe('parseAndRepairJson integration', () => {
 
     expect(result).toEqual({ alpha: 1 });
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Initial JSON.parse failed after cleaning. Attempting repair.'),
+      expect.stringContaining(
+        'Initial JSON.parse failed after cleaning. Attempting repair.'
+      ),
       expect.objectContaining({
         originalInputLength: rawResponse.length,
         cleanedJsonStringLength: expect.any(Number),

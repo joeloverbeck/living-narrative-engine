@@ -26,7 +26,10 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action discovery', ()
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-physical-control', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'sex-physical-control',
+      ACTION_ID
+    );
     restoreScopeResolver = installActorsSittingCloseScopeOverride(testFixture);
   });
 
@@ -51,11 +54,15 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action discovery', ()
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("pull {primary}'s head to your clothed crotch");
+    expect(discovered.template).toBe(
+      "pull {primary}'s head to your clothed crotch"
+    );
   });
 
   it("does not appear when the actor's penis is uncovered", async () => {
-    const { entities } = buildPullHeadToClothedCrotchScenario({ coverActorPenis: false });
+    const { entities } = buildPullHeadToClothedCrotchScenario({
+      coverActorPenis: false,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -66,7 +73,9 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action discovery', ()
   });
 
   it('does not appear when the actor is not sitting', async () => {
-    const { entities } = buildPullHeadToClothedCrotchScenario({ includeActorSitting: false });
+    const { entities } = buildPullHeadToClothedCrotchScenario({
+      includeActorSitting: false,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -77,7 +86,9 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action discovery', ()
   });
 
   it('does not appear without mutual closeness', async () => {
-    const { entities } = buildPullHeadToClothedCrotchScenario({ includeCloseness: false });
+    const { entities } = buildPullHeadToClothedCrotchScenario({
+      includeCloseness: false,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 

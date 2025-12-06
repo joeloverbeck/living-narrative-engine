@@ -1105,7 +1105,10 @@ describe('GameSessionManager', () => {
 
     it('should treat metadata containing backslashes as file paths', async () => {
       const saveData = {
-        metadata: { gameTitle: '', worldName: 'C\\\\saves\\\\manual_save_Episode1.sav' },
+        metadata: {
+          gameTitle: '',
+          worldName: 'C\\\\saves\\\\manual_save_Episode1.sav',
+        },
         entities: [],
         gameState: {},
       };

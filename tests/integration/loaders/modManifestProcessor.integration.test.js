@@ -4,12 +4,7 @@
  * load order resolution, and version compatibility checks.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, afterEach } from '@jest/globals';
 import fs from 'fs/promises';
 import path from 'path';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -210,7 +205,6 @@ describe('Integration: ModManifestProcessor', () => {
       try {
         await fs.rm(dir, { recursive: true, force: true });
       } catch (error) {
-         
         console.warn('Failed to clean temporary directory', error);
       }
     }
@@ -231,9 +225,7 @@ describe('Integration: ModManifestProcessor', () => {
     const manifests = [
       createManifest('core', { version: '1.0.0' }),
       createManifest('positioning', {
-        dependencies: [
-          { id: 'core', version: '^1.0.0', required: true },
-        ],
+        dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
       }),
       createManifest('intimacy', {
         dependencies: [
@@ -255,11 +247,7 @@ describe('Integration: ModManifestProcessor', () => {
       'intimacy',
       'positioning',
     ]);
-    expect(result.finalModOrder).toEqual([
-      'core',
-      'positioning',
-      'intimacy',
-    ]);
+    expect(result.finalModOrder).toEqual(['core', 'positioning', 'intimacy']);
     expect(result.validationWarnings).toEqual([]);
     expect(result.incompatibilityCount).toBe(0);
 
@@ -282,9 +270,7 @@ describe('Integration: ModManifestProcessor', () => {
     const manifests = [
       createManifest('core'),
       createManifest('positioning', {
-        dependencies: [
-          { id: 'core', version: '^1.0.0', required: true },
-        ],
+        dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
       }),
     ];
 
@@ -335,9 +321,7 @@ describe('Integration: ModManifestProcessor', () => {
     const manifests = [
       createManifest('core'),
       createManifest('positioning', {
-        dependencies: [
-          { id: 'core', version: '^1.0.0', required: true },
-        ],
+        dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
       }),
     ];
 
@@ -369,9 +353,7 @@ describe('Integration: ModManifestProcessor', () => {
     const manifests = [
       createManifest('core'),
       createManifest('positioning', {
-        dependencies: [
-          { id: 'core', version: '^1.0.0', required: true },
-        ],
+        dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
       }),
     ];
 
@@ -393,8 +375,9 @@ describe('Integration: ModManifestProcessor', () => {
     ).rejects.toThrow('Strict validation failure');
 
     expect(
-      logger.warn.mock.calls.every(([message]) =>
-        !message.includes('Validation orchestrator failed, falling back')
+      logger.warn.mock.calls.every(
+        ([message]) =>
+          !message.includes('Validation orchestrator failed, falling back')
       )
     ).toBe(true);
   });
@@ -431,9 +414,7 @@ describe('Integration: ModManifestProcessor', () => {
       createManifest('core', { version: '1.0.0' }),
       createManifest('positioning', {
         version: '1.0.0',
-        dependencies: [
-          { id: 'core', version: '^2.0.0', required: true },
-        ],
+        dependencies: [{ id: 'core', version: '^2.0.0', required: true }],
       }),
     ];
 
@@ -449,15 +430,12 @@ describe('Integration: ModManifestProcessor', () => {
       createManifest('core', { gameVersion: '>=1.0.0' }),
       createManifest('positioning', {
         gameVersion: '>=1.0.0',
-        dependencies: [
-          { id: 'core', version: '^1.0.0', required: true },
-        ],
+        dependencies: [{ id: 'core', version: '^1.0.0', required: true }],
       }),
     ];
 
-    const { processor, logger, safeDispatcher } = await createProcessor(
-      manifests
-    );
+    const { processor, logger, safeDispatcher } =
+      await createProcessor(manifests);
 
     await expect(
       processor.processManifests(['positioning'], 'integration-world')
@@ -469,8 +447,6 @@ describe('Integration: ModManifestProcessor', () => {
       )
     ).toBe(true);
     expect(safeDispatcher.events).toHaveLength(1);
-    expect(safeDispatcher.events[0].eventName).toBe(
-      SYSTEM_ERROR_OCCURRED_ID
-    );
+    expect(safeDispatcher.events[0].eventName).toBe(SYSTEM_ERROR_OCCURRED_ID);
   });
 });

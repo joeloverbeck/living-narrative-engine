@@ -15,10 +15,10 @@ Bring the `kissing` mod rules onto the shared `PREPARE_ACTION_CONTEXT` operation
 
 ## Current Reality vs. Original Assumptions
 
-- The mod currently has **16** rules, not 15, and none match the placeholder filenames listed previously.  
-- Six rules dispatch a **separate success message** (distinct from the perceptible log) and cannot use the `core:logSuccessAndEndTurn` macro without losing that behavior.  
-- Four rules modify kissing state (add/remove components, lock/unlock mouth engagement) and must keep those operations intact.  
-- No `npm run validate:mod:kissing` script exists; mod validation should call `scripts/validateModReferences.js --mod=kissing`.  
+- The mod currently has **16** rules, not 15, and none match the placeholder filenames listed previously.
+- Six rules dispatch a **separate success message** (distinct from the perceptible log) and cannot use the `core:logSuccessAndEndTurn` macro without losing that behavior.
+- Four rules modify kissing state (add/remove components, lock/unlock mouth engagement) and must keep those operations intact.
+- No `npm run validate:mod:kissing` script exists; mod validation should call `scripts/validateModReferences.js --mod=kissing`.
 - Integration tests live under `tests/integration/mods/kissing/` and must be run with `--runInBand` to avoid known Jest exit issues.
 
 ---
@@ -47,14 +47,17 @@ Bring the `kissing` mod rules onto the shared `PREPARE_ACTION_CONTEXT` operation
 ## Migration Pattern
 
 ### Common change
+
 - Replace the repeated setup (`GET_NAME` x2, `QUERY_COMPONENT core:position`, `SET_VARIABLE perceptionType/locationId/targetId`) with a single `PREPARE_ACTION_CONTEXT` call.
 - Retain each rule's unique `logMessage`/`successMessage` content, mouth locking/unlocking, component adds/removes, and description regeneration.
 
 ### Pattern A: Macro-driven logs (uses `core:logSuccessAndEndTurn`)
+
 - Keep `logMessage` `SET_VARIABLE`.
 - Ensure `PREPARE_ACTION_CONTEXT` runs before any stateful operations that depend on context vars.
 
 ### Pattern B: Custom dispatch + distinct success message
+
 - Keep `logMessage`, `successMessage`, `GET_TIMESTAMP`, explicit `DISPATCH_EVENT` calls, and `END_TURN`.
 - Only replace the shared context setup with `PREPARE_ACTION_CONTEXT`.
 
@@ -73,12 +76,14 @@ Bring the `kissing` mod rules onto the shared `PREPARE_ACTION_CONTEXT` operation
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 1. Kissing mod integration tests (in-band):  
    `npm run test:integration -- tests/integration/mods/kissing --runInBand`
 2. Kissing mod validation:  
    `node scripts/validateModReferences.js --mod=kissing`
 
 ### Invariants That Must Remain True
+
 1. All 16 rules keep identical runtime behavior (state changes, log vs. success messages, events dispatched).
 2. `core:logSuccessAndEndTurn` users still emit the same perceptible and display events.
 3. `successMessage` rules continue to emit the distinct display payload.

@@ -53,7 +53,7 @@ export function wrapActionsWithStrictValidation(actions) {
           value: wrappedTargets,
           writable: false,
           enumerable: true,
-          configurable: true
+          configurable: true,
         });
       }
     }
@@ -91,7 +91,7 @@ export function wrapEntityWithStrictValidation(entity) {
       value: wrappedComponents,
       writable: false,
       enumerable: true,
-      configurable: true
+      configurable: true,
     });
   }
 

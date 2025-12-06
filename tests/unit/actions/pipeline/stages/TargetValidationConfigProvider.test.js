@@ -189,8 +189,8 @@ describe('TargetValidationConfigProvider', () => {
     const snapshot = provider.getSnapshot();
 
     expect(snapshot.validationEnabled).toBe(true);
-    expect(snapshot.shouldSkipAction({ id: 'core:action', type: 'GENERIC' })).toBe(
-      false
-    );
+    expect(
+      snapshot.shouldSkipAction({ id: 'core:action', type: 'GENERIC' })
+    ).toBe(false);
   });
 });

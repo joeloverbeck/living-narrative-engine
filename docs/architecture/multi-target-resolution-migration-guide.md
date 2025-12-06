@@ -5,12 +5,14 @@ This guide documents the refactoring of `MultiTargetResolutionStage` from a mono
 ## Refactoring Overview
 
 ### Before (Commits before 22c282154)
+
 - **Structure:** Single 1,085-line class
 - **Concerns:** Mixed orchestration, tracing, result building, resolution
 - **Testability:** Low (monolithic, hard to isolate)
 - **Modifiability:** Low (changes ripple across file)
 
 ### After (Commit ba0aaffa8 and later)
+
 - **Structure:** 556-line orchestrator + 3 services (~530 lines)
 - **Concerns:** Separated into dedicated services
 - **Testability:** High (services independently testable)
@@ -19,21 +21,24 @@ This guide documents the refactoring of `MultiTargetResolutionStage` from a mono
 ## Extracted Services
 
 ### 1. TargetResolutionTracingOrchestrator (~200 lines)
+
 **Extracted from:** Inline trace calls scattered throughout stage
 
 **Before:**
+
 ```javascript
 // MultiTargetResolutionStage.js - lines 200-400 (approximate)
 if (trace && typeof trace.captureActionData === 'function') {
   trace.captureActionData('legacy_action_detected', {
     actionId,
-    legacyFormat: true
+    legacyFormat: true,
   });
 }
 // ... 26 more trace calls with similar conditionals
 ```
 
 **After:**
+
 ```javascript
 // TargetResolutionTracingOrchestrator.js
 captureLegacyDetection(trace, actionId, data) {
@@ -47,30 +52,36 @@ this.#tracingOrchestrator.captureLegacyDetection(trace, actionId, data);
 ```
 
 **Benefits:**
+
 - Centralized trace capability detection
 - Consistent trace call patterns
 - Easier to add new trace events
 - Testable in isolation
 
 ### 2. TargetResolutionResultBuilder (~150 lines)
+
 **Extracted from:** Result assembly logic in 3 locations
 
 **Before:**
+
 ```javascript
 // MultiTargetResolutionStage.js - result assembly scattered
 const legacyResult = PipelineResult.success({
-  candidateActions: [{
-    ...actionDef,
-    resolvedTargets: { ...resolvedTargets },
-    // ... metadata attachment logic
-  }],
-  targetContexts: [...targetContexts] // Backward compat
+  candidateActions: [
+    {
+      ...actionDef,
+      resolvedTargets: { ...resolvedTargets },
+      // ... metadata attachment logic
+    },
+  ],
+  targetContexts: [...targetContexts], // Backward compat
 });
 
 // ... similar logic in 2 other places
 ```
 
 **After:**
+
 ```javascript
 // TargetResolutionResultBuilder.js
 buildLegacyResult(context, targets, targetContexts, conversion, actionDef) {
@@ -91,15 +102,18 @@ const result = this.#resultBuilder.buildLegacyResult(
 ```
 
 **Benefits:**
+
 - Single source of truth for result format
 - Consistent metadata attachment
 - Backward compatibility in one place
 - Easy to modify result structure
 
 ### 3. TargetResolutionCoordinator (~180 lines)
+
 **Extracted from:** Multi-target resolution and dependency handling
 
 **Before:**
+
 ```javascript
 // MultiTargetResolutionStage.js - dependency resolution inline
 const dependencyOrder = this.#dependencyResolver.getResolutionOrder(targets);
@@ -118,6 +132,7 @@ for (const targetDef of dependencyOrder) {
 ```
 
 **After:**
+
 ```javascript
 // TargetResolutionCoordinator.js
 async resolveTargets(context, actionDef, trace) {
@@ -140,6 +155,7 @@ const results = await this.#resolutionCoordinator.resolveTargets(
 ```
 
 **Benefits:**
+
 - Clear separation of resolution logic
 - Easier to add new resolution strategies
 - Testable dependency handling
@@ -150,14 +166,18 @@ const results = await this.#resolutionCoordinator.resolveTargets(
 ### Pattern 1: Adding New Trace Events
 
 **Before Refactoring:**
+
 ```javascript
 // Had to modify MultiTargetResolutionStage.js
 if (trace && typeof trace.captureActionData === 'function') {
-  trace.captureActionData('new_event', { /* data */ });
+  trace.captureActionData('new_event', {
+    /* data */
+  });
 }
 ```
 
 **After Refactoring:**
+
 ```javascript
 // 1. Add to ITargetResolutionTracingOrchestrator.js interface
 captureNewEvent(trace, eventData);
@@ -178,14 +198,20 @@ this.#tracingOrchestrator.captureNewEvent(trace, data);
 ### Pattern 2: Changing Result Format
 
 **Before Refactoring:**
+
 ```javascript
 // Had to find and update 3 different locations in MultiTargetResolutionStage.js
 return PipelineResult.success({
-  candidateActions: [{ /* format */ }]
+  candidateActions: [
+    {
+      /* format */
+    },
+  ],
 });
 ```
 
 **After Refactoring:**
+
 ```javascript
 // Only modify TargetResolutionResultBuilder.js
 buildMultiTargetResult(context, results, actionDef) {
@@ -204,12 +230,14 @@ buildMultiTargetResult(context, results, actionDef) {
 ### Pattern 3: New Resolution Strategy
 
 **Before Refactoring:**
+
 ```javascript
 // Had to modify resolution logic embedded in MultiTargetResolutionStage.js
 // Mixed with tracing and result building
 ```
 
 **After Refactoring:**
+
 ```javascript
 // Only modify TargetResolutionCoordinator.js
 async resolveWithNewStrategy(context, target, trace) {
@@ -228,6 +256,7 @@ async resolveWithNewStrategy(context, target, trace) {
 ## Testing Strategy Migration
 
 ### Before: Monolithic Testing
+
 ```javascript
 describe('MultiTargetResolutionStage', () => {
   it('should resolve targets and trace and build results', () => {
@@ -239,6 +268,7 @@ describe('MultiTargetResolutionStage', () => {
 ```
 
 ### After: Service-Based Testing
+
 ```javascript
 // Unit test each service
 describe('TargetResolutionTracingOrchestrator', () => {
@@ -271,6 +301,7 @@ describe('MultiTargetResolutionStage Integration', () => {
 ## Common Pitfalls
 
 ### ❌ Pitfall 1: Bypassing Services
+
 ```javascript
 // Wrong: Direct operation that should use service
 if (trace && trace.captureActionData) {
@@ -279,12 +310,14 @@ if (trace && trace.captureActionData) {
 ```
 
 **Fix:** Always delegate to appropriate service
+
 ```javascript
 // Right: Use service
 this.#tracingOrchestrator.captureEvent(trace, data);
 ```
 
 ### ❌ Pitfall 2: Mixing Concerns
+
 ```javascript
 // Wrong: Building results in coordinator
 class TargetResolutionCoordinator {
@@ -296,6 +329,7 @@ class TargetResolutionCoordinator {
 ```
 
 **Fix:** Return raw data, delegate result building
+
 ```javascript
 // Right: Coordinator returns raw data
 class TargetResolutionCoordinator {
@@ -306,23 +340,29 @@ class TargetResolutionCoordinator {
 
 // Stage delegates to result builder
 const rawResults = await coordinator.resolveTargets();
-const result = resultBuilder.buildMultiTargetResult(context, rawResults, action);
+const result = resultBuilder.buildMultiTargetResult(
+  context,
+  rawResults,
+  action
+);
 ```
 
 ### ❌ Pitfall 3: Modifying Multiple Services for Simple Changes
+
 ```javascript
 // Wrong: Changing result format requires coordinator change
 class TargetResolutionCoordinator {
   async resolveTargets() {
     return {
       targets: resolved,
-      newMetadata: 'data' // Adding metadata in coordinator
+      newMetadata: 'data', // Adding metadata in coordinator
     };
   }
 }
 ```
 
 **Fix:** Keep services focused on single responsibility
+
 ```javascript
 // Right: Coordinator returns targets only
 class TargetResolutionCoordinator {
@@ -335,11 +375,13 @@ class TargetResolutionCoordinator {
 class TargetResolutionResultBuilder {
   buildMultiTargetResult(context, targets, action) {
     return PipelineResult.success({
-      candidateActions: [{
-        ...action,
-        resolvedTargets: targets,
-        metadata: this.#buildMetadata() // Metadata in builder
-      }]
+      candidateActions: [
+        {
+          ...action,
+          resolvedTargets: targets,
+          metadata: this.#buildMetadata(), // Metadata in builder
+        },
+      ],
     });
   }
 }
@@ -347,20 +389,20 @@ class TargetResolutionResultBuilder {
 
 ## Metrics
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
+| Metric            | Before     | After     | Change      |
+| ----------------- | ---------- | --------- | ----------- |
 | **Lines of Code** |
-| Main file | 1,085 | 556 | -529 (-49%) |
-| Services (total) | 0 | 530 | +530 |
-| Total system | 1,085 | 1,086 | +1 (~0%) |
-| **Complexity** |
-| Concerns per file | 4-5 | 1 | -75% |
-| Max method length | ~120 lines | ~60 lines | -50% |
-| Cognitive load | High | Low | ✓ |
-| **Quality** |
-| Testability | Low | High | ✓ |
-| Maintainability | Low | High | ✓ |
-| Extensibility | Low | High | ✓ |
+| Main file         | 1,085      | 556       | -529 (-49%) |
+| Services (total)  | 0          | 530       | +530        |
+| Total system      | 1,085      | 1,086     | +1 (~0%)    |
+| **Complexity**    |
+| Concerns per file | 4-5        | 1         | -75%        |
+| Max method length | ~120 lines | ~60 lines | -50%        |
+| Cognitive load    | High       | Low       | ✓           |
+| **Quality**       |
+| Testability       | Low        | High      | ✓           |
+| Maintainability   | Low        | High      | ✓           |
+| Extensibility     | Low        | High      | ✓           |
 
 ## Key Takeaways
 

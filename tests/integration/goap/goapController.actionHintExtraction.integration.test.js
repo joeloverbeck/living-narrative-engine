@@ -101,7 +101,9 @@ describe('GoapController - Action Hint Extraction Integration', () => {
         methodId: 'core:consume_item.simple',
         actorId: 'actor_1',
         timestamp: Date.now(),
-        stepResults: [{ success: true, data: {}, actionId: 'items:consume_item' }],
+        stepResults: [
+          { success: true, data: {}, actionId: 'items:consume_item' },
+        ],
       };
 
       // Method definition

@@ -79,6 +79,8 @@ describe('Action Validation Integration', () => {
         mockCondition,
         { actionDefinition: invalidAction }
       );
-    }).rejects.toThrow(/Invalid property 'requiredComponents'.*Did you mean 'required_components'/);
+    }).rejects.toThrow(
+      /Invalid property 'requiredComponents'.*Did you mean 'required_components'/
+    );
   });
 });

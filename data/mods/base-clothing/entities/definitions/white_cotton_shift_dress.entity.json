@@ -8,10 +8,7 @@
       "equipmentSlots": {
         "primary": "full_body"
       },
-      "allowedLayers": [
-        "underwear",
-        "base"
-      ]
+      "allowedLayers": ["underwear", "base"]
     },
     "core:material": {
       "material": "cotton"
@@ -26,10 +23,7 @@
       "color": "white"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper",
-        "torso_lower"
-      ],
+      "covers": ["torso_upper", "torso_lower"],
       "coveragePriority": "base"
     },
     "items:item": {},

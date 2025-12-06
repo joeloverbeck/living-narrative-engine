@@ -36,6 +36,7 @@ Create the `weapons:weapon` marker component to identify weapon entities. This c
 ```
 
 **Component Notes:**
+
 - **Type:** Marker component (no data fields)
 - **Purpose:** Identify entities as weapons for filtering and categorization
 - **Used With:** Always combined with `items:item`, `items:portable`, `items:aimable`
@@ -91,10 +92,12 @@ npm run validate
 ### Test Coverage
 
 **Total Tests Created:** 28 tests
+
 - Unit tests: 13 tests
 - Integration tests: 15 tests
 
 **Test Categories:**
+
 - Schema validation compliance
 - Marker component pattern verification
 - Required fields validation
@@ -107,6 +110,7 @@ npm run validate
 ### Deviations from Original Plan
 
 **None.** The implementation exactly matched the ticket specification:
+
 - Component structure is identical to planned specification
 - All acceptance criteria met
 - No API changes or breaking changes
@@ -124,6 +128,7 @@ npm run validate
 ### Next Steps
 
 This marker component is now ready for use in:
+
 - WEASYSIMP-009: Weapon-specific data components
 - WEASYSIMP-011-015: Weapon action implementations
 - Future weapon entity definitions

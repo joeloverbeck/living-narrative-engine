@@ -3,6 +3,9 @@
   "id": "affection:event-is-action-rest-head-on-shoulder",
   "description": "Checks if the triggering event is for the 'affection:rest_head_on_shoulder' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "affection:rest_head_on_shoulder"]
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:rest_head_on_shoulder"
+    ]
   }
 }

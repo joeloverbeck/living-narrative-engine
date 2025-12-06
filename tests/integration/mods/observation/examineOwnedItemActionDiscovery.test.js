@@ -11,7 +11,10 @@ describe('observation:examine_owned_item action definition', () => {
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('observation', 'observation:examine_owned_item');
+    testFixture = await ModTestFixture.forAction(
+      'observation',
+      'observation:examine_owned_item'
+    );
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -107,7 +110,8 @@ describe('observation:examine_owned_item action definition', () => {
 
       expect(examineActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -115,11 +119,10 @@ describe('observation:examine_owned_item action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:actor_inventory_items',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['test_item_1']);
@@ -156,7 +159,8 @@ describe('observation:examine_owned_item action definition', () => {
 
       expect(examineActions.length).toBe(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -164,18 +168,20 @@ describe('observation:examine_owned_item action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:actor_inventory_items',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toHaveLength(0);
     });
 
     it('should NOT appear when inventory is empty', () => {
-      const room = ModEntityScenarios.createRoom('empty_location', 'Empty Room');
+      const room = ModEntityScenarios.createRoom(
+        'empty_location',
+        'Empty Room'
+      );
 
       const actor = new ModEntityBuilder('lonely_actor')
         .withName('Lonely')
@@ -265,7 +271,8 @@ describe('observation:examine_owned_item action definition', () => {
 
       expect(examineActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -273,11 +280,10 @@ describe('observation:examine_owned_item action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:actor_inventory_items',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(new Set(scopeResult.value)).toEqual(new Set(['item1', 'item2']));

@@ -68,7 +68,10 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
       $ref: '#/$defs/Action',
       $defs: {
         Action: {
-          anyOf: [{ $ref: '#/$defs/MacroReference' }, { $ref: '#/$defs/Operation' }],
+          anyOf: [
+            { $ref: '#/$defs/MacroReference' },
+            { $ref: '#/$defs/Operation' },
+          ],
         },
         MacroReference: {
           type: 'object',
@@ -108,7 +111,10 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
                   type: 'object',
                   properties: {
                     message: { type: 'string' },
-                    level: { type: 'string', enum: ['info', 'warn', 'error', 'debug'] },
+                    level: {
+                      type: 'string',
+                      enum: ['info', 'warn', 'error', 'debug'],
+                    },
                   },
                   required: ['message', 'level'],
                   additionalProperties: false,
@@ -271,7 +277,9 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
     });
 
     it('should validate core:logFailureOutcomeAndEndTurn macro from production files', async () => {
-      const macro = await loadMacroFile('core/macros/logFailureOutcomeAndEndTurn.macro.json');
+      const macro = await loadMacroFile(
+        'core/macros/logFailureOutcomeAndEndTurn.macro.json'
+      );
 
       const result = validator.validate(macroSchemaId, macro);
 
@@ -282,7 +290,9 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
 
   describe('Weapons macros (with nested refs) - THE BUG FIX', () => {
     it('should validate weapons:handleMeleeCritical macro (has nested macro ref)', async () => {
-      const macro = await loadMacroFile('weapons/macros/handleMeleeCritical.macro.json');
+      const macro = await loadMacroFile(
+        'weapons/macros/handleMeleeCritical.macro.json'
+      );
 
       const result = validator.validate(macroSchemaId, macro);
 
@@ -290,13 +300,18 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
       // Before the fix, this would FAIL with "Missing operation type" error
       expect(result.isValid).toBe(true);
       if (!result.isValid) {
-        console.error('Validation errors:', JSON.stringify(result.errors, null, 2));
+        console.error(
+          'Validation errors:',
+          JSON.stringify(result.errors, null, 2)
+        );
       }
       expect(result.errors).toBeNull();
     });
 
     it('should validate weapons:handleMeleeFumble macro (has nested macro ref)', async () => {
-      const macro = await loadMacroFile('weapons/macros/handleMeleeFumble.macro.json');
+      const macro = await loadMacroFile(
+        'weapons/macros/handleMeleeFumble.macro.json'
+      );
 
       const result = validator.validate(macroSchemaId, macro);
 
@@ -305,7 +320,9 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
     });
 
     it('should validate weapons:handleMeleeHit macro (has nested macro ref)', async () => {
-      const macro = await loadMacroFile('weapons/macros/handleMeleeHit.macro.json');
+      const macro = await loadMacroFile(
+        'weapons/macros/handleMeleeHit.macro.json'
+      );
 
       const result = validator.validate(macroSchemaId, macro);
 
@@ -314,7 +331,9 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
     });
 
     it('should validate weapons:handleMeleeMiss macro (has nested macro ref)', async () => {
-      const macro = await loadMacroFile('weapons/macros/handleMeleeMiss.macro.json');
+      const macro = await loadMacroFile(
+        'weapons/macros/handleMeleeMiss.macro.json'
+      );
 
       const result = validator.validate(macroSchemaId, macro);
 
@@ -325,15 +344,21 @@ describe('Macro Schema - Nested Macro References (Production Schema)', () => {
 
   describe('Verify actual macro file content has nested macro refs', () => {
     it('should confirm weapons:handleMeleeCritical contains nested macro ref', async () => {
-      const macro = await loadMacroFile('weapons/macros/handleMeleeCritical.macro.json');
+      const macro = await loadMacroFile(
+        'weapons/macros/handleMeleeCritical.macro.json'
+      );
 
       // Verify the macro actually contains a nested macro reference
-      const hasNestedMacroRef = macro.actions.some((action) => 'macro' in action);
+      const hasNestedMacroRef = macro.actions.some(
+        (action) => 'macro' in action
+      );
       expect(hasNestedMacroRef).toBe(true);
     });
 
     it('should confirm nested macro reference format is valid', async () => {
-      const macro = await loadMacroFile('weapons/macros/handleMeleeCritical.macro.json');
+      const macro = await loadMacroFile(
+        'weapons/macros/handleMeleeCritical.macro.json'
+      );
 
       const macroRefs = macro.actions.filter((action) => 'macro' in action);
       expect(macroRefs.length).toBeGreaterThan(0);

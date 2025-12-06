@@ -52,27 +52,18 @@ jest.mock(
     default: mockActionTraceConfigValidator,
   })
 );
-jest.mock(
-  '../../../../src/configuration/actionTraceConfigLoader.js',
-  () => ({
-    __esModule: true,
-    default: mockActionTraceConfigLoader,
-  })
-);
-jest.mock(
-  '../../../../src/actions/tracing/traceDirectoryManager.js',
-  () => ({
-    __esModule: true,
-    default: mockTraceDirectoryManager,
-  })
-);
-jest.mock(
-  '../../../../src/actions/tracing/actionTraceFilter.js',
-  () => ({
-    __esModule: true,
-    default: mockActionTraceFilter,
-  })
-);
+jest.mock('../../../../src/configuration/actionTraceConfigLoader.js', () => ({
+  __esModule: true,
+  default: mockActionTraceConfigLoader,
+}));
+jest.mock('../../../../src/actions/tracing/traceDirectoryManager.js', () => ({
+  __esModule: true,
+  default: mockTraceDirectoryManager,
+}));
+jest.mock('../../../../src/actions/tracing/actionTraceFilter.js', () => ({
+  __esModule: true,
+  default: mockActionTraceFilter,
+}));
 jest.mock(
   '../../../../src/actions/tracing/actionAwareStructuredTrace.js',
   () => ({
@@ -89,34 +80,22 @@ jest.mock(
     TimestampFormat: mockTimestampFormat,
   })
 );
-jest.mock(
-  '../../../../src/actions/tracing/jsonTraceFormatter.js',
-  () => ({
-    __esModule: true,
-    JsonTraceFormatter: mockJsonTraceFormatter,
-  })
-);
-jest.mock(
-  '../../../../src/actions/tracing/humanReadableFormatter.js',
-  () => ({
-    __esModule: true,
-    HumanReadableFormatter: mockHumanReadableFormatter,
-  })
-);
-jest.mock(
-  '../../../../src/storage/indexedDBStorageAdapter.js',
-  () => ({
-    __esModule: true,
-    IndexedDBStorageAdapter: mockIndexedDBStorageAdapter,
-  })
-);
-jest.mock(
-  '../../../../src/events/tracing/eventDispatchTracer.js',
-  () => ({
-    __esModule: true,
-    EventDispatchTracer: mockEventDispatchTracer,
-  })
-);
+jest.mock('../../../../src/actions/tracing/jsonTraceFormatter.js', () => ({
+  __esModule: true,
+  JsonTraceFormatter: mockJsonTraceFormatter,
+}));
+jest.mock('../../../../src/actions/tracing/humanReadableFormatter.js', () => ({
+  __esModule: true,
+  HumanReadableFormatter: mockHumanReadableFormatter,
+}));
+jest.mock('../../../../src/storage/indexedDBStorageAdapter.js', () => ({
+  __esModule: true,
+  IndexedDBStorageAdapter: mockIndexedDBStorageAdapter,
+}));
+jest.mock('../../../../src/events/tracing/eventDispatchTracer.js', () => ({
+  __esModule: true,
+  EventDispatchTracer: mockEventDispatchTracer,
+}));
 jest.mock(
   '../../../../src/actions/tracing/metrics/errorMetricsService.js',
   () => ({
@@ -124,13 +103,10 @@ jest.mock(
     ErrorMetricsService: mockErrorMetricsService,
   })
 );
-jest.mock(
-  '../../../../src/actions/tracing/resilience/retryManager.js',
-  () => ({
-    __esModule: true,
-    RetryManager: mockRetryManager,
-  })
-);
+jest.mock('../../../../src/actions/tracing/resilience/retryManager.js', () => ({
+  __esModule: true,
+  RetryManager: mockRetryManager,
+}));
 jest.mock(
   '../../../../src/actions/tracing/recovery/recoveryManager.js',
   () => ({

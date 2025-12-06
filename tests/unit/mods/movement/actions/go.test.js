@@ -8,7 +8,7 @@ describe('Movement Go Action', () => {
   beforeEach(() => {
     const actionPath = path.resolve(
       process.cwd(),
-      'data/mods/movement/actions/go.action.json',
+      'data/mods/movement/actions/go.action.json'
     );
     const actionContent = fs.readFileSync(actionPath, 'utf8');
     action = JSON.parse(actionContent);
@@ -21,7 +21,7 @@ describe('Movement Go Action', () => {
   it('should have the correct name and description', () => {
     expect(action.name).toBe('Go');
     expect(action.description).toBe(
-      'Moves your character to the specified location.',
+      'Moves your character to the specified location.'
     );
   });
 
@@ -46,10 +46,10 @@ describe('Movement Go Action', () => {
     expect(action.prerequisites[0]).toBeDefined();
     expect(action.prerequisites[0].logic).toBeDefined();
     expect(action.prerequisites[0].logic.condition_ref).toBe(
-      'movement:actor-can-move',
+      'movement:actor-can-move'
     );
     expect(action.prerequisites[0].failure_message).toBe(
-      'You cannot move without functioning legs.',
+      'You cannot move without functioning legs.'
     );
   });
 
@@ -89,14 +89,14 @@ describe('Movement Go Action', () => {
       // Test normal state contrast
       const normalContrast = getContrastRatio(
         action.visual.backgroundColor,
-        action.visual.textColor,
+        action.visual.textColor
       );
       expect(normalContrast).toBeGreaterThanOrEqual(6.5); // Still exceeds WCAG AA Large Text (4.5:1)
 
       // Test hover state contrast
       const hoverContrast = getContrastRatio(
         action.visual.hoverBackgroundColor,
-        action.visual.hoverTextColor,
+        action.visual.hoverTextColor
       );
       expect(hoverContrast).toBeGreaterThanOrEqual(4.5); // WCAG AA for normal text
     });
@@ -119,7 +119,7 @@ describe('Movement Go Action', () => {
 
   it('should have the correct JSON schema reference', () => {
     expect(action.$schema).toBe(
-      'schema://living-narrative-engine/action.schema.json',
+      'schema://living-narrative-engine/action.schema.json'
     );
   });
 });

@@ -163,7 +163,9 @@ export class GameDataRepository extends IGameDataRepository {
    */
   getTask(id) {
     if (typeof id !== 'string' || !id.trim()) {
-      this.#logger.warn(`GameDataRepository.getTask called with invalid ID: ${id}`);
+      this.#logger.warn(
+        `GameDataRepository.getTask called with invalid ID: ${id}`
+      );
       return null;
     }
 

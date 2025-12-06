@@ -100,9 +100,9 @@ describe('BodyDescriptionComposer - Activity Integration', () => {
 
     const result = await composer.composeDescription(mockBodyEntity);
 
-    expect(mockActivityService.generateActivityDescription).toHaveBeenCalledWith(
-      mockBodyEntity.id
-    );
+    expect(
+      mockActivityService.generateActivityDescription
+    ).toHaveBeenCalledWith(mockBodyEntity.id);
     expect(result).toContain('Activity: Jon is kneeling before Alicia');
   });
 
@@ -229,9 +229,9 @@ describe('BodyDescriptionComposer - Activity Integration', () => {
     const result = await composer.composeDescription(mockBodyEntity);
 
     // Verify service was called exactly once (not multiple times)
-    expect(mockActivityService.generateActivityDescription).toHaveBeenCalledTimes(
-      1
-    );
+    expect(
+      mockActivityService.generateActivityDescription
+    ).toHaveBeenCalledTimes(1);
     expect(result).toContain('Activity: Jon is kneeling');
   });
 });

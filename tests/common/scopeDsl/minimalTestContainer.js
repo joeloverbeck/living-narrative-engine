@@ -60,7 +60,10 @@ export async function createMinimalTestContainer(options = {}) {
   // Entity manager for entity lifecycle - using TestEntityManagerAdapter for test flexibility
   // TestEntityManagerAdapter wraps SimpleEntityManager and provides addEntity/deleteEntity methods
   // Pass registry so createEntityInstance can look up entity definitions
-  const entityManager = new TestEntityManagerAdapter({ logger, registry: dataRegistry });
+  const entityManager = new TestEntityManagerAdapter({
+    logger,
+    registry: dataRegistry,
+  });
   container.register(tokens.IEntityManager, entityManager);
 
   // JSON Logic evaluation service for filters

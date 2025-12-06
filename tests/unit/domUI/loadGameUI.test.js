@@ -241,13 +241,11 @@ describe('LoadGameUI basic behaviors', () => {
   it('restores status message and button state when repopulating with a selection', async () => {
     const updateSpy = jest.spyOn(loadGameUI, '_updateButtonStates');
     const displaySpy = jest.spyOn(loadGameUI, '_displayStatusMessage');
-    jest
-      .spyOn(loadGameUI, 'populateSlotsList')
-      .mockImplementation(async () => {
-        loadGameUI.currentSlotsDisplayData = [
-          { identifier: 'slot-1', saveName: 'Keep Selected', isCorrupted: false },
-        ];
-      });
+    jest.spyOn(loadGameUI, 'populateSlotsList').mockImplementation(async () => {
+      loadGameUI.currentSlotsDisplayData = [
+        { identifier: 'slot-1', saveName: 'Keep Selected', isCorrupted: false },
+      ];
+    });
 
     loadGameUI.selectedSlotData = {
       identifier: 'slot-1',

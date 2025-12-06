@@ -6,8 +6,8 @@ Create the `ranged:throw_item_at_target` action definition with chance-based mec
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                        | Purpose                |
+| ----------------------------------------------------------- | ---------------------- |
 | `data/mods/ranged/actions/throw_item_at_target.action.json` | Main action definition |
 
 ## Implementation Details
@@ -85,6 +85,7 @@ Create the `ranged:throw_item_at_target` action definition with chance-based mec
 ### Visual Styling
 
 Uses the "Archer's Focus" color scheme (Section 15.1 in mod-color-schemes.md):
+
 - Background: `#2a4a3f` (deep forest-olive teal)
 - Text: `#e8f5f0` (light mint)
 - Hover Background: `#3a5f52` (lighter forest-teal)
@@ -93,13 +94,13 @@ Uses the "Archer's Focus" color scheme (Section 15.1 in mod-color-schemes.md):
 
 ### Key Configuration Details
 
-| Property | Value | Rationale |
-|----------|-------|-----------|
-| `required_components.actor` | `[]` | No wielding requirement - can throw from inventory |
-| `required_components.primary` | `["items:portable"]` | Only portable items can be thrown |
-| `actorSkill.component` | `skills:ranged_skill` | Uses ranged skill (not melee) |
-| `targetSkill.targetRole` | `secondary` | Defense skill comes from target actor |
-| `generateCombinations` | `true` | Generate all item/target combinations |
+| Property                      | Value                 | Rationale                                          |
+| ----------------------------- | --------------------- | -------------------------------------------------- |
+| `required_components.actor`   | `[]`                  | No wielding requirement - can throw from inventory |
+| `required_components.primary` | `["items:portable"]`  | Only portable items can be thrown                  |
+| `actorSkill.component`        | `skills:ranged_skill` | Uses ranged skill (not melee)                      |
+| `targetSkill.targetRole`      | `secondary`           | Defense skill comes from target actor              |
+| `generateCombinations`        | `true`                | Generate all item/target combinations              |
 
 ## Out of Scope
 
@@ -139,6 +140,7 @@ npm run validate
 ## Reference Files
 
 For understanding action patterns:
+
 - `data/mods/weapons/actions/swing_at_target.action.json` - Similar chance-based combat action
 
 ## Dependencies

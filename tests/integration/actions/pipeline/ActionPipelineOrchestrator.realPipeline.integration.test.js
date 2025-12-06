@@ -132,17 +132,26 @@ function createOrchestratorScenario({
   };
 
   const commandFormatter = {
-    format: jest.fn((actionDef, targetContext, manager, _options, { displayNameFn }) => {
-      const entity = manager.getEntityInstance(targetContext.entityId);
-      const targetName = displayNameFn(entity, targetContext.entityId, logger);
-      return { ok: true, value: `${actionDef.name} -> ${targetName}` };
-    }),
+    format: jest.fn(
+      (actionDef, targetContext, manager, _options, { displayNameFn }) => {
+        const entity = manager.getEntityInstance(targetContext.entityId);
+        const targetName = displayNameFn(
+          entity,
+          targetContext.entityId,
+          logger
+        );
+        return { ok: true, value: `${actionDef.name} -> ${targetName}` };
+      }
+    ),
   };
 
   const safeEventDispatcher = { dispatch: jest.fn() };
 
   const errorBuilder = {
-    buildErrorContext: jest.fn((input) => ({ ...input, stage: 'integration-test' })),
+    buildErrorContext: jest.fn((input) => ({
+      ...input,
+      stage: 'integration-test',
+    })),
   };
 
   const orchestrator = new ActionPipelineOrchestrator({
@@ -160,7 +169,7 @@ function createOrchestratorScenario({
     targetContextBuilder: { build: jest.fn() },
     multiTargetResolutionStage: new SimpleMultiTargetResolutionStage(
       entityManager,
-      TARGET_ID,
+      TARGET_ID
     ),
     targetComponentValidator,
     targetRequiredComponentsValidator,
@@ -220,7 +229,7 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
     const result = await orchestrator.discoverActions(
       { id: ACTOR_ID },
       { mood: 'cheerful' },
-      { trace },
+      { trace }
     );
 
     expect(result.actions).toHaveLength(1);
@@ -234,10 +243,10 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
     expect(prerequisiteService.evaluate).toHaveBeenCalledTimes(2);
     expect(commandFormatter.format).toHaveBeenCalledTimes(1);
     expect(logger.debug).toHaveBeenCalledWith(
-      `Starting action discovery pipeline for actor ${ACTOR_ID}`,
+      `Starting action discovery pipeline for actor ${ACTOR_ID}`
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      `Action discovery pipeline completed for actor ${ACTOR_ID}. Found 1 actions, 0 errors.`,
+      `Action discovery pipeline completed for actor ${ACTOR_ID}. Found 1 actions, 0 errors.`
     );
   });
 
@@ -263,7 +272,7 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
 
     const result = await orchestrator.discoverActions(
       { id: ACTOR_ID },
-      { mood: 'calm' },
+      { mood: 'calm' }
     );
 
     expect(result.actions).toEqual([]);
@@ -273,10 +282,10 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
     expect(prerequisiteService.evaluate).not.toHaveBeenCalled();
     expect(commandFormatter.format).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
-      `Starting action discovery pipeline for actor ${ACTOR_ID}`,
+      `Starting action discovery pipeline for actor ${ACTOR_ID}`
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      `Action discovery pipeline completed for actor ${ACTOR_ID}. Found 0 actions, 0 errors.`,
+      `Action discovery pipeline completed for actor ${ACTOR_ID}. Found 0 actions, 0 errors.`
     );
   });
 });

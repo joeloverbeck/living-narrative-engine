@@ -35,7 +35,9 @@ describe('Centaur Warrior Recipe Validation', () => {
           json: () => Promise.resolve(JSON.parse(content)),
         });
       } catch (error) {
-        return Promise.reject(new Error(`Failed to load ${url}: ${error.message}`));
+        return Promise.reject(
+          new Error(`Failed to load ${url}: ${error.message}`)
+        );
       }
     });
 
@@ -95,7 +97,10 @@ describe('Centaur Warrior Recipe Validation', () => {
 
   it('should validate centaur_warrior recipe without false positive warnings', async () => {
     // Get the actual centaur_warrior recipe from loaded mods
-    const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:centaur_warrior');
+    const recipe = dataRegistry.get(
+      'anatomyRecipes',
+      'anatomy:centaur_warrior'
+    );
 
     expect(recipe).toBeDefined();
     expect(recipe.recipeId).toBe('anatomy:centaur_warrior');
@@ -127,7 +132,10 @@ describe('Centaur Warrior Recipe Validation', () => {
   });
 
   it('should correctly match arm pattern against additionalSlots', async () => {
-    const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:centaur_warrior');
+    const recipe = dataRegistry.get(
+      'anatomyRecipes',
+      'anatomy:centaur_warrior'
+    );
 
     // Get the blueprint
     const blueprint = dataRegistry.get(
@@ -159,7 +167,10 @@ describe('Centaur Warrior Recipe Validation', () => {
   });
 
   it('should correctly match leg patterns against generated slots with orientation', async () => {
-    const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:centaur_warrior');
+    const recipe = dataRegistry.get(
+      'anatomyRecipes',
+      'anatomy:centaur_warrior'
+    );
 
     // Get the structure template to verify it generates leg slots
     const template = dataRegistry.get(
@@ -207,7 +218,10 @@ describe('Centaur Warrior Recipe Validation', () => {
   });
 
   it('should have only descriptor coverage suggestions, no critical warnings', async () => {
-    const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:centaur_warrior');
+    const recipe = dataRegistry.get(
+      'anatomyRecipes',
+      'anatomy:centaur_warrior'
+    );
 
     const report = await validator.validate(recipe);
 
@@ -223,7 +237,10 @@ describe('Centaur Warrior Recipe Validation', () => {
   });
 
   it('should process blueprint slots correctly for pattern resolution', async () => {
-    const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:centaur_warrior');
+    const recipe = dataRegistry.get(
+      'anatomyRecipes',
+      'anatomy:centaur_warrior'
+    );
 
     // This test verifies that the validator processes the blueprint
     // the same way runtime does, ensuring consistency

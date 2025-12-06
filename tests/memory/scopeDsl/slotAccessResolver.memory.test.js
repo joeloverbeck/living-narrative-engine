@@ -314,8 +314,7 @@ describe('SlotAccessResolver Memory', () => {
         resolver.resolve(node, mockContext);
       }
 
-      const avgTime =
-        (performance.now() - startTime) / ITERATIONS_PER_SAMPLE;
+      const avgTime = (performance.now() - startTime) / ITERATIONS_PER_SAMPLE;
       timings.push(avgTime);
     }
 
@@ -344,7 +343,8 @@ describe('SlotAccessResolver Memory', () => {
     for (let i = 0; i < ITERATIONS_PER_SAMPLE; i++) {
       resolver.resolve(node, mockContext);
     }
-    const recoveredTiming = (performance.now() - startTime) / ITERATIONS_PER_SAMPLE;
+    const recoveredTiming =
+      (performance.now() - startTime) / ITERATIONS_PER_SAMPLE;
 
     console.log('After GC recovery:', {
       recoveredTiming: recoveredTiming.toFixed(6),

@@ -4,7 +4,14 @@
  *              caching is disabled and constructor guard rails for dependency wiring.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import { ApiKeyService } from '../../src/services/apiKeyService.js';
 import CacheService from '../../src/services/cacheService.js';
@@ -80,7 +87,12 @@ describe('ApiKeyService cache guards integration', () => {
     });
     const fsReader = new NodeFileSystemReader();
 
-    const service = new ApiKeyService(logger, fsReader, appConfig, cacheService);
+    const service = new ApiKeyService(
+      logger,
+      fsReader,
+      appConfig,
+      cacheService
+    );
 
     const invalidateResult = service.invalidateCache('disabled-llm');
     expect(invalidateResult).toBe(0);
@@ -115,17 +127,17 @@ describe('ApiKeyService cache guards integration', () => {
       enableAutoCleanup: false,
     });
 
-    expect(() => new ApiKeyService(null, fsReader, appConfig, cacheService)).toThrow(
-      'ApiKeyService: logger is required.'
-    );
+    expect(
+      () => new ApiKeyService(null, fsReader, appConfig, cacheService)
+    ).toThrow('ApiKeyService: logger is required.');
 
-    expect(() => new ApiKeyService(logger, null, appConfig, cacheService)).toThrow(
-      'ApiKeyService: fileSystemReader is required.'
-    );
+    expect(
+      () => new ApiKeyService(logger, null, appConfig, cacheService)
+    ).toThrow('ApiKeyService: fileSystemReader is required.');
 
-    expect(() => new ApiKeyService(logger, fsReader, null, cacheService)).toThrow(
-      'ApiKeyService: appConfigService is required.'
-    );
+    expect(
+      () => new ApiKeyService(logger, fsReader, null, cacheService)
+    ).toThrow('ApiKeyService: appConfigService is required.');
 
     expect(() => new ApiKeyService(logger, fsReader, appConfig, null)).toThrow(
       'ApiKeyService: cacheService is required.'

@@ -56,7 +56,9 @@ describe('Chicken Entity Validation', () => {
 
     it('should have "feathered" texture', () => {
       expect(entity.components['descriptors:texture']).toBeDefined();
-      expect(entity.components['descriptors:texture'].texture).toBe('feathered');
+      expect(entity.components['descriptors:texture'].texture).toBe(
+        'feathered'
+      );
     });
   });
 
@@ -79,7 +81,9 @@ describe('Chicken Entity Validation', () => {
 
     it('should have "feathered" texture', () => {
       expect(entity.components['descriptors:texture']).toBeDefined();
-      expect(entity.components['descriptors:texture'].texture).toBe('feathered');
+      expect(entity.components['descriptors:texture'].texture).toBe(
+        'feathered'
+      );
     });
   });
 
@@ -102,7 +106,9 @@ describe('Chicken Entity Validation', () => {
 
     it('should have "conical" shape', () => {
       expect(entity.components['descriptors:shape_general']).toBeDefined();
-      expect(entity.components['descriptors:shape_general'].shape).toBe('conical');
+      expect(entity.components['descriptors:shape_general'].shape).toBe(
+        'conical'
+      );
     });
 
     it('should have "yellow" color', () => {
@@ -176,7 +182,9 @@ describe('Chicken Entity Validation', () => {
 
     it('should have "feathered" texture', () => {
       expect(entity.components['descriptors:texture']).toBeDefined();
-      expect(entity.components['descriptors:texture'].texture).toBe('feathered');
+      expect(entity.components['descriptors:texture'].texture).toBe(
+        'feathered'
+      );
     });
   });
 
@@ -240,7 +248,9 @@ describe('Chicken Entity Validation', () => {
 
     it('should have "feathered" texture', () => {
       expect(entity.components['descriptors:texture']).toBeDefined();
-      expect(entity.components['descriptors:texture'].texture).toBe('feathered');
+      expect(entity.components['descriptors:texture'].texture).toBe(
+        'feathered'
+      );
     });
   });
 
@@ -263,7 +273,9 @@ describe('Chicken Entity Validation', () => {
 
     it('should have "conical" shape', () => {
       expect(entity.components['descriptors:shape_general']).toBeDefined();
-      expect(entity.components['descriptors:shape_general'].shape).toBe('conical');
+      expect(entity.components['descriptors:shape_general'].shape).toBe(
+        'conical'
+      );
     });
 
     it('should be a distinct part for roosters', () => {
@@ -277,25 +289,43 @@ describe('Chicken Entity Validation', () => {
       entity: loadEntity(filename),
     }));
 
-    it.each(entities)('$filename should reference correct schema', ({ entity }) => {
-      expect(entity.$schema).toBe('schema://living-narrative-engine/entity-definition.schema.json');
-    });
+    it.each(entities)(
+      '$filename should reference correct schema',
+      ({ entity }) => {
+        expect(entity.$schema).toBe(
+          'schema://living-narrative-engine/entity-definition.schema.json'
+        );
+      }
+    );
 
-    it.each(entities)('$filename should have anatomy:part component', ({ entity }) => {
-      expect(entity.components['anatomy:part']).toBeDefined();
-    });
+    it.each(entities)(
+      '$filename should have anatomy:part component',
+      ({ entity }) => {
+        expect(entity.components['anatomy:part']).toBeDefined();
+      }
+    );
 
-    it.each(entities)('$filename should have anatomy:part_health component', ({ entity }) => {
-      expect(entity.components['anatomy:part_health']).toBeDefined();
-      expect(entity.components['anatomy:part_health'].currentHealth).toBeGreaterThan(0);
-      expect(entity.components['anatomy:part_health'].maxHealth).toBeGreaterThan(0);
-      expect(entity.components['anatomy:part_health'].state).toBe('healthy');
-    });
+    it.each(entities)(
+      '$filename should have anatomy:part_health component',
+      ({ entity }) => {
+        expect(entity.components['anatomy:part_health']).toBeDefined();
+        expect(
+          entity.components['anatomy:part_health'].currentHealth
+        ).toBeGreaterThan(0);
+        expect(
+          entity.components['anatomy:part_health'].maxHealth
+        ).toBeGreaterThan(0);
+        expect(entity.components['anatomy:part_health'].state).toBe('healthy');
+      }
+    );
 
-    it.each(entities)('$filename should have core:name component', ({ entity }) => {
-      expect(entity.components['core:name']).toBeDefined();
-      expect(entity.components['core:name'].text).toBeTruthy();
-    });
+    it.each(entities)(
+      '$filename should have core:name component',
+      ({ entity }) => {
+        expect(entity.components['core:name']).toBeDefined();
+        expect(entity.components['core:name'].text).toBeTruthy();
+      }
+    );
   });
 
   describe('Texture enum extensions', () => {
@@ -306,7 +336,9 @@ describe('Chicken Entity Validation', () => {
       const tail = loadEntity('chicken_tail.entity.json');
 
       [torso, head, wing, tail].forEach((entity) => {
-        expect(entity.components['descriptors:texture'].texture).toBe('feathered');
+        expect(entity.components['descriptors:texture'].texture).toBe(
+          'feathered'
+        );
       });
     });
 
@@ -364,11 +396,14 @@ describe('Chicken Entity Validation', () => {
       expect(ALL_CHICKEN_ENTITIES.length).toBe(26);
     });
 
-    it.each(ALL_CHICKEN_ENTITIES)('%s should have core:weight component', (filename) => {
-      const entity = loadEntity(filename);
-      expect(entity.components['core:weight']).toBeDefined();
-      expect(entity.components['core:weight'].weight).toBeDefined();
-    });
+    it.each(ALL_CHICKEN_ENTITIES)(
+      '%s should have core:weight component',
+      (filename) => {
+        const entity = loadEntity(filename);
+        expect(entity.components['core:weight']).toBeDefined();
+        expect(entity.components['core:weight'].weight).toBeDefined();
+      }
+    );
 
     it.each(ALL_CHICKEN_ENTITIES)('%s should have weight > 0', (filename) => {
       const entity = loadEntity(filename);
@@ -378,7 +413,9 @@ describe('Chicken Entity Validation', () => {
     describe('Weight realism checks', () => {
       it('chicken_torso should be the heaviest part (1-2 kg range)', () => {
         const torso = loadEntity('chicken_torso.entity.json');
-        expect(torso.components['core:weight'].weight).toBeGreaterThanOrEqual(1.0);
+        expect(torso.components['core:weight'].weight).toBeGreaterThanOrEqual(
+          1.0
+        );
         expect(torso.components['core:weight'].weight).toBeLessThanOrEqual(2.0);
       });
 

@@ -16,9 +16,7 @@
     },
     "core:material": {
       "material": "wood",
-      "properties": [
-        "rigid"
-      ]
+      "properties": ["rigid"]
     },
     "descriptors:texture": {
       "texture": "smooth"

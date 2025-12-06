@@ -3,9 +3,6 @@
   "id": "item-transfer:event-is-action-give-item",
   "description": "Checks if event is the give_item action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "item-transfer:give_item"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "item-transfer:give_item"]
   }
 }

@@ -218,8 +218,6 @@ describe('BaseCharacterBuilderController DI integration', () => {
     expect(injected.memoryManager).toBe(memoryManager);
     expect(injected.errorHandlingStrategy).toBe(errorHandlingStrategy);
     expect(injected.validationService).toBe(validationService);
-    expect(injected.controllerLifecycleOrchestrator).toBe(
-      controllerLifecycle
-    );
+    expect(injected.controllerLifecycleOrchestrator).toBe(controllerLifecycle);
   });
 });

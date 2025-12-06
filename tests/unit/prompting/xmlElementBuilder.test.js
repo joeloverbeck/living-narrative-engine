@@ -32,7 +32,9 @@ describe('XmlElementBuilder', () => {
     });
 
     it('should escape mixed special characters', () => {
-      expect(builder.escape('mixed <&> chars')).toBe('mixed &lt;&amp;&gt; chars');
+      expect(builder.escape('mixed <&> chars')).toBe(
+        'mixed &lt;&amp;&gt; chars'
+      );
     });
 
     it('should return empty string for empty input', () => {
@@ -80,7 +82,9 @@ describe('XmlElementBuilder', () => {
 
     it('should preserve multiline content', () => {
       const content = 'line1\nline2\nline3';
-      expect(builder.wrap('text', content)).toBe('<text>line1\nline2\nline3</text>');
+      expect(builder.wrap('text', content)).toBe(
+        '<text>line1\nline2\nline3</text>'
+      );
     });
 
     it('should handle zero indentation', () => {
@@ -88,7 +92,9 @@ describe('XmlElementBuilder', () => {
     });
 
     it('should handle deep indentation', () => {
-      expect(builder.wrap('deep', 'value', 5)).toBe('          <deep>value</deep>');
+      expect(builder.wrap('deep', 'value', 5)).toBe(
+        '          <deep>value</deep>'
+      );
     });
   });
 
@@ -118,11 +124,15 @@ describe('XmlElementBuilder', () => {
     });
 
     it('should wrap content with leading/trailing whitespace (preserves original)', () => {
-      expect(builder.wrapIfPresent('name', '  John  ')).toBe('<name>  John  </name>');
+      expect(builder.wrapIfPresent('name', '  John  ')).toBe(
+        '<name>  John  </name>'
+      );
     });
 
     it('should apply indentation when wrapping', () => {
-      expect(builder.wrapIfPresent('name', 'John', 1)).toBe('  <name>John</name>');
+      expect(builder.wrapIfPresent('name', 'John', 1)).toBe(
+        '  <name>John</name>'
+      );
     });
 
     it('should not apply indentation to empty result', () => {
@@ -173,7 +183,10 @@ describe('XmlElementBuilder', () => {
       });
 
       it('should format multiple lines correctly', () => {
-        const result = builder.decoratedComment(['Line 1', 'Line 2'], 'primary');
+        const result = builder.decoratedComment(
+          ['Line 1', 'Line 2'],
+          'primary'
+        );
         const lines = result.split('\n');
         expect(lines).toHaveLength(4);
         expect(lines[1]).toContain('Line 1');
@@ -207,7 +220,10 @@ describe('XmlElementBuilder', () => {
       });
 
       it('should format single line correctly', () => {
-        const result = builder.decoratedComment(['Critical Content'], 'critical');
+        const result = builder.decoratedComment(
+          ['Critical Content'],
+          'critical'
+        );
         const lines = result.split('\n');
         expect(lines).toHaveLength(3);
         expect(lines[0]).toMatch(/^<!-- \*+$/);
@@ -216,7 +232,10 @@ describe('XmlElementBuilder', () => {
       });
 
       it('should format multiple lines correctly', () => {
-        const result = builder.decoratedComment(['Rule 1', 'Rule 2'], 'critical');
+        const result = builder.decoratedComment(
+          ['Rule 1', 'Rule 2'],
+          'critical'
+        );
         const lines = result.split('\n');
         expect(lines).toHaveLength(4);
         expect(lines[1]).toContain('Rule 1');
@@ -234,7 +253,10 @@ describe('XmlElementBuilder', () => {
       });
 
       it('should format single line correctly', () => {
-        const result = builder.decoratedComment(['Reference Info'], 'reference');
+        const result = builder.decoratedComment(
+          ['Reference Info'],
+          'reference'
+        );
         const lines = result.split('\n');
         expect(lines).toHaveLength(3);
         expect(lines[0]).toMatch(/^<!-- \.+$/);
@@ -243,7 +265,10 @@ describe('XmlElementBuilder', () => {
       });
 
       it('should format multiple lines correctly', () => {
-        const result = builder.decoratedComment(['Context 1', 'Context 2'], 'reference');
+        const result = builder.decoratedComment(
+          ['Context 1', 'Context 2'],
+          'reference'
+        );
         const lines = result.split('\n');
         expect(lines).toHaveLength(4);
         expect(lines[1]).toContain('Context 1');
@@ -273,7 +298,7 @@ describe('XmlElementBuilder', () => {
       it('should apply indentation to all lines', () => {
         const result = builder.decoratedComment(['Line 1'], 'primary', 1);
         const lines = result.split('\n');
-        lines.forEach(line => {
+        lines.forEach((line) => {
           expect(line.startsWith('  ')).toBe(true);
         });
       });
@@ -281,7 +306,7 @@ describe('XmlElementBuilder', () => {
       it('should apply deep indentation correctly', () => {
         const result = builder.decoratedComment(['Test'], 'secondary', 2);
         const lines = result.split('\n');
-        lines.forEach(line => {
+        lines.forEach((line) => {
           expect(line.startsWith('    ')).toBe(true);
         });
       });
@@ -296,7 +321,10 @@ describe('XmlElementBuilder', () => {
       });
 
       it('should handle lines with special characters', () => {
-        const result = builder.decoratedComment(['Test <special> & "chars"'], 'primary');
+        const result = builder.decoratedComment(
+          ['Test <special> & "chars"'],
+          'primary'
+        );
         // Content should be preserved as-is (comments don't need escaping)
         expect(result).toContain('Test <special> & "chars"');
       });
@@ -318,7 +346,9 @@ describe('XmlElementBuilder', () => {
     it('should produce idempotent results across instances', () => {
       const builder1 = new XmlElementBuilder();
       const builder2 = new XmlElementBuilder();
-      expect(builder1.escape('test & value')).toBe(builder2.escape('test & value'));
+      expect(builder1.escape('test & value')).toBe(
+        builder2.escape('test & value')
+      );
     });
 
     it('should have no side effects on input', () => {

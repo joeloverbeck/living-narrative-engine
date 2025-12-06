@@ -17,7 +17,9 @@ describe('game.html Prompt Preview modal', () => {
     const dom = new JSDOM(gameHtml);
     const { document } = dom.window;
 
-    const metadataContainer = document.querySelector('#llm-prompt-debug-metadata');
+    const metadataContainer = document.querySelector(
+      '#llm-prompt-debug-metadata'
+    );
     const metaActor = document.querySelector('#llm-prompt-meta-actor');
     const metaLlm = document.querySelector('#llm-prompt-meta-llm');
     const metaActions = document.querySelector('#llm-prompt-meta-actions');
@@ -52,7 +54,9 @@ describe('game.html Prompt Preview modal', () => {
     styleEl.textContent = styles;
     document.head.appendChild(styleEl);
 
-    const modalContent = document.querySelector('#llm-prompt-debug-modal .modal-content');
+    const modalContent = document.querySelector(
+      '#llm-prompt-debug-modal .modal-content'
+    );
     const computedStyles = dom.window.getComputedStyle(modalContent);
     const maxWidth = parseFloat(computedStyles.maxWidth);
 

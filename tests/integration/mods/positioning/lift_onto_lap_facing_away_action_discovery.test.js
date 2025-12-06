@@ -42,8 +42,9 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
         }
 
         // Filter partners where BOTH have sitting_on
-        const bothSittingPartners = closeness.partners.filter(partnerId => {
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
+        const bothSittingPartners = closeness.partners.filter((partnerId) => {
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
           return (
             !!partner?.components?.['positioning:sitting_on'] &&
             !!actor?.components?.['positioning:sitting_on']
@@ -64,7 +65,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
     const originalGetCondition =
       testEnv.dataRegistry.getConditionDefinition.getMockImplementation?.();
     testEnv.dataRegistry.getConditionDefinition.mockImplementation(
-      conditionId => {
+      (conditionId) => {
         if (conditionId === 'core:actor-mouth-available') {
           return mouthAvailableCondition;
         }
@@ -122,7 +123,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeDefined();
@@ -180,14 +181,22 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
         })
         .build();
 
-      testFixture.reset([room, chair1, chair2, chair3, actor, target1, target2]);
+      testFixture.reset([
+        room,
+        chair1,
+        chair2,
+        chair3,
+        actor,
+        target1,
+        target2,
+      ]);
 
       configureActionDiscovery();
 
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeDefined();
@@ -230,7 +239,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeDefined();
@@ -272,7 +281,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeUndefined();
@@ -312,7 +321,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeUndefined();
@@ -359,7 +368,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeUndefined();
@@ -407,7 +416,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       expect(liftAction).toBeUndefined();
@@ -456,7 +465,7 @@ describe('lift_onto_lap_facing_away action discovery - Integration Tests', () =>
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_facing_away'
+        (a) => a.id === 'positioning:lift_onto_lap_facing_away'
       );
 
       // Actor being straddled should still be able to lift someone else

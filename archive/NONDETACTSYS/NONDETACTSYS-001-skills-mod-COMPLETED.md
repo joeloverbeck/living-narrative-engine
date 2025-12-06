@@ -10,19 +10,19 @@ Create the `skills` mod with individual skill components for character combat pr
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/mods/skills/mod-manifest.json` | Mod manifest with core dependency |
-| `data/mods/skills/components/melee_skill.component.json` | Melee combat proficiency |
-| `data/mods/skills/components/defense_skill.component.json` | Defensive combat skill |
-| `data/mods/skills/components/ranged_skill.component.json` | Ranged combat proficiency |
-| `data/mods/skills/components/dodge_skill.component.json` | Evasion skill |
-| `data/mods/skills/components/parry_skill.component.json` | Parry skill |
+| File                                                       | Purpose                           |
+| ---------------------------------------------------------- | --------------------------------- |
+| `data/mods/skills/mod-manifest.json`                       | Mod manifest with core dependency |
+| `data/mods/skills/components/melee_skill.component.json`   | Melee combat proficiency          |
+| `data/mods/skills/components/defense_skill.component.json` | Defensive combat skill            |
+| `data/mods/skills/components/ranged_skill.component.json`  | Ranged combat proficiency         |
+| `data/mods/skills/components/dodge_skill.component.json`   | Evasion skill                     |
+| `data/mods/skills/components/parry_skill.component.json`   | Parry skill                       |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File             | Change                         |
+| ---------------- | ------------------------------ |
 | `data/game.json` | Add `skills` to the mods array |
 
 ## Implementation Details
@@ -38,9 +38,7 @@ The manifest follows the pattern established by `data/mods/core/mod-manifest.jso
   "version": "1.0.0",
   "name": "Skills System",
   "description": "Character skills for non-deterministic action resolution",
-  "dependencies": [
-    { "id": "core", "version": ">=1.0.0" }
-  ],
+  "dependencies": [{ "id": "core", "version": ">=1.0.0" }],
   "content": {
     "components": [
       "melee_skill.component.json",
@@ -79,13 +77,13 @@ Each skill component follows this structure:
 
 ### Skill Definitions
 
-| Skill ID | Description | Default Value |
-|----------|-------------|---------------|
-| `skills:melee_skill` | Melee combat proficiency | 10 |
-| `skills:defense_skill` | Defensive combat skill for avoiding attacks | 0 |
-| `skills:ranged_skill` | Ranged combat proficiency | 0 |
-| `skills:dodge_skill` | Ability to evade incoming attacks | 0 |
-| `skills:parry_skill` | Ability to deflect attacks with weapons | 0 |
+| Skill ID               | Description                                 | Default Value |
+| ---------------------- | ------------------------------------------- | ------------- |
+| `skills:melee_skill`   | Melee combat proficiency                    | 10            |
+| `skills:defense_skill` | Defensive combat skill for avoiding attacks | 0             |
+| `skills:ranged_skill`  | Ranged combat proficiency                   | 0             |
+| `skills:dodge_skill`   | Ability to evade incoming attacks           | 0             |
+| `skills:parry_skill`   | Ability to deflect attacks with weapons     | 0             |
 
 ## Out of Scope
 
@@ -148,11 +146,11 @@ data/mods/skills/
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/core/mod-manifest.json` | Manifest pattern reference |
+| File                                                   | Purpose                                                                                                      |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `data/mods/core/mod-manifest.json`                     | Manifest pattern reference                                                                                   |
 | `data/mods/anatomy/components/can_grab.component.json` | Component pattern reference (original ticket incorrectly referenced non-existent `grabbable.component.json`) |
-| `data/schemas/component.schema.json` | Component schema reference |
+| `data/schemas/component.schema.json`                   | Component schema reference                                                                                   |
 
 ## Assumption Corrections
 
@@ -173,6 +171,7 @@ The following assumptions in the original ticket were incorrect and have been co
 ### What Was Actually Changed
 
 **Files Created (6 total):**
+
 - `data/mods/skills/mod-manifest.json` - Mod manifest with proper schema, dependencies, and content listing
 - `data/mods/skills/components/melee_skill.component.json` - Melee combat proficiency (default: 10)
 - `data/mods/skills/components/defense_skill.component.json` - Defensive combat skill (default: 0)
@@ -181,6 +180,7 @@ The following assumptions in the original ticket were incorrect and have been co
 - `data/mods/skills/components/parry_skill.component.json` - Parry skill (default: 0)
 
 **Files Modified (1 total):**
+
 - `data/game.json` - Added `skills` to mods array
 
 ### Differences From Original Plan
@@ -199,6 +199,7 @@ The following assumptions in the original ticket were incorrect and have been co
 ### New/Modified Tests
 
 No new tests were created for this ticket as per the "Out of Scope" section - component validation is handled by existing schema validation infrastructure. The skills mod validation is covered by:
+
 - Existing mod manifest schema validation
 - Existing component schema validation
 - `npm run validate` ecosystem validation

@@ -15,21 +15,25 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 ## Migration Phases
 
 ### Phase 1: Core System Update (Minimal Risk)
+
 - **Duration**: ~40 minutes
 - **Risk**: Minimal
 - **Description**: Update component schemas to include armor layer
 
 ### Phase 2: Priority System Update (Medium Risk)
+
 - **Duration**: ~95 minutes
 - **Risk**: Medium
 - **Description**: Update priority constants and coverage resolution logic
 
 ### Phase 3: Documentation and Examples (No Risk)
+
 - **Duration**: ~105 minutes
 - **Risk**: None
 - **Description**: Update documentation and create example armor entities
 
 ### Phase 4: Testing with Real Scenarios (Validation)
+
 - **Duration**: ~150 minutes
 - **Risk**: Low (validation only)
 - **Description**: Test armor in realistic gameplay scenarios and validate performance
@@ -41,6 +45,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 ### Phase 1: Core System Update
 
 #### ARMSYSANA-001: Update Wearable Component Schema
+
 - **File**: `workflows/ARMSYSANA-001-update-wearable-schema.md`
 - **Priority**: Critical
 - **Estimated Effort**: 15 minutes
@@ -49,6 +54,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 - **Breaking Changes**: None (additive)
 
 #### ARMSYSANA-002: Update Coverage Mapping Schema
+
 - **File**: `workflows/ARMSYSANA-002-update-coverage-mapping-schema.md`
 - **Priority**: High (Optional but Recommended)
 - **Estimated Effort**: 15 minutes
@@ -57,6 +63,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 - **Breaking Changes**: None (additive)
 
 #### ARMSYSANA-003: Run Validation Suite
+
 - **File**: `workflows/ARMSYSANA-003-run-validation-suite.md`
 - **Priority**: Critical
 - **Estimated Effort**: 10 minutes
@@ -67,6 +74,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 ### Phase 2: Priority System Update
 
 #### ARMSYSANA-004: Update Slot Access Resolver Priority System
+
 - **File**: `workflows/ARMSYSANA-004-update-slot-access-resolver.md`
 - **Priority**: Critical
 - **Estimated Effort**: 30 minutes
@@ -76,6 +84,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 - **Breaking Changes**: None (behavior addition)
 
 #### ARMSYSANA-005: Update Related Coverage Logic ✅ COMPLETED
+
 - **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-005-update-coverage-logic-COMPLETED.md`
 - **Priority**: High
 - **Estimated Effort**: 45 minutes
@@ -87,6 +96,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
   - Most components were already data-driven via centralized `priorityConstants.js`
 
 #### ARMSYSANA-006: Run Comprehensive Tests ✅ COMPLETED
+
 - **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-006-run-comprehensive-tests-COMPLETED.md`
 - **Priority**: Critical
 - **Estimated Effort**: 20 minutes
@@ -102,6 +112,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 ### Phase 3: Documentation and Examples
 
 #### ARMSYSANA-007: Update Documentation ✅ COMPLETED
+
 - **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-007-update-documentation-COMPLETED.md`
 - **Priority**: High
 - **Estimated Effort**: 60 minutes
@@ -116,6 +127,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
   - Corrected ticket assumption: accessories fall back to `direct: 400`, not `accessories: 350`
 
 #### ARMSYSANA-008: Create Example Armor Entities ✅ COMPLETED
+
 - **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-008-create-armor-examples-COMPLETED.md`
 - **Priority**: Medium
 - **Estimated Effort**: 45 minutes
@@ -132,6 +144,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
 ### Phase 4: Testing with Real Scenarios
 
 #### ARMSYSANA-009: Test Armor with Real Scenarios ✅ COMPLETED
+
 - **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-009-test-armor-scenarios-COMPLETED.md`
 - **Priority**: High
 - **Estimated Effort**: 90 minutes (Actual: ~30 minutes)
@@ -144,6 +157,7 @@ Armor can be implemented as a **fifth clothing layer** without modifying the cor
   - All tests pass, no regressions in existing 285 clothing tests
 
 #### ARMSYSANA-010: Performance Testing ✅ COMPLETED
+
 - **File**: `archive/workflows/armor-system-analysis/ARMSYSANA-010-performance-testing-COMPLETED.md`
 - **Priority**: Medium
 - **Estimated Effort**: 60 minutes
@@ -208,14 +222,17 @@ Innermost to Outermost:
 ### Files Modified
 
 **Schemas**:
+
 - `data/mods/clothing/components/wearable.component.json`
 - `data/mods/clothing/components/coverage_mapping.component.json`
 
 **Code**:
+
 - `src/scopeDsl/nodes/slotAccessResolver.js`
 - Potentially: Coverage analyzer, action text generation, validators
 
 **Documentation**:
+
 - `docs/modding/clothing-items.md`
 - `docs/developers/clothing-coverage-system.md`
 - `docs/anatomy/anatomy-system-guide.md`
@@ -223,6 +240,7 @@ Innermost to Outermost:
 - `CLAUDE.md`
 
 **Content**:
+
 - New armor entities in `data/mods/armor/` or `data/mods/clothing/`
 
 ### Test Commands
@@ -262,12 +280,12 @@ The armor system implementation is complete when:
 
 ## Risk Assessment
 
-| Phase | Risk Level | Mitigation |
-|-------|-----------|------------|
-| Phase 1 | Minimal | Additive changes only, full validation |
-| Phase 2 | Medium | Checkpoints, comprehensive testing |
-| Phase 3 | None | Documentation only |
-| Phase 4 | Low | Validation only, no code changes |
+| Phase   | Risk Level | Mitigation                             |
+| ------- | ---------- | -------------------------------------- |
+| Phase 1 | Minimal    | Additive changes only, full validation |
+| Phase 2 | Medium     | Checkpoints, comprehensive testing     |
+| Phase 3 | None       | Documentation only                     |
+| Phase 4 | Low        | Validation only, no code changes       |
 
 **Overall Risk**: Low to Medium
 
@@ -285,6 +303,7 @@ The armor system implementation is complete when:
 ### Future Enhancements
 
 After armor system is complete, consider:
+
 - Armor-specific components (protection rating, armor class)
 - Damage/durability system for armor
 - Special armor properties (magical, enchanted)
@@ -318,6 +337,7 @@ The armor system integration has been successfully completed:
 7. **Performance Tests**: 12 tests validating coverage resolution, scaling, cache efficiency, and memory stability
 
 **Key Corrections Made During Implementation**:
+
 - Multiple ticket assumptions were incorrect about non-existent helper functions and test patterns
 - Used actual project patterns: `ModTestFixture`, mock-based service testing, `performance.now()`
 - Relaxed degradation threshold from 5% to 10% for CI stability

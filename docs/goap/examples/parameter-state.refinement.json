@@ -17,7 +17,7 @@
       "description": "Validate movement succeeded before proceeding",
       "stepType": "conditional",
       "condition": {
-        "==": [{"var": "refinement.localState.moveResult.success"}, true]
+        "==": [{ "var": "refinement.localState.moveResult.success" }, true]
       },
       "trueBranch": [
         {
@@ -33,7 +33,10 @@
           "description": "Validate pickup succeeded",
           "stepType": "conditional",
           "condition": {
-            "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+            "==": [
+              { "var": "refinement.localState.pickupResult.success" },
+              true
+            ]
           },
           "trueBranch": [
             {
@@ -53,7 +56,12 @@
                 "item": "refinement.localState.pickupResult.data.item"
               },
               "condition": {
-                "==": [{"var": "refinement.localState.moveToConsumeResult.success"}, true]
+                "==": [
+                  {
+                    "var": "refinement.localState.moveToConsumeResult.success"
+                  },
+                  true
+                ]
               },
               "storeResultAs": "consumeResult"
             },

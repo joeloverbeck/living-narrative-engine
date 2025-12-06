@@ -19,31 +19,41 @@ The Movement mod provides all spatial navigation and movement mechanics for the 
 ## Content Types
 
 ### Actions
+
 Movement commands available to actors:
+
 - `go` action: Navigate to a different location
 
 ### Rules
+
 Movement event processing logic:
+
 - Movement validation rules
 - Location transition handling
 
 ### Conditions
+
 Movement validation logic:
+
 - `actor-can-move`: Validates if an actor is capable of movement
 - `exit-is-unblocked`: Checks if a path is available
 - `event-is-action-go`: Identifies movement action events
 
 ### Scopes
+
 Direction and path availability:
+
 - Direction availability for UI display
 - Path validation for movement options
 
 ### Macros
+
 Movement-related macros for reusable logic patterns
 
 ## Architecture
 
 The movement mod follows the Entity-Component-System (ECS) architecture:
+
 - **Components**: Data definitions for movement-related properties
 - **Rules**: Processing logic for movement events
 - **Conditions**: Validation logic for movement operations

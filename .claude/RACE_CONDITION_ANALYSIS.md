@@ -10,6 +10,7 @@ After analyzing the turn management system across the entire event flow, I've id
 2. **Path B**: TurnManager's handler destruction (via handleTurnEndedEvent at line 772)
 
 These two paths execute in parallel and conflict, causing:
+
 - Handler destroyed while in TurnEndingState (state machine still running)
 - "Operation invoked while handler is destroying" (operation handler invoked after destruction started)
 - CRITICAL - Failed to enter TurnIdleState (state transition failures)
@@ -64,11 +65,13 @@ T=0.7: TurnEndingState ops       T=0.7: RACE! State machine still in TurnEndingS
 ### Listener Registration Order:
 
 1. **TurnManager startup** (line 210 in turnManager.js):
+
    ```javascript
    this.#eventSubscription.subscribe((ev) => this.#handleTurnEndedEvent(ev));
    ```
 
 2. **CommandProcessingWorkflow** (line 491 in commandProcessingWorkflow.js):
+
    ```javascript
    earlyUnsubscribe = dispatcher.subscribe(TURN_ENDED_ID, (event) => { ... });
    ```
@@ -100,6 +103,7 @@ The early listener pattern was designed to capture events during dispatch, but t
 3. This deferred call queues AFTER the state machine's Promise.race winner
 
 **The state machine wins the race (correctly), but then:**
+
 - State machine calls `ctx.endTurn()`
 - This eventually transitions to TurnEndingState
 - Meanwhile, TurnManager's deferred handler ALSO runs
@@ -154,11 +158,13 @@ This defers the TurnManager's handler, creating two separate execution timelines
 ### Solution 1: Remove the setTimeout deferral in TurnEventSubscription (BEST)
 
 **Rationale**: TurnManager doesn't need deferral since:
+
 - EndTurnHandler no longer uses queueMicrotask
 - Early listener (Phase 7) already captures events during dispatch
 - Immediate execution allows TurnManager to destroy handler BEFORE state machine enters new state
 
 **Changes**:
+
 ```javascript
 // In TurnEventSubscription.subscribe()
 // REMOVE the setTimeout deferral
@@ -174,6 +180,7 @@ const wrapped = (ev) => {
 **Rationale**: Ensure state machine completes before destruction
 
 **Changes**:
+
 1. State machine signals when it's "safe to destroy"
 2. TurnManager waits for this signal before calling destroy()
 3. TurnManager then destroys handler safely
@@ -183,6 +190,7 @@ const wrapped = (ev) => {
 **Rationale**: Replace dual-listener with single coordinated handler
 
 **Changes**:
+
 1. TurnManager subscribes ONCE
 2. TurnManager coordinates both state machine and handler destruction
 3. Eliminates concurrent path execution
@@ -192,7 +200,7 @@ const wrapped = (ev) => {
 ```
 T=0ms:     EndTurnHandler.execute() called
 T=0.1ms:   dispatcher.dispatch(TURN_ENDED_ID, payload)
-           
+
            ├─ Immediate: Early listener (if still active) captures event
            │  └─ Stores in context as pendingTurnEndEvent
            │
@@ -247,14 +255,18 @@ T=2ms:     setTimeout(0) microtask fires
 ## Questions Answered
 
 ✅ **Is TurnManager's `handleTurnEndedEvent` called before or after the state machine's event listener?**
-   - The state machine's listener wins the Promise.race immediately, but TurnManager's listener (via setTimeout) executes in parallel, starting a deferred task that runs while state machine is still transitioning.
+
+- The state machine's listener wins the Promise.race immediately, but TurnManager's listener (via setTimeout) executes in parallel, starting a deferred task that runs while state machine is still transitioning.
 
 ✅ **Why are BOTH the timeout path AND the TurnManager destruction path executing?**
-   - They're not both timing out. TurnEventSubscription's setTimeout(..., 0) defers TurnManager's execution, creating two parallel execution paths that don't coordinate.
+
+- They're not both timing out. TurnEventSubscription's setTimeout(..., 0) defers TurnManager's execution, creating two parallel execution paths that don't coordinate.
 
 ✅ **What is the order of event listener registration?**
-   - TurnManager (earliest), CommandProcessingWorkflow (early), createEventPromise (state machine)
-   - But all three can receive the event independently.
+
+- TurnManager (earliest), CommandProcessingWorkflow (early), createEventPromise (state machine)
+- But all three can receive the event independently.
 
 ✅ **Why does the timeout still win even with the early listener pattern?**
-   - The timeout doesn't "win" in Promise.race. The state machine wins. But TurnManager's deferred execution (setTimeout) causes it to interfere with state transitions.
+
+- The timeout doesn't "win" in Promise.race. The state machine wins. But TurnManager's deferred execution (setTimeout) causes it to interfere with state transitions.

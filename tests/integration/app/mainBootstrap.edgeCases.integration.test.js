@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const baseDom = `
   <div id="outputDiv"></div>
@@ -71,7 +78,12 @@ const registerBaseMocks = ({
   }));
 };
 
-const createSuccessfulStageMocks = ({ uiElements, container, logger, gameEngine }) => {
+const createSuccessfulStageMocks = ({
+  uiElements,
+  container,
+  logger,
+  gameEngine,
+}) => {
   return {
     ensureCriticalDOMElementsStage: jest
       .fn()
@@ -117,9 +129,19 @@ describe('main.js bootstrap edge cases', () => {
 
   it('falls back to the default start world when configuration loading fails', async () => {
     const uiElements = createUIElements();
-    const container = { resolve: jest.fn(), isRegistered: jest.fn().mockReturnValue(false) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
+    const container = {
+      resolve: jest.fn(),
+      isRegistered: jest.fn().mockReturnValue(false),
+    };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    const gameEngine = {
+      showLoadGameUI: jest.fn().mockResolvedValue(undefined),
+    };
     const stageMocks = createSuccessfulStageMocks({
       uiElements,
       container,
@@ -153,9 +175,19 @@ describe('main.js bootstrap edge cases', () => {
 
   it('uses fallback UI references when bootstrap fails before UI elements resolve', async () => {
     const uiElements = createUIElements();
-    const container = { resolve: jest.fn(), isRegistered: jest.fn().mockReturnValue(false) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
+    const container = {
+      resolve: jest.fn(),
+      isRegistered: jest.fn().mockReturnValue(false),
+    };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    const gameEngine = {
+      showLoadGameUI: jest.fn().mockResolvedValue(undefined),
+    };
     const stageMocks = createSuccessfulStageMocks({
       uiElements,
       container,
@@ -192,9 +224,19 @@ describe('main.js bootstrap edge cases', () => {
 
   it('reports a fatal error when beginGame is invoked before the engine is ready', async () => {
     const uiElements = createUIElements();
-    const container = { resolve: jest.fn(), isRegistered: jest.fn().mockReturnValue(false) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
+    const container = {
+      resolve: jest.fn(),
+      isRegistered: jest.fn().mockReturnValue(false),
+    };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    const gameEngine = {
+      showLoadGameUI: jest.fn().mockResolvedValue(undefined),
+    };
     const stageMocks = createSuccessfulStageMocks({
       uiElements,
       container,
@@ -227,7 +269,9 @@ describe('main.js bootstrap edge cases', () => {
         message.includes('main.js: Critical: GameEngine not initialized')
       )
     ).toBe(true);
-    expect(document.getElementById('error-output').textContent).toContain('Critical: GameEngine not initialized');
+    expect(document.getElementById('error-output').textContent).toContain(
+      'Critical: GameEngine not initialized'
+    );
     expect(document.getElementById('speech-input').disabled).toBe(true);
   });
 });

@@ -103,7 +103,9 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       // Only include error property if it's a non-empty string
       ...(normalizedOptions.error &&
         typeof normalizedOptions.error === 'string' &&
-        normalizedOptions.error.trim() !== '' && { error: normalizedOptions.error }),
+        normalizedOptions.error.trim() !== '' && {
+          error: normalizedOptions.error,
+        }),
     };
 
     const suggestedAction = this.#normalizeSuggestedAction(

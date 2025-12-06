@@ -16,7 +16,12 @@ import structureCentauroidTemplate from '../../../data/mods/anatomy/structure-te
 
 const TEST_RECIPE_ID = 'anatomy:test_recipe';
 
-const silentLogger = { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} };
+const silentLogger = {
+  debug: () => {},
+  info: () => {},
+  warn: () => {},
+  error: () => {},
+};
 
 const slotKeyCollector = new SlotGenerator({ logger: silentLogger });
 
@@ -25,10 +30,13 @@ const collectTemplateSlots = (template) => {
     return {};
   }
 
-  return slotKeyCollector.generateBlueprintSlots(JSON.parse(JSON.stringify(template)));
+  return slotKeyCollector.generateBlueprintSlots(
+    JSON.parse(JSON.stringify(template))
+  );
 };
 
-const collectTemplateSlotKeys = (template) => Object.keys(collectTemplateSlots(template));
+const collectTemplateSlotKeys = (template) =>
+  Object.keys(collectTemplateSlots(template));
 
 const countTemplateSockets = (template) => {
   if (!template?.topology) {
@@ -37,7 +45,10 @@ const countTemplateSockets = (template) => {
 
   const { limbSets = [], appendages = [] } = template.topology;
   const limbCount = limbSets.reduce((sum, set) => sum + (set.count || 0), 0);
-  const appendageCount = appendages.reduce((sum, app) => sum + (app.count || 0), 0);
+  const appendageCount = appendages.reduce(
+    (sum, app) => sum + (app.count || 0),
+    0
+  );
   return limbCount + appendageCount;
 };
 
@@ -163,15 +174,25 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
     baseRecipe = { recipeId: TEST_RECIPE_ID, slots: {} };
     mockRecipeProcessor.loadRecipe.mockReturnValue(baseRecipe);
     mockRecipeProcessor.processRecipe.mockReturnValue(baseRecipe);
-    mockRecipeProcessor.mergeSlotRequirements.mockImplementation((requirements) => requirements);
-    mockSocketManager.validateSocketAvailability.mockImplementation((parentId, socketId) => ({
-      valid: true,
-      socket: { id: socketId, orientation: null, allowedTypes: ['anatomy:part'] },
-    }));
+    mockRecipeProcessor.mergeSlotRequirements.mockImplementation(
+      (requirements) => requirements
+    );
+    mockSocketManager.validateSocketAvailability.mockImplementation(
+      (parentId, socketId) => ({
+        valid: true,
+        socket: {
+          id: socketId,
+          orientation: null,
+          allowedTypes: ['anatomy:part'],
+        },
+      })
+    );
     mockPartSelectionService.selectPart.mockResolvedValue('anatomy:test_part');
     mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity');
     mockEntityGraphBuilder.addSocketsToEntity.mockResolvedValue(undefined);
-    mockEntityGraphBuilder.createAndAttachPart.mockResolvedValue('child-entity');
+    mockEntityGraphBuilder.createAndAttachPart.mockResolvedValue(
+      'child-entity'
+    );
     mockEntityGraphBuilder.getPartType.mockReturnValue('test_part_type');
     mockEntityGraphBuilder.cleanupEntities.mockResolvedValue(undefined);
   });
@@ -203,71 +224,87 @@ describe('BodyBlueprintFactory - Example blueprint coverage', () => {
     },
   ];
 
-  it.each(scenarios)('processes %s via structure templates', async (scenario) => {
-    const blueprint = clone(scenario.blueprint);
-    const template = clone(scenario.template);
+  it.each(scenarios)(
+    'processes %s via structure templates',
+    async (scenario) => {
+      const blueprint = clone(scenario.blueprint);
+      const template = clone(scenario.template);
 
-    const generatedSlots = collectTemplateSlots(template);
-    const expectedTemplateSocketCount = countTemplateSockets(template);
-    const combinedSlots = {
-      ...generatedSlots,
-      ...(blueprint.additionalSlots || {}),
-    };
-    const expectedTotalSlotCount = Object.keys(combinedSlots).length;
-    const expectedSocketIds = Object.values(combinedSlots).map((slot) => slot.socket);
+      const generatedSlots = collectTemplateSlots(template);
+      const expectedTemplateSocketCount = countTemplateSockets(template);
+      const combinedSlots = {
+        ...generatedSlots,
+        ...(blueprint.additionalSlots || {}),
+      };
+      const expectedTotalSlotCount = Object.keys(combinedSlots).length;
+      const expectedSocketIds = Object.values(combinedSlots).map(
+        (slot) => slot.socket
+      );
 
-    mockDataRegistry.get.mockImplementation((type, id) => {
-      if (type === 'anatomyBlueprints' && id === blueprint.id) {
-        return blueprint;
-      }
-      if (type === 'anatomyStructureTemplates' && id === blueprint.structureTemplate) {
-        return template;
-      }
-      return undefined;
-    });
-
-    mockPartSelectionService.selectPart.mockImplementation(async (requirements) => {
-      if (scenario.optionalSkips.has(requirements.partType)) {
+      mockDataRegistry.get.mockImplementation((type, id) => {
+        if (type === 'anatomyBlueprints' && id === blueprint.id) {
+          return blueprint;
+        }
+        if (
+          type === 'anatomyStructureTemplates' &&
+          id === blueprint.structureTemplate
+        ) {
+          return template;
+        }
         return undefined;
-      }
-      return 'anatomy:test_part';
-    });
-
-    await factory.createAnatomyGraph(blueprint.id, TEST_RECIPE_ID);
-
-    expect(mockEntityGraphBuilder.addSocketsToEntity).toHaveBeenCalledTimes(1);
-    const socketsArg = mockEntityGraphBuilder.addSocketsToEntity.mock.calls[0][1];
-    expect(Array.isArray(socketsArg)).toBe(true);
-    expect(socketsArg).toHaveLength(expectedTemplateSocketCount);
-
-    expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledTimes(
-      expectedTotalSlotCount
-    );
-
-    const validatedSockets = mockSocketManager.validateSocketAvailability.mock.calls.map(
-      (call) => call[1]
-    );
-    expect(validatedSockets).toHaveLength(expectedTotalSlotCount);
-    expect(new Set(validatedSockets)).toEqual(new Set(expectedSocketIds));
-
-    const expectedAttachments = Object.values(combinedSlots).filter((slot) => {
-      if (!slot?.optional) {
-        return true;
-      }
-      return !scenario.optionalSkips.has(slot.requirements?.partType);
-    }).length;
-    expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenCalledTimes(
-      expectedAttachments
-    );
-
-    if (scenario.optionalSkips.size > 0) {
-      scenario.optionalSkips.forEach((partType) => {
-        expect(
-          mockPartSelectionService.selectPart.mock.calls.some(
-            (call) => call[0]?.partType === partType
-          )
-        ).toBe(true);
       });
+
+      mockPartSelectionService.selectPart.mockImplementation(
+        async (requirements) => {
+          if (scenario.optionalSkips.has(requirements.partType)) {
+            return undefined;
+          }
+          return 'anatomy:test_part';
+        }
+      );
+
+      await factory.createAnatomyGraph(blueprint.id, TEST_RECIPE_ID);
+
+      expect(mockEntityGraphBuilder.addSocketsToEntity).toHaveBeenCalledTimes(
+        1
+      );
+      const socketsArg =
+        mockEntityGraphBuilder.addSocketsToEntity.mock.calls[0][1];
+      expect(Array.isArray(socketsArg)).toBe(true);
+      expect(socketsArg).toHaveLength(expectedTemplateSocketCount);
+
+      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledTimes(
+        expectedTotalSlotCount
+      );
+
+      const validatedSockets =
+        mockSocketManager.validateSocketAvailability.mock.calls.map(
+          (call) => call[1]
+        );
+      expect(validatedSockets).toHaveLength(expectedTotalSlotCount);
+      expect(new Set(validatedSockets)).toEqual(new Set(expectedSocketIds));
+
+      const expectedAttachments = Object.values(combinedSlots).filter(
+        (slot) => {
+          if (!slot?.optional) {
+            return true;
+          }
+          return !scenario.optionalSkips.has(slot.requirements?.partType);
+        }
+      ).length;
+      expect(mockEntityGraphBuilder.createAndAttachPart).toHaveBeenCalledTimes(
+        expectedAttachments
+      );
+
+      if (scenario.optionalSkips.size > 0) {
+        scenario.optionalSkips.forEach((partType) => {
+          expect(
+            mockPartSelectionService.selectPart.mock.calls.some(
+              (call) => call[0]?.partType === partType
+            )
+          ).toBe(true);
+        });
+      }
     }
-  });
+  );
 });

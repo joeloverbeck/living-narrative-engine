@@ -43,7 +43,10 @@ import {
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
-import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
+import {
+  createMultiTargetResolutionStage,
+  createActionPipelineOrchestrator,
+} from '../../common/actions/multiTargetStageTestUtilities.js';
 
 // Import actions
 import dismissAction from '../../../data/mods/companionship/actions/dismiss.action.json';
@@ -78,7 +81,10 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.clear();
 
     const followersScopeContent = fs.readFileSync(
-      path.resolve(__dirname, '../../../data/mods/companionship/scopes/followers.scope'),
+      path.resolve(
+        __dirname,
+        '../../../data/mods/companionship/scopes/followers.scope'
+      ),
       'utf8'
     );
     const environmentScopeContent = fs.readFileSync(
@@ -123,7 +129,9 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.initialize({
       'companionship:followers': followerDefs.get('companionship:followers'),
       'core:environment': environmentDefs.get('core:environment'),
-      'movement:clear_directions': directionDefs.get('movement:clear_directions'),
+      'movement:clear_directions': directionDefs.get(
+        'movement:clear_directions'
+      ),
       'companionship:potential_leaders': potentialLeadersDefs.get(
         'companionship:potential_leaders'
       ),
@@ -215,7 +223,7 @@ describe('Scope Integration Tests', () => {
     actionIndex.buildIndex(allActions);
 
     // Create the ActionPipelineOrchestrator
-    
+
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -379,7 +387,8 @@ describe('Scope Integration Tests', () => {
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -548,7 +557,8 @@ describe('Scope Integration Tests', () => {
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -695,7 +705,8 @@ describe('Scope Integration Tests', () => {
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({
@@ -830,7 +841,8 @@ describe('Scope Integration Tests', () => {
           }),
         }),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
       });
 
       actionDiscoveryService = new ActionDiscoveryService({

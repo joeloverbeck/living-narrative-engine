@@ -3,7 +3,14 @@
  * @description Integration tests for Perceptible Event Sender UI workflow
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import PerceptibleEventSenderController from '../../../src/domUI/perceptibleEventSenderController.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
@@ -51,7 +58,10 @@ describe('PerceptibleEventSender Integration Tests', () => {
         <div id="perceptible-event-status"></div>
       </div>
     `;
-    dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+    dom = new JSDOM(html, {
+      runScripts: 'dangerously',
+      pretendToBeVisual: true,
+    });
     mockDocument = dom.window.document;
 
     executedOperations = [];
@@ -153,18 +163,30 @@ describe('PerceptibleEventSender Integration Tests', () => {
   describe('Full Workflow - All Actors Mode', () => {
     it('should execute operation to send event to all actors in location', async () => {
       // Arrange: Fill out form
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'A loud crash echoes from nearby';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Act: Send event
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(false);
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -174,8 +196,12 @@ describe('PerceptibleEventSender Integration Tests', () => {
 
       expect(operation.type).toBe('DISPATCH_PERCEPTIBLE_EVENT');
       expect(operation.parameters.location_id).toBe('location:tavern');
-      expect(operation.parameters.description_text).toBe('A loud crash echoes from nearby');
-      expect(operation.parameters.perception_type).toBe('state_change_observable');
+      expect(operation.parameters.description_text).toBe(
+        'A loud crash echoes from nearby'
+      );
+      expect(operation.parameters.perception_type).toBe(
+        'state_change_observable'
+      );
       expect(operation.parameters.actor_id).toBe('system');
       expect(operation.parameters.log_entry).toBe(true);
       expect(operation.parameters.contextual_data).toEqual({});
@@ -185,73 +211,121 @@ describe('PerceptibleEventSender Integration Tests', () => {
   describe('Full Workflow - Specific Actors Mode', () => {
     it('should execute operation with specific actor recipientIds', async () => {
       // Arrange: Select location
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Switch to specific mode
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
-      specificRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      specificRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Select specific actor
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
-      const option = Array.from(actorSelect.options).find((opt) => opt.value === 'actor:frodo');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
+      const option = Array.from(actorSelect.options).find(
+        (opt) => opt.value === 'actor:frodo'
+      );
       if (option) option.selected = true;
-      actorSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      actorSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Fill message
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Frodo, you have a visitor';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
       // Act: Send event
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       // Assert: Verify recipientIds included in operation
       expect(executedOperations.length).toBe(1);
       const { operation } = executedOperations[0];
-      expect(operation.parameters.contextual_data.recipientIds).toContain('actor:frodo');
-      expect(operation.parameters.contextual_data.excludedActorIds).toBeUndefined();
+      expect(operation.parameters.contextual_data.recipientIds).toContain(
+        'actor:frodo'
+      );
+      expect(
+        operation.parameters.contextual_data.excludedActorIds
+      ).toBeUndefined();
     });
   });
 
   describe('Full Workflow - Exclude Actors Mode', () => {
     it('should execute operation with excludedActorIds', async () => {
       // Arrange: Select location
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Switch to exclude mode
       const excludeRadio = mockDocument.querySelector('input[value="exclude"]');
       excludeRadio.checked = true;
-      excludeRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      excludeRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Select actor to exclude
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
-      const option = Array.from(actorSelect.options).find((opt) => opt.value === 'actor:sam');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
+      const option = Array.from(actorSelect.options).find(
+        (opt) => opt.value === 'actor:sam'
+      );
       if (option) option.selected = true;
-      actorSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      actorSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Fill message
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Frodo receives a secret message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
       // Act: Send event
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       // Assert: Verify excludedActorIds included in operation
       expect(executedOperations.length).toBe(1);
       const { operation } = executedOperations[0];
-      expect(operation.parameters.contextual_data.excludedActorIds).toContain('actor:sam');
+      expect(operation.parameters.contextual_data.excludedActorIds).toContain(
+        'actor:sam'
+      );
       expect(operation.parameters.contextual_data.recipientIds).toBeUndefined();
     });
   });
@@ -259,65 +333,105 @@ describe('PerceptibleEventSender Integration Tests', () => {
   describe('Multiple Events Workflow', () => {
     it('should execute multiple operations for different locations', async () => {
       // Event 1: Tavern
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Event at tavern';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       // Event 2: Market
       messageInput.value = 'Event at market';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
       locationSelect.value = 'location:market';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       // Assert: Both operations executed
       expect(executedOperations.length).toBe(2);
-      expect(executedOperations[0].operation.parameters.location_id).toBe('location:tavern');
-      expect(executedOperations[1].operation.parameters.location_id).toBe('location:market');
+      expect(executedOperations[0].operation.parameters.location_id).toBe(
+        'location:tavern'
+      );
+      expect(executedOperations[1].operation.parameters.location_id).toBe(
+        'location:market'
+      );
     });
   });
 
   describe('Error Recovery', () => {
     it('should handle operation execution errors and allow retry', async () => {
       // Arrange: Setup form
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Mock operation execution failure
-      mockOperationInterpreter.execute.mockRejectedValueOnce(new Error('Operation failed'));
+      mockOperationInterpreter.execute.mockRejectedValueOnce(
+        new Error('Operation failed')
+      );
 
       // Act: First attempt fails
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       // Assert: Error logged
       expect(mockLogger.error).toHaveBeenCalled();
 
       // Act: Retry should work
-      mockOperationInterpreter.execute.mockImplementationOnce((operation, context) => {
-        executedOperations.push({ operation, context });
-        return Promise.resolve();
-      });
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      mockOperationInterpreter.execute.mockImplementationOnce(
+        (operation, context) => {
+          executedOperations.push({ operation, context });
+          return Promise.resolve();
+        }
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       // Assert: Second attempt succeeds
@@ -327,25 +441,37 @@ describe('PerceptibleEventSender Integration Tests', () => {
 
   describe('Form State Management', () => {
     it('should maintain correct button state during workflow', async () => {
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
 
       // Initially disabled
       expect(sendButton.disabled).toBe(true);
 
       // Add message - still disabled (no location)
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
       expect(sendButton.disabled).toBe(true);
 
       // Add location - enabled
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
       expect(sendButton.disabled).toBe(false);
 
       // Send event - form cleared, button disabled again
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
       expect(sendButton.disabled).toBe(true);
       expect(messageInput.value).toBe('');
@@ -360,8 +486,11 @@ describe('PerceptibleEventSender Integration Tests', () => {
       }
 
       // Reset location select to clean state
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
-      locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
+      locationSelect.innerHTML =
+        '<option value="">-- Select Location --</option>';
 
       // Create controller with empty entityManager
       const emptyEntityManager = {
@@ -388,7 +517,9 @@ describe('PerceptibleEventSender Integration Tests', () => {
       // Assert: Location selector should only have placeholder
       expect(locationSelect.options.length).toBe(1);
       expect(locationSelect.options[0].value).toBe('');
-      expect(locationSelect.options[0].textContent).toBe('-- Select Location --');
+      expect(locationSelect.options[0].textContent).toBe(
+        '-- Select Location --'
+      );
 
       // Cleanup
       emptyController.cleanup();
@@ -401,8 +532,11 @@ describe('PerceptibleEventSender Integration Tests', () => {
       }
 
       // Reset location select to clean state
-      let locationSelect = mockDocument.getElementById('perceptible-event-location');
-      locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+      let locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
+      locationSelect.innerHTML =
+        '<option value="">-- Select Location --</option>';
 
       // Create controller with empty entityManager initially
       const mockLocations = [
@@ -450,7 +584,9 @@ describe('PerceptibleEventSender Integration Tests', () => {
       dynamicController.initialize();
 
       // Assert: Initially empty
-      locationSelect = mockDocument.getElementById('perceptible-event-location');
+      locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       expect(locationSelect.options.length).toBe(1);
 
       // Act: Simulate game ready - entities become available
@@ -463,7 +599,9 @@ describe('PerceptibleEventSender Integration Tests', () => {
       await new Promise((resolve) => setImmediate(resolve));
 
       // Assert: Locations should now be populated
-      locationSelect = mockDocument.getElementById('perceptible-event-location');
+      locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       expect(locationSelect.options.length).toBe(2); // placeholder + 1 location
       expect(locationSelect.options[1].value).toBe('location:tavern');
       expect(locationSelect.options[1].textContent).toBe('The Prancing Pony');
@@ -499,20 +637,32 @@ describe('PerceptibleEventSender Integration Tests', () => {
       locationsController.initialize();
 
       // Act: Select location (should not crash even with no actors)
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Switch to specific actors mode
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
-      specificRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      specificRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Assert: Actor selector should be visible but empty
-      const actorFilterContainer = mockDocument.getElementById('actor-filter-container');
+      const actorFilterContainer = mockDocument.getElementById(
+        'actor-filter-container'
+      );
       expect(actorFilterContainer.style.display).not.toBe('none');
 
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       expect(actorSelect.options.length).toBe(0);
 
       // Assert: No errors logged
@@ -529,8 +679,11 @@ describe('PerceptibleEventSender Integration Tests', () => {
       }
 
       // Reset location select to clean state
-      let locationSelect = mockDocument.getElementById('perceptible-event-location');
-      locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+      let locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
+      locationSelect.innerHTML =
+        '<option value="">-- Select Location --</option>';
 
       // Controller starts with empty data
       let locationsLoaded = false;
@@ -565,7 +718,9 @@ describe('PerceptibleEventSender Integration Tests', () => {
       refreshableController.initialize();
 
       // Assert: Initially empty
-      locationSelect = mockDocument.getElementById('perceptible-event-location');
+      locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       expect(locationSelect.options.length).toBe(1);
 
       // Act: Load entities and refresh
@@ -577,7 +732,9 @@ describe('PerceptibleEventSender Integration Tests', () => {
         await new Promise((resolve) => setImmediate(resolve));
 
         // Assert: Locations now loaded
-        locationSelect = mockDocument.getElementById('perceptible-event-location');
+        locationSelect = mockDocument.getElementById(
+          'perceptible-event-location'
+        );
         expect(locationSelect.options.length).toBe(2);
         expect(locationSelect.options[1].value).toBe('location:market');
       }

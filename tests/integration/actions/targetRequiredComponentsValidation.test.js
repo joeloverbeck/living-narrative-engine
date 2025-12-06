@@ -6,7 +6,14 @@
  * @see src/actions/pipeline/stages/TargetComponentValidationStage.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import TargetRequiredComponentsValidator from '../../../src/actions/validation/TargetRequiredComponentsValidator.js';
@@ -584,7 +591,11 @@ describe('Target Required Components Validation - Integration', () => {
       const actionDef = {
         id: 'test:multiple_requirements',
         required_components: {
-          primary: ['positioning:sitting_on', 'positioning:closeness', 'positioning:facing'],
+          primary: [
+            'positioning:sitting_on',
+            'positioning:closeness',
+            'positioning:facing',
+          ],
         },
       };
 

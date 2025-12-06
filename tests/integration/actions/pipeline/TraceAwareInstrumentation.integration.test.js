@@ -138,19 +138,25 @@ describe('TraceAwareInstrumentation integration', () => {
       instanceId: 'actor-1',
     });
 
-    const firstTarget = await entityManager.createEntityInstance('test:target', {
-      instanceId: 'target-1',
-      componentOverrides: {
-        'core:name': { value: 'Alpha' },
-      },
-    });
+    const firstTarget = await entityManager.createEntityInstance(
+      'test:target',
+      {
+        instanceId: 'target-1',
+        componentOverrides: {
+          'core:name': { value: 'Alpha' },
+        },
+      }
+    );
 
-    const secondTarget = await entityManager.createEntityInstance('test:target', {
-      instanceId: 'target-2',
-      componentOverrides: {
-        'core:name': { value: 'Beta' },
-      },
-    });
+    const secondTarget = await entityManager.createEntityInstance(
+      'test:target',
+      {
+        instanceId: 'target-2',
+        componentOverrides: {
+          'core:name': { value: 'Beta' },
+        },
+      }
+    );
 
     return { actor, firstTarget, secondTarget };
   }
@@ -234,14 +240,19 @@ describe('TraceAwareInstrumentation integration', () => {
           event.payload.formattingPath === 'per-action'
       )
     ).toBeDefined();
-    expect(events.find((event) => event.payload.status === 'formatting')).toBeDefined();
+    expect(
+      events.find((event) => event.payload.status === 'formatting')
+    ).toBeDefined();
     const completionEvent = events.find(
-      (event) => event.payload.status === 'completed' && event.actionId === actionDef.id
+      (event) =>
+        event.payload.status === 'completed' && event.actionId === actionDef.id
     );
     expect(completionEvent).toBeDefined();
     expect(completionEvent.payload.commandCount).toBeGreaterThan(0);
 
-    const summaryEvent = events.find((event) => event.actionId === '__stage_summary');
+    const summaryEvent = events.find(
+      (event) => event.actionId === '__stage_summary'
+    );
     expect(summaryEvent).toBeDefined();
     expect(summaryEvent.payload.formattingPath).toBe('per-action');
     expect(summaryEvent.payload.statistics.total).toBe(1);
@@ -309,7 +320,9 @@ describe('TraceAwareInstrumentation integration', () => {
     expect(result.actions).toHaveLength(0);
     expect(result.errors).toHaveLength(1);
 
-    expect(traceRecorder.events.find((event) => event.payload.status === 'failed')).toBeDefined();
+    expect(
+      traceRecorder.events.find((event) => event.payload.status === 'failed')
+    ).toBeDefined();
 
     const summaryEvent = traceRecorder.events.find(
       (event) => event.actionId === '__stage_summary'
@@ -318,4 +331,3 @@ describe('TraceAwareInstrumentation integration', () => {
     expect(summaryEvent.payload.errors).toBe(1);
   });
 });
-

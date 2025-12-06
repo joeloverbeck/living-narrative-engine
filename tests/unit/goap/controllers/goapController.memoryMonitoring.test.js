@@ -46,7 +46,10 @@ describe('GoapController memory monitoring', () => {
     mockJsonLogicService = { evaluate: jest.fn() };
     mockDataRegistry = { getAll: jest.fn(), get: jest.fn() };
     mockEventBus = { dispatch: jest.fn() };
-    mockParameterResolutionService = { resolve: jest.fn(), clearCache: jest.fn() };
+    mockParameterResolutionService = {
+      resolve: jest.fn(),
+      clearCache: jest.fn(),
+    };
   });
 
   it('returns cache and map metrics without altering decision flow', () => {
@@ -59,7 +62,10 @@ describe('GoapController memory monitoring', () => {
       size: 10,
       maxSize: 100,
     });
-    expect(snapshot.failureTracking).toEqual({ failedGoals: 0, failedTasks: 0 });
+    expect(snapshot.failureTracking).toEqual({
+      failedGoals: 0,
+      failedTasks: 0,
+    });
     expect(snapshot.diagnostics).toEqual({
       goalPathDiagnostics: 0,
       effectFailureTelemetry: 0,
@@ -86,7 +92,10 @@ describe('GoapController memory monitoring', () => {
     expect(snapshot.pressureLevel).toBe('critical');
     expect(snapshot.breaches).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ metric: 'goalPathNormalizationCache', level: 'critical' }),
+        expect.objectContaining({
+          metric: 'goalPathNormalizationCache',
+          level: 'critical',
+        }),
         expect.objectContaining({ metric: 'failedTasks', level: 'critical' }),
       ])
     );

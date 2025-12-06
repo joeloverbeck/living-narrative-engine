@@ -6,7 +6,14 @@
  *              formatting when chalk is discovered via `require('chalk')`.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
 const ORIGINAL_STDOUT_DESCRIPTOR = Object.getOwnPropertyDescriptor(
@@ -60,11 +67,19 @@ describe('Enhanced console logger CommonJS require interop', () => {
     process.env = ORIGINAL_ENV;
 
     if (ORIGINAL_STDOUT_DESCRIPTOR) {
-      Object.defineProperty(process.stdout, 'isTTY', ORIGINAL_STDOUT_DESCRIPTOR);
+      Object.defineProperty(
+        process.stdout,
+        'isTTY',
+        ORIGINAL_STDOUT_DESCRIPTOR
+      );
     }
 
     if (ORIGINAL_STDERR_DESCRIPTOR) {
-      Object.defineProperty(process.stderr, 'isTTY', ORIGINAL_STDERR_DESCRIPTOR);
+      Object.defineProperty(
+        process.stderr,
+        'isTTY',
+        ORIGINAL_STDERR_DESCRIPTOR
+      );
     }
 
     delete globalThis.chalk;
@@ -81,13 +96,19 @@ describe('Enhanced console logger CommonJS require interop', () => {
       blue: jest.fn((value) => `blue:${value}`),
       green: jest.fn((value) => `green:${value}`),
       yellow: jest.fn((value) => `yellow:${value}`),
-      red: Object.assign(jest.fn((value) => `red:${value}`), {
-        bold: jest.fn((value) => `bold-red:${value}`),
-      }),
+      red: Object.assign(
+        jest.fn((value) => `red:${value}`),
+        {
+          bold: jest.fn((value) => `bold-red:${value}`),
+        }
+      ),
       cyan: jest.fn((value) => `cyan:${value}`),
-      gray: Object.assign(jest.fn((value) => `gray:${value}`), {
-        italic: jest.fn((value) => `italic-gray:${value}`),
-      }),
+      gray: Object.assign(
+        jest.fn((value) => `gray:${value}`),
+        {
+          italic: jest.fn((value) => `italic-gray:${value}`),
+        }
+      ),
     };
 
     jest.doMock('chalk', () => commonJsChalk);

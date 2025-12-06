@@ -18,7 +18,9 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       'sex-anal-penetration',
       'sex-anal-penetration:tease_asshole_with_glans'
     );
-    testFixture.testEnv.actionIndex.buildIndex([teaseAssholeWithGlansActionJson]);
+    testFixture.testEnv.actionIndex.buildIndex([
+      teaseAssholeWithGlansActionJson,
+    ]);
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
     await testFixture.registerCustomScope(
@@ -63,10 +65,14 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-anal-penetration:tease_asshole_with_glans');
+      expect(ids).not.toContain(
+        'sex-anal-penetration:tease_asshole_with_glans'
+      );
     });
 
     it('should NOT be discovered when actor has fucking_vaginally component', () => {
@@ -99,10 +105,14 @@ describe('sex-anal-penetration:tease_asshole_with_glans action discovery', () =>
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-anal-penetration:tease_asshole_with_glans');
+      expect(ids).not.toContain(
+        'sex-anal-penetration:tease_asshole_with_glans'
+      );
     });
   });
 });

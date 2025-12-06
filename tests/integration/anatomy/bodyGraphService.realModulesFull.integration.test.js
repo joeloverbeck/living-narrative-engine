@@ -86,7 +86,10 @@ class TestEntityManager {
     if (!entity) {
       throw new Error(`Entity ${id} not found`);
     }
-    return { id: entity.id, components: this.cloneComponent(entity.components) };
+    return {
+      id: entity.id,
+      components: this.cloneComponent(entity.components),
+    };
   }
 
   getEntitiesWithComponent(componentId) {
@@ -96,7 +99,9 @@ class TestEntityManager {
 
     const result = [];
     for (const entity of this.entities.values()) {
-      if (Object.prototype.hasOwnProperty.call(entity.components, componentId)) {
+      if (
+        Object.prototype.hasOwnProperty.call(entity.components, componentId)
+      ) {
         result.push({ id: entity.id, components: entity.components });
       }
     }
@@ -177,7 +182,10 @@ function createService({ queryCache } = {}) {
     eventDispatcher: dispatcher,
     queryCache,
   });
-  const bodyComponent = entityManager.getComponentData(ACTOR_ID, 'anatomy:body');
+  const bodyComponent = entityManager.getComponentData(
+    ACTOR_ID,
+    'anatomy:body'
+  );
   return { service, entityManager, logger, dispatcher, bodyComponent };
 }
 
@@ -189,7 +197,8 @@ describe('BodyGraphService real module integration', () => {
   let bodyComponent;
 
   beforeEach(() => {
-    ({ service, entityManager, logger, dispatcher, bodyComponent } = createService());
+    ({ service, entityManager, logger, dispatcher, bodyComponent } =
+      createService());
   });
 
   it('builds adjacency caches and reuses cached anatomy queries', async () => {
@@ -252,7 +261,9 @@ describe('BodyGraphService real module integration', () => {
     expect(service.getAncestors(ACTOR_ID)).toEqual([]);
 
     const descendants = service.getAllDescendants(TORSO_ID);
-    expect(descendants).toEqual(expect.arrayContaining([ARM_ID, HAND_ID, LEG_ID, FOOT_ID]));
+    expect(descendants).toEqual(
+      expect.arrayContaining([ARM_ID, HAND_ID, LEG_ID, FOOT_ID])
+    );
 
     const path = service.getPath(HAND_ID, LEG_ID);
     expect(path).toEqual([HAND_ID, ARM_ID, TORSO_ID, LEG_ID]);
@@ -263,8 +274,12 @@ describe('BodyGraphService real module integration', () => {
   it('detects component presence and nested component values across the body graph', async () => {
     await service.buildAdjacencyCache(ACTOR_ID);
 
-    expect(service.hasPartWithComponent(bodyComponent, 'custom:sensation')).toBe(true);
-    expect(service.hasPartWithComponent(bodyComponent, 'component:missing')).toBe(false);
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'custom:sensation')
+    ).toBe(true);
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'component:missing')
+    ).toBe(false);
 
     const gripResult = service.hasPartWithComponentValue(
       bodyComponent,
@@ -284,7 +299,9 @@ describe('BodyGraphService real module integration', () => {
   });
 
   it('provides anatomy graph wrappers and guards invalid queries', async () => {
-    await expect(service.getBodyGraph(null)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph(null)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('unknown')).rejects.toThrow(
       /has no anatomy:body component/
     );
@@ -293,15 +310,21 @@ describe('BodyGraphService real module integration', () => {
 
     const graph = await service.getBodyGraph(ACTOR_ID);
     const partIds = graph.getAllPartIds();
-    expect(partIds).toEqual(expect.arrayContaining([TORSO_ID, ARM_ID, HAND_ID, LEG_ID, FOOT_ID]));
+    expect(partIds).toEqual(
+      expect.arrayContaining([TORSO_ID, ARM_ID, HAND_ID, LEG_ID, FOOT_ID])
+    );
 
     expect(graph.getConnectedParts(ARM_ID)).toEqual([HAND_ID]);
     expect(graph.getConnectedParts('non-existent')).toEqual([]);
   });
 
   it('summarizes anatomy metadata and handles invalid identifiers', async () => {
-    await expect(service.getAnatomyData(42)).rejects.toThrow(InvalidArgumentError);
-    await expect(service.getAnatomyData('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData(42)).rejects.toThrow(
+      InvalidArgumentError
+    );
+    await expect(service.getAnatomyData('')).rejects.toThrow(
+      InvalidArgumentError
+    );
 
     const metadata = await service.getAnatomyData(ACTOR_ID);
     expect(metadata).toEqual({
@@ -323,7 +346,9 @@ describe('BodyGraphService real module integration', () => {
 
     expect(detachResult.parentId).toBe(TORSO_ID);
     expect(detachResult.socketId).toBe('arm-left-socket');
-    expect(detachResult.detached).toEqual(expect.arrayContaining([ARM_ID, HAND_ID]));
+    expect(detachResult.detached).toEqual(
+      expect.arrayContaining([ARM_ID, HAND_ID])
+    );
 
     expect(entityManager.getComponentData(ARM_ID, 'anatomy:joint')).toBeNull();
     expect(service.hasCache(ACTOR_ID)).toBe(false);
@@ -331,34 +356,41 @@ describe('BodyGraphService real module integration', () => {
     expect(dispatcher.calls).toHaveLength(1);
     const [dispatchCall] = dispatcher.calls;
     expect(dispatchCall.eventId).toBe(LIMB_DETACHED_EVENT_ID);
-    expect(dispatchCall.payload.detachedCount).toBe(detachResult.detached.length);
+    expect(dispatchCall.payload.detachedCount).toBe(
+      detachResult.detached.length
+    );
     expect(dispatchCall.payload.reason).toBe('integration-test');
 
-    await expect(service.detachPart(ARM_ID)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.detachPart(ARM_ID)).rejects.toThrow(
+      InvalidArgumentError
+    );
 
-    const { service: freshService, entityManager: freshManager } = createService();
+    const { service: freshService, entityManager: freshManager } =
+      createService();
     await freshService.buildAdjacencyCache(ACTOR_ID);
-    const singleDetach = await freshService.detachPart(LEG_ID, { cascade: false });
+    const singleDetach = await freshService.detachPart(LEG_ID, {
+      cascade: false,
+    });
     expect(singleDetach.detached).toEqual([LEG_ID]);
     expect(freshManager.getComponentData(LEG_ID, 'anatomy:joint')).toBeNull();
   });
 
   it('validates constructor dependencies and reuses provided query cache', () => {
-    expect(() => new BodyGraphService({ logger, eventDispatcher: dispatcher })).toThrow(
-      /entityManager is required/
-    );
-    expect(() => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })).toThrow(
-      /logger is required/
-    );
+    expect(
+      () => new BodyGraphService({ logger, eventDispatcher: dispatcher })
+    ).toThrow(/entityManager is required/);
+    expect(
+      () => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })
+    ).toThrow(/logger is required/);
     expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
       /eventDispatcher is required/
     );
 
-    const customQueryCache = new AnatomyQueryCache({ logger: new RecordingLogger() });
-    const {
-      service: cachedService,
-      bodyComponent: cachedBodyComponent,
-    } = createService({ queryCache: customQueryCache });
+    const customQueryCache = new AnatomyQueryCache({
+      logger: new RecordingLogger(),
+    });
+    const { service: cachedService, bodyComponent: cachedBodyComponent } =
+      createService({ queryCache: customQueryCache });
 
     return cachedService.buildAdjacencyCache(ACTOR_ID).then(() => {
       const parts = cachedService.getAllParts(cachedBodyComponent, ACTOR_ID);

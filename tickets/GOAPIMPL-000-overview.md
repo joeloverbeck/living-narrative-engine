@@ -34,39 +34,42 @@ GOAPIMPL-001 (Base Schema)
 
 ### Schema Design
 
-| Ticket | Title | Effort | Dependencies | Status |
-|--------|-------|--------|--------------|--------|
-| GOAPIMPL-001 | Design Refinement Method Base Schema Structure | 2-3 days | None | Ready |
-| GOAPIMPL-002 | Design Conditional Logic Format for Refinement Methods | 2-3 days | GOAPIMPL-001 | Ready |
-| GOAPIMPL-003 | Design Primitive Action Reference Format | 2 days | GOAPIMPL-001 | Ready |
-| GOAPIMPL-004 | Design Parameter Binding Mechanism | 2-3 days | GOAPIMPL-001, GOAPIMPL-003 | Ready |
-| GOAPIMPL-005 | Design Task File Format and Mod Integration | 2-3 days | GOAPIMPL-001, GOAPIMPL-004 | Ready |
+| Ticket       | Title                                                  | Effort   | Dependencies               | Status |
+| ------------ | ------------------------------------------------------ | -------- | -------------------------- | ------ |
+| GOAPIMPL-001 | Design Refinement Method Base Schema Structure         | 2-3 days | None                       | Ready  |
+| GOAPIMPL-002 | Design Conditional Logic Format for Refinement Methods | 2-3 days | GOAPIMPL-001               | Ready  |
+| GOAPIMPL-003 | Design Primitive Action Reference Format               | 2 days   | GOAPIMPL-001               | Ready  |
+| GOAPIMPL-004 | Design Parameter Binding Mechanism                     | 2-3 days | GOAPIMPL-001, GOAPIMPL-003 | Ready  |
+| GOAPIMPL-005 | Design Task File Format and Mod Integration            | 2-3 days | GOAPIMPL-001, GOAPIMPL-004 | Ready  |
 
 **Total Effort**: 10-14 days
 
 ### Documentation
 
-| Ticket | Title | Effort | Dependencies | Status |
-|--------|-------|--------|--------------|--------|
-| GOAPIMPL-006 | Create Refinement Method Specification Document | 2 days | GOAPIMPL-001 to 005 | Ready |
-| GOAPIMPL-007 | Create Complete Refinement Method Examples | 2 days | GOAPIMPL-001 to 005 | Ready |
-| GOAPIMPL-008 | Create Implementation Guide for Developers | 2-3 days | GOAPIMPL-006 | Ready |
-| GOAPIMPL-009 | Create Modder Authoring Guide | 2 days | GOAPIMPL-006, GOAPIMPL-007 | Ready |
+| Ticket       | Title                                           | Effort   | Dependencies               | Status |
+| ------------ | ----------------------------------------------- | -------- | -------------------------- | ------ |
+| GOAPIMPL-006 | Create Refinement Method Specification Document | 2 days   | GOAPIMPL-001 to 005        | Ready  |
+| GOAPIMPL-007 | Create Complete Refinement Method Examples      | 2 days   | GOAPIMPL-001 to 005        | Ready  |
+| GOAPIMPL-008 | Create Implementation Guide for Developers      | 2-3 days | GOAPIMPL-006               | Ready  |
+| GOAPIMPL-009 | Create Modder Authoring Guide                   | 2 days   | GOAPIMPL-006, GOAPIMPL-007 | Ready  |
 
 **Total Effort**: 8-11 days
 
 ## Recommended Implementation Order
 
 ### Phase 1: Core Schema Design (Week 1-2)
+
 1. GOAPIMPL-001: Base Schema
 2. GOAPIMPL-003: Action Reference
 3. GOAPIMPL-004: Parameter Binding
 
 ### Phase 2: Advanced Features (Week 2-3)
+
 4. GOAPIMPL-002: Conditional Logic
 5. GOAPIMPL-005: Task File Format
 
 ### Phase 3: Documentation (Week 3-4)
+
 6. GOAPIMPL-006: Specification Document
 7. GOAPIMPL-007: Complete Examples
 8. GOAPIMPL-008: Implementation Guide
@@ -75,10 +78,12 @@ GOAPIMPL-001 (Base Schema)
 ## Expected Deliverables
 
 ### Schemas
+
 - `data/schemas/refinement-method.schema.json` (GOAPIMPL-001, 002, 003, 004)
 - `data/schemas/task.schema.json` (GOAPIMPL-005)
 
 ### Documentation
+
 - `docs/goap/refinement-methods-specification.md` (GOAPIMPL-006)
 - `docs/goap/examples/` (GOAPIMPL-007)
   - consume-item-simple.example.json
@@ -91,6 +96,7 @@ GOAPIMPL-001 (Base Schema)
 - `docs/modding/authoring-refinement-methods.md` (GOAPIMPL-009)
 
 ### Templates
+
 - `docs/goap/templates/` (GOAPIMPL-007)
   - simple-sequential-task.template.json
   - conditional-acquisition-task.template.json
@@ -100,18 +106,21 @@ GOAPIMPL-001 (Base Schema)
 ## Success Criteria
 
 ### Schema Design Phase
+
 - [ ] All schemas validate with AJV
 - [ ] Schemas follow existing project patterns
 - [ ] Schemas are extensible for future features
 - [ ] All validation rules are comprehensive
 
 ### Documentation Phase
+
 - [ ] Specification is complete and unambiguous
 - [ ] Examples validate against schemas
 - [ ] Implementation guide is actionable
 - [ ] Modder guide is accessible to non-developers
 
 ### Overall Project
+
 - [ ] No ambiguities in design
 - [ ] All design decisions are documented
 - [ ] Implementation is straightforward from guides

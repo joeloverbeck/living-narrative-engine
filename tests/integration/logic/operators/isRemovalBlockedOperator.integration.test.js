@@ -31,7 +31,10 @@ describe('IsRemovalBlocked Operator integration with EntityManager', () => {
   };
 
   const equipItem = async (actorId, itemId, slot, layer) => {
-    const equipment = entityManager.getComponentData(actorId, 'clothing:equipment') || {
+    const equipment = entityManager.getComponentData(
+      actorId,
+      'clothing:equipment'
+    ) || {
       equipped: {},
     };
 

@@ -1,58 +1,75 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 const lowStrategyInstances = [];
 const criticalStrategyInstances = [];
 
-jest.mock('../../../../src/entities/monitoring/strategies/LowMemoryStrategy.js', () => {
-  const factory = jest.fn().mockImplementation(() => {
-    const instance = {
-      execute: jest.fn().mockResolvedValue({
-        success: true,
-        memoryFreed: 0,
-        actionsTaken: [],
-        metrics: {},
-      }),
-      getStatistics: jest.fn().mockReturnValue({ config: { preset: 'low' } }),
-      updateConfig: jest.fn(),
-      destroy: jest.fn(),
+jest.mock(
+  '../../../../src/entities/monitoring/strategies/LowMemoryStrategy.js',
+  () => {
+    const factory = jest.fn().mockImplementation(() => {
+      const instance = {
+        execute: jest.fn().mockResolvedValue({
+          success: true,
+          memoryFreed: 0,
+          actionsTaken: [],
+          metrics: {},
+        }),
+        getStatistics: jest.fn().mockReturnValue({ config: { preset: 'low' } }),
+        updateConfig: jest.fn(),
+        destroy: jest.fn(),
+      };
+      lowStrategyInstances.push(instance);
+      return instance;
+    });
+    factory.__getInstances = () => lowStrategyInstances;
+    factory.__reset = () => {
+      factory.mockClear();
+      lowStrategyInstances.length = 0;
     };
-    lowStrategyInstances.push(instance);
-    return instance;
-  });
-  factory.__getInstances = () => lowStrategyInstances;
-  factory.__reset = () => {
-    factory.mockClear();
-    lowStrategyInstances.length = 0;
-  };
-  return { __esModule: true, default: factory };
-});
+    return { __esModule: true, default: factory };
+  }
+);
 
-jest.mock('../../../../src/entities/monitoring/strategies/CriticalMemoryStrategy.js', () => {
-  const factory = jest.fn().mockImplementation(() => {
-    const instance = {
-      execute: jest.fn().mockResolvedValue({
-        success: true,
-        memoryFreed: 0,
-        actionsTaken: [],
-        metrics: {},
-      }),
-      getStatistics: jest.fn().mockReturnValue({ config: { preset: 'critical' } }),
-      updateConfig: jest.fn(),
-      destroy: jest.fn(),
+jest.mock(
+  '../../../../src/entities/monitoring/strategies/CriticalMemoryStrategy.js',
+  () => {
+    const factory = jest.fn().mockImplementation(() => {
+      const instance = {
+        execute: jest.fn().mockResolvedValue({
+          success: true,
+          memoryFreed: 0,
+          actionsTaken: [],
+          metrics: {},
+        }),
+        getStatistics: jest
+          .fn()
+          .mockReturnValue({ config: { preset: 'critical' } }),
+        updateConfig: jest.fn(),
+        destroy: jest.fn(),
+      };
+      criticalStrategyInstances.push(instance);
+      return instance;
+    });
+    factory.__getInstances = () => criticalStrategyInstances;
+    factory.__reset = () => {
+      factory.mockClear();
+      criticalStrategyInstances.length = 0;
     };
-    criticalStrategyInstances.push(instance);
-    return instance;
-  });
-  factory.__getInstances = () => criticalStrategyInstances;
-  factory.__reset = () => {
-    factory.mockClear();
-    criticalStrategyInstances.length = 0;
-  };
-  return { __esModule: true, default: factory };
-});
+    return { __esModule: true, default: factory };
+  }
+);
 
 jest.mock('../../../../src/utils/environmentUtils.js', () => {
-  const actual = jest.requireActual('../../../../src/utils/environmentUtils.js');
+  const actual = jest.requireActual(
+    '../../../../src/utils/environmentUtils.js'
+  );
   return {
     ...actual,
     triggerGarbageCollection: jest.fn(),
@@ -63,7 +80,10 @@ jest.mock('../../../../src/utils/environmentUtils.js', () => {
 import MemoryPressureManager from '../../../../src/entities/monitoring/MemoryPressureManager.js';
 import LowMemoryStrategy from '../../../../src/entities/monitoring/strategies/LowMemoryStrategy.js';
 import CriticalMemoryStrategy from '../../../../src/entities/monitoring/strategies/CriticalMemoryStrategy.js';
-import { triggerGarbageCollection, getMemoryUsageBytes } from '../../../../src/utils/environmentUtils.js';
+import {
+  triggerGarbageCollection,
+  getMemoryUsageBytes,
+} from '../../../../src/utils/environmentUtils.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
 
 const createLogger = () => ({
@@ -102,7 +122,11 @@ const createCache = () => ({
   size: jest.fn(),
 });
 
-const buildManager = ({ cache = createCache(), config, overrides = {} } = {}) => {
+const buildManager = ({
+  cache = createCache(),
+  config,
+  overrides = {},
+} = {}) => {
   const logger = createLogger();
   const eventBus = createEventBus();
   const monitor = createMonitor();
@@ -136,9 +160,18 @@ describe('MemoryPressureManager', () => {
 
     expect(LowMemoryStrategy).toHaveBeenCalledTimes(1);
     expect(CriticalMemoryStrategy).toHaveBeenCalledTimes(1);
-    expect(monitor.onThresholdExceeded).toHaveBeenCalledWith('warning', expect.any(Function));
-    expect(monitor.onThresholdExceeded).toHaveBeenCalledWith('critical', expect.any(Function));
-    expect(eventBus.subscribe).toHaveBeenCalledWith('MEMORY_PRESSURE_CHANGED', expect.any(Function));
+    expect(monitor.onThresholdExceeded).toHaveBeenCalledWith(
+      'warning',
+      expect.any(Function)
+    );
+    expect(monitor.onThresholdExceeded).toHaveBeenCalledWith(
+      'critical',
+      expect.any(Function)
+    );
+    expect(eventBus.subscribe).toHaveBeenCalledWith(
+      'MEMORY_PRESSURE_CHANGED',
+      expect.any(Function)
+    );
 
     const stats = manager.getStatistics();
     expect(stats.registeredStrategies).toEqual(['warning', 'critical']);
@@ -151,7 +184,12 @@ describe('MemoryPressureManager', () => {
     const monitor = createMonitor();
     const cache = createCache();
 
-    const manager = new MemoryPressureManager({ logger, eventBus, monitor, cache });
+    const manager = new MemoryPressureManager({
+      logger,
+      eventBus,
+      monitor,
+      cache,
+    });
 
     expect(manager.getStatistics().config).toEqual(
       expect.objectContaining({
@@ -208,8 +246,11 @@ describe('MemoryPressureManager', () => {
     expect(lowStrategy.execute).toHaveBeenCalledTimes(2);
     expect(manager.getManagementHistory()).toHaveLength(2);
     expect(
-      logger.info.mock.calls.some(([, details]) =>
-        details && typeof details.value === 'string' && details.value.includes('MB')
+      logger.info.mock.calls.some(
+        ([, details]) =>
+          details &&
+          typeof details.value === 'string' &&
+          details.value.includes('MB')
       )
     ).toBe(true);
   });
@@ -265,10 +306,12 @@ describe('MemoryPressureManager', () => {
     expect(manager.getCurrentPressureLevel()).toBe('warning');
     expect(lowStrategy.execute).not.toHaveBeenCalled();
     expect(
-      logger.info.mock.calls.some(([message, details]) =>
-        message.includes('Memory pressure changed to: warning') &&
-        details && typeof details.value === 'string' &&
-        details.value === '42.0%'
+      logger.info.mock.calls.some(
+        ([message, details]) =>
+          message.includes('Memory pressure changed to: warning') &&
+          details &&
+          typeof details.value === 'string' &&
+          details.value === '42.0%'
       )
     ).toBe(true);
 
@@ -277,10 +320,12 @@ describe('MemoryPressureManager', () => {
     expect(manager.getCurrentPressureLevel()).toBe('critical');
     expect(criticalStrategy.execute).not.toHaveBeenCalled();
     expect(
-      logger.info.mock.calls.some(([message, details]) =>
-        message.includes('Memory pressure changed to: critical') &&
-        details && typeof details.value === 'string' &&
-        details.value.endsWith('MB')
+      logger.info.mock.calls.some(
+        ([message, details]) =>
+          message.includes('Memory pressure changed to: critical') &&
+          details &&
+          typeof details.value === 'string' &&
+          details.value.endsWith('MB')
       )
     ).toBe(true);
   });
@@ -288,10 +333,23 @@ describe('MemoryPressureManager', () => {
   it('validates strategy registration inputs', () => {
     const { manager } = buildManager();
 
-    expect(() => manager.registerStrategy('', { execute: jest.fn() })).toThrow();
-    expect(() => manager.registerStrategy('custom', {})).toThrow('Strategy execute function');
+    expect(() =>
+      manager.registerStrategy('', { execute: jest.fn() })
+    ).toThrow();
+    expect(() => manager.registerStrategy('custom', {})).toThrow(
+      'Strategy execute function'
+    );
 
-    const strategy = { execute: jest.fn().mockResolvedValue({ success: true, memoryFreed: 0, actionsTaken: [], metrics: {} }) };
+    const strategy = {
+      execute: jest
+        .fn()
+        .mockResolvedValue({
+          success: true,
+          memoryFreed: 0,
+          actionsTaken: [],
+          metrics: {},
+        }),
+    };
     manager.registerStrategy('custom', strategy);
 
     expect(manager.getStatistics().registeredStrategies).toContain('custom');
@@ -326,7 +384,9 @@ describe('MemoryPressureManager', () => {
     expect(manager.getStatistics().config.aggressiveGC).toBe(true);
 
     manager.disableAutomaticManagement();
-    expect(eventBus.dispatch).toHaveBeenCalledWith({ type: 'MEMORY_AUTOMATIC_MANAGEMENT_DISABLED' });
+    expect(eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'MEMORY_AUTOMATIC_MANAGEMENT_DISABLED',
+    });
   });
 
   it('updates strategy configuration when toggling aggressive GC', () => {
@@ -337,7 +397,9 @@ describe('MemoryPressureManager', () => {
 
     manager.setAggressiveGC(true);
     expect(lowStrategy.updateConfig).toHaveBeenCalledWith({ forceGC: true });
-    expect(criticalStrategy.updateConfig).toHaveBeenCalledWith({ forceGC: true });
+    expect(criticalStrategy.updateConfig).toHaveBeenCalledWith({
+      forceGC: true,
+    });
 
     manager.setAggressiveGC(false);
     expect(lowStrategy.updateConfig).toHaveBeenCalledWith({ forceGC: false });
@@ -345,7 +407,9 @@ describe('MemoryPressureManager', () => {
 
   it('handles cache pruning success, absence, and failure', async () => {
     const cache = createCache();
-    cache.prune.mockResolvedValueOnce(5).mockRejectedValueOnce(new Error('prune failed'));
+    cache.prune
+      .mockResolvedValueOnce(5)
+      .mockRejectedValueOnce(new Error('prune failed'));
     const { manager, logger, eventBus } = buildManager({ cache });
 
     await expect(manager.triggerCachePruning('aggressive')).resolves.toBe(5);
@@ -360,7 +424,9 @@ describe('MemoryPressureManager', () => {
       expect.any(Error)
     );
 
-    const { manager: noCacheManager, logger: noCacheLogger } = buildManager({ overrides: { cache: undefined } });
+    const { manager: noCacheManager, logger: noCacheLogger } = buildManager({
+      overrides: { cache: undefined },
+    });
     await expect(noCacheManager.triggerCachePruning()).resolves.toBe(0);
     expect(noCacheLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('No cache available for pruning')
@@ -404,7 +470,13 @@ describe('MemoryPressureManager', () => {
 
     const result = await manager.releaseUnusedMemory();
 
-    expect(result.actionsTaken).toEqual(expect.arrayContaining(['cache_pruned', 'resources_released', 'gc_forced']));
+    expect(result.actionsTaken).toEqual(
+      expect.arrayContaining([
+        'cache_pruned',
+        'resources_released',
+        'gc_forced',
+      ])
+    );
     expect(eventBus.dispatch).toHaveBeenCalledWith({
       type: 'MEMORY_RESOURCE_RELEASE_REQUESTED',
       payload: { level: 'unused', source: 'MemoryPressureManager' },
@@ -488,11 +560,15 @@ describe('MemoryPressureManager', () => {
 
     changeHandler({ payload: { newLevel: 'unknown' } });
     await Promise.resolve();
-    await expect(manager.executeCurrentStrategy()).rejects.toThrow(InvalidArgumentError);
+    await expect(manager.executeCurrentStrategy()).rejects.toThrow(
+      InvalidArgumentError
+    );
   });
 
   it('exposes statistics, history controls, and destroy lifecycle', async () => {
-    const { manager, eventBus } = buildManager({ config: { maxHistorySize: 2 } });
+    const { manager, eventBus } = buildManager({
+      config: { maxHistorySize: 2 },
+    });
     const criticalStrategy = CriticalMemoryStrategy.__getInstances()[0];
     criticalStrategy.execute.mockResolvedValue({
       success: true,
@@ -533,10 +609,18 @@ describe('MemoryPressureManager', () => {
     manager.clearHistory();
     expect(manager.getManagementHistory()).toEqual([]);
 
-    manager.registerStrategy('ephemeral', { execute: jest.fn(), instance: {}, config: {} });
+    manager.registerStrategy('ephemeral', {
+      execute: jest.fn(),
+      instance: {},
+      config: {},
+    });
     manager.destroy();
-    expect(eventBus.dispatch).toHaveBeenCalledWith({ type: 'MEMORY_AUTOMATIC_MANAGEMENT_DISABLED' });
-    expect(CriticalMemoryStrategy.__getInstances()[0].destroy).toHaveBeenCalled();
+    expect(eventBus.dispatch).toHaveBeenCalledWith({
+      type: 'MEMORY_AUTOMATIC_MANAGEMENT_DISABLED',
+    });
+    expect(
+      CriticalMemoryStrategy.__getInstances()[0].destroy
+    ).toHaveBeenCalled();
     expect(LowMemoryStrategy.__getInstances()[0].destroy).toHaveBeenCalled();
     expect(manager.getStatistics().registeredStrategies).toEqual([]);
   });

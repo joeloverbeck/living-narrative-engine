@@ -10,15 +10,15 @@ Create the `anatomy:can_grab` component schema that marks body parts as capable 
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/mods/anatomy/components/can_grab.component.json` | Component schema definition |
+| File                                                            | Purpose                          |
+| --------------------------------------------------------------- | -------------------------------- |
+| `data/mods/anatomy/components/can_grab.component.json`          | Component schema definition      |
 | `tests/unit/mods/anatomy/components/can_grab.component.test.js` | Unit tests for schema validation |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                  | Change                                          |
+| ------------------------------------- | ----------------------------------------------- |
 | `data/mods/anatomy/mod-manifest.json` | Add component reference to the components array |
 
 ## Out of Scope
@@ -135,7 +135,10 @@ describe('anatomy:can_grab Component Definition', () => {
     test('should conform to the component definition schema', () => {
       const ok = validateComponentDefinition(canGrabComponent);
       if (!ok) {
-        console.error('Validation failed:', JSON.stringify(validateComponentDefinition.errors, null, 2));
+        console.error(
+          'Validation failed:',
+          JSON.stringify(validateComponentDefinition.errors, null, 2)
+        );
       }
       expect(ok).toBe(true);
     });
@@ -162,7 +165,7 @@ describe('anatomy:can_grab Component Definition', () => {
       const data = {
         locked: false,
         heldItemId: null,
-        gripStrength: 1.0
+        gripStrength: 1.0,
       };
       expect(validateComponentData(data)).toBe(true);
     });
@@ -175,7 +178,7 @@ describe('anatomy:can_grab Component Definition', () => {
     test('should validate locked: true with heldItemId string', () => {
       const data = {
         locked: true,
-        heldItemId: 'weapons:longsword_001'
+        heldItemId: 'weapons:longsword_001',
       };
       expect(validateComponentData(data)).toBe(true);
     });
@@ -183,7 +186,7 @@ describe('anatomy:can_grab Component Definition', () => {
     test('should validate with zero gripStrength', () => {
       const data = {
         locked: false,
-        gripStrength: 0
+        gripStrength: 0,
       };
       expect(validateComponentData(data)).toBe(true);
     });
@@ -233,7 +236,9 @@ describe('anatomy:can_grab Component Definition', () => {
     });
 
     test('should set minimum for gripStrength', () => {
-      expect(canGrabComponent.dataSchema.properties.gripStrength.minimum).toBe(0);
+      expect(canGrabComponent.dataSchema.properties.gripStrength.minimum).toBe(
+        0
+      );
     });
   });
 });
@@ -261,6 +266,7 @@ npm run test:unit -- tests/unit/mods/anatomy/
 ### What Was Actually Changed vs Originally Planned
 
 #### Changes Made as Planned
+
 1. ✅ Created `data/mods/anatomy/components/can_grab.component.json` - exact schema as specified
 2. ✅ Created `tests/unit/mods/anatomy/components/can_grab.component.test.js` - 29 tests
 3. ✅ Updated `data/mods/anatomy/mod-manifest.json` - added `can_grab.component.json` to components array
@@ -278,21 +284,21 @@ npm run test:unit -- tests/unit/mods/anatomy/
 
 ### Test Summary
 
-| Test Category | Tests Added | Rationale |
-|--------------|-------------|-----------|
-| Schema Validation | 4 | Validates component definition conforms to meta-schema |
-| Valid Component Data | 6 | Tests all valid state combinations including edge cases |
-| Invalid Component Data | 9 | Comprehensive rejection tests for type errors, missing fields, extra properties |
-| Schema Structure | 5 | Verifies required fields, defaults, constraints |
-| Required Fields | 1 | Confirms component has all required top-level fields |
-| Edge Cases | 4 | Tests component definition edge cases (missing fields, extra properties) |
+| Test Category          | Tests Added | Rationale                                                                       |
+| ---------------------- | ----------- | ------------------------------------------------------------------------------- |
+| Schema Validation      | 4           | Validates component definition conforms to meta-schema                          |
+| Valid Component Data   | 6           | Tests all valid state combinations including edge cases                         |
+| Invalid Component Data | 9           | Comprehensive rejection tests for type errors, missing fields, extra properties |
+| Schema Structure       | 5           | Verifies required fields, defaults, constraints                                 |
+| Required Fields        | 1           | Confirms component has all required top-level fields                            |
+| Edge Cases             | 4           | Tests component definition edge cases (missing fields, extra properties)        |
 
 **Total: 29 tests passing**
 
 ### Files Modified/Created
 
-| File | Action |
-|------|--------|
-| `data/mods/anatomy/components/can_grab.component.json` | Created |
-| `data/mods/anatomy/mod-manifest.json` | Modified (line 19: added component reference) |
-| `tests/unit/mods/anatomy/components/can_grab.component.test.js` | Created |
+| File                                                            | Action                                        |
+| --------------------------------------------------------------- | --------------------------------------------- |
+| `data/mods/anatomy/components/can_grab.component.json`          | Created                                       |
+| `data/mods/anatomy/mod-manifest.json`                           | Modified (line 19: added component reference) |
+| `tests/unit/mods/anatomy/components/can_grab.component.test.js` | Created                                       |

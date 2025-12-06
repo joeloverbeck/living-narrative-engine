@@ -12,7 +12,8 @@ import '../../../common/mods/domainMatchers.js';
 import '../../../common/actionMatchers.js';
 
 const ACTION_ID = 'sex-anal-penetration:pull_penis_out';
-const EXPECTED_MESSAGE = "Marcus slowly pulls out of Lena's ass, withdrawing completely.";
+const EXPECTED_MESSAGE =
+  "Marcus slowly pulls out of Lena's ass, withdrawing completely.";
 
 /**
  * Builds the action index with the pull penis out action definition.
@@ -89,7 +90,8 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const fuckingAnally = actor?.components?.['positioning:fucking_anally'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       if (!fuckingAnally || !Array.isArray(closenessPartners)) {
         return { success: true, value: new Set() };
@@ -100,12 +102,14 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
         return { success: true, value: new Set() };
       }
 
-      const receivingEntity = fixture.entityManager.getEntityInstance(beingFuckedEntityId);
+      const receivingEntity =
+        fixture.entityManager.getEntityInstance(beingFuckedEntityId);
       if (!receivingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const beingFuckedAnally = receivingEntity.components?.['positioning:being_fucked_anally'];
+      const beingFuckedAnally =
+        receivingEntity.components?.['positioning:being_fucked_anally'];
       if (!beingFuckedAnally) {
         return { success: true, value: new Set() };
       }
@@ -133,8 +137,12 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-anal-penetration', ACTION_ID);
-    restoreScopeResolver = installActorBeingFuckedAnallyByMeScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-anal-penetration',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installActorBeingFuckedAnallyByMeScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -151,7 +159,8 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
 
   // eslint-disable-next-line jest/expect-expect -- Uses ModAssertionHelpers which internally uses expect
   it('dispatches correct narrative message and perceptible event', async () => {
-    const { entities, actorId, primaryId, roomId } = buildPullPenisOutScenario();
+    const { entities, actorId, primaryId, roomId } =
+      buildPullPenisOutScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -159,10 +168,14 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
       additionalPayload: { primaryId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
@@ -180,9 +193,12 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
 
     // Verify components exist before action
     const actorBefore = testFixture.entityManager.getEntityInstance(actorId);
-    const primaryBefore = testFixture.entityManager.getEntityInstance(primaryId);
+    const primaryBefore =
+      testFixture.entityManager.getEntityInstance(primaryId);
     expect(actorBefore.components['positioning:fucking_anally']).toBeDefined();
-    expect(primaryBefore.components['positioning:being_fucked_anally']).toBeDefined();
+    expect(
+      primaryBefore.components['positioning:being_fucked_anally']
+    ).toBeDefined();
 
     await testFixture.executeAction(actorId, primaryId, {
       additionalPayload: { primaryId },
@@ -192,7 +208,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
     const primaryAfter = testFixture.entityManager.getEntityInstance(primaryId);
     expect(actorAfter.components['positioning:fucking_anally']).toBeUndefined();
-    expect(primaryAfter.components['positioning:being_fucked_anally']).toBeUndefined();
+    expect(
+      primaryAfter.components['positioning:being_fucked_anally']
+    ).toBeUndefined();
   });
 
   it('does not affect other entities when removing anal penetration state', async () => {
@@ -234,11 +252,16 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     });
 
     // Verify other pair's components unchanged
-    const secondaryActorAfter = testFixture.entityManager.getEntityInstance(SECONDARY_ACTOR_ID);
+    const secondaryActorAfter =
+      testFixture.entityManager.getEntityInstance(SECONDARY_ACTOR_ID);
     const secondaryPrimaryAfter =
       testFixture.entityManager.getEntityInstance(SECONDARY_PRIMARY_ID);
-    expect(secondaryActorAfter.components['positioning:fucking_anally']).toBeDefined();
-    expect(secondaryPrimaryAfter.components['positioning:being_fucked_anally']).toBeDefined();
+    expect(
+      secondaryActorAfter.components['positioning:fucking_anally']
+    ).toBeDefined();
+    expect(
+      secondaryPrimaryAfter.components['positioning:being_fucked_anally']
+    ).toBeDefined();
   });
 
   it('does not fire rule for different action', async () => {
@@ -280,7 +303,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     const actorMid = testFixture.entityManager.getEntityInstance(actorId);
     const primaryMid = testFixture.entityManager.getEntityInstance(primaryId);
     expect(actorMid.components['positioning:fucking_anally']).toBeDefined();
-    expect(primaryMid.components['positioning:being_fucked_anally']).toBeDefined();
+    expect(
+      primaryMid.components['positioning:being_fucked_anally']
+    ).toBeDefined();
 
     // Execute pull out action
     await testFixture.executeAction(actorId, primaryId, {
@@ -291,7 +316,9 @@ describe('sex-anal-penetration:pull_penis_out action integration', () => {
     const actorFinal = testFixture.entityManager.getEntityInstance(actorId);
     const primaryFinal = testFixture.entityManager.getEntityInstance(primaryId);
     expect(actorFinal.components['positioning:fucking_anally']).toBeUndefined();
-    expect(primaryFinal.components['positioning:being_fucked_anally']).toBeUndefined();
+    expect(
+      primaryFinal.components['positioning:being_fucked_anally']
+    ).toBeUndefined();
 
     // Verify success event
     const successEvents = testFixture.events.filter(

@@ -42,13 +42,24 @@ class BleedingTickSystem extends BaseService {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
    */
-  constructor({ logger, entityManager, safeEventDispatcher, validatedEventDispatcher }) {
+  constructor({
+    logger,
+    entityManager,
+    safeEventDispatcher,
+    validatedEventDispatcher,
+  }) {
     super();
 
     this.#logger = this._init('BleedingTickSystem', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent', 'hasComponent', 'getEntitiesWithComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+          'hasComponent',
+          'getEntitiesWithComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -94,7 +105,9 @@ class BleedingTickSystem extends BaseService {
    * Applies tick damage, decrements duration, and handles expiration.
    */
   async processTick() {
-    const bleedingParts = this.#entityManager.getEntitiesWithComponent(BLEEDING_COMPONENT_ID);
+    const bleedingParts = this.#entityManager.getEntitiesWithComponent(
+      BLEEDING_COMPONENT_ID
+    );
 
     if (!bleedingParts || bleedingParts.length === 0) {
       return;
@@ -117,7 +130,10 @@ class BleedingTickSystem extends BaseService {
    */
   async #processBleedingPart(partId) {
     // Get bleeding component data
-    const bleedingData = this.#entityManager.getComponentData(partId, BLEEDING_COMPONENT_ID);
+    const bleedingData = this.#entityManager.getComponentData(
+      partId,
+      BLEEDING_COMPONENT_ID
+    );
     if (!bleedingData) {
       return;
     }
@@ -125,25 +141,41 @@ class BleedingTickSystem extends BaseService {
     const { severity, remainingTurns, tickDamage } = bleedingData;
 
     // Get owner entity ID from part component for event payload
-    const partComponent = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
+    const partComponent = this.#entityManager.getComponentData(
+      partId,
+      PART_COMPONENT_ID
+    );
     const ownerEntityId = partComponent?.ownerEntityId ?? null;
 
     // Check if part is destroyed (no health component or currentHealth <= 0)
-    const partHealth = this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)
+    const partHealth = this.#entityManager.hasComponent(
+      partId,
+      PART_HEALTH_COMPONENT_ID
+    )
       ? this.#entityManager.getComponentData(partId, PART_HEALTH_COMPONENT_ID)
       : null;
 
-    const partDestroyed = !partHealth || (partHealth.currentHealth !== undefined && partHealth.currentHealth <= 0);
+    const partDestroyed =
+      !partHealth ||
+      (partHealth.currentHealth !== undefined && partHealth.currentHealth <= 0);
 
     // If part is destroyed, remove bleeding and emit stopped event
     if (partDestroyed) {
-      await this.#stopBleeding(partId, severity, ownerEntityId, 'part_destroyed');
+      await this.#stopBleeding(
+        partId,
+        severity,
+        ownerEntityId,
+        'part_destroyed'
+      );
       return;
     }
 
     // Apply tick damage to part health
     if (tickDamage > 0 && partHealth) {
-      const newHealth = Math.max(0, (partHealth.currentHealth ?? 0) - tickDamage);
+      const newHealth = Math.max(
+        0,
+        (partHealth.currentHealth ?? 0) - tickDamage
+      );
       await this.#entityManager.addComponent(partId, PART_HEALTH_COMPONENT_ID, {
         ...partHealth,
         currentHealth: newHealth,
@@ -159,7 +191,12 @@ class BleedingTickSystem extends BaseService {
 
     if (newRemainingTurns <= 0) {
       // Duration expired - stop bleeding
-      await this.#stopBleeding(partId, severity, ownerEntityId, 'duration_expired');
+      await this.#stopBleeding(
+        partId,
+        severity,
+        ownerEntityId,
+        'duration_expired'
+      );
     } else {
       // Update component with decremented duration
       await this.#entityManager.addComponent(partId, BLEEDING_COMPONENT_ID, {

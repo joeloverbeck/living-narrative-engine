@@ -3,13 +3,20 @@
  * Tests the complete error flow through the entire pipeline
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import {
   createDomainErrors,
   simulateErrorBurst,
   createErrorChain,
-  waitFor
+  waitFor,
 } from '../../common/errorTestHelpers.js';
 import CentralErrorHandler from '../../../src/errors/CentralErrorHandler.js';
 import RecoveryStrategyManager from '../../../src/errors/RecoveryStrategyManager.js';
@@ -30,13 +37,16 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
+    mockEventBus = testBed.createMock('MockEventBus', [
+      'dispatch',
+      'subscribe',
+    ]);
 
     // Create real instances for integration testing
     monitoringCoordinator = new MonitoringCoordinator({
       logger: mockLogger,
       enabled: true,
-      checkInterval: 100
+      checkInterval: 100,
     });
 
     recoveryManager = new RecoveryStrategyManager({
@@ -44,14 +54,14 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       monitoringCoordinator,
       maxRetries: 3,
       baseDelay: 10,
-      maxDelay: 100
+      maxDelay: 100,
     });
 
     errorReporter = new ErrorReporter({
       logger: mockLogger,
       eventBus: mockEventBus,
       batchSize: 10,
-      flushInterval: 100
+      flushInterval: 100,
     });
 
     centralErrorHandler = new CentralErrorHandler({
@@ -59,7 +69,7 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       eventBus: mockEventBus,
       monitoringCoordinator,
       recoveryManager,
-      errorReporter
+      errorReporter,
     });
   });
 
@@ -74,18 +84,30 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
   describe('End-to-End Error Flow', () => {
     it('should handle clothing error through entire pipeline', async () => {
       const { ClothingServiceError } = createDomainErrors();
-      const error = new ClothingServiceError('Service failed', 'test-service', 'fetch');
+      const error = new ClothingServiceError(
+        'Service failed',
+        'test-service',
+        'fetch'
+      );
 
       // Register a recovery strategy
-      centralErrorHandler.registerRecoveryStrategy('ClothingServiceError', async () => {
-        return { success: true, result: 'recovered from clothing error' };
-      });
+      centralErrorHandler.registerRecoveryStrategy(
+        'ClothingServiceError',
+        async () => {
+          return { success: true, result: 'recovered from clothing error' };
+        }
+      );
 
       // Handle error through pipeline
-      const result = await centralErrorHandler.handle(error, { component: 'clothing-manager' });
+      const result = await centralErrorHandler.handle(error, {
+        component: 'clothing-manager',
+      });
 
       // Verify recovery was successful
-      expect(result).toEqual({ success: true, result: 'recovered from clothing error' });
+      expect(result).toEqual({
+        success: true,
+        result: 'recovered from clothing error',
+      });
 
       // Verify metrics were updated
       const metrics = centralErrorHandler.getMetrics();
@@ -99,8 +121,8 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
         payload: expect.objectContaining({
           errorType: 'ClothingServiceError',
           severity: 'error',
-          recoverable: true
-        })
+          recoverable: true,
+        }),
       });
     });
 
@@ -115,7 +137,9 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
 
       // Attempt to handle error
       try {
-        await centralErrorHandler.handle(error, { component: 'anatomy-system' });
+        await centralErrorHandler.handle(error, {
+          component: 'anatomy-system',
+        });
         expect.fail('Should have thrown error after failed recovery');
       } catch (thrownError) {
         expect(thrownError).toBeInstanceOf(BaseError);
@@ -129,7 +153,10 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
     });
 
     it('should integrate with monitoring system', async () => {
-      const error = new BaseError('Monitored error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Monitored error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       // Handle error with monitoring
       try {
@@ -144,10 +171,13 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
 
     it('should handle circuit breaker scenarios', async () => {
       // Get circuit breaker for specific operation
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('test-operation', {
-        failureThreshold: 2,
-        resetTimeout: 50
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'test-operation',
+        {
+          failureThreshold: 2,
+          resetTimeout: 50,
+        }
+      );
 
       let failureCount = 0;
       const failingStrategy = async () => {
@@ -155,14 +185,19 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
         throw new Error('Strategy failed');
       };
 
-      centralErrorHandler.registerRecoveryStrategy('TestError', failingStrategy);
+      centralErrorHandler.registerRecoveryStrategy(
+        'TestError',
+        failingStrategy
+      );
 
       class TestError extends BaseError {
         constructor() {
           super('Test error', 'TEST_ERROR');
           this.name = 'TestError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       // Trigger multiple failures to trip circuit breaker
@@ -198,14 +233,19 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
         return 'eventually recovered';
       };
 
-      centralErrorHandler.registerRecoveryStrategy('CascadingError', cascadingStrategy);
+      centralErrorHandler.registerRecoveryStrategy(
+        'CascadingError',
+        cascadingStrategy
+      );
 
       class CascadingError extends BaseError {
         constructor() {
           super('Cascading error', 'CASCADING_ERROR');
           this.name = 'CascadingError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       // Attempt recovery multiple times
@@ -228,18 +268,18 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       const errors = simulateErrorBurst(10, {
         errorType: 'SimultaneousError',
         recoverable: false,
-        severity: 'error'
+        severity: 'error',
       });
 
-      const handlePromises = errors.map(error =>
-        centralErrorHandler.handle(error).catch(e => e)
+      const handlePromises = errors.map((error) =>
+        centralErrorHandler.handle(error).catch((e) => e)
       );
 
       const results = await Promise.all(handlePromises);
 
       // All errors should be handled
       expect(results).toHaveLength(10);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeInstanceOf(BaseError);
       });
 
@@ -253,16 +293,22 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       const systemErrors = [
         new BaseError('Database failure', ErrorCodes.CONNECTION_FAILED),
         new BaseError('Service failure', ErrorCodes.SERVICE_NOT_FOUND),
-        new BaseError('Async operation failure', ErrorCodes.ASYNC_OPERATION_FAILED)
+        new BaseError(
+          'Async operation failure',
+          ErrorCodes.ASYNC_OPERATION_FAILED
+        ),
       ];
 
       // Register recovery strategies
-      centralErrorHandler.registerRecoveryStrategy('BaseError', async (error) => {
-        if (error.code === ErrorCodes.CONNECTION_FAILED) {
-          return { recovered: 'database', fallback: true };
+      centralErrorHandler.registerRecoveryStrategy(
+        'BaseError',
+        async (error) => {
+          if (error.code === ErrorCodes.CONNECTION_FAILED) {
+            return { recovered: 'database', fallback: true };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const results = [];
       for (const error of systemErrors) {
@@ -287,7 +333,7 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       // Generate large number of errors
       const errors = simulateErrorBurst(1000, {
         errorType: 'MemoryPressureError',
-        withDelay: false
+        withDelay: false,
       });
 
       let handledCount = 0;
@@ -298,10 +344,10 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       for (let i = 0; i < errors.length; i += concurrencyLimit) {
         const batch = errors.slice(i, i + concurrencyLimit);
         const results = await Promise.allSettled(
-          batch.map(error => centralErrorHandler.handle(error))
+          batch.map((error) => centralErrorHandler.handle(error))
         );
 
-        results.forEach(result => {
+        results.forEach((result) => {
           if (result.status === 'fulfilled') {
             handledCount++;
           } else {
@@ -368,14 +414,19 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
         throw new Error('Always fails');
       };
 
-      centralErrorHandler.registerRecoveryStrategy('InfiniteError', infiniteStrategy);
+      centralErrorHandler.registerRecoveryStrategy(
+        'InfiniteError',
+        infiniteStrategy
+      );
 
       class InfiniteError extends BaseError {
         constructor() {
           super('Infinite error', 'INFINITE_ERROR');
           this.name = 'InfiniteError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       try {
@@ -397,14 +448,19 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
         throw new BaseError('Circular error', 'CIRCULAR_ERROR');
       };
 
-      centralErrorHandler.registerRecoveryStrategy('CircularError', circularStrategy);
+      centralErrorHandler.registerRecoveryStrategy(
+        'CircularError',
+        circularStrategy
+      );
 
       class CircularError extends BaseError {
         constructor() {
           super('Circular error', 'CIRCULAR_ERROR');
           this.name = 'CircularError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       try {
@@ -417,7 +473,7 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
     it('should timeout stuck operations', async () => {
       const stuckStrategy = async () => {
         // Simulate stuck operation
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         return 'should not reach here';
       };
 
@@ -428,7 +484,9 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
           super('Stuck error', 'STUCK_ERROR');
           this.name = 'StuckError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const startTime = Date.now();
@@ -438,7 +496,7 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
           centralErrorHandler.handle(new StuckError()),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Timeout')), 1000)
-          )
+          ),
         ]);
       } catch (e) {
         const elapsed = Date.now() - startTime;
@@ -451,7 +509,10 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
   describe('Data Corruption', () => {
     it('should handle corrupted error data', async () => {
       // Create error with circular reference
-      const corruptedError = new BaseError('Corrupted', ErrorCodes.INVALID_DATA_GENERIC);
+      const corruptedError = new BaseError(
+        'Corrupted',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
       corruptedError.context.circular = corruptedError.context;
 
       try {
@@ -463,7 +524,10 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
     });
 
     it('should validate error context', async () => {
-      const invalidContextError = new BaseError('Invalid context', ErrorCodes.INVALID_DATA_GENERIC);
+      const invalidContextError = new BaseError(
+        'Invalid context',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       // Try to add invalid context
       try {
@@ -499,7 +563,7 @@ describe('Error Handling Flow Integration - Failure Scenarios', () => {
       const logCalls = mockLogger.error.mock.calls;
 
       // Verify sensitive data handling
-      logCalls.forEach(call => {
+      logCalls.forEach((call) => {
         const logMessage = JSON.stringify(call);
         // Implementation-specific: Check if sanitization is in place
         expect(logMessage).toBeDefined();

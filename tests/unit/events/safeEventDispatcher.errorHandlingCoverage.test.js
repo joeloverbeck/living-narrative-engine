@@ -3,7 +3,14 @@
  * @description Ensures difficult error-handling branches are exercised.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import * as safeStringifyModule from '../../../src/utils/safeStringify.js';
 
@@ -44,11 +51,15 @@ describe('SafeEventDispatcher - error handling coverage', () => {
   });
 
   it('uses object message fields and console fallback for error events', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const rejection = { message: '  trimmed message  ' };
     deps.validatedEventDispatcher.dispatch.mockRejectedValue(rejection);
 
-    const result = await dispatcher.dispatch('workflow_error_event', { payload: true });
+    const result = await dispatcher.dispatch('workflow_error_event', {
+      payload: true,
+    });
 
     expect(result).toBe(false);
     expect(consoleSpy).toHaveBeenCalledWith(
@@ -62,7 +73,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
   });
 
   it('falls back to console when logger throws for async errors with unstringifiable values', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const problematic = {
       toString() {
         throw new Error('no string for you');
@@ -78,7 +91,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
 
     expect(result).toBe(false);
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Logger failed while handling error in dispatching event'),
+      expect.stringContaining(
+        'Logger failed while handling error in dispatching event'
+      ),
       problematic,
       'Logger error:',
       expect.any(Error)
@@ -86,7 +101,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
   });
 
   it('normalizes null synchronous errors and logs to console for error-labelled operations', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     deps.validatedEventDispatcher.subscribe.mockImplementation(() => {
       throw null;
     });
@@ -102,7 +119,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
   });
 
   it('trims string errors and provides console fallback when logger fails synchronously', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     deps.validatedEventDispatcher.unsubscribe.mockImplementation(() => {
       throw '  spaced message  ';
     });
@@ -110,7 +129,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
       throw new Error('logger failure');
     });
 
-    expect(() => dispatcher.unsubscribe('regular_event', jest.fn())).not.toThrow();
+    expect(() =>
+      dispatcher.unsubscribe('regular_event', jest.fn())
+    ).not.toThrow();
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('spaced message'),
@@ -130,7 +151,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
       throw customError;
     });
 
-    expect(() => dispatcher.setBatchMode(true, { context: 'normal-operation' })).not.toThrow();
+    expect(() =>
+      dispatcher.setBatchMode(true, { context: 'normal-operation' })
+    ).not.toThrow();
 
     expect(deps.logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Detailed failure message'),
@@ -139,13 +162,17 @@ describe('SafeEventDispatcher - error handling coverage', () => {
   });
 
   it('reports generic unknown messages for plain object errors via console path', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const plainObjectError = {};
     deps.validatedEventDispatcher.setBatchMode.mockImplementation(() => {
       throw plainObjectError;
     });
 
-    expect(() => dispatcher.setBatchMode(true, { context: 'error-phase' })).not.toThrow();
+    expect(() =>
+      dispatcher.setBatchMode(true, { context: 'error-phase' })
+    ).not.toThrow();
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('Unknown error.'),
@@ -161,7 +188,9 @@ describe('SafeEventDispatcher - error handling coverage', () => {
         throw new Error('stringify boom');
       });
 
-    const result = await dispatcher.dispatch('no_error_event', { data: 'value' });
+    const result = await dispatcher.dispatch('no_error_event', {
+      data: 'value',
+    });
 
     expect(result).toBe(false);
     expect(deps.logger.debug).toHaveBeenCalledWith(

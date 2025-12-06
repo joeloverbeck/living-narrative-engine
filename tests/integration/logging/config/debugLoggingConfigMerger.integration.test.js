@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import ConsoleLogger, { LogLevel } from '../../../../src/logging/consoleLogger.js';
+import ConsoleLogger, {
+  LogLevel,
+} from '../../../../src/logging/consoleLogger.js';
 import { DebugLoggingConfigMerger } from '../../../../src/logging/config/configMerger.js';
 import LogFilter from '../../../../src/logging/logFilter.js';
 
@@ -66,7 +68,14 @@ describe('DebugLoggingConfigMerger integration', () => {
 
     expect(report.appliedPreset).toBe('production');
     expect(report.appliedOverrides).toEqual(
-      expect.arrayContaining(['enabled', 'console', 'remote', 'categories', 'performance', 'lastRefresh'])
+      expect.arrayContaining([
+        'enabled',
+        'console',
+        'remote',
+        'categories',
+        'performance',
+        'lastRefresh',
+      ])
     );
     expect(report.appliedEnvVars).toEqual(
       expect.arrayContaining([
@@ -84,7 +93,9 @@ describe('DebugLoggingConfigMerger integration', () => {
 
     expect(mergedConfig.enabled).toBe(false);
     expect(mergedConfig.mode).toBe('remote');
-    expect(mergedConfig.remote.endpoint).toBe('https://logs.example.com/collect');
+    expect(mergedConfig.remote.endpoint).toBe(
+      'https://logs.example.com/collect'
+    );
     expect(mergedConfig.remote.compression.algorithm).toBe('brotli');
     expect(mergedConfig.remote.batching.targetLatency).toBe(50);
     expect(mergedConfig.console.enabled).toBe(true);
@@ -94,14 +105,23 @@ describe('DebugLoggingConfigMerger integration', () => {
     expect(mergedConfig.performance.slowLogThreshold).toBeCloseTo(250.5);
     expect(mergedConfig.categories.engine.enabled).toBe(false);
     expect(mergedConfig.categories.ui.level).toBe('error');
-    expect(mergedConfig.categories.custom_analytics).toMatchObject({ enabled: true, level: 'debug' });
+    expect(mergedConfig.categories.custom_analytics).toMatchObject({
+      enabled: true,
+      level: 'debug',
+    });
 
     expect(mergedConfig.lastRefresh).toBeInstanceOf(Date);
-    expect(mergedConfig.lastRefresh.toISOString()).toBe('2023-12-31T23:59:59.000Z');
+    expect(mergedConfig.lastRefresh.toISOString()).toBe(
+      '2023-12-31T23:59:59.000Z'
+    );
     expect(mergedConfig.lastRefresh).not.toBe(overrides.lastRefresh);
 
-    expect(merger.getNestedValue(mergedConfig, 'console.showCategory')).toBe(true);
-    expect(merger.getNestedValue(mergedConfig, 'remote.compression.level')).toBe(9);
+    expect(merger.getNestedValue(mergedConfig, 'console.showCategory')).toBe(
+      true
+    );
+    expect(
+      merger.getNestedValue(mergedConfig, 'remote.compression.level')
+    ).toBe(9);
 
     // Use the merged configuration with another real module to ensure integration coverage
     const logFilter = new LogFilter({
@@ -113,12 +133,26 @@ describe('DebugLoggingConfigMerger integration', () => {
 
     const now = Date.now();
     logFilter.setLogs([
-      { message: 'engine warning', category: 'engine', level: 'warn', timestamp: now },
-      { message: 'custom analytics insight', category: 'custom_analytics', level: 'debug', timestamp: now },
+      {
+        message: 'engine warning',
+        category: 'engine',
+        level: 'warn',
+        timestamp: now,
+      },
+      {
+        message: 'custom analytics insight',
+        category: 'custom_analytics',
+        level: 'debug',
+        timestamp: now,
+      },
       { message: 'ui failure', category: 'ui', level: 'error', timestamp: now },
     ]);
 
-    logFilter.setFilter({ category: 'custom_analytics', level: 'all', searchText: '' });
+    logFilter.setFilter({
+      category: 'custom_analytics',
+      level: 'all',
+      searchText: '',
+    });
     const filtered = logFilter.getFilteredLogs();
     expect(filtered).toHaveLength(1);
     expect(filtered[0].category).toBe('custom_analytics');
@@ -128,8 +162,10 @@ describe('DebugLoggingConfigMerger integration', () => {
       expect.objectContaining({ preset: 'production' })
     );
     expect(
-      consoleInfoSpy.mock.calls.some(([message]) =>
-        typeof message === 'string' && message.includes('environment variable overrides')
+      consoleInfoSpy.mock.calls.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes('environment variable overrides')
       )
     ).toBe(true);
 
@@ -137,7 +173,9 @@ describe('DebugLoggingConfigMerger integration', () => {
     const diagnosticReport = merger.mergeWithReport({}, 'mystery', {});
     expect(diagnosticReport.warnings).toContain('Unknown preset: mystery');
     expect(
-      consoleWarnSpy.mock.calls.some(([message]) => message === 'Unknown preset requested: mystery')
+      consoleWarnSpy.mock.calls.some(
+        ([message]) => message === 'Unknown preset requested: mystery'
+      )
     ).toBe(true);
   });
 
@@ -156,7 +194,12 @@ describe('DebugLoggingConfigMerger integration', () => {
       DEBUG_LOG_CONSOLE_ENABLED: 'false',
     };
 
-    const merged = merger.mergeWithLegacySupport(currentConfig, legacyConfig, 'development', envVars);
+    const merged = merger.mergeWithLegacySupport(
+      currentConfig,
+      legacyConfig,
+      'development',
+      envVars
+    );
 
     expect(merged.mode).toBe('hybrid');
     expect(merged.enabled).toBe(true);
@@ -164,7 +207,9 @@ describe('DebugLoggingConfigMerger integration', () => {
     expect(merged.logLevel).toBe('NONE');
     expect(merger.getNestedValue(merged, 'console.showTimestamp')).toBe(true);
 
-    expect(consoleInfoSpy).toHaveBeenCalledWith('Migrating legacy configuration');
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      'Migrating legacy configuration'
+    );
     expect(
       consoleDebugSpy.mock.calls.some(
         ([message, metadata]) =>
@@ -178,7 +223,7 @@ describe('DebugLoggingConfigMerger integration', () => {
       {},
       { logLevel: 'WARN' },
       null,
-      {},
+      {}
     );
 
     expect(legacyWarnConfig.mode).toBe('development');
@@ -193,7 +238,12 @@ describe('DebugLoggingConfigMerger integration', () => {
     });
 
     expect(() =>
-      merger.mergeWithLegacySupport(failingConfig, { logLevel: 'INFO' }, null, {})
+      merger.mergeWithLegacySupport(
+        failingConfig,
+        { logLevel: 'INFO' },
+        null,
+        {}
+      )
     ).toThrow(/legacy config access failure/);
 
     expect(
@@ -228,7 +278,7 @@ describe('DebugLoggingConfigMerger integration', () => {
     const fallbackConfig = merger.mergeConfig(
       { console: { enabled: true } },
       null,
-      undefined,
+      undefined
     );
 
     expect(fallbackConfig.console.enabled).toBe(true);
@@ -252,7 +302,7 @@ describe('DebugLoggingConfigMerger integration', () => {
     expect(
       merger.deepMerge(
         { list: [1, 2], nested: { keep: true } },
-        { list: ['a', 'b'], nested: { added: 'value' } },
+        { list: ['a', 'b'], nested: { added: 'value' } }
       )
     ).toEqual({ list: ['a', 'b'], nested: { keep: true, added: 'value' } });
 
@@ -269,7 +319,9 @@ describe('DebugLoggingConfigMerger integration', () => {
     protoCloneSource.payload = { ready: true };
     const protoCloned = merger.deepClone(protoCloneSource);
     expect(protoCloned).toEqual({ payload: { ready: true } });
-    expect(Object.prototype.hasOwnProperty.call(protoCloned, 'legacy')).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(protoCloned, 'legacy')).toBe(
+      false
+    );
 
     expect(merger.parseEnvironmentValue(true)).toBe(true);
     expect(merger.parseEnvironmentValue('FALSE')).toBe(false);
@@ -281,23 +333,35 @@ describe('DebugLoggingConfigMerger integration', () => {
     merger.setNestedValue(nestedTarget, 'remote.upload.retry', 3);
     expect(nestedTarget.remote.upload.retry).toBe(3);
 
-    expect(merger.getNestedValue(null, 'any.path', 'fallback')).toBe('fallback');
-    expect(merger.getNestedValue({ data: { value: 7 } }, 'data.value', 0)).toBe(7);
-    expect(merger.getNestedValue({ data: null }, 'data.value', 'missing')).toBe('missing');
+    expect(merger.getNestedValue(null, 'any.path', 'fallback')).toBe(
+      'fallback'
+    );
+    expect(merger.getNestedValue({ data: { value: 7 } }, 'data.value', 0)).toBe(
+      7
+    );
+    expect(merger.getNestedValue({ data: null }, 'data.value', 'missing')).toBe(
+      'missing'
+    );
 
     const categoryOnlyConfig = merger.applyEnvironmentVariables(
       {},
       {
         DEBUG_LOG_CATEGORY_TEMP_ENABLED: 'true',
         DEBUG_LOG_CATEGORY_MALFORMED_FLAG: 'true',
-      },
+      }
     );
     expect(categoryOnlyConfig.categories.temp.enabled).toBe(true);
 
     const untouchedConfig = { untouched: true };
-    expect(merger.applyEnvironmentVariables(untouchedConfig, null)).toEqual(untouchedConfig);
+    expect(merger.applyEnvironmentVariables(untouchedConfig, null)).toEqual(
+      untouchedConfig
+    );
 
-    const nullCategoryResult = merger.mergeConfig({ categories: null }, null, {});
+    const nullCategoryResult = merger.mergeConfig(
+      { categories: null },
+      null,
+      {}
+    );
     expect(nullCategoryResult.categories).toBeNull();
 
     const fallbackMerge = merger.mergeConfig('noop', null, {});
@@ -306,17 +370,17 @@ describe('DebugLoggingConfigMerger integration', () => {
     const reportNoOverrides = merger.mergeWithReport('noop', null, {});
     expect(reportNoOverrides.appliedOverrides).toEqual([]);
 
-    expect(() =>
-      merger.mergeWithReport(null, 'production', {})
-    ).not.toThrow();
+    expect(() => merger.mergeWithReport(null, 'production', {})).not.toThrow();
 
-    expect(() => merger.mergeWithLegacySupport(undefined, null, null, {})).not.toThrow();
+    expect(() =>
+      merger.mergeWithLegacySupport(undefined, null, null, {})
+    ).not.toThrow();
     expect(() => merger.mergeWithLegacySupport({}, {}, null, {})).not.toThrow();
     const preservedMode = merger.mergeWithLegacySupport(
       { mode: 'preexisting', enabled: false },
       { logLevel: 'INFO' },
       null,
-      {},
+      {}
     );
     expect(preservedMode.mode).toBe('preexisting');
     expect(preservedMode.enabled).toBe(false);

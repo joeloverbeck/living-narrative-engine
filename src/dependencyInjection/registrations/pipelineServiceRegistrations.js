@@ -80,11 +80,14 @@ export function registerPipelineServices(container) {
     });
   });
 
-  registrar.singletonFactory(tokens.ITargetResolutionTracingOrchestrator, (c) => {
-    return new TargetResolutionTracingOrchestrator({
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
+  registrar.singletonFactory(
+    tokens.ITargetResolutionTracingOrchestrator,
+    (c) => {
+      return new TargetResolutionTracingOrchestrator({
+        logger: c.resolve(tokens.ILogger),
+      });
+    }
+  );
 
   registrar.singletonFactory(tokens.ITargetResolutionResultBuilder, (c) => {
     return new TargetResolutionResultBuilder({

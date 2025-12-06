@@ -47,7 +47,13 @@ class CharacterDataXmlBuilder {
       requiredMethods: ['debug', 'warn', 'error'],
     });
     validateDependency(xmlElementBuilder, 'XmlElementBuilder', console, {
-      requiredMethods: ['escape', 'wrap', 'wrapIfPresent', 'comment', 'decoratedComment'],
+      requiredMethods: [
+        'escape',
+        'wrap',
+        'wrapIfPresent',
+        'comment',
+        'decoratedComment',
+      ],
     });
 
     this.#logger = logger;
@@ -65,7 +71,9 @@ class CharacterDataXmlBuilder {
    */
   buildCharacterDataXml(characterData) {
     if (characterData === null || characterData === undefined) {
-      throw new TypeError('characterData is required and cannot be null or undefined');
+      throw new TypeError(
+        'characterData is required and cannot be null or undefined'
+      );
     }
 
     if (typeof characterData !== 'object') {
@@ -88,14 +96,28 @@ class CharacterDataXmlBuilder {
     // Section 1: Identity
     const identitySection = this.#buildIdentitySection(characterData);
     parts.push('');
-    parts.push(this.#buildSectionComment(1, 'ESSENTIAL IDENTITY', 'WHO YOU ARE', 'These define your fundamental self - read and internalize deeply.'));
+    parts.push(
+      this.#buildSectionComment(
+        1,
+        'ESSENTIAL IDENTITY',
+        'WHO YOU ARE',
+        'These define your fundamental self - read and internalize deeply.'
+      )
+    );
     parts.push(identitySection);
 
     // Section 2: Core Self
     const coreSelfSection = this.#buildCoreSelfSection(characterData);
     if (coreSelfSection) {
       parts.push('');
-      parts.push(this.#buildSectionComment(2, 'CORE SELF', 'YOUR HISTORY AND PERSONALITY', 'This is your background and how you approach the world.'));
+      parts.push(
+        this.#buildSectionComment(
+          2,
+          'CORE SELF',
+          'YOUR HISTORY AND PERSONALITY',
+          'This is your background and how you approach the world.'
+        )
+      );
       parts.push(coreSelfSection);
     }
 
@@ -103,7 +125,14 @@ class CharacterDataXmlBuilder {
     const psychologySection = this.#buildPsychologySection(characterData);
     if (psychologySection) {
       parts.push('');
-      parts.push(this.#buildSectionComment(3, 'PSYCHOLOGY', 'YOUR INNER DEPTHS', 'These drive your actions even when you don\'t realize it.'));
+      parts.push(
+        this.#buildSectionComment(
+          3,
+          'PSYCHOLOGY',
+          'YOUR INNER DEPTHS',
+          "These drive your actions even when you don't realize it."
+        )
+      );
       parts.push(psychologySection);
     }
 
@@ -111,15 +140,31 @@ class CharacterDataXmlBuilder {
     const traitsSection = this.#buildTraitsSection(characterData);
     if (traitsSection) {
       parts.push('');
-      parts.push(this.#buildSectionComment(4, 'CHARACTER TRAITS', 'YOUR QUALITIES', 'Observable patterns in how you engage with the world.'));
+      parts.push(
+        this.#buildSectionComment(
+          4,
+          'CHARACTER TRAITS',
+          'YOUR QUALITIES',
+          'Observable patterns in how you engage with the world.'
+        )
+      );
       parts.push(traitsSection);
     }
 
     // Section 5: Speech Patterns
-    const speechSection = this.#buildSpeechPatternsSection(characterData.speechPatterns);
+    const speechSection = this.#buildSpeechPatternsSection(
+      characterData.speechPatterns
+    );
     if (speechSection) {
       parts.push('');
-      parts.push(this.#buildSectionComment(5, 'EXPRESSION', 'HOW YOU COMMUNICATE', 'Use these patterns naturally in dialogue - don\'t force every one.'));
+      parts.push(
+        this.#buildSectionComment(
+          5,
+          'EXPRESSION',
+          'HOW YOU COMMUNICATE',
+          "Use these patterns naturally in dialogue - don't force every one."
+        )
+      );
       parts.push(speechSection);
     }
 
@@ -127,7 +172,14 @@ class CharacterDataXmlBuilder {
     const currentStateSection = this.#buildCurrentStateSection(characterData);
     if (currentStateSection) {
       parts.push('');
-      parts.push(this.#buildSectionComment(6, 'CURRENT STATE', 'MUTABLE CONTEXT', 'These change over time - your active mental state.'));
+      parts.push(
+        this.#buildSectionComment(
+          6,
+          'CURRENT STATE',
+          'MUTABLE CONTEXT',
+          'These change over time - your active mental state.'
+        )
+      );
       parts.push(currentStateSection);
     }
 
@@ -136,9 +188,12 @@ class CharacterDataXmlBuilder {
 
     const result = parts.join('\n');
 
-    this.#logger.debug('CharacterDataXmlBuilder: Successfully built character XML', {
-      length: result.length,
-    });
+    this.#logger.debug(
+      'CharacterDataXmlBuilder: Successfully built character XML',
+      {
+        length: result.length,
+      }
+    );
 
     return result;
   }
@@ -170,10 +225,7 @@ class CharacterDataXmlBuilder {
    */
   #buildSectionComment(number, name, shortPhrase, hint) {
     return this.#xmlBuilder.decoratedComment(
-      [
-        `SECTION ${number}: ${name} (${shortPhrase})`,
-        hint,
-      ],
+      [`SECTION ${number}: ${name} (${shortPhrase})`, hint],
       'secondary',
       1
     );
@@ -187,7 +239,11 @@ class CharacterDataXmlBuilder {
    */
   #buildIdentitySection(data) {
     const name = data.name || DEFAULT_FALLBACK_CHARACTER_NAME;
-    const nameXml = this.#xmlBuilder.wrap('name', this.#xmlBuilder.escape(name), 2);
+    const nameXml = this.#xmlBuilder.wrap(
+      'name',
+      this.#xmlBuilder.escape(name),
+      2
+    );
 
     const elements = [nameXml];
 
@@ -195,13 +251,25 @@ class CharacterDataXmlBuilder {
     if (data.apparentAge) {
       const ageDescription = this.#formatApparentAge(data.apparentAge);
       if (ageDescription) {
-        elements.push(this.#xmlBuilder.wrap('apparent_age', this.#xmlBuilder.escape(ageDescription), 2));
+        elements.push(
+          this.#xmlBuilder.wrap(
+            'apparent_age',
+            this.#xmlBuilder.escape(ageDescription),
+            2
+          )
+        );
       }
     }
 
     // Description
     if (data.description && String(data.description).trim()) {
-      elements.push(this.#xmlBuilder.wrap('description', this.#xmlBuilder.escape(data.description), 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'description',
+          this.#xmlBuilder.escape(data.description),
+          2
+        )
+      );
     }
 
     return this.#wrapSection('identity', elements);
@@ -237,11 +305,23 @@ class CharacterDataXmlBuilder {
     const elements = [];
 
     if (data.profile && String(data.profile).trim()) {
-      elements.push(this.#xmlBuilder.wrap('profile', this.#xmlBuilder.escape(data.profile), 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'profile',
+          this.#xmlBuilder.escape(data.profile),
+          2
+        )
+      );
     }
 
     if (data.personality && String(data.personality).trim()) {
-      elements.push(this.#xmlBuilder.wrap('personality', this.#xmlBuilder.escape(data.personality), 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'personality',
+          this.#xmlBuilder.escape(data.personality),
+          2
+        )
+      );
     }
 
     if (elements.length === 0) {
@@ -261,15 +341,33 @@ class CharacterDataXmlBuilder {
     const elements = [];
 
     if (data.motivations && String(data.motivations).trim()) {
-      elements.push(this.#xmlBuilder.wrap('core_motivations', this.#xmlBuilder.escape(data.motivations), 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'core_motivations',
+          this.#xmlBuilder.escape(data.motivations),
+          2
+        )
+      );
     }
 
     if (data.internalTensions && String(data.internalTensions).trim()) {
-      elements.push(this.#xmlBuilder.wrap('internal_tensions', this.#xmlBuilder.escape(data.internalTensions), 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'internal_tensions',
+          this.#xmlBuilder.escape(data.internalTensions),
+          2
+        )
+      );
     }
 
     if (data.coreDilemmas && String(data.coreDilemmas).trim()) {
-      elements.push(this.#xmlBuilder.wrap('dilemmas', this.#xmlBuilder.escape(data.coreDilemmas), 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'dilemmas',
+          this.#xmlBuilder.escape(data.coreDilemmas),
+          2
+        )
+      );
     }
 
     if (elements.length === 0) {
@@ -300,7 +398,9 @@ class CharacterDataXmlBuilder {
     for (const { key, tag } of traitFields) {
       const value = data[key];
       if (value && String(value).trim()) {
-        elements.push(this.#xmlBuilder.wrap(tag, this.#xmlBuilder.escape(value), 2));
+        elements.push(
+          this.#xmlBuilder.wrap(tag, this.#xmlBuilder.escape(value), 2)
+        );
       }
     }
 
@@ -344,11 +444,20 @@ class CharacterDataXmlBuilder {
 
     // Add enhanced usage guidance with anti-rigidity reminders
     const guidance = [
-      this.#xmlBuilder.comment('REFERENCE: Use these patterns naturally, not mechanically', 2),
+      this.#xmlBuilder.comment(
+        'REFERENCE: Use these patterns naturally, not mechanically',
+        2
+      ),
       this.#xmlBuilder.comment('USAGE GUIDANCE:', 2),
-      this.#xmlBuilder.comment('- Apply patterns when appropriate to situation and emotion', 2),
-      this.#xmlBuilder.comment('- DO NOT cycle through patterns mechanically', 2),
-      this.#xmlBuilder.comment('- Absence of patterns is also authentic', 2)
+      this.#xmlBuilder.comment(
+        '- Apply patterns when appropriate to situation and emotion',
+        2
+      ),
+      this.#xmlBuilder.comment(
+        '- DO NOT cycle through patterns mechanically',
+        2
+      ),
+      this.#xmlBuilder.comment('- Absence of patterns is also authentic', 2),
     ].join('\n');
 
     return `  <speech_patterns>\n${guidance}\n\n${content}\n  </speech_patterns>`;
@@ -362,10 +471,14 @@ class CharacterDataXmlBuilder {
    */
   #detectPatternFormat(patterns) {
     const hasStrings = patterns.some((p) => typeof p === 'string');
-    const hasObjects = patterns.some((p) => typeof p === 'object' && p !== null);
+    const hasObjects = patterns.some(
+      (p) => typeof p === 'object' && p !== null
+    );
 
     if (hasStrings && hasObjects) {
-      this.#logger.warn('CharacterDataXmlBuilder: Mixed speech pattern formats detected');
+      this.#logger.warn(
+        'CharacterDataXmlBuilder: Mixed speech pattern formats detected'
+      );
       return 'mixed';
     }
 
@@ -379,19 +492,33 @@ class CharacterDataXmlBuilder {
    * @returns {string} Formatted patterns content
    */
   #formatStructuredPatterns(patterns) {
-    const objectPatterns = patterns.filter((p) => typeof p === 'object' && p !== null);
+    const objectPatterns = patterns.filter(
+      (p) => typeof p === 'object' && p !== null
+    );
 
     const lines = [];
 
     objectPatterns.forEach((pattern, index) => {
-      lines.push(`    ${index + 1}. **${this.#xmlBuilder.escape(pattern.type || 'Pattern')}**`);
+      lines.push(
+        `    ${index + 1}. **${this.#xmlBuilder.escape(pattern.type || 'Pattern')}**`
+      );
 
-      if (pattern.contexts && Array.isArray(pattern.contexts) && pattern.contexts.length > 0) {
-        const contextsStr = pattern.contexts.map((c) => this.#xmlBuilder.escape(c)).join(', ');
+      if (
+        pattern.contexts &&
+        Array.isArray(pattern.contexts) &&
+        pattern.contexts.length > 0
+      ) {
+        const contextsStr = pattern.contexts
+          .map((c) => this.#xmlBuilder.escape(c))
+          .join(', ');
         lines.push(`       Contexts: ${contextsStr}`);
       }
 
-      if (pattern.examples && Array.isArray(pattern.examples) && pattern.examples.length > 0) {
+      if (
+        pattern.examples &&
+        Array.isArray(pattern.examples) &&
+        pattern.examples.length > 0
+      ) {
         lines.push('       Examples:');
         pattern.examples.forEach((example) => {
           lines.push(`       - "${this.#xmlBuilder.escape(example)}"`);
@@ -434,16 +561,30 @@ class CharacterDataXmlBuilder {
     const lines = [];
 
     // Structured patterns first
-    const objectPatterns = patterns.filter((p) => typeof p === 'object' && p !== null);
+    const objectPatterns = patterns.filter(
+      (p) => typeof p === 'object' && p !== null
+    );
     objectPatterns.forEach((pattern, index) => {
-      lines.push(`    ${index + 1}. **${this.#xmlBuilder.escape(pattern.type || 'Pattern')}**`);
+      lines.push(
+        `    ${index + 1}. **${this.#xmlBuilder.escape(pattern.type || 'Pattern')}**`
+      );
 
-      if (pattern.contexts && Array.isArray(pattern.contexts) && pattern.contexts.length > 0) {
-        const contextsStr = pattern.contexts.map((c) => this.#xmlBuilder.escape(c)).join(', ');
+      if (
+        pattern.contexts &&
+        Array.isArray(pattern.contexts) &&
+        pattern.contexts.length > 0
+      ) {
+        const contextsStr = pattern.contexts
+          .map((c) => this.#xmlBuilder.escape(c))
+          .join(', ');
         lines.push(`       Contexts: ${contextsStr}`);
       }
 
-      if (pattern.examples && Array.isArray(pattern.examples) && pattern.examples.length > 0) {
+      if (
+        pattern.examples &&
+        Array.isArray(pattern.examples) &&
+        pattern.examples.length > 0
+      ) {
         lines.push('       Examples:');
         pattern.examples.forEach((example) => {
           lines.push(`       - "${this.#xmlBuilder.escape(example)}"`);
@@ -454,7 +595,9 @@ class CharacterDataXmlBuilder {
     });
 
     // Additional legacy patterns
-    const stringPatterns = patterns.filter((p) => typeof p === 'string' && p.trim().length > 0);
+    const stringPatterns = patterns.filter(
+      (p) => typeof p === 'string' && p.trim().length > 0
+    );
     if (stringPatterns.length > 0) {
       lines.push('    Additional Patterns:');
       stringPatterns.forEach((pattern) => {
@@ -476,7 +619,9 @@ class CharacterDataXmlBuilder {
     const elements = [];
 
     // Physical condition (placed first for prominence per spec)
-    const physicalConditionContent = this.#buildPhysicalConditionSection(data.healthState);
+    const physicalConditionContent = this.#buildPhysicalConditionSection(
+      data.healthState
+    );
     if (physicalConditionContent) {
       elements.push(physicalConditionContent);
     }
@@ -484,19 +629,29 @@ class CharacterDataXmlBuilder {
     // Goals
     const goalsContent = this.#formatGoalsList(data.goals);
     if (goalsContent) {
-      elements.push(this.#xmlBuilder.wrap('goals', '\n' + goalsContent + '\n    ', 2));
+      elements.push(
+        this.#xmlBuilder.wrap('goals', '\n' + goalsContent + '\n    ', 2)
+      );
     }
 
     // Notes
     const notesContent = this.#formatNotesList(data.notes);
     if (notesContent) {
-      elements.push(this.#xmlBuilder.wrap('notes', '\n' + notesContent + '\n    ', 2));
+      elements.push(
+        this.#xmlBuilder.wrap('notes', '\n' + notesContent + '\n    ', 2)
+      );
     }
 
     // Recent thoughts
     const thoughtsContent = this.#formatRecentThoughts(data.shortTermMemory);
     if (thoughtsContent) {
-      elements.push(this.#xmlBuilder.wrap('recent_thoughts', '\n' + thoughtsContent + '\n    ', 2));
+      elements.push(
+        this.#xmlBuilder.wrap(
+          'recent_thoughts',
+          '\n' + thoughtsContent + '\n    ',
+          2
+        )
+      );
     }
 
     if (elements.length === 0) {
@@ -547,14 +702,17 @@ class CharacterDataXmlBuilder {
     }
 
     const lines = notes
-      .filter((note) => note && note.text && String(note.text).trim().length > 0)
+      .filter(
+        (note) => note && note.text && String(note.text).trim().length > 0
+      )
       .map((note) => {
         const text = String(note.text).trim();
         const subject = note.subject || 'General';
         const subjectType = note.subjectType || 'other';
 
         // Format: [SubjectType: subject] text
-        const capitalizedType = subjectType.charAt(0).toUpperCase() + subjectType.slice(1);
+        const capitalizedType =
+          subjectType.charAt(0).toUpperCase() + subjectType.slice(1);
         return `      - [${capitalizedType}: ${this.#xmlBuilder.escape(subject)}] ${this.#xmlBuilder.escape(text)}`;
       });
 
@@ -568,12 +726,19 @@ class CharacterDataXmlBuilder {
    * @returns {string} Formatted thoughts content or empty string
    */
   #formatRecentThoughts(shortTermMemory) {
-    if (!shortTermMemory || !shortTermMemory.thoughts || !Array.isArray(shortTermMemory.thoughts)) {
+    if (
+      !shortTermMemory ||
+      !shortTermMemory.thoughts ||
+      !Array.isArray(shortTermMemory.thoughts)
+    ) {
       return '';
     }
 
     const lines = shortTermMemory.thoughts
-      .filter((thought) => thought && thought.text && String(thought.text).trim().length > 0)
+      .filter(
+        (thought) =>
+          thought && thought.text && String(thought.text).trim().length > 0
+      )
       .map((thought) => {
         const text = String(thought.text).trim();
         return `      - "${this.#xmlBuilder.escape(text)}"`;

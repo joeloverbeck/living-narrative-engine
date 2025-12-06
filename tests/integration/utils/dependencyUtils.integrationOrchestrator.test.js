@@ -1,7 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import { MultiTargetEventBuilder } from '../../../src/entities/multiTarget/multiTargetEventBuilder.js';
 import TargetExtractionResult from '../../../src/entities/multiTarget/targetExtractionResult.js';
 import { TargetManager } from '../../../src/entities/multiTarget/targetManager.js';
@@ -53,13 +58,15 @@ describe('dependencyUtils integration orchestrator coverage', () => {
 
     const targetManager = new TargetManager({ logger });
 
-    expect(() => targetManager.addTarget('', 'npc-01')).toThrow(InvalidArgumentError);
+    expect(() => targetManager.addTarget('', 'npc-01')).toThrow(
+      InvalidArgumentError
+    );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "TargetManager.addTarget: Invalid name ''. Expected non-blank string.",
       expect.objectContaining({
         receivedValue: '',
         parameterName: 'name',
-      }),
+      })
     );
 
     consoleErrorSpy.mockClear();
@@ -69,7 +76,9 @@ describe('dependencyUtils integration orchestrator coverage', () => {
     builder.setAction('core:wave');
     builder.setOriginalInput('wave at npc');
 
-    expect(() => builder.setTargets(null)).toThrow('Targets object is required');
+    expect(() => builder.setTargets(null)).toThrow(
+      'Targets object is required'
+    );
     expect(consoleErrorSpy).toHaveBeenCalledWith('Targets object is required');
 
     consoleErrorSpy.mockClear();
@@ -78,7 +87,9 @@ describe('dependencyUtils integration orchestrator coverage', () => {
       logger,
       targets: { primary: 'npc-02', ally: 'npc-03' },
     });
-    const extraction = new TargetExtractionResult({ targetManager: populatedManager });
+    const extraction = new TargetExtractionResult({
+      targetManager: populatedManager,
+    });
 
     expect(() => builder.setTargetsFromExtraction(extraction)).not.toThrow();
     expect(builder.setLegacyTarget('npc-02')).toBe(builder);
@@ -88,7 +99,7 @@ describe('dependencyUtils integration orchestrator coverage', () => {
       "MultiTargetEventBuilder.setLegacyTarget: Invalid targetId '   '. Expected non-blank string.",
       expect.objectContaining({
         parameterName: 'targetId',
-      }),
+      })
     );
   });
 
@@ -120,33 +131,36 @@ describe('dependencyUtils integration orchestrator coverage', () => {
       scopeRegistry: { initialize: () => {} },
     };
 
-    expect(() =>
-      new WorldInitializer({
-        ...minimalDeps,
-        entityManager: {},
-      }),
+    expect(
+      () =>
+        new WorldInitializer({
+          ...minimalDeps,
+          entityManager: {},
+        })
     ).toThrow(
-      'WorldInitializer requires an IEntityManager with createEntityInstance().',
+      'WorldInitializer requires an IEntityManager with createEntityInstance().'
     );
 
-    expect(() =>
-      new WorldInitializer({
-        ...minimalDeps,
-        worldContext: null,
-      }),
+    expect(
+      () =>
+        new WorldInitializer({
+          ...minimalDeps,
+          worldContext: null,
+        })
     ).toThrow('WorldInitializer requires a WorldContext.');
 
-    expect(() =>
-      new WorldInitializer({
-        ...minimalDeps,
-        gameDataRepository: {
-          getWorld() {
-            return {};
+    expect(
+      () =>
+        new WorldInitializer({
+          ...minimalDeps,
+          gameDataRepository: {
+            getWorld() {
+              return {};
+            },
           },
-        },
-      }),
+        })
     ).toThrow(
-      'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().',
+      'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().'
     );
   });
 
@@ -168,21 +182,27 @@ describe('dependencyUtils integration orchestrator coverage', () => {
         ['dispatchWithLogging', 'dispatchWithErrorHandling'],
         'Event dispatch API incomplete',
         InvalidArgumentError,
-        logger,
-      ),
+        logger
+      )
     ).toThrow(InvalidArgumentError);
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Event dispatch API incomplete');
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Event dispatch API incomplete'
+    );
 
     consoleErrorSpy.mockClear();
 
     expect(() =>
       assertMethods(
         eventDispatchService,
-        ['dispatchWithLogging', 'dispatchWithErrorHandling', 'dispatchSystemError'],
+        [
+          'dispatchWithLogging',
+          'dispatchWithErrorHandling',
+          'dispatchSystemError',
+        ],
         'Event dispatch API complete',
         InvalidArgumentError,
-        logger,
-      ),
+        logger
+      )
     ).not.toThrow();
 
     const commandProcessor = new CommandProcessor({
@@ -196,21 +216,25 @@ describe('dependencyUtils integration orchestrator coverage', () => {
 
     const failureResult = await commandProcessor.dispatchAction(
       invalidActor,
-      invalidAction,
+      invalidAction
     );
 
     expect(failureResult.success).toBe(false);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'CommandProcessor.dispatchAction: Input validation failed',
       expect.objectContaining({
-        error: "CommandProcessor.dispatchAction: Invalid ID '   '. Expected non-blank string.",
-      }),
+        error:
+          "CommandProcessor.dispatchAction: Invalid ID '   '. Expected non-blank string.",
+      })
     );
 
     consoleErrorSpy.mockClear();
 
     const validActor = { id: 'hero-01' };
-    const validAction = { actionDefinitionId: 'core:wave', commandString: 'wave' };
+    const validAction = {
+      actionDefinitionId: 'core:wave',
+      commandString: 'wave',
+    };
 
     await commandProcessor.dispatchAction(validActor, validAction);
 
@@ -260,7 +284,7 @@ describe('dependencyUtils integration orchestrator coverage', () => {
       pathResolver,
       fetcher,
       validator,
-      logger,
+      logger
     );
 
     await expect(loader.loadAndCompileAllSchemas()).resolves.toBeUndefined();
@@ -269,39 +293,35 @@ describe('dependencyUtils integration orchestrator coverage', () => {
 
     consoleErrorSpy.mockClear();
 
-    expect(() =>
-      new SchemaLoader(
-        configuration,
-        pathResolver,
-        fetcher,
-        { addSchema: async () => {}, addSchemas: async () => {} },
-        logger,
-      ),
+    expect(
+      () =>
+        new SchemaLoader(
+          configuration,
+          pathResolver,
+          fetcher,
+          { addSchema: async () => {}, addSchemas: async () => {} },
+          logger
+        )
     ).toThrow(
-      "Invalid or missing method 'isSchemaLoaded' on dependency 'ISchemaValidator'.",
+      "Invalid or missing method 'isSchemaLoaded' on dependency 'ISchemaValidator'."
     );
 
-    expect(() =>
-      new SchemaLoader(
-        configuration,
-        pathResolver,
-        fetcher,
-        null,
-        logger,
-      ),
+    expect(
+      () => new SchemaLoader(configuration, pathResolver, fetcher, null, logger)
     ).toThrow('Missing required dependency: ISchemaValidator.');
 
     const bareLogger = { error: jest.fn(), debug: jest.fn() };
     const minimalSafeDispatcher = { dispatch: jest.fn() };
-    expect(() =>
-      new DelegatingDecisionProvider({
-        delegate: {},
-        logger: bareLogger,
-        safeEventDispatcher: minimalSafeDispatcher,
-      }),
+    expect(
+      () =>
+        new DelegatingDecisionProvider({
+          delegate: {},
+          logger: bareLogger,
+          safeEventDispatcher: minimalSafeDispatcher,
+        })
     ).toThrow("Dependency 'delegate' must be a function, but got object.");
     expect(bareLogger.error).toHaveBeenCalledWith(
-      "Dependency 'delegate' must be a function, but got object.",
+      "Dependency 'delegate' must be a function, but got object."
     );
   });
 });

@@ -57,7 +57,9 @@ describe('CacheService maintenance integration coverage', () => {
 
     expect(cache.get('lru:second')).toBeUndefined();
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("CacheService: Evicted LRU entry with key 'lru:second'"),
+      expect.stringContaining(
+        "CacheService: Evicted LRU entry with key 'lru:second'"
+      )
     );
 
     cache.set('test:alpha', { value: 'alpha' }, 5_000);
@@ -71,8 +73,8 @@ describe('CacheService maintenance integration coverage', () => {
     expect(cache.get('other:gamma')).toEqual({ value: 'gamma' });
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining(
-        "CacheService: Invalidated 2 cache entries matching pattern /^test:/, freed",
-      ),
+        'CacheService: Invalidated 2 cache entries matching pattern /^test:/, freed'
+      )
     );
   });
 
@@ -97,7 +99,9 @@ describe('CacheService maintenance integration coverage', () => {
     expect(cache.get('auto:transient')).toBeUndefined();
     expect(cache.get('auto:linger')).toEqual({ payload: 'linger' });
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('CacheService: Auto cleanup removed 1 expired entries, freed'),
+      expect.stringContaining(
+        'CacheService: Auto cleanup removed 1 expired entries, freed'
+      )
     );
 
     const stats = cache.getStats();

@@ -143,7 +143,10 @@ const buildAnatomyFixture = (entityManager) => {
   });
   entityManager.createEntity('actor:hand-left', {
     'anatomy:part': { subType: 'hand' },
-    'anatomy:joint': { parentId: 'actor:arm-left', socketId: 'hand-left-socket' },
+    'anatomy:joint': {
+      parentId: 'actor:arm-left',
+      socketId: 'hand-left-socket',
+    },
   });
   entityManager.createEntity('actor:arm-right', {
     'anatomy:part': { subType: 'arm' },
@@ -156,7 +159,10 @@ const buildAnatomyFixture = (entityManager) => {
   });
   entityManager.createEntity('actor:foot-left', {
     'anatomy:part': { subType: 'foot' },
-    'anatomy:joint': { parentId: 'actor:leg-left', socketId: 'foot-left-socket' },
+    'anatomy:joint': {
+      parentId: 'actor:leg-left',
+      socketId: 'foot-left-socket',
+    },
   });
   entityManager.createEntity('actor:head', {
     'anatomy:part': { subType: 'head' },
@@ -171,7 +177,10 @@ const buildAnatomyFixture = (entityManager) => {
 
   return {
     actorBody: entityManager.getComponentData('actor-1', 'anatomy:body'),
-    blueprintBody: entityManager.getComponentData('blueprint-root', 'anatomy:body'),
+    blueprintBody: entityManager.getComponentData(
+      'blueprint-root',
+      'anatomy:body'
+    ),
   };
 };
 
@@ -232,7 +241,7 @@ describe('BodyGraphService multi-root cache integration', () => {
     expect(allPartsSecond).toEqual(allPartsFirst);
     expect(
       logger
-        .messages('info')
+        .messages('debug')
         .filter(
           (msg) =>
             typeof msg === 'string' &&
@@ -337,9 +346,12 @@ describe('BodyGraphService multi-root cache integration', () => {
     });
 
     expect(
-      logger.messages('info').some((msg) =>
-        typeof msg === 'string' && msg.includes('Detached 2 entities')
-      )
+      logger
+        .messages('info')
+        .some(
+          (msg) =>
+            typeof msg === 'string' && msg.includes('Detached 2 entities')
+        )
     ).toBe(true);
 
     entityManager.setComponent('actor:arm-replacement', 'anatomy:part', {
@@ -359,7 +371,9 @@ describe('BodyGraphService multi-root cache integration', () => {
   });
 
   it('retrieves body graphs, evaluates components, and handles error cases', async () => {
-    await expect(service.getBodyGraph('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph('')).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('no-body')).rejects.toThrow(
       'Entity no-body has no anatomy:body component'
     );
@@ -416,12 +430,17 @@ describe('BodyGraphService multi-root cache integration', () => {
     );
     expect(noValueMatch).toEqual({ found: false });
 
-    await expect(service.getAnatomyData('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData('')).rejects.toThrow(
+      InvalidArgumentError
+    );
     const missingData = await service.getAnatomyData('no-body');
     expect(missingData).toBeNull();
     expect(
-      collectDebugMessages(logger, (msg) =>
-        typeof msg === 'string' && msg.includes('has no anatomy:body component')
+      collectDebugMessages(
+        logger,
+        (msg) =>
+          typeof msg === 'string' &&
+          msg.includes('has no anatomy:body component')
       ).length
     ).toBeGreaterThanOrEqual(1);
 

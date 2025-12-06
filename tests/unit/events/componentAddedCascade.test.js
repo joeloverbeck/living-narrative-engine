@@ -36,12 +36,15 @@ describe('EventBus - Component Added Event Cascades', () => {
     // Create a cascade where each component triggers the next
     eventBus.subscribe('core:component_added', (payload) => {
       eventCount++;
-      if (eventCount < cascadeDepth && payload.componentTypeId !== `test:comp${cascadeDepth}`) {
+      if (
+        eventCount < cascadeDepth &&
+        payload.componentTypeId !== `test:comp${cascadeDepth}`
+      ) {
         // Simulate adding the next component in the cascade
         eventBus.dispatch('core:component_added', {
           entity: 'test-entity',
           componentTypeId: `test:comp${eventCount + 1}`,
-          componentData: { index: eventCount + 1 }
+          componentData: { index: eventCount + 1 },
         });
       }
     });
@@ -50,7 +53,7 @@ describe('EventBus - Component Added Event Cascades', () => {
     eventBus.dispatch('core:component_added', {
       entity: 'test-entity',
       componentTypeId: 'test:comp1',
-      componentData: { index: 1 }
+      componentData: { index: 1 },
     });
 
     // Should complete without warnings for a small cascade
@@ -70,7 +73,7 @@ describe('EventBus - Component Added Event Cascades', () => {
         eventBus.dispatch('core:component_added', {
           entity: 'test-entity',
           componentTypeId: `test:comp${eventCount + 1}`,
-          componentData: { depth: eventCount + 1 }
+          componentData: { depth: eventCount + 1 },
         });
       }
     };
@@ -81,11 +84,11 @@ describe('EventBus - Component Added Event Cascades', () => {
     eventBus.dispatch('core:component_added', {
       entity: 'test-entity',
       componentTypeId: 'test:comp1',
-      componentData: { depth: 1 }
+      componentData: { depth: 1 },
     });
 
     // Should have warned at 50% (depth 50)
-    const warningCalls = consoleWarnSpy.mock.calls.filter(call =>
+    const warningCalls = consoleWarnSpy.mock.calls.filter((call) =>
       call[0].includes('50% of limit reached')
     );
     expect(warningCalls.length).toBeGreaterThan(0);
@@ -103,8 +106,8 @@ describe('EventBus - Component Added Event Cascades', () => {
           componentTypeId: `test:recursive${eventCount}`,
           componentData: {
             depth: eventCount,
-            trigger: 'cascade_test'
-          }
+            trigger: 'cascade_test',
+          },
         });
       }
     };
@@ -117,15 +120,15 @@ describe('EventBus - Component Added Event Cascades', () => {
       componentTypeId: 'test:trigger',
       componentData: {
         depth: 0,
-        trigger: 'initial'
-      }
+        trigger: 'initial',
+      },
     });
 
     // Should stop at 100
     expect(eventCount).toBe(100);
 
     // Should have logged an error with enhanced details
-    const errorCalls = consoleErrorSpy.mock.calls.filter(call =>
+    const errorCalls = consoleErrorSpy.mock.calls.filter((call) =>
       call[0].includes('Maximum recursion depth (100) exceeded')
     );
     expect(errorCalls.length).toBe(1);
@@ -147,7 +150,10 @@ describe('EventBus - Component Added Event Cascades', () => {
     expect(eventDetails).toHaveProperty('maxDepth', 100);
     expect(eventDetails.payload).toHaveProperty('entity', 'test-entity');
     expect(eventDetails.payload).toHaveProperty('componentTypeId');
-    expect(eventDetails.payload.componentData).toHaveProperty('trigger', 'cascade_test');
+    expect(eventDetails.payload.componentData).toHaveProperty(
+      'trigger',
+      'cascade_test'
+    );
   });
 
   it('should handle batch mode with higher limits for component lifecycle events', () => {
@@ -155,7 +161,7 @@ describe('EventBus - Component Added Event Cascades', () => {
     eventBus.setBatchMode(true, {
       maxRecursionDepth: 200,
       maxGlobalRecursion: 500,
-      context: 'game-initialization'
+      context: 'game-initialization',
     });
 
     let eventCount = 0;
@@ -167,7 +173,7 @@ describe('EventBus - Component Added Event Cascades', () => {
         eventBus.dispatch('core:component_added', {
           entity: 'test-entity',
           componentTypeId: `test:batch${eventCount}`,
-          componentData: { depth: eventCount }
+          componentData: { depth: eventCount },
         });
       }
     };
@@ -178,14 +184,14 @@ describe('EventBus - Component Added Event Cascades', () => {
     eventBus.dispatch('core:component_added', {
       entity: 'test-entity',
       componentTypeId: 'test:batch_trigger',
-      componentData: { depth: 0 }
+      componentData: { depth: 0 },
     });
 
     // Should allow up to 150 in batch mode (limit is 200)
     expect(eventCount).toBe(targetDepth);
 
     // Should not have errored yet
-    const errorCalls = consoleErrorSpy.mock.calls.filter(call =>
+    const errorCalls = consoleErrorSpy.mock.calls.filter((call) =>
       call[0].includes('Maximum recursion depth')
     );
     expect(errorCalls.length).toBe(0);
@@ -204,7 +210,7 @@ describe('EventBus - Component Added Event Cascades', () => {
         // Trigger a different event type
         eventBus.dispatch('test:other_event', {
           triggered_by: 'component_added',
-          count: componentEventCount
+          count: componentEventCount,
         });
       }
     });
@@ -217,7 +223,7 @@ describe('EventBus - Component Added Event Cascades', () => {
         eventBus.dispatch('core:component_added', {
           entity: 'test-entity',
           componentTypeId: `test:from_other${otherEventCount}`,
-          componentData: { source: 'other_event' }
+          componentData: { source: 'other_event' },
         });
       }
     });
@@ -226,7 +232,7 @@ describe('EventBus - Component Added Event Cascades', () => {
     eventBus.dispatch('core:component_added', {
       entity: 'test-entity',
       componentTypeId: 'test:initial',
-      componentData: { source: 'test' }
+      componentData: { source: 'test' },
     });
 
     // Both event types should have been dispatched
@@ -234,7 +240,7 @@ describe('EventBus - Component Added Event Cascades', () => {
     expect(otherEventCount).toBeGreaterThan(0);
 
     // Neither should have hit recursion limits since they're different event types
-    const errorCalls = consoleErrorSpy.mock.calls.filter(call =>
+    const errorCalls = consoleErrorSpy.mock.calls.filter((call) =>
       call[0].includes('Maximum recursion depth')
     );
     expect(errorCalls.length).toBe(0);

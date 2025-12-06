@@ -18,7 +18,9 @@ describe('sex-dry-intimacy:rub_penis_between_ass_cheeks action discovery', () =>
       'sex-dry-intimacy',
       'sex-dry-intimacy:rub_penis_between_ass_cheeks'
     );
-    testFixture.testEnv.actionIndex.buildIndex([rubPenisBetweenAssCheeksActionJson]);
+    testFixture.testEnv.actionIndex.buildIndex([
+      rubPenisBetweenAssCheeksActionJson,
+    ]);
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
     await testFixture.registerCustomScope(
@@ -62,10 +64,14 @@ describe('sex-dry-intimacy:rub_penis_between_ass_cheeks action discovery', () =>
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-dry-intimacy:rub_penis_between_ass_cheeks');
+      expect(ids).not.toContain(
+        'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+      );
     });
   });
 });

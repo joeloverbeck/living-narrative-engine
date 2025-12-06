@@ -6,12 +6,12 @@ Create the four outcome macros for the throw item action: Critical Success, Succ
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                     | Purpose                                |
+| -------------------------------------------------------- | -------------------------------------- |
 | `data/mods/ranged/macros/handleThrowCritical.macro.json` | CRITICAL_SUCCESS outcome (1.5x damage) |
-| `data/mods/ranged/macros/handleThrowHit.macro.json` | SUCCESS outcome (normal damage) |
-| `data/mods/ranged/macros/handleThrowMiss.macro.json` | FAILURE outcome (no damage) |
-| `data/mods/ranged/macros/handleThrowFumble.macro.json` | FUMBLE outcome (random collateral) |
+| `data/mods/ranged/macros/handleThrowHit.macro.json`      | SUCCESS outcome (normal damage)        |
+| `data/mods/ranged/macros/handleThrowMiss.macro.json`     | FAILURE outcome (no damage)            |
+| `data/mods/ranged/macros/handleThrowFumble.macro.json`   | FUMBLE outcome (random collateral)     |
 
 ## Implementation Details
 
@@ -309,12 +309,12 @@ Create the four outcome macros for the throw item action: Critical Success, Succ
 
 ## Macro Behavior Summary
 
-| Macro | Item Dropped | Damage Applied | Message Type |
-|-------|-------------|----------------|--------------|
-| Critical | Yes | 1.5x multiplier | Success |
-| Hit | Yes | 1.0x (normal) | Success |
-| Miss | Yes | None | Failure |
-| Fumble | Yes | None (hits furniture) | Failure |
+| Macro    | Item Dropped | Damage Applied        | Message Type |
+| -------- | ------------ | --------------------- | ------------ |
+| Critical | Yes          | 1.5x multiplier       | Success      |
+| Hit      | Yes          | 1.0x (normal)         | Success      |
+| Miss     | Yes          | None                  | Failure      |
+| Fumble   | Yes          | None (hits furniture) | Failure      |
 
 ## Out of Scope
 
@@ -356,6 +356,7 @@ npm run validate
 ## Reference Files
 
 For understanding macro patterns:
+
 - `data/mods/weapons/macros/handleMeleeCritical.macro.json` - Critical hit pattern
 - `data/mods/weapons/macros/handleMeleeFumble.macro.json` - Fumble pattern
 - `data/mods/core/macros/endTurnOnly.macro.json` - Turn ending macro
@@ -373,6 +374,7 @@ For understanding macro patterns:
 ## Outcome
 
 The four macros for the ranged throw item action were created:
+
 - `data/mods/ranged/macros/handleThrowCritical.macro.json`
 - `data/mods/ranged/macros/handleThrowHit.macro.json`
 - `data/mods/ranged/macros/handleThrowMiss.macro.json`

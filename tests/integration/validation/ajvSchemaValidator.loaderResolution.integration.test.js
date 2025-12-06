@@ -127,7 +127,11 @@ describe('AjvSchemaValidator schema loader integration', () => {
 
     expect(validator.removeSchema(relativeSchema.$id)).toBe(true);
     expect(validator.isSchemaLoaded(relativeSchema.$id)).toBe(false);
-    expect(validator.removeSchema('schema://living-narrative-engine/missing.schema.json')).toBe(false);
+    expect(
+      validator.removeSchema(
+        'schema://living-narrative-engine/missing.schema.json'
+      )
+    ).toBe(false);
     expect(validator.removeSchema('   ')).toBe(false);
 
     await validator.addSchema(relativeSchema, relativeSchema.$id);
@@ -143,9 +147,7 @@ describe('AjvSchemaValidator schema loader integration', () => {
       },
     ]);
 
-    expect(
-      validator.getLoadedSchemaIds()
-    ).toEqual(
+    expect(validator.getLoadedSchemaIds()).toEqual(
       expect.arrayContaining([
         baseSchema.$id,
         absoluteBaseSchema.$id,
@@ -153,25 +155,38 @@ describe('AjvSchemaValidator schema loader integration', () => {
       ])
     );
 
-    const duplicateError =
-      `AjvSchemaValidator: Schema with ID '${relativeSchema.$id}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
+    const duplicateError = `AjvSchemaValidator: Schema with ID '${relativeSchema.$id}' already exists. Ajv does not overwrite. Use removeSchema first if replacement is intended.`;
     await expect(
       validator.addSchema(relativeSchema, relativeSchema.$id)
     ).rejects.toThrow(duplicateError);
 
     await expect(
-      validator.addSchema({}, 'schema://living-narrative-engine/empty.schema.json')
+      validator.addSchema(
+        {},
+        'schema://living-narrative-engine/empty.schema.json'
+      )
     ).rejects.toThrow(/Invalid or empty schemaData provided for ID/);
 
     await expect(
       validator.addSchema(
-        { $id: 'schema://living-narrative-engine/blank-id.schema.json', type: 'object' },
+        {
+          $id: 'schema://living-narrative-engine/blank-id.schema.json',
+          type: 'object',
+        },
         '   '
       )
     ).rejects.toThrow(/Invalid or empty schemaId provided/);
 
-    expect(logger.warnMessages.some((args) => String(args[0]).includes('invalid entry'))).toBe(true);
-    expect(logger.debugMessages.some((args) => String(args[0]).includes('Successfully added'))).toBe(true);
+    expect(
+      logger.warnMessages.some((args) =>
+        String(args[0]).includes('invalid entry')
+      )
+    ).toBe(true);
+    expect(
+      logger.debugMessages.some((args) =>
+        String(args[0]).includes('Successfully added')
+      )
+    ).toBe(true);
   });
 
   it('reports unresolved references and handles batch loading edge cases', async () => {
@@ -187,15 +202,13 @@ describe('AjvSchemaValidator schema loader integration', () => {
 
     await validator.addSchema(baseSchema, baseSchema.$id);
 
-    await expect(
-      validator.addSchemas([])
-    ).rejects.toThrow('addSchemas called with empty or non-array input.');
+    await expect(validator.addSchemas([])).rejects.toThrow(
+      'addSchemas called with empty or non-array input.'
+    );
 
     const unresolvedSchema = {
       $id: 'schema://living-narrative-engine/operations/unresolved.schema.json',
-      allOf: [
-        { $ref: '../missing/missing.schema.json' },
-      ],
+      allOf: [{ $ref: '../missing/missing.schema.json' }],
     };
 
     await validator.addSchema(unresolvedSchema, unresolvedSchema.$id);
@@ -209,7 +222,11 @@ describe('AjvSchemaValidator schema loader integration', () => {
     expect(missingResult.errors?.[0]?.keyword).toBe('schemaNotFound');
 
     expect(validator.getValidator('')).toBeUndefined();
-    expect(validator.getValidator('schema://living-narrative-engine/unknown.schema.json')).toBeUndefined();
+    expect(
+      validator.getValidator(
+        'schema://living-narrative-engine/unknown.schema.json'
+      )
+    ).toBeUndefined();
 
     await expect(
       validator.addSchemas([{ $id: baseSchema.$id, type: 'object' }])
@@ -226,7 +243,9 @@ describe('AjvSchemaValidator schema loader integration', () => {
 
     // The validate() call for a non-existent schema logs this warning
     expect(
-      logger.warnMessages.some((args) => String(args[0]).includes('validate called for schemaId'))
+      logger.warnMessages.some((args) =>
+        String(args[0]).includes('validate called for schemaId')
+      )
     ).toBe(true);
   });
 });

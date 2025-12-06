@@ -190,7 +190,8 @@ export class InjuryStatusPanel extends BoundDomRendererBase {
 
     try {
       // Aggregate injuries for the entity
-      const summary = this.#injuryAggregationService.aggregateInjuries(entityId);
+      const summary =
+        this.#injuryAggregationService.aggregateInjuries(entityId);
 
       // Render based on the summary
       this.#renderSummary(summary);

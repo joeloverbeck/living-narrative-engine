@@ -59,7 +59,10 @@ describe('AjvSchemaValidator fault tolerance integration', () => {
     }
 
     const logger = new RecordingLogger();
-    const ajvInstance = new NonRetrievableAjv({ allErrors: true, strict: false });
+    const ajvInstance = new NonRetrievableAjv({
+      allErrors: true,
+      strict: false,
+    });
     addFormats(ajvInstance);
     const validator = new AjvSchemaValidator({ logger, ajvInstance });
 
@@ -70,7 +73,9 @@ describe('AjvSchemaValidator fault tolerance integration', () => {
     };
 
     // Schema addition should succeed without post-add verification
-    await expect(validator.addSchema(schema, schema.$id)).resolves.toBeUndefined();
+    await expect(
+      validator.addSchema(schema, schema.$id)
+    ).resolves.toBeUndefined();
 
     // No warning about retrieval failure at add time (performance optimization)
     expect(
@@ -86,7 +91,8 @@ describe('AjvSchemaValidator fault tolerance integration', () => {
   it('surfaces Ajv validation errors when schema registration throws', async () => {
     class ExplodingAjv extends Ajv {
       addSchema(schema, key) {
-        const id = typeof key === 'string' && key.length > 0 ? key : schema?.$id;
+        const id =
+          typeof key === 'string' && key.length > 0 ? key : schema?.$id;
         if (id === 'schema://diagnostics/exploding.schema.json') {
           const error = new Error('schema explosion');
           error.errors = [
@@ -127,7 +133,11 @@ describe('AjvSchemaValidator fault tolerance integration', () => {
 
   it('wraps runtime exceptions from Ajv validator functions with diagnostic context', async () => {
     const logger = new RecordingLogger();
-    const ajvInstance = new Ajv({ allErrors: true, strict: false, validateFormats: false });
+    const ajvInstance = new Ajv({
+      allErrors: true,
+      strict: false,
+      validateFormats: false,
+    });
     addFormats(ajvInstance);
     const validator = new AjvSchemaValidator({ logger, ajvInstance });
 
@@ -169,13 +179,15 @@ describe('AjvSchemaValidator fault tolerance integration', () => {
     const logger = new RecordingLogger();
     const validator = new AjvSchemaValidator({ logger });
 
-    await expect(
-      validator.addSchemas([null])
-    ).rejects.toThrow('All schemas must be objects with a valid $id.');
+    await expect(validator.addSchemas([null])).rejects.toThrow(
+      'All schemas must be objects with a valid $id.'
+    );
 
     expect(
       logger.errorMessages.some((args) =>
-        String(args[0]).includes('All schemas must be objects with a valid $id.')
+        String(args[0]).includes(
+          'All schemas must be objects with a valid $id.'
+        )
       )
     ).toBe(true);
   });
@@ -231,9 +243,7 @@ describe('AjvSchemaValidator fault tolerance integration', () => {
 
     expect(combinedResult).toEqual(ajvOnlyResult);
     expect(combinedResult.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ keyword: 'required' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ keyword: 'required' })])
     );
   });
 });

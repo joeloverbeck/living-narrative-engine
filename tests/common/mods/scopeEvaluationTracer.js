@@ -83,8 +83,12 @@ export class ScopeEvaluationTracer {
     const stepDuration = stepEndTime - stepStartTime;
 
     // Update performance metrics
-    const currentTotal = this.#performanceMetrics.resolverTimes.get(resolverName) || 0;
-    this.#performanceMetrics.resolverTimes.set(resolverName, currentTotal + stepDuration);
+    const currentTotal =
+      this.#performanceMetrics.resolverTimes.get(resolverName) || 0;
+    this.#performanceMetrics.resolverTimes.set(
+      resolverName,
+      currentTotal + stepDuration
+    );
     this.#performanceMetrics.stepTimes.push({
       resolver: resolverName,
       duration: stepDuration,
@@ -202,11 +206,13 @@ export class ScopeEvaluationTracer {
         totalTime: time,
         percentage: (time / totalDuration) * 100,
         stepCount: this.#performanceMetrics.stepTimes.filter(
-          s => s.resolver === resolver
+          (s) => s.resolver === resolver
         ).length,
-        averageTime: time / this.#performanceMetrics.stepTimes.filter(
-          s => s.resolver === resolver
-        ).length,
+        averageTime:
+          time /
+          this.#performanceMetrics.stepTimes.filter(
+            (s) => s.resolver === resolver
+          ).length,
       });
     }
 
@@ -235,7 +241,8 @@ export class ScopeEvaluationTracer {
       filterEvaluation: {
         count: filterEvalCount,
         totalTime: totalFilterTime,
-        averageTime: filterEvalCount > 0 ? totalFilterTime / filterEvalCount : 0,
+        averageTime:
+          filterEvalCount > 0 ? totalFilterTime / filterEvalCount : 0,
         percentage: (totalFilterTime / totalDuration) * 100,
       },
       slowestOperations: {
@@ -278,15 +285,19 @@ export class ScopeEvaluationTracer {
   format(options = {}) {
     const { performanceFocus = false } = options;
     if (this.#steps.length === 0) {
-      return 'SCOPE EVALUATION TRACE:\n' +
+      return (
+        'SCOPE EVALUATION TRACE:\n' +
         '================================================================================\n' +
         'No steps recorded.\n' +
-        '================================================================================\n';
+        '================================================================================\n'
+      );
     }
 
     const lines = [];
     lines.push('SCOPE EVALUATION TRACE:');
-    lines.push('================================================================================');
+    lines.push(
+      '================================================================================'
+    );
     lines.push('');
 
     if (performanceFocus) {
@@ -297,26 +308,36 @@ export class ScopeEvaluationTracer {
       lines.push('');
 
       lines.push('Resolver Timing:');
-      metrics.resolverStats.forEach(stat => {
+      metrics.resolverStats.forEach((stat) => {
         const resolverPadded = stat.resolver.padEnd(20);
         const timePart = `${stat.totalTime.toFixed(2)}ms`;
         const percentPart = `(${stat.percentage.toFixed(1)}%)`;
         const detailsPart = `[${stat.stepCount} steps, avg: ${stat.averageTime.toFixed(2)}ms]`;
-        lines.push(`  ${resolverPadded} ${timePart} ${percentPart} ${detailsPart}`);
+        lines.push(
+          `  ${resolverPadded} ${timePart} ${percentPart} ${detailsPart}`
+        );
       });
 
       lines.push('');
       lines.push('Filter Evaluation:');
       lines.push(`  Count: ${metrics.filterEvaluation.count}`);
-      lines.push(`  Total Time: ${metrics.filterEvaluation.totalTime.toFixed(2)}ms`);
-      lines.push(`  Average: ${metrics.filterEvaluation.averageTime.toFixed(2)}ms`);
-      lines.push(`  Percentage: ${metrics.filterEvaluation.percentage.toFixed(1)}%`);
+      lines.push(
+        `  Total Time: ${metrics.filterEvaluation.totalTime.toFixed(2)}ms`
+      );
+      lines.push(
+        `  Average: ${metrics.filterEvaluation.averageTime.toFixed(2)}ms`
+      );
+      lines.push(
+        `  Percentage: ${metrics.filterEvaluation.percentage.toFixed(1)}%`
+      );
 
       if (metrics.slowestOperations.steps.length > 0) {
         lines.push('');
         lines.push('Slowest Operations:');
         metrics.slowestOperations.steps.slice(0, 3).forEach((step, i) => {
-          lines.push(`  ${i + 1}. ${step.resolver}: ${step.duration.toFixed(2)}ms`);
+          lines.push(
+            `  ${i + 1}. ${step.resolver}: ${step.duration.toFixed(2)}ms`
+          );
         });
       }
 
@@ -336,20 +357,23 @@ export class ScopeEvaluationTracer {
       if (step.type === 'RESOLVER_STEP') {
         // Flush any pending filter evaluations
         if (filterEvaluations.length > 0) {
-          lines.push(...this.#formatFilterEvaluations(
-            currentFilterStepNumber,
-            filterEvaluations,
-            performanceFocus
-          ));
+          lines.push(
+            ...this.#formatFilterEvaluations(
+              currentFilterStepNumber,
+              filterEvaluations,
+              performanceFocus
+            )
+          );
           filterEvaluations.length = 0;
           stepNumber++;
         }
 
         // Format resolver step
         const stepHeader = `${stepNumber}. [${step.resolver}] ${step.operation}`;
-        const stepDuration = performanceFocus && step.duration !== undefined
-          ? ` (${step.duration.toFixed(2)}ms)`
-          : '';
+        const stepDuration =
+          performanceFocus && step.duration !== undefined
+            ? ` (${step.duration.toFixed(2)}ms)`
+            : '';
         lines.push(stepHeader + stepDuration);
         lines.push(`   Input: ${this.#formatSerializedValue(step.input)}`);
         lines.push(`   Output: ${this.#formatSerializedValue(step.output)}`);
@@ -364,11 +388,13 @@ export class ScopeEvaluationTracer {
       } else if (step.type === 'ERROR') {
         // Flush any pending filter evaluations
         if (filterEvaluations.length > 0) {
-          lines.push(...this.#formatFilterEvaluations(
-            currentFilterStepNumber,
-            filterEvaluations,
-            performanceFocus
-          ));
+          lines.push(
+            ...this.#formatFilterEvaluations(
+              currentFilterStepNumber,
+              filterEvaluations,
+              performanceFocus
+            )
+          );
           filterEvaluations.length = 0;
           stepNumber++;
         }
@@ -386,17 +412,23 @@ export class ScopeEvaluationTracer {
 
     // Flush any remaining filter evaluations
     if (filterEvaluations.length > 0) {
-      lines.push(...this.#formatFilterEvaluations(
-        currentFilterStepNumber,
-        filterEvaluations,
-        performanceFocus
-      ));
+      lines.push(
+        ...this.#formatFilterEvaluations(
+          currentFilterStepNumber,
+          filterEvaluations,
+          performanceFocus
+        )
+      );
     }
 
     // Add summary
     const summary = this.#calculateSummary();
-    lines.push('================================================================================');
-    lines.push(`Summary: ${summary.totalSteps} steps, ${summary.duration}ms, Final size: ${summary.finalOutputSize}`);
+    lines.push(
+      '================================================================================'
+    );
+    lines.push(
+      `Summary: ${summary.totalSteps} steps, ${summary.duration}ms, Final size: ${summary.finalOutputSize}`
+    );
 
     return lines.join('\n');
   }
@@ -469,9 +501,9 @@ export class ScopeEvaluationTracer {
    */
   #formatSerializedValue(serialized) {
     if (serialized.type === 'Set' || serialized.type === 'Array') {
-      const items = serialized.values.map(v =>
-        typeof v === 'string' ? `'${v}'` : String(v)
-      ).join(', ');
+      const items = serialized.values
+        .map((v) => (typeof v === 'string' ? `'${v}'` : String(v)))
+        .join(', ');
       const suffix = serialized.truncated ? '...' : '';
       return `${serialized.type} (${serialized.size} item${serialized.size !== 1 ? 's' : ''}) [${items}${suffix}]`;
     }
@@ -494,7 +526,9 @@ export class ScopeEvaluationTracer {
    */
   #formatFilterEvaluations(stepNumber, evaluations, performanceFocus = false) {
     const lines = [];
-    lines.push(`${stepNumber}. [FilterResolver] Evaluating ${evaluations.length} entit${evaluations.length !== 1 ? 'ies' : 'y'}`);
+    lines.push(
+      `${stepNumber}. [FilterResolver] Evaluating ${evaluations.length} entit${evaluations.length !== 1 ? 'ies' : 'y'}`
+    );
     lines.push('');
 
     // Group by result and format
@@ -503,9 +537,10 @@ export class ScopeEvaluationTracer {
       const status = evaluation.result ? 'PASS' : 'FAIL';
 
       const entityHeader = `   Entity: ${evaluation.entityId}`;
-      const evalDuration = performanceFocus && evaluation.duration !== undefined
-        ? ` (${evaluation.duration.toFixed(2)}ms)`
-        : '';
+      const evalDuration =
+        performanceFocus && evaluation.duration !== undefined
+          ? ` (${evaluation.duration.toFixed(2)}ms)`
+          : '';
       lines.push(entityHeader + evalDuration);
       lines.push(`   Result: ${status} ${symbol}`);
 
@@ -518,7 +553,9 @@ export class ScopeEvaluationTracer {
     }
 
     // Calculate output
-    const passedEntities = evaluations.filter(e => e.result).map(e => e.entityId);
+    const passedEntities = evaluations
+      .filter((e) => e.result)
+      .map((e) => e.entityId);
     const outputSerialized = this.#serializeValue(new Set(passedEntities));
     lines.push(`   Output: ${this.#formatSerializedValue(outputSerialized)}`);
     lines.push('');
@@ -544,7 +581,10 @@ export class ScopeEvaluationTracer {
     }
 
     // Check if this is a FilterClauseAnalyzer breakdown structure
-    if (breakdown.type && ['operator', 'variable', 'value'].includes(breakdown.type)) {
+    if (
+      breakdown.type &&
+      ['operator', 'variable', 'value'].includes(breakdown.type)
+    ) {
       return this.#formatFilterClauseBreakdown(breakdown, indent);
     }
 
@@ -579,7 +619,9 @@ export class ScopeEvaluationTracer {
 
     if (breakdown.type === 'operator') {
       const symbol = breakdown.result ? '✓' : '✗';
-      lines.push(`${prefix}${symbol} ${breakdown.operator}: ${breakdown.description}`);
+      lines.push(
+        `${prefix}${symbol} ${breakdown.operator}: ${breakdown.description}`
+      );
 
       if (breakdown.children && Array.isArray(breakdown.children)) {
         for (const child of breakdown.children) {
@@ -589,9 +631,10 @@ export class ScopeEvaluationTracer {
     } else if (breakdown.type === 'variable') {
       lines.push(`${prefix}  ${breakdown.description}`);
     } else if (breakdown.type === 'value') {
-      const valueStr = typeof breakdown.value === 'string'
-        ? `"${breakdown.value}"`
-        : String(breakdown.value);
+      const valueStr =
+        typeof breakdown.value === 'string'
+          ? `"${breakdown.value}"`
+          : String(breakdown.value);
       lines.push(`${prefix}  value: ${valueStr}`);
     }
 
@@ -605,11 +648,13 @@ export class ScopeEvaluationTracer {
    * @returns {object} Summary object.
    */
   #calculateSummary() {
-    const resolverSteps = this.#steps.filter(s => s.type === 'RESOLVER_STEP');
-    const filterEvaluations = this.#steps.filter(s => s.type === 'FILTER_EVALUATION');
-    const errors = this.#steps.filter(s => s.type === 'ERROR');
+    const resolverSteps = this.#steps.filter((s) => s.type === 'RESOLVER_STEP');
+    const filterEvaluations = this.#steps.filter(
+      (s) => s.type === 'FILTER_EVALUATION'
+    );
+    const errors = this.#steps.filter((s) => s.type === 'ERROR');
 
-    const resolversUsed = [...new Set(resolverSteps.map(s => s.resolver))];
+    const resolversUsed = [...new Set(resolverSteps.map((s) => s.resolver))];
 
     // Get final output from last resolver step
     let finalOutput = null;

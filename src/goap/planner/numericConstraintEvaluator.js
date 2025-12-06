@@ -146,7 +146,10 @@ class NumericConstraintEvaluator {
         });
       } else {
         activeStateView = createPlanningStateView(context?.state ?? context, {
-          metadata: { origin: 'NumericConstraintEvaluator', ...options.metadata },
+          metadata: {
+            origin: 'NumericConstraintEvaluator',
+            ...options.metadata,
+          },
         });
         currentValue = activeStateView.assertPath(varPath, {
           path: varPath,
@@ -202,7 +205,9 @@ class NumericConstraintEvaluator {
     }
 
     const keys = Object.keys(constraint);
-    return keys.some((key) => NumericConstraintEvaluator.#NUMERIC_OPERATORS.includes(key));
+    return keys.some((key) =>
+      NumericConstraintEvaluator.#NUMERIC_OPERATORS.includes(key)
+    );
   }
 
   /**
@@ -284,7 +289,13 @@ class NumericConstraintEvaluator {
     }
   }
 
-  #handleNumericFallback({ metadata = {}, stateView, varPath = null, operator = null, reason = 'numeric-fallback' }) {
+  #handleNumericFallback({
+    metadata = {},
+    stateView,
+    varPath = null,
+    operator = null,
+    reason = 'numeric-fallback',
+  }) {
     const actorId =
       metadata.actorId ||
       stateView?.getActorId() ||
@@ -322,10 +333,13 @@ class NumericConstraintEvaluator {
             }
           );
         } catch (error) {
-          this.#logger.warn('Failed to emit numeric constraint fallback event', {
-            error,
-            payload,
-          });
+          this.#logger.warn(
+            'Failed to emit numeric constraint fallback event',
+            {
+              error,
+              payload,
+            }
+          );
         }
       }
     }

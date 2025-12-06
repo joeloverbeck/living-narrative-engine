@@ -31,22 +31,23 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
     });
 
     it('should use correct orange visual styling', () => {
-      validateVisualStyling(
-        drawAttentionToAssAction.visual,
-        'Orange Theme',
-        {
-          backgroundColor: '#f57f17',
-          textColor: '#000000',
-          hoverBackgroundColor: '#f9a825',
-          hoverTextColor: '#212121',
-        }
-      );
+      validateVisualStyling(drawAttentionToAssAction.visual, 'Orange Theme', {
+        backgroundColor: '#f57f17',
+        textColor: '#000000',
+        hoverBackgroundColor: '#f9a825',
+        hoverTextColor: '#212121',
+      });
     });
 
     it('should require actor to not be hugging anyone', () => {
       validateComponentRequirements(drawAttentionToAssAction, {
         required: {},
-        forbidden: { actor: ['positioning:hugging', 'positioning:doing_complex_performance'] },
+        forbidden: {
+          actor: [
+            'positioning:hugging',
+            'positioning:doing_complex_performance',
+          ],
+        },
       });
     });
 
@@ -78,9 +79,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
       expect(drawAttentionToAssAction.description).toBe(
         'Angle and position yourself to flatter your buttocks, drawing attention to your ass in an alluring manner.'
       );
-      expect(drawAttentionToAssAction.description.length).toBeGreaterThan(
-        0
-      );
+      expect(drawAttentionToAssAction.description.length).toBeGreaterThan(0);
     });
 
     it('should be self-targeting action', () => {
@@ -106,8 +105,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
     });
 
     it('should require lower torso clothing', () => {
-      const clothingPrerequisite =
-        drawAttentionToAssAction.prerequisites[1];
+      const clothingPrerequisite = drawAttentionToAssAction.prerequisites[1];
       expect(clothingPrerequisite.logic.hasClothingInSlot).toBeDefined();
       expect(clothingPrerequisite.logic.hasClothingInSlot).toEqual([
         'actor',
@@ -116,8 +114,7 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
     });
 
     it('should require other actors at location', () => {
-      const otherActorsPrerequisite =
-        drawAttentionToAssAction.prerequisites[2];
+      const otherActorsPrerequisite = drawAttentionToAssAction.prerequisites[2];
       expect(
         otherActorsPrerequisite.logic.hasOtherActorsAtLocation
       ).toBeDefined();

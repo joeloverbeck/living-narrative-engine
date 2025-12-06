@@ -6,19 +6,23 @@
 **Related GOAP Spec**: `specs/goap-system-specs.md` - Performance considerations
 
 ## Summary
+
 Create comprehensive performance benchmarks for numeric constraint planning to supplement existing GOAP performance tests, focusing on missing coverage areas like memory leak detection, percentile statistics, and batch goal testing.
 
 ## Problem
+
 While basic numeric constraint planning performance is already tested in `multiActionPlanning.performance.test.js` and `heuristicCalculation.performance.test.js`, there are gaps in coverage for memory leak detection, statistical analysis (p95/p99), and comprehensive batch testing of diverse goal types.
 
 ## Assumptions Corrected
 
 ### ❌ Incorrect Assumptions from Original Ticket:
+
 1. **Spec file reference**: `specs/modify-component-planner-support.md` does NOT exist (removed from references)
 2. **Dependencies**: MODCOMPLASUP-001 through -006 could NOT be verified (no evidence of these tickets)
 3. **New functionality**: Numeric constraint planning is NOT new - it's already implemented and tested
 
 ### ✅ Verified Existing Coverage:
+
 1. **`tests/performance/goap/multiActionPlanning.performance.test.js`** (329 lines):
    - ✅ Tests hunger reduction with numeric goals (< 100ms)
    - ✅ Tests gold accumulation with MODIFY_COMPONENT (< 100ms)
@@ -33,6 +37,7 @@ While basic numeric constraint planning performance is already tested in `multiA
    - ✅ Tests with moderate condition counts (20 conditions)
 
 ### ❌ Missing Coverage (This Ticket's Scope):
+
 1. Health restoration scenario (has hunger/gold but not health)
 2. Comprehensive batch test with 10 diverse goal types (thirst, energy, strength, agility, intelligence, experience, reputation)
 3. Memory leak detection with GC-based testing
@@ -41,7 +46,9 @@ While basic numeric constraint planning performance is already tested in `multiA
 6. Mixed component + numeric goals in single test
 
 ## Revised Scope
+
 Instead of creating all tests from scratch, this ticket will:
+
 1. **Supplement existing tests** with missing scenarios
 2. **Add memory leak detection** (not currently tested for GOAP)
 3. **Add percentile statistics** collection (p95, p99)
@@ -51,18 +58,21 @@ Instead of creating all tests from scratch, this ticket will:
 ## Performance Targets
 
 ### Planning Performance
+
 - **Simple numeric goal**: < 100ms for plan creation
 - **Multiple numeric goals**: < 1 second for 10 different goals
 - **Heuristic calculation**: < 5ms per goal evaluation
 - **No regression**: Existing component-based planning maintains current performance
 
 ### Memory Performance
+
 - **Memory growth**: < 1MB per 100 planning iterations
 - **No memory leaks**: Memory usage stable over 1000+ plans
 
 ## Implementation Details
 
 ### Test File Location
+
 `tests/performance/goap/numericPlanning.performance.test.js` (NEW - Supplementary tests)
 
 **Note**: This file will contain ONLY the missing test scenarios identified above. Existing tests in `multiActionPlanning.performance.test.js` and `heuristicCalculation.performance.test.js` remain unchanged.
@@ -106,7 +116,7 @@ describe('Batch Planning Performance', () => {
       createAgilityGoal(),
       createIntelligenceGoal(),
       createExperienceGoal(),
-      createReputationGoal()
+      createReputationGoal(),
     ];
 
     const startTime = performance.now();
@@ -166,9 +176,9 @@ describe('Heuristic Calculation Performance', () => {
         and: [
           { '<=': [{ var: 'actor.hunger' }, 30] },
           { '>=': [{ var: 'actor.health' }, 80] },
-          { '>=': [{ var: 'actor.gold' }, 100] }
-        ]
-      }
+          { '>=': [{ var: 'actor.gold' }, 100] },
+        ],
+      },
     };
 
     const startTime = performance.now();
@@ -194,7 +204,7 @@ describe('Performance Regression Tests', () => {
 
     const componentGoal = {
       id: 'test:component_goal',
-      goalState: { has_component: ['actor', 'core:armed'] }
+      goalState: { has_component: ['actor', 'core:armed'] },
     };
 
     const startTime = performance.now();
@@ -217,7 +227,7 @@ describe('Performance Regression Tests', () => {
       { goalState: { has_component: ['actor', 'core:armed'] } },
       { goalState: { '<=': [{ var: 'actor.hunger' }, 30] } },
       { goalState: { has_component: ['actor', 'core:shelter'] } },
-      { goalState: { '>=': [{ var: 'actor.health' }, 80] } }
+      { goalState: { '>=': [{ var: 'actor.health' }, 80] } },
     ];
 
     const startTime = performance.now();
@@ -288,7 +298,8 @@ describe('Memory Performance', () => {
     const firstAverage = firstHalf.reduce((a, b) => a + b) / 5;
     const secondAverage = secondHalf.reduce((a, b) => a + b) / 5;
 
-    const percentageIncrease = ((secondAverage - firstAverage) / firstAverage) * 100;
+    const percentageIncrease =
+      ((secondAverage - firstAverage) / firstAverage) * 100;
 
     expect(percentageIncrease).toBeLessThan(5); // < 5% growth
   });
@@ -305,7 +316,7 @@ describe('Performance Metrics Collection', () => {
     const metrics = {
       planCreationTimes: [],
       heuristicCalculationTimes: [],
-      actionApplicabilityTimes: []
+      actionApplicabilityTimes: [],
     };
 
     for (const goal of goals) {
@@ -321,7 +332,7 @@ describe('Performance Metrics Collection', () => {
       p95: calculatePercentile(metrics.planCreationTimes, 95),
       p99: calculatePercentile(metrics.planCreationTimes, 99),
       min: Math.min(...metrics.planCreationTimes),
-      max: Math.max(...metrics.planCreationTimes)
+      max: Math.max(...metrics.planCreationTimes),
     };
 
     console.log('Performance Statistics:', stats);
@@ -333,6 +344,7 @@ describe('Performance Metrics Collection', () => {
 ```
 
 ## Dependencies
+
 - ~~MODCOMPLASUP-001 through MODCOMPLASUP-006~~ (❌ Could not verify - no evidence of these tickets)
 - ✅ Numeric constraint planning already implemented (NumericConstraintEvaluator, GoalDistanceHeuristic, PlanningEffectsSimulator)
 - ✅ Existing performance tests already validate basic performance targets
@@ -341,6 +353,7 @@ describe('Performance Metrics Collection', () => {
 ## Testing Requirements
 
 ### Execution
+
 ```bash
 # Run performance tests
 npm run test:performance -- tests/performance/goap/numericPlanning.performance.test.js
@@ -353,7 +366,9 @@ npm run test:performance:compare
 ```
 
 ### Reporting
+
 Create performance report with:
+
 - Test scenario descriptions
 - Performance metrics (mean, median, p95, p99)
 - Memory usage statistics
@@ -361,6 +376,7 @@ Create performance report with:
 - Regression analysis
 
 ## Acceptance Criteria
+
 - [x] Performance test file created (`tests/performance/goap/numericPlanning.performance.test.js`)
 - [x] Health restoration scenario (supplementary to existing hunger/gold tests)
 - [x] Batch planning tests (2 scenarios: 10 diverse goals, average < 100ms)
@@ -374,23 +390,28 @@ Create performance report with:
 - [x] Ticket assumptions corrected and documented
 
 ## Performance Targets Summary
-| Metric | Target | Test |
-|--------|--------|------|
-| Simple goal planning | < 100ms | ✅ |
-| Batch planning (10 goals) | < 1 second | ✅ |
-| Heuristic calculation | < 5ms | ✅ |
-| Component-based (no regression) | < 60ms | ✅ |
-| Memory growth (1000 plans) | < 1MB | ✅ |
-| Memory stability | < 5% increase | ✅ |
+
+| Metric                          | Target        | Test |
+| ------------------------------- | ------------- | ---- |
+| Simple goal planning            | < 100ms       | ✅   |
+| Batch planning (10 goals)       | < 1 second    | ✅   |
+| Heuristic calculation           | < 5ms         | ✅   |
+| Component-based (no regression) | < 60ms        | ✅   |
+| Memory growth (1000 plans)      | < 1MB         | ✅   |
+| Memory stability                | < 5% increase | ✅   |
 
 ## Estimated Effort
+
 1 hour
 
 ## Final Notes
+
 This ticket supplements existing GOAP performance tests with additional scenarios focused on memory leak detection and statistical analysis. The core numeric constraint planning functionality is already implemented, tested in existing performance tests, and documented (see `docs/goap/numeric-constraints-guide.md`).
 
 ## Follow-up
+
 After implementation complete, consider:
+
 - Profiling specific bottlenecks if performance issues found
 - Optimizing heuristic calculation if needed
 - Adding more complex benchmark scenarios
@@ -405,6 +426,7 @@ After implementation complete, consider:
 ### What Was Actually Changed vs Originally Planned
 
 #### Major Scope Corrections:
+
 1. **Discovered Existing Coverage**: Found that `multiActionPlanning.performance.test.js` (329 lines) and `heuristicCalculation.performance.test.js` (143 lines) already test core numeric planning performance (hunger reduction, gold accumulation, heuristic calculation).
 
 2. **Corrected False Assumptions**:
@@ -415,11 +437,13 @@ After implementation complete, consider:
 3. **Refined Scope to Missing Coverage Only**: Instead of creating duplicate tests, focused on supplementary scenarios not covered by existing tests.
 
 #### Files Created:
+
 - **`tests/performance/goap/numericPlanning.performance.test.js`** (928 lines)
   - Supplementary performance tests for missing coverage areas
   - 8 test scenarios across 6 describe blocks
 
 #### Test Scenarios Added:
+
 1. **Health Restoration** (1 test) - Complements existing hunger/gold tests
 2. **Batch Planning** (2 tests) - 10 diverse goal types (thirst, energy, strength, agility, intelligence, experience, reputation)
 3. **Complex Multi-Constraint Goals** (1 test) - AND of multiple numeric constraints
@@ -429,12 +453,14 @@ After implementation complete, consider:
 7. **Statistical Analysis** (1 test) - Collects p95, p99 percentiles
 
 #### Ticket Updates:
+
 - **Corrected assumptions section** with detailed analysis of existing vs missing coverage
 - **Updated dependencies** to reflect actual state
 - **Revised scope** to focus on supplementary tests only
 - **Updated acceptance criteria** to match actual deliverables
 
 #### Technical Quality:
+
 - ✅ Code structure matches existing GOAP performance tests
 - ✅ Uses established test helpers (`createGoapTestSetup`, `createTestGoal`, `createTestTask`)
 - ✅ All helper functions documented with JSDoc
@@ -442,12 +468,14 @@ After implementation complete, consider:
 - ✅ Includes percentile calculation utilities (p95, p99, median, mean)
 
 #### Environment Limitations:
+
 - ⚠️ Test execution blocked by environment configuration issues (jest-environment-jsdom not installed, babel plugin issues)
 - ✅ Code structure verified manually by comparing with working existing tests
 - ⚠️ ESLint blocked by missing 'globals' package
 - 📝 Tests will run once environment is properly configured in CI/CD
 
 ### Summary:
+
 Successfully created comprehensive supplementary performance tests for numeric constraint planning. Corrected significant assumptions about missing functionality (which was actually already implemented and tested). The new test file adds 8 tests covering previously untested scenarios: health restoration, diverse batch goal testing, complex multi-constraint goals, mixed goals, memory leak detection, memory stability, and statistical analysis with percentiles.
 
 The ticket's core value was in identifying gaps in existing test coverage rather than implementing new functionality, which proved to be already complete.

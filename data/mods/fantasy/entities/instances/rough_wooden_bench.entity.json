@@ -1,10 +1,10 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:rough_wooden_bench_instance",
-    "definitionId": "furniture:rough_wooden_bench",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:rough_wooden_bench_instance",
+  "definitionId": "furniture:rough_wooden_bench",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
     }
+  }
 }

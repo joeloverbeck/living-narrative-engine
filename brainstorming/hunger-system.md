@@ -8,7 +8,7 @@ First of all, we want to tie hunger to actually having an organ that can digest.
 
 We would need a new mod named 'metabolism'. It would its own mod structure inside the data/mods/ structure. The 'metabolism' mod should be dependent on the 'anatomy' mod.
 
-We likely would need a new operation handler (as those in src/logic/operationHandlers/ ) that calculates burn rate. This operation handler would optionally be used in actions that would burn calories at higher rate than normal (e.g. the rules of the actions in the mods data/mods/movement/ , data/mods/ballet/ , data/mods/gymnastics/ , the sex mods, etc.). For example, walking would burn X calories, or ballet would burn X * 3 calories. For future work, having low energy as reported by the metabolism mod could prevent some exercise actions from being available.
+We likely would need a new operation handler (as those in src/logic/operationHandlers/ ) that calculates burn rate. This operation handler would optionally be used in actions that would burn calories at higher rate than normal (e.g. the rules of the actions in the mods data/mods/movement/ , data/mods/ballet/ , data/mods/gymnastics/ , the sex mods, etc.). For example, walking would burn X calories, or ballet would burn X \* 3 calories. For future work, having low energy as reported by the metabolism mod could prevent some exercise actions from being available.
 
 ## The Digestion Buffer system
 
@@ -40,6 +40,7 @@ Volume: Reduces the "Hunger" status (stops stomach rumbling, removes distraction
 Calories: Refills your "Stamina/Long-term Health" pool.
 
 ### The Gameplay Scenarios:
+
 Scenario A: You eat a bag of raw spinach. Your Volume is full (you feel full), but your Calories are low. You won't starve, but you will be weak and have low stamina.
 Scenario B: You eat a stick of butter or an energy bar. Your Volume is low (you still feel hungry/empty), but your Calories are high. You have energy, but your character complains of hunger pangs.
 
@@ -72,7 +73,7 @@ The Stomach fills to 40.
 
 Over the next 10 minutes, that 40 ticks down, filling an invisible "Calorie Store."
 
-Hypotheticals for future synergies: 
+Hypotheticals for future synergies:
 
 If the Calorie Store is high, they get the "Well Fed" buff (High stamina regen).
 
@@ -98,6 +99,7 @@ Simulation Layer: You need a variable representing ProjectedEnergy = CurrentEner
 Planner Logic: The GOAP precondition should not be has_energy, but is_satiated.
 
 ### The Fix: When the AI eats, the StomachContent goes up immediately. The AI planner must check: "Is my current energy low?" AND "Is my stomach empty?"
+
 If Energy is Low + Stomach is Full = State: Digesting (Do not eat, maybe rest).
 If Energy is Low + Stomach is Empty = State: Hungry (Find food).
 
@@ -105,8 +107,8 @@ This could be handled with a custom operator or operators for Json Logic (such a
 
 ## Calculations
 
-Burn Rate: BaseMetabolicRate * ActivityMultiplier * time_delta
-Digestion: DigestionRate * time_delta
+Burn Rate: BaseMetabolicRate _ ActivityMultiplier _ time_delta
+Digestion: DigestionRate \* time_delta
 
 ## Abstracting "Food" and "Stomach"
 
@@ -117,12 +119,15 @@ Perhaps we should go even further, given that in the future we may want to have 
 Instead of hardcoding "Stomach" and "Food," use abstract component definitions:
 
 ### The Container: Component: FuelConverter.
+
 Properties: capacity, conversion_rate, accepted_fuel_tags (e.g., "organic", "blood", "electricity").
 
 ### The Item: Component: FuelSource.
+
 Properties: potential_energy (Calories), bulk (Volume), fuel_tags.
 
 ### Robustness: This allows you to swap the FuelConverter component.
+
 Human: Accepts "organic", medium capacity, slow conversion.
 Vampire: Accepts "blood", low capacity, instant conversion (high conversion_rate).
 Steam Engine: Accepts "coal", high capacity, burns fast.
@@ -140,6 +145,7 @@ FuelConverter (on body part): buffer_storage, conversion_rate, efficiency.
 MetabolicStore (on root actor): current_energy, max_energy.
 
 ### Systems:
+
 TurnHook: calculates burn based on fixed delta time.
 Individual rules for actions that produce exertion would use a new operation handler that passes an exertion multiplier. The operation handler calculates burn, and moves buffer to store.
 

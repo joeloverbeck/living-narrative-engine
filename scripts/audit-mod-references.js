@@ -20,12 +20,13 @@ const SEVERITY_RULES = [
   {
     severity: 'Critical',
     approach: 'Registry',
-    test: filePath => /operationHandlers|services|engine/.test(filePath),
+    test: (filePath) => /operationHandlers|services|engine/.test(filePath),
   },
   {
     severity: 'High',
     approach: 'Plugin',
-    test: filePath => /systems|managers|rules|controllers|routes/.test(filePath),
+    test: (filePath) =>
+      /systems|managers|rules|controllers|routes/.test(filePath),
   },
   {
     severity: 'Medium',
@@ -41,7 +42,7 @@ const SEVERITY_RULES = [
 function walkDirectory(dirPath) {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
   let files = [];
-  entries.forEach(entry => {
+  entries.forEach((entry) => {
     if (entry.name === 'node_modules' || entry.name.startsWith('.')) {
       return;
     }
@@ -61,7 +62,7 @@ function walkDirectory(dirPath) {
  * @param filePath
  */
 function determineSeverity(filePath) {
-  const matchedRule = SEVERITY_RULES.find(rule => rule.test(filePath));
+  const matchedRule = SEVERITY_RULES.find((rule) => rule.test(filePath));
   return matchedRule || SEVERITY_RULES[SEVERITY_RULES.length - 1];
 }
 
@@ -70,14 +71,14 @@ function determineSeverity(filePath) {
  */
 function collectReferences() {
   const files = walkDirectory(SRC_DIR);
-  const results = Object.fromEntries(MODS_TO_AUDIT.map(mod => [mod.id, []]));
+  const results = Object.fromEntries(MODS_TO_AUDIT.map((mod) => [mod.id, []]));
 
-  files.forEach(filePath => {
+  files.forEach((filePath) => {
     const relativePath = path.relative(PROJECT_ROOT, filePath);
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split(/\r?\n/);
 
-    MODS_TO_AUDIT.forEach(mod => {
+    MODS_TO_AUDIT.forEach((mod) => {
       if (!content.includes(`${mod.id}:`)) {
         return;
       }
@@ -108,12 +109,12 @@ function collectReferences() {
  */
 function buildSummaryStats(results) {
   const stats = {};
-  MODS_TO_AUDIT.forEach(mod => {
+  MODS_TO_AUDIT.forEach((mod) => {
     const entries = results[mod.id];
     const severityCounts = { Critical: 0, High: 0, Medium: 0 };
     const approachCounts = { Registry: 0, Plugin: 0, Config: 0 };
 
-    entries.forEach(entry => {
+    entries.forEach((entry) => {
       severityCounts[entry.severity] += 1;
       approachCounts[entry.approach] += 1;
     });
@@ -133,33 +134,57 @@ function buildSummaryStats(results) {
  * @param stats
  */
 function renderAuditMarkdown(results, stats) {
-  const totalViolations = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].total, 0);
+  const totalViolations = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].total,
+    0
+  );
   let markdown = '# Hardcoded Mod References - Complete Audit\n\n';
   markdown += `**Generated:** ${new Date().toISOString()}\n`;
   markdown += '**Scope:** Production source code in `src/`\n';
-  markdown += '**Methodology:** Automated scan using `scripts/audit-mod-references.js`\n';
+  markdown +=
+    '**Methodology:** Automated scan using `scripts/audit-mod-references.js`\n';
   markdown += `**Total Violations:** ${totalViolations}\n\n`;
   markdown += '---\n\n';
   markdown += '## Summary Statistics\n\n';
-  markdown += '| Mod | Total Refs | Critical | High | Medium | Registry Candidates | Plugin Candidates | Config Candidates |\n';
-  markdown += '|-----|------------|----------|------|--------|---------------------|-------------------|-------------------|\n';
+  markdown +=
+    '| Mod | Total Refs | Critical | High | Medium | Registry Candidates | Plugin Candidates | Config Candidates |\n';
+  markdown +=
+    '|-----|------------|----------|------|--------|---------------------|-------------------|-------------------|\n';
 
-  MODS_TO_AUDIT.forEach(mod => {
+  MODS_TO_AUDIT.forEach((mod) => {
     const modStats = stats[mod.id];
     markdown += `| ${mod.id} | ${modStats.total} | ${modStats.severity.Critical} | ${modStats.severity.High} | ${modStats.severity.Medium} | ${modStats.approach.Registry} | ${modStats.approach.Plugin} | ${modStats.approach.Config} |\n`;
   });
 
   markdown += '| **TOTAL** | ';
-  const totalCritical = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].severity.Critical, 0);
-  const totalHigh = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].severity.High, 0);
-  const totalMedium = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].severity.Medium, 0);
-  const totalRegistry = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].approach.Registry, 0);
-  const totalPlugin = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].approach.Plugin, 0);
-  const totalConfig = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].approach.Config, 0);
+  const totalCritical = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].severity.Critical,
+    0
+  );
+  const totalHigh = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].severity.High,
+    0
+  );
+  const totalMedium = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].severity.Medium,
+    0
+  );
+  const totalRegistry = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].approach.Registry,
+    0
+  );
+  const totalPlugin = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].approach.Plugin,
+    0
+  );
+  const totalConfig = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].approach.Config,
+    0
+  );
   markdown += `**${totalViolations}** | **${totalCritical}** | **${totalHigh}** | **${totalMedium}** | **${totalRegistry}** | **${totalPlugin}** | **${totalConfig}** |\n`;
   markdown += '\n---\n\n';
 
-  MODS_TO_AUDIT.forEach(mod => {
+  MODS_TO_AUDIT.forEach((mod) => {
     markdown += `## ${mod.label} Mod References\n\n`;
     const entries = results[mod.id];
     if (entries.length === 0) {
@@ -177,13 +202,13 @@ function renderAuditMarkdown(results, stats) {
 
     Object.keys(grouped)
       .sort()
-      .forEach(file => {
+      .forEach((file) => {
         markdown += `### ${file}\n\n`;
         markdown += '| Line | Snippet | Severity | Refactoring Approach |\n';
         markdown += '|------|---------|----------|---------------------|\n';
         grouped[file]
           .sort((a, b) => a.line - b.line)
-          .forEach(entry => {
+          .forEach((entry) => {
             markdown += `| ${entry.line} | \`${entry.snippet}\` | ${entry.severity} | ${entry.approach} |\n`;
           });
         markdown += '\n';
@@ -202,10 +227,13 @@ function renderSummaryMarkdown(stats) {
   markdown += `**Generated:** ${new Date().toISOString()}\n\n`;
   markdown += '| Mod | Count |\n';
   markdown += '|-----|-------|\n';
-  MODS_TO_AUDIT.forEach(mod => {
+  MODS_TO_AUDIT.forEach((mod) => {
     markdown += `| ${mod.id} | ${stats[mod.id].total} |\n`;
   });
-  const total = MODS_TO_AUDIT.reduce((sum, mod) => sum + stats[mod.id].total, 0);
+  const total = MODS_TO_AUDIT.reduce(
+    (sum, mod) => sum + stats[mod.id].total,
+    0
+  );
   markdown += `| **TOTAL** | **${total}** |\n`;
   return markdown;
 }
@@ -240,7 +268,9 @@ function main() {
   const summaryMarkdown = renderSummaryMarkdown(stats);
   writeAuditFiles(auditMarkdown, summaryMarkdown);
   console.log(`Audit saved to ${path.relative(PROJECT_ROOT, AUDIT_DOC_PATH)}`);
-  console.log(`Summary saved to ${path.relative(PROJECT_ROOT, SUMMARY_DOC_PATH)}`);
+  console.log(
+    `Summary saved to ${path.relative(PROJECT_ROOT, SUMMARY_DOC_PATH)}`
+  );
 }
 
 if (require.main === module) {

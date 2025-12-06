@@ -150,7 +150,10 @@ describe('GOAP hunger goals integration', () => {
           currentEnergy: 20,
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(true);
       });
@@ -161,7 +164,10 @@ describe('GOAP hunger goals integration', () => {
           currentEnergy: 5,
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(true);
       });
@@ -172,7 +178,10 @@ describe('GOAP hunger goals integration', () => {
           currentEnergy: 0,
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(true);
       });
@@ -186,7 +195,10 @@ describe('GOAP hunger goals integration', () => {
           bufferStorage: [], // No pending energy
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(true);
       });
@@ -198,7 +210,10 @@ describe('GOAP hunger goals integration', () => {
           bufferStorage: [{ bulk: 2, energy_content: 100 }], // 300 + 100 = 400 < 500
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(true);
       });
@@ -212,7 +227,10 @@ describe('GOAP hunger goals integration', () => {
           bufferStorage: [{ bulk: 2, energy_content: 200 }], // 400 + 200 = 600 >= 500
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(false);
       });
@@ -224,7 +242,10 @@ describe('GOAP hunger goals integration', () => {
           bufferStorage: [],
         });
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(false);
       });
@@ -240,12 +261,19 @@ describe('GOAP hunger goals integration', () => {
         );
 
         // Only add fuel_converter
-        await entityManager.addComponent(actor.id, 'metabolism:fuel_converter', {
-          capacity: 10,
-          accepted_fuel_tags: ['food'],
-        });
+        await entityManager.addComponent(
+          actor.id,
+          'metabolism:fuel_converter',
+          {
+            capacity: 10,
+            accepted_fuel_tags: ['food'],
+          }
+        );
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(false);
       });
@@ -268,7 +296,10 @@ describe('GOAP hunger goals integration', () => {
           }
         );
 
-        const result = evaluateGoalCondition(satisfyHungerGoal.relevance, actor);
+        const result = evaluateGoalCondition(
+          satisfyHungerGoal.relevance,
+          actor
+        );
 
         expect(result).toBe(false);
       });
@@ -355,9 +386,12 @@ describe('GOAP hunger goals integration', () => {
 
   describe('Edge cases', () => {
     it('handles entity with missing hunger_state component', async () => {
-      const actor = await entityManager.createEntityInstance(actorDefinition.id, {
-        instanceId: 'partial-metabolism',
-      });
+      const actor = await entityManager.createEntityInstance(
+        actorDefinition.id,
+        {
+          instanceId: 'partial-metabolism',
+        }
+      );
 
       // Add both required components but NOT hunger_state
       await entityManager.addComponent(actor.id, 'metabolism:metabolic_store', {

@@ -186,7 +186,14 @@ export function validateOperationType(operationType, logger, options = {}) {
   if (!inWhitelist) {
     // If not in whitelist, assume all registrations might be missing
     // (we can't verify without filesystem access)
-    missingRegistrations.push('whitelist', 'schema', 'reference', 'token', 'handler', 'mapping');
+    missingRegistrations.push(
+      'whitelist',
+      'schema',
+      'reference',
+      'token',
+      'handler',
+      'mapping'
+    );
   }
 
   // Build result
@@ -214,7 +221,10 @@ export function validateOperationType(operationType, logger, options = {}) {
 
   // Throw error if requested and validation failed
   if (!result.isValid && throwOnError) {
-    const error = new OperationValidationError(operationType, missingRegistrations);
+    const error = new OperationValidationError(
+      operationType,
+      missingRegistrations
+    );
     logger.error('Operation validation error', {
       operationType,
       errorMessage: error.message,
@@ -243,30 +253,30 @@ const OPERATION_PARAMETER_RULES = {
     required: ['entity_ref', 'result_variable'],
     invalidFields: ['entity_id'], // Common mistake
     fieldCorrections: {
-      entity_id: 'entity_ref'
-    }
+      entity_id: 'entity_ref',
+    },
   },
   QUERY_COMPONENT: {
     required: ['entity_ref', 'component_type', 'result_variable'],
     invalidFields: ['entity_id'],
     fieldCorrections: {
-      entity_id: 'entity_ref'
-    }
+      entity_id: 'entity_ref',
+    },
   },
   ADD_COMPONENT: {
     required: ['entity_ref', 'component_type'],
     invalidFields: ['entity_id'],
     fieldCorrections: {
-      entity_id: 'entity_ref'
-    }
+      entity_id: 'entity_ref',
+    },
   },
   REMOVE_COMPONENT: {
     required: ['entity_ref', 'component_type'],
     invalidFields: ['entity_id'],
     fieldCorrections: {
-      entity_id: 'entity_ref'
-    }
-  }
+      entity_id: 'entity_ref',
+    },
+  },
 };
 
 /**
@@ -289,9 +299,7 @@ function validateOperationParameters(operationType, parameters, path) {
       isValid: false,
       error: `Operation type "${operationType}" requires a parameters object`,
       path,
-      suggestions: [
-        `Required parameters: ${rules.required.join(', ')}`
-      ],
+      suggestions: [`Required parameters: ${rules.required.join(', ')}`],
     };
   }
 
@@ -305,11 +313,13 @@ function validateOperationParameters(operationType, parameters, path) {
           error: `Invalid parameter "${invalidField}" in ${operationType} operation`,
           path: `${path}.parameters`,
           suggestions: [
-            correction ? `Use "${correction}" instead of "${invalidField}"` : `Remove "${invalidField}"`,
+            correction
+              ? `Use "${correction}" instead of "${invalidField}"`
+              : `Remove "${invalidField}"`,
             `${operationType} expects: ${rules.required.join(', ')}`,
             correction && parameters[invalidField]
               ? `Change to: "${correction}": "${parameters[invalidField]}"`
-              : null
+              : null,
           ].filter(Boolean),
         };
       }
@@ -414,7 +424,11 @@ export function validateOperationStructure(operation, path = 'root') {
 
   // Validate parameters for known operation types
   if (operation.parameters) {
-    const paramResult = validateOperationParameters(operation.type, operation.parameters, path);
+    const paramResult = validateOperationParameters(
+      operation.type,
+      operation.parameters,
+      path
+    );
     if (!paramResult.isValid) {
       return paramResult;
     }
@@ -452,8 +466,8 @@ export function validateAllOperations(
           path: `${basePath}[${i}]`,
           suggestions: [
             ...(result.suggestions || []),
-            `Problematic operation: ${JSON.stringify(data[i], null, 2).substring(0, 200)}...`
-          ]
+            `Problematic operation: ${JSON.stringify(data[i], null, 2).substring(0, 200)}...`,
+          ],
         };
         return enhancedError;
       }
@@ -581,7 +595,6 @@ export function validateRuleStructure(ruleData, _filePath = 'unknown') {
   // Validate all operations in the rule
   return validateAllOperations(ruleData, 'root');
 }
-
 
 /**
  * Validates macro-specific structure

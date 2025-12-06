@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  jest,
+} from '@jest/globals';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -82,7 +89,9 @@ describe('NodeDataFetcher', () => {
 
   it('falls back to the original identifier when the resolved path is unavailable', async () => {
     const relativePath = 'missing/data.json';
-    const enoent = Object.assign(new Error('still missing'), { code: 'ENOENT' });
+    const enoent = Object.assign(new Error('still missing'), {
+      code: 'ENOENT',
+    });
 
     const realResolve = path.resolve;
     const resolveSpy = jest.spyOn(path, 'resolve');

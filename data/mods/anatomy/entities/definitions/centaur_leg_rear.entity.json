@@ -17,10 +17,7 @@
       "sockets": [
         {
           "id": "hoof",
-          "allowedTypes": [
-            "hoof",
-            "horse_hoof"
-          ],
+          "allowedTypes": ["hoof", "horse_hoof"],
           "nameTpl": "hoof"
         }
       ]

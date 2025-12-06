@@ -106,18 +106,18 @@ class XmlElementBuilder {
       primary: '=', // Identity emphasis
       secondary: '-', // Section headers
       critical: '*', // Mandatory constraints
-      reference: '.' // Context/reference material
+      reference: '.', // Context/reference material
     };
     const borderChar = borderChars[style] || '-';
     const border = borderChar.repeat(XmlElementBuilder.#BORDER_WIDTH);
 
     const contentIndent = '     '; // 5 spaces for content alignment
-    const formattedLines = lines.map(line => `${contentIndent}${line}`);
+    const formattedLines = lines.map((line) => `${contentIndent}${line}`);
 
     const result = [
       `${indentStr}<!-- ${border}`,
-      ...formattedLines.map(line => `${indentStr}${line}`),
-      `${indentStr}${contentIndent}${border} -->`
+      ...formattedLines.map((line) => `${indentStr}${line}`),
+      `${indentStr}${contentIndent}${border} -->`,
     ];
 
     return result.join('\n');

@@ -92,7 +92,9 @@ describe('actionMatchers - toHaveAction', () => {
 
   describe('Negation support', () => {
     it('should pass when action not discovered with .not', () => {
-      const actions = [{ id: 'physical-control:turn_around', name: 'Turn Around' }];
+      const actions = [
+        { id: 'physical-control:turn_around', name: 'Turn Around' },
+      ];
 
       expect(actions).not.toHaveAction('affection:place_hands_on_shoulders');
     });

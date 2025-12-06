@@ -68,7 +68,9 @@ describe('createGoapEventDispatcher', () => {
   it('guards against missing payloads while still recording compliance metadata', () => {
     const dispatcher = createGoapEventDispatcher(eventBus, logger);
 
-    expect(() => dispatcher.dispatch('goap:test_event')).toThrow(/requires a structured payload object/);
+    expect(() => dispatcher.dispatch('goap:test_event')).toThrow(
+      /requires a structured payload object/
+    );
 
     expect(eventBus.dispatch).toHaveBeenCalledWith(
       GOAP_EVENTS.EVENT_CONTRACT_VIOLATION,
@@ -90,7 +92,10 @@ describe('createGoapEventDispatcher', () => {
       allowEmptyPayload: true,
     });
 
-    expect(eventBus.dispatch).toHaveBeenCalledWith('goap:dependency_validated', {});
+    expect(eventBus.dispatch).toHaveBeenCalledWith(
+      'goap:dependency_validated',
+      {}
+    );
     expect(dispatcher.getComplianceForActor('global').totalEvents).toBe(1);
   });
 
@@ -110,7 +115,10 @@ describe('createGoapEventDispatcher', () => {
       ],
     });
 
-    await dispatcher.dispatch('goap:test_event', { actorId: 'actor-123', taskId: 'task-1' });
+    await dispatcher.dispatch('goap:test_event', {
+      actorId: 'actor-123',
+      taskId: 'task-1',
+    });
 
     expect(probeEvents).toHaveLength(1);
     expect(probeEvents[0]).toMatchObject({
@@ -163,7 +171,11 @@ describe('createGoapEventDispatcher', () => {
       expect.objectContaining({ code: GOAP_EVENT_TRACE_LOG_CODES.ENABLED })
     );
     let diagnostics = dispatcher.getProbeDiagnostics();
-    expect(diagnostics).toMatchObject({ hasProbes: true, totalRegistered: 1, totalAttachedEver: 1 });
+    expect(diagnostics).toMatchObject({
+      hasProbes: true,
+      totalRegistered: 1,
+      totalAttachedEver: 1,
+    });
 
     logger.info.mockClear();
     detach();
@@ -189,9 +201,15 @@ describe('createGoapEventDispatcher', () => {
   it('tracks planning completion/failure counters per actor without mutation', async () => {
     const dispatcher = createGoapEventDispatcher(eventBus, logger);
 
-    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, { actorId: 'actor-A' });
-    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_FAILED, { actorId: 'actor-B' });
-    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_FAILED, { actorId: 'actor-A' });
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, {
+      actorId: 'actor-A',
+    });
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_FAILED, {
+      actorId: 'actor-B',
+    });
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_FAILED, {
+      actorId: 'actor-A',
+    });
 
     const planningSnapshot = dispatcher.getPlanningComplianceSnapshot();
     expect(planningSnapshot.global).toMatchObject({
@@ -200,14 +218,28 @@ describe('createGoapEventDispatcher', () => {
       totalPlanningEvents: 3,
     });
 
-    const actorA = planningSnapshot.actors.find((entry) => entry.actorId === 'actor-A');
-    const actorB = planningSnapshot.actors.find((entry) => entry.actorId === 'actor-B');
-    expect(actorA).toMatchObject({ planningCompleted: 1, planningFailed: 1, totalPlanningEvents: 2 });
-    expect(actorB).toMatchObject({ planningCompleted: 0, planningFailed: 1, totalPlanningEvents: 1 });
+    const actorA = planningSnapshot.actors.find(
+      (entry) => entry.actorId === 'actor-A'
+    );
+    const actorB = planningSnapshot.actors.find(
+      (entry) => entry.actorId === 'actor-B'
+    );
+    expect(actorA).toMatchObject({
+      planningCompleted: 1,
+      planningFailed: 1,
+      totalPlanningEvents: 2,
+    });
+    expect(actorB).toMatchObject({
+      planningCompleted: 0,
+      planningFailed: 1,
+      totalPlanningEvents: 1,
+    });
 
     actorA.planningCompleted = 999;
     const freshSnapshot = dispatcher.getPlanningComplianceSnapshot();
-    const freshActorA = freshSnapshot.actors.find((entry) => entry.actorId === 'actor-A');
+    const freshActorA = freshSnapshot.actors.find(
+      (entry) => entry.actorId === 'actor-A'
+    );
     expect(freshActorA.planningCompleted).toBe(1);
   });
 
@@ -217,7 +249,10 @@ describe('createGoapEventDispatcher', () => {
     await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, {});
 
     const planningSnapshot = dispatcher.getPlanningComplianceSnapshot();
-    expect(planningSnapshot.global).toMatchObject({ planningCompleted: 1, planningFailed: 0 });
+    expect(planningSnapshot.global).toMatchObject({
+      planningCompleted: 1,
+      planningFailed: 0,
+    });
     expect(planningSnapshot.actors).toHaveLength(0);
 
     expect(logger.warn).toHaveBeenCalledWith(
@@ -233,7 +268,10 @@ describe('createGoapEventDispatcher', () => {
     });
 
     // Test with non-object payload (should return empty object)
-    await dispatcher.dispatch('goap:test_event', { actorId: 'actor-1', data: null });
+    await dispatcher.dispatch('goap:test_event', {
+      actorId: 'actor-1',
+      data: null,
+    });
     expect(probeEvents[0].payload).toBeDefined();
     expect(typeof probeEvents[0].payload).toBe('object');
   });
@@ -341,7 +379,9 @@ describe('createGoapEventDispatcher', () => {
     const dispatcher = createGoapEventDispatcher(eventBus, logger);
 
     // Dispatch planning event with explicit 'global' actorId
-    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, { actorId: 'global' });
+    await dispatcher.dispatch(GOAP_EVENTS.PLANNING_COMPLETED, {
+      actorId: 'global',
+    });
 
     const planningSnapshot = dispatcher.getPlanningComplianceSnapshot();
     expect(planningSnapshot.global.planningCompleted).toBe(1);
@@ -415,7 +455,9 @@ describe('createGoapEventDispatcher', () => {
 
     // String payload with allowEmptyPayload=true
     expect(() =>
-      dispatcher.dispatch('goap:test_event', 'invalid payload', { allowEmptyPayload: true })
+      dispatcher.dispatch('goap:test_event', 'invalid payload', {
+        allowEmptyPayload: true,
+      })
     ).toThrow(/must use an object payload when provided/);
 
     // Should have recorded a violation
@@ -434,7 +476,9 @@ describe('createGoapEventDispatcher', () => {
   it('allows null payload when allowEmptyPayload is true', async () => {
     const dispatcher = createGoapEventDispatcher(eventBus, logger);
 
-    await dispatcher.dispatch('goap:test_event', null, { allowEmptyPayload: true });
+    await dispatcher.dispatch('goap:test_event', null, {
+      allowEmptyPayload: true,
+    });
 
     expect(eventBus.dispatch).toHaveBeenCalledWith('goap:test_event', {});
     const snapshot = dispatcher.getComplianceSnapshot();
@@ -466,9 +510,13 @@ describe('createGoapEventDispatcher', () => {
   it('handles actorIdOverride parameter', async () => {
     const dispatcher = createGoapEventDispatcher(eventBus, logger);
 
-    await dispatcher.dispatch('goap:test_event', { data: 'test' }, {
-      actorIdOverride: 'override-actor',
-    });
+    await dispatcher.dispatch(
+      'goap:test_event',
+      { data: 'test' },
+      {
+        actorIdOverride: 'override-actor',
+      }
+    );
 
     const actorStats = dispatcher.getComplianceForActor('override-actor');
     expect(actorStats).toMatchObject({
@@ -517,7 +565,9 @@ describe('validateEventBusContract', () => {
         return event;
       },
     };
-    expect(() => validateEventBusContract(legacyBus, logger)).toThrow(/event bus dispatch must accept \(eventType, payload\)/);
+    expect(() => validateEventBusContract(legacyBus, logger)).toThrow(
+      /event bus dispatch must accept \(eventType, payload\)/
+    );
   });
 
   it('passes modern dispatch implementations', () => {

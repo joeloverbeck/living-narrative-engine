@@ -109,9 +109,9 @@ describe('Validation Config Schema', () => {
       const result = validate(config);
       expect(result).toBe(false);
       expect(validate.errors).toBeDefined();
-      expect(validate.errors.some((e) => e.params.missingProperty === 'mods')).toBe(
-        true
-      );
+      expect(
+        validate.errors.some((e) => e.params.missingProperty === 'mods')
+      ).toBe(true);
     });
 
     it('should reject config without validators section', () => {
@@ -193,9 +193,9 @@ describe('Validation Config Schema', () => {
       const result = validate(config);
       expect(result).toBe(false);
       expect(validate.errors).toBeDefined();
-      expect(validate.errors.some((e) => e.params.missingProperty === 'name')).toBe(
-        true
-      );
+      expect(
+        validate.errors.some((e) => e.params.missingProperty === 'name')
+      ).toBe(true);
     });
 
     it('should reject validator without priority', () => {
@@ -375,9 +375,9 @@ describe('Validation Config Schema', () => {
       const result = validate(config);
       expect(result).toBe(false);
       expect(validate.errors).toBeDefined();
-      expect(validate.errors.some((e) => e.keyword === 'additionalProperties')).toBe(
-        true
-      );
+      expect(
+        validate.errors.some((e) => e.keyword === 'additionalProperties')
+      ).toBe(true);
     });
 
     it('should reject empty essential array', () => {

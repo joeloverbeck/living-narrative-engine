@@ -63,7 +63,9 @@ describe('IfHandler', () => {
             jsonLogic: mockJsonLogic,
             logger: mockLogger,
           })
-      ).toThrow('IfHandler requires a valid OperationInterpreter resolver or instance.');
+      ).toThrow(
+        'IfHandler requires a valid OperationInterpreter resolver or instance.'
+      );
     });
 
     test('should throw if operationInterpreter is invalid', () => {
@@ -74,7 +76,9 @@ describe('IfHandler', () => {
             jsonLogic: mockJsonLogic,
             logger: mockLogger,
           })
-      ).toThrow('IfHandler requires operationInterpreter to be either a resolver function or an object with execute() method.');
+      ).toThrow(
+        'IfHandler requires operationInterpreter to be either a resolver function or an object with execute() method.'
+      );
     });
 
     test('should throw if jsonLogic is missing', () => {
@@ -84,7 +88,9 @@ describe('IfHandler', () => {
             operationInterpreter: mockOperationInterpreter,
             logger: mockLogger,
           })
-      ).toThrow('IfHandler requires a valid JsonLogicEvaluationService instance.');
+      ).toThrow(
+        'IfHandler requires a valid JsonLogicEvaluationService instance.'
+      );
     });
 
     test('should throw if jsonLogic is invalid', () => {
@@ -95,7 +101,9 @@ describe('IfHandler', () => {
             jsonLogic: {},
             logger: mockLogger,
           })
-      ).toThrow('IfHandler requires a valid JsonLogicEvaluationService instance.');
+      ).toThrow(
+        'IfHandler requires a valid JsonLogicEvaluationService instance.'
+      );
     });
 
     test('should throw if logger is missing', () => {

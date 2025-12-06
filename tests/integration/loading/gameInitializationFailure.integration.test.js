@@ -15,7 +15,7 @@ describe('Game Initialization Failure - Integration', () => {
 
   beforeEach(() => {
     container = new AppContainer();
-    
+
     // Register minimal required services for the loader registration to work
     const simpleLogger = {
       debug: console.debug,
@@ -26,8 +26,10 @@ describe('Game Initialization Failure - Integration', () => {
     container.register(tokens.ILogger, simpleLogger);
 
     // Register other minimal required services
-    container.register(tokens.IValidatedEventDispatcher, { dispatch: () => Promise.resolve() });
-    
+    container.register(tokens.IValidatedEventDispatcher, {
+      dispatch: () => Promise.resolve(),
+    });
+
     // Register infrastructure which includes ISafeEventDispatcher needed by EntityDefinitionLoader
     registerInfrastructure(container);
 
@@ -47,24 +49,24 @@ describe('Game Initialization Failure - Integration', () => {
         debug: () => {},
         info: () => {},
         warn: () => {},
-        error: () => {}
+        error: () => {},
       });
 
       // Act & Assert: Try to resolve IModValidationOrchestrator - should fail in browser
       expect(() => {
         simpleContainer.resolve(tokens.IModValidationOrchestrator);
       }).toThrow(/No service registered for key "IModValidationOrchestrator"/);
-      
+
       // This demonstrates the exact error from the original logs
     });
 
     it('should successfully resolve ManifestPhase when infrastructure is registered', async () => {
       // Arrange: Infrastructure is already registered in beforeEach
-      
+
       const { registerLoaders } = await import(
         '../../../src/dependencyInjection/registrations/loadersRegistrations.js'
       );
-      
+
       await registerLoaders(container);
 
       // Act & Assert: ManifestPhase should resolve successfully now that ISafeEventDispatcher is available
@@ -76,11 +78,11 @@ describe('Game Initialization Failure - Integration', () => {
 
     it('should successfully resolve ModsLoader when infrastructure is registered', async () => {
       // Arrange: Infrastructure is already registered in beforeEach
-      
+
       const { registerLoaders } = await import(
         '../../../src/dependencyInjection/registrations/loadersRegistrations.js'
       );
-      
+
       await registerLoaders(container);
 
       // Act & Assert: ModsLoader should resolve successfully now that all dependencies are available
@@ -95,11 +97,11 @@ describe('Game Initialization Failure - Integration', () => {
     it('should successfully create ModManifestProcessor without orchestrator', async () => {
       // With infrastructure registered, ModManifestProcessor can be created
       // even without IModValidationOrchestrator (it's optional)
-      
+
       const { registerLoaders } = await import(
         '../../../src/dependencyInjection/registrations/loadersRegistrations.js'
       );
-      
+
       await registerLoaders(container);
 
       // This should succeed
@@ -111,11 +113,11 @@ describe('Game Initialization Failure - Integration', () => {
 
     it('should successfully initialize full mod loading pipeline', async () => {
       // With infrastructure registered, the full pipeline works
-      
+
       const { registerLoaders } = await import(
         '../../../src/dependencyInjection/registrations/loadersRegistrations.js'
       );
-      
+
       await registerLoaders(container);
 
       // Full pipeline should work

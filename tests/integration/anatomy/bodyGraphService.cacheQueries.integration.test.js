@@ -143,7 +143,8 @@ class FakeEntityManager {
     return {
       id: entity.id,
       type: entity.type,
-      getComponentData: (componentId) => this.getComponentData(entity.id, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entity.id, componentId),
     };
   }
 
@@ -285,9 +286,9 @@ describe('BodyGraphService cache & query integration', () => {
     await service.buildAdjacencyCache(actor.id);
     const bodyComponent = createBodyComponent();
 
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'core:tattoo')
-    ).toBe(true);
+    expect(service.hasPartWithComponent(bodyComponent, 'core:tattoo')).toBe(
+      true
+    );
     expect(
       service.hasPartWithComponent(bodyComponent, 'core:nonexistent')
     ).toBe(false);
@@ -341,7 +342,9 @@ describe('BodyGraphService cache & query integration', () => {
       socketId: 'shoulder-left',
     });
     expect(entityManager.getComponentData(arm.id, 'anatomy:joint')).toBeNull();
-    expect(entityManager.getComponentData(hand.id, 'anatomy:joint')).not.toBeNull();
+    expect(
+      entityManager.getComponentData(hand.id, 'anatomy:joint')
+    ).not.toBeNull();
     expect(service.hasCache(torso.id)).toBe(false);
 
     // Reattach for cascade scenario

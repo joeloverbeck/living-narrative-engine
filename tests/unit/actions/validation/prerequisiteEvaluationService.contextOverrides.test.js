@@ -2,9 +2,12 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { resolveReferences } from '../../../../src/actions/validation/conditionReferenceResolver.js';
 
-jest.mock('../../../../src/actions/validation/conditionReferenceResolver.js', () => ({
-  resolveReferences: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/actions/validation/conditionReferenceResolver.js',
+  () => ({
+    resolveReferences: jest.fn(),
+  })
+);
 
 describe('PrerequisiteEvaluationService context override coverage', () => {
   let logger;
@@ -102,7 +105,9 @@ describe('PrerequisiteEvaluationService context override coverage', () => {
     expect(passedContext.metadata).toEqual({ origin: 'base', updated: true });
     expect(passedContext.location).toBe('forgotten-catacombs');
     expect(passedContext).toHaveProperty('newField', { difficulty: 'hard' });
-    expect(Object.prototype.hasOwnProperty.call(passedContext, 'tags')).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(passedContext, 'tags')).toBe(
+      false
+    );
 
     expect(trace.withSpan).toHaveBeenCalledWith(
       'prerequisite.evaluate',

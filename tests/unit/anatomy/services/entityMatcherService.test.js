@@ -40,7 +40,9 @@ describe('EntityMatcherService', () => {
     });
 
     it('should throw if logger is missing', () => {
-      expect(() => new EntityMatcherService({ dataRegistry: mockDataRegistry })).toThrow();
+      expect(
+        () => new EntityMatcherService({ dataRegistry: mockDataRegistry })
+      ).toThrow();
     });
 
     it('should throw if dataRegistry is missing', () => {
@@ -49,10 +51,13 @@ describe('EntityMatcherService', () => {
 
     it('should throw if dataRegistry missing required methods', () => {
       const invalidRegistry = { get: jest.fn() }; // Missing getAll
-      expect(() => new EntityMatcherService({
-        logger: mockLogger,
-        dataRegistry: invalidRegistry
-      })).toThrow();
+      expect(
+        () =>
+          new EntityMatcherService({
+            logger: mockLogger,
+            dataRegistry: invalidRegistry,
+          })
+      ).toThrow();
     });
   });
 
@@ -141,9 +146,7 @@ describe('EntityMatcherService', () => {
 
     it('should return empty array when no matches found', () => {
       const criteria = { partType: 'nonexistent' };
-      const allEntityDefs = [
-        createMockEntityDef('anatomy:head', 'head'),
-      ];
+      const allEntityDefs = [createMockEntityDef('anatomy:head', 'head')];
 
       const result = service.findMatchingEntities(criteria, allEntityDefs);
 
@@ -206,7 +209,10 @@ describe('EntityMatcherService', () => {
         createMockEntityDef('anatomy:head2', 'head'),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(2);
     });
@@ -224,7 +230,10 @@ describe('EntityMatcherService', () => {
         createMockEntityDef('anatomy:brain', 'brain'),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(2);
       expect(result).toContain('anatomy:head');
@@ -244,7 +253,10 @@ describe('EntityMatcherService', () => {
         createMockEntityDef('anatomy:leg', 'leg'),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(1);
       expect(result).toContain('anatomy:arm');
@@ -268,7 +280,10 @@ describe('EntityMatcherService', () => {
         createMockEntityDef('anatomy:ear', 'ear'),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(2);
       expect(result).toContain('anatomy:finger_nailed');
@@ -299,7 +314,10 @@ describe('EntityMatcherService', () => {
         }),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(2);
       expect(result).toContain('anatomy:arm_perfect');
@@ -313,11 +331,12 @@ describe('EntityMatcherService', () => {
         tags: [],
         properties: {},
       };
-      const allEntityDefs = [
-        createMockEntityDef('anatomy:head', 'head'),
-      ];
+      const allEntityDefs = [createMockEntityDef('anatomy:head', 'head')];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(0);
     });
@@ -347,7 +366,10 @@ describe('EntityMatcherService', () => {
         createMockEntityDef('anatomy:head', 'head'),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(1);
       expect(result).toContain('anatomy:head');
@@ -366,7 +388,10 @@ describe('EntityMatcherService', () => {
         createMockEntityDef('anatomy:hand', 'hand'),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(2);
       expect(result).toContain('anatomy:head');
@@ -394,7 +419,10 @@ describe('EntityMatcherService', () => {
         }),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(1);
       expect(result).toContain('anatomy:torso_perfect');
@@ -406,19 +434,31 @@ describe('EntityMatcherService', () => {
         allowedTypes: ['*'],
         tags: [],
         properties: {
-          'descriptors:function': { primary: 'digestion', secondary: 'absorption' },
+          'descriptors:function': {
+            primary: 'digestion',
+            secondary: 'absorption',
+          },
         },
       };
       const allEntityDefs = [
         createMockEntityDef('anatomy:stomach', 'organ', {
-          'descriptors:function': { primary: 'digestion', secondary: 'absorption' },
+          'descriptors:function': {
+            primary: 'digestion',
+            secondary: 'absorption',
+          },
         }),
         createMockEntityDef('anatomy:liver', 'organ', {
-          'descriptors:function': { primary: 'filtration', secondary: 'detoxification' },
+          'descriptors:function': {
+            primary: 'filtration',
+            secondary: 'detoxification',
+          },
         }),
       ];
 
-      const result = service.findMatchingEntitiesForSlot(requirements, allEntityDefs);
+      const result = service.findMatchingEntitiesForSlot(
+        requirements,
+        allEntityDefs
+      );
 
       expect(result).toHaveLength(1);
       expect(result).toContain('anatomy:stomach');
@@ -517,7 +557,11 @@ describe('EntityMatcherService', () => {
       );
 
       expect(result).toEqual({
-        'descriptors:venom': { potency: 'high', delivery: 'bite', color: 'green' },
+        'descriptors:venom': {
+          potency: 'high',
+          delivery: 'bite',
+          color: 'green',
+        },
         'descriptors:defense': { mechanism: 'camouflage' },
         'descriptors:attack': { method: 'strike' },
       });

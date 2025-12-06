@@ -27,13 +27,19 @@ jest.mock('../../../src/anatomy/orchestration/anatomyOrchestrator.js', () => {
   return { AnatomyOrchestrator };
 });
 
-jest.mock('../../../src/anatomy/workflows/anatomyGenerationWorkflow.js', () => ({
-  AnatomyGenerationWorkflow: jest.fn(),
-}));
+jest.mock(
+  '../../../src/anatomy/workflows/anatomyGenerationWorkflow.js',
+  () => ({
+    AnatomyGenerationWorkflow: jest.fn(),
+  })
+);
 
-jest.mock('../../../src/anatomy/workflows/descriptionGenerationWorkflow.js', () => ({
-  DescriptionGenerationWorkflow: jest.fn(),
-}));
+jest.mock(
+  '../../../src/anatomy/workflows/descriptionGenerationWorkflow.js',
+  () => ({
+    DescriptionGenerationWorkflow: jest.fn(),
+  })
+);
 
 jest.mock('../../../src/anatomy/workflows/graphBuildingWorkflow.js', () => ({
   GraphBuildingWorkflow: jest.fn(),
@@ -63,7 +69,9 @@ describe('AnatomyGenerationService orchestrator fallback coverage', () => {
     };
 
     entityRecord = {
-      getComponentData: jest.fn().mockReturnValue({ recipeId: 'orchestration-recipe' }),
+      getComponentData: jest
+        .fn()
+        .mockReturnValue({ recipeId: 'orchestration-recipe' }),
     };
     mockEntityManager.getEntityInstance.mockReturnValue(entityRecord);
 
@@ -86,7 +94,9 @@ describe('AnatomyGenerationService orchestrator fallback coverage', () => {
 
   it('returns false when the orchestrator signals an unsuccessful generation result', async () => {
     const orchestrator = getLatestOrchestratorInstance();
-    orchestrator.checkGenerationNeeded.mockReturnValue({ needsGeneration: true });
+    orchestrator.checkGenerationNeeded.mockReturnValue({
+      needsGeneration: true,
+    });
     orchestrator.orchestrateGeneration.mockResolvedValue({
       success: false,
       entityCount: 0,
@@ -96,9 +106,15 @@ describe('AnatomyGenerationService orchestrator fallback coverage', () => {
     const result = await service.generateAnatomyIfNeeded('entity-under-test');
 
     expect(result).toBe(false);
-    expect(orchestrator.checkGenerationNeeded).toHaveBeenCalledWith('entity-under-test');
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity-under-test');
-    expect(entityRecord.getComponentData).toHaveBeenCalledWith(ANATOMY_BODY_COMPONENT_ID);
+    expect(orchestrator.checkGenerationNeeded).toHaveBeenCalledWith(
+      'entity-under-test'
+    );
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+      'entity-under-test'
+    );
+    expect(entityRecord.getComponentData).toHaveBeenCalledWith(
+      ANATOMY_BODY_COMPONENT_ID
+    );
     expect(orchestrator.orchestrateGeneration).toHaveBeenCalledWith(
       'entity-under-test',
       'orchestration-recipe'

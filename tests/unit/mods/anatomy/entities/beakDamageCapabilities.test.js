@@ -198,9 +198,9 @@ describe('Beak Entity Damage Capabilities', () => {
 
     test('chicken_beak should preserve anatomy:part_health component', () => {
       expect(chickenBeakEntity.components['anatomy:part_health']).toBeDefined();
-      expect(chickenBeakEntity.components['anatomy:part_health'].maxHealth).toBe(
-        5
-      );
+      expect(
+        chickenBeakEntity.components['anatomy:part_health'].maxHealth
+      ).toBe(5);
     });
 
     test('tortoise_beak should preserve anatomy:part_health component', () => {

@@ -80,22 +80,32 @@ describe('ReportFormatter integration', () => {
 
     const html = formatter.toHTML();
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('<title>Validation Report - Recipe &amp; Entities &quot;Alpha&quot;</title>');
-    expect(html).toContain('<strong>Path:</strong> /mods/core/&lt;alpha&gt;/recipe.json');
+    expect(html).toContain(
+      '<title>Validation Report - Recipe &amp; Entities &quot;Alpha&quot;</title>'
+    );
+    expect(html).toContain(
+      '<strong>Path:</strong> /mods/core/&lt;alpha&gt;/recipe.json'
+    );
     expect(html).toContain('<div class="stat-value">1</div>');
     expect(html).toContain('Fix:</strong> Add &quot;name&quot; field');
     expect(html).toContain('Component:</strong> component,with,comma');
-    expect(html).toContain("Location:</strong> component 'core&lt;&#039;module&#039;&gt;'");
+    expect(html).toContain(
+      "Location:</strong> component 'core&lt;&#039;module&#039;&gt;'"
+    );
     expect(html).toContain("Location:</strong> scope 'scope&quot;Name&quot;'");
     expect(html).toContain('Suggestion:</strong> Use &amp; maintain defaults');
     expect(html).toContain('⚠ Warnings');
     expect(html).toContain('💡 Suggestions');
-    expect(html).toContain('Consider &lt;upgrade&gt; &amp; &quot;enhance&quot;');
+    expect(html).toContain(
+      'Consider &lt;upgrade&gt; &amp; &quot;enhance&quot;'
+    );
     expect(html).toContain('Supports better flows');
     expect(html).toContain('Impact:</strong> High');
 
     const markdown = formatter.toMarkdown();
-    expect(markdown).toContain('# Validation Report: Recipe & Entities "Alpha"');
+    expect(markdown).toContain(
+      '# Validation Report: Recipe & Entities "Alpha"'
+    );
     expect(markdown).toContain('## ✗ Errors');
     expect(markdown).toContain('**Message:** Missing "name", please review');
     expect(markdown).toContain("- **Location:** component 'core<'module'>'");
@@ -109,7 +119,9 @@ describe('ReportFormatter integration', () => {
     const csv = formatter.toCSV();
     const lines = csv.trim().split('\n');
     expect(lines).toHaveLength(4);
-    expect(lines[0]).toBe('Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion');
+    expect(lines[0]).toBe(
+      'Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion'
+    );
 
     expect(parseCsvLine(lines[1])).toEqual([
       'Error',
@@ -167,6 +179,8 @@ describe('ReportFormatter integration', () => {
     expect(markdown).not.toContain('## 💡 Suggestions');
 
     const csv = formatter.toCSV();
-    expect(csv.trim()).toBe('Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion');
+    expect(csv.trim()).toBe(
+      'Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion'
+    );
   });
 });

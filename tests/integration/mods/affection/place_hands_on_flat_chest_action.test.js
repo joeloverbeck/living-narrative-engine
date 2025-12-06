@@ -35,7 +35,9 @@ describe('affection:place_hands_on_flat_chest action integration', () => {
       (event) => event.eventType === 'core:display_successful_action_result'
     );
   const findPerceptibleEvent = () =>
-    testFixture.events.find((event) => event.eventType === 'core:perceptible_event');
+    testFixture.events.find(
+      (event) => event.eventType === 'core:perceptible_event'
+    );
 
   it('executes successfully for close actors without breast anatomy', async () => {
     const scenario = testFixture.createAnatomyScenario(
@@ -101,7 +103,9 @@ describe('affection:place_hands_on_flat_chest action integration', () => {
     expect(perceptibleEvent.payload.descriptionText).toBe(
       EXPECTED_MESSAGE.replace('{actor}', 'Maya').replace('{primary}', 'Rin')
     );
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
     expect(perceptibleEvent.payload.locationId).toBe('library_nook');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     expect(perceptibleEvent.payload.actorId).toBe(scenario.actor.id);

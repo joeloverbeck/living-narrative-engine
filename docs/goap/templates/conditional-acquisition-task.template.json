@@ -7,10 +7,7 @@
   "applicability": {
     "description": "{{APPLICABILITY_DESCRIPTION}}",
     "condition": {
-      "has_component": [
-        { "var": "{{ENTITY_PATH}}" },
-        "{{COMPONENT_ID}}"
-      ]
+      "has_component": [{ "var": "{{ENTITY_PATH}}" }, "{{COMPONENT_ID}}"]
     }
   },
 

@@ -45,13 +45,13 @@ class ErrorReporter {
     endpoint = null,
     batchSize = null,
     flushInterval = null,
-    enabled = null
+    enabled = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'error', 'warn', 'debug']
+      requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
     validateDependency(eventBus, 'IEventBus', logger, {
-      requiredMethods: ['dispatch', 'subscribe']
+      requiredMethods: ['dispatch', 'subscribe'],
     });
 
     // Get configuration
@@ -62,7 +62,9 @@ class ErrorReporter {
     this.#endpoint = endpoint ?? config.reporting.endpoint;
     this.#batchSize = batchSize ?? config.reporting.batchSize;
     this.#flushInterval = flushInterval ?? config.reporting.flushInterval;
-    this.#enabled = (enabled !== null ? enabled : config.reporting.enabled) && this.#endpoint !== null;
+    this.#enabled =
+      (enabled !== null ? enabled : config.reporting.enabled) &&
+      this.#endpoint !== null;
     this.#buffer = [];
     this.#intervalHandle = null;
 
@@ -71,7 +73,7 @@ class ErrorReporter {
       errorsByType: new Map(),
       errorsBySeverity: new Map(),
       errorsByHour: new Map(),
-      trends: []
+      trends: [],
     };
 
     // Use configuration for alert thresholds
@@ -79,7 +81,7 @@ class ErrorReporter {
       criticalErrors: config.reporting.alerts.criticalErrors,
       errorRate: config.reporting.alerts.errorRate,
       specificError: config.reporting.alerts.specificError,
-      failureRate: config.reporting.alerts.failureRate
+      failureRate: config.reporting.alerts.failureRate,
     };
 
     if (this.#enabled) {
@@ -110,7 +112,9 @@ class ErrorReporter {
    */
   static resolveUserAgent(globals = globalThis) {
     const userAgent = globals?.navigator?.userAgent;
-    return typeof userAgent === 'string' && userAgent.length > 0 ? userAgent : 'server';
+    return typeof userAgent === 'string' && userAgent.length > 0
+      ? userAgent
+      : 'server';
   }
 
   /**
@@ -139,7 +143,7 @@ class ErrorReporter {
       if (!shouldReport) {
         this.#logger.debug('Error sampled out', {
           errorType: error?.constructor?.name,
-          severity: error?.severity
+          severity: error?.severity,
         });
         return;
       }
@@ -181,7 +185,7 @@ class ErrorReporter {
     } catch (error) {
       this.#logger.error('Failed to send error batch', {
         error: error.message,
-        batchSize: errors.length
+        batchSize: errors.length,
       });
 
       // Re-add to buffer if send failed (with limit)
@@ -206,17 +210,17 @@ class ErrorReporter {
     const report = {
       period: {
         start: new Date(startTime).toISOString(),
-        end: new Date(endTime).toISOString()
+        end: new Date(endTime).toISOString(),
       },
       summary: {
         totalErrors: this.#analytics.totalReported,
         uniqueErrorTypes: this.#analytics.errorsByType.size,
         topErrors: this.#getTopErrors(5),
         severityBreakdown: Object.fromEntries(this.#analytics.errorsBySeverity),
-        hourlyDistribution: this.#getHourlyDistribution(startTime, endTime)
+        hourlyDistribution: this.#getHourlyDistribution(startTime, endTime),
       },
       trends: this.#analyzeTrends(),
-      recommendations: this.#generateRecommendations()
+      recommendations: this.#generateRecommendations(),
     };
 
     return report;
@@ -230,7 +234,7 @@ class ErrorReporter {
    */
   getErrorTrends(hours = 24) {
     const cutoff = Date.now() - hours * 60 * 60 * 1000;
-    return this.#analytics.trends.filter(t => t.timestamp > cutoff);
+    return this.#analytics.trends.filter((t) => t.timestamp > cutoff);
   }
 
   /**
@@ -255,7 +259,7 @@ class ErrorReporter {
       errorsBySeverity: Object.fromEntries(this.#analytics.errorsBySeverity),
       errorsByHour: Object.fromEntries(this.#analytics.errorsByHour),
       trends: [...this.#analytics.trends],
-      topErrors: this.#getTopErrors(10)
+      topErrors: this.#getTopErrors(10),
     };
   }
 
@@ -273,13 +277,13 @@ class ErrorReporter {
         severity,
         message,
         details,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     });
 
     this.#logger.warn(`Error alert: ${message}`, {
       severity,
-      details
+      details,
     });
   }
 
@@ -292,12 +296,16 @@ class ErrorReporter {
     return {
       id: error?.correlationId || this.#generateReportId(),
       timestamp: Date.now(),
-      error: isBaseError ? error.toJSON() : {
-        name: error?.constructor?.name || 'UnknownError',
-        message: error?.message || 'Unknown error',
-        stack: config.reporting.includeStackTrace ? error?.stack : undefined,
-        code: error?.code
-      },
+      error: isBaseError
+        ? error.toJSON()
+        : {
+            name: error?.constructor?.name || 'UnknownError',
+            message: error?.message || 'Unknown error',
+            stack: config.reporting.includeStackTrace
+              ? error?.stack
+              : undefined,
+            code: error?.code,
+          },
       context: {
         ...context,
         environment: environmentMode,
@@ -308,17 +316,21 @@ class ErrorReporter {
         url:
           environmentMode === 'test'
             ? 'server'
-            : ErrorReporter.resolveCurrentUrl() ?? 'server'
+            : (ErrorReporter.resolveCurrentUrl() ?? 'server'),
       },
-      severity: isBaseError ? error.severity : (error?.severity || 'error'),
-      recoverable: isBaseError ? error.recoverable : (error?.recoverable || false)
+      severity: isBaseError ? error.severity : error?.severity || 'error',
+      recoverable: isBaseError
+        ? error.recoverable
+        : error?.recoverable || false,
     };
   }
 
   async #sendBatch(errors) {
     if (!this.#endpoint) {
       // If no endpoint, just log
-      this.#logger.info(`Would send ${errors.length} errors to reporting service`);
+      this.#logger.info(
+        `Would send ${errors.length} errors to reporting service`
+      );
       return;
     }
 
@@ -329,14 +341,15 @@ class ErrorReporter {
       batchSize: errors.length,
       batchId: this.#generateReportId(),
       timestamp: Date.now(),
-      environment: getEnvironmentMode()
+      environment: getEnvironmentMode(),
     });
 
     // Simulate network delay (use immediate resolution for testing)
     await Promise.resolve();
 
     // Simulate occasional failure for testing
-    if (Math.random() < 0.05) { // 5% failure rate
+    if (Math.random() < 0.05) {
+      // 5% failure rate
       throw new Error('Network error');
     }
   }
@@ -363,7 +376,7 @@ class ErrorReporter {
     this.#analytics.trends.push({
       timestamp: errorReport.timestamp,
       type: errorType,
-      severity: severity
+      severity: severity,
     });
 
     if (this.#analytics.trends.length > 100) {
@@ -375,22 +388,31 @@ class ErrorReporter {
     // Check critical error threshold
     const criticalCount = this.#analytics.errorsBySeverity.get('critical') || 0;
     if (criticalCount >= this.#alertThresholds.criticalErrors) {
-      this.sendAlert('critical', `Critical error threshold exceeded: ${criticalCount} errors`);
+      this.sendAlert(
+        'critical',
+        `Critical error threshold exceeded: ${criticalCount} errors`
+      );
     }
 
     // Check error rate (errors in last minute)
     const recentErrors = this.#analytics.trends.filter(
-      t => Date.now() - t.timestamp < 60000
+      (t) => Date.now() - t.timestamp < 60000
     ).length;
 
     if (recentErrors >= this.#alertThresholds.errorRate) {
-      this.sendAlert('warning', `High error rate: ${recentErrors} errors in last minute`);
+      this.sendAlert(
+        'warning',
+        `High error rate: ${recentErrors} errors in last minute`
+      );
     }
 
     // Check specific error threshold
     const errorCount = this.#analytics.errorsByType.get(errorReport.error.name);
     if (errorCount >= this.#alertThresholds.specificError) {
-      this.sendAlert('warning', `Repeated error: ${errorReport.error.name} occurred ${errorCount} times`);
+      this.sendAlert(
+        'warning',
+        `Repeated error: ${errorReport.error.name} occurred ${errorCount} times`
+      );
     }
   }
 
@@ -402,7 +424,7 @@ class ErrorReporter {
     return sorted.map(([type, count]) => ({
       type,
       count,
-      percentage: (count / this.#analytics.totalReported * 100).toFixed(2)
+      percentage: ((count / this.#analytics.totalReported) * 100).toFixed(2),
     }));
   }
 
@@ -426,10 +448,10 @@ class ErrorReporter {
       critical: 4,
       error: 3,
       warning: 2,
-      info: 1
+      info: 1,
     };
 
-    const calculateWindowScore = entries => {
+    const calculateWindowScore = (entries) => {
       const totalWeight = entries.reduce(
         (sum, entry) => sum + (severityWeights[entry.severity] ?? 0),
         0
@@ -447,9 +469,15 @@ class ErrorReporter {
     }
 
     if (recentRate > olderRate * 1.5) {
-      return { status: 'increasing', change: '+' + Math.round((recentRate / olderRate - 1) * 100) + '%' };
+      return {
+        status: 'increasing',
+        change: '+' + Math.round((recentRate / olderRate - 1) * 100) + '%',
+      };
     } else if (recentRate < olderRate * 0.5) {
-      return { status: 'decreasing', change: '-' + Math.round((1 - recentRate / olderRate) * 100) + '%' };
+      return {
+        status: 'decreasing',
+        change: '-' + Math.round((1 - recentRate / olderRate) * 100) + '%',
+      };
     }
 
     return { status: 'stable' };
@@ -463,7 +491,7 @@ class ErrorReporter {
     if (criticalCount > 0) {
       recommendations.push({
         priority: 'high',
-        message: `Address ${criticalCount} critical errors immediately`
+        message: `Address ${criticalCount} critical errors immediately`,
       });
     }
 
@@ -472,7 +500,7 @@ class ErrorReporter {
     if (topErrors.length > 0 && topErrors[0].count > 50) {
       recommendations.push({
         priority: 'medium',
-        message: `Investigate root cause of ${topErrors[0].type} (${topErrors[0].count} occurrences)`
+        message: `Investigate root cause of ${topErrors[0].type} (${topErrors[0].count} occurrences)`,
       });
     }
 
@@ -481,7 +509,7 @@ class ErrorReporter {
     if (trends.status === 'increasing') {
       recommendations.push({
         priority: 'medium',
-        message: `Error rate increasing by ${trends.change}, investigate cause`
+        message: `Error rate increasing by ${trends.change}, investigate cause`,
       });
     }
 
@@ -495,19 +523,25 @@ class ErrorReporter {
 
     this.#logger.debug('Error batch reporting started', {
       interval: this.#flushInterval,
-      batchSize: this.#batchSize
+      batchSize: this.#batchSize,
     });
   }
 
   #registerEventListeners() {
     // Listen for generic error events
     this.#eventBus.subscribe('ERROR_OCCURRED', (event) => {
-      this.report(event.payload.error || event.payload, event.payload.context || {});
+      this.report(
+        event.payload.error || event.payload,
+        event.payload.context || {}
+      );
     });
 
     // Also listen for domain-specific error events (following existing pattern)
     this.#eventBus.subscribe('SYSTEM_ERROR_OCCURRED', (event) => {
-      this.report(event.payload.error || event.payload, event.payload.context || {});
+      this.report(
+        event.payload.error || event.payload,
+        event.payload.context || {}
+      );
     });
   }
 

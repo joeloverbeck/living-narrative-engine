@@ -24,11 +24,11 @@ beforeEach(async () => {
 
 ### Scope Categories
 
-| Category | Registration Method | Coverage |
-|----------|-------------------|----------|
+| Category        | Registration Method                  | Coverage  |
+| --------------- | ------------------------------------ | --------- |
 | **Positioning** | `registerPositioningScopes(testEnv)` | 26 scopes |
-| **Inventory** | `registerInventoryScopes(testEnv)` | 5 scopes |
-| **Anatomy** | `registerAnatomyScopes(testEnv)` | 2 scopes |
+| **Inventory**   | `registerInventoryScopes(testEnv)`   | 5 scopes  |
+| **Anatomy**     | `registerAnatomyScopes(testEnv)`     | 2 scopes  |
 
 ---
 
@@ -37,6 +37,7 @@ beforeEach(async () => {
 Scopes for handling positioning, furniture, sitting, standing, kneeling, lying, bending, and facing relationships.
 
 **Registration**:
+
 ```javascript
 ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 ```
@@ -48,11 +49,13 @@ ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor must have `positioning:sitting_on` component with `furniture_id` field
 
 **Returns**: Set containing single furniture entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 // Action that uses this scope
 {
@@ -63,6 +66,7 @@ ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 ```
 
 **Test Setup**:
+
 ```javascript
 // Arrange scenario
 const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
@@ -74,10 +78,13 @@ scenario.actor.components['positioning:sitting_on'] = {
 };
 
 // Execute action
-const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+const availableActions = await testFixture.getAvailableActions(
+  scenario.actor.id
+);
 ```
 
 **Common Use Cases**:
+
 - "stand up" action - requires knowing current furniture
 - "get up from furniture" interactions
 
@@ -90,12 +97,14 @@ const availableActions = await testFixture.getAvailableActions(scenario.actor.id
 **Pattern Type**: Array Filter
 
 **Requirements**:
+
 - Actor has `positioning:sitting_on` component
 - Furniture has `positioning:allows_sitting` component with `spots` array
 
 **Returns**: Set of entity IDs of other actors on same furniture
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:talk_to_person_on_couch",
@@ -105,12 +114,17 @@ const availableActions = await testFixture.getAvailableActions(scenario.actor.id
 ```
 
 **Test Setup**:
+
 ```javascript
-const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couch');
+const scenario = testFixture.createSittingPair(
+  ['Alice', 'Bob'],
+  'furniture_couch'
+);
 // Creates two actors sitting on same furniture at different spots
 ```
 
 **Common Use Cases**:
+
 - Social interactions with seated neighbors
 - Group sitting conversations
 
@@ -123,12 +137,14 @@ const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couc
 **Pattern Type**: Component Lookup + Position Calculation
 
 **Requirements**:
+
 - Actor has `positioning:sitting_on` with valid `spot_index`
 - Furniture has occupied spot to the left
 
 **Returns**: Set containing single entity ID of leftmost neighbor, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:scoot_closer_left",
@@ -138,13 +154,18 @@ const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couc
 ```
 
 **Test Setup**:
+
 ```javascript
-const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couch');
+const scenario = testFixture.createSittingPair(
+  ['Alice', 'Bob'],
+  'furniture_couch'
+);
 // Alice at spot 0, Bob at spot 1
 // Bob's closest_leftmost_occupant = Alice
 ```
 
 **Common Use Cases**:
+
 - Directional seating interactions
 - "scoot closer to left" actions
 
@@ -157,12 +178,14 @@ const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couc
 **Pattern Type**: Component Lookup + Position Calculation
 
 **Requirements**:
+
 - Actor has `positioning:sitting_on` with valid `spot_index`
 - Furniture has occupied spot to the right with at least one empty spot between
 
 **Returns**: Set containing single entity ID of rightmost neighbor, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:scoot_closer_right",
@@ -172,13 +195,18 @@ const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couc
 ```
 
 **Test Setup**:
+
 ```javascript
-const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couch');
+const scenario = testFixture.createSittingPair(
+  ['Alice', 'Bob'],
+  'furniture_couch'
+);
 // Alice at spot 0, empty at spot 1, Bob at spot 2
 // Alice's closest_rightmost_occupant = Bob
 ```
 
 **Common Use Cases**:
+
 - Directional seating interactions
 - "scoot closer to right" actions
 
@@ -191,12 +219,14 @@ const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couc
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Furniture has `positioning:allows_sitting` component
 - Furniture at same location as actor
 
 **Returns**: Set of furniture entity IDs allowing sitting
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:sit_down",
@@ -206,6 +236,7 @@ const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couc
 ```
 
 **Test Setup**:
+
 ```javascript
 const scenario = testFixture.createStandardActorTarget(['Alice']);
 
@@ -217,6 +248,7 @@ const furniture = testFixture.createEntity('furniture_chair', {
 ```
 
 **Common Use Cases**:
+
 - "sit down on furniture" action discovery
 - Finding available seating
 
@@ -229,11 +261,13 @@ const furniture = testFixture.createEntity('furniture_chair', {
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Actors at same location without sitting, lying, or kneeling components
 
 **Returns**: Set of standing actor entity IDs
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:greet_standing_actors",
@@ -243,12 +277,14 @@ const furniture = testFixture.createEntity('furniture_chair', {
 ```
 
 **Test Setup**:
+
 ```javascript
 const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 // Both actors created at same location, neither sitting/kneeling
 ```
 
 **Common Use Cases**:
+
 - Proximity-based standing interactions
 - Room-wide greetings
 
@@ -261,11 +297,13 @@ const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 **Pattern Type**: Component Filter
 
 **Requirements**:
+
 - Actors have `positioning:sitting_on` component
 
 **Returns**: Set of all sitting actor entity IDs
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "core:global_sitting_query",
@@ -275,13 +313,18 @@ const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 ```
 
 **Test Setup**:
+
 ```javascript
-const sitting = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couch');
+const sitting = testFixture.createSittingPair(
+  ['Alice', 'Bob'],
+  'furniture_couch'
+);
 const standing = testFixture.createStandardActorTarget(['Charlie']);
 // sitting_actors = { Alice, Bob }
 ```
 
 **Common Use Cases**:
+
 - Global sitting state queries
 - Finding all seated characters
 
@@ -294,11 +337,13 @@ const standing = testFixture.createStandardActorTarget(['Charlie']);
 **Pattern Type**: Component Filter
 
 **Requirements**:
+
 - Actors have `positioning:kneeling` component
 
 **Returns**: Set of all kneeling actor entity IDs
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "core:global_kneeling_query",
@@ -308,11 +353,13 @@ const standing = testFixture.createStandardActorTarget(['Charlie']);
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:kneeling'] = { started_at: Date.now() };
 ```
 
 **Common Use Cases**:
+
 - Kneeling state-dependent actions
 - Finding kneeling characters
 
@@ -325,11 +372,13 @@ scenario.actor.components['positioning:kneeling'] = { started_at: Date.now() };
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `positioning:standing_behind` component with `furniture_id` field
 
 **Returns**: Set containing single furniture entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:step_out_from_behind",
@@ -339,6 +388,7 @@ scenario.actor.components['positioning:kneeling'] = { started_at: Date.now() };
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:standing_behind'] = {
   furniture_id: 'furniture_wall',
@@ -346,6 +396,7 @@ scenario.actor.components['positioning:standing_behind'] = {
 ```
 
 **Common Use Cases**:
+
 - "step out from behind furniture" actions
 - Cover-based positioning
 
@@ -358,6 +409,7 @@ scenario.actor.components['positioning:standing_behind'] = {
 **Pattern Type**: Array Filter with Reciprocal Validation
 
 **Requirements**:
+
 - Actor has `positioning:biting_neck` component with `bitten_entity_id`
 - Target has `positioning:being_bitten_in_neck` component with `biting_entity_id`
 - Both components reference each other (reciprocal relationship)
@@ -365,6 +417,7 @@ scenario.actor.components['positioning:standing_behind'] = {
 **Returns**: Set containing single bitten entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "violence:tear_out_throat",
@@ -374,6 +427,7 @@ scenario.actor.components['positioning:standing_behind'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:biting_neck'] = {
   bitten_entity_id: scenario.target.id,
@@ -384,6 +438,7 @@ scenario.target.components['positioning:being_bitten_in_neck'] = {
 ```
 
 **Common Use Cases**:
+
 - "tear out throat" vampire actions
 - "drink blood" actions requiring bite hold
 
@@ -396,12 +451,14 @@ scenario.target.components['positioning:being_bitten_in_neck'] = {
 **Pattern Type**: Array Filter with Complex Logic
 
 **Requirements**:
+
 - Actor has `positioning:closeness` component with `partners` array
 - Both actors have `positioning:facing_away` components
 
 **Returns**: Set of close actor entity IDs meeting facing criteria
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "violence:grab_neck",
@@ -411,12 +468,17 @@ scenario.target.components['positioning:being_bitten_in_neck'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 // Facing each other
 const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
-scenario.actor.components['positioning:closeness'] = { partners: [scenario.target.id] };
+scenario.actor.components['positioning:closeness'] = {
+  partners: [scenario.target.id],
+};
 scenario.actor.components['positioning:facing_away'] = { facing_away_from: [] };
-scenario.target.components['positioning:facing_away'] = { facing_away_from: [] };
+scenario.target.components['positioning:facing_away'] = {
+  facing_away_from: [],
+};
 
 // OR actor behind target
 scenario.target.components['positioning:facing_away'] = {
@@ -425,6 +487,7 @@ scenario.target.components['positioning:facing_away'] = {
 ```
 
 **Common Use Cases**:
+
 - Stealth attack actions
 - Grab/grapple actions requiring positioning
 
@@ -437,12 +500,14 @@ scenario.target.components['positioning:facing_away'] = {
 **Pattern Type**: Array Filter
 
 **Requirements**:
+
 - Actor has `positioning:closeness` component with `partners` array
 - Excludes partners in kneeling-before relationship
 
 **Returns**: Set of close actor entity IDs
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "affection:hug",
@@ -452,6 +517,7 @@ scenario.target.components['positioning:facing_away'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:closeness'] = {
   partners: [scenario.target.id],
@@ -459,6 +525,7 @@ scenario.actor.components['positioning:closeness'] = {
 ```
 
 **Common Use Cases**:
+
 - General proximity-based interactions
 - Physical contact actions
 
@@ -471,12 +538,14 @@ scenario.actor.components['positioning:closeness'] = {
 **Pattern Type**: Array Filter
 
 **Requirements**:
+
 - Actor has `positioning:closeness` component
 - Neither actor in `positioning:facing_away` list for the other
 
 **Returns**: Set of close actors facing each other
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "kissing:kiss_lips",
@@ -486,13 +555,19 @@ scenario.actor.components['positioning:closeness'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
-scenario.actor.components['positioning:closeness'] = { partners: [scenario.target.id] };
+scenario.actor.components['positioning:closeness'] = {
+  partners: [scenario.target.id],
+};
 scenario.actor.components['positioning:facing_away'] = { facing_away_from: [] };
-scenario.target.components['positioning:facing_away'] = { facing_away_from: [] };
+scenario.target.components['positioning:facing_away'] = {
+  facing_away_from: [],
+};
 ```
 
 **Common Use Cases**:
+
 - Face-to-face interactions
 - Kissing, eye contact actions
 
@@ -505,12 +580,14 @@ scenario.target.components['positioning:facing_away'] = { facing_away_from: [] }
 **Pattern Type**: Array Filter
 
 **Requirements**:
+
 - Actor has `positioning:closeness` component
 - Both actor and partner have `positioning:sitting_on` component
 
 **Returns**: Set of close sitting partners
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "affection:hold_hands_while_sitting",
@@ -520,12 +597,19 @@ scenario.target.components['positioning:facing_away'] = { facing_away_from: [] }
 ```
 
 **Test Setup**:
+
 ```javascript
-const scenario = testFixture.createSittingPair(['Alice', 'Bob'], 'furniture_couch');
-scenario.actor.components['positioning:closeness'] = { partners: [scenario.target.id] };
+const scenario = testFixture.createSittingPair(
+  ['Alice', 'Bob'],
+  'furniture_couch'
+);
+scenario.actor.components['positioning:closeness'] = {
+  partners: [scenario.target.id],
+};
 ```
 
 **Common Use Cases**:
+
 - Seated physical contact
 - Couch cuddling actions
 
@@ -538,6 +622,7 @@ scenario.actor.components['positioning:closeness'] = { partners: [scenario.targe
 **Pattern Type**: Array Filter with Reciprocal Validation
 
 **Requirements**:
+
 - Actor has `positioning:being_bitten_in_neck` component
 - Partner has `positioning:biting_neck` component
 - Reciprocal relationship validated
@@ -545,6 +630,7 @@ scenario.actor.components['positioning:closeness'] = { partners: [scenario.targe
 **Returns**: Set containing single biting entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "violence:struggle_against_bite",
@@ -554,6 +640,7 @@ scenario.actor.components['positioning:closeness'] = { partners: [scenario.targe
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:being_bitten_in_neck'] = {
   biting_entity_id: scenario.target.id,
@@ -564,6 +651,7 @@ scenario.target.components['positioning:biting_neck'] = {
 ```
 
 **Common Use Cases**:
+
 - Defensive actions against bite
 - "push away attacker" actions
 
@@ -576,12 +664,14 @@ scenario.target.components['positioning:biting_neck'] = {
 **Pattern Type**: Array Filter
 
 **Requirements**:
+
 - Actor has `positioning:closeness` component
 - Partner has `positioning:sitting_on` component
 
 **Returns**: Set of close partners who are sitting
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "affection:sit_beside",
@@ -591,12 +681,19 @@ scenario.target.components['positioning:biting_neck'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
-scenario.actor.components['positioning:closeness'] = { partners: [scenario.target.id] };
-scenario.target.components['positioning:sitting_on'] = { furniture_id: 'chair_01', spot_index: 0 };
+scenario.actor.components['positioning:closeness'] = {
+  partners: [scenario.target.id],
+};
+scenario.target.components['positioning:sitting_on'] = {
+  furniture_id: 'chair_01',
+  spot_index: 0,
+};
 ```
 
 **Common Use Cases**:
+
 - Joining seated person
 - Seated interaction discovery
 
@@ -609,6 +706,7 @@ scenario.target.components['positioning:sitting_on'] = { furniture_id: 'chair_01
 **Pattern Type**: Array Filter with Complex Logic
 
 **Requirements**:
+
 - Actor has `positioning:closeness` component
 - Facing/behind logic evaluated
 - Kneeling-before relationship checked
@@ -616,6 +714,7 @@ scenario.target.components['positioning:sitting_on'] = { furniture_id: 'chair_01
 **Returns**: Set of valid close actors
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "affection:embrace",
@@ -625,16 +724,22 @@ scenario.target.components['positioning:sitting_on'] = { furniture_id: 'chair_01
 ```
 
 **Test Setup**:
+
 ```javascript
-scenario.actor.components['positioning:closeness'] = { partners: [scenario.target.id] };
+scenario.actor.components['positioning:closeness'] = {
+  partners: [scenario.target.id],
+};
 scenario.actor.components['positioning:facing_away'] = { facing_away_from: [] };
-scenario.target.components['positioning:facing_away'] = { facing_away_from: [] };
+scenario.target.components['positioning:facing_away'] = {
+  facing_away_from: [],
+};
 
 // Ensure actor NOT kneeling before partner
 // (absence of component is valid)
 ```
 
 **Common Use Cases**:
+
 - Complex positioning-aware interactions
 - Embrace actions with positioning constraints
 
@@ -647,11 +752,13 @@ scenario.target.components['positioning:facing_away'] = { facing_away_from: [] }
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `positioning:straddling_waist` component with `target_id` field
 
 **Returns**: Set containing single straddled entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:dismount_from_straddling",
@@ -661,6 +768,7 @@ scenario.target.components['positioning:facing_away'] = { facing_away_from: [] }
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:straddling_waist'] = {
   target_id: scenario.target.id,
@@ -669,6 +777,7 @@ scenario.actor.components['positioning:straddling_waist'] = {
 ```
 
 **Common Use Cases**:
+
 - Dismount actions
 - Straddling-specific interactions
 
@@ -681,11 +790,13 @@ scenario.actor.components['positioning:straddling_waist'] = {
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `positioning:kneeling_before` component with `entity_id` field
 
 **Returns**: Set containing single entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:stop_kneeling",
@@ -695,6 +806,7 @@ scenario.actor.components['positioning:straddling_waist'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:kneeling_before'] = {
   entity_id: scenario.target.id,
@@ -702,6 +814,7 @@ scenario.actor.components['positioning:kneeling_before'] = {
 ```
 
 **Common Use Cases**:
+
 - "stand up from kneeling" actions
 - Kneeling relationship queries
 
@@ -714,6 +827,7 @@ scenario.actor.components['positioning:kneeling_before'] = {
 **Pattern Type**: Component Filter with Complex Validation
 
 **Requirements**:
+
 - Actor has `positioning:sitting_on` component
 - Furniture has at least 2 consecutive empty spots to right
 - Actor is rightmost occupant
@@ -721,6 +835,7 @@ scenario.actor.components['positioning:kneeling_before'] = {
 **Returns**: Set of actors meeting seating space criteria
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:sit_beside_with_room",
@@ -730,6 +845,7 @@ scenario.actor.components['positioning:kneeling_before'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 const furniture = testFixture.createEntity('furniture_couch', {
   'positioning:allows_sitting': {
@@ -743,6 +859,7 @@ scenario.actor.components['positioning:sitting_on'] = {
 ```
 
 **Common Use Cases**:
+
 - Finding actors with room to sit beside
 - Seating arrangement actions
 
@@ -755,12 +872,14 @@ scenario.actor.components['positioning:sitting_on'] = {
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Furniture has `positioning:allows_sitting` component
 - At least one `null` or `undefined` spot in `spots` array
 
 **Returns**: Set of furniture entity IDs with available spots
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:find_seating",
@@ -770,6 +889,7 @@ scenario.actor.components['positioning:sitting_on'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 const furniture = testFixture.createEntity('furniture_couch', {
   'core:position': { locationId: 'location_livingroom' },
@@ -778,6 +898,7 @@ const furniture = testFixture.createEntity('furniture_couch', {
 ```
 
 **Common Use Cases**:
+
 - Finding available seating
 - Furniture discovery for sit actions
 
@@ -790,12 +911,14 @@ const furniture = testFixture.createEntity('furniture_couch', {
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Furniture has `positioning:allows_lying_on` component
 - Furniture at same location as actor
 
 **Returns**: Set of furniture entity IDs allowing lying
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:lie_down",
@@ -805,6 +928,7 @@ const furniture = testFixture.createEntity('furniture_couch', {
 ```
 
 **Test Setup**:
+
 ```javascript
 const bed = testFixture.createEntity('furniture_bed', {
   'core:position': { locationId: 'location_bedroom' },
@@ -813,6 +937,7 @@ const bed = testFixture.createEntity('furniture_bed', {
 ```
 
 **Common Use Cases**:
+
 - "lie down" action discovery
 - Finding beds/couches for resting
 
@@ -825,11 +950,13 @@ const bed = testFixture.createEntity('furniture_bed', {
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `positioning:lying_down` component with `furniture_id` field
 
 **Returns**: Set containing single furniture entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:get_up_from_lying",
@@ -839,6 +966,7 @@ const bed = testFixture.createEntity('furniture_bed', {
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:lying_down'] = {
   furniture_id: 'furniture_bed_01',
@@ -846,6 +974,7 @@ scenario.actor.components['positioning:lying_down'] = {
 ```
 
 **Common Use Cases**:
+
 - "get up from lying" actions
 - Current lying surface queries
 
@@ -858,11 +987,13 @@ scenario.actor.components['positioning:lying_down'] = {
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `positioning:sitting_on` component with `furniture_id` field
 
 **Returns**: Set containing single furniture entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:adjust_seat",
@@ -872,6 +1003,7 @@ scenario.actor.components['positioning:lying_down'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:sitting_on'] = {
   furniture_id: 'furniture_chair_01',
@@ -880,6 +1012,7 @@ scenario.actor.components['positioning:sitting_on'] = {
 ```
 
 **Common Use Cases**:
+
 - Current sitting surface queries
 - Furniture-specific sitting actions
 
@@ -892,11 +1025,13 @@ scenario.actor.components['positioning:sitting_on'] = {
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `positioning:bending_over` component with `surface_id` field
 
 **Returns**: Set containing single surface entity ID, or empty set
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:straighten_up",
@@ -906,6 +1041,7 @@ scenario.actor.components['positioning:sitting_on'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.actor.components['positioning:bending_over'] = {
   surface_id: 'furniture_table_01',
@@ -913,6 +1049,7 @@ scenario.actor.components['positioning:bending_over'] = {
 ```
 
 **Common Use Cases**:
+
 - "straighten up" actions
 - Bending-over surface queries
 
@@ -925,12 +1062,14 @@ scenario.actor.components['positioning:bending_over'] = {
 **Pattern Type**: Array Filter
 
 **Requirements**:
+
 - Actor has `positioning:facing_away` component with `facing_away_from` array
 - Partners also in actor's closeness list
 
 **Returns**: Set of actor entity IDs in facing-away list
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "positioning:turn_around_to_face",
@@ -940,14 +1079,18 @@ scenario.actor.components['positioning:bending_over'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
-scenario.actor.components['positioning:closeness'] = { partners: [scenario.target.id] };
+scenario.actor.components['positioning:closeness'] = {
+  partners: [scenario.target.id],
+};
 scenario.actor.components['positioning:facing_away'] = {
   facing_away_from: [scenario.target.id],
 };
 ```
 
 **Common Use Cases**:
+
 - "turn around to face" actions
 - Facing direction queries
 
@@ -958,6 +1101,7 @@ scenario.actor.components['positioning:facing_away'] = {
 Scopes for handling items, containers, equipped items, and inventory management.
 
 **Registration**:
+
 ```javascript
 ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 ```
@@ -969,11 +1113,13 @@ ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 **Pattern Type**: Component Lookup
 
 **Requirements**:
+
 - Actor has `items:inventory` component with `items` array field
 
 **Returns**: Set of item entity IDs (note: returns the array as-is from component)
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "items:drop_item",
@@ -983,6 +1129,7 @@ ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
 ```
 
 **Test Setup**:
+
 ```javascript
 const item = testFixture.createEntity('item_sword', {
   'items:item': { name: 'Sword', weight: 5 },
@@ -996,6 +1143,7 @@ scenario.actor.components['items:inventory'] = {
 ```
 
 **Common Use Cases**:
+
 - "drop item" action discovery
 - "give item" action discovery
 - Inventory queries
@@ -1009,12 +1157,14 @@ scenario.actor.components['items:inventory'] = {
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Items have `items:item` component
 - Items at same location as actor
 
 **Returns**: Set of item entity IDs at location
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "items:pick_up_item",
@@ -1024,6 +1174,7 @@ scenario.actor.components['items:inventory'] = {
 ```
 
 **Test Setup**:
+
 ```javascript
 const item = testFixture.createEntity('item_key', {
   'core:position': { locationId: 'location_room' },
@@ -1033,6 +1184,7 @@ const item = testFixture.createEntity('item_key', {
 ```
 
 **Common Use Cases**:
+
 - "pick up item" action discovery
 - Location item queries
 
@@ -1045,12 +1197,14 @@ const item = testFixture.createEntity('item_key', {
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Items have both `items:item` and `items:portable` components
 - Items at same location as actor
 
 **Returns**: Set of portable item entity IDs
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "items:pick_up_portable_item",
@@ -1060,6 +1214,7 @@ const item = testFixture.createEntity('item_key', {
 ```
 
 **Test Setup**:
+
 ```javascript
 const portableItem = testFixture.createEntity('item_coin', {
   'core:position': { locationId: 'location_room' },
@@ -1076,6 +1231,7 @@ const heavyItem = testFixture.createEntity('item_anvil', {
 ```
 
 **Common Use Cases**:
+
 - "pick up" action filtering
 - Excluding non-portable objects
 
@@ -1088,12 +1244,14 @@ const heavyItem = testFixture.createEntity('item_anvil', {
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Entities have `core:actor` component
 - Entities at same location as actor
 
 **Returns**: Set of actor entity IDs (excluding source actor)
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "items:give_item",
@@ -1103,12 +1261,18 @@ const heavyItem = testFixture.createEntity('item_anvil', {
 ```
 
 **Test Setup**:
+
 ```javascript
-const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob', 'Charlie']);
+const scenario = testFixture.createStandardActorTarget([
+  'Alice',
+  'Bob',
+  'Charlie',
+]);
 // All at same location by default
 ```
 
 **Common Use Cases**:
+
 - "give item" recipient discovery
 - Social interaction targeting
 
@@ -1121,12 +1285,14 @@ const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob', 'Charlie
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Entities have `items:container` component
 - Entities at same location as actor
 
 **Returns**: Set of container entity IDs
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "items:open_container",
@@ -1136,6 +1302,7 @@ const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob', 'Charlie
 ```
 
 **Test Setup**:
+
 ```javascript
 const chest = testFixture.createEntity('container_chest', {
   'core:position': { locationId: 'location_room' },
@@ -1148,6 +1315,7 @@ const chest = testFixture.createEntity('container_chest', {
 ```
 
 **Common Use Cases**:
+
 - "open container" action discovery
 - "put item in container" targeting
 - "take from container" targeting
@@ -1159,6 +1327,7 @@ const chest = testFixture.createEntity('container_chest', {
 Scopes for handling body parts, anatomy interactions, and anatomical relationships.
 
 **Registration**:
+
 ```javascript
 ScopeResolverHelpers.registerAnatomyScopes(testFixture.testEnv);
 ```
@@ -1170,12 +1339,14 @@ ScopeResolverHelpers.registerAnatomyScopes(testFixture.testEnv);
 **Pattern Type**: Location Match + Component Filter
 
 **Requirements**:
+
 - Entities have `core:actor` component
 - Entities at same location as actor
 
 **Returns**: Set of actor entity IDs (excluding source actor)
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "anatomy:examine_body",
@@ -1185,11 +1356,13 @@ ScopeResolverHelpers.registerAnatomyScopes(testFixture.testEnv);
 ```
 
 **Test Setup**:
+
 ```javascript
 const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 ```
 
 **Common Use Cases**:
+
 - Anatomy examination actions
 - Body part interaction targeting
 
@@ -1202,11 +1375,13 @@ const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 **Pattern Type**: Custom Resolver
 
 **Requirements**:
+
 - Target has `anatomy:body` component with `parts` object
 
 **Returns**: Set of body part string IDs (not entity IDs, but part identifiers)
 
 **Example Usage**:
+
 ```javascript
 {
   "id": "anatomy:touch_body_part",
@@ -1216,6 +1391,7 @@ const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 ```
 
 **Test Setup**:
+
 ```javascript
 scenario.target.components['anatomy:body'] = {
   parts: {
@@ -1228,6 +1404,7 @@ scenario.target.components['anatomy:body'] = {
 ```
 
 **Common Use Cases**:
+
 - Body part selection for interactions
 - Anatomy-specific targeting
 
@@ -1244,17 +1421,20 @@ For scopes not in the standard library, use factory methods to create resolvers.
 **Purpose**: Resolve to entity ID stored in a component field.
 
 **Signature**:
+
 ```javascript
-ScopeResolverHelpers.createComponentLookupResolver(scopeName, config)
+ScopeResolverHelpers.createComponentLookupResolver(scopeName, config);
 ```
 
 **Config Parameters**:
+
 - `componentType` (string): Component to read from (e.g., `'positioning:biting_neck'`)
 - `sourceField` (string): Field containing target entity ID (e.g., `'bitten_entity_id'`)
 - `resultField` (string, optional): Field to extract from result (default: `'id'`)
 - `contextSource` (string, optional): Where to get source entity (`'actor'` | `'target'`, default: `'actor'`)
 
 **Example**:
+
 ```javascript
 const furnitureResolver = ScopeResolverHelpers.createComponentLookupResolver(
   'positioning:furniture_im_sitting_on',
@@ -1273,6 +1453,7 @@ ScopeResolverHelpers._registerResolvers(
 ```
 
 **Use When**:
+
 - Scope resolves to single entity from component field
 - Pattern: "entity X has relationship to entity Y"
 - Examples: "furniture I'm sitting on", "actor I'm kneeling before"
@@ -1284,16 +1465,19 @@ ScopeResolverHelpers._registerResolvers(
 **Purpose**: Filter array of entity IDs based on custom logic.
 
 **Signature**:
+
 ```javascript
-ScopeResolverHelpers.createArrayFilterResolver(scopeName, config)
+ScopeResolverHelpers.createArrayFilterResolver(scopeName, config);
 ```
 
 **Config Parameters**:
+
 - `getArray` (function): `(actor, context, entityManager) => entityId[]` - Function to retrieve array
 - `filterFn` (function): `(entityId, actor, context, entityManager) => boolean` - Filter predicate
 - `contextSource` (string, optional): Context entity to use (`'actor'` | `'target'`, default: `'actor'`)
 
 **Example**:
+
 ```javascript
 const facingResolver = ScopeResolverHelpers.createArrayFilterResolver(
   'positioning:close_actors_facing_each_other',
@@ -1304,9 +1488,11 @@ const facingResolver = ScopeResolverHelpers.createArrayFilterResolver(
     },
     filterFn: (partnerId, actor, context, em) => {
       const actorFacingAway =
-        em.getComponentData(actor.id, 'positioning:facing_away')?.facing_away_from || [];
+        em.getComponentData(actor.id, 'positioning:facing_away')
+          ?.facing_away_from || [];
       const partnerFacingAway =
-        em.getComponentData(partnerId, 'positioning:facing_away')?.facing_away_from || [];
+        em.getComponentData(partnerId, 'positioning:facing_away')
+          ?.facing_away_from || [];
 
       return (
         !actorFacingAway.includes(partnerId) &&
@@ -1324,6 +1510,7 @@ ScopeResolverHelpers._registerResolvers(
 ```
 
 **Use When**:
+
 - Scope resolves to subset of entities from array
 - Complex filtering logic required
 - Pattern: "entities from list that match criteria"
@@ -1336,15 +1523,18 @@ ScopeResolverHelpers._registerResolvers(
 **Purpose**: Resolve to entities at the same location with optional filtering.
 
 **Signature**:
+
 ```javascript
-ScopeResolverHelpers.createLocationMatchResolver(scopeName, config)
+ScopeResolverHelpers.createLocationMatchResolver(scopeName, config);
 ```
 
 **Config Parameters**:
+
 - `filterFn` (function, optional): `(entityId, sourceEntity, context, entityManager) => boolean`
 - `contextSource` (string, optional): Context entity to use (`'actor'` | `'target'`, default: `'actor'`)
 
 **Example**:
+
 ```javascript
 const standingAtLocation = ScopeResolverHelpers.createLocationMatchResolver(
   'positioning:standing_actors_at_location',
@@ -1368,6 +1558,7 @@ ScopeResolverHelpers._registerResolvers(
 ```
 
 **Use When**:
+
 - Scope resolves to entities at same location
 - Optional filtering by component presence
 - Pattern: "entities in same room [that meet criteria]"
@@ -1380,15 +1571,18 @@ ScopeResolverHelpers._registerResolvers(
 **Purpose**: Resolve to all entities with a specific component globally.
 
 **Signature**:
+
 ```javascript
-ScopeResolverHelpers.createComponentFilterResolver(scopeName, config)
+ScopeResolverHelpers.createComponentFilterResolver(scopeName, config);
 ```
 
 **Config Parameters**:
+
 - `componentType` (string): Component type to filter by
 - `filterFn` (function, optional): `(entityId, context, entityManager) => boolean` - Additional filtering
 
 **Example**:
+
 ```javascript
 const sittingActors = ScopeResolverHelpers.createComponentFilterResolver(
   'positioning:sitting_actors',
@@ -1405,6 +1599,7 @@ ScopeResolverHelpers._registerResolvers(
 ```
 
 **Use When**:
+
 - Scope resolves to all entities with component (global)
 - Pattern: "all entities with component X"
 - Examples: "all sitting actors", "all kneeling actors"
@@ -1413,12 +1608,12 @@ ScopeResolverHelpers._registerResolvers(
 
 ### Choosing the Right Factory Method
 
-| Pattern | Factory Method | Example |
-|---------|---------------|---------|
-| "Entity ID from component field" | `createComponentLookupResolver` | "furniture actor is sitting on" |
-| "Filter entities from array" | `createArrayFilterResolver` | "close actors facing each other" |
-| "Entities at same location" | `createLocationMatchResolver` | "standing actors at location" |
-| "All entities with component" | `createComponentFilterResolver` | "all kneeling actors" |
+| Pattern                          | Factory Method                  | Example                          |
+| -------------------------------- | ------------------------------- | -------------------------------- |
+| "Entity ID from component field" | `createComponentLookupResolver` | "furniture actor is sitting on"  |
+| "Filter entities from array"     | `createArrayFilterResolver`     | "close actors facing each other" |
+| "Entities at same location"      | `createLocationMatchResolver`   | "standing actors at location"    |
+| "All entities with component"    | `createComponentFilterResolver` | "all kneeling actors"            |
 
 ---
 
@@ -1428,50 +1623,50 @@ ScopeResolverHelpers._registerResolvers(
 
 **Need to find...**
 
-| Scenario | Scope Name | Category |
-|----------|-----------|----------|
-| Furniture actor sits on | `positioning:furniture_actor_sitting_on` | Positioning |
-| Actors on same furniture | `positioning:actors_sitting_on_same_furniture` | Positioning |
-| Actor to left on furniture | `positioning:closest_leftmost_occupant` | Positioning |
-| Actor to right on furniture | `positioning:closest_rightmost_occupant` | Positioning |
-| Furniture allowing sitting | `positioning:furniture_allowing_sitting_at_location` | Positioning |
-| Standing actors nearby | `positioning:standing_actors_at_location` | Positioning |
-| All sitting actors | `positioning:sitting_actors` | Positioning |
-| All kneeling actors | `positioning:kneeling_actors` | Positioning |
-| Furniture actor behind | `positioning:furniture_actor_behind` | Positioning |
-| Entity being bitten | `positioning:actor_being_bitten_by_me` | Positioning |
+| Scenario                     | Scope Name                                                    | Category    |
+| ---------------------------- | ------------------------------------------------------------- | ----------- |
+| Furniture actor sits on      | `positioning:furniture_actor_sitting_on`                      | Positioning |
+| Actors on same furniture     | `positioning:actors_sitting_on_same_furniture`                | Positioning |
+| Actor to left on furniture   | `positioning:closest_leftmost_occupant`                       | Positioning |
+| Actor to right on furniture  | `positioning:closest_rightmost_occupant`                      | Positioning |
+| Furniture allowing sitting   | `positioning:furniture_allowing_sitting_at_location`          | Positioning |
+| Standing actors nearby       | `positioning:standing_actors_at_location`                     | Positioning |
+| All sitting actors           | `positioning:sitting_actors`                                  | Positioning |
+| All kneeling actors          | `positioning:kneeling_actors`                                 | Positioning |
+| Furniture actor behind       | `positioning:furniture_actor_behind`                          | Positioning |
+| Entity being bitten          | `positioning:actor_being_bitten_by_me`                        | Positioning |
 | Close actors (facing/behind) | `positioning:close_actors_facing_each_other_or_behind_target` | Positioning |
-| Close actors (base) | `positioning:close_actors` | Positioning |
-| Close actors facing | `positioning:close_actors_facing_each_other` | Positioning |
-| Both sitting close | `positioning:actors_both_sitting_close` | Positioning |
-| Actor biting my neck | `positioning:actor_biting_my_neck` | Positioning |
-| Actors sitting close | `positioning:actors_sitting_close` | Positioning |
-| Complex closeness/kneeling | `positioning:close_actors_or_entity_kneeling_before_actor` | Positioning |
-| Actor I'm straddling | `positioning:actor_im_straddling` | Positioning |
-| Entity kneeling before | `positioning:entity_actor_is_kneeling_before` | Positioning |
-| Sitting with space right | `positioning:actors_sitting_with_space_to_right` | Positioning |
-| Available furniture | `positioning:available_furniture` | Positioning |
-| Available lying furniture | `positioning:available_lying_furniture` | Positioning |
-| Furniture lying on | `positioning:furniture_im_lying_on` | Positioning |
-| Furniture sitting on | `positioning:furniture_im_sitting_on` | Positioning |
-| Surface bending over | `positioning:surface_im_bending_over` | Positioning |
-| Actors facing away from | `positioning:actors_im_facing_away_from` | Positioning |
-| Actor's inventory items | `items:actor_inventory_items` | Inventory |
-| Items at location | `items:items_at_location` | Inventory |
-| Portable items at location | `items:portable_items_at_location` | Inventory |
-| Actors at location (items) | `items:actors_at_location` | Inventory |
-| Containers at location | `items:containers_at_location` | Inventory |
-| Actors at location (anatomy) | `anatomy:actors_at_location` | Anatomy |
-| Target's body parts | `anatomy:target_body_parts` | Anatomy |
+| Close actors (base)          | `positioning:close_actors`                                    | Positioning |
+| Close actors facing          | `positioning:close_actors_facing_each_other`                  | Positioning |
+| Both sitting close           | `positioning:actors_both_sitting_close`                       | Positioning |
+| Actor biting my neck         | `positioning:actor_biting_my_neck`                            | Positioning |
+| Actors sitting close         | `positioning:actors_sitting_close`                            | Positioning |
+| Complex closeness/kneeling   | `positioning:close_actors_or_entity_kneeling_before_actor`    | Positioning |
+| Actor I'm straddling         | `positioning:actor_im_straddling`                             | Positioning |
+| Entity kneeling before       | `positioning:entity_actor_is_kneeling_before`                 | Positioning |
+| Sitting with space right     | `positioning:actors_sitting_with_space_to_right`              | Positioning |
+| Available furniture          | `positioning:available_furniture`                             | Positioning |
+| Available lying furniture    | `positioning:available_lying_furniture`                       | Positioning |
+| Furniture lying on           | `positioning:furniture_im_lying_on`                           | Positioning |
+| Furniture sitting on         | `positioning:furniture_im_sitting_on`                         | Positioning |
+| Surface bending over         | `positioning:surface_im_bending_over`                         | Positioning |
+| Actors facing away from      | `positioning:actors_im_facing_away_from`                      | Positioning |
+| Actor's inventory items      | `items:actor_inventory_items`                                 | Inventory   |
+| Items at location            | `items:items_at_location`                                     | Inventory   |
+| Portable items at location   | `items:portable_items_at_location`                            | Inventory   |
+| Actors at location (items)   | `items:actors_at_location`                                    | Inventory   |
+| Containers at location       | `items:containers_at_location`                                | Inventory   |
+| Actors at location (anatomy) | `anatomy:actors_at_location`                                  | Anatomy     |
+| Target's body parts          | `anatomy:target_body_parts`                                   | Anatomy     |
 
 ### Coverage Matrix
 
-| Mod Category | Total Scopes | Documented | Coverage |
-|--------------|--------------|------------|----------|
-| **Positioning** | 26 | 26 | 100% |
-| **Inventory** | 5 | 5 | 100% |
-| **Anatomy** | 2 | 2 | 100% |
-| **Total** | 33 | 33 | 100% |
+| Mod Category    | Total Scopes | Documented | Coverage |
+| --------------- | ------------ | ---------- | -------- |
+| **Positioning** | 26           | 26         | 100%     |
+| **Inventory**   | 5            | 5          | 100%     |
+| **Anatomy**     | 2            | 2          | 100%     |
+| **Total**       | 33           | 33         | 100%     |
 
 ---
 
@@ -1484,7 +1679,9 @@ ScopeResolverHelpers._registerResolvers(
 **Cause**: Action uses a scope that hasn't been registered in the test.
 
 **Solution**:
+
 1. Identify scope from action definition:
+
    ```bash
    cat data/mods/{mod}/actions/{action}.action.json | grep "targets"
    ```
@@ -1504,12 +1701,14 @@ ScopeResolverHelpers._registerResolvers(
 **Symptom**: Action uses a scope not in the standard library.
 
 **Solution**:
+
 1. Identify scope pattern (lookup, filter, location, component)
 2. Choose appropriate factory method from above
 3. Create and register custom resolver
 4. See [Creating Custom Scope Resolvers](#creating-custom-scope-resolvers)
 
 **Example Custom Resolver**:
+
 ```javascript
 // Custom scope for "actors wearing hats at location"
 const hatWearersResolver = ScopeResolverHelpers.createLocationMatchResolver(
@@ -1534,7 +1733,9 @@ ScopeResolverHelpers._registerResolvers(
 **Symptom**: Slow test execution when using many scopes.
 
 **Optimization Strategies**:
+
 - **Register only needed categories**: Don't register all scope categories if only using positioning scopes
+
   ```javascript
   // ✅ Good: Only register what's needed
   ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
@@ -1546,6 +1747,7 @@ ScopeResolverHelpers._registerResolvers(
   ```
 
 - **Use `testFixture.reset()` instead of recreating fixture**: Reuse fixture across tests
+
   ```javascript
   beforeEach(async () => {
     if (!testFixture) {
@@ -1558,12 +1760,14 @@ ScopeResolverHelpers._registerResolvers(
   ```
 
 - **Disable diagnostics in production tests**: Only enable for debugging
+
   ```javascript
   // Only enable when needed
   // testFixture.enableDiagnostics();
   ```
 
 - **Cache resolver creation**: Create resolvers once, reuse across tests
+
   ```javascript
   let customResolver;
   beforeAll(() => {

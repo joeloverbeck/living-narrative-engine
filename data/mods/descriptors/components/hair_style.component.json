@@ -25,9 +25,7 @@
         "default": "straight"
       }
     },
-    "required": [
-      "style"
-    ],
+    "required": ["style"],
     "additionalProperties": false
   },
   "validationRules": {

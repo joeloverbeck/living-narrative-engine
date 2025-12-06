@@ -3,7 +3,14 @@
  * @description Tests real-world integration with event system, schema validation, and multi-target pipelines
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import MultiTargetEventValidator from '../../../src/validation/multiTargetEventValidator.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
@@ -451,7 +458,9 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
       expect(result.warnings).toContain(
         'Target "primary" ID "invalid id with space" should follow entity ID format (letters, numbers, underscore, colon)'
       );
-      expect(result.warnings).toContain('targets object contains duplicate target IDs');
+      expect(result.warnings).toContain(
+        'targets object contains duplicate target IDs'
+      );
       expect(result.details.consistencyIssues).toContain('duplicate_targets');
     });
 
@@ -467,7 +476,9 @@ describe('MultiTargetEventValidator - Integration Tests', () => {
       const result = validator.validateEvent(legacyEvent);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Legacy targetId must be a string or null');
+      expect(result.errors).toContain(
+        'Legacy targetId must be a string or null'
+      );
     });
 
     it('should warn when an event has excessive targets and actor equals the primary target', () => {

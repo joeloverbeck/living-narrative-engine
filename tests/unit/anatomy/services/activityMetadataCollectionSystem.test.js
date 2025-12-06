@@ -91,9 +91,7 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should collect from activity index when available', () => {
       const mockActivityIndex = {
-        findActivitiesForEntity: () => [
-          { type: 'indexed', priority: 10 },
-        ],
+        findActivitiesForEntity: () => [{ type: 'indexed', priority: 10 }],
       };
 
       const systemWithIndex = new ActivityMetadataCollectionSystem({
@@ -202,9 +200,7 @@ describe('ActivityMetadataCollectionSystem', () => {
 
     it('should collect from all three tiers', () => {
       const mockActivityIndex = {
-        findActivitiesForEntity: () => [
-          { type: 'indexed', priority: 90 },
-        ],
+        findActivitiesForEntity: () => [{ type: 'indexed', priority: 90 }],
       };
 
       const systemWithIndex = new ActivityMetadataCollectionSystem({
@@ -256,11 +252,9 @@ describe('ActivityMetadataCollectionSystem', () => {
     });
 
     it('should continue when inline metadata collection throws', () => {
-      jest
-        .spyOn(system, 'collectInlineMetadata')
-        .mockImplementation(() => {
-          throw new Error('inline failure');
-        });
+      jest.spyOn(system, 'collectInlineMetadata').mockImplementation(() => {
+        throw new Error('inline failure');
+      });
 
       const mockEntity = { id: 'entity', componentTypeIds: [] };
 
@@ -270,11 +264,9 @@ describe('ActivityMetadataCollectionSystem', () => {
     });
 
     it('should continue when dedicated metadata collection throws', () => {
-      jest
-        .spyOn(system, 'collectDedicatedMetadata')
-        .mockImplementation(() => {
-          throw new Error('dedicated failure');
-        });
+      jest.spyOn(system, 'collectDedicatedMetadata').mockImplementation(() => {
+        throw new Error('dedicated failure');
+      });
 
       const mockEntity = { id: 'entity', componentTypeIds: [] };
 
@@ -532,8 +524,7 @@ describe('ActivityMetadataCollectionSystem', () => {
     });
 
     it('should return empty array if entity missing hasComponent', () => {
-      const mockEntity = {
-      };
+      const mockEntity = {};
 
       const result = system.collectDedicatedMetadata(mockEntity);
 
@@ -898,12 +889,12 @@ describe('ActivityMetadataCollectionSystem', () => {
       const result = system.deduplicateActivitiesBySignature(activities);
 
       expect(result).toHaveLength(3);
-      expect(result.find((a) => a.template === 'kneeling before')?.priority).toBe(
-        70
-      );
-      expect(result.find((a) => a.template === 'sitting beside')?.priority).toBe(
-        80
-      );
+      expect(
+        result.find((a) => a.template === 'kneeling before')?.priority
+      ).toBe(70);
+      expect(
+        result.find((a) => a.template === 'sitting beside')?.priority
+      ).toBe(80);
       expect(result.find((a) => a.verb === 'standing')?.priority).toBe(40);
     });
   });

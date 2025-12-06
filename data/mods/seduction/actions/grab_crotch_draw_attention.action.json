@@ -17,27 +17,19 @@
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "penis"
-        ]
+        "hasPartOfType": ["actor", "penis"]
       },
       "failure_message": "You need a penis to grab and draw attention to it."
     },
     {
       "logic": {
-        "hasClothingInSlot": [
-          "actor",
-          "torso_lower"
-        ]
+        "hasClothingInSlot": ["actor", "torso_lower"]
       },
       "failure_message": "Your crotch needs to be covered to emphasize the bulge."
     },
     {
       "logic": {
-        "hasOtherActorsAtLocation": [
-          "actor"
-        ]
+        "hasOtherActorsAtLocation": ["actor"]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

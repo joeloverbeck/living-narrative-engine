@@ -3,13 +3,7 @@
  * @file Unit tests for the orchestration registrations.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  jest,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, jest, afterEach } from '@jest/globals';
 
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
@@ -78,7 +72,10 @@ function createContainerWithDefaults() {
   const gameLoop = { stop: jest.fn() };
 
   container.register(tokens.ILogger, () => logger);
-  container.register(tokens.IValidatedEventDispatcher, () => validatedEventDispatcher);
+  container.register(
+    tokens.IValidatedEventDispatcher,
+    () => validatedEventDispatcher
+  );
   container.register(tokens.ModsLoader, () => modsLoader);
   container.register(tokens.IScopeRegistry, () => scopeRegistry);
   container.register(tokens.IDataRegistry, () => dataRegistry);
@@ -92,7 +89,10 @@ function createContainerWithDefaults() {
   container.register(tokens.ActionIndex, () => actionIndex);
   container.register(tokens.IGameDataRepository, () => gameDataRepository);
   container.register(tokens.ISpatialIndexManager, () => spatialIndexManager);
-  container.register(tokens.AnatomyFormattingService, () => anatomyFormattingService);
+  container.register(
+    tokens.AnatomyFormattingService,
+    () => anatomyFormattingService
+  );
   container.register(tokens.GameLoop, () => gameLoop);
 
   return {
@@ -152,9 +152,9 @@ describe('registerOrchestration', () => {
     registerOrchestration(container);
 
     expect(container.isRegistered(tokens.ComponentAccessService)).toBe(true);
-    expect(
-      container.resolve(tokens.ComponentAccessService)
-    ).toBeInstanceOf(ComponentAccessService);
+    expect(container.resolve(tokens.ComponentAccessService)).toBeInstanceOf(
+      ComponentAccessService
+    );
 
     const logs = logger.debug.mock.calls.map(([message]) => message);
     expect(logs).toContain(
@@ -170,7 +170,9 @@ describe('registerOrchestration', () => {
 
     registerOrchestration(container);
 
-    expect(container.resolve(tokens.ComponentAccessService)).toBe(existingService);
+    expect(container.resolve(tokens.ComponentAccessService)).toBe(
+      existingService
+    );
 
     const logs = logger.debug.mock.calls.map(([message]) => message);
     expect(logs).not.toContain(
@@ -182,7 +184,8 @@ describe('registerOrchestration', () => {
     it.each([
       {
         description: 'logger resolves to undefined',
-        override: (container) => container.setOverride(tokens.ILogger, undefined),
+        override: (container) =>
+          container.setOverride(tokens.ILogger, undefined),
         expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.ILogger}`,
       },
       {
@@ -193,7 +196,8 @@ describe('registerOrchestration', () => {
       },
       {
         description: 'mods loader resolves to undefined',
-        override: (container) => container.setOverride(tokens.ModsLoader, undefined),
+        override: (container) =>
+          container.setOverride(tokens.ModsLoader, undefined),
         expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.ModsLoader}`,
       },
       {
@@ -208,23 +212,27 @@ describe('registerOrchestration', () => {
           container.setOverride(tokens.WorldInitializer, undefined),
         expectedMessage: `InitializationService Factory: Failed to resolve dependency: ${tokens.WorldInitializer}`,
       },
-    ])('throws descriptive error when $description', ({ override, expectedMessage }) => {
-      const { container } = createContainerWithDefaults();
+    ])(
+      'throws descriptive error when $description',
+      ({ override, expectedMessage }) => {
+        const { container } = createContainerWithDefaults();
 
-      registerOrchestration(container);
-      override(container);
+        registerOrchestration(container);
+        override(container);
 
-      expect(() => container.resolve(tokens.IInitializationService)).toThrow(
-        expectedMessage
-      );
-    });
+        expect(() => container.resolve(tokens.IInitializationService)).toThrow(
+          expectedMessage
+        );
+      }
+    );
   });
 
   describe('ShutdownService factory error handling', () => {
     it.each([
       {
         description: 'logger resolves to undefined',
-        override: (container) => container.setOverride(tokens.ILogger, undefined),
+        override: (container) =>
+          container.setOverride(tokens.ILogger, undefined),
         expectedMessage: `ShutdownService Factory: Failed to resolve dependency: ${tokens.ILogger}`,
       },
       {
@@ -235,19 +243,23 @@ describe('registerOrchestration', () => {
       },
       {
         description: 'game loop resolves to undefined',
-        override: (container) => container.setOverride(tokens.GameLoop, undefined),
+        override: (container) =>
+          container.setOverride(tokens.GameLoop, undefined),
         expectedMessage: `ShutdownService Factory: Failed to resolve dependency: ${tokens.GameLoop}`,
       },
-    ])('throws descriptive error when $description', ({ override, expectedMessage }) => {
-      const { container } = createContainerWithDefaults();
+    ])(
+      'throws descriptive error when $description',
+      ({ override, expectedMessage }) => {
+        const { container } = createContainerWithDefaults();
 
-      registerOrchestration(container);
-      override(container);
+        registerOrchestration(container);
+        override(container);
 
-      expect(() => container.resolve(tokens.ShutdownService)).toThrow(
-        expectedMessage
-      );
-    });
+        expect(() => container.resolve(tokens.ShutdownService)).toThrow(
+          expectedMessage
+        );
+      }
+    );
   });
 
   it('successfully creates both services with all dependencies resolved', () => {
@@ -255,7 +267,9 @@ describe('registerOrchestration', () => {
 
     registerOrchestration(container);
 
-    const initializationService = container.resolve(tokens.IInitializationService);
+    const initializationService = container.resolve(
+      tokens.IInitializationService
+    );
     const shutdownService = container.resolve(tokens.ShutdownService);
 
     expect(initializationService).toBeInstanceOf(InitializationService);
@@ -266,4 +280,3 @@ describe('registerOrchestration', () => {
     expect(logs).toContain('Orchestration Registration: Complete.');
   });
 });
-

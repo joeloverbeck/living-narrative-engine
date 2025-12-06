@@ -182,7 +182,9 @@ class TaskLoader extends SimpleItemLoader {
     let cachedMethod = this._refinementMethodCache.get(cacheKey);
 
     if (!cachedMethod) {
-      const relativePath = normalizedRef.slice(REFINEMENT_METHODS_PREFIX.length);
+      const relativePath = normalizedRef.slice(
+        REFINEMENT_METHODS_PREFIX.length
+      );
       const resolvedPath = this._pathResolver.resolveModContentPath(
         modId,
         REFINEMENT_METHODS_FOLDER,
@@ -270,7 +272,11 @@ class TaskLoader extends SimpleItemLoader {
     }
 
     const segments = normalized.split('/');
-    if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+    if (
+      segments.some(
+        (segment) => segment === '' || segment === '.' || segment === '..'
+      )
+    ) {
       throw new Error(
         `Task ${taskId} in ${filename}: Refinement method $ref '${refPath}' contains invalid path segments`
       );

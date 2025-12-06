@@ -298,9 +298,9 @@ describe('Turn Around Action Discovery', () => {
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
-    // Create mock TargetRequiredComponentsValidator
-    const mockTargetRequiredComponentsValidator =
-      createMockTargetRequiredComponentsValidator();
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
 
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -321,7 +321,8 @@ describe('Turn Around Action Discovery', () => {
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 
@@ -432,9 +433,9 @@ describe('Turn Around Action Discovery', () => {
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
-    // Create mock TargetRequiredComponentsValidator
-    const mockTargetRequiredComponentsValidator =
-      createMockTargetRequiredComponentsValidator();
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
 
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -455,7 +456,8 @@ describe('Turn Around Action Discovery', () => {
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 
@@ -530,9 +532,9 @@ describe('Turn Around Action Discovery', () => {
         validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
       };
 
-    // Create mock TargetRequiredComponentsValidator
-    const mockTargetRequiredComponentsValidator =
-      createMockTargetRequiredComponentsValidator();
+      // Create mock TargetRequiredComponentsValidator
+      const mockTargetRequiredComponentsValidator =
+        createMockTargetRequiredComponentsValidator();
 
       const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         actionIndex,
@@ -553,7 +555,8 @@ describe('Turn Around Action Discovery', () => {
         unifiedScopeResolver,
         targetContextBuilder: createMockTargetContextBuilder(),
         targetComponentValidator: mockTargetComponentValidator,
-        targetRequiredComponentsValidator: mockTargetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          mockTargetRequiredComponentsValidator,
         multiTargetResolutionStage: multiTargetStage,
       });
 

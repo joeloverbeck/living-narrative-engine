@@ -28,7 +28,7 @@ class FileTraceOutputHandler {
 
   /**
    * Create a new FileTraceOutputHandler
-   * 
+   *
    * @param {object} dependencies - Dependency injection object
    * @param {string} dependencies.outputDirectory - Directory path for trace output
    * @param {object} dependencies.traceDirectoryManager - Directory manager for file operations
@@ -66,7 +66,9 @@ class FileTraceOutputHandler {
         requiredMethods: ['push', 'shift'],
       });
 
-      if (!Object.prototype.hasOwnProperty.call(queueImplementation, 'length')) {
+      if (
+        !Object.prototype.hasOwnProperty.call(queueImplementation, 'length')
+      ) {
         throw new Error(
           "Invalid trace queue implementation: missing required 'length' property."
         );
@@ -328,7 +330,9 @@ class FileTraceOutputHandler {
     try {
       // Skip network calls in test mode
       if (this.#testMode) {
-        this.#logger.debug('FileTraceOutputHandler: Skipping server endpoint in test mode');
+        this.#logger.debug(
+          'FileTraceOutputHandler: Skipping server endpoint in test mode'
+        );
         return true; // Simulate successful write
       }
 

@@ -32,61 +32,45 @@
         {
           "id": "left_eye",
           "orientation": "left",
-          "allowedTypes": [
-            "eye"
-          ],
+          "allowedTypes": ["eye"],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_eye",
           "orientation": "right",
-          "allowedTypes": [
-            "eye"
-          ],
+          "allowedTypes": ["eye"],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "left_ear",
           "orientation": "left",
-          "allowedTypes": [
-            "ear"
-          ],
+          "allowedTypes": ["ear"],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "right_ear",
           "orientation": "right",
-          "allowedTypes": [
-            "ear"
-          ],
+          "allowedTypes": ["ear"],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "scalp",
-          "allowedTypes": [
-            "hair"
-          ],
+          "allowedTypes": ["hair"],
           "nameTpl": "{{type}}"
         },
         {
           "id": "nose",
-          "allowedTypes": [
-            "nose"
-          ],
+          "allowedTypes": ["nose"],
           "nameTpl": "{{type}}"
         },
         {
           "id": "mouth",
-          "allowedTypes": [
-            "mouth"
-          ],
+          "allowedTypes": ["mouth"],
           "nameTpl": "{{type}}"
         },
         {
           "id": "brain_socket",
-          "allowedTypes": [
-            "brain"
-          ],
+          "allowedTypes": ["brain"],
           "nameTpl": "{{type}}"
         }
       ]

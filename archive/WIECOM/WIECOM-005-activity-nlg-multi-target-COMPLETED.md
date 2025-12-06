@@ -12,10 +12,10 @@ Modify `activityNLGSystem.js` to handle multi-target activities (activities with
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/anatomy/services/activityNLGSystem.js` | MODIFY | Add multi-target handling in `generateActivityPhrase` + helper method |
-| `tests/unit/anatomy/services/activityNLGSystem.test.js` | MODIFY | Add 6 unit tests for multi-target support |
+| File                                                    | Action | Description                                                           |
+| ------------------------------------------------------- | ------ | --------------------------------------------------------------------- |
+| `src/anatomy/services/activityNLGSystem.js`             | MODIFY | Add multi-target handling in `generateActivityPhrase` + helper method |
+| `tests/unit/anatomy/services/activityNLGSystem.test.js` | MODIFY | Add 6 unit tests for multi-target support                             |
 
 ## Out of Scope
 
@@ -108,10 +108,10 @@ generateActivityPhrase(
 
 ### Expected Output Examples
 
-| Component State | Template | Expected Output |
-|-----------------|----------|-----------------|
-| `wielded_item_ids: ['sword-1']` | "{actor} is wielding {targets} threateningly" | "Alice is wielding sword threateningly" |
-| `wielded_item_ids: ['sword-1', 'dagger-2']` | "{actor} is wielding {targets} threateningly" | "Alice is wielding sword and dagger threateningly" |
+| Component State                                        | Template                                      | Expected Output                                            |
+| ------------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| `wielded_item_ids: ['sword-1']`                        | "{actor} is wielding {targets} threateningly" | "Alice is wielding sword threateningly"                    |
+| `wielded_item_ids: ['sword-1', 'dagger-2']`            | "{actor} is wielding {targets} threateningly" | "Alice is wielding sword and dagger threateningly"         |
 | `wielded_item_ids: ['sword-1', 'dagger-2', 'staff-3']` | "{actor} is wielding {targets} threateningly" | "Alice is wielding sword, dagger, and staff threateningly" |
 
 ### Invariants That Must Remain True
@@ -149,6 +149,7 @@ npx eslint src/anatomy/services/activityNLGSystem.js
 ## Diff Size Estimate
 
 The diff should add approximately 40-50 lines:
+
 - ~15 lines for `#formatListWithConjunction` helper (with JSDoc)
 - ~20 lines for multi-target handling in `generateActivityPhrase`
 - ~100 lines for unit tests (6 test cases)
@@ -190,11 +191,11 @@ The diff should add approximately 40-50 lines:
 
 ### New/Modified Tests
 
-| Test | Rationale |
-|------|-----------|
-| `should format single item in targetEntityIds` | Verifies single-item arrays produce non-list output |
-| `should format two items with "and" conjunction` | Verifies two-item conjunction without Oxford comma |
-| `should format three items with Oxford comma` | Verifies Oxford comma usage per acceptance criteria |
-| `should handle empty targetEntityIds array gracefully` | Edge case - prevents crashes |
-| `should use fallback phrase when no template provided` | Covers no-template fallback path |
-| `should not affect non-multi-target activities` | Critical backward compatibility verification |
+| Test                                                   | Rationale                                           |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| `should format single item in targetEntityIds`         | Verifies single-item arrays produce non-list output |
+| `should format two items with "and" conjunction`       | Verifies two-item conjunction without Oxford comma  |
+| `should format three items with Oxford comma`          | Verifies Oxford comma usage per acceptance criteria |
+| `should handle empty targetEntityIds array gracefully` | Edge case - prevents crashes                        |
+| `should use fallback phrase when no template provided` | Covers no-template fallback path                    |
+| `should not affect non-multi-target activities`        | Critical backward compatibility verification        |

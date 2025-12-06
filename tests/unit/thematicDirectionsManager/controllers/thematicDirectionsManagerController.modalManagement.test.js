@@ -99,7 +99,6 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
     }
   });
 
-
   // Helper function to map element keys to DOM IDs
   /**
    *
@@ -145,11 +144,7 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
           controller._showElement('confirmationModal', 'flex');
 
           // Setup keyboard handler
-          document.addEventListener(
-            'keydown',
-            expect.any(Function),
-            true
-          );
+          document.addEventListener('keydown', expect.any(Function), true);
 
           // Focus the confirm button after a timeout
           global.setTimeout(() => {
@@ -548,5 +543,4 @@ describe('ThematicDirectionsManagerController - Modal Management', () => {
       );
     });
   });
-
 });

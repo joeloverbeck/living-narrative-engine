@@ -4,7 +4,14 @@
  * @see tests/integration/server-lifecycle.integration.test.js
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createProxyServer } from '../../../src/core/server.js';
 
 describe('Server Cache Disabled Logging (Isolated)', () => {

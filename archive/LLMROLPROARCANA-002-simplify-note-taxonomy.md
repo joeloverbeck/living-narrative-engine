@@ -14,6 +14,7 @@
 The current note-taking system uses 19 subject types with extensive decision trees, creating cognitive overload for the LLM:
 
 **Current Types (19 - as of 2025-01-24):**
+
 - Core Entity: character, location, item, creature, organization
 - Temporal & Action: event, plan, timeline, quest
 - Knowledge & Mental: theory, observation, knowledge_state, concept
@@ -22,6 +23,7 @@ The current note-taking system uses 19 subject types with extensive decision tre
 - Other: other
 
 This complexity:
+
 - Creates decision paralysis (19-option decision tree)
 - Consumes ~1,200 tokens for rules alone
 - Overwhelms classification task with excessive distinctions
@@ -34,6 +36,7 @@ Reduce note subject types to 6 core categories with clear, simple classification
 **Migration Note:** habit → state, philosophy → knowledge in the simplified taxonomy.
 
 **Target Taxonomy (6 types):**
+
 1. **entity** - People, places, things, creatures
 2. **event** - Things that already happened
 3. **plan** - Future intentions not yet executed
@@ -109,6 +112,7 @@ Select ONE type per note using these simple criteria:
 **Format:** 1-3 sentences, max 60 words, in character voice.
 
 **Priority Guidelines:**
+
 - HIGH: Character secrets, survival plans, critical deadlines → Always record
 - MEDIUM: Behavioral patterns, theories, relationships → Record if significant
 - LOW: Routine events, common knowledge → OMIT unless exceptional
@@ -123,75 +127,79 @@ Old Type → New Type mapping for backward compatibility:
 ```javascript
 const NOTE_TYPE_MIGRATION = {
   // Entity types
-  'character': 'entity',
-  'location': 'entity',
-  'item': 'entity',
-  'creature': 'entity',
-  'organization': 'entity',
+  character: 'entity',
+  location: 'entity',
+  item: 'entity',
+  creature: 'entity',
+  organization: 'entity',
 
   // Event/temporal types
-  'event': 'event',
-  'timeline': 'event',
+  event: 'event',
+  timeline: 'event',
 
   // Plan types
-  'plan': 'plan',
-  'quest': 'plan',
+  plan: 'plan',
+  quest: 'plan',
 
   // Knowledge types
-  'theory': 'knowledge',
-  'observation': 'knowledge',
-  'knowledge_state': 'knowledge',
-  'concept': 'knowledge',
-  'philosophy': 'knowledge', // NEW
+  theory: 'knowledge',
+  observation: 'knowledge',
+  knowledge_state: 'knowledge',
+  concept: 'knowledge',
+  philosophy: 'knowledge', // NEW
 
   // State types
-  'emotion': 'state',
-  'psychological_state': 'state',
-  'relationship': 'state',
-  'skill': 'state',
-  'habit': 'state', // NEW
+  emotion: 'state',
+  psychological_state: 'state',
+  relationship: 'state',
+  skill: 'state',
+  habit: 'state', // NEW
 
   // Fallback
-  'other': 'other'
+  other: 'other',
 };
 ```
 
 ## Testing Requirements
 
 ### Unit Tests
+
 - [x] Test note type validation with new 6-type enum
 - [x] Test migration mapping for old types
 - [x] Test classification guidance formatting
 
 ### Integration Tests
+
 - [x] Test note creation with each of 6 types
 - [x] Test existing notes with old types (migration)
 - [x] Verify schema validation accepts new types
 
 ### E2E Tests
+
 - [ ] Test LLM note classification accuracy with simplified taxonomy
 - [ ] Compare classification accuracy: old (19 types) vs new (6 types)
 - [ ] Verify note quality is maintained or improved
 
 ### Classification Accuracy Test
+
 Create test dataset with 100 scenarios, verify LLM selects correct type >90% of time:
 
 ```javascript
 const testScenarios = [
   {
-    scenario: "Met a mysterious cloaked figure at the market",
-    expectedType: "entity",
-    description: "Describing a person"
+    scenario: 'Met a mysterious cloaked figure at the market',
+    expectedType: 'entity',
+    description: 'Describing a person',
   },
   {
-    scenario: "Witnessed a brawl break out near the fountain",
-    expectedType: "event",
-    description: "Past occurrence"
+    scenario: 'Witnessed a brawl break out near the fountain',
+    expectedType: 'event',
+    description: 'Past occurrence',
   },
   {
-    scenario: "Will investigate the abandoned mill tomorrow night",
-    expectedType: "plan",
-    description: "Future intention"
+    scenario: 'Will investigate the abandoned mill tomorrow night',
+    expectedType: 'plan',
+    description: 'Future intention',
   },
   // ... 97 more scenarios
 ];
@@ -209,17 +217,18 @@ const testScenarios = [
 
 **CORRECTED BASELINE (2025-01-24):**
 
-| Metric | Baseline | Target | Actual | Status |
-|--------|----------|--------|--------|--------|
-| Subject type count | 19 types | 6 types | 6 types | ✅ Achieved |
-| Taxonomy token count | 1,200 tokens | 400 tokens | 1,079 tokens | ⚠️ 10% reduction (not 67% but still significant) |
-| Decision tree complexity | 19 options | 6 options | 6 options | ✅ Achieved |
-| Classification accuracy | Unknown | >90% | Pending E2E tests | ⏳ Not yet measured |
-| Token savings | 0 | 800 tokens | 121 tokens | ⚠️ Modest savings, significant simplification |
+| Metric                   | Baseline     | Target     | Actual            | Status                                           |
+| ------------------------ | ------------ | ---------- | ----------------- | ------------------------------------------------ |
+| Subject type count       | 19 types     | 6 types    | 6 types           | ✅ Achieved                                      |
+| Taxonomy token count     | 1,200 tokens | 400 tokens | 1,079 tokens      | ⚠️ 10% reduction (not 67% but still significant) |
+| Decision tree complexity | 19 options   | 6 options  | 6 options         | ✅ Achieved                                      |
+| Classification accuracy  | Unknown      | >90%       | Pending E2E tests | ⏳ Not yet measured                              |
+| Token savings            | 0            | 800 tokens | 121 tokens        | ⚠️ Modest savings, significant simplification    |
 
 ## Rollback Plan
 
 If classification accuracy drops below 85%:
+
 1. Analyze which specific distinctions are needed
 2. Consider adding 1-2 intermediate types (e.g., split entity into character/location)
 3. Maximum: 8 types (not back to 19)
@@ -301,12 +310,14 @@ Successfully simplified note subject taxonomy from 19 types to 6 types with comp
 ### Test Results
 
 **All Tests Passing:**
+
 ```
 Test Suites: 5 passed, 5 total
 Tests: 62 passed, 62 total
 ```
 
 **Coverage:**
+
 - Unit tests: Comprehensive coverage of constants, display mapping, and note formatting
 - Integration tests: Schema validation, legacy migration, prompt structure validation
 - E2E tests: Pending (classification accuracy testing requires LLM integration)
@@ -345,11 +356,13 @@ None introduced. All changes maintain existing patterns and add comprehensive te
 ### Migration Notes
 
 **For Existing Notes:**
+
 - All existing notes with old 19 types will be automatically migrated using `LEGACY_TYPE_MIGRATION`
 - No data loss or manual migration required
 - Mapping documented in `src/constants/subjectTypes.js`
 
 **For Developers:**
+
 - Use new `SUBJECT_TYPES` constants from `src/constants/subjectTypes.js`
 - Legacy constants removed but migration mapping preserved
 - Display categories updated in `promptDataFormatter.js`

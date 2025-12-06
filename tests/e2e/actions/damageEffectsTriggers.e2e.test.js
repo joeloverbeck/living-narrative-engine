@@ -138,7 +138,8 @@ const installRealHandlers = ({
   forcedOutcome = 'SUCCESS',
   rngProvider = () => 0.5,
 }) => {
-  const { entityManager, logger, jsonLogic, operationRegistry, eventBus } = testEnv;
+  const { entityManager, logger, jsonLogic, operationRegistry, eventBus } =
+    testEnv;
 
   const bodyGraphService = new BodyGraphService({
     entityManager,
@@ -230,13 +231,10 @@ describe('damage effects triggers e2e', () => {
   let effectService;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
     jest.spyOn(Math, 'random').mockReturnValue(0); // deterministic part selection

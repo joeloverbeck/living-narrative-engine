@@ -716,7 +716,6 @@ class WorldInitializer {
         instanceId,
         componentOverrides,
       });
-
     } catch (creationError) {
       this.#logger.error(
         `WorldInitializer (Pass 1): Error during createEntityInstance for instanceId '${instanceId}', definitionId '${definitionId}':`,

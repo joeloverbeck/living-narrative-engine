@@ -266,7 +266,7 @@ describe('ModProcessor', () => {
         'anatomyStructureTemplates'
       );
       expect(logger.debug).toHaveBeenCalledWith(
-        "ModsLoader [anatomy, definitions]: Processing structure-templates content with 1 files..."
+        'ModsLoader [anatomy, definitions]: Processing structure-templates content with 1 files...'
       );
       expect(logger.debug).toHaveBeenCalledWith(
         "ModsLoader [anatomy, definitions]: Found content for 'structure-templates'. Invoking loader 'AnatomyStructureTemplateLoader'."

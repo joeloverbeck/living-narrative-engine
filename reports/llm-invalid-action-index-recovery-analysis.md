@@ -110,11 +110,13 @@ When `assertValidActionIndex` throws a standard Error:
 3. **Notes**: Metadata for memory system (dispatched to events, but lost in Error object)
 
 What IS preserved in the Error object:
+
 - Error name/message
 - Actor ID (via error dispatch context, not Error object)
 - Stack trace
 
 What IS preserved in the event system (but not accessible to fallback handler):
+
 - All LLM data (speech, thoughts, notes) via `safeDispatchError()`
 - Full debugData context
 
@@ -160,6 +162,7 @@ create(failureContext, error, actorId) {
 ```
 
 **Issues with this approach**:
+
 - ❌ Breaks character immersion (meta-reference to "issue")
 - ❌ Same generic message for all characters
 - ❌ Discards potentially valid LLM speech
@@ -189,6 +192,7 @@ LLMs typically excel at following structured output formats, especially when sch
 2. But `chosenIndex` value is **semantically invalid** (out of bounds)
 
 This is a rare edge case where the LLM:
+
 - ✅ Followed JSON structure perfectly
 - ✅ Provided valid speech/thoughts/notes
 - ❌ Selected an action index that doesn't exist (off-by-one error, hallucination, etc.)
@@ -204,6 +208,7 @@ This is a rare edge case where the LLM:
 Modify the validation error to carry LLM data through the error handling chain, allowing the fallback factory to preserve character voice while substituting a safe action.
 
 **Why this approach:**
+
 - ✅ Minimal code changes (5 files modified)
 - ✅ Preserves immersion by using LLM speech
 - ✅ Still executes safe fallback action (`core:wait`)
@@ -243,11 +248,10 @@ export class ActionIndexValidationError extends Error {
    * Check if this error has preserved LLM data
    */
   hasPreservedData() {
-    return Boolean(this.llmData && (
-      this.llmData.speech ||
-      this.llmData.thoughts ||
-      this.llmData.notes
-    ));
+    return Boolean(
+      this.llmData &&
+        (this.llmData.speech || this.llmData.thoughts || this.llmData.notes)
+    );
   }
 }
 ```
@@ -422,12 +426,14 @@ catch (err) {
 ### Immersion Improvement
 
 **Before** (current):
+
 ```
 > "I encountered an unexpected issue and will wait for a moment."
   [Generic, meta-reference, breaks character voice]
 ```
 
 **After** (with preservation):
+
 ```
 > "Perhaps I should take a moment to assess the situation more carefully..."
   [LLM's actual speech, maintains character voice]
@@ -460,14 +466,17 @@ catch (err) {
 ### Option B: Decision Provider Refactor
 
 **Concept**: Split `AbstractDecisionProvider.decide()` into two phases:
+
 1. Call `choose()` and return all data
 2. Validate index separately with full context
 
 **Pros**:
+
 - Cleaner separation of concerns
 - More flexible for future validation needs
 
 **Cons**:
+
 - Requires refactoring base class and all implementations
 - Higher risk of regression
 - More test updates required
@@ -480,10 +489,12 @@ catch (err) {
 **Concept**: Wrap `decisionProvider.decide()` in try-catch, retry with modified index
 
 **Pros**:
+
 - Could potentially "fix" the invalid index
 - No changes to validation layer
 
 **Cons**:
+
 - Risky: Which index to substitute? (1? Last valid?)
 - May execute unintended action
 - Doesn't address root cause (data loss)

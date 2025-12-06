@@ -172,8 +172,10 @@ function installKneelingBeforeTargetWithPenisScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
-      const kneelingBefore = actor?.components?.['positioning:kneeling_before']?.entityId;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
+      const kneelingBefore =
+        actor?.components?.['positioning:kneeling_before']?.entityId;
 
       if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
         return { success: true, value: new Set() };
@@ -257,7 +259,8 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action discovery', () => 
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installKneelingBeforeTargetWithPenisScopeOverride(testFixture);
+    restoreScopeResolver =
+      installKneelingBeforeTargetWithPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {

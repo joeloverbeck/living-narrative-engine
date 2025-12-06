@@ -122,12 +122,10 @@ NPM SCRIPTS:
  * Load dependencies dynamically
  */
 async function loadDependencies() {
-  const AppContainer = (await import(
-    '../src/dependencyInjection/appContainer.js'
-  )).default;
-  const tokensModule = await import(
-    '../src/dependencyInjection/tokens.js'
-  );
+  const AppContainer = (
+    await import('../src/dependencyInjection/appContainer.js')
+  ).default;
+  const tokensModule = await import('../src/dependencyInjection/tokens.js');
   const { configureMinimalContainer } = await import(
     '../src/dependencyInjection/minimalContainerConfig.js'
   );
@@ -135,12 +133,15 @@ async function loadDependencies() {
   // Create container and configure with validation services
   container = new AppContainer();
   await configureMinimalContainer(container, {
-    includeValidationServices: true
+    includeValidationServices: true,
   });
 
   // Override data fetcher for CLI environment
   const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
-  container.register(tokensModule.tokens.IDataFetcher, () => new NodeDataFetcher());
+  container.register(
+    tokensModule.tokens.IDataFetcher,
+    () => new NodeDataFetcher()
+  );
 
   tokens = tokensModule.tokens;
 }
@@ -434,11 +435,13 @@ async function main() {
       const registry = container.resolve(tokens.IDataRegistry);
 
       // Create minimal load context for schema loading
-      const { createLoadContext } = await import('../src/loaders/LoadContext.js');
+      const { createLoadContext } = await import(
+        '../src/loaders/LoadContext.js'
+      );
       const loadContext = createLoadContext({
         worldName: 'validation-context',
         requestedMods: [],
-        registry
+        registry,
       });
 
       await schemaPhase.execute(loadContext);

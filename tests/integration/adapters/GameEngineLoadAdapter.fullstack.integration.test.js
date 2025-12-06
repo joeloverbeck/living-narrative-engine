@@ -159,7 +159,10 @@ function createAdapterEnvironment() {
   const entityDisplayDataProvider = { getEntityName: jest.fn() };
 
   const ensureRegistered = (token, value) => {
-    if (typeof container.isRegistered === 'function' && container.isRegistered(token)) {
+    if (
+      typeof container.isRegistered === 'function' &&
+      container.isRegistered(token)
+    ) {
       return;
     }
     container.register(token, value);
@@ -216,7 +219,9 @@ describe('GameEngineLoadAdapter real integration', () => {
     expect(env.playtimeTracker.sessionStarted).toBe(true);
     expect(env.turnManager.started).toBe(true);
 
-    const dispatchedIds = env.safeEventDispatcher.events.map((entry) => entry.eventId);
+    const dispatchedIds = env.safeEventDispatcher.events.map(
+      (entry) => entry.eventId
+    );
     expect(dispatchedIds).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
       ENGINE_READY_UI,
@@ -239,10 +244,16 @@ describe('GameEngineLoadAdapter real integration', () => {
 
     const result = await env.adapter.load('slot-corrupt');
 
-    expect(result).toEqual({ success: false, error: 'checksum mismatch', data: null });
+    expect(result).toEqual({
+      success: false,
+      error: 'checksum mismatch',
+      data: null,
+    });
     expect(env.turnManager.started).toBe(false);
 
-    const dispatchedIds = env.safeEventDispatcher.events.map((entry) => entry.eventId);
+    const dispatchedIds = env.safeEventDispatcher.events.map(
+      (entry) => entry.eventId
+    );
     expect(dispatchedIds).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
       ENGINE_OPERATION_FAILED_UI,

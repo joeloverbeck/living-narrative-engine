@@ -23,10 +23,15 @@ class SocketNotFoundError extends AnatomyError {
    * @param {string[]} params.availableSockets - Array of available socket IDs on the root entity
    * @param {string} [params.entityPath] - File path to the root entity definition
    */
-  constructor({ blueprintId, slotName, socketId, rootEntityId, availableSockets, entityPath }) {
-    const fixes = [
-      `Option 1: Add socket to root entity`,
-    ];
+  constructor({
+    blueprintId,
+    slotName,
+    socketId,
+    rootEntityId,
+    availableSockets,
+    entityPath,
+  }) {
+    const fixes = [`Option 1: Add socket to root entity`];
 
     if (entityPath) {
       fixes.push(`  File: ${entityPath}`);

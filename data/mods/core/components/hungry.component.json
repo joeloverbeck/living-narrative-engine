@@ -9,7 +9,7 @@
         "type": "integer",
         "minimum": 0,
         "maximum": 100,
-        "description": "Optional urgency indicator. Higher values mean the actor should prioritize eating." 
+        "description": "Optional urgency indicator. Higher values mean the actor should prioritize eating."
       },
       "since": {
         "type": "string",

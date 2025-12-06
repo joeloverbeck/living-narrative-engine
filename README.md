@@ -685,7 +685,10 @@ describe('positioning:sit_down', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+    fixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:sit_down'
+    );
   });
 
   afterEach(() => {
@@ -700,7 +703,9 @@ describe('positioning:sit_down', () => {
       scenario.furniture.id
     );
 
-    const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
+    const actor = fixture.entityManager.getEntityInstance(
+      scenario.seatedActors[0].id
+    );
     expect(actor).toHaveComponent('positioning:sitting_on');
     expect(fixture.events).toHaveActionSuccess();
   });

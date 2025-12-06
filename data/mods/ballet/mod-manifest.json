@@ -55,8 +55,6 @@
       "event-is-action-do-tendus-en-croix.condition.json",
       "event-is-action-hold-arabesque-penche.condition.json"
     ],
-    "components": [
-      "is_ballet_dancer.component.json"
-    ]
+    "components": ["is_ballet_dancer.component.json"]
   }
 }

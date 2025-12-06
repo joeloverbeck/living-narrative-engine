@@ -120,9 +120,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
   });
 
   it('successfully hugs a comfort item at the location', async () => {
-    const room = new ModEntityBuilder('bedroom')
-      .asRoom('Bedroom')
-      .build();
+    const room = new ModEntityBuilder('bedroom').asRoom('Bedroom').build();
 
     const actor = new ModEntityBuilder('actor_location')
       .withName('Taylor')
@@ -158,9 +156,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
   });
 
   it('includes correct metadata in all dispatched events', async () => {
-    const room = new ModEntityBuilder('study')
-      .asRoom('Study')
-      .build();
+    const room = new ModEntityBuilder('study').asRoom('Study').build();
 
     const actor = new ModEntityBuilder('actor_meta')
       .withName('Jordan')

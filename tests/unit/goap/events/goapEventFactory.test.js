@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   createGoapEventPayload,
   emitGoapEvent,
@@ -60,7 +67,12 @@ describe('goapEventFactory', () => {
     it('passes normalized payload to dispatcher', () => {
       const dispatcher = { dispatch: jest.fn() };
 
-      emitGoapEvent(dispatcher, 'goap:test', { foo: 'bar' }, { actorId: 'actor' });
+      emitGoapEvent(
+        dispatcher,
+        'goap:test',
+        { foo: 'bar' },
+        { actorId: 'actor' }
+      );
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith('goap:test', {
         foo: 'bar',

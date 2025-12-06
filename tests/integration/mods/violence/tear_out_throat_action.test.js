@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import { ActionValidationError } from '../../../common/mods/actionExecutionValidator.js';
 import tearOutThroatRule from '../../../../data/mods/violence/rules/handle_tear_out_throat.rule.json';
 import eventIsActionTearOutThroat from '../../../../data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json';

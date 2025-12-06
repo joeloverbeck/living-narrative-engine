@@ -18,8 +18,14 @@ describe('positioning:allows_bending_over component schema validation', () => {
 
   describe('component schema structure', () => {
     it('should have correct schema structure', () => {
-      expect(componentSchema).toHaveProperty('id', 'positioning:allows_bending_over');
-      expect(componentSchema).toHaveProperty('$schema', 'schema://living-narrative-engine/component.schema.json');
+      expect(componentSchema).toHaveProperty(
+        'id',
+        'positioning:allows_bending_over'
+      );
+      expect(componentSchema).toHaveProperty(
+        '$schema',
+        'schema://living-narrative-engine/component.schema.json'
+      );
       expect(componentSchema).toHaveProperty('dataSchema');
       expect(componentSchema.dataSchema).toHaveProperty('type', 'object');
       expect(componentSchema.dataSchema).toHaveProperty('properties');
@@ -28,7 +34,9 @@ describe('positioning:allows_bending_over component schema validation', () => {
 
     it('should be a simple marker component with no required fields', () => {
       expect(componentSchema.dataSchema.required).toBeUndefined();
-      expect(Object.keys(componentSchema.dataSchema.properties)).toHaveLength(0);
+      expect(Object.keys(componentSchema.dataSchema.properties)).toHaveLength(
+        0
+      );
     });
 
     it('should have appropriate description', () => {

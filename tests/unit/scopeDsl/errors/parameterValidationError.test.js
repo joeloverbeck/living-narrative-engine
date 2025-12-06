@@ -30,7 +30,7 @@ describe('ParameterValidationError', () => {
         expected: 'string id property',
         received: 'undefined',
         hint: 'Extract actorEntity from context before calling',
-        example: 'const actorEntity = context.actorEntity;'
+        example: 'const actorEntity = context.actorEntity;',
       };
 
       const error = new ParameterValidationError('Invalid parameter', context);
@@ -39,8 +39,12 @@ describe('ParameterValidationError', () => {
       expect(error.context).toEqual(context);
       expect(error.context.expected).toBe('string id property');
       expect(error.context.received).toBe('undefined');
-      expect(error.context.hint).toBe('Extract actorEntity from context before calling');
-      expect(error.context.example).toBe('const actorEntity = context.actorEntity;');
+      expect(error.context.hint).toBe(
+        'Extract actorEntity from context before calling'
+      );
+      expect(error.context.example).toBe(
+        'const actorEntity = context.actorEntity;'
+      );
     });
   });
 
@@ -105,7 +109,7 @@ describe('ParameterValidationError', () => {
       const context = {
         expected: 'object',
         received: 'undefined',
-        customProperty: 'custom value'
+        customProperty: 'custom value',
       };
 
       const error = new ParameterValidationError('Test message', context);
@@ -120,7 +124,7 @@ describe('ParameterValidationError', () => {
     it('should return deep copy of context to prevent external modification', () => {
       const context = {
         expected: 'object',
-        nested: { value: 'original' }
+        nested: { value: 'original' },
       };
 
       const error = new ParameterValidationError('Test message', context);
@@ -140,7 +144,7 @@ describe('ParameterValidationError', () => {
         expected: 'string',
         received: 'number',
         parameterName: 'actorEntity',
-        functionName: 'resolve'
+        functionName: 'resolve',
       };
 
       const error = new ParameterValidationError('Test message', context);
@@ -181,7 +185,7 @@ describe('ParameterValidationError', () => {
 
     it('should format message with expected only', () => {
       const error = new ParameterValidationError('Invalid parameter', {
-        expected: 'string id property'
+        expected: 'string id property',
       });
 
       const result = error.toString();
@@ -192,7 +196,7 @@ describe('ParameterValidationError', () => {
 
     it('should format message with received only', () => {
       const error = new ParameterValidationError('Invalid parameter', {
-        received: 'undefined'
+        received: 'undefined',
       });
 
       const result = error.toString();
@@ -203,7 +207,7 @@ describe('ParameterValidationError', () => {
 
     it('should format message with hint only', () => {
       const error = new ParameterValidationError('Invalid parameter', {
-        hint: 'Extract actorEntity from context'
+        hint: 'Extract actorEntity from context',
       });
 
       const result = error.toString();
@@ -214,7 +218,7 @@ describe('ParameterValidationError', () => {
 
     it('should format message with example only', () => {
       const error = new ParameterValidationError('Invalid parameter', {
-        example: 'const actorEntity = context.actorEntity;'
+        example: 'const actorEntity = context.actorEntity;',
       });
 
       const result = error.toString();
@@ -226,30 +230,41 @@ describe('ParameterValidationError', () => {
 
     it('should format message with all context properties', () => {
       const error = new ParameterValidationError(
-        'ScopeEngine.resolve: actorEntity has invalid \'id\' property: undefined',
+        "ScopeEngine.resolve: actorEntity has invalid 'id' property: undefined",
         {
           expected: 'string id property',
           received: 'undefined',
           hint: 'You appear to have passed the entire context object instead of extracting actorEntity.\nExtract actorEntity from context before calling ScopeEngine.resolve()',
-          example: 'const actorEntity = context.actorEntity || context.actor;\nscopeEngine.resolve(ast, actorEntity, runtimeCtx);'
+          example:
+            'const actorEntity = context.actorEntity || context.actor;\nscopeEngine.resolve(ast, actorEntity, runtimeCtx);',
         }
       );
 
       const result = error.toString();
 
-      expect(result).toContain('ParameterValidationError: ScopeEngine.resolve: actorEntity has invalid \'id\' property: undefined');
+      expect(result).toContain(
+        "ParameterValidationError: ScopeEngine.resolve: actorEntity has invalid 'id' property: undefined"
+      );
       expect(result).toContain('Expected: string id property');
       expect(result).toContain('Received: undefined');
-      expect(result).toContain('💡 Hint: You appear to have passed the entire context object');
-      expect(result).toContain('Extract actorEntity from context before calling ScopeEngine.resolve()');
+      expect(result).toContain(
+        '💡 Hint: You appear to have passed the entire context object'
+      );
+      expect(result).toContain(
+        'Extract actorEntity from context before calling ScopeEngine.resolve()'
+      );
       expect(result).toContain('Example:');
-      expect(result).toContain('const actorEntity = context.actorEntity || context.actor;');
-      expect(result).toContain('scopeEngine.resolve(ast, actorEntity, runtimeCtx);');
+      expect(result).toContain(
+        'const actorEntity = context.actorEntity || context.actor;'
+      );
+      expect(result).toContain(
+        'scopeEngine.resolve(ast, actorEntity, runtimeCtx);'
+      );
     });
 
     it('should properly indent multi-line hints', () => {
       const error = new ParameterValidationError('Test', {
-        hint: 'First line of hint\nSecond line of hint\nThird line of hint'
+        hint: 'First line of hint\nSecond line of hint\nThird line of hint',
       });
 
       const result = error.toString();
@@ -261,7 +276,7 @@ describe('ParameterValidationError', () => {
 
     it('should properly indent multi-line examples', () => {
       const error = new ParameterValidationError('Test', {
-        example: 'const x = 1;\nconst y = 2;\nreturn x + y;'
+        example: 'const x = 1;\nconst y = 2;\nreturn x + y;',
       });
 
       const result = error.toString();
@@ -278,7 +293,7 @@ describe('ParameterValidationError', () => {
       const context = {
         expected: 'string',
         received: 'undefined',
-        hint: 'Check your parameters'
+        hint: 'Check your parameters',
       };
 
       const error = new ParameterValidationError('Test error', context);
@@ -298,7 +313,7 @@ describe('ParameterValidationError', () => {
         received: 'undefined',
         hint: 'Extract actorEntity from context',
         example: 'const actorEntity = context.actorEntity;',
-        customField: 'custom value'
+        customField: 'custom value',
       };
 
       const error = new ParameterValidationError('Test error', context);
@@ -308,7 +323,9 @@ describe('ParameterValidationError', () => {
       expect(json.context.expected).toBe('string id property');
       expect(json.context.received).toBe('undefined');
       expect(json.context.hint).toBe('Extract actorEntity from context');
-      expect(json.context.example).toBe('const actorEntity = context.actorEntity;');
+      expect(json.context.example).toBe(
+        'const actorEntity = context.actorEntity;'
+      );
       expect(json.context.customField).toBe('custom value');
     });
 
@@ -351,16 +368,17 @@ describe('ParameterValidationError', () => {
   describe('Real-world usage scenarios', () => {
     it('should create helpful error for missing actorEntity.id', () => {
       const error = new ParameterValidationError(
-        'ScopeEngine.resolve: actorEntity has invalid \'id\' property: undefined',
+        "ScopeEngine.resolve: actorEntity has invalid 'id' property: undefined",
         {
           expected: 'string id property',
           received: 'undefined',
           hint: 'You appear to have passed the entire context object instead of extracting actorEntity.\nExtract actorEntity from context before calling ScopeEngine.resolve()',
-          example: 'const actorEntity = context.actorEntity || context.actor;\nscopeEngine.resolve(ast, actorEntity, runtimeCtx);'
+          example:
+            'const actorEntity = context.actorEntity || context.actor;\nscopeEngine.resolve(ast, actorEntity, runtimeCtx);',
         }
       );
 
-      expect(error.message).toContain('actorEntity has invalid \'id\' property');
+      expect(error.message).toContain("actorEntity has invalid 'id' property");
       expect(error.context.expected).toBe('string id property');
       expect(error.context.hint).toContain('passed the entire context object');
 
@@ -371,12 +389,13 @@ describe('ParameterValidationError', () => {
 
     it('should create helpful error for invalid AST', () => {
       const error = new ParameterValidationError(
-        'Invalid AST: missing required \'type\' property',
+        "Invalid AST: missing required 'type' property",
         {
           expected: 'AST object with type property',
           received: 'plain object without type',
           hint: 'The AST must be parsed before being passed to the resolver',
-          example: 'const ast = scopeParser.parse(dslExpression);\nconst result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);'
+          example:
+            'const ast = scopeParser.parse(dslExpression);\nconst result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);',
         }
       );
 
@@ -394,7 +413,8 @@ describe('ParameterValidationError', () => {
           expected: 'object with required runtime properties',
           received: 'undefined',
           hint: 'Runtime context must include entityManager, eventBus, and other required services',
-          example: 'const runtimeCtx = {\n  entityManager,\n  eventBus,\n  logger\n};\nscopeEngine.resolve(ast, actorEntity, runtimeCtx);'
+          example:
+            'const runtimeCtx = {\n  entityManager,\n  eventBus,\n  logger\n};\nscopeEngine.resolve(ast, actorEntity, runtimeCtx);',
         }
       );
 

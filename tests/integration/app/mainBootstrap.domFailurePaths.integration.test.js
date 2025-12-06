@@ -76,7 +76,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
 
     const fallbackError = document.getElementById('temp-startup-error');
     expect(fallbackError).not.toBeNull();
-    expect(fallbackError?.textContent).toContain('Application failed to start due to a critical error:');
+    expect(fallbackError?.textContent).toContain(
+      'Application failed to start due to a critical error:'
+    );
     expect(fallbackError?.style.border).toBe('1px solid red');
     // Title element no longer exists in game.html - verify it's absent
     expect(document.querySelector('h1')).toBeNull();
@@ -101,7 +103,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     global.__LNE_forcePhaseReset = () => {};
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
         ensureCriticalDOMElementsStage: jest.fn(async () => {
@@ -147,7 +151,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     });
 
     const { stageSuccess } = await import('../../../src/types/stageResult.js');
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
 
     const mockLogger = {
       debug: jest.fn(),
@@ -173,10 +179,14 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     };
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
-        ensureCriticalDOMElementsStage: jest.fn(async () => stageSuccess(uiElementsPayload)),
+        ensureCriticalDOMElementsStage: jest.fn(async () =>
+          stageSuccess(uiElementsPayload)
+        ),
         setupDIContainerStage: jest.fn(async (_ui, _config, options) => {
           options?.createAppContainer?.();
           return stageSuccess(mockContainer);
@@ -244,7 +254,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     });
 
     const { stageSuccess } = await import('../../../src/types/stageResult.js');
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
 
     const mockLogger = {
       debug: jest.fn(),
@@ -270,10 +282,14 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     };
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
-        ensureCriticalDOMElementsStage: jest.fn(async () => stageSuccess(uiElementsPayload)),
+        ensureCriticalDOMElementsStage: jest.fn(async () =>
+          stageSuccess(uiElementsPayload)
+        ),
         setupDIContainerStage: jest.fn(async (_ui, _config, options) => {
           options?.createAppContainer?.();
           return stageSuccess(mockContainer);
@@ -332,7 +348,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
 
     const fallbackEl = document.getElementById('temp-startup-error');
     expect(fallbackEl).not.toBeNull();
-    expect(fallbackEl?.textContent).toContain('Application failed to start due to a critical error:');
+    expect(fallbackEl?.textContent).toContain(
+      'Application failed to start due to a critical error:'
+    );
 
     const inputEl = document.getElementById('speech-input');
     expect(inputEl?.disabled).toBe(true);
@@ -355,7 +373,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     });
 
     const { stageSuccess } = await import('../../../src/types/stageResult.js');
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
 
     const mockLogger = {
       debug: jest.fn(),
@@ -373,7 +393,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     };
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
         ensureCriticalDOMElementsStage: actual.ensureCriticalDOMElementsStage,
@@ -386,10 +408,15 @@ describe('main.js catastrophic bootstrap scenarios', () => {
           return stageSuccess({ logger });
         }),
         initializeGlobalConfigStage: jest.fn(async () => stageSuccess({})),
-        initializeGameEngineStage: jest.fn(async (_container, logger, options) => {
-          const engine = options?.createGameEngine?.({ container: mockContainer, logger });
-          return stageSuccess(engine);
-        }),
+        initializeGameEngineStage: jest.fn(
+          async (_container, logger, options) => {
+            const engine = options?.createGameEngine?.({
+              container: mockContainer,
+              logger,
+            });
+            return stageSuccess(engine);
+          }
+        ),
         initializeAuxiliaryServicesStage: jest.fn(async () => stageSuccess({})),
         setupMenuButtonListenersStage: jest.fn(async () => stageSuccess({})),
         setupGlobalEventListenersStage: jest.fn(async () => stageSuccess({})),
@@ -445,7 +472,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     });
 
     const { stageSuccess } = await import('../../../src/types/stageResult.js');
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
 
     const mockLogger = {
       debug: jest.fn(),
@@ -465,7 +494,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     const engineInstances = [];
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
         ensureCriticalDOMElementsStage: actual.ensureCriticalDOMElementsStage,
@@ -478,11 +509,16 @@ describe('main.js catastrophic bootstrap scenarios', () => {
           return stageSuccess({ logger });
         }),
         initializeGlobalConfigStage: jest.fn(async () => stageSuccess({})),
-        initializeGameEngineStage: jest.fn(async (_container, logger, options) => {
-          const engine = options?.createGameEngine?.({ container: mockContainer, logger });
-          engineInstances.push(engine);
-          return stageSuccess(engine);
-        }),
+        initializeGameEngineStage: jest.fn(
+          async (_container, logger, options) => {
+            const engine = options?.createGameEngine?.({
+              container: mockContainer,
+              logger,
+            });
+            engineInstances.push(engine);
+            return stageSuccess(engine);
+          }
+        ),
         initializeAuxiliaryServicesStage: jest.fn(async () => stageSuccess({})),
         setupMenuButtonListenersStage: jest.fn(async () => stageSuccess({})),
         setupGlobalEventListenersStage: jest.fn(async () => stageSuccess({})),
@@ -544,8 +580,12 @@ describe('main.js catastrophic bootstrap scenarios', () => {
       json: jest.fn().mockResolvedValue({ startWorld: 'citadel' }),
     });
 
-    const { stageSuccess, stageFailure } = await import('../../../src/types/stageResult.js');
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { stageSuccess, stageFailure } = await import(
+      '../../../src/types/stageResult.js'
+    );
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
 
     const mockLogger = {
       debug: jest.fn(),
@@ -565,7 +605,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     global.__LNE_setPhaseToNull = () => {};
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
         ensureCriticalDOMElementsStage: actual.ensureCriticalDOMElementsStage,
@@ -578,15 +620,22 @@ describe('main.js catastrophic bootstrap scenarios', () => {
           return stageSuccess({ logger });
         }),
         initializeGlobalConfigStage: jest.fn(async () => stageSuccess({})),
-        initializeGameEngineStage: jest.fn(async (_container, logger, options) => {
-          const engine = options?.createGameEngine?.({ container: mockContainer, logger });
-          return stageSuccess(engine);
-        }),
+        initializeGameEngineStage: jest.fn(
+          async (_container, logger, options) => {
+            const engine = options?.createGameEngine?.({
+              container: mockContainer,
+              logger,
+            });
+            return stageSuccess(engine);
+          }
+        ),
         initializeAuxiliaryServicesStage: jest.fn(async () => stageSuccess({})),
         setupMenuButtonListenersStage: jest.fn(async () => stageSuccess({})),
         setupGlobalEventListenersStage: jest.fn(async () => {
           global.__LNE_setPhaseToNull?.();
-          return stageFailure(new Error('global listeners failed mysteriously'));
+          return stageFailure(
+            new Error('global listeners failed mysteriously')
+          );
         }),
       };
     });
@@ -628,7 +677,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
       'Application failed to start due to a critical error: global listeners failed mysteriously'
     );
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Bootstrap Orchestration - Application Logic/Runtime'),
+      expect.stringContaining(
+        'Bootstrap Orchestration - Application Logic/Runtime'
+      ),
       expect.any(Error)
     );
 
@@ -648,14 +699,20 @@ describe('main.js catastrophic bootstrap scenarios', () => {
       json: jest.fn().mockResolvedValue({ startWorld: 'citadel' }),
     });
 
-    const { stageSuccess, stageFailure } = await import('../../../src/types/stageResult.js');
+    const { stageSuccess, stageFailure } = await import(
+      '../../../src/types/stageResult.js'
+    );
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-      const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
+      const actual = jest.requireActual(
+        '../../../src/bootstrapper/stages/index.js'
+      );
       return {
         ...actual,
         ensureCriticalDOMElementsStage: actual.ensureCriticalDOMElementsStage,
-        setupDIContainerStage: jest.fn(async () => stageFailure(new Error('container exploded'))),
+        setupDIContainerStage: jest.fn(async () =>
+          stageFailure(new Error('container exploded'))
+        ),
       };
     });
 
@@ -684,7 +741,9 @@ describe('main.js catastrophic bootstrap scenarios', () => {
     );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Critical: GameEngine not initialized before attempting Start Game stage.')
+      expect.stringContaining(
+        'Critical: GameEngine not initialized before attempting Start Game stage.'
+      )
     );
 
     consoleErrorSpy.mockRestore();
@@ -742,13 +801,15 @@ describe('main.js catastrophic bootstrap scenarios', () => {
           stages.initializeGameEngineStage.mockImplementation(async () =>
             stageSuccessFn({})
           );
-          stages.initializeAuxiliaryServicesStage.mockImplementation(async () => {
-            const error = new Error('auxiliary stage failed');
-            error.failures = [
-              { service: 'AuxiliaryService', error: new Error('aux boom') },
-            ];
-            return stageFailureFn(error);
-          });
+          stages.initializeAuxiliaryServicesStage.mockImplementation(
+            async () => {
+              const error = new Error('auxiliary stage failed');
+              error.failures = [
+                { service: 'AuxiliaryService', error: new Error('aux boom') },
+              ];
+              return stageFailureFn(error);
+            }
+          );
         },
       },
       {
@@ -788,99 +849,113 @@ describe('main.js catastrophic bootstrap scenarios', () => {
       },
     ];
 
-    it.each(failureCases)('handles %s failure gracefully', async ({
-      label,
-      stage,
-      configure,
-      failureMessage,
-    }) => {
-      document.body.innerHTML = `
+    it.each(failureCases)(
+      'handles %s failure gracefully',
+      async ({ label, stage, configure, failureMessage }) => {
+        document.body.innerHTML = `
         <div id="outputDiv"></div>
         <div id="error-output"></div>
         <h1>Game Title</h1>
         <input id="speech-input" />
       `;
 
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ startWorld: 'sanctuary' }),
-      });
+        global.fetch = jest.fn().mockResolvedValue({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ startWorld: 'sanctuary' }),
+        });
 
-      const { stageSuccess, stageFailure } = await import('../../../src/types/stageResult.js');
-      const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+        const { stageSuccess, stageFailure } = await import(
+          '../../../src/types/stageResult.js'
+        );
+        const { tokens } = await import(
+          '../../../src/dependencyInjection/tokens.js'
+        );
 
-      const mockLogger = {
-        debug: jest.fn(),
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-      };
-      const mockContainer = {
-        resolve: jest.fn((token) => {
-          if (token === tokens.ILogger) {
-            return mockLogger;
-          }
-          return undefined;
-        }),
-      };
-
-      jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
-        const actual = jest.requireActual('../../../src/bootstrapper/stages/index.js');
-        const stages = {
-          ...actual,
-          ensureCriticalDOMElementsStage: actual.ensureCriticalDOMElementsStage,
-          setupDIContainerStage: jest.fn(async (_ui, _config, options) => {
-            options?.createAppContainer?.();
-            return stageSuccess(mockContainer);
-          }),
-          resolveLoggerStage: jest.fn(async () => {
-            const logger = mockContainer.resolve(tokens.ILogger);
-            return stageSuccess({ logger });
-          }),
-          initializeGlobalConfigStage: jest.fn(async () => stageSuccess({})),
-          initializeGameEngineStage: jest.fn(async () => stageSuccess({})),
-          initializeAuxiliaryServicesStage: jest.fn(async () => stageSuccess({})),
-          setupMenuButtonListenersStage: jest.fn(async () => stageSuccess({})),
-          setupGlobalEventListenersStage: jest.fn(async () => stageSuccess({})),
+        const mockLogger = {
+          debug: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          info: jest.fn(),
         };
-        configure(stages, stageSuccess, stageFailure);
-        return stages;
-      });
-
-      jest.doMock('../../../src/dependencyInjection/appContainer.js', () => ({
-        __esModule: true,
-        default: class MockAppContainer {},
-      }));
-
-      jest.doMock('../../../src/dependencyInjection/containerConfig.js', () => ({
-        configureContainer: jest.fn(async () => {}),
-      }));
-
-      let mainModule;
-      await jest.isolateModulesAsync(async () => {
-        mainModule = await import('../../../src/main.js');
-      });
-
-      if (label === 'logger resolution' || label === 'DI container setup') {
-        global.__LNE_forcePhaseReset = () => {
-          mainModule.__TEST_ONLY__setCurrentPhaseForError(undefined);
+        const mockContainer = {
+          resolve: jest.fn((token) => {
+            if (token === tokens.ILogger) {
+              return mockLogger;
+            }
+            return undefined;
+          }),
         };
+
+        jest.doMock('../../../src/bootstrapper/stages/index.js', () => {
+          const actual = jest.requireActual(
+            '../../../src/bootstrapper/stages/index.js'
+          );
+          const stages = {
+            ...actual,
+            ensureCriticalDOMElementsStage:
+              actual.ensureCriticalDOMElementsStage,
+            setupDIContainerStage: jest.fn(async (_ui, _config, options) => {
+              options?.createAppContainer?.();
+              return stageSuccess(mockContainer);
+            }),
+            resolveLoggerStage: jest.fn(async () => {
+              const logger = mockContainer.resolve(tokens.ILogger);
+              return stageSuccess({ logger });
+            }),
+            initializeGlobalConfigStage: jest.fn(async () => stageSuccess({})),
+            initializeGameEngineStage: jest.fn(async () => stageSuccess({})),
+            initializeAuxiliaryServicesStage: jest.fn(async () =>
+              stageSuccess({})
+            ),
+            setupMenuButtonListenersStage: jest.fn(async () =>
+              stageSuccess({})
+            ),
+            setupGlobalEventListenersStage: jest.fn(async () =>
+              stageSuccess({})
+            ),
+          };
+          configure(stages, stageSuccess, stageFailure);
+          return stages;
+        });
+
+        jest.doMock('../../../src/dependencyInjection/appContainer.js', () => ({
+          __esModule: true,
+          default: class MockAppContainer {},
+        }));
+
+        jest.doMock(
+          '../../../src/dependencyInjection/containerConfig.js',
+          () => ({
+            configureContainer: jest.fn(async () => {}),
+          })
+        );
+
+        let mainModule;
+        await jest.isolateModulesAsync(async () => {
+          mainModule = await import('../../../src/main.js');
+        });
+
+        if (label === 'logger resolution' || label === 'DI container setup') {
+          global.__LNE_forcePhaseReset = () => {
+            mainModule.__TEST_ONLY__setCurrentPhaseForError(undefined);
+          };
+        }
+
+        const { bootstrapApp } = mainModule;
+
+        await expect(bootstrapApp()).resolves.toBeUndefined();
+
+        const errorOutput = document.getElementById('error-output');
+        const fallbackMessage = errorOutput?.textContent || '';
+        expect(fallbackMessage).toContain(
+          `Application failed to start due to a critical error: ${failureMessage}`
+        );
+        expect(errorOutput?.style.display).toBe('block');
+
+        if (label === 'logger resolution' || label === 'DI container setup') {
+          delete global.__LNE_forcePhaseReset;
+        }
       }
-
-      const { bootstrapApp } = mainModule;
-
-      await expect(bootstrapApp()).resolves.toBeUndefined();
-
-      const errorOutput = document.getElementById('error-output');
-      const fallbackMessage = errorOutput?.textContent || '';
-      expect(fallbackMessage).toContain(
-        `Application failed to start due to a critical error: ${failureMessage}`
-      );
-      expect(errorOutput?.style.display).toBe('block');
-
-      if (label === 'logger resolution' || label === 'DI container setup') {
-        delete global.__LNE_forcePhaseReset;
-      }
-    });
+    );
   });
 });

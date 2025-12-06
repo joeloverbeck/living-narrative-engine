@@ -20,11 +20,13 @@ function createLoaderWithDependencies() {
 
   const config = {
     getModsBasePath: () => './mods',
-    getContentTypeSchemaId: () => 'schema://living-narrative-engine/action.schema.json',
+    getContentTypeSchemaId: () =>
+      'schema://living-narrative-engine/action.schema.json',
   };
 
   const pathResolver = {
-    resolveModContentPath: (modId, folder, filename) => `${modId}/${folder}/${filename}`,
+    resolveModContentPath: (modId, folder, filename) =>
+      `${modId}/${folder}/${filename}`,
   };
 
   const dataFetcher = {
@@ -33,7 +35,9 @@ function createLoaderWithDependencies() {
 
   const schemaValidator = {
     validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
-    getValidator: jest.fn().mockReturnValue(() => ({ isValid: true, errors: null })),
+    getValidator: jest
+      .fn()
+      .mockReturnValue(() => ({ isValid: true, errors: null })),
     isSchemaLoaded: jest.fn().mockReturnValue(true),
   };
 
@@ -101,12 +105,16 @@ describe('Integration: visualPropertiesValidator with ActionLoader', () => {
 
     expect(
       debugMessages.some((message) =>
-        message.includes("Action stylishMod:pose_action loaded with visual properties:")
+        message.includes(
+          'Action stylishMod:pose_action loaded with visual properties:'
+        )
       )
     ).toBe(true);
     expect(
       debugMessages.some((message) =>
-        message.includes("Action stylishMod:plain_action loaded with visual properties:")
+        message.includes(
+          'Action stylishMod:plain_action loaded with visual properties:'
+        )
       )
     ).toBe(false);
 
@@ -114,8 +122,13 @@ describe('Integration: visualPropertiesValidator with ActionLoader', () => {
     expect(storedActions).toHaveLength(2);
     expect(countActionsWithVisualProperties(storedActions)).toBe(1);
 
-    const [storedRichAction] = storedActions.filter((action) => action.id === 'stylishMod:pose_action');
-    const validated = validateVisualProperties(storedRichAction.visual, storedRichAction.id);
+    const [storedRichAction] = storedActions.filter(
+      (action) => action.id === 'stylishMod:pose_action'
+    );
+    const validated = validateVisualProperties(
+      storedRichAction.visual,
+      storedRichAction.id
+    );
     expect(validated).toEqual(richVisuals.visual);
   });
 
@@ -127,7 +140,9 @@ describe('Integration: visualPropertiesValidator with ActionLoader', () => {
       unknownFlag: 'experimental',
     };
 
-    expect(() => validateVisualProperties(invalidVisual, 'stylishMod:glitchy_action')).toThrow(
+    expect(() =>
+      validateVisualProperties(invalidVisual, 'stylishMod:glitchy_action')
+    ).toThrow(
       /Invalid visual properties for action stylishMod:glitchy_action:\nbackgroundColor: Invalid CSS color value: "not-a-color"\. Expected hex \(#RGB or #RRGGBB\), rgb\(\), rgba\(\), or named color\.\nhoverBackgroundColor: Color must be a string\nUnknown visual properties: unknownFlag/
     );
   });
@@ -166,14 +181,20 @@ describe('Integration: visualPropertiesValidator with ActionLoader', () => {
     );
 
     const storedActions = registry.getAll('actions');
-    const emptyStored = storedActions.find((action) => action.id === 'quirkyMod:empty_visual');
-    const nullStored = storedActions.find((action) => action.id === 'quirkyMod:null_visual');
+    const emptyStored = storedActions.find(
+      (action) => action.id === 'quirkyMod:empty_visual'
+    );
+    const nullStored = storedActions.find(
+      (action) => action.id === 'quirkyMod:null_visual'
+    );
 
     expect(hasVisualProperties(emptyStored)).toBe(false);
     expect(hasVisualProperties(nullStored)).toBe(false);
     expect(countActionsWithVisualProperties(storedActions)).toBe(0);
 
-    expect(() => validateVisualProperties(null, 'quirkyMod:null_visual')).toThrow(
+    expect(() =>
+      validateVisualProperties(null, 'quirkyMod:null_visual')
+    ).toThrow(
       'Invalid visual properties for action quirkyMod:null_visual: expected object'
     );
     expect(countActionsWithVisualProperties('not-an-array')).toBe(0);

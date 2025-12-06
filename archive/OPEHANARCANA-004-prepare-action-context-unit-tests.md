@@ -10,6 +10,7 @@
 ## Objective
 
 Create comprehensive unit tests for `PrepareActionContextHandler` with 90%+ branch coverage, covering:
+
 - Happy path scenarios
 - Edge cases
 - Error handling
@@ -20,6 +21,7 @@ Create comprehensive unit tests for `PrepareActionContextHandler` with 90%+ bran
 ## Files to Touch
 
 ### New Files
+
 - `tests/unit/logic/operationHandlers/prepareActionContextHandler.test.js`
 
 ---
@@ -27,6 +29,7 @@ Create comprehensive unit tests for `PrepareActionContextHandler` with 90%+ bran
 ## Out of Scope
 
 **DO NOT modify:**
+
 - The handler implementation file
 - Any schema files
 - Any DI registration files
@@ -235,8 +238,7 @@ describe('PrepareActionContextHandler', () => {
         (entityId, componentType) => {
           if (componentType === 'core:actor') return null;
           if (componentType === 'core:item') return { name: 'Sword' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -338,8 +340,7 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:actor') return { name: 'Test' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -372,8 +373,7 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:actor') return { name: 'Test' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -403,8 +403,7 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:actor') return { name: 'Test' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -541,11 +540,13 @@ describe('PrepareActionContextHandler', () => {
 ### Tests That Must Pass
 
 1. **All unit tests pass:**
+
    ```bash
    npm run test:unit -- tests/unit/logic/operationHandlers/prepareActionContextHandler.test.js
    ```
 
 2. **Coverage meets requirements (90%+ branches):**
+
    ```bash
    npm run test:unit -- --coverage --collectCoverageFrom='src/logic/operationHandlers/prepareActionContextHandler.js'
    ```
@@ -566,12 +567,12 @@ describe('PrepareActionContextHandler', () => {
 
 ## Test Coverage Requirements
 
-| Area | Min Coverage |
-|------|-------------|
-| Branches | 90% |
-| Functions | 100% |
-| Lines | 95% |
-| Statements | 95% |
+| Area       | Min Coverage |
+| ---------- | ------------ |
+| Branches   | 90%          |
+| Functions  | 100%         |
+| Lines      | 95%          |
+| Statements | 95%          |
 
 ---
 
@@ -600,6 +601,7 @@ npx eslint tests/unit/logic/operationHandlers/prepareActionContextHandler.test.j
 - Mock utilities: `tests/common/testBed.js`
 
 ## Outcome
+
 - **Code Changes:** Created `tests/unit/logic/operationHandlers/prepareActionContextHandler.test.js`.
 - **Ticket Updates:** Updated ticket to match implementation signature and added error/edge case tests.
 - **Coverage:** Achieved 100% coverage for all metrics.

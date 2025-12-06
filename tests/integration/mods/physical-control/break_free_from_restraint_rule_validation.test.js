@@ -7,8 +7,7 @@ import breakFreeAction from '../../../../data/mods/physical-control/actions/brea
 const findIfByOutcome = (actions, outcomeValue) =>
   actions.find(
     (op) =>
-      op.type === 'IF' &&
-      op.parameters?.condition?.['==']?.[1] === outcomeValue
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcomeValue
   );
 
 describe('handle_break_free_from_restraint rule', () => {
@@ -126,7 +125,9 @@ describe('handle_break_free_from_restraint rule', () => {
     const ifOps = breakFreeRule.actions.filter((op) => op.type === 'IF');
 
     expect(ifOps).toHaveLength(4);
-    expect(findIfByOutcome(breakFreeRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
+    expect(
+      findIfByOutcome(breakFreeRule.actions, 'CRITICAL_SUCCESS')
+    ).toBeDefined();
     expect(findIfByOutcome(breakFreeRule.actions, 'SUCCESS')).toBeDefined();
     expect(findIfByOutcome(breakFreeRule.actions, 'FAILURE')).toBeDefined();
     expect(findIfByOutcome(breakFreeRule.actions, 'FUMBLE')).toBeDefined();
@@ -134,9 +135,9 @@ describe('handle_break_free_from_restraint rule', () => {
 
   it('removes restraint components, unlocks grabbing, and logs success on SUCCESS/CRITICAL_SUCCESS', () => {
     const successMessage =
-      '{context.actorName} breaks free from {context.targetName}\'s grip.';
+      "{context.actorName} breaks free from {context.targetName}'s grip.";
     const criticalMessage =
-      '{context.actorName} breaks free from {context.targetName}\'s grip, and during the struggle, {context.targetName} falls to the ground.';
+      "{context.actorName} breaks free from {context.targetName}'s grip, and during the struggle, {context.targetName} falls to the ground.";
 
     ['SUCCESS', 'CRITICAL_SUCCESS'].forEach((outcome) => {
       const branch = findIfByOutcome(breakFreeRule.actions, outcome);
@@ -224,7 +225,7 @@ describe('handle_break_free_from_restraint rule', () => {
     const fumbleActions = fumbleBranch?.parameters.then_actions ?? [];
 
     const expectedMessage =
-      '{context.actorName} tries to break free from {context.targetName}\'s grip, but fails to release themselves.';
+      "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves.";
 
     [failureActions, fumbleActions].forEach((actions) => {
       expect(actions.some((op) => op.type === 'REMOVE_COMPONENT')).toBe(false);

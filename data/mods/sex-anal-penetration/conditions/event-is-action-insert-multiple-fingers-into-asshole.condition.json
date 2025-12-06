@@ -4,7 +4,7 @@
   "description": "Checks if the triggering event is for the 'sex-anal-penetration:insert_multiple_fingers_into_asshole' action.",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "sex-anal-penetration:insert_multiple_fingers_into_asshole"
     ]
   }

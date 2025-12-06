@@ -49,12 +49,13 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
       actorComponents: ['core:position'],
     });
 
-    const minimalStage = trace.getActionTrace('core:move').stages.component_filtering.data;
+    const minimalStage =
+      trace.getActionTrace('core:move').stages.component_filtering.data;
     expect(minimalStage.passed).toBe(true);
     expect(minimalStage.actorComponents).toBeUndefined();
     expect(performanceMonitor.trackOperation).toHaveBeenCalledWith(
       'stage_component_filtering',
-      expect.any(Number),
+      expect.any(Number)
     );
 
     filter.setVerbosityLevel('standard');
@@ -70,7 +71,8 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
       targetCount: 2,
       targetKeys: ['primary', 'secondary'],
     });
-    const standardStage = trace.getActionTrace('core:move').stages.prerequisite_evaluation.data;
+    const standardStage =
+      trace.getActionTrace('core:move').stages.prerequisite_evaluation.data;
     expect(standardStage.actorComponents).toEqual(['core:position']);
     expect(standardStage.prerequisiteCount).toBe(2);
     expect(standardStage.targetKeys).toEqual(['primary', 'secondary']);
@@ -84,7 +86,8 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
       resolvedTargets,
       duration: 42,
     });
-    const detailedStage = trace.getActionTrace('core:move').stages.target_resolution.data;
+    const detailedStage =
+      trace.getActionTrace('core:move').stages.target_resolution.data;
     expect(detailedStage.resolvedTargets).toHaveLength(10);
     expect(detailedStage.resolvedTargets.at(-1)).toEqual({
       truncated: true,
@@ -98,7 +101,8 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
     verboseData.longText = 'x'.repeat(1200);
     verboseData.self = verboseData;
     trace.captureActionData('formatting', 'core:move', verboseData);
-    const verboseStage = trace.getActionTrace('core:move').stages.formatting.data;
+    const verboseStage =
+      trace.getActionTrace('core:move').stages.formatting.data;
     expect(verboseStage.longText.endsWith('... [truncated]')).toBe(true);
     expect(verboseStage.self).toBe('[Circular Reference]');
     expect(verboseStage.debug).toEqual({ detail: 'rich diagnostics' });
@@ -111,7 +115,7 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
 
     const performance = trace.calculateStagePerformance('core:move');
     expect(Object.keys(performance)).toEqual(
-      expect.arrayContaining(['component_filtering', 'prerequisite_evaluation']),
+      expect.arrayContaining(['component_filtering', 'prerequisite_evaluation'])
     );
 
     const tracedActionsCopy = trace.getTracedActions();
@@ -143,7 +147,8 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
     filter.getVerbosityLevel = () => 'standard';
     filter.getInclusionConfig = () => badConfig;
     trace.captureActionData('error_stage', 'core:move', { passed: false });
-    const errorStage = trace.getActionTrace('core:move').stages.error_stage.data;
+    const errorStage =
+      trace.getActionTrace('core:move').stages.error_stage.data;
     expect(errorStage.error).toBe('Data filtering failed');
     filter.getVerbosityLevel = originalGetVerbosityLevel;
     filter.getInclusionConfig = originalGetInclusionConfig;
@@ -152,16 +157,21 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
       metric: 1,
       value: BigInt(10),
     });
-    const diagnosticStage = trace.getActionTrace('core:move').stages.diagnostic_stage.data;
+    const diagnosticStage =
+      trace.getActionTrace('core:move').stages.diagnostic_stage.data;
     expect(diagnosticStage.dataError).toBe('Failed to serialize data safely');
 
     trace.captureActionData('', 'core:move', null);
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('ActionAwareStructuredTrace: Error capturing action data'),
-      expect.any(Error),
+      expect.stringContaining(
+        'ActionAwareStructuredTrace: Error capturing action data'
+      ),
+      expect.any(Error)
     );
 
-    trace.captureActionData('component_filtering', 'core:idle', { passed: true });
+    trace.captureActionData('component_filtering', 'core:idle', {
+      passed: true,
+    });
     expect(trace.isActionTraced('core:idle')).toBe(false);
 
     const json = trace.toJSON();
@@ -173,7 +183,7 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
         'formatting',
         'error_stage',
         'diagnostic_stage',
-      ]),
+      ])
     );
   });
 
@@ -262,7 +272,7 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
         filterEvaluations: [
           { itemId: 'entity-1', filterPassed: true, evaluationResult: 'ok' },
         ],
-      },
+      }
     );
 
     trace.captureEnhancedScopeEvaluation('multi:resolve', 'primary', [
@@ -310,7 +320,9 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
     expect(multiSummary.targetKeys).toEqual(['primary', 'secondary']);
 
     const operatorTrace = trace.getActionTrace('_current_scope_evaluation');
-    expect(operatorTrace.stages.operator_evaluations.data.evaluations).toHaveLength(2);
+    expect(
+      operatorTrace.stages.operator_evaluations.data.evaluations
+    ).toHaveLength(2);
 
     expect(trace.isMultiTargetAction({ targets: { key: 'value' } })).toBe(true);
     expect(trace.isMultiTargetAction({ name: 'single-action' })).toBe(false);
@@ -354,7 +366,7 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
         summarize: true,
         targetVerbosity: 'minimal',
         context: { actionId: 'core:enhanced' },
-      },
+      }
     );
 
     const enhancedTimingStage =
@@ -364,17 +376,17 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
     expect(enhancedTimingStage.performance).toBeUndefined();
 
     trace.addDynamicTraceRule('skip-diagnostics', ({ category }) =>
-      category === 'diagnostic' ? false : true,
+      category === 'diagnostic' ? false : true
     );
 
     trace.captureEnhancedActionData(
       'debug_info',
       'core:enhanced',
       { message: 'should skip' },
-      { category: 'diagnostic', context: { actionId: 'core:enhanced' } },
+      { category: 'diagnostic', context: { actionId: 'core:enhanced' } }
     );
     expect(
-      trace.getActionTrace('core:enhanced').stages.debug_info,
+      trace.getActionTrace('core:enhanced').stages.debug_info
     ).toBeUndefined();
 
     trace.removeDynamicTraceRule('skip-diagnostics');
@@ -382,14 +394,18 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
       'debug_info',
       'core:enhanced',
       { message: 'captured' },
-      { category: 'diagnostic', context: { actionId: 'core:enhanced' } },
+      { category: 'diagnostic', context: { actionId: 'core:enhanced' } }
     );
     expect(
-      trace.getActionTrace('core:enhanced').stages.debug_info.data.message,
+      trace.getActionTrace('core:enhanced').stages.debug_info.data.message
     ).toBe('captured');
 
-    trace.captureActionData('performance_metrics', 'core:enhanced', { metric: 1 });
-    trace.captureActionData('component_filtering', 'core:secondary', { passed: true });
+    trace.captureActionData('performance_metrics', 'core:enhanced', {
+      metric: 1,
+    });
+    trace.captureActionData('component_filtering', 'core:secondary', {
+      passed: true,
+    });
 
     const stats = trace.getEnhancedTraceStats();
     expect(stats.totalChecks).toBeGreaterThan(0);
@@ -407,13 +423,23 @@ describe('ActionAwareStructuredTrace comprehensive integration', () => {
     trace.clearEnhancedCache();
     trace.optimizeEnhancedCache(-1);
 
-    const standardExport = trace.exportFilteredTraceData('standard', ['performance']);
+    const standardExport = trace.exportFilteredTraceData('standard', [
+      'performance',
+    ]);
     expect(Object.keys(standardExport)).toContain('core:enhanced');
-    expect(standardExport['core:enhanced'].stages).not.toHaveProperty('timing_data');
-    expect(standardExport['core:enhanced'].stages).toHaveProperty('performance_metrics');
-    const verboseExport = trace.exportFilteredTraceData('verbose', ['performance']);
+    expect(standardExport['core:enhanced'].stages).not.toHaveProperty(
+      'timing_data'
+    );
+    expect(standardExport['core:enhanced'].stages).toHaveProperty(
+      'performance_metrics'
+    );
+    const verboseExport = trace.exportFilteredTraceData('verbose', [
+      'performance',
+    ]);
     expect(verboseExport['core:enhanced'].stages).toHaveProperty('timing_data');
-    expect(verboseExport['core:enhanced'].stages).not.toHaveProperty('debug_info');
+    expect(verboseExport['core:enhanced'].stages).not.toHaveProperty(
+      'debug_info'
+    );
 
     expect(trace.actionId).toBe('discovery');
 

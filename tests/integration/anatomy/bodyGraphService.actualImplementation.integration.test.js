@@ -84,7 +84,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -130,7 +131,9 @@ async function createServiceFixture() {
     structure: { rootPartId: partIds.torso },
   });
 
-  entityManager.addComponent(partIds.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(partIds.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(partIds.torso, 'anatomy:joint', {
     parentId: actorId,
     socketId: 'core',
@@ -143,7 +146,9 @@ async function createServiceFixture() {
     socketId: 'neck',
   });
 
-  entityManager.addComponent(partIds.leftArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partIds.leftArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partIds.leftArm, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'left-shoulder',
@@ -155,7 +160,9 @@ async function createServiceFixture() {
     text: 'left arm',
   });
 
-  entityManager.addComponent(partIds.leftHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(partIds.leftHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(partIds.leftHand, 'anatomy:joint', {
     parentId: partIds.leftArm,
     socketId: 'left-wrist',
@@ -165,14 +172,18 @@ async function createServiceFixture() {
     quality: 'legendary',
   });
 
-  entityManager.addComponent(partIds.rightArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partIds.rightArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partIds.rightArm, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'right-shoulder',
   });
   entityManager.addComponent(partIds.rightArm, 'core:description', {});
 
-  entityManager.addComponent(partIds.heart, 'anatomy:part', { subType: 'heart' });
+  entityManager.addComponent(partIds.heart, 'anatomy:part', {
+    subType: 'heart',
+  });
   entityManager.addComponent(partIds.heart, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'chest',
@@ -235,8 +246,7 @@ describe('BodyGraphService integration - real module coverage', () => {
     });
 
     it('builds caches, reuses query results, and resolves traversal helpers', async () => {
-      const { service, actorId, partIds, bodyComponent } =
-        await fixturePromise;
+      const { service, actorId, partIds, bodyComponent } = await fixturePromise;
 
       const buildCacheSpy = jest.spyOn(
         AnatomyCacheManager.prototype,
@@ -246,10 +256,7 @@ describe('BodyGraphService integration - real module coverage', () => {
       await service.buildAdjacencyCache(partIds.torso);
       expect(buildCacheSpy).toHaveBeenCalledTimes(1);
 
-      const allPartsSpy = jest.spyOn(
-        AnatomyGraphAlgorithms,
-        'getAllParts'
-      );
+      const allPartsSpy = jest.spyOn(AnatomyGraphAlgorithms, 'getAllParts');
       const blueprintPartsFirst = service.getAllParts(bodyComponent, actorId);
       expect(allPartsSpy).toHaveBeenCalledTimes(1);
       expect(collectIds(blueprintPartsFirst)).toEqual(
@@ -416,8 +423,14 @@ describe('BodyGraphService integration - real module coverage', () => {
     });
 
     it('detaches parts, invalidates caches, and surfaces errors', async () => {
-      const { service, entityManager, actorId, partIds, bodyComponent, eventDispatcher } =
-        await fixturePromise;
+      const {
+        service,
+        entityManager,
+        actorId,
+        partIds,
+        bodyComponent,
+        eventDispatcher,
+      } = await fixturePromise;
       await service.buildAdjacencyCache(actorId);
 
       // Warm caches so that detachPart invalidates query results.

@@ -90,15 +90,13 @@ describe('weapons:ammunition Component Definition', () => {
     });
 
     test('currentAmmo should be integer with minimum 0', () => {
-      const currentAmmo =
-        ammunitionComponent.dataSchema.properties.currentAmmo;
+      const currentAmmo = ammunitionComponent.dataSchema.properties.currentAmmo;
       expect(currentAmmo.type).toBe('integer');
       expect(currentAmmo.minimum).toBe(0);
     });
 
     test('maxCapacity should be integer with minimum 1', () => {
-      const maxCapacity =
-        ammunitionComponent.dataSchema.properties.maxCapacity;
+      const maxCapacity = ammunitionComponent.dataSchema.properties.maxCapacity;
       expect(maxCapacity.type).toBe('integer');
       expect(maxCapacity.minimum).toBe(1);
     });

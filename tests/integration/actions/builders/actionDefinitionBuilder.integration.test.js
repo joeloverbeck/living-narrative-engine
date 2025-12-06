@@ -104,13 +104,18 @@ describe('ActionDefinitionBuilder integration behavior', () => {
         failure_message: 'The ritual site must already be prepared',
       },
     ]);
-    expect(validator.validate(targetedDefinition)).toEqual({ isValid: true, errors: [] });
+    expect(validator.validate(targetedDefinition)).toEqual({
+      isValid: true,
+      errors: [],
+    });
 
     builder.withTemplate('perform ritual together');
     expect(() => builder.build()).toThrow(InvalidActionDefinitionError);
     try {
       builder.build();
-      throw new Error('Expected builder.build() to throw due to invalid targeted template');
+      throw new Error(
+        'Expected builder.build() to throw due to invalid targeted template'
+      );
     } catch (error) {
       expect(error).toBeInstanceOf(InvalidActionDefinitionError);
       expect(error.message).toContain(

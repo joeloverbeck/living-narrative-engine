@@ -70,12 +70,9 @@ describe('affection:place_hands_on_shoulders action integration', () => {
   });
 
   it('formats messages correctly with different names', async () => {
-    const scenario = testFixture.createCloseActors(
-      ['Serena', 'Miguel'],
-      {
-        location: 'balcony',
-      }
-    );
+    const scenario = testFixture.createCloseActors(['Serena', 'Miguel'], {
+      location: 'balcony',
+    });
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -89,7 +86,10 @@ describe('affection:place_hands_on_shoulders action integration', () => {
 
     const perceptibleEvent = findPerceptibleEvent();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      EXPECTED_SENTENCE.replace('{actor}', 'Serena').replace('{target}', 'Miguel')
+      EXPECTED_SENTENCE.replace('{actor}', 'Serena').replace(
+        '{target}',
+        'Miguel'
+      )
     );
   });
 

@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-009: Optimize Visualizer Child Discovery
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-009
 - **Priority**: LOW
 - **Severity**: P9
@@ -19,7 +20,8 @@ The anatomy visualizer uses an O(n²) algorithm for discovering parent-child rel
 
 ```javascript
 // src/domUI/anatomy-renderer/VisualizationComposer.js:326-365
-for (const partId of allPartIds) {  // O(n) per node
+for (const partId of allPartIds) {
+  // O(n) per node
   if (!visited.has(partId)) {
     try {
       const partEntity = await this.#entityManager.getEntityInstance(partId);
@@ -48,8 +50,8 @@ For a complex creature with ~200 parts: ~40,000 iterations
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
+| File                                                  | Line(s) | Change Type        |
+| ----------------------------------------------------- | ------- | ------------------ |
 | `src/domUI/anatomy-renderer/VisualizationComposer.js` | 326-365 | Optimize algorithm |
 
 ---
@@ -158,11 +160,11 @@ Orphan detection is already handled by `#handleUnconnectedParts()` at the end of
 
 ## Complexity Analysis
 
-| Operation | Before | After |
-|-----------|--------|-------|
-| Build index | N/A | O(n) - one-time |
-| Find children of one node | O(n) | O(1) lookup + O(k) children |
-| Process entire tree | O(n²) | O(n) |
+| Operation                 | Before | After                       |
+| ------------------------- | ------ | --------------------------- |
+| Build index               | N/A    | O(n) - one-time             |
+| Find children of one node | O(n)   | O(1) lookup + O(k) children |
+| Process entire tree       | O(n²)  | O(n)                        |
 
 **Memory Trade-off**: Additional O(n) space for the index Map
 
@@ -263,11 +265,11 @@ The O(n²) child discovery algorithm was successfully optimized to O(n) by intro
 
 ### Performance Improvements
 
-| Operation | Before | After |
-|-----------|--------|-------|
-| Build index | N/A | O(n) - one-time |
-| Find children of one node | O(n) | O(1) lookup + O(k) children |
-| Process entire tree | O(n²) | O(n) |
+| Operation                 | Before | After                       |
+| ------------------------- | ------ | --------------------------- |
+| Build index               | N/A    | O(n) - one-time             |
+| Find children of one node | O(n)   | O(1) lookup + O(k) children |
+| Process entire tree       | O(n²)  | O(n)                        |
 
 For a 200-part anatomy: ~40,000 iterations → ~400 iterations
 

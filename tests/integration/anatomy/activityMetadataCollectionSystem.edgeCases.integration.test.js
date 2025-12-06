@@ -3,7 +3,14 @@
  * @description Exercises fallback behaviour and failure handling across real collaborators
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityMetadataCollectionSystem from '../../../src/anatomy/services/activityMetadataCollectionSystem.js';
 
@@ -117,9 +124,12 @@ const TEST_COMPONENT_DEFINITIONS = {
  * @returns {Promise<import('../../../src/entities/entity.js').default>}
  */
 async function createActorWithSourceComponent(testBed, instanceId) {
-  const entity = await testBed.entityManager.createEntityInstance('core:actor', {
-    instanceId,
-  });
+  const entity = await testBed.entityManager.createEntityInstance(
+    'core:actor',
+    {
+      instanceId,
+    }
+  );
   testBed.entityManager.addComponent(entity.id, 'test:source_component', {
     partner: 'partner_id',
   });
@@ -182,9 +192,12 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
     expect(system.collectActivityMetadata('missing-entity')).toEqual([]);
 
     // Real entity with inline + dedicated metadata -> index throws but fallbacks succeed
-    const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-      instanceId: 'actor_edge',
-    });
+    const actor = await testBed.entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: 'actor_edge',
+      }
+    );
     testBed.entityManager.addComponent(actor.id, 'test:inline_valid', {
       targetId: 'friend',
       activityMetadata: {
@@ -197,15 +210,19 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
     testBed.entityManager.addComponent(actor.id, 'test:source_component', {
       partner: 'friend',
     });
-    testBed.entityManager.addComponent(actor.id, 'activity:description_metadata', {
-      sourceComponent: 'test:source_component',
-      descriptionType: 'verb',
-      verb: 'waving',
-      targetRole: 'partner',
-      priority: 90,
-      adverb: 'warmly',
-      grouping: { groupKey: 'greeting' },
-    });
+    testBed.entityManager.addComponent(
+      actor.id,
+      'activity:description_metadata',
+      {
+        sourceComponent: 'test:source_component',
+        descriptionType: 'verb',
+        verb: 'waving',
+        targetRole: 'partner',
+        priority: 90,
+        adverb: 'warmly',
+        grouping: { groupKey: 'greeting' },
+      }
+    );
 
     const collected = system.collectActivityMetadata('actor_edge');
     const types = collected.map((item) => item.type).sort();
@@ -230,24 +247,43 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
       })
     ).toEqual([]);
 
-    const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-      instanceId: 'inline_actor',
-    });
+    const actor = await testBed.entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: 'inline_actor',
+      }
+    );
 
     // Register a dedicated metadata component to verify it is skipped when scanning inline sources
-    testBed.entityManager.addComponent(actor.id, 'activity:description_metadata', {
-      sourceComponent: 'test:source_component',
-    });
+    testBed.entityManager.addComponent(
+      actor.id,
+      'activity:description_metadata',
+      {
+        sourceComponent: 'test:source_component',
+      }
+    );
 
-    testBed.entityManager.addComponent(actor.id, 'test:inline_invalid_data', {});
-    testBed.entityManager.addComponent(actor.id, 'test:inline_malformed_metadata', {
-      activityMetadata: {},
-    });
-    testBed.entityManager.addComponent(actor.id, 'test:inline_missing_template', {
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-      },
-    });
+    testBed.entityManager.addComponent(
+      actor.id,
+      'test:inline_invalid_data',
+      {}
+    );
+    testBed.entityManager.addComponent(
+      actor.id,
+      'test:inline_malformed_metadata',
+      {
+        activityMetadata: {},
+      }
+    );
+    testBed.entityManager.addComponent(
+      actor.id,
+      'test:inline_missing_template',
+      {
+        activityMetadata: {
+          shouldDescribeInActivity: true,
+        },
+      }
+    );
     testBed.entityManager.addComponent(actor.id, 'test:inline_blank_target', {
       targetId: '   ',
       activityMetadata: {
@@ -280,13 +316,17 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
     testBed.entityManager.addComponent(actor.id, 'test:inline_parser_error', {
       activityMetadata: parserErrorMetadata.activityMetadata,
     });
-    testBed.entityManager.addComponent(actor.id, 'test:inline_throwing_component', {
-      targetId: 'friend',
-      activityMetadata: {
-        shouldDescribeInActivity: true,
-        template: '{actor} tries to contact {target}',
-      },
-    });
+    testBed.entityManager.addComponent(
+      actor.id,
+      'test:inline_throwing_component',
+      {
+        targetId: 'friend',
+        activityMetadata: {
+          shouldDescribeInActivity: true,
+          template: '{actor} tries to contact {target}',
+        },
+      }
+    );
     testBed.entityManager.addComponent(actor.id, 'test:inline_valid', {
       targetId: 'companion',
       activityMetadata: {
@@ -456,16 +496,19 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
         descriptionType: 'verb',
       }
     );
-    const originalSourceGet = sourceRetrievalFailureEntity.getComponentData.bind(
-      sourceRetrievalFailureEntity
-    );
+    const originalSourceGet =
+      sourceRetrievalFailureEntity.getComponentData.bind(
+        sourceRetrievalFailureEntity
+      );
     sourceRetrievalFailureEntity.getComponentData = (componentId) => {
       if (componentId === 'test:source_component') {
         throw new Error('source retrieval failure');
       }
       return originalSourceGet(componentId);
     };
-    expect(system.collectDedicatedMetadata(sourceRetrievalFailureEntity)).toEqual([]);
+    expect(
+      system.collectDedicatedMetadata(sourceRetrievalFailureEntity)
+    ).toEqual([]);
 
     const missingSourceDataEntity = await createActorWithSourceComponent(
       testBed,
@@ -480,7 +523,9 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
         descriptionType: 'verb',
       }
     );
-    expect(system.collectDedicatedMetadata(missingSourceDataEntity)).toEqual([]);
+    expect(system.collectDedicatedMetadata(missingSourceDataEntity)).toEqual(
+      []
+    );
 
     const targetResolutionFailureEntity = await createActorWithSourceComponent(
       testBed,
@@ -496,9 +541,10 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
         targetRole: 'unreliable',
       }
     );
-    const originalTargetGet = targetResolutionFailureEntity.getComponentData.bind(
-      targetResolutionFailureEntity
-    );
+    const originalTargetGet =
+      targetResolutionFailureEntity.getComponentData.bind(
+        targetResolutionFailureEntity
+      );
     targetResolutionFailureEntity.getComponentData = (componentId) => {
       const data = originalTargetGet(componentId);
       if (componentId === 'test:source_component') {
@@ -524,16 +570,20 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
       'ded_valid'
     );
     validEntity.hasComponent = () => true;
-    testBed.entityManager.addComponent(validEntity.id, 'activity:description_metadata', {
-      sourceComponent: 'test:source_component',
-      descriptionType: 'verb',
-      verb: 'saluting',
-      template: '{actor} salutes',
-      adverb: 'smartly',
-      targetRole: 'partner',
-      priority: 120,
-      grouping: { groupKey: 'greeting' },
-    });
+    testBed.entityManager.addComponent(
+      validEntity.id,
+      'activity:description_metadata',
+      {
+        sourceComponent: 'test:source_component',
+        descriptionType: 'verb',
+        verb: 'saluting',
+        template: '{actor} salutes',
+        adverb: 'smartly',
+        targetRole: 'partner',
+        priority: 120,
+        grouping: { groupKey: 'greeting' },
+      }
+    );
     const validActivities = system.collectDedicatedMetadata(validEntity);
     expect(validActivities).toHaveLength(1);
     expect(validActivities[0].verb).toBe('saluting');
@@ -663,4 +713,3 @@ describe('ActivityMetadataCollectionSystem integration edge cases', () => {
     ).toBeNull();
   });
 });
-

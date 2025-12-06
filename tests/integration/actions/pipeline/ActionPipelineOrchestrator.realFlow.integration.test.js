@@ -124,7 +124,9 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
         return null;
       }),
       hasComponent: jest.fn((entityId, component) =>
-        entityManager.getAllComponentTypesForEntity(entityId).includes(component)
+        entityManager
+          .getAllComponentTypesForEntity(entityId)
+          .includes(component)
       ),
     };
 
@@ -200,7 +202,11 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
       failure: jest.fn(),
     };
 
-    const result = await orchestrator.discoverActions(actorEntity, { mood: 'cheerful' }, { trace });
+    const result = await orchestrator.discoverActions(
+      actorEntity,
+      { mood: 'cheerful' },
+      { trace }
+    );
 
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0]).toEqual(
@@ -213,7 +219,10 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
     expect(result.errors).toEqual([]);
     expect(result.trace).toBe(trace);
 
-    expect(actionIndex.getCandidateActions).toHaveBeenCalledWith(actorEntity, trace);
+    expect(actionIndex.getCandidateActions).toHaveBeenCalledWith(
+      actorEntity,
+      trace
+    );
     expect(commandFormatter.format).toHaveBeenCalledWith(
       candidateActions[0],
       expect.objectContaining({ entityId: targetEntity.id }),
@@ -231,12 +240,17 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
   });
 
   it('supports discovery without optional trace configuration', async () => {
-    const result = await orchestrator.discoverActions(actorEntity, { mood: 'neutral' });
+    const result = await orchestrator.discoverActions(actorEntity, {
+      mood: 'neutral',
+    });
 
     expect(result.actions).toHaveLength(1);
     expect(result.errors).toEqual([]);
     expect(result.trace).toBeUndefined();
-    expect(actionIndex.getCandidateActions).toHaveBeenCalledWith(actorEntity, undefined);
+    expect(actionIndex.getCandidateActions).toHaveBeenCalledWith(
+      actorEntity,
+      undefined
+    );
   });
 
   it('halts further stages when no candidate actions are available', async () => {
@@ -247,7 +261,11 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
       step: jest.fn(),
     };
 
-    const result = await orchestrator.discoverActions(actorEntity, { mood: 'isolated' }, { trace });
+    const result = await orchestrator.discoverActions(
+      actorEntity,
+      { mood: 'isolated' },
+      { trace }
+    );
 
     expect(result.actions).toEqual([]);
     expect(result.errors).toEqual([]);

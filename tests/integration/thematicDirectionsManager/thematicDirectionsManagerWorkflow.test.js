@@ -252,7 +252,9 @@ describe('Thematic Directions Manager Integration Tests', () => {
 
   const createController = (overrides = {}) => {
     if (!testBase) {
-      throw new Error('Test base must be initialized before creating controller');
+      throw new Error(
+        'Test base must be initialized before creating controller'
+      );
     }
 
     return new ThematicDirectionsManagerController({

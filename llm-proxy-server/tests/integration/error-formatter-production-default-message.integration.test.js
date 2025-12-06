@@ -4,13 +4,7 @@
  *              sanitizeErrorForClient is invoked without a custom message.
  */
 
-import {
-  describe,
-  it,
-  beforeAll,
-  afterEach,
-  expect,
-} from '@jest/globals';
+import { describe, it, beforeAll, afterEach, expect } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 

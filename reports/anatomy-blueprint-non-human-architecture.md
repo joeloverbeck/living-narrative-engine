@@ -100,6 +100,7 @@ Current blueprint format (`human_male.blueprint.json`):
 ```
 
 **Key observations:**
+
 - Slot keys (`penis`, `left_testicle`) are rigid identifiers
 - Socket IDs must pre-exist on parent entities
 - Composition reduces duplication for shared structure
@@ -134,6 +135,7 @@ Entity definitions specify attachment points:
 ```
 
 **Socket properties:**
+
 - `id`: Unique identifier within parent
 - `orientation`: Spatial position (enum: left, right, mid, upper, lower, front, back)
 - `allowedTypes`: Whitelist of compatible part types
@@ -154,6 +156,7 @@ Entity definitions specify attachment points:
 ```
 
 The `BodyBlueprintFactory` orchestrates this flow, ensuring:
+
 - Socket availability before attachment
 - Part type compatibility with socket whitelist
 - Recipe constraints (co-presence, exclusions)
@@ -197,6 +200,7 @@ The recipe system provides excellent modder control:
 ```
 
 **Recipe capabilities:**
+
 - **Per-slot configuration**: Override individual slots with specific parts
 - **Pattern matching**: Configure multiple slots with same rules
 - **Tag filtering**: Include/exclude parts by component tags
@@ -217,6 +221,7 @@ Blueprint slots:           Recipe must match:
 ```
 
 **Validation:**
+
 - `#validateRecipeSlots()` ensures recipe keys exist in blueprint
 - Special case: `torso` slot overrides root entity
 - Invalid keys dispatch `SYSTEM_ERROR_OCCURRED` event
@@ -226,6 +231,7 @@ Blueprint slots:           Recipe must match:
 ### 2.3 Strengths to Preserve
 
 The recipe system excels at:
+
 1. **Declarative part selection** - No code required
 2. **Property-based filtering** - Flexible matching
 3. **Pattern reuse** - DRY for symmetric parts
@@ -243,18 +249,25 @@ The recipe system excels at:
 **Problem:** Socket IDs and blueprint slots embed human anatomy knowledge.
 
 Current socket IDs in `human_male_torso.entity.json`:
+
 ```json
 {
   "sockets": [
-    "left_shoulder", "right_shoulder",  // Bilateral arms
-    "left_hip", "right_hip",            // Bilateral legs
-    "penis", "left_testicle", "right_testicle",  // Male genitalia
-    "left_chest", "right_chest"         // Chest sockets
+    "left_shoulder",
+    "right_shoulder", // Bilateral arms
+    "left_hip",
+    "right_hip", // Bilateral legs
+    "penis",
+    "left_testicle",
+    "right_testicle", // Male genitalia
+    "left_chest",
+    "right_chest" // Chest sockets
   ]
 }
 ```
 
 **Issues for non-human creatures:**
+
 - **Spider (8 legs)**: Would need `leg_1`, `leg_2`, ..., `leg_8` or similar
 - **Centaur (4 legs + 2 arms)**: Mix of quadruped + biped structure
 - **Octopus (8 tentacles)**: Radial symmetry, not bilateral
@@ -266,30 +279,36 @@ Current socket IDs in `human_male_torso.entity.json`:
 ### 3.2 Fixed Orientation Vocabulary
 
 Current orientation enum (7 values):
+
 ```typescript
 enum Orientation {
-  left, right,      // Bilateral symmetry
-  mid,              // Centerline
-  upper, lower,     // Vertical axis
-  front, back       // Anterior/posterior
+  left,
+  right, // Bilateral symmetry
+  mid, // Centerline
+  upper,
+  lower, // Vertical axis
+  front,
+  back, // Anterior/posterior
 }
 ```
 
 **Limitations:**
+
 - **Radial symmetry**: Cannot represent circular arrangement (e.g., starfish arms)
 - **Multi-plane**: Cannot represent dorsal/ventral distinctions
 - **Indexed**: Cannot represent enumerated positions (tentacle_1, tentacle_2)
 - **Custom schemes**: Cannot define creature-specific coordinates
 
 **Example failure case:**
+
 ```json
 // Attempting to define spider legs with current system
 {
   "id": "spider_cephalothorax",
   "sockets": [
-    {"id": "leg_1", "orientation": "left"}, // Wrong! Not left/right
-    {"id": "leg_2", "orientation": "right"},
-    {"id": "leg_3", "orientation": "???"}, // No enum value
+    { "id": "leg_1", "orientation": "left" }, // Wrong! Not left/right
+    { "id": "leg_2", "orientation": "right" },
+    { "id": "leg_3", "orientation": "???" } // No enum value
     // ... 5 more legs with no valid orientation
   ]
 }
@@ -307,6 +326,7 @@ enum Orientation {
 6. Write recipes for every character variant
 
 **Example:** Adding a 6-armed creature requires:
+
 - 1 torso entity with 6 shoulder sockets
 - 1 blueprint with 6 arm slots
 - 6 arm entity definitions (or variant sets)
@@ -318,6 +338,7 @@ enum Orientation {
 ### 3.4 No Limb Count Parameterization
 
 **Current approach:**
+
 ```
 human_male (2 arms, 2 legs)     → anatomy:human_male blueprint
 centaur (2 arms, 4 legs)        → anatomy:centaur blueprint (NEW)
@@ -326,12 +347,14 @@ multi_armed_deity (6 arms)      → anatomy:deity_6arm blueprint (NEW)
 ```
 
 **Problems:**
+
 - No reuse between similar structures
 - Blueprint explosion for variations
 - Cannot dynamically adjust limb counts
 - Recipes must know exact slot keys upfront
 
 **Example:** Creating spider variants:
+
 - 6-legged spider → New blueprint
 - 8-legged spider → New blueprint
 - 10-legged spider → New blueprint
@@ -354,23 +377,37 @@ if (!blueprint.slots || !blueprint.slots[slotKey]) {
 **Consequence:** Cannot use generic patterns across blueprints.
 
 Desired flexibility:
+
 ```json
 {
-  "patterns": [{
-    "matchesAll": {"partType": "leg"},  // All legs, regardless of count
-    "preferId": "anatomy:spider_leg"
-  }]
+  "patterns": [
+    {
+      "matchesAll": { "partType": "leg" }, // All legs, regardless of count
+      "preferId": "anatomy:spider_leg"
+    }
+  ]
 }
 ```
 
 Current reality:
+
 ```json
 {
-  "patterns": [{
-    "matches": ["leg_1", "leg_2", "leg_3", "leg_4",
-                "leg_5", "leg_6", "leg_7", "leg_8"],  // Must enumerate
-    "partType": "leg"
-  }]
+  "patterns": [
+    {
+      "matches": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8"
+      ], // Must enumerate
+      "partType": "leg"
+    }
+  ]
 }
 ```
 
@@ -430,7 +467,7 @@ Current reality:
 {
   "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
   "id": "anatomy:giant_spider",
-  "schemaVersion": "2.0",  // Opt-in to new features
+  "schemaVersion": "2.0", // Opt-in to new features
   "structureTemplate": "anatomy:structure_arachnid",
   "root": "anatomy:spider_cephalothorax",
   "additionalSlots": {
@@ -443,6 +480,7 @@ Current reality:
 ```
 
 **Key improvements:**
+
 - Slot keys auto-generated from template
 - Socket definitions created programmatically
 - Count changes only require template parameter update
@@ -458,15 +496,27 @@ Current reality:
 {
   "orientationSchemes": {
     "bilateral": ["left", "right", "mid"],
-    "radial": ["anterior", "posterior", "left_lateral", "right_lateral",
-               "left_anterior_lateral", "right_anterior_lateral",
-               "left_posterior_lateral", "right_posterior_lateral"],
+    "radial": [
+      "anterior",
+      "posterior",
+      "left_lateral",
+      "right_lateral",
+      "left_anterior_lateral",
+      "right_anterior_lateral",
+      "left_posterior_lateral",
+      "right_posterior_lateral"
+    ],
     "indexed": {
       "pattern": "position_{{index}}",
       "count": 8
     },
     "custom": {
-      "positions": ["dorsal_left", "dorsal_right", "ventral_left", "ventral_right"]
+      "positions": [
+        "dorsal_left",
+        "dorsal_right",
+        "ventral_left",
+        "ventral_right"
+      ]
     }
   }
 }
@@ -476,19 +526,22 @@ Current reality:
 
 ```json
 {
-  "limbSets": [{
-    "type": "tentacle",
-    "count": 6,
-    "orientationScheme": "radial",
-    "socketPattern": {
-      "idTemplate": "tentacle_{{index}}",
-      "orientation": "{{scheme.positions[index]}}"
+  "limbSets": [
+    {
+      "type": "tentacle",
+      "count": 6,
+      "orientationScheme": "radial",
+      "socketPattern": {
+        "idTemplate": "tentacle_{{index}}",
+        "orientation": "{{scheme.positions[index]}}"
+      }
     }
-  }]
+  ]
 }
 ```
 
 **Benefits:**
+
 - Radial creatures: Proper angular positioning
 - Multi-limbed: Indexed positions (1, 2, 3, ...)
 - Complex anatomy: Custom coordinate systems
@@ -504,12 +557,12 @@ Current reality:
 {
   "patterns": [
     {
-      "matchesGroup": "limbSet:leg",  // All slots from leg limbSet
+      "matchesGroup": "limbSet:leg", // All slots from leg limbSet
       "partType": "leg",
       "tags": ["anatomy:spider_leg"]
     },
     {
-      "matchesPattern": "tentacle_*",  // Wildcard matching
+      "matchesPattern": "tentacle_*", // Wildcard matching
       "partType": "tentacle",
       "properties": {
         "descriptors:flexibility": { "value": "highly_flexible" }
@@ -518,7 +571,7 @@ Current reality:
     {
       "matchesAll": {
         "slotType": "leg",
-        "orientation": "left_*"  // All left-side legs
+        "orientation": "left_*" // All left-side legs
       },
       "tags": ["anatomy:left_leg_marker"]
     }
@@ -584,10 +637,12 @@ class StructureTemplateProcessor {
     for (const limbSet of structureTemplate.topology.limbSets) {
       for (let i = 1; i <= limbSet.count; i++) {
         const socket = {
-          id: this.#applyTemplate(limbSet.socketPattern.idTemplate, { index: i }),
+          id: this.#applyTemplate(limbSet.socketPattern.idTemplate, {
+            index: i,
+          }),
           orientation: this.#resolveOrientation(limbSet, i),
           allowedTypes: limbSet.socketPattern.allowedTypes,
-          nameTpl: limbSet.socketPattern.nameTpl || "{{type}} {{index}}"
+          nameTpl: limbSet.socketPattern.nameTpl || '{{type}} {{index}}',
         };
         sockets.push(socket);
       }
@@ -601,14 +656,16 @@ class StructureTemplateProcessor {
 
     for (const limbSet of structureTemplate.topology.limbSets) {
       for (let i = 1; i <= limbSet.count; i++) {
-        const slotKey = this.#applyTemplate(limbSet.socketPattern.idTemplate, { index: i });
+        const slotKey = this.#applyTemplate(limbSet.socketPattern.idTemplate, {
+          index: i,
+        });
         slots[slotKey] = {
           socket: slotKey,
           requirements: {
             partType: limbSet.type,
-            components: ["anatomy:part"]
+            components: ['anatomy:part'],
           },
-          optional: limbSet.optional || false
+          optional: limbSet.optional || false,
         };
       }
     }
@@ -739,6 +796,7 @@ class StructureTemplateProcessor {
 ```
 
 **Generated at runtime:**
+
 - 8 leg slots: `leg_1` through `leg_8`
 - 2 pedipalp slots: `pedipalp_1`, `pedipalp_2`
 - 1 abdomen slot: `posterior_abdomen`
@@ -924,6 +982,7 @@ class StructureTemplateProcessor {
 ### Phase 1: Schema Extensions (1-2 weeks)
 
 **Tasks:**
+
 1. Create `anatomy.structure-template.schema.json`
    - Define `topology`, `limbSets`, `appendages` structures
    - Define orientation scheme formats
@@ -942,6 +1001,7 @@ class StructureTemplateProcessor {
    - Keep existing `matches` array for compatibility
 
 **Deliverables:**
+
 - 3 new/updated schema files
 - Schema validation tests
 - Documentation with examples
@@ -966,11 +1026,13 @@ class StructureTemplateProcessor {
    - Merges with additional slots
 
 **Integration points:**
+
 - `BodyBlueprintFactory.#loadBlueprint()` - detect schemaVersion
 - Route v2 blueprints through template processor
 - Fall back to existing logic for v1 blueprints
 
 **Testing:**
+
 - Unit tests for each generator
 - Integration tests with example structures
 - Performance tests (template expansion overhead)
@@ -1018,6 +1080,7 @@ class StructureTemplateProcessor {
 ### Phase 4: Backward Compatibility Layer (1 week)
 
 **Objectives:**
+
 - All existing blueprints work without modification
 - v1 blueprints bypass template processing
 - Clear upgrade path documented
@@ -1084,6 +1147,7 @@ class StructureTemplateProcessor {
    - Demonstrate pattern matching features
 
 **Documentation:**
+
 - Tutorial: "Creating Non-Human Body Structures"
 - Reference: Structure template format
 - Migration guide: Converting v1 to v2 blueprints
@@ -1131,18 +1195,21 @@ npm run generate:template -- --blueprint anatomy:human_male \
 ### 7.1 Three-Phase Migration
 
 **Phase A: Coexistence (Months 1-2)**
+
 - v1 and v2 blueprints work simultaneously
 - New content uses v2
 - Legacy content unchanged
 - No pressure on modders
 
 **Phase B: Conversion Tools (Month 3)**
+
 - Release migration CLI tools
 - Provide automated conversion where possible
 - Document manual conversion for edge cases
 - Convert core humanoid blueprints to v2 as examples
 
 **Phase C: Deprecation Notice (Month 6+)**
+
 - Announce v1 support will remain indefinitely
 - Recommend v2 for new mods
 - Highlight benefits (flexibility, less code, easier maintenance)
@@ -1156,12 +1223,21 @@ npm run generate:template -- --blueprint anatomy:human_male \
   "id": "anatomy:human_male",
   "root": "anatomy:human_male_torso",
   "compose": [
-    { "part": "anatomy:humanoid_core", "include": ["slots", "clothingSlotMappings"] }
+    {
+      "part": "anatomy:humanoid_core",
+      "include": ["slots", "clothingSlotMappings"]
+    }
   ],
   "slots": {
-    "penis": { "socket": "penis", "requirements": { "partType": "penis" }},
-    "left_testicle": { "socket": "left_testicle", "requirements": { "partType": "testicle" }},
-    "right_testicle": { "socket": "right_testicle", "requirements": { "partType": "testicle" }}
+    "penis": { "socket": "penis", "requirements": { "partType": "penis" } },
+    "left_testicle": {
+      "socket": "left_testicle",
+      "requirements": { "partType": "testicle" }
+    },
+    "right_testicle": {
+      "socket": "right_testicle",
+      "requirements": { "partType": "testicle" }
+    }
   }
 }
 ```
@@ -1175,9 +1251,15 @@ npm run generate:template -- --blueprint anatomy:human_male \
   "structureTemplate": "anatomy:structure_humanoid_bilateral",
   "root": "anatomy:human_male_torso",
   "additionalSlots": {
-    "penis": { "socket": "penis", "requirements": { "partType": "penis" }},
-    "left_testicle": { "socket": "left_testicle", "requirements": { "partType": "testicle" }},
-    "right_testicle": { "socket": "right_testicle", "requirements": { "partType": "testicle" }}
+    "penis": { "socket": "penis", "requirements": { "partType": "penis" } },
+    "left_testicle": {
+      "socket": "left_testicle",
+      "requirements": { "partType": "testicle" }
+    },
+    "right_testicle": {
+      "socket": "right_testicle",
+      "requirements": { "partType": "testicle" }
+    }
   }
 }
 ```
@@ -1212,8 +1294,12 @@ npm run generate:template -- --blueprint anatomy:human_male \
       }
     ],
     "appendages": [
-      { "type": "head", "count": 1, "attachment": "anterior",
-        "socketPattern": { "idTemplate": "neck", "allowedTypes": ["head"] }}
+      {
+        "type": "head",
+        "count": 1,
+        "attachment": "anterior",
+        "socketPattern": { "idTemplate": "neck", "allowedTypes": ["head"] }
+      }
     ]
   }
 }
@@ -1242,6 +1328,7 @@ npm run generate:template -- --blueprint anatomy:human_male \
    - **Support:** Discord channel for questions
 
 **Rollback plan:**
+
 - Feature flag: `ENABLE_STRUCTURE_TEMPLATES=false`
 - Falls back to v1-only processing
 - No data loss, instant revert
@@ -1253,12 +1340,14 @@ npm run generate:template -- --blueprint anatomy:human_male \
 ### 8.1 Lower Barrier to Entry
 
 **Before (v1):**
+
 - Modder must understand: sockets, slots, blueprints, parts, libraries
 - Must create 50-200 lines of socket definitions
 - Must enumerate every attachment point
 - Trial-and-error to get socket IDs matching
 
 **After (v2):**
+
 - Modder defines high-level structure
 - Socket generation is automatic
 - Focus on "what" (8 legs) not "how" (leg_1 through leg_8)
@@ -1314,6 +1403,7 @@ anatomy:structure_octopoid            → Used by octopus, squid, jellyfish
 ```
 
 **Community benefit:**
+
 - Modders share templates
 - Standard structures emerge
 - Easier to remix and extend
@@ -1322,11 +1412,13 @@ anatomy:structure_octopoid            → Used by octopus, squid, jellyfish
 ### 8.4 Improved Error Messages
 
 **Current error (v1):**
+
 ```
 ValidationError: Recipe 'my_spider' contains invalid slot key 'leg_3' not in blueprint 'spider'
 ```
 
 **Improved error (v2):**
+
 ```
 ValidationError: Recipe 'my_spider' contains invalid slot key 'leg_3'.
 
@@ -1346,6 +1438,7 @@ Hint: Use pattern matching to target all legs:
 ```
 
 **Features:**
+
 - Shows available slots from template
 - Suggests corrections
 - Provides pattern matching hint
@@ -1384,6 +1477,7 @@ The proposed modular architecture preserves all strengths of the current system 
 The implementation roadmap provides a safe, incremental migration path with clear phases, tooling support, and risk mitigation. Modders gain powerful new capabilities while existing content continues working unchanged.
 
 **Recommended next steps:**
+
 1. Review and approve architectural approach
 2. Begin Phase 1 (schema extensions)
 3. Create proof-of-concept spider blueprint
@@ -1534,25 +1628,30 @@ The implementation roadmap provides a safe, incremental migration path with clea
 ### Files to Modify
 
 **Schemas (3 files):**
+
 - `data/schemas/anatomy.blueprint.schema.json` - Add schemaVersion, structureTemplate
 - `data/schemas/anatomy.recipe.schema.json` - Add enhanced pattern types
 - `data/schemas/anatomy.structure-template.schema.json` - NEW
 
 **Services (5 files):**
+
 - `src/anatomy/bodyBlueprintFactory.js` - Add template processing branch
 - `src/anatomy/recipeProcessor.js` - Add pattern resolution methods
 - `src/anatomy/repositories/anatomyBlueprintRepository.js` - Support template loading
 
 **New Services (3 files):**
+
 - `src/anatomy/structureTemplateLoader.js` - NEW
 - `src/anatomy/socketGenerator.js` - NEW
 - `src/anatomy/slotGenerator.js` - NEW
 
 **Validation (2 files):**
+
 - `src/anatomy/validation/blueprintValidator.js` - NEW
 - `src/anatomy/validation/templateValidator.js` - NEW
 
 **Tests (~15 files):**
+
 - Unit tests for each new service
 - Integration tests for template processing
 - Regression tests for v1 compatibility

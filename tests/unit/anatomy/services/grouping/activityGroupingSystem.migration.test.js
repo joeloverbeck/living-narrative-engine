@@ -39,7 +39,9 @@ function createMockActivityIndexManager() {
   return {
     buildIndex: jest.fn((activities) => {
       // Sort by priority descending (highest first)
-      const sorted = [...activities].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+      const sorted = [...activities].sort(
+        (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
+      );
 
       // Build target index
       const byTarget = new Map();
@@ -319,8 +321,14 @@ describe('ActivityGroupingSystem - Migrated Tests (Batch 2)', () => {
         { verb: 'caress', targetEntityId: 'target1', priority: 61 },
       ]);
 
-      const withinGroups = groupingSystem.groupActivities(withinThreshold, 'key1');
-      const beyondGroups = groupingSystem.groupActivities(beyondThreshold, 'key2');
+      const withinGroups = groupingSystem.groupActivities(
+        withinThreshold,
+        'key1'
+      );
+      const beyondGroups = groupingSystem.groupActivities(
+        beyondThreshold,
+        'key2'
+      );
 
       expect(withinGroups[0].relatedActivities[0].conjunction).toBe('while');
       expect(beyondGroups[0].relatedActivities[0].conjunction).toBe('and');

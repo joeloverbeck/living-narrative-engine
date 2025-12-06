@@ -110,7 +110,9 @@ describe('EnhancedConsoleLogger', () => {
             level: level.toUpperCase(),
             service: 'ServiceName',
             message,
-            contextLines: args.map((arg, index) => `context-${index}:${JSON.stringify(arg)}`),
+            contextLines: args.map(
+              (arg, index) => `context-${index}:${JSON.stringify(arg)}`
+            ),
           }),
           formatSimple: jest.fn(),
         }),
@@ -252,9 +254,12 @@ describe('EnhancedConsoleLogger', () => {
         green: jest.fn((str) => str),
         yellow: jest.fn((str) => str),
         red: { bold: jest.fn((str) => str) },
-        gray: Object.assign(jest.fn((str) => str), {
-          italic: jest.fn((str) => str),
-        }),
+        gray: Object.assign(
+          jest.fn((str) => str),
+          {
+            italic: jest.fn((str) => str),
+          }
+        ),
       };
 
       jest.doMock('chalk', () => ({ default: chalkDefault }), {
@@ -280,7 +285,9 @@ describe('EnhancedConsoleLogger', () => {
             level: level.toUpperCase(),
             service: 'ServiceName',
             message,
-            contextLines: args.map((arg, index) => `context-${index}:${JSON.stringify(arg)}`),
+            contextLines: args.map(
+              (arg, index) => `context-${index}:${JSON.stringify(arg)}`
+            ),
           }),
           formatSimple: jest.fn(),
         }),

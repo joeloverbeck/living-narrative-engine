@@ -19,7 +19,7 @@ class RegistryBackedLoader {
     });
 
     this._logger.debug(
-      `Registry write: ${registryKey}:${baseId} from ${filename} (override=${didOverride})`,
+      `Registry write: ${registryKey}:${baseId} from ${filename} (override=${didOverride})`
     );
 
     return { qualifiedId: `${modId}:${baseId}`, didOverride };
@@ -44,7 +44,7 @@ describe('summarizeSettledResults integration', () => {
       'testMod',
       'beta-action',
       { id: 'testMod:beta-action', payload: { damage: 1 } },
-      'seed.json',
+      'seed.json'
     );
 
     const operations = [
@@ -80,7 +80,7 @@ describe('summarizeSettledResults integration', () => {
       filenames,
       'testMod',
       'actions',
-      operations.length,
+      operations.length
     );
 
     expect(summary.processedCount).toBe(2);
@@ -93,18 +93,18 @@ describe('summarizeSettledResults integration', () => {
     });
 
     // Ensure that successful writes persisted real data in the registry.
-    expect(
-      registry.get('actions.testMod', 'alpha-action'),
-    ).toMatchObject({ payload: { damage: 5 } });
-    expect(
-      registry.get('actions.testMod', 'beta-action'),
-    ).toMatchObject({ payload: { damage: 9 } });
+    expect(registry.get('actions.testMod', 'alpha-action')).toMatchObject({
+      payload: { damage: 5 },
+    });
+    expect(registry.get('actions.testMod', 'beta-action')).toMatchObject({
+      payload: { damage: 9 },
+    });
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Processed 2/3 actions items.'),
+      expect.stringContaining('Processed 2/3 actions items.')
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Failure recorded for broken.json'),
+      expect.stringContaining('Failure recorded for broken.json')
     );
   });
 
@@ -133,7 +133,7 @@ describe('summarizeSettledResults integration', () => {
       ['gamma.json', 'delta.json'],
       'testMod',
       'actions',
-      operations.length,
+      operations.length
     );
 
     expect(summary).toEqual({
@@ -144,7 +144,7 @@ describe('summarizeSettledResults integration', () => {
     });
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'Mod [testMod] - Processed 2/2 actions items.',
+      'Mod [testMod] - Processed 2/2 actions items.'
     );
   });
 });

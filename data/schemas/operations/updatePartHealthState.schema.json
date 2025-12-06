@@ -19,10 +19,7 @@
       "properties": {
         "part_entity_ref": {
           "description": "Reference to the body part entity. Can be a direct entity ID string or a JSON Logic expression that resolves to an entity ID.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         }
       },
       "required": ["part_entity_ref"],

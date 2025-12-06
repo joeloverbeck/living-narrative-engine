@@ -69,11 +69,15 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
       const hooks = customTestBed.service.getTestHooks();
       const entity = createStandardEntity({ id: 'actor1' });
       const entityMap = new Map([['actor1', entity]]);
-      customTestBed.mockEntityManager.getEntityInstance.mockImplementation((id) => entityMap.get(id));
+      customTestBed.mockEntityManager.getEntityInstance.mockImplementation(
+        (id) => entityMap.get(id)
+      );
 
       const activities = hooks.collectActivityMetadata('actor1', entity);
 
-      expect(mockActivityIndex.findActivitiesForEntity).toHaveBeenCalledWith('actor1');
+      expect(mockActivityIndex.findActivitiesForEntity).toHaveBeenCalledWith(
+        'actor1'
+      );
       expect(activities).toHaveLength(1);
       expect(activities[0].type).toBe('indexed');
       expect(activities[0].verb).toBe('kneeling');
@@ -178,18 +182,24 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should skip components explicitly disabled via shouldDescribeInActivity', () => {
       const additionalComponents = new Map([
-        ['test:disabled', {
-          activityMetadata: {
-            template: '{actor} performs action',
-            shouldDescribeInActivity: false,
+        [
+          'test:disabled',
+          {
+            activityMetadata: {
+              template: '{actor} performs action',
+              shouldDescribeInActivity: false,
+            },
           },
-        }],
-        ['test:enabled', {
-          activityMetadata: {
-            template: '{actor} performs another action',
-            shouldDescribeInActivity: true,
+        ],
+        [
+          'test:enabled',
+          {
+            activityMetadata: {
+              template: '{actor} performs another action',
+              shouldDescribeInActivity: true,
+            },
           },
-        }],
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -206,11 +216,14 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should skip dedicated metadata components during inline scanning', () => {
       const additionalComponents = new Map([
-        ['activity:description_metadata', {
-          activityMetadata: {
-            template: 'This should be skipped',
+        [
+          'activity:description_metadata',
+          {
+            activityMetadata: {
+              template: 'This should be skipped',
+            },
           },
-        }],
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -226,9 +239,12 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should handle components with malformed activityMetadata gracefully', () => {
       const additionalComponents = new Map([
-        ['test:malformed', {
-          activityMetadata: 'not-an-object', // Invalid type
-        }],
+        [
+          'test:malformed',
+          {
+            activityMetadata: 'not-an-object', // Invalid type
+          },
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -244,12 +260,15 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should handle components missing required template field', () => {
       const additionalComponents = new Map([
-        ['test:no_template', {
-          activityMetadata: {
-            // Missing template
-            priority: 50,
+        [
+          'test:no_template',
+          {
+            activityMetadata: {
+              // Missing template
+              priority: 50,
+            },
           },
-        }],
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -279,13 +298,16 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should handle blank target entity references', () => {
       const additionalComponents = new Map([
-        ['test:blank_target', {
-          entityId: '   ', // Blank string with spaces
-          activityMetadata: {
-            template: '{actor} performs action',
-            targetRole: 'entityId',
+        [
+          'test:blank_target',
+          {
+            entityId: '   ', // Blank string with spaces
+            activityMetadata: {
+              template: '{actor} performs action',
+              targetRole: 'entityId',
+            },
           },
-        }],
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -301,21 +323,30 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should scan all components except dedicated metadata', () => {
       const additionalComponents = new Map([
-        ['positioning:touch', {
-          entityId: 'target1',
-          activityMetadata: {
-            template: '{actor} touches {target}',
+        [
+          'positioning:touch',
+          {
+            entityId: 'target1',
+            activityMetadata: {
+              template: '{actor} touches {target}',
+            },
           },
-        }],
-        ['positioning:sit_on', {
-          entityId: 'target2',
-          activityMetadata: {
-            template: '{actor} sits on {target}',
+        ],
+        [
+          'positioning:sit_on',
+          {
+            entityId: 'target2',
+            activityMetadata: {
+              template: '{actor} sits on {target}',
+            },
           },
-        }],
-        ['core:actor', {
-          // No activityMetadata
-        }],
+        ],
+        [
+          'core:actor',
+          {
+            // No activityMetadata
+          },
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -327,7 +358,7 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
       const activities = hooks.collectInlineMetadata(entity);
 
       expect(activities).toHaveLength(2);
-      expect(activities.map(a => a.sourceComponent)).toEqual([
+      expect(activities.map((a) => a.sourceComponent)).toEqual([
         'positioning:touch',
         'positioning:sit_on',
       ]);
@@ -379,10 +410,13 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
     it('should handle metadata missing sourceComponent field', () => {
       const additionalComponents = new Map([
-        ['activity:description_metadata', {
-          // Missing sourceComponent
-          verb: 'doing something',
-        }],
+        [
+          'activity:description_metadata',
+          {
+            // Missing sourceComponent
+            verb: 'doing something',
+          },
+        ],
       ]);
 
       const entity = createStandardEntity({
@@ -497,7 +531,7 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
       const hooks = testBed.service.getTestHooks();
       const deduplicated = hooks.deduplicateActivitiesBySignature(activities);
 
-      expect(deduplicated.map(a => a.sourceComponent)).toEqual([
+      expect(deduplicated.map((a) => a.sourceComponent)).toEqual([
         'test:first',
         'test:second',
         'test:third',
@@ -510,7 +544,6 @@ describe('ActivityDescriptionService - Metadata Collection Characterization', ()
 
       expect(deduplicated).toEqual([]);
     });
-
   });
 });
 
@@ -586,7 +619,10 @@ describe('ActivityDescriptionService - Activity Filtering Characterization', () 
 
       const activity = {
         conditions: {
-          requiredComponents: ['positioning:kneeling', 'positioning:facing_target'],
+          requiredComponents: [
+            'positioning:kneeling',
+            'positioning:facing_target',
+          ],
         },
       };
 
@@ -633,9 +669,7 @@ describe('ActivityDescriptionService - Activity Filtering Characterization', () 
     it('should hide activities when forbidden components are present', () => {
       const entity = createStandardEntity({
         id: 'actor1',
-        additionalComponents: new Map([
-          ['positioning:lying_down', {}],
-        ]),
+        additionalComponents: new Map([['positioning:lying_down', {}]]),
       });
 
       const activity = {
@@ -700,7 +734,9 @@ describe('ActivityDescriptionService - Activity Filtering Characterization', () 
       const result = hooks.evaluateActivityVisibility(activity, entity);
 
       expect(result).toBe(true);
-      expect(customTestBed.mockJsonLogicEvaluationService.evaluate).toHaveBeenCalled();
+      expect(
+        customTestBed.mockJsonLogicEvaluationService.evaluate
+      ).toHaveBeenCalled();
 
       customTestBed.service.destroy();
     });
@@ -731,14 +767,19 @@ describe('ActivityDescriptionService - Activity Filtering Characterization', () 
 
     it('should build correct logic context with entity and target data', () => {
       const entity = createStandardEntity({ id: 'actor1', name: 'John' });
-      const targetEntity = createStandardEntity({ id: 'target1', name: 'Alice' });
+      const targetEntity = createStandardEntity({
+        id: 'target1',
+        name: 'Alice',
+      });
 
       const entityMap = new Map([
         ['actor1', entity],
         ['target1', targetEntity],
       ]);
 
-      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) => entityMap.get(id));
+      testBed.mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        entityMap.get(id)
+      );
 
       const activity = {
         targetEntityId: 'target1',
@@ -1086,7 +1127,8 @@ describe('ActivityDescriptionService - Natural Language Generation Characterizat
 
     it('should default to neutral when gender component missing', () => {
       const entity = createStandardEntity({ id: 'entity1' });
-      entity.getAllComponents = () => new Map([['core:name', { text: 'Alex' }]]);
+      entity.getAllComponents = () =>
+        new Map([['core:name', { text: 'Alex' }]]);
       testBed.mockEntityManager.getEntityInstance.mockReturnValue(entity);
 
       const hooks = testBed.service.getTestHooks();
@@ -1094,7 +1136,6 @@ describe('ActivityDescriptionService - Natural Language Generation Characterizat
 
       expect(gender).toBe('neutral');
     });
-
   });
 
   // ------------------------------------------------------------------------
@@ -1571,11 +1612,15 @@ describe('ActivityDescriptionService - Edge Cases Characterization', () => {
     it('should handle activity metadata with wrong type', () => {
       const entity = {
         id: 'entity1',
-        getAllComponents: () => new Map([
-          ['test:component', {
-            activityMetadata: 'should-be-object', // Wrong type
-          }],
-        ]),
+        getAllComponents: () =>
+          new Map([
+            [
+              'test:component',
+              {
+                activityMetadata: 'should-be-object', // Wrong type
+              },
+            ],
+          ]),
         getComponentData: () => null,
         hasComponent: () => false,
       };
@@ -1589,14 +1634,18 @@ describe('ActivityDescriptionService - Edge Cases Characterization', () => {
     it('should handle activity missing required template field', () => {
       const entity = {
         id: 'entity1',
-        getAllComponents: () => new Map([
-          ['test:component', {
-            activityMetadata: {
-              // Missing template
-              priority: 50,
-            },
-          }],
-        ]),
+        getAllComponents: () =>
+          new Map([
+            [
+              'test:component',
+              {
+                activityMetadata: {
+                  // Missing template
+                  priority: 50,
+                },
+              },
+            ],
+          ]),
         getComponentData: () => null,
         hasComponent: () => false,
       };
@@ -1633,7 +1682,9 @@ describe('ActivityDescriptionService - Edge Cases Characterization', () => {
       const hooks = testBed.service.getTestHooks();
 
       // Should not throw
-      expect(() => hooks.buildLogicContext(activity, createStandardEntity())).not.toThrow();
+      expect(() =>
+        hooks.buildLogicContext(activity, createStandardEntity())
+      ).not.toThrow();
     });
   });
 
@@ -1685,7 +1736,6 @@ describe('ActivityDescriptionService - Edge Cases Characterization', () => {
 
       expect(context.relationshipTone).toBe('neutral');
     });
-
   });
 
   // ------------------------------------------------------------------------
@@ -1713,11 +1763,15 @@ describe('ActivityDescriptionService - Edge Cases Characterization', () => {
     });
 
     it('should handle very large activity collections', () => {
-      const largeActivities = Array.from({ length: 1000 }, (_, i) =>
-        createTestActivities([{
-          verb: `activity${i}`,
-          priority: i,
-        }])[0]
+      const largeActivities = Array.from(
+        { length: 1000 },
+        (_, i) =>
+          createTestActivities([
+            {
+              verb: `activity${i}`,
+              priority: i,
+            },
+          ])[0]
       );
 
       const hooks = testBed.service.getTestHooks();
@@ -1758,12 +1812,16 @@ describe('ActivityDescriptionService - Performance & Cache Characterization', ()
   // ------------------------------------------------------------------------
   describe('Grouping Algorithm Performance', () => {
     it('should handle large datasets efficiently', () => {
-      const largeActivities = Array.from({ length: 100 }, (_, i) =>
-        createTestActivities([{
-          verb: `activity${i}`,
-          targetEntityId: `target${i % 10}`,
-          priority: 50 + (i % 20),
-        }])[0]
+      const largeActivities = Array.from(
+        { length: 100 },
+        (_, i) =>
+          createTestActivities([
+            {
+              verb: `activity${i}`,
+              targetEntityId: `target${i % 10}`,
+              priority: 50 + (i % 20),
+            },
+          ])[0]
       );
 
       const hooks = testBed.service.getTestHooks();
@@ -1863,7 +1921,6 @@ describe('ActivityDescriptionService - Performance & Cache Characterization', ()
       expect(true).toBe(true);
     });
   });
-
 });
 
 // ============================================================================
@@ -2047,17 +2104,23 @@ describe('ActivityDescriptionService - Golden Master Tests', () => {
         name: 'John',
         gender: 'male',
         additionalComponents: new Map([
-          ['positioning:touch', {
-            entityId: 'target1',
-            activityMetadata: {
-              template: '{actor} touches {target}',
-              targetRole: 'entityId',
-              priority: 50,
+          [
+            'positioning:touch',
+            {
+              entityId: 'target1',
+              activityMetadata: {
+                template: '{actor} touches {target}',
+                targetRole: 'entityId',
+                priority: 50,
+              },
             },
-          }],
-          ['positioning:closeness', {
-            partners: ['target1'],
-          }],
+          ],
+          [
+            'positioning:closeness',
+            {
+              partners: ['target1'],
+            },
+          ],
         ]),
       });
 
@@ -2076,7 +2139,8 @@ describe('ActivityDescriptionService - Golden Master Tests', () => {
         entityMap.get(id)
       );
 
-      const result = await testBed.service.generateActivityDescription('actor1');
+      const result =
+        await testBed.service.generateActivityDescription('actor1');
 
       // Complete workflow golden master
       expect(result).toMatchSnapshot();

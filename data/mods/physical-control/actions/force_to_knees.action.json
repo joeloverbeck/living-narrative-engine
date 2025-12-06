@@ -11,9 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness"
-    ]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": [
@@ -27,10 +25,7 @@
       "positioning:restraining",
       "positioning:fallen"
     ],
-    "primary": [
-      "positioning:kneeling_before",
-      "positioning:sitting_on"
-    ]
+    "primary": ["positioning:kneeling_before", "positioning:sitting_on"]
   },
   "template": "force {target} to their knees before you",
   "visual": {

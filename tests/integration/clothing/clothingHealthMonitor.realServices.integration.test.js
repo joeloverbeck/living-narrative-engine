@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ClothingHealthMonitor from '../../../src/clothing/monitoring/clothingHealthMonitor.js';
 import { ClothingAccessibilityService } from '../../../src/clothing/services/clothingAccessibilityService.js';
 import createCoverageAnalyzer from '../../../src/clothing/analysis/coverageAnalyzer.js';
@@ -227,7 +234,9 @@ describe('ClothingHealthMonitor integration with real services', () => {
     });
 
     expect(
-      logger.logs.debug.some(({ message }) => message === 'Health check completed')
+      logger.logs.debug.some(
+        ({ message }) => message === 'Health check completed'
+      )
     ).toBe(true);
     expect(
       logger.logs.debug.some(
@@ -263,13 +272,19 @@ describe('ClothingHealthMonitor integration with real services', () => {
     jest.useRealTimers();
 
     expect(
-      logger.logs.info.some(({ message }) => message === 'Health monitoring started')
+      logger.logs.info.some(
+        ({ message }) => message === 'Health monitoring started'
+      )
     ).toBe(true);
     expect(
-      logger.logs.warn.some(({ message }) => message === 'Health monitoring already started')
+      logger.logs.warn.some(
+        ({ message }) => message === 'Health monitoring already started'
+      )
     ).toBe(true);
     expect(
-      logger.logs.info.some(({ message }) => message === 'Health monitoring stopped')
+      logger.logs.info.some(
+        ({ message }) => message === 'Health monitoring stopped'
+      )
     ).toBe(true);
 
     await new Promise((resolve) => setImmediate(resolve));

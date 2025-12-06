@@ -13,7 +13,7 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
     // Mock window.matchMedia for animation tests
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(query => ({
+      value: jest.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -69,7 +69,7 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           return el;
@@ -80,7 +80,7 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           if (text !== undefined) {
@@ -96,7 +96,7 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           return el;
@@ -108,11 +108,7 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
     });
 
     // Render actors
-    renderer.render([
-      { id: 'actor-1' },
-      { id: 'actor-2' },
-      { id: 'actor-3' },
-    ]);
+    renderer.render([{ id: 'actor-1' }, { id: 'actor-2' }, { id: 'actor-3' }]);
   });
 
   it('should set data-participating to false for non-participating actors', () => {
@@ -173,7 +169,7 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
     expect(actor1.classList.contains('participation-updating')).toBe(true);
 
     // Check after transition duration
-    await new Promise(resolve => setTimeout(resolve, 350));
+    await new Promise((resolve) => setTimeout(resolve, 350));
     expect(actor1.classList.contains('participation-updating')).toBe(false);
   });
 
@@ -191,9 +187,21 @@ describe('TurnOrderTickerRenderer - Participation Updates', () => {
     renderer.updateActorParticipation('actor-2', false);
     renderer.updateActorParticipation('actor-3', true); // Keep participating
 
-    expect(queueElement.querySelector('[data-entity-id="actor-1"]').getAttribute('data-participating')).toBe('false');
-    expect(queueElement.querySelector('[data-entity-id="actor-2"]').getAttribute('data-participating')).toBe('false');
-    expect(queueElement.querySelector('[data-entity-id="actor-3"]').getAttribute('data-participating')).toBe('true');
+    expect(
+      queueElement
+        .querySelector('[data-entity-id="actor-1"]')
+        .getAttribute('data-participating')
+    ).toBe('false');
+    expect(
+      queueElement
+        .querySelector('[data-entity-id="actor-2"]')
+        .getAttribute('data-participating')
+    ).toBe('false');
+    expect(
+      queueElement
+        .querySelector('[data-entity-id="actor-3"]')
+        .getAttribute('data-participating')
+    ).toBe('true');
   });
 
   it('should not crash if queue is empty', () => {

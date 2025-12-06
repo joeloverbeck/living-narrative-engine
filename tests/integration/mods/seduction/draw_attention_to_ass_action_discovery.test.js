@@ -62,7 +62,10 @@ describe('seduction:draw_attention_to_ass action discovery', () => {
       expect(drawAttentionToAssAction.prerequisites.length).toBe(3);
 
       const bodyPartPrereq = drawAttentionToAssAction.prerequisites[0];
-      expect(bodyPartPrereq.logic.hasPartOfType).toEqual(['actor', 'ass_cheek']);
+      expect(bodyPartPrereq.logic.hasPartOfType).toEqual([
+        'actor',
+        'ass_cheek',
+      ]);
 
       const clothingPrereq = drawAttentionToAssAction.prerequisites[1];
       expect(clothingPrereq.logic.hasClothingInSlot).toEqual([

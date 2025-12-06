@@ -33,8 +33,8 @@ describe('Body Descriptor Validation - Integration', () => {
         'build',
         'body_composition',
         'body_hair',
-        'smell'
-      ]
+        'smell',
+      ],
     });
   });
 
@@ -77,7 +77,9 @@ describe('Body Descriptor Validation - Integration', () => {
         anotherUnknown: 'another value',
       };
 
-      const result = validator.validateRecipeDescriptors(descriptorsWithUnknown);
+      const result = validator.validateRecipeDescriptors(
+        descriptorsWithUnknown
+      );
 
       expect(result.warnings.length).toBe(2);
       expect(result.warnings[0]).toContain('Unknown body descriptor');
@@ -117,10 +119,12 @@ describe('Body Descriptor Validation - Integration', () => {
 
       expect(result.valid).toBe(true); // Still valid, but with warnings
       expect(result.warnings.length).toBeGreaterThan(0);
-      expect(result.warnings.some(w => w.includes('skin_color'))).toBe(true);
-      expect(result.warnings.some(w => w.includes('body_composition'))).toBe(true);
-      expect(result.warnings.some(w => w.includes('body_hair'))).toBe(true);
-      expect(result.warnings.some(w => w.includes('smell'))).toBe(true);
+      expect(result.warnings.some((w) => w.includes('skin_color'))).toBe(true);
+      expect(result.warnings.some((w) => w.includes('body_composition'))).toBe(
+        true
+      );
+      expect(result.warnings.some((w) => w.includes('body_hair'))).toBe(true);
+      expect(result.warnings.some((w) => w.includes('smell'))).toBe(true);
     });
   });
 
@@ -147,7 +151,9 @@ describe('Body Descriptor Validation - Integration', () => {
         dataRegistry: emptyRegistry,
       });
 
-      expect(result.errors).toContain('Formatting config not found: anatomy:default');
+      expect(result.errors).toContain(
+        'Formatting config not found: anatomy:default'
+      );
     });
 
     it('should validate sample recipes if available', async () => {
@@ -157,7 +163,7 @@ describe('Body Descriptor Validation - Integration', () => {
           height: 'tall',
           skinColor: 'tan',
           build: 'athletic',
-        }
+        },
       });
 
       dataRegistry.store('anatomyRecipes', 'anatomy:human_female', {
@@ -165,7 +171,7 @@ describe('Body Descriptor Validation - Integration', () => {
           height: 'average',
           skinColor: 'fair',
           build: 'shapely',
-        }
+        },
       });
 
       const result = await validator.validateSystemConsistency({
@@ -182,7 +188,7 @@ describe('Body Descriptor Validation - Integration', () => {
         bodyDescriptors: {
           height: 'invalid-height-value',
           build: 'invalid-build-value',
-        }
+        },
       });
 
       const result = await validator.validateSystemConsistency({
@@ -190,8 +196,12 @@ describe('Body Descriptor Validation - Integration', () => {
       });
 
       // Should have warnings about invalid recipe descriptors
-      expect(result.warnings.some(w => w.includes('anatomy:human_male'))).toBe(true);
-      expect(result.warnings.some(w => w.includes('Invalid value'))).toBe(true);
+      expect(
+        result.warnings.some((w) => w.includes('anatomy:human_male'))
+      ).toBe(true);
+      expect(result.warnings.some((w) => w.includes('Invalid value'))).toBe(
+        true
+      );
     });
 
     it('should handle missing sample recipes gracefully', async () => {
@@ -225,7 +235,9 @@ describe('Body Descriptor Validation - Integration', () => {
   describe('End-to-end validation workflow', () => {
     it('should detect configuration drift', async () => {
       // Create incomplete formatting config to simulate drift
-      const incompleteRegistry = new InMemoryDataRegistry({ logger: mockLogger });
+      const incompleteRegistry = new InMemoryDataRegistry({
+        logger: mockLogger,
+      });
       incompleteRegistry.store('anatomyFormatting', 'default', {
         descriptionOrder: ['height', 'build'], // Missing skin_color, body_composition, body_hair, smell
       });
@@ -236,7 +248,9 @@ describe('Body Descriptor Validation - Integration', () => {
 
       // Should warn about missing descriptors
       expect(result.warnings.length).toBeGreaterThan(0);
-      expect(result.warnings.some(w => w.includes('missing from descriptionOrder'))).toBe(true);
+      expect(
+        result.warnings.some((w) => w.includes('missing from descriptionOrder'))
+      ).toBe(true);
     });
 
     it('should provide actionable error messages', async () => {
@@ -263,7 +277,9 @@ describe('Body Descriptor Validation - Integration', () => {
 
       // Config should be complete (all descriptors present in beforeEach setup)
       // So there should be no warnings about missing descriptors
-      const missingDescriptorWarnings = result.warnings.filter(w => w.includes('missing from descriptionOrder'));
+      const missingDescriptorWarnings = result.warnings.filter((w) =>
+        w.includes('missing from descriptionOrder')
+      );
       expect(missingDescriptorWarnings.length).toBe(0);
     });
   });

@@ -18,6 +18,7 @@ describe('DamageResolutionService', () => {
   /** @type {jest.Mocked<any>} */ let dispatcher;
   /** @type {jest.Mocked<any>} */ let damageAccumulator;
   /** @type {jest.Mocked<any>} */ let damageNarrativeComposer;
+  /** @type {jest.Mocked<any>} */ let damageTypeEffectsService;
   /** @type {jest.Mocked<any>} */ let damagePropagationService;
   /** @type {jest.Mocked<any>} */ let deathCheckService;
   /** @type {jest.Mocked<any>} */ let callTracker;
@@ -45,7 +46,7 @@ describe('DamageResolutionService', () => {
       dispatch: jest.fn(),
     };
 
-    const damageTypeEffectsService = {
+    damageTypeEffectsService = {
       applyEffectsForDamage: jest.fn(),
     };
 
@@ -65,14 +66,22 @@ describe('DamageResolutionService', () => {
     };
 
     damageAccumulator = {
-      createSession: jest.fn().mockImplementation(() => ({ ...baseSession, entries: [], pendingEvents: [] })),
+      createSession: jest
+        .fn()
+        .mockImplementation(() => ({
+          ...baseSession,
+          entries: [],
+          pendingEvents: [],
+        })),
       recordDamage: jest.fn().mockImplementation((session, entry) => {
         session.entries.push(entry);
       }),
       recordEffect: jest.fn(),
-      queueEvent: jest.fn().mockImplementation((session, eventType, payload) => {
-        session.pendingEvents.push({ eventType, payload });
-      }),
+      queueEvent: jest
+        .fn()
+        .mockImplementation((session, eventType, payload) => {
+          session.pendingEvents.push({ eventType, payload });
+        }),
       finalize: jest.fn().mockImplementation((session) => ({
         entries: [...(session?.entries || [])],
         pendingEvents: [...(session?.pendingEvents || [])],
@@ -95,26 +104,32 @@ describe('DamageResolutionService', () => {
     });
   };
 
-  const seedComponentData = ({ partHealth = { currentHealth: 10, maxHealth: 10, state: 'healthy' } } = {}) => {
+  const seedComponentData = ({
+    partHealth = { currentHealth: 10, maxHealth: 10, state: 'healthy' },
+  } = {}) => {
     entityManager.hasComponent.mockImplementation((entityId, componentId) => {
-      if (componentId === PART_HEALTH_COMPONENT_ID) return entityId === 'part-1';
+      if (componentId === PART_HEALTH_COMPONENT_ID)
+        return entityId === 'part-1';
       if (componentId === PART_COMPONENT_ID) return entityId === 'part-1';
       return false;
     });
 
-    entityManager.getComponentData.mockImplementation((entityId, componentId) => {
-      if (componentId === NAME_COMPONENT_ID) return { text: 'Target' };
-      if (componentId === GENDER_COMPONENT_ID) return { value: 'neutral' };
-      if (componentId === PART_COMPONENT_ID) {
-        return {
-          subType: 'torso',
-          ownerEntityId: 'entity-1',
-        };
+    entityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        if (componentId === NAME_COMPONENT_ID) return { text: 'Target' };
+        if (componentId === GENDER_COMPONENT_ID) return { value: 'neutral' };
+        if (componentId === PART_COMPONENT_ID) {
+          return {
+            subType: 'torso',
+            ownerEntityId: 'entity-1',
+          };
+        }
+        if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
+        if (componentId === POSITION_COMPONENT_ID)
+          return { locationId: 'room-1' };
+        return null;
       }
-      if (componentId === PART_HEALTH_COMPONENT_ID) return partHealth;
-      if (componentId === POSITION_COMPONENT_ID) return { locationId: 'room-1' };
-      return null;
-    });
+    );
   };
 
   beforeEach(() => {
@@ -171,7 +186,10 @@ describe('DamageResolutionService', () => {
       callTracker.push('finalize');
       return {
         entries: [...session.entries],
-        pendingEvents: [...session.pendingEvents, { eventType: 'anatomy:damage_applied', payload: { amount: 5 } }],
+        pendingEvents: [
+          ...session.pendingEvents,
+          { eventType: 'anatomy:damage_applied', payload: { amount: 5 } },
+        ],
       };
     });
     damageNarrativeComposer.compose.mockImplementation((entries) => {
@@ -193,7 +211,9 @@ describe('DamageResolutionService', () => {
     });
 
     const perceptibleIndex = callTracker.indexOf('core:perceptible_event');
-    const damageAppliedIndex = callTracker.lastIndexOf('anatomy:damage_applied');
+    const damageAppliedIndex = callTracker.lastIndexOf(
+      'anatomy:damage_applied'
+    );
     const finalizeDeathIndex = callTracker.indexOf('finalizeDeath');
 
     expect(perceptibleIndex).toBeGreaterThan(-1);
@@ -201,5 +221,24 @@ describe('DamageResolutionService', () => {
     expect(finalizeDeathIndex).toBeGreaterThan(damageAppliedIndex);
     expect(callTracker).toContain('finalize');
     expect(callTracker).toContain('compose');
+  });
+
+  it('cleans up top-level damage session when effect application throws', async () => {
+    damageTypeEffectsService.applyEffectsForDamage.mockImplementation(() => {
+      throw new Error('effect boom');
+    });
+
+    await service.resolve({
+      entityId: 'entity-1',
+      partId: 'part-1',
+      finalDamageEntry: { name: 'slashing', amount: 5 },
+      propagatedFrom: null,
+      executionContext,
+      isTopLevel: true,
+      applyDamage: jest.fn(),
+    });
+
+    expect(damageAccumulator.createSession).toHaveBeenCalledWith('entity-1');
+    expect(executionContext.damageSession).toBeUndefined();
   });
 });

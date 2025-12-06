@@ -13,6 +13,7 @@ Complete the metabolism mod directory structure and update the manifest file to 
 ## What Was Actually Changed
 
 ### Current State Assessment (Before Implementation)
+
 - ✅ `data/mods/metabolism/` directory already existed
 - ✅ `data/mods/metabolism/mod-manifest.json` already existed (needed updates)
 - ✅ `data/mods/metabolism/components/` with all 4 component files already in place
@@ -25,6 +26,7 @@ Complete the metabolism mod directory structure and update the manifest file to 
 ### Changes Made
 
 #### 1. Created Missing Directories (7 total)
+
 ```bash
 data/mods/metabolism/actions/
 data/mods/metabolism/rules/
@@ -36,15 +38,18 @@ data/mods/metabolism/lookups/
 ```
 
 #### 2. Updated Mod Manifest
+
 **File:** `data/mods/metabolism/mod-manifest.json`
 
 **Changes:**
+
 - Added `anatomy` to dependencies array (version 1.0.0)
 - Added empty content arrays: `actions`, `rules`, `conditions`, `scopes`
 - Fixed `entities` structure from empty array `[]` to object with `definitions` and `instances` arrays
   - This was a critical schema fix discovered during validation
 
 **Final Manifest:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
@@ -84,6 +89,7 @@ data/mods/metabolism/lookups/
 ```
 
 #### 3. Created Hunger Thresholds Lookup File
+
 **File:** `data/mods/metabolism/lookups/hunger_thresholds.json`
 
 This provides reference data for hunger state thresholds (6 states: gluttonous, satiated, neutral, hungry, starving, critical). The actual implementation logic will be in the UPDATE_HUNGER_STATE operation handler (future ticket).
@@ -91,6 +97,7 @@ This provides reference data for hunger state thresholds (6 states: gluttonous, 
 Note: Per project conventions (CLAUDE.md), mods use `lookups/` directory, not `config/`.
 
 #### 4. Registered Mod in Game Configuration
+
 **File:** `data/game.json`
 
 Added `"metabolism"` to mods array after `"anatomy"` to respect dependency order.
@@ -98,17 +105,20 @@ Added `"metabolism"` to mods array after `"anatomy"` to respect dependency order
 ### Validation Results
 
 ✅ **Manifest Validation:** Passed (`npm run validate`)
+
 - Initial validation caught schema error: entities must be object with definitions/instances, not array
 - Fixed and re-validated successfully
 - Metabolism mod has no dependency or cross-reference violations
 
 ✅ **Unit Tests:** All passed (35,325 tests)
+
 ```bash
 Test Suites: 2180 passed, 2180 total
 Tests:       35325 passed, 35325 total
 ```
 
 ✅ **Directory Structure:** Complete and correct
+
 ```
 data/mods/metabolism/
 ├── actions/                    (empty, ready for future content)
@@ -126,9 +136,11 @@ data/mods/metabolism/
 ## Key Learnings
 
 ### Schema Discovery
+
 The mod-manifest schema requires `entities` to be an object with `definitions` and `instances` arrays, not a simple empty array. This wasn't immediately obvious from the ticket assumptions.
 
 ### Naming Convention Correction
+
 The ticket initially referenced `config/hunger_thresholds.json`, but per CLAUDE.md project conventions, mods use `lookups/` directory for data reference files, not `config/`.
 
 ## Acceptance Criteria - All Met ✅
@@ -157,6 +169,7 @@ The ticket initially referenced `config/hunger_thresholds.json`, but per CLAUDE.
 ## Files Modified
 
 ### Created (8 total)
+
 1. `data/mods/metabolism/actions/` (directory)
 2. `data/mods/metabolism/rules/` (directory)
 3. `data/mods/metabolism/conditions/` (directory)
@@ -167,12 +180,14 @@ The ticket initially referenced `config/hunger_thresholds.json`, but per CLAUDE.
 8. `data/mods/metabolism/lookups/hunger_thresholds.json` (file)
 
 ### Modified (2 total)
+
 1. `data/mods/metabolism/mod-manifest.json` - Added anatomy dependency and fixed content arrays structure
 2. `data/game.json` - Added metabolism to mods array after anatomy
 
 ## Next Steps
 
 The mod structure is now ready for content population:
+
 - HUNMETSYS-007: Add consumption operation handlers
 - HUNMETSYS-008: Add digestion operation handlers
 - HUNMETSYS-009: Add burn energy operation handler
@@ -184,6 +199,7 @@ The mod structure is now ready for content population:
 **Estimated:** 3 hours → **Actual:** 30 minutes
 
 The task was completed faster than estimated because:
+
 1. Basic directory structure and manifest already existed
 2. Component files were already in place from HUNMETSYS-001, 002
 3. Only needed to add missing directories, update manifest, and register in game.json

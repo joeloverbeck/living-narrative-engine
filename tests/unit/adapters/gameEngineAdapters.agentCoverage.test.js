@@ -45,9 +45,14 @@ describe('GameEngine adapters direct coverage', () => {
 
       expect(adapter).toBeInstanceOf(ISaveService);
 
-      await expect(adapter.save('slot-42', 'Manual Backup')).resolves.toBe('saved!');
+      await expect(adapter.save('slot-42', 'Manual Backup')).resolves.toBe(
+        'saved!'
+      );
       expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Manual Backup', 'slot-42');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Manual Backup',
+        'slot-42'
+      );
     });
 
     it('propagates engine save failures', async () => {
@@ -58,7 +63,10 @@ describe('GameEngine adapters direct coverage', () => {
       const adapter = new GameEngineSaveAdapter(engine);
 
       await expect(adapter.save('slot-11', 'Broken Save')).rejects.toBe(error);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Broken Save', 'slot-11');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Broken Save',
+        'slot-11'
+      );
     });
   });
 });

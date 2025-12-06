@@ -1,4 +1,7 @@
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
+import {
+  BodyGraphService,
+  LIMB_DETACHED_EVENT_ID,
+} from '../../../src/anatomy/bodyGraphService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import AnatomyQueryCache from '../../../src/anatomy/cache/AnatomyQueryCache.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
@@ -29,18 +32,26 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
    *
    */
   async function seedAnatomy() {
-    await entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
+    await entityManager.addComponent(torsoId, 'anatomy:part', {
+      subType: 'torso',
+    });
     await entityManager.addComponent(torsoId, 'core:name', { text: 'Torso' });
 
-    await entityManager.addComponent(headId, 'anatomy:part', { subType: 'head' });
+    await entityManager.addComponent(headId, 'anatomy:part', {
+      subType: 'head',
+    });
     await entityManager.addComponent(headId, 'core:name', { text: 'Head' });
     await entityManager.addComponent(headId, 'anatomy:joint', {
       parentId: torsoId,
       socketId: 'neck',
     });
 
-    await entityManager.addComponent(leftArmId, 'anatomy:part', { subType: 'arm' });
-    await entityManager.addComponent(leftArmId, 'core:name', { text: 'Left Arm' });
+    await entityManager.addComponent(leftArmId, 'anatomy:part', {
+      subType: 'arm',
+    });
+    await entityManager.addComponent(leftArmId, 'core:name', {
+      text: 'Left Arm',
+    });
     await entityManager.addComponent(leftArmId, 'core:tattoo', {
       pattern: 'dragon',
       appearance: { color: 'blue' },
@@ -50,8 +61,12 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
       socketId: 'left_shoulder',
     });
 
-    await entityManager.addComponent(leftHandId, 'anatomy:part', { subType: 'hand' });
-    await entityManager.addComponent(leftHandId, 'core:name', { text: 'Left Hand' });
+    await entityManager.addComponent(leftHandId, 'anatomy:part', {
+      subType: 'hand',
+    });
+    await entityManager.addComponent(leftHandId, 'core:name', {
+      text: 'Left Hand',
+    });
     await entityManager.addComponent(leftHandId, 'anatomy:joint', {
       parentId: leftArmId,
       socketId: 'left_wrist',
@@ -60,8 +75,12 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
       jewelry: { ring: 'gold' },
     });
 
-    await entityManager.addComponent(rightArmId, 'anatomy:part', { subType: 'arm' });
-    await entityManager.addComponent(rightArmId, 'core:name', { text: 'Right Arm' });
+    await entityManager.addComponent(rightArmId, 'anatomy:part', {
+      subType: 'arm',
+    });
+    await entityManager.addComponent(rightArmId, 'core:name', {
+      text: 'Right Arm',
+    });
     await entityManager.addComponent(rightArmId, 'core:scar', {});
     await entityManager.addComponent(rightArmId, 'anatomy:joint', {
       parentId: torsoId,
@@ -147,8 +166,9 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     const cachedArms = bodyGraphService.findPartsByType(torsoId, 'arm');
     expect(cachedArms).toEqual(arms);
     expect(
-      logger.debug.mock.calls.some(([message]) =>
-        typeof message === 'string' && message.includes('Cache hit for key')
+      logger.debug.mock.calls.some(
+        ([message]) =>
+          typeof message === 'string' && message.includes('Cache hit for key')
       )
     ).toBe(true);
   });
@@ -163,9 +183,12 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     const cachedParts = bodyGraphService.getAllParts(bodyComponent, torsoId);
     expect(cachedParts).toEqual(allParts);
     expect(
-      logger.info.mock.calls.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('BodyGraphService.getAllParts: CACHE HIT for cache root')
+      logger.debug.mock.calls.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes(
+            'BodyGraphService.getAllParts: CACHE HIT for cache root'
+          )
       )
     ).toBe(true);
 
@@ -217,11 +240,15 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
 
   it('computes graph paths, ancestry, and descendant relationships', () => {
     expect(bodyGraphService.getAnatomyRoot(leftHandId)).toBe(torsoId);
-    expect(bodyGraphService.getAnatomyRoot('unknown-part')).toBe('unknown-part');
+    expect(bodyGraphService.getAnatomyRoot('unknown-part')).toBe(
+      'unknown-part'
+    );
 
     const path = bodyGraphService.getPath(leftHandId, rightArmId);
     expect(path).toEqual([leftHandId, leftArmId, torsoId, rightArmId]);
-    expect(bodyGraphService.getPath(leftHandId, leftHandId)).toEqual([leftHandId]);
+    expect(bodyGraphService.getPath(leftHandId, leftHandId)).toEqual([
+      leftHandId,
+    ]);
     expect(bodyGraphService.getPath(leftHandId, 'missing-target')).toBeNull();
 
     expect(bodyGraphService.getChildren(torsoId).sort()).toEqual(
@@ -229,7 +256,10 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     );
     expect(bodyGraphService.getParent(leftHandId)).toBe(leftArmId);
     expect(bodyGraphService.getParent('no-parent')).toBeNull();
-    expect(bodyGraphService.getAncestors(leftHandId)).toEqual([leftArmId, torsoId]);
+    expect(bodyGraphService.getAncestors(leftHandId)).toEqual([
+      leftArmId,
+      torsoId,
+    ]);
     expect(bodyGraphService.getAllDescendants(leftArmId)).toEqual([leftHandId]);
   });
 
@@ -243,7 +273,15 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
 
     const graph = await bodyGraphService.getBodyGraph(actorId);
     expect(graph.getAllPartIds().sort()).toEqual(
-      [actorId, torsoId, headId, leftArmId, leftHandId, rightArmId, legId].sort()
+      [
+        actorId,
+        torsoId,
+        headId,
+        leftArmId,
+        leftHandId,
+        rightArmId,
+        legId,
+      ].sort()
     );
     expect(graph.getConnectedParts(leftArmId)).toEqual([leftHandId]);
     expect(graph.getConnectedParts(torsoId).sort()).toEqual(
@@ -273,9 +311,7 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     expect(result.parentId).toBe(torsoId);
     expect(result.socketId).toBe('left_shoulder');
 
-    expect(
-      eventDispatcher.dispatch
-    ).toHaveBeenCalledWith(
+    expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
       LIMB_DETACHED_EVENT_ID,
       expect.objectContaining({
         detachedEntityId: leftArmId,
@@ -286,7 +322,9 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
       })
     );
     expect(bodyGraphService.hasCache(torsoId)).toBe(false);
-    expect(entityManager.getComponentData(leftArmId, 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData(leftArmId, 'anatomy:joint')
+    ).toBeNull();
   });
 
   it('supports non-cascading detachment when requested', async () => {
@@ -298,9 +336,7 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
     expect(result.detached).toEqual([rightArmId]);
     expect(result.parentId).toBe(torsoId);
     expect(result.socketId).toBe('right_shoulder');
-    expect(
-      eventDispatcher.dispatch
-    ).toHaveBeenCalledWith(
+    expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
       LIMB_DETACHED_EVENT_ID,
       expect.objectContaining({
         detachedEntityId: rightArmId,
@@ -328,24 +364,31 @@ describe('BodyGraphService integration with real anatomy collaborators', () => {
 
     await serviceWithCustomCache.buildAdjacencyCache(torsoId);
     const firstLookup = serviceWithCustomCache.findPartsByType(torsoId, 'arm');
-    expect(
-      customCache.getCachedFindPartsByType(torsoId, 'arm').sort()
-    ).toEqual(firstLookup.sort());
+    expect(customCache.getCachedFindPartsByType(torsoId, 'arm').sort()).toEqual(
+      firstLookup.sort()
+    );
 
-    const cacheHitCountBefore = sharedLogger.debug.mock.calls.filter(([message]) =>
-      typeof message === 'string' && message.includes('AnatomyQueryCache: Cache hit')
+    const cacheHitCountBefore = sharedLogger.debug.mock.calls.filter(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes('AnatomyQueryCache: Cache hit')
     ).length;
 
     serviceWithCustomCache.findPartsByType(torsoId, 'arm');
 
-    const cacheHitCountAfter = sharedLogger.debug.mock.calls.filter(([message]) =>
-      typeof message === 'string' && message.includes('AnatomyQueryCache: Cache hit')
+    const cacheHitCountAfter = sharedLogger.debug.mock.calls.filter(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes('AnatomyQueryCache: Cache hit')
     ).length;
     expect(cacheHitCountAfter).toBeGreaterThan(cacheHitCountBefore);
 
-    const partListing = serviceWithCustomCache.getAllParts(bodyComponent, torsoId);
-    expect(
-      customCache.getCachedGetAllParts(torsoId).sort()
-    ).toEqual(partListing.sort());
+    const partListing = serviceWithCustomCache.getAllParts(
+      bodyComponent,
+      torsoId
+    );
+    expect(customCache.getCachedGetAllParts(torsoId).sort()).toEqual(
+      partListing.sort()
+    );
   });
 });

@@ -232,10 +232,13 @@ export class AsyncUtilitiesToolkit {
         executeFunction();
       } else if (!timerId && trailing) {
         const delay = wait - timeSinceLastExecute;
-        timerId = toolkit.setTimeout(() => {
-          timerId = null;
-          executeFunction();
-        }, delay > 0 ? delay : wait);
+        timerId = toolkit.setTimeout(
+          () => {
+            timerId = null;
+            executeFunction();
+          },
+          delay > 0 ? delay : wait
+        );
       }
 
       return result;
@@ -277,10 +280,14 @@ export class AsyncUtilitiesToolkit {
    */
   getDebouncedHandler(key, fn, delay, options) {
     if (!key) {
-      throw new Error('AsyncUtilitiesToolkit.getDebouncedHandler requires a key');
+      throw new Error(
+        'AsyncUtilitiesToolkit.getDebouncedHandler requires a key'
+      );
     }
     if (typeof fn !== 'function') {
-      throw new TypeError('AsyncUtilitiesToolkit.getDebouncedHandler expects a function');
+      throw new TypeError(
+        'AsyncUtilitiesToolkit.getDebouncedHandler expects a function'
+      );
     }
 
     if (!this.#debouncedHandlers.has(key)) {
@@ -302,10 +309,14 @@ export class AsyncUtilitiesToolkit {
    */
   getThrottledHandler(key, fn, wait, options) {
     if (!key) {
-      throw new Error('AsyncUtilitiesToolkit.getThrottledHandler requires a key');
+      throw new Error(
+        'AsyncUtilitiesToolkit.getThrottledHandler requires a key'
+      );
     }
     if (typeof fn !== 'function') {
-      throw new TypeError('AsyncUtilitiesToolkit.getThrottledHandler expects a function');
+      throw new TypeError(
+        'AsyncUtilitiesToolkit.getThrottledHandler expects a function'
+      );
     }
 
     if (!this.#throttledHandlers.has(key)) {
@@ -325,7 +336,9 @@ export class AsyncUtilitiesToolkit {
    */
   setTimeout(callback, delay = this.#config.defaultWait) {
     if (typeof callback !== 'function') {
-      throw new TypeError('AsyncUtilitiesToolkit.setTimeout expects a function');
+      throw new TypeError(
+        'AsyncUtilitiesToolkit.setTimeout expects a function'
+      );
     }
 
     const timerId = globalThis.setTimeout(() => {
@@ -368,7 +381,9 @@ export class AsyncUtilitiesToolkit {
    */
   setInterval(callback, delay = this.#config.defaultWait) {
     if (typeof callback !== 'function') {
-      throw new TypeError('AsyncUtilitiesToolkit.setInterval expects a function');
+      throw new TypeError(
+        'AsyncUtilitiesToolkit.setInterval expects a function'
+      );
     }
 
     const intervalId = globalThis.setInterval(callback, delay);
@@ -408,8 +423,11 @@ export class AsyncUtilitiesToolkit {
     }
 
     const frameId = ++this.#animationFrameCounter;
-    const raf = globalThis.requestAnimationFrame || ((cb) => globalThis.setTimeout(() => cb(Date.now()), 16));
-    const cancelRaf = globalThis.cancelAnimationFrame || globalThis.clearTimeout;
+    const raf =
+      globalThis.requestAnimationFrame ||
+      ((cb) => globalThis.setTimeout(() => cb(Date.now()), 16));
+    const cancelRaf =
+      globalThis.cancelAnimationFrame || globalThis.clearTimeout;
 
     const wrappedCallback = (timestamp) => {
       try {
@@ -498,19 +516,23 @@ export class AsyncUtilitiesToolkit {
     return {
       timeouts: {
         count: this.#pendingTimers.size,
-        entries: Array.from(this.#pendingTimers.entries()).map(([id, meta]) => ({
-          id,
-          delay: meta.delay,
-          createdAt: meta.createdAt,
-        })),
+        entries: Array.from(this.#pendingTimers.entries()).map(
+          ([id, meta]) => ({
+            id,
+            delay: meta.delay,
+            createdAt: meta.createdAt,
+          })
+        ),
       },
       intervals: {
         count: this.#pendingIntervals.size,
-        entries: Array.from(this.#pendingIntervals.entries()).map(([id, meta]) => ({
-          id,
-          delay: meta.delay,
-          createdAt: meta.createdAt,
-        })),
+        entries: Array.from(this.#pendingIntervals.entries()).map(
+          ([id, meta]) => ({
+            id,
+            delay: meta.delay,
+            createdAt: meta.createdAt,
+          })
+        ),
       },
       animationFrames: {
         count: this.#pendingAnimationFrames.size,

@@ -3,34 +3,38 @@
 **Status: ✅ COMPLETED**
 
 ## Files to Touch
+
 - `tests/property/anatomy/bodyDescriptorRegistry.property.test.js` (New file)
 
 ## Out of Scope
+
 - Changing `bodyDescriptorRegistry.js`.
 - Changing `RecipeBodyDescriptorValidator.js`.
 
 ## Acceptance Criteria
 
 ### Specific Tests
+
 - **Descriptor Exhaustiveness:**
-    - Iterate over every key in `BODY_DESCRIPTOR_REGISTRY`.
-    - If `validValues` is not null:
-        - Iterate over every value in `validValues`.
-        - Assert that `validateDescriptorValue(key, value)` returns `true`.
+  - Iterate over every key in `BODY_DESCRIPTOR_REGISTRY`.
+  - If `validValues` is not null:
+    - Iterate over every value in `validValues`.
+    - Assert that `validateDescriptorValue(key, value)` returns `true`.
 - **Registry Structure:**
-    - Assert every entry has the 9 required properties:
-        - `schemaProperty` (string)
-        - `displayLabel` (string)
-        - `displayKey` (string)
-        - `dataPath` (string)
-        - `validValues` (array | null)
-        - `displayOrder` (number)
-        - `extractor` (function)
-        - `formatter` (function)
-        - `required` (boolean)
-    - Assert `validValues` is either `null` or an `Array`.
+  - Assert every entry has the 9 required properties:
+    - `schemaProperty` (string)
+    - `displayLabel` (string)
+    - `displayKey` (string)
+    - `dataPath` (string)
+    - `validValues` (array | null)
+    - `displayOrder` (number)
+    - `extractor` (function)
+    - `formatter` (function)
+    - `required` (boolean)
+  - Assert `validValues` is either `null` or an `Array`.
 
 ### Invariants
+
 - Use `jest` with `fast-check` for property-based testing.
 - Must run via `npm run test:property`.
 
@@ -39,7 +43,9 @@
 ## Outcome
 
 ### What Was Originally Planned
+
 The original ticket incorrectly assumed the registry had:
+
 - `id`, `displayName`, `description`, `displayOrder` fields
 
 ### What Was Actually Changed
@@ -59,12 +65,14 @@ The original ticket incorrectly assumed the registry had:
 3. **Tests Verified**: All 15 tests pass via `npm run test:property`
 
 ### Files Modified
-| File | Action |
-|------|--------|
-| `tickets/RECVALROB-005-add-registry-property-tests.md` | Corrected, then archived |
-| `tests/property/anatomy/bodyDescriptorRegistry.property.test.js` | Created (new) |
+
+| File                                                             | Action                   |
+| ---------------------------------------------------------------- | ------------------------ |
+| `tickets/RECVALROB-005-add-registry-property-tests.md`           | Corrected, then archived |
+| `tests/property/anatomy/bodyDescriptorRegistry.property.test.js` | Created (new)            |
 
 ### Test Coverage Summary
+
 ```
 PASS tests/property/anatomy/bodyDescriptorRegistry.property.test.js
   Body Descriptor Registry - Property Tests

@@ -205,7 +205,11 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       });
 
       expect(() =>
-        trace.captureActionData('diagnostic_stage', 'movement:go', problematicData)
+        trace.captureActionData(
+          'diagnostic_stage',
+          'movement:go',
+          problematicData
+        )
       ).not.toThrow();
 
       const actionTrace = trace.getActionTrace('movement:go');
@@ -322,7 +326,11 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
         sensitiveData: 'should not be included',
       };
 
-      trace.captureActionData('prerequisite_evaluation', 'movement:go', fullData);
+      trace.captureActionData(
+        'prerequisite_evaluation',
+        'movement:go',
+        fullData
+      );
 
       const capturedData =
         trace.getActionTrace('movement:go').stages.prerequisite_evaluation.data;
@@ -453,7 +461,11 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
         resolvedTargets: Array.from({ length: 10 }, (_, i) => ({ id: i })),
       };
 
-      trace.captureActionData('exact_limit_stage', 'movement:go', exactLimitData);
+      trace.captureActionData(
+        'exact_limit_stage',
+        'movement:go',
+        exactLimitData
+      );
 
       const exactLimitCaptured =
         trace.getActionTrace('movement:go').stages.exact_limit_stage.data;
@@ -504,7 +516,11 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
         passed: true,
       };
 
-      trace.captureActionData('target_keys_stage', 'movement:go', targetKeysData);
+      trace.captureActionData(
+        'target_keys_stage',
+        'movement:go',
+        targetKeysData
+      );
 
       const capturedData =
         trace.getActionTrace('movement:go').stages.target_keys_stage.data;
@@ -569,7 +585,9 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
         verbosity: 'standard',
       });
 
-      trace.captureActionData('test_stage', 'movement:go', { original: 'data' });
+      trace.captureActionData('test_stage', 'movement:go', {
+        original: 'data',
+      });
 
       const tracedActions1 = trace.getTracedActions();
       const tracedActions2 = trace.getTracedActions();
@@ -1242,7 +1260,9 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       });
       trace.captureActionData('timing_data', 'movement:go', { detail: 'perf' });
 
-      const exported = trace.exportFilteredTraceData('verbose', ['performance']);
+      const exported = trace.exportFilteredTraceData('verbose', [
+        'performance',
+      ]);
       const stages = exported['movement:go'].stages;
 
       expect(stages.timing_data).toBeDefined();
@@ -1272,8 +1292,13 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       expect(json.summary.tracedActionCount).toBe(2);
       expect(json.actions).toBeDefined();
       expect(json.actions['movement:go']).toBeDefined();
-      expect(json.actions['movement:go'].stageOrder).toEqual(['stage1', 'stage2']);
-      expect(json.actions['movement:go'].totalDuration).toBeGreaterThanOrEqual(0);
+      expect(json.actions['movement:go'].stageOrder).toEqual([
+        'stage1',
+        'stage2',
+      ]);
+      expect(json.actions['movement:go'].totalDuration).toBeGreaterThanOrEqual(
+        0
+      );
     });
 
     it('should calculate total duration correctly', async () => {

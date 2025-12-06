@@ -170,16 +170,14 @@ const buildTorsoWithHeart = (rulesOverride) => {
       ],
     })
     .withComponent('anatomy:damage_propagation', {
-      rules:
-        rulesOverride ||
-        [
-          {
-            childSocketId: 'heart_socket',
-            baseProbability: 0.3,
-            damageFraction: 0.5,
-            damageTypeModifiers: { piercing: 1.5, blunt: 0.3, slashing: 0.8 },
-          },
-        ],
+      rules: rulesOverride || [
+        {
+          childSocketId: 'heart_socket',
+          baseProbability: 0.3,
+          damageFraction: 0.5,
+          damageTypeModifiers: { piercing: 1.5, blunt: 0.3, slashing: 0.8 },
+        },
+      ],
     })
     .build();
 
@@ -196,7 +194,10 @@ const buildTorsoWithHeart = (rulesOverride) => {
       state: 'healthy',
     })
     .withComponent('anatomy:vital_organ', { organType: 'heart' })
-    .withComponent('anatomy:joint', { parentId: torso.id, socketId: 'heart_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: torso.id,
+      socketId: 'heart_socket',
+    })
     .build();
 
   return { torso, heart };
@@ -248,7 +249,10 @@ const buildHeadWithBrain = () => {
       state: 'healthy',
     })
     .withComponent('anatomy:vital_organ', { organType: 'brain' })
-    .withComponent('anatomy:joint', { parentId: head.id, socketId: 'brain_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: head.id,
+      socketId: 'brain_socket',
+    })
     .build();
 
   return { head, brain };
@@ -276,14 +280,23 @@ const buildRecursiveHeart = () => {
       maxHealth: BASE_ARTERY_HEALTH,
       state: 'healthy',
     })
-    .withComponent('anatomy:joint', { parentId: heart.id, socketId: 'artery_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: heart.id,
+      socketId: 'artery_socket',
+    })
     .build();
 
   const heartWithPropagation = new ModEntityBuilder(heart.id)
     .withName('Heart')
     .withComponent('anatomy:part', heart.components['anatomy:part'])
-    .withComponent('anatomy:part_health', heart.components['anatomy:part_health'])
-    .withComponent('anatomy:vital_organ', heart.components['anatomy:vital_organ'])
+    .withComponent(
+      'anatomy:part_health',
+      heart.components['anatomy:part_health']
+    )
+    .withComponent(
+      'anatomy:vital_organ',
+      heart.components['anatomy:vital_organ']
+    )
     .withComponent('anatomy:joint', heart.components['anatomy:joint'])
     .withComponent('anatomy:sockets', {
       sockets: [
@@ -339,13 +352,10 @@ describe('damage propagation flow e2e', () => {
   let safeDispatcher;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
   });
@@ -522,9 +532,6 @@ describe('damage propagation flow e2e', () => {
     ).toBe(true);
 
     expect(heartHealth.currentHealth).toBe(BASE_HEART_HEALTH - 10); // 20 * 0.5
-    expect(arteryHealth.currentHealth).toBeCloseTo(
-      BASE_ARTERY_HEALTH - 2.5,
-      5
-    ); // propagated 10 * 0.25
+    expect(arteryHealth.currentHealth).toBeCloseTo(BASE_ARTERY_HEALTH - 2.5, 5); // propagated 10 * 0.25
   });
 });

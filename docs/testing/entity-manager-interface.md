@@ -11,11 +11,13 @@ The `IEntityManager` interface (located at `src/interfaces/IEntityManager.js`) d
 ### Production EntityManager vs Test SimpleEntityManager
 
 **Production (`src/entities/entityManager.js`):**
+
 - Uses `entities` **getter** returning `IterableIterator<Entity>`
 - Extends `IEntityManager` class
 - Full dependency injection with validators, registries, dispatchers
 
 **Test (`tests/common/entities/simpleEntityManager.js`):**
+
 - Has both `entities` **getter** (for compatibility) AND `getEntities()` **method** (for convenience)
 - `getEntities()` method returns `Array<Object>`
 - Does NOT extend `IEntityManager` (standalone implementation)
@@ -33,6 +35,7 @@ Returns an iterator over all active entities (GETTER, not method).
 **Returns:** `IterableIterator<Entity>` (use with `for...of` or `Array.from()`)
 
 **Example:**
+
 ```javascript
 // ✅ CORRECT - Production pattern
 for (const entity of entityManager.entities) {
@@ -50,6 +53,7 @@ const entities = entityManager.getEntities(); // undefined in production
 ```
 
 **Usage in Operators (Production):**
+
 ```javascript
 // ✅ CORRECT
 const allEntities = Array.from(this.#entityManager.entities);
@@ -66,18 +70,26 @@ const allEntities = this.#entityManager.getEntities();
 Get component data for a specific entity and component type.
 
 **Parameters:**
+
 - `instanceId` (string): The entity ID (UUID)
 - `componentTypeId` (string): Namespaced component type (e.g., 'positioning:closeness')
 
 **Returns:** Component data object, or `undefined` if not found
 
 **Example:**
+
 ```javascript
-const closeness = entityManager.getComponentData('actor-1', 'positioning:closeness');
+const closeness = entityManager.getComponentData(
+  'actor-1',
+  'positioning:closeness'
+);
 // Returns: { partners: ['actor-2'] } or undefined
 
 // Test SimpleEntityManager returns null instead of undefined
-const closenessTest = testEntityManager.getComponentData('actor-1', 'positioning:closeness');
+const closenessTest = testEntityManager.getComponentData(
+  'actor-1',
+  'positioning:closeness'
+);
 // Returns: { partners: ['actor-2'] } or null
 ```
 
@@ -86,6 +98,7 @@ const closenessTest = testEntityManager.getComponentData('actor-1', 'positioning
 Check if entity has a specific component.
 
 **Parameters:**
+
 - `instanceId` (string): The entity ID (UUID)
 - `componentTypeId` (string): Namespaced component type
 - `checkOverrideOnly` (boolean, optional): If true, only check for instance-level overrides
@@ -93,6 +106,7 @@ Check if entity has a specific component.
 **Returns:** `boolean` - True if entity has component, false otherwise
 
 **Example:**
+
 ```javascript
 const isSitting = entityManager.hasComponent('actor-1', 'positioning:sitting');
 // Returns: true or false
@@ -103,6 +117,7 @@ const isSitting = entityManager.hasComponent('actor-1', 'positioning:sitting');
 Get full entity instance with all components.
 
 **Parameters:**
+
 - `instanceId` (string): The entity ID (UUID)
 
 **Returns:** `Entity` object or `undefined` if not found
@@ -110,6 +125,7 @@ Get full entity instance with all components.
 **Important:** Return type is `Entity|undefined` in production, not `Object|null`
 
 **Example:**
+
 ```javascript
 const entity = entityManager.getEntityInstance('actor-1');
 if (entity) {
@@ -127,6 +143,7 @@ Returns an array of all active entity IDs.
 **Returns:** `string[]` - Array of entity instance IDs (UUIDs)
 
 **Example:**
+
 ```javascript
 const ids = entityManager.getEntityIds();
 // Returns: ['actor-1', 'actor-2', 'item-1']
@@ -137,11 +154,13 @@ const ids = entityManager.getEntityIds();
 Fetches all active entities that possess a specific component type.
 
 **Parameters:**
+
 - `componentTypeId` (string): The component type identifier
 
 **Returns:** `Entity[]` - Array of Entity instances (never null, empty array if none)
 
 **Example:**
+
 ```javascript
 const actors = entityManager.getEntitiesWithComponent('core:actor');
 // Returns: [Entity, Entity, ...] or []
@@ -152,11 +171,13 @@ const actors = entityManager.getEntitiesWithComponent('core:actor');
 Retrieves all entity instance IDs present in a specific location.
 
 **Parameters:**
+
 - `locationId` (string): The unique ID of the location entity
 
 **Returns:** `Set<string>` - Set of entity instance IDs in the location
 
 **Example:**
+
 ```javascript
 const entitiesInRoom = entityManager.getEntitiesInLocation('room-1');
 // Returns: Set(['actor-1', 'item-2'])
@@ -167,11 +188,13 @@ const entitiesInRoom = entityManager.getEntitiesInLocation('room-1');
 Returns a list of all component type IDs attached to a given entity.
 
 **Parameters:**
+
 - `entityId` (string): The ID of the entity
 
 **Returns:** `string[]` - Array of component ID strings
 
 **Example:**
+
 ```javascript
 const components = entityManager.getAllComponentTypesForEntity('actor-1');
 // Returns: ['core:actor', 'core:position', 'positioning:sitting']
@@ -182,6 +205,7 @@ const components = entityManager.getAllComponentTypesForEntity('actor-1');
 Dynamically adds a component data object to an existing entity.
 
 **Parameters:**
+
 - `instanceId` (string): The ID of the entity to modify
 - `componentTypeId` (string): The component type to add
 - `componentData` (object): The component's data
@@ -189,12 +213,11 @@ Dynamically adds a component data object to an existing entity.
 **Returns:** `boolean` - True if the component was successfully added
 
 **Example:**
+
 ```javascript
-const success = entityManager.addComponent(
-  'actor-1',
-  'positioning:sitting',
-  { chairId: 'chair-1' }
-);
+const success = entityManager.addComponent('actor-1', 'positioning:sitting', {
+  chairId: 'chair-1',
+});
 // Returns: true or false
 ```
 
@@ -203,12 +226,14 @@ const success = entityManager.addComponent(
 Removes a component data object from an existing entity.
 
 **Parameters:**
+
 - `instanceId` (string): The ID of the entity to modify
 - `componentTypeId` (string): The component type to remove
 
 **Returns:** `boolean` - True if the component was found and removed
 
 **Example:**
+
 ```javascript
 const removed = entityManager.removeComponent('actor-1', 'positioning:sitting');
 // Returns: true or false
@@ -221,12 +246,12 @@ const removed = entityManager.removeComponent('actor-1', 'positioning:sitting');
 ```javascript
 // Test pattern - SimpleEntityManager
 const testManager = new SimpleEntityManager([
-  { id: 'actor-1', components: { 'core:actor': {} } }
+  { id: 'actor-1', components: { 'core:actor': {} } },
 ]);
 
 // ✅ Works in tests - method returns array
 const entities = testManager.getEntities();
-entities.forEach(e => console.log(e.id));
+entities.forEach((e) => console.log(e.id));
 
 // ✅ Now also works - getter for compatibility
 for (const entity of testManager.entities) {
@@ -257,6 +282,7 @@ const entities = entityManager.getEntities(); // undefined!
 ### Updating Operators for Production
 
 **Before (Incorrect):**
+
 ```javascript
 class MyOperator {
   execute(context) {
@@ -269,6 +295,7 @@ class MyOperator {
 ```
 
 **After (Correct):**
+
 ```javascript
 class MyOperator {
   execute(context) {
@@ -292,7 +319,7 @@ Scope resolvers should use the interface methods consistently:
 const resolver = (runtimeCtx) => {
   // Convert iterator to array first
   const entities = Array.from(runtimeCtx.entityManager.entities);
-  return entities.filter(e =>
+  return entities.filter((e) =>
     runtimeCtx.entityManager.hasComponent(e.id, 'positioning:sitting')
   );
 };
@@ -301,7 +328,9 @@ const resolver = (runtimeCtx) => {
 const resolver = (runtimeCtx) => {
   const result = [];
   for (const entity of runtimeCtx.entityManager.entities) {
-    if (runtimeCtx.entityManager.hasComponent(entity.id, 'positioning:sitting')) {
+    if (
+      runtimeCtx.entityManager.hasComponent(entity.id, 'positioning:sitting')
+    ) {
       result.push(entity);
     }
   }
@@ -364,7 +393,9 @@ function validateEntityManagerCompliance(manager, context = 'EntityManager') {
 
   for (const member of requiredMembers) {
     if (!(member in manager)) {
-      throw new Error(`${context} missing required interface member: ${member}`);
+      throw new Error(
+        `${context} missing required interface member: ${member}`
+      );
     }
   }
 
@@ -450,7 +481,7 @@ for (const entity of entityManager.entities) {
 }
 
 // ✅ CORRECT - collect IDs first, then modify
-const entityIds = Array.from(entityManager.entities).map(e => e.id);
+const entityIds = Array.from(entityManager.entities).map((e) => e.id);
 for (const id of entityIds) {
   entityManager.removeComponent(id, 'core:actor');
 }

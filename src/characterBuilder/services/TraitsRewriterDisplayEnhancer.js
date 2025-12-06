@@ -364,8 +364,7 @@ export class TraitsRewriterDisplayEnhancer {
       return '';
     }
 
-    const stringValue =
-      typeof text === 'string' ? text : String(text);
+    const stringValue = typeof text === 'string' ? text : String(text);
 
     return stringValue
       .replace(/&/g, '&amp;')
@@ -447,11 +446,11 @@ export class TraitsRewriterDisplayEnhancer {
    */
   #createTraitSection(traitKey, traitValue, index) {
     let sanitizedContent;
-    
+
     // Handle array values (for goals and notes)
     if (Array.isArray(traitValue)) {
       // Create bulleted list for array items
-      const items = traitValue.map(item => this.#sanitizeForDisplay(item));
+      const items = traitValue.map((item) => this.#sanitizeForDisplay(item));
       sanitizedContent = items.join('\n• ');
       if (items.length > 0) {
         sanitizedContent = '• ' + sanitizedContent;
@@ -459,7 +458,7 @@ export class TraitsRewriterDisplayEnhancer {
     } else {
       sanitizedContent = this.#sanitizeForDisplay(traitValue);
     }
-    
+
     const label = this.#formatTraitLabel(traitKey);
 
     return {
@@ -524,7 +523,7 @@ export class TraitsRewriterDisplayEnhancer {
       const traitValue = traits[section.key];
       if (Array.isArray(traitValue)) {
         // Format array items as bulleted list
-        traitValue.forEach(item => {
+        traitValue.forEach((item) => {
           text += `• ${item}\n`;
         });
         text += '\n';

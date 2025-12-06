@@ -70,7 +70,9 @@ describe('PrerequisiteEvaluationService span-aware coverage', () => {
 
     expect(result).toBe(true);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Could not serialize components for validation logging'),
+      expect.stringContaining(
+        'Could not serialize components for validation logging'
+      ),
       expect.any(Error)
     );
   });
@@ -90,7 +92,9 @@ describe('PrerequisiteEvaluationService span-aware coverage', () => {
 
     expect(result).toBe(true);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('ERROR - Actor context is missing components property entirely!')
+      expect.stringContaining(
+        'ERROR - Actor context is missing components property entirely!'
+      )
     );
   });
 

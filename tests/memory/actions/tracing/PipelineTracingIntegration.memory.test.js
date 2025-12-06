@@ -72,7 +72,9 @@ describe('Pipeline Tracing Integration Memory', () => {
 
       // Measure final memory with stable measurement
       const finalMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      console.log(`Final memory (stable): ${(finalMemory / 1024 / 1024).toFixed(2)} MB`);
+      console.log(
+        `Final memory (stable): ${(finalMemory / 1024 / 1024).toFixed(2)} MB`
+      );
 
       // Assert - Action completed successfully
       expect(result.success).toBe(true);
@@ -95,7 +97,9 @@ describe('Pipeline Tracing Integration Memory', () => {
 
       // Use enhanced adaptive thresholds and robust retry logic for pipeline tracing tests
       if (global.memoryTestUtils) {
-        const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds(PERFORMANCE_THRESHOLDS);
+        const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds(
+          PERFORMANCE_THRESHOLDS
+        );
 
         try {
           // Enhanced memory growth assertion with increased retry count
@@ -105,8 +109,10 @@ describe('Pipeline Tracing Integration Memory', () => {
             12 // Enhanced retry count for pipeline tracing reliability
           );
         } catch (error) {
-          console.log(`Memory growth assertion failed, trying percentage-based fallback...`);
-          
+          console.log(
+            `Memory growth assertion failed, trying percentage-based fallback...`
+          );
+
           // Robust fallback to percentage-based check with enhanced thresholds
           try {
             global.memoryTestUtils.assertMemoryGrowthPercentage(
@@ -118,14 +124,17 @@ describe('Pipeline Tracing Integration Memory', () => {
           } catch (percentageError) {
             // Final fallback with even more lenient absolute check
             const memoryGrowth = (finalMemory - initialMemory) / 1024 / 1024;
-            const veryLenientLimitMB = adaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 1.5;
-            
+            const veryLenientLimitMB =
+              adaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 1.5;
+
             if (memoryGrowth > veryLenientLimitMB) {
               throw new Error(
                 `Memory growth ${memoryGrowth.toFixed(2)}MB exceeds even the most lenient limit of ${veryLenientLimitMB.toFixed(2)}MB. Original errors: ${error.message} | ${percentageError.message}`
               );
             } else {
-              console.log(`Memory growth ${memoryGrowth.toFixed(2)}MB passed final lenient check (< ${veryLenientLimitMB.toFixed(2)}MB)`);
+              console.log(
+                `Memory growth ${memoryGrowth.toFixed(2)}MB passed final lenient check (< ${veryLenientLimitMB.toFixed(2)}MB)`
+              );
             }
           }
         }
@@ -209,20 +218,25 @@ describe('Pipeline Tracing Integration Memory', () => {
         );
       } catch (percentageError) {
         console.log(`Percentage assertion failed, trying absolute check...`);
-        
+
         // Fallback to absolute memory growth check
         if (memoryGrowthMB > adaptedThresholds.MEMORY_GROWTH_LIMIT_MB) {
           // Final fallback with even more lenient check
-          const veryLenientLimitMB = adaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 2;
+          const veryLenientLimitMB =
+            adaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 2;
           if (memoryGrowthMB > veryLenientLimitMB) {
             throw new Error(
               `Memory growth ${memoryGrowthMB.toFixed(2)}MB exceeds even the most lenient limit of ${veryLenientLimitMB.toFixed(2)}MB for ${iterations} iterations. Percentage error: ${percentageError.message}`
             );
           } else {
-            console.log(`Memory growth ${memoryGrowthMB.toFixed(2)}MB passed final lenient check (< ${veryLenientLimitMB.toFixed(2)}MB)`);
+            console.log(
+              `Memory growth ${memoryGrowthMB.toFixed(2)}MB passed final lenient check (< ${veryLenientLimitMB.toFixed(2)}MB)`
+            );
           }
         } else {
-          console.log(`Memory growth ${memoryGrowthMB.toFixed(2)}MB passed absolute check (< ${adaptedThresholds.MEMORY_GROWTH_LIMIT_MB.toFixed(2)}MB)`);
+          console.log(
+            `Memory growth ${memoryGrowthMB.toFixed(2)}MB passed absolute check (< ${adaptedThresholds.MEMORY_GROWTH_LIMIT_MB.toFixed(2)}MB)`
+          );
         }
       }
 

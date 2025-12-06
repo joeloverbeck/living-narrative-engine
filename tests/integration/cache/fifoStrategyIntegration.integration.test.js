@@ -2,9 +2,19 @@
  * @file Integration tests ensuring FIFO cache strategy works with cache infrastructure services
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
-import { UnifiedCache, EvictionPolicy } from '../../../src/cache/UnifiedCache.js';
+import {
+  UnifiedCache,
+  EvictionPolicy,
+} from '../../../src/cache/UnifiedCache.js';
 import { CacheInvalidationManager } from '../../../src/cache/CacheInvalidationManager.js';
 import { CacheMetrics } from '../../../src/cache/CacheMetrics.js';
 import EventBus from '../../../src/events/eventBus.js';
@@ -50,10 +60,16 @@ describe('FIFO cache strategy integration', () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
     mockSchemaValidator = testBed.createMockValidator();
-    mockDataRegistry = testBed.createMock('dataRegistry', DATA_REGISTRY_METHODS);
+    mockDataRegistry = testBed.createMock(
+      'dataRegistry',
+      DATA_REGISTRY_METHODS
+    );
 
     eventBus = new EventBus({ logger: mockLogger });
-    const gameDataRepository = new GameDataRepository(mockDataRegistry, mockLogger);
+    const gameDataRepository = new GameDataRepository(
+      mockDataRegistry,
+      mockLogger
+    );
     validatedEventDispatcher = new ValidatedEventDispatcher({
       eventBus,
       gameDataRepository,
@@ -66,11 +82,14 @@ describe('FIFO cache strategy integration', () => {
       validatedEventDispatcher,
     });
 
-    cacheMetrics = new CacheMetrics({
-      logger: mockLogger,
-    }, {
-      enableAutoCollection: false,
-    });
+    cacheMetrics = new CacheMetrics(
+      {
+        logger: mockLogger,
+      },
+      {
+        enableAutoCollection: false,
+      }
+    );
   });
 
   afterEach(() => {
@@ -79,13 +98,16 @@ describe('FIFO cache strategy integration', () => {
   });
 
   it('should coordinate FIFO eviction, ordering, and metrics across cache services', () => {
-    const fifoCache = new UnifiedCache({ logger: mockLogger }, {
-      maxSize: 3,
-      ttl: 500,
-      evictionPolicy: EvictionPolicy.FIFO,
-      maxMemoryUsage: 1024,
-      enableMetrics: true,
-    });
+    const fifoCache = new UnifiedCache(
+      { logger: mockLogger },
+      {
+        maxSize: 3,
+        ttl: 500,
+        evictionPolicy: EvictionPolicy.FIFO,
+        maxMemoryUsage: 1024,
+        enableMetrics: true,
+      }
+    );
 
     cacheInvalidationManager.registerCache('fifo-cache', fifoCache, {
       entityTypes: ['actor'],
@@ -126,7 +148,11 @@ describe('FIFO cache strategy integration', () => {
 
     const snapshot = cacheMetrics.collectCacheMetrics('fifo-cache');
     expect(snapshot.strategyName).toBe('FIFO');
-    expect(snapshot.insertionStats.insertionOrder).toEqual(['fifo:2', 'fifo:4', 'fifo:5']);
+    expect(snapshot.insertionStats.insertionOrder).toEqual([
+      'fifo:2',
+      'fifo:4',
+      'fifo:5',
+    ]);
     expect(snapshot.insertionStats.oldestKey).toBe('fifo:2');
     expect(snapshot.insertionStats.newestKey).toBe('fifo:5');
     expect(snapshot.memorySize).toBeGreaterThan(0);
@@ -141,13 +167,16 @@ describe('FIFO cache strategy integration', () => {
   it('should expire entries via TTL and support pruning and invalidation workflows', () => {
     jest.useFakeTimers();
 
-    const shortLivedCache = new UnifiedCache({ logger: mockLogger }, {
-      maxSize: 5,
-      ttl: 50,
-      evictionPolicy: EvictionPolicy.FIFO,
-      updateAgeOnGet: false,
-      enableMetrics: true,
-    });
+    const shortLivedCache = new UnifiedCache(
+      { logger: mockLogger },
+      {
+        maxSize: 5,
+        ttl: 50,
+        evictionPolicy: EvictionPolicy.FIFO,
+        updateAgeOnGet: false,
+        enableMetrics: true,
+      }
+    );
 
     cacheInvalidationManager.registerCache('fifo-short', shortLivedCache, {
       description: 'Short lived FIFO cache',
@@ -173,7 +202,10 @@ describe('FIFO cache strategy integration', () => {
     expect(shortLivedCache.has('ttl:keep')).toBe(false);
 
     shortLivedCache.set('ttl:pattern', 'match');
-    const patternResults = cacheInvalidationManager.invalidatePattern('ttl:pattern', ['fifo-short']);
+    const patternResults = cacheInvalidationManager.invalidatePattern(
+      'ttl:pattern',
+      ['fifo-short']
+    );
     expect(patternResults['fifo-short'].invalidated).toBe(1);
 
     shortLivedCache.set('ttl:a', 'a');

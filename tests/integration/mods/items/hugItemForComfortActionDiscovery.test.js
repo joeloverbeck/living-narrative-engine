@@ -44,7 +44,9 @@ describe('items:hug_item_for_comfort action definition', () => {
       expect(hugItemForComfortAction.description).toBe(
         'Hug a comforting item like a plush toy or pillow to feel calmer.'
       );
-      expect(hugItemForComfortAction.template).toBe('hug {item} to soothe yourself');
+      expect(hugItemForComfortAction.template).toBe(
+        'hug {item} to soothe yourself'
+      );
     });
 
     it('should use examinable_items scope for primary targets', () => {
@@ -97,7 +99,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([room, actor, plushToy]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -125,7 +128,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([room, actor, comfortPillow]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -160,7 +164,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([room, actor, stuffedAnimal]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor2');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor2');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -198,7 +203,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([room, actor, comfortItem, nonComfortItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor_mixed');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor_mixed');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -224,7 +230,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([room, actor]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -255,7 +262,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([room, actor, nonComfortItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -284,7 +292,8 @@ describe('items:hug_item_for_comfort action definition', () => {
       testFixture.reset([roomA, roomB, actor, distantComfortItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -300,7 +309,11 @@ describe('items:hug_item_for_comfort action definition', () => {
         .atLocation('mixed_room')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['comfort_item_one', 'comfort_item_two', 'non_comfort_item_one'],
+          items: [
+            'comfort_item_one',
+            'comfort_item_two',
+            'non_comfort_item_one',
+          ],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
         .build();
@@ -326,10 +339,17 @@ describe('items:hug_item_for_comfort action definition', () => {
         .withDescription('Metal scissors with sharp blades.')
         .build();
 
-      testFixture.reset([room, actor, comfortItemOne, comfortItemTwo, nonComfortItem]);
+      testFixture.reset([
+        room,
+        actor,
+        comfortItemOne,
+        comfortItemTwo,
+        nonComfortItem,
+      ]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('hug_actor');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('hug_actor');
       const hugActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );

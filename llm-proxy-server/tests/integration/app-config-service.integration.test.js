@@ -74,7 +74,8 @@ describe('AppConfigService integration coverage', () => {
 
     process.env.PROXY_PORT = '4100';
     process.env.LLM_CONFIG_PATH = path.join(tempDir, 'llm-config.json');
-    process.env.PROXY_ALLOWED_ORIGIN = 'https://example.com,https://example.org';
+    process.env.PROXY_ALLOWED_ORIGIN =
+      'https://example.com,https://example.org';
     process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = tempDir;
     process.env.NODE_ENV = 'production';
 
@@ -164,7 +165,9 @@ describe('AppConfigService integration coverage', () => {
 
     const envResult = await apiKeyService.getApiKey(llmConfig, 'llm-env');
     expect(envResult.apiKey).toBe('env-secret');
-    expect(envResult.source).toContain("environment variable 'TEST_API_KEY_ENV'");
+    expect(envResult.source).toContain(
+      "environment variable 'TEST_API_KEY_ENV'"
+    );
 
     delete process.env.TEST_API_KEY_ENV;
     const apiKeyPath = path.join(tempDir, 'api-key.txt');
@@ -260,7 +263,9 @@ describe('AppConfigService integration coverage', () => {
   });
 
   it('recovers gracefully from invalid environment configuration', async () => {
-    const tempDir = await mkdtemp(path.join(tmpdir(), 'app-config-int-invalid-'));
+    const tempDir = await mkdtemp(
+      path.join(tmpdir(), 'app-config-int-invalid-')
+    );
     process.env.PROXY_PORT = 'not-a-number';
     process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = tempDir;
     // Explicitly clear any previously configured allowed origins to simulate

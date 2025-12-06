@@ -28,29 +28,59 @@ describe('Cache Coordination Integration', () => {
 
     // Register only the minimal core dependencies required by infrastructure
     const mockLogger = testBed.createMockLogger();
-    container.register(tokens.ILogger, () => mockLogger, { lifecycle: 'singleton' });
+    container.register(tokens.ILogger, () => mockLogger, {
+      lifecycle: 'singleton',
+    });
 
     // Register mock document context for CriticalLogNotifier
-    const mockDocumentContext = testBed.createMock('documentContext', ['createElement']);
-    container.register(tokens.IDocumentContext, () => mockDocumentContext, { lifecycle: 'singleton' });
+    const mockDocumentContext = testBed.createMock('documentContext', [
+      'createElement',
+    ]);
+    container.register(tokens.IDocumentContext, () => mockDocumentContext, {
+      lifecycle: 'singleton',
+    });
 
     // Register schema validator and data registry required by infrastructure
     const mockSchemaValidator = testBed.createMock('SchemaValidator', [
-      'validateAgainstSchema', 'validate', 'getSchema', 'loadSchema'
+      'validateAgainstSchema',
+      'validate',
+      'getSchema',
+      'loadSchema',
     ]);
     const mockDataRegistry = testBed.createMock('DataRegistry', [
-      'get', 'set', 'has', 'delete', 'clear', 'getAll',
-      'getWorldDefinition', 'getAllWorldDefinitions', 'getStartingPlayerId',
-      'getStartingLocationId', 'getActionDefinition', 'getAllActionDefinitions',
-      'getEntityDefinition', 'getAllEntityDefinitions', 'getEventDefinition',
-      'getAllEventDefinitions', 'getComponentDefinition', 'getAllComponentDefinitions',
-      'getConditionDefinition', 'getAllConditionDefinitions', 'getGoalDefinition',
-      'getAllGoalDefinitions', 'getEntityInstanceDefinition', 'getAllEntityInstanceDefinitions',
-      'store'
+      'get',
+      'set',
+      'has',
+      'delete',
+      'clear',
+      'getAll',
+      'getWorldDefinition',
+      'getAllWorldDefinitions',
+      'getStartingPlayerId',
+      'getStartingLocationId',
+      'getActionDefinition',
+      'getAllActionDefinitions',
+      'getEntityDefinition',
+      'getAllEntityDefinitions',
+      'getEventDefinition',
+      'getAllEventDefinitions',
+      'getComponentDefinition',
+      'getAllComponentDefinitions',
+      'getConditionDefinition',
+      'getAllConditionDefinitions',
+      'getGoalDefinition',
+      'getAllGoalDefinitions',
+      'getEntityInstanceDefinition',
+      'getAllEntityInstanceDefinitions',
+      'store',
     ]);
 
-    container.register(tokens.ISchemaValidator, () => mockSchemaValidator, { lifecycle: 'singleton' });
-    container.register(tokens.IDataRegistry, () => mockDataRegistry, { lifecycle: 'singleton' });
+    container.register(tokens.ISchemaValidator, () => mockSchemaValidator, {
+      lifecycle: 'singleton',
+    });
+    container.register(tokens.IDataRegistry, () => mockDataRegistry, {
+      lifecycle: 'singleton',
+    });
 
     // Register infrastructure services (includes event bus, spatial index, etc.)
     registerInfrastructure(container);

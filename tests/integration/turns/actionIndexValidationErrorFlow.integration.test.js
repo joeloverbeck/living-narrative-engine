@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { ActionIndexValidationError } from '../../../src/errors/actionIndexValidationError.js';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
@@ -32,7 +39,15 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
       const debugData = { result: llmData };
 
       await expect(
-        assertValidActionIndex(10, 5, 'LLMChooser', 'actor-1', mockDispatcher, mockLogger, debugData)
+        assertValidActionIndex(
+          10,
+          5,
+          'LLMChooser',
+          'actor-1',
+          mockDispatcher,
+          mockLogger,
+          debugData
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: 'Perhaps I should reconsider my approach...',
@@ -56,7 +71,15 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
       const debugData = { result: llmData };
 
       await expect(
-        assertValidActionIndex(8, 3, 'LLMChooser', 'actor-test', mockDispatcher, mockLogger, debugData)
+        assertValidActionIndex(
+          8,
+          3,
+          'LLMChooser',
+          'actor-test',
+          mockDispatcher,
+          mockLogger,
+          debugData
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: 'I will pause to consider the situation.',
@@ -98,7 +121,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
       expect(fallbackAction.speech).toBe('Let me reconsider my options...');
       expect(fallbackAction.actionDefinitionId).toBe('core:wait');
       expect(fallbackAction.resolvedParameters.isFallback).toBe(true);
-      expect(fallbackAction.resolvedParameters.diagnostics.preservedDataUsed).toBe(true);
+      expect(
+        fallbackAction.resolvedParameters.diagnostics.preservedDataUsed
+      ).toBe(true);
     });
 
     it('should generate generic message when no preserved speech available', () => {
@@ -117,7 +142,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
 
       expect(fallbackAction.speech).toContain('unexpected issue');
       expect(fallbackAction.speech).toContain('wait for a moment');
-      expect(fallbackAction.resolvedParameters.diagnostics.preservedDataUsed).toBe(false);
+      expect(
+        fallbackAction.resolvedParameters.diagnostics.preservedDataUsed
+      ).toBe(false);
     });
 
     it('should preserve all LLM data types in fallback', () => {
@@ -146,10 +173,12 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
   describe('GenericTurnStrategy Integration', () => {
     it('should extract and use preserved data in catch block', async () => {
       const mockChoicePipeline = {
-        buildChoices: jest.fn().mockResolvedValue([
-          { actionDefinitionId: 'core:wait' },
-          { actionDefinitionId: 'core:look' },
-        ]),
+        buildChoices: jest
+          .fn()
+          .mockResolvedValue([
+            { actionDefinitionId: 'core:wait' },
+            { actionDefinitionId: 'core:look' },
+          ]),
       };
 
       const mockDecisionProvider = {
@@ -171,7 +200,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
         }),
       };
 
-      const fallbackFactory = new AIFallbackActionFactory({ logger: mockLogger });
+      const fallbackFactory = new AIFallbackActionFactory({
+        logger: mockLogger,
+      });
 
       const strategy = new GenericTurnStrategy({
         choicePipeline: mockChoicePipeline,
@@ -191,15 +222,17 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
       expect(result.kind).toBe('fallback');
       expect(result.extractedData.speech).toBe('I need a moment to think.');
       expect(result.extractedData.thoughts).toBe('This is confusing.');
-      expect(result.extractedData.notes).toEqual([{ type: 'state', value: 'confused' }]);
+      expect(result.extractedData.notes).toEqual([
+        { type: 'state', value: 'confused' },
+      ]);
       expect(result.action.speech).toBe('I need a moment to think.');
     });
 
     it('should fallback to generic message when no preserved data', async () => {
       const mockChoicePipeline = {
-        buildChoices: jest.fn().mockResolvedValue([
-          { actionDefinitionId: 'core:wait' },
-        ]),
+        buildChoices: jest
+          .fn()
+          .mockResolvedValue([{ actionDefinitionId: 'core:wait' }]),
       };
 
       const mockDecisionProvider = {
@@ -218,7 +251,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
         }),
       };
 
-      const fallbackFactory = new AIFallbackActionFactory({ logger: mockLogger });
+      const fallbackFactory = new AIFallbackActionFactory({
+        logger: mockLogger,
+      });
 
       const strategy = new GenericTurnStrategy({
         choicePipeline: mockChoicePipeline,
@@ -245,9 +280,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
   describe('Backward Compatibility', () => {
     it('should handle standard Error without llmData property', async () => {
       const mockChoicePipeline = {
-        buildChoices: jest.fn().mockResolvedValue([
-          { actionDefinitionId: 'core:wait' },
-        ]),
+        buildChoices: jest
+          .fn()
+          .mockResolvedValue([{ actionDefinitionId: 'core:wait' }]),
       };
 
       const mockDecisionProvider = {
@@ -261,7 +296,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
         }),
       };
 
-      const fallbackFactory = new AIFallbackActionFactory({ logger: mockLogger });
+      const fallbackFactory = new AIFallbackActionFactory({
+        logger: mockLogger,
+      });
 
       const strategy = new GenericTurnStrategy({
         choicePipeline: mockChoicePipeline,
@@ -290,10 +327,16 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
       // 1. Simulate validation error with LLM data
       const llmData = {
         index: 15,
-        speech: '"Perhaps I should take a moment to assess the situation more carefully," I muse thoughtfully.',
-        thoughts: 'The merchant\'s nervous demeanor suggests there might be more to this than meets the eye.',
+        speech:
+          '"Perhaps I should take a moment to assess the situation more carefully," I muse thoughtfully.',
+        thoughts:
+          "The merchant's nervous demeanor suggests there might be more to this than meets the eye.",
         notes: [
-          { type: 'observation', npcId: 'merchant_bob', content: 'acting_suspicious' },
+          {
+            type: 'observation',
+            npcId: 'merchant_bob',
+            content: 'acting_suspicious',
+          },
           { type: 'emotion', content: 'curious' },
           { type: 'memory', content: 'merchant_encounter_suspicious' },
         ],
@@ -303,7 +346,15 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
 
       let caughtError;
       try {
-        await assertValidActionIndex(15, 8, 'LLMChooser', 'protagonist', mockDispatcher, mockLogger, debugData);
+        await assertValidActionIndex(
+          15,
+          8,
+          'LLMChooser',
+          'protagonist',
+          mockDispatcher,
+          mockLogger,
+          debugData
+        );
       } catch (err) {
         caughtError = err;
       }
@@ -317,7 +368,9 @@ describe('ActionIndexValidationError - End-to-End Flow Integration', () => {
       expect(caughtError.getPreservedNotes()).toEqual(llmData.notes);
 
       // 3. Create fallback action with preserved data
-      const fallbackFactory = new AIFallbackActionFactory({ logger: mockLogger });
+      const fallbackFactory = new AIFallbackActionFactory({
+        logger: mockLogger,
+      });
       const fallbackAction = fallbackFactory.create(
         caughtError.name,
         caughtError,

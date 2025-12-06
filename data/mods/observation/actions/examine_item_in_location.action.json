@@ -11,10 +11,7 @@
     }
   },
   "required_components": {
-    "primary": [
-      "items:item",
-      "core:description"
-    ]
+    "primary": ["items:item", "core:description"]
   },
   "forbidden_components": {
     "actor": [

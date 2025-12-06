@@ -62,6 +62,7 @@ Available clothing slots:
 The armor layer is a special clothing layer for protective equipment. Armor has priority between outer garments and base clothing.
 
 **Layer Priority Order** (innermost to outermost):
+
 1. `underwear` - Undergarments
 2. `base` - Regular clothing (shirts, pants, boots)
 3. `armor` - Protective equipment (cuirasses, chainmail, plate armor)
@@ -69,6 +70,7 @@ The armor layer is a special clothing layer for protective equipment. Armor has 
 5. `accessories` - Accessories (jewelry, belts, gloves)
 
 **Coverage Priority Scoring** (lower = higher visibility):
+
 - `outer`: 100 (highest visibility)
 - `armor`: 150
 - `base`: 200
@@ -76,16 +78,19 @@ The armor layer is a special clothing layer for protective equipment. Armor has 
 - `direct`: 400 (fallback, including accessories)
 
 **When to Use Armor Layer**:
+
 - Protective equipment (cuirasses, chainmail, plate armor)
 - Combat gear (leather armor, bracers, greaves)
 - Defensive items worn for protection rather than fashion
 
 **Armor vs. Outer Layer**:
+
 - Use `armor` for protective equipment
 - Use `outer` for non-protective outerwear (cloaks, robes)
 - Armor can be worn under or over other layers depending on coverage priority
 
 **Example**:
+
 ```json
 {
   "clothing:wearable": {
@@ -211,6 +216,7 @@ The clothing system includes a blocking mechanism to enforce realistic removal o
 **Purpose**: Prevent unrealistic clothing removal scenarios (e.g., removing pants while belt is fastened).
 
 **How It Works**:
+
 1. Items with `clothing:blocks_removal` component declare blocking rules
 2. Scope resolution filters out blocked items from `topmost_clothing`
 3. Condition validation prevents blocked removal at action execution
@@ -237,6 +243,7 @@ Add `clothing:blocks_removal` to items that block other items:
 ### Examples
 
 **Belt Blocking Pants**:
+
 ```json
 {
   "id": "clothing:belt",

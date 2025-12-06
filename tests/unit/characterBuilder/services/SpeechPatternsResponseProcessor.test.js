@@ -189,12 +189,16 @@ Her voice trembles slightly when revealing secrets
       expect(result.speechPatterns).toHaveLength(4);
       expect(result.speechPatterns[0]).toMatchObject({
         type: 'Her voice trembles slightly when revealing secrets',
-        examples: expect.arrayContaining(['I... I just thought you should know.']),
+        examples: expect.arrayContaining([
+          'I... I just thought you should know.',
+        ]),
         contexts: expect.arrayContaining(['when confiding in allies']),
       });
       expect(result.speechPatterns[1]).toMatchObject({
         type: 'Warm greeting',
-        examples: expect.arrayContaining(['Hello there, friend! Good to see you!']),
+        examples: expect.arrayContaining([
+          'Hello there, friend! Good to see you!',
+        ]),
         contexts: expect.arrayContaining(['when meeting allies']),
       });
       expect(result.speechPatterns[2]).toMatchObject({
@@ -204,7 +208,9 @@ Her voice trembles slightly when revealing secrets
       });
       expect(result.speechPatterns[3].examples).toContain('Wow!');
       expect(result.speechPatterns[3].type).toContain('bursts forth');
-      expect(result.speechPatterns[3].contexts).toContain('during celebrations');
+      expect(result.speechPatterns[3].contexts).toContain(
+        'during celebrations'
+      );
 
       expect(result.metadata).toMatchObject({
         processingMethod: 'json',

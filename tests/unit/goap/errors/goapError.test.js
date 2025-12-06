@@ -33,13 +33,22 @@ describe('GoapError', () => {
 
     it('should create error with context', () => {
       const context = { actorId: 'actor-123', taskId: 'task-456' };
-      const error = new GoapError('GOAP operation failed', 'GOAP_ERROR', context);
+      const error = new GoapError(
+        'GOAP operation failed',
+        'GOAP_ERROR',
+        context
+      );
       expect(error.context).toEqual(context);
     });
 
     it('should create error with correlation ID option', () => {
       const correlationId = 'custom-correlation-id';
-      const error = new GoapError('GOAP operation failed', 'GOAP_ERROR', {}, { correlationId });
+      const error = new GoapError(
+        'GOAP operation failed',
+        'GOAP_ERROR',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
 
@@ -92,7 +101,7 @@ describe('GoapError', () => {
       const context = {
         actorId: 'actor-123',
         taskId: 'task-456',
-        reason: 'No applicable methods'
+        reason: 'No applicable methods',
       };
       const error = new GoapError('Test message', 'GOAP_ERROR', context);
       expect(error.context).toEqual(context);
@@ -137,7 +146,9 @@ describe('GoapError', () => {
       expect(error.timestamp).toBeDefined();
       expect(typeof error.timestamp).toBe('string');
       // Verify ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should set timestamp at construction time', () => {
@@ -167,7 +178,11 @@ describe('GoapError', () => {
   describe('Serialization', () => {
     it('should serialize to JSON with all BaseError fields', () => {
       const context = { actorId: 'actor-123', taskId: 'task-456' };
-      const error = new GoapError('GOAP operation failed', 'GOAP_ERROR', context);
+      const error = new GoapError(
+        'GOAP operation failed',
+        'GOAP_ERROR',
+        context
+      );
       const json = error.toJSON();
 
       expect(json).toHaveProperty('name', 'GoapError');
@@ -185,7 +200,7 @@ describe('GoapError', () => {
       const context = {
         actorId: 'actor-123',
         taskId: 'task-456',
-        reason: 'Planning failed'
+        reason: 'Planning failed',
       };
       const error = new GoapError('Test message', 'GOAP_ERROR', context);
       const json = error.toJSON();
@@ -194,7 +209,9 @@ describe('GoapError', () => {
     });
 
     it('should be JSON-safe (no circular references)', () => {
-      const error = new GoapError('Test message', 'GOAP_ERROR', { actorId: 'actor-123' });
+      const error = new GoapError('Test message', 'GOAP_ERROR', {
+        actorId: 'actor-123',
+      });
       expect(() => JSON.stringify(error.toJSON())).not.toThrow();
     });
   });

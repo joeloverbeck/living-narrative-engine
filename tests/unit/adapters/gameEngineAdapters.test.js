@@ -38,7 +38,9 @@ describe('GameEngineLoadAdapter', () => {
   it('rejects when the engine does not expose a loadGame function', async () => {
     const adapter = new GameEngineLoadAdapter({});
 
-    await expect(adapter.load('missing-method')).rejects.toBeInstanceOf(TypeError);
+    await expect(adapter.load('missing-method')).rejects.toBeInstanceOf(
+      TypeError
+    );
   });
 });
 
@@ -59,6 +61,9 @@ describe('GameEngineSaveAdapter', () => {
 
     await expect(adapter.save('slot-42', 'critical')).rejects.toBe(error);
     expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
-    expect(engine.triggerManualSave).toHaveBeenCalledWith('critical', 'slot-42');
+    expect(engine.triggerManualSave).toHaveBeenCalledWith(
+      'critical',
+      'slot-42'
+    );
   });
 });

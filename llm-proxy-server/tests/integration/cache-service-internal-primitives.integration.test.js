@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  jest,
+} from '@jest/globals';
 
 import CacheService from '../../src/services/cacheService.js';
 
@@ -67,10 +74,14 @@ describe('CacheService primitive operations integration', () => {
     const removedCount = cache.invalidatePattern(/^pattern:/);
     expect(removedCount).toBe(2);
 
-    const infoMessages = logger.info.mock.calls.map(([message]) => String(message));
+    const infoMessages = logger.info.mock.calls.map(([message]) =>
+      String(message)
+    );
     expect(
       infoMessages.some((message) =>
-        message.includes('CacheService: Invalidated 2 cache entries matching pattern /^pattern:/')
+        message.includes(
+          'CacheService: Invalidated 2 cache entries matching pattern /^pattern:/'
+        )
       )
     ).toBe(true);
 
@@ -80,7 +91,9 @@ describe('CacheService primitive operations integration', () => {
 
     const cleanupMessages = logger.debug.mock.calls
       .map(([message]) => String(message))
-      .filter((message) => message.includes('CacheService: Auto cleanup removed'));
+      .filter((message) =>
+        message.includes('CacheService: Auto cleanup removed')
+      );
 
     expect(cleanupMessages.length).toBeGreaterThanOrEqual(1);
     expect(cache.has('short-lived')).toBe(false);

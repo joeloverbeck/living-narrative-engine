@@ -12,23 +12,24 @@ Add the `anatomy:can_grab` component to body part entity definitions that should
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/mods/anatomy/entities/definitions/human_hand.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/humanoid_hand_craftsman_stained.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/humanoid_hand_scarred.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/eldritch_malformed_hand.entity.json` | Add `anatomy:can_grab` component (gripStrength 0.7) |
-| `data/mods/anatomy/entities/definitions/tortoise_hand.entity.json` | Add `anatomy:can_grab` component (gripStrength 0.8) |
-| `data/mods/anatomy/entities/definitions/squid_tentacle.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/kraken_tentacle.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/octopus_tentacle.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/eldritch_tentacle_feeding.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/eldritch_tentacle_large.entity.json` | Add `anatomy:can_grab` component |
-| `data/mods/anatomy/entities/definitions/eldritch_tentacle_sensory.entity.json` | Add `anatomy:can_grab` component (lower gripStrength) |
+| File                                                                                 | Change                                                |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| `data/mods/anatomy/entities/definitions/human_hand.entity.json`                      | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/humanoid_hand_craftsman_stained.entity.json` | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/humanoid_hand_scarred.entity.json`           | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/eldritch_malformed_hand.entity.json`         | Add `anatomy:can_grab` component (gripStrength 0.7)   |
+| `data/mods/anatomy/entities/definitions/tortoise_hand.entity.json`                   | Add `anatomy:can_grab` component (gripStrength 0.8)   |
+| `data/mods/anatomy/entities/definitions/squid_tentacle.entity.json`                  | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/kraken_tentacle.entity.json`                 | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/octopus_tentacle.entity.json`                | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/eldritch_tentacle_feeding.entity.json`       | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/eldritch_tentacle_large.entity.json`         | Add `anatomy:can_grab` component                      |
+| `data/mods/anatomy/entities/definitions/eldritch_tentacle_sensory.entity.json`       | Add `anatomy:can_grab` component (lower gripStrength) |
 
 ## Files NOT to Modify
 
 These body parts cannot grab:
+
 - `human_foot.entity.json` (feet cannot grab)
 - `tortoise_foot.entity.json` (feet cannot grab)
 - `spider_leg.entity.json` (spider legs are locomotion only)
@@ -108,18 +109,18 @@ These body parts cannot grab:
 
 ### Grip Strength Values
 
-| Body Part Type | gripStrength | Rationale |
-|---------------|--------------|-----------|
-| Human hand | 1.0 | Standard baseline |
-| Humanoid hand (craftsman/scarred) | 1.0 | Same as human hand |
-| Eldritch malformed hand | 0.7 | Deformed joints reduce precision |
-| Tortoise hand | 0.8 | Only 3 digits, less dexterity |
-| Squid tentacle | 0.8 | Flexible but less precise |
-| Octopus tentacle | 0.9 | Strong suckers |
-| Kraken tentacle | 1.5 | Massive and powerful |
-| Eldritch tentacle (large) | 1.2 | Otherworldly strength |
-| Eldritch tentacle (feeding) | 0.6 | Designed for feeding, not gripping |
-| Eldritch tentacle (sensory) | 0.3 | Designed for sensing, weak grip |
+| Body Part Type                    | gripStrength | Rationale                          |
+| --------------------------------- | ------------ | ---------------------------------- |
+| Human hand                        | 1.0          | Standard baseline                  |
+| Humanoid hand (craftsman/scarred) | 1.0          | Same as human hand                 |
+| Eldritch malformed hand           | 0.7          | Deformed joints reduce precision   |
+| Tortoise hand                     | 0.8          | Only 3 digits, less dexterity      |
+| Squid tentacle                    | 0.8          | Flexible but less precise          |
+| Octopus tentacle                  | 0.9          | Strong suckers                     |
+| Kraken tentacle                   | 1.5          | Massive and powerful               |
+| Eldritch tentacle (large)         | 1.2          | Otherworldly strength              |
+| Eldritch tentacle (feeding)       | 0.6          | Designed for feeding, not gripping |
+| Eldritch tentacle (sensory)       | 0.3          | Designed for sensing, weak grip    |
 
 ## Acceptance Criteria
 
@@ -179,10 +180,12 @@ npm run test:unit -- --testPathPattern="anatomy"
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned (7 entities):**
+
 - human_hand, squid_tentacle, kraken_tentacle, octopus_tentacle, eldritch_tentacle_feeding, eldritch_tentacle_large, eldritch_tentacle_sensory
 
 **Actually Changed (11 entities):**
 The original ticket was missing 4 hand entities that exist in the codebase:
+
 - humanoid_hand_craftsman_stained.entity.json (gripStrength: 1.0)
 - humanoid_hand_scarred.entity.json (gripStrength: 1.0)
 - eldritch_malformed_hand.entity.json (gripStrength: 0.7)
@@ -192,27 +195,28 @@ The original ticket was missing 4 hand entities that exist in the codebase:
 
 ### Entity Files Modified
 
-| File | gripStrength | Notes |
-|------|-------------|-------|
-| human_hand.entity.json | 1.0 | Baseline |
-| humanoid_hand_craftsman_stained.entity.json | 1.0 | Standard humanoid |
-| humanoid_hand_scarred.entity.json | 1.0 | Standard humanoid |
-| eldritch_malformed_hand.entity.json | 0.7 | Reduced due to deformed joints |
-| tortoise_hand.entity.json | 0.8 | Reduced due to only 3 digits |
-| squid_tentacle.entity.json | 0.8 | Flexible but less precise |
-| octopus_tentacle.entity.json | 0.9 | Strong suckers |
-| kraken_tentacle.entity.json | 1.5 | Massive and powerful |
-| eldritch_tentacle_feeding.entity.json | 0.6 | Designed for feeding |
-| eldritch_tentacle_large.entity.json | 1.2 | Otherworldly strength |
-| eldritch_tentacle_sensory.entity.json | 0.3 | Designed for sensing |
+| File                                        | gripStrength | Notes                          |
+| ------------------------------------------- | ------------ | ------------------------------ |
+| human_hand.entity.json                      | 1.0          | Baseline                       |
+| humanoid_hand_craftsman_stained.entity.json | 1.0          | Standard humanoid              |
+| humanoid_hand_scarred.entity.json           | 1.0          | Standard humanoid              |
+| eldritch_malformed_hand.entity.json         | 0.7          | Reduced due to deformed joints |
+| tortoise_hand.entity.json                   | 0.8          | Reduced due to only 3 digits   |
+| squid_tentacle.entity.json                  | 0.8          | Flexible but less precise      |
+| octopus_tentacle.entity.json                | 0.9          | Strong suckers                 |
+| kraken_tentacle.entity.json                 | 1.5          | Massive and powerful           |
+| eldritch_tentacle_feeding.entity.json       | 0.6          | Designed for feeding           |
+| eldritch_tentacle_large.entity.json         | 1.2          | Otherworldly strength          |
+| eldritch_tentacle_sensory.entity.json       | 0.3          | Designed for sensing           |
 
 ### New Tests Created
 
-| File | Tests | Rationale |
-|------|-------|-----------|
+| File                                                                  | Tests    | Rationale                                                                 |
+| --------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------- |
 | tests/integration/mods/anatomy/grabbableBodyParts.integration.test.js | 66 tests | Integration tests ensuring body parts have correct can_grab configuration |
 
 **Test Coverage:**
+
 - Hand entities have anatomy:can_grab component with correct gripStrength
 - Tentacle entities have anatomy:can_grab component with correct gripStrength
 - Non-grabbable body parts (feet, legs, arms, heads) do NOT have anatomy:can_grab

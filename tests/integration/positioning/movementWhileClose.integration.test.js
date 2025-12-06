@@ -69,7 +69,9 @@ describe('Movement While Close - Integration', () => {
       systemMoveEntityHandler: mockMoveHandler,
       safeEventDispatcher: mockEventDispatcher,
       operationInterpreter: () => {
-        throw new Error('operationInterpreter should not be called in this test');
+        throw new Error(
+          'operationInterpreter should not be called in this test'
+        );
       },
     });
   });

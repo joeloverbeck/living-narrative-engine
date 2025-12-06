@@ -12,14 +12,14 @@ The recipe validation system exhibits **classic patchwork architecture** charact
 
 ### Critical Findings
 
-| Issue | Severity | Impact |
-|-------|----------|--------|
-| God Class Anti-Pattern (1,207 lines) | 🔴 Critical | Violates project guidelines, untestable |
+| Issue                                | Severity    | Impact                                   |
+| ------------------------------------ | ----------- | ---------------------------------------- |
+| God Class Anti-Pattern (1,207 lines) | 🔴 Critical | Violates project guidelines, untestable  |
 | Boolean Flag Proliferation (7 flags) | 🔴 Critical | 128 test configurations, high complexity |
-| Code Duplication (5 instances) | 🟡 High | Maintenance burden, bug propagation |
-| Hardcoded Dependencies | 🟡 High | Inflexible, brittle to changes |
-| Inconsistent Error Handling | 🟡 High | Unpredictable behavior |
-| Zero Test Coverage | 🔴 Critical | No unit tests for core validator |
+| Code Duplication (5 instances)       | 🟡 High     | Maintenance burden, bug propagation      |
+| Hardcoded Dependencies               | 🟡 High     | Inflexible, brittle to changes           |
+| Inconsistent Error Handling          | 🟡 High     | Unpredictable behavior                   |
+| Zero Test Coverage                   | 🔴 Critical | No unit tests for core validator         |
 
 ---
 
@@ -81,6 +81,7 @@ src/anatomy/validation/
 **Violation:** Project guideline states "Never create files > 500 lines"
 
 **Structure:**
+
 ```javascript
 class RecipePreflightValidator {
   // 11 validation checks crammed into single class
@@ -144,6 +145,7 @@ class RecipePreflightValidator {
 ```
 
 **Issues:**
+
 - **Single Responsibility Violation:** Class handles orchestration + 11 validation types
 - **High Coupling:** Cannot reuse individual validators outside this class
 - **Poor Testability:** Cannot unit test individual checks in isolation
@@ -156,24 +158,27 @@ class RecipePreflightValidator {
 **Location:** `RecipePreflightValidator.js` lines 100-148
 
 **Flags Identified:**
+
 ```javascript
 const options = {
-  failFast: boolean,                    // (1) Stop on first error
-  skipPatternValidation: boolean,       // (2) Skip pattern matching check
-  skipDescriptorChecks: boolean,        // (3) Skip descriptor coverage check
-  skipPartAvailabilityChecks: boolean,  // (4) Skip part availability check
-  skipGeneratedSlotChecks: boolean,     // (5) Skip generated slot check
-  skipLoadFailureChecks: boolean,       // (6) Skip load failure check
-  skipRecipeUsageCheck: boolean,        // (7) Skip recipe usage check
+  failFast: boolean, // (1) Stop on first error
+  skipPatternValidation: boolean, // (2) Skip pattern matching check
+  skipDescriptorChecks: boolean, // (3) Skip descriptor coverage check
+  skipPartAvailabilityChecks: boolean, // (4) Skip part availability check
+  skipGeneratedSlotChecks: boolean, // (5) Skip generated slot check
+  skipLoadFailureChecks: boolean, // (6) Skip load failure check
+  skipRecipeUsageCheck: boolean, // (7) Skip recipe usage check
 };
 ```
 
 **Complexity Explosion:**
+
 - **7 boolean flags** = **2^7 = 128 possible configurations**
 - Each new requirement added another flag instead of refactoring
 - No validation pipeline abstraction to manage orchestration
 
 **Code Smell Example:**
+
 ```javascript
 // Lines 118-148: Flag-driven execution control
 if (!options.skipPatternValidation) {
@@ -202,6 +207,7 @@ if (!options.skipRecipeUsageCheck) {
 ```
 
 **Anti-Pattern:** Instead of abstracting validation pipeline, each new check added:
+
 1. New `skip*` flag
 2. New `if (!options.skip*)` wrapper
 3. Increased configuration complexity
@@ -213,12 +219,13 @@ if (!options.skipRecipeUsageCheck) {
 **Location:** `scripts/validate-recipe.js` lines 84-99
 
 **Hardcoded Values:**
+
 ```javascript
 // Hardcoded essential mods for recipe validation
 const essentialMods = [
-  'core',        // ← Hardcoded
+  'core', // ← Hardcoded
   'descriptors', // ← Hardcoded
-  'anatomy',     // ← Hardcoded
+  'anatomy', // ← Hardcoded
 ];
 
 // Brittle path parsing using regex
@@ -233,12 +240,14 @@ if (recipeModName && !modsToLoad.includes(recipeModName)) {
 ```
 
 **Issues:**
+
 - **Cannot validate recipes from other mods** without code modification
 - **Brittle filesystem dependency:** Assumes `data/mods/{modName}/` structure
 - **No configuration:** Should read from config file or accept CLI argument
 - **Violates DI principles:** Dependencies should be injected, not hardcoded
 
 **Impact:**
+
 - Adding new mod to validation requires code change
 - Directory structure change breaks validation
 - Testing with different mod combinations impossible
@@ -250,6 +259,7 @@ if (recipeModName && !modsToLoad.includes(recipeModName)) {
 **Location:** `RecipePreflightValidator.js` lines 400-445
 
 **Duplicated Logic:**
+
 ```javascript
 async #ensureBlueprintProcessed(blueprint) {
   // V1 blueprints or already-processed blueprints pass through
@@ -287,12 +297,14 @@ async #ensureBlueprintProcessed(blueprint) {
 ```
 
 **Issues:**
+
 - **Magic Field `_generatedSockets`:** Used as processing marker, not documented
 - **Duplicated Processing Logic:** Production code has similar logic
 - **Mixed V1/V2 Handling:** Inline version detection and transformation
 - **Ad-hoc Mutation:** Blueprint objects mutated with undocumented fields
 
 **Should Be:**
+
 ```javascript
 // Production blueprint processor service
 const processedBlueprint = blueprintProcessor.process(rawBlueprint);
@@ -306,10 +318,12 @@ await this.#validateBlueprint(processedBlueprint);
 ### 5. Duplicated Entity Matching Logic
 
 **Locations:**
+
 - `RecipePreflightValidator.js` lines 661-692 (`#findMatchingEntities`)
 - `RecipePreflightValidator.js` lines 873-916 (`#findMatchingEntitiesForSlot`)
 
 **Implementation 1:**
+
 ```javascript
 #findMatchingEntities(slotOrPattern, allEntityDefs) {
   const matches = [];
@@ -350,6 +364,7 @@ await this.#validateBlueprint(processedBlueprint);
 ```
 
 **Implementation 2:**
+
 ```javascript
 #findMatchingEntitiesForSlot(requirements, allEntityDefs) {
   const matches = [];
@@ -393,12 +408,14 @@ await this.#validateBlueprint(processedBlueprint);
 ```
 
 **Issues:**
+
 - **95% identical logic** duplicated
 - **Single-feature difference:** `allowedTypes` check added in second version
 - **Bug propagation risk:** Fixes must be applied twice
 - **Violates DRY principle**
 
 **Should Be:**
+
 ```javascript
 // Unified entity matcher service
 const matcher = new EntityMatcher(dataRegistry);
@@ -421,6 +438,7 @@ const matches = matcher.findEntities({
 3. **`patternMatchingValidator.js`** (inferred from suggestion logic)
 
 **Identical Implementation:**
+
 ```javascript
 function levenshteinDistance(a, b) {
   const matrix = [];
@@ -440,8 +458,8 @@ function levenshteinDistance(a, b) {
       } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
         );
       }
     }
@@ -452,14 +470,18 @@ function levenshteinDistance(a, b) {
 ```
 
 **Issues:**
+
 - **Copy-paste development pattern**
 - **No shared utility module** for string similarity
 - **Triple maintenance burden** for algorithm changes
 
 **Should Be:**
+
 ```javascript
 // src/utils/stringUtils.js
-export function levenshteinDistance(a, b) { /* ... */ }
+export function levenshteinDistance(a, b) {
+  /* ... */
+}
 
 // Import in all validators
 import { levenshteinDistance } from '../../utils/stringUtils.js';
@@ -472,6 +494,7 @@ import { levenshteinDistance } from '../../utils/stringUtils.js';
 **Three Different Patterns Found:**
 
 #### Pattern A: Error Accumulation (Component Existence)
+
 ```javascript
 async #checkComponentExistence(recipe, results) {
   try {
@@ -497,6 +520,7 @@ async #checkComponentExistence(recipe, results) {
 ```
 
 #### Pattern B: Warning on Exception (Socket/Slot Compatibility)
+
 ```javascript
 async #checkSocketSlotCompatibility(recipe, results) {
   try {
@@ -520,6 +544,7 @@ async #checkSocketSlotCompatibility(recipe, results) {
 ```
 
 #### Pattern C: Silent Failure (Descriptor Coverage)
+
 ```javascript
 #checkDescriptorCoverage(recipe, results) {
   try {
@@ -536,25 +561,26 @@ async #checkSocketSlotCompatibility(recipe, results) {
 ```
 
 **Issues:**
+
 - **No consistent error severity policy**
 - **Unpredictable behavior:** Same exception type → different severity
 - **Silent failures mask problems**
 
 **Mapping:**
 
-| Validation Check | Success → | Exception → | Pattern |
-|-----------------|-----------|-------------|---------|
-| Component Existence | passed | errors | A |
-| Property Schemas | passed | errors | A |
-| Body Descriptors | passed | errors | A |
-| Blueprint Exists | passed | errors | A |
-| Socket/Slot Compatibility | passed | **warnings** | B |
-| Pattern Matching | passed | **warnings** | B |
-| Descriptor Coverage | suggestions | **silent** | C |
-| Part Availability | passed | errors | A |
-| Generated Slots | passed | errors | A |
-| Load Failures | warnings | **silent** | C |
-| Recipe Usage | passed | **silent** | C |
+| Validation Check          | Success →   | Exception →  | Pattern |
+| ------------------------- | ----------- | ------------ | ------- |
+| Component Existence       | passed      | errors       | A       |
+| Property Schemas          | passed      | errors       | A       |
+| Body Descriptors          | passed      | errors       | A       |
+| Blueprint Exists          | passed      | errors       | A       |
+| Socket/Slot Compatibility | passed      | **warnings** | B       |
+| Pattern Matching          | passed      | **warnings** | B       |
+| Descriptor Coverage       | suggestions | **silent**   | C       |
+| Part Availability         | passed      | errors       | A       |
+| Generated Slots           | passed      | errors       | A       |
+| Load Failures             | warnings    | **silent**   | C       |
+| Recipe Usage              | passed      | **silent**   | C       |
 
 ---
 
@@ -563,6 +589,7 @@ async #checkSocketSlotCompatibility(recipe, results) {
 **Location:** `scripts/validate-recipe.js` lines 106-135
 
 **Bypassing Loader System:**
+
 ```javascript
 // Create load context
 let context = createLoadContext({
@@ -595,17 +622,20 @@ context = await contentPhase.execute(context);
 ```
 
 **Issues:**
+
 - **Duplicates phase ordering logic** from production loader
 - **Tight coupling** to phase implementation details
 - **Bypasses loader orchestration** for special-case behavior
 - **No loader configuration API** for selective phase execution
 
 **Impact:**
+
 - Future phase changes require CLI tool updates
 - Cannot reuse phase orchestration patterns
 - Violates encapsulation of loader system
 
 **Should Be:**
+
 ```javascript
 // Loader configuration API
 const loader = createLoader({
@@ -629,6 +659,7 @@ const context = await loader.execute();
 **Location:** `RecipePreflightValidator.js` lines 224-324
 
 **100-line method with nested schema extraction:**
+
 ```javascript
 async #checkBodyDescriptors(recipe, results) {
   try {
@@ -711,12 +742,14 @@ async #checkBodyDescriptors(recipe, results) {
 ```
 
 **Issues:**
+
 - **Hardcoded schema path:** `dataSchema?.properties?.body?.properties?.descriptors`
 - **Manual validation logic:** Reimplements AJV functionality
 - **Duplicates schema validation** from `PropertySchemaValidationRule`
 - **Tight coupling** to `anatomy:body` component structure
 
 **Should Be:**
+
 ```javascript
 async #checkBodyDescriptors(recipe, results) {
   const validator = this.#bodyDescriptorValidator;
@@ -737,19 +770,23 @@ async #checkBodyDescriptors(recipe, results) {
 ### Layer 1: Schema Validation (AJV Integration)
 
 **Implementation:**
+
 - `propertySchemaValidationRule.js` - Validates properties against JSON schemas
 - Inline schema validation in `#checkBodyDescriptors`
 
 **Strengths:**
+
 - Uses industry-standard AJV library
 - Provides Levenshtein-based enum suggestions
 
 **Weaknesses:**
+
 - **Dual validation paths:** Registered schema vs inline fallback
 - **Inconsistent schema loading:** Some validators bypass registry
 - **No centralized AJV configuration:** Each validator configures separately
 
 **Architecture Issue:**
+
 ```javascript
 // Pattern A: Using registered schema (proper)
 const schema = this.#schemaRegistry.getSchema('anatomy:body');
@@ -757,7 +794,8 @@ const valid = this.#ajv.validate(schema, data);
 
 // Pattern B: Inline schema extraction (improper)
 const bodyComponent = this.#dataRegistry.get('components', 'anatomy:body');
-const schema = bodyComponent.dataSchema?.properties?.body?.properties?.descriptors;
+const schema =
+  bodyComponent.dataSchema?.properties?.body?.properties?.descriptors;
 // Manual validation instead of AJV
 ```
 
@@ -767,26 +805,28 @@ const schema = bodyComponent.dataSchema?.properties?.body?.properties?.descripto
 
 **Checks Implemented:**
 
-| # | Check Name | Implementation | Lines | Abstraction |
-|---|-----------|----------------|-------|-------------|
-| 1 | Component Existence | `ComponentExistenceValidationRule` | 377 | ValidationRule class ✅ |
-| 2 | Property Schemas | `PropertySchemaValidationRule` | 409 | ValidationRule class ✅ |
-| 3 | Body Descriptors | Inline method | 100 | None ❌ |
-| 4 | Blueprint Exists | Inline method | 60 | None ❌ |
-| 5 | Socket/Slot Compatibility | External function | 211 | External validator |
-| 6 | Pattern Matching | External function | 293 | External validator |
-| 7 | Descriptor Coverage | Inline method | 80 | None ❌ |
-| 8 | Part Availability | Inline method | 120 | None ❌ |
-| 9 | Generated Slot Parts | Inline method | 163 | None ❌ |
-| 10 | Entity Load Failures | Inline method | 40 | None ❌ |
-| 11 | Recipe Usage | Inline method | 50 | None ❌ |
+| #   | Check Name                | Implementation                     | Lines | Abstraction             |
+| --- | ------------------------- | ---------------------------------- | ----- | ----------------------- |
+| 1   | Component Existence       | `ComponentExistenceValidationRule` | 377   | ValidationRule class ✅ |
+| 2   | Property Schemas          | `PropertySchemaValidationRule`     | 409   | ValidationRule class ✅ |
+| 3   | Body Descriptors          | Inline method                      | 100   | None ❌                 |
+| 4   | Blueprint Exists          | Inline method                      | 60    | None ❌                 |
+| 5   | Socket/Slot Compatibility | External function                  | 211   | External validator      |
+| 6   | Pattern Matching          | External function                  | 293   | External validator      |
+| 7   | Descriptor Coverage       | Inline method                      | 80    | None ❌                 |
+| 8   | Part Availability         | Inline method                      | 120   | None ❌                 |
+| 9   | Generated Slot Parts      | Inline method                      | 163   | None ❌                 |
+| 10  | Entity Load Failures      | Inline method                      | 40    | None ❌                 |
+| 11  | Recipe Usage              | Inline method                      | 50    | None ❌                 |
 
 **Pattern Inconsistency:**
+
 - **Checks 1-2:** Proper abstraction using `ValidationRule` base class
 - **Checks 3-11:** Inline methods in monolithic class
 - **No consistent validation interface**
 
 **Should Be:**
+
 ```javascript
 // All validators implement common interface
 interface IValidator {
@@ -812,10 +852,12 @@ class ValidationPipeline {
 ### Layer 3: Cross-Reference Validation
 
 **External Validators:**
+
 - `socketSlotCompatibilityValidator.js` (211 lines)
 - `patternMatchingValidator.js` (293 lines)
 
 **Implementation Pattern:**
+
 ```javascript
 // Standalone function instead of service
 export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
@@ -825,7 +867,9 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
   const allEntityDefs = dataRegistry.getAll('entities');
 
   // Inline Levenshtein distance (duplicated)
-  function levenshteinDistance(a, b) { /* ... */ }
+  function levenshteinDistance(a, b) {
+    /* ... */
+  }
 
   // Validation logic...
 
@@ -834,12 +878,14 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
 ```
 
 **Issues:**
+
 - **No dependency injection:** Direct `dataRegistry` parameter
 - **Tight coupling:** Cannot mock for testing
 - **Code duplication:** Levenshtein distance, entity matching
 - **Not composable:** Cannot integrate into validation pipeline
 
 **Should Be:**
+
 ```javascript
 // Proper service with DI
 class SocketSlotCompatibilityValidator {
@@ -862,20 +908,21 @@ class SocketSlotCompatibilityValidator {
 
 ### Hardcoded Elements
 
-| Element | Location | Impact |
-|---------|----------|--------|
-| Mod dependencies | `validate-recipe.js:86-88` | Cannot validate other mods |
-| Path parsing regex | `validate-recipe.js:91` | Breaks on structure change |
-| Validation check order | `RecipePreflightValidator.js:95-149` | Cannot reorder priorities |
-| Error severity mapping | Throughout validator | Inconsistent severities |
-| Blueprint processing flag | `RecipePreflightValidator.js:400` | Magic field `_generatedSockets` |
-| Phase execution sequence | `validate-recipe.js:106-135` | Duplicates loader logic |
+| Element                   | Location                             | Impact                          |
+| ------------------------- | ------------------------------------ | ------------------------------- |
+| Mod dependencies          | `validate-recipe.js:86-88`           | Cannot validate other mods      |
+| Path parsing regex        | `validate-recipe.js:91`              | Breaks on structure change      |
+| Validation check order    | `RecipePreflightValidator.js:95-149` | Cannot reorder priorities       |
+| Error severity mapping    | Throughout validator                 | Inconsistent severities         |
+| Blueprint processing flag | `RecipePreflightValidator.js:400`    | Magic field `_generatedSockets` |
+| Phase execution sequence  | `validate-recipe.js:106-135`         | Duplicates loader logic         |
 
 ### Configuration System
 
 **Current State:** ❌ **None exists**
 
 **Should Have:**
+
 ```javascript
 // validation-config.json
 {
@@ -916,12 +963,14 @@ class SocketSlotCompatibilityValidator {
 **Found:** ❌ **None for `RecipePreflightValidator`**
 
 **Testing Challenges:**
+
 - **1,207-line monolithic class:** Impossible to unit test in isolation
 - **11 async methods:** Complex state management
 - **7 boolean flags:** 128 test configurations
 - **Tight coupling:** Direct dependencies on DataRegistry, SlotGenerator, BlueprintRepository
 
 **Should Have:**
+
 ```javascript
 // tests/unit/anatomy/validation/RecipePreflightValidator.test.js
 describe('RecipePreflightValidator', () => {
@@ -946,11 +995,11 @@ describe('RecipePreflightValidator', () => {
 
 ### Severity Classification
 
-| Severity | Current Usage | Consistency |
-|----------|---------------|-------------|
-| **Error** | Component existence, property schemas, body descriptors, blueprint, part availability | ✅ Consistent |
-| **Warning** | Socket/slot compatibility (on exception), pattern matching | ⚠️ Inconsistent |
-| **Silent Failure** | Descriptor coverage, load failures, recipe usage | ❌ Problematic |
+| Severity           | Current Usage                                                                         | Consistency     |
+| ------------------ | ------------------------------------------------------------------------------------- | --------------- |
+| **Error**          | Component existence, property schemas, body descriptors, blueprint, part availability | ✅ Consistent   |
+| **Warning**        | Socket/slot compatibility (on exception), pattern matching                            | ⚠️ Inconsistent |
+| **Silent Failure** | Descriptor coverage, load failures, recipe usage                                      | ❌ Problematic  |
 
 ### Missing Error Handling Features
 
@@ -967,11 +1016,13 @@ describe('RecipePreflightValidator', () => {
 ### 1. Violation of Separation of Concerns
 
 **Problem:**
+
 - Validation orchestration mixed with check implementation
 - Cannot reuse individual validators outside `RecipePreflightValidator`
 - Adding new validator requires modifying core class
 
 **Impact:**
+
 - High coupling prevents composition
 - Cannot test validators independently
 - Cannot use validators in different contexts (e.g., CI, editor plugins)
@@ -981,16 +1032,19 @@ describe('RecipePreflightValidator', () => {
 ### 2. No Extensibility Mechanism
 
 **Problem:**
+
 - No plugin system for custom validators
 - No validation pipeline abstraction
 - Adding validation requires core class modification
 
 **Impact:**
+
 - Closed to extension (violates Open/Closed Principle)
 - Mod developers cannot add custom validation
 - Third-party tools cannot integrate
 
 **Should Have:**
+
 ```javascript
 // Plugin architecture
 class ValidationPluginRegistry {
@@ -1007,17 +1061,20 @@ registry.registerValidator('my-mod:custom-check', new MyCustomValidator());
 ### 3. Tight Coupling to Infrastructure
 
 **Direct Dependencies:**
+
 - `DataRegistry` - data access
 - `SlotGenerator` - blueprint processing
 - `BlueprintRepository` - blueprint storage
 - `AJVSchemaValidator` - schema validation
 
 **Impact:**
+
 - Cannot mock for testing
 - Cannot swap implementations
 - Cannot use validators without full infrastructure
 
 **Should Use:**
+
 ```javascript
 // Interface-based dependencies
 constructor({ dataProvider, blueprintProcessor, schemaValidator, logger }) {
@@ -1030,11 +1087,13 @@ constructor({ dataProvider, blueprintProcessor, schemaValidator, logger }) {
 ### 4. Zero Configuration System
 
 **Problem:**
+
 - All behavior hardcoded
 - No environment-specific configuration
 - No user preferences
 
 **Impact:**
+
 - Cannot customize for different contexts
 - Cannot disable expensive checks in CI
 - Cannot add mod-specific validators
@@ -1044,12 +1103,14 @@ constructor({ dataProvider, blueprintProcessor, schemaValidator, logger }) {
 ### 5. Pervasive Code Duplication
 
 **Instances:**
+
 - Entity matching: 2 implementations
 - Levenshtein distance: 3 implementations
 - Blueprint processing: Duplicated from production
 - Schema validation: Inline + rule-based
 
 **Impact:**
+
 - Bug fixes must be applied multiple times
 - Maintenance burden increases
 - Code quality degrades over time
@@ -1059,11 +1120,13 @@ constructor({ dataProvider, blueprintProcessor, schemaValidator, logger }) {
 ### 6. Inconsistent Abstraction Patterns
 
 **Mix of Patterns:**
+
 - `ValidationRule` base class (2 validators)
 - Inline methods (9 validators)
 - External functions (2 validators)
 
 **Impact:**
+
 - No predictable pattern
 - Difficult to understand system
 - Hard to onboard new developers
@@ -1073,12 +1136,14 @@ constructor({ dataProvider, blueprintProcessor, schemaValidator, logger }) {
 ### 7. Poor Testability
 
 **Factors:**
+
 - Monolithic 1,207-line class
 - Boolean flag explosion (128 configs)
 - Tight infrastructure coupling
 - No dependency injection
 
 **Impact:**
+
 - Zero unit test coverage
 - Cannot test edge cases
 - Regression risk high

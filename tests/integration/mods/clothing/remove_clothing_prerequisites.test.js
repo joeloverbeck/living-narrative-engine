@@ -39,7 +39,9 @@ describe('clothing:remove_clothing prerequisites', () => {
     jest.clearAllMocks();
 
     // Import mocked function
-    const grabbingUtils = await import('../../../../src/utils/grabbingUtils.js');
+    const grabbingUtils = await import(
+      '../../../../src/utils/grabbingUtils.js'
+    );
     mockCountFreeGrabbingAppendages = grabbingUtils.countFreeGrabbingAppendages;
 
     mockLogger = {

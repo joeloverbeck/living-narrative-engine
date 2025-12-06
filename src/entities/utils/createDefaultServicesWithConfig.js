@@ -91,7 +91,10 @@ export function createDefaultServicesWithConfig({
         logger.debug('MonitoringCoordinator resolved from DI container');
       }
     } catch (error) {
-      logger.warn('Could not resolve MonitoringCoordinator from DI container:', error.message);
+      logger.warn(
+        'Could not resolve MonitoringCoordinator from DI container:',
+        error.message
+      );
     }
   }
 
@@ -99,7 +102,8 @@ export function createDefaultServicesWithConfig({
   if (!monitoringCoordinator) {
     monitoringCoordinator = new MonitoringCoordinator({
       logger,
-      enabled: config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? true,
+      enabled:
+        config?.isFeatureEnabled('performance.ENABLE_MONITORING') ?? true,
       checkInterval:
         config?.getValue('monitoring.HEALTH_CHECK_INTERVAL') ?? 30000,
       circuitBreakerOptions: {

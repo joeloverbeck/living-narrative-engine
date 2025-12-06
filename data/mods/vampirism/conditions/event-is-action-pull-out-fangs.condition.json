@@ -3,9 +3,6 @@
   "id": "vampirism:event-is-action-pull-out-fangs",
   "description": "Validates that the event is an attempt to execute the pull_out_fangs action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "vampirism:pull_out_fangs"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "vampirism:pull_out_fangs"]
   }
 }

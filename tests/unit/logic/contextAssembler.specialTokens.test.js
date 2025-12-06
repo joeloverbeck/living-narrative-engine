@@ -28,7 +28,13 @@ describe('contextAssembler - Special Entity Tokens', () => {
 
   describe("'system' token handling", () => {
     it("should create context for 'system' actor without entity lookup", () => {
-      populateParticipant('actor', 'system', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'system',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(evaluationContext.actor).toBeDefined();
       expect(evaluationContext.actor.id).toBe('system');
@@ -38,7 +44,13 @@ describe('contextAssembler - Special Entity Tokens', () => {
     });
 
     it("should create context for 'system' target without entity lookup", () => {
-      populateParticipant('target', 'system', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'target',
+        'system',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(evaluationContext.target).toBeDefined();
       expect(evaluationContext.target.id).toBe('system');
@@ -48,24 +60,44 @@ describe('contextAssembler - Special Entity Tokens', () => {
     });
 
     it("should log debug message for 'system' token", () => {
-      populateParticipant('actor', 'system', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'system',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining("Special 'system' token detected")
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Creating minimal context without entity lookup')
+        expect.stringContaining(
+          'Creating minimal context without entity lookup'
+        )
       );
     });
 
     it("should not trigger warnings for 'system' token", () => {
-      populateParticipant('actor', 'system', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'system',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should create components accessor object for system token', () => {
-      populateParticipant('actor', 'system', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'system',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       // Component accessor should be an object (Proxy)
       expect(typeof evaluationContext.actor.components).toBe('object');
@@ -76,7 +108,10 @@ describe('contextAssembler - Special Entity Tokens', () => {
       mockEntityManager.getComponentData = jest.fn(() => null);
       const hasComponent = evaluationContext.actor.components.someComponent;
       expect(hasComponent).toBeNull();
-      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('system', 'someComponent');
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'system',
+        'someComponent'
+      );
     });
   });
 
@@ -85,9 +120,17 @@ describe('contextAssembler - Special Entity Tokens', () => {
       const mockEntity = { id: 'entity-123' };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
-      populateParticipant('actor', 'entity-123', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'entity-123',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('entity-123');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'entity-123'
+      );
       expect(evaluationContext.actor).toBeDefined();
       expect(evaluationContext.actor.id).toBe('entity-123');
     });
@@ -95,9 +138,17 @@ describe('contextAssembler - Special Entity Tokens', () => {
     it('should warn for non-existent regular entity IDs', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(null);
 
-      populateParticipant('actor', 'nonexistent', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'nonexistent',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('nonexistent');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'nonexistent'
+      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Actor entity not found for ID [nonexistent]')
       );
@@ -107,7 +158,13 @@ describe('contextAssembler - Special Entity Tokens', () => {
       const mockEntity = { id: 42 };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
 
-      populateParticipant('actor', 42, evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        42,
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(42);
       expect(evaluationContext.actor).toBeDefined();
@@ -120,22 +177,42 @@ describe('contextAssembler - Special Entity Tokens', () => {
       // 'System' (capitalized) should NOT be treated as special token
       mockEntityManager.getEntityInstance.mockReturnValue(null);
 
-      populateParticipant('actor', 'System', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        'System',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       // Should attempt entity lookup since it's not exactly 'system'
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('System');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'System'
+      );
       expect(mockLogger.warn).toHaveBeenCalled();
     });
 
     it('should handle empty string entity ID', () => {
-      populateParticipant('actor', '', evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        '',
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
       expect(evaluationContext.actor).toBeUndefined();
     });
 
     it('should handle null entity ID', () => {
-      populateParticipant('actor', null, evaluationContext, mockEntityManager, mockLogger);
+      populateParticipant(
+        'actor',
+        null,
+        evaluationContext,
+        mockEntityManager,
+        mockLogger
+      );
 
       expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
       expect(evaluationContext.actor).toBeUndefined();

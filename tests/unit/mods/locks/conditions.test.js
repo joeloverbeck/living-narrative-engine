@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import path from 'path';
 import fs from 'fs';
 import { createMinimalTestContainer } from '../../../common/scopeDsl/minimalTestContainer.js';
@@ -7,7 +14,7 @@ import { HasComponentOperator } from '../../../../src/logic/operators/hasCompone
 
 const CONDITIONS_DIR = path.resolve(
   process.cwd(),
-  'data/mods/locks/conditions',
+  'data/mods/locks/conditions'
 );
 
 /**
@@ -21,7 +28,7 @@ function loadConditions(dataRegistry) {
 
   files.forEach((file) => {
     const condition = JSON.parse(
-      fs.readFileSync(path.join(CONDITIONS_DIR, file), 'utf8'),
+      fs.readFileSync(path.join(CONDITIONS_DIR, file), 'utf8')
     );
     dataRegistry.store('conditions', condition.id, condition);
   });
@@ -42,7 +49,7 @@ async function createConditionEnv() {
     logger: services.logger,
   });
   jsonLogicEval.addOperation('has_component', (entityPath, componentId, ctx) =>
-    hasComponent.evaluate([entityPath, componentId], ctx),
+    hasComponent.evaluate([entityPath, componentId], ctx)
   );
   jsonLogicEval.addOperation(
     'get_component_value',
@@ -51,7 +58,10 @@ async function createConditionEnv() {
         entityRef && typeof entityRef === 'object' && 'id' in entityRef
           ? entityRef.id
           : entityRef;
-      const data = services.entityManager.getComponentData(entityId, componentId);
+      const data = services.entityManager.getComponentData(
+        entityId,
+        componentId
+      );
       if (!data || typeof data !== 'object') {
         return null;
       }
@@ -192,15 +202,24 @@ describe('Locks conditions', () => {
   });
 
   it('matches lock/unlock action events', () => {
-    const lockEvent = evaluateCondition('locks:event-is-action-lock-connection', {
-      event: { payload: { actionId: 'locks:lock_connection' } },
-    });
-    const unlockEvent = evaluateCondition('locks:event-is-action-unlock-connection', {
-      event: { payload: { actionId: 'locks:unlock_connection' } },
-    });
-    const unrelated = evaluateCondition('locks:event-is-action-lock-connection', {
-      event: { payload: { actionId: 'locks:unlock_connection' } },
-    });
+    const lockEvent = evaluateCondition(
+      'locks:event-is-action-lock-connection',
+      {
+        event: { payload: { actionId: 'locks:lock_connection' } },
+      }
+    );
+    const unlockEvent = evaluateCondition(
+      'locks:event-is-action-unlock-connection',
+      {
+        event: { payload: { actionId: 'locks:unlock_connection' } },
+      }
+    );
+    const unrelated = evaluateCondition(
+      'locks:event-is-action-lock-connection',
+      {
+        event: { payload: { actionId: 'locks:unlock_connection' } },
+      }
+    );
 
     expect(lockEvent).toBe(true);
     expect(unlockEvent).toBe(true);

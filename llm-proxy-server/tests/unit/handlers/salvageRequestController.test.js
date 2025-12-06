@@ -1,4 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { SalvageRequestController } from '../../../src/handlers/salvageRequestController.js';
 
 describe('SalvageRequestController', () => {
@@ -84,7 +91,10 @@ describe('SalvageRequestController', () => {
   });
 
   test('handleSalvageByRequestId returns salvaged payload with metadata', async () => {
-    jest.spyOn(Date, 'now').mockReturnValueOnce(3_000).mockReturnValueOnce(3_000);
+    jest
+      .spyOn(Date, 'now')
+      .mockReturnValueOnce(3_000)
+      .mockReturnValueOnce(3_000);
 
     const salvaged = {
       responseData: { data: 'value' },
@@ -101,7 +111,11 @@ describe('SalvageRequestController', () => {
 
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Salvaged response retrieved successfully'),
-      expect.objectContaining({ requestId: 'abc', llmId: 'llm-1', ageMs: 2_000 })
+      expect.objectContaining({
+        requestId: 'abc',
+        llmId: 'llm-1',
+        ageMs: 2_000,
+      })
     );
     expect(res.status).toHaveBeenCalledWith(202);
     expect(res.json).toHaveBeenCalledWith(

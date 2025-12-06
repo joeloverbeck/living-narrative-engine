@@ -43,12 +43,12 @@ export function validateExclusions(
         const limbSets = Array.isArray(topology?.limbSets)
           ? topology.limbSets
           : [];
-        groupExists = limbSets.some(ls => ls.type === groupName);
+        groupExists = limbSets.some((ls) => ls.type === groupName);
       } else {
         const appendages = Array.isArray(topology?.appendages)
           ? topology.appendages
           : [];
-        groupExists = appendages.some(a => a.type === groupName);
+        groupExists = appendages.some((a) => a.type === groupName);
       }
 
       if (!groupExists) {
@@ -98,7 +98,7 @@ export function applyExclusions(slotKeys, exclusions, blueprint, deps) {
   if (exclusions.slotGroups && Array.isArray(exclusions.slotGroups)) {
     for (const groupRef of exclusions.slotGroups) {
       const excludedKeys = resolveSlotGroup(groupRef, blueprint, {}, deps);
-      filtered = filtered.filter(key => !excludedKeys.includes(key));
+      filtered = filtered.filter((key) => !excludedKeys.includes(key));
       logger.debug(
         `Excluded ${excludedKeys.length} slots from group '${groupRef}'`
       );
@@ -107,7 +107,7 @@ export function applyExclusions(slotKeys, exclusions, blueprint, deps) {
 
   // Exclude by properties
   if (exclusions.properties && blueprint.slots) {
-    filtered = filtered.filter(key => {
+    filtered = filtered.filter((key) => {
       const slotDef = blueprint.slots[key];
       if (!slotDef) return true;
 

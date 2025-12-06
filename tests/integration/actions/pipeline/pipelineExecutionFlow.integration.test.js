@@ -176,7 +176,9 @@ describe('Pipeline integration flow', () => {
         executionOrder.push(this.name);
 
         return PipelineResult.success({
-          data: { stopReason: `halted after ${context.actions.length} actions` },
+          data: {
+            stopReason: `halted after ${context.actions.length} actions`,
+          },
           continueProcessing: false,
         });
       }
@@ -218,9 +220,16 @@ describe('Pipeline integration flow', () => {
 
     expect(result.success).toBe(true);
     expect(result.actions).toHaveLength(2);
-    expect(result.actions[0]).toEqual({ id: 'core:wave', command: 'wave at actor-1' });
+    expect(result.actions[0]).toEqual({
+      id: 'core:wave',
+      command: 'wave at actor-1',
+    });
     expect(result.errors).toHaveLength(1);
-    expect(result.data).toMatchObject({ collected: true, formatted: true, stopReason: 'halted after 2 actions' });
+    expect(result.data).toMatchObject({
+      collected: true,
+      formatted: true,
+      stopReason: 'halted after 2 actions',
+    });
 
     expect(executionOrder).toEqual([
       'CollectCandidates',
@@ -260,9 +269,7 @@ describe('Pipeline integration flow', () => {
 
       async executeInternal(context) {
         return PipelineResult.success({
-          actions: [
-            { id: 'core:greet', command: `greet ${context.actor.id}` },
-          ],
+          actions: [{ id: 'core:greet', command: `greet ${context.actor.id}` }],
         });
       }
     }
@@ -310,7 +317,9 @@ describe('Pipeline integration flow', () => {
       'Stage FailureStage completed with errors',
     ]);
 
-    const failureEvents = trace.events.filter((event) => event.type === 'failure');
+    const failureEvents = trace.events.filter(
+      (event) => event.type === 'failure'
+    );
     expect(failureEvents).toEqual([
       {
         type: 'failure',
@@ -375,7 +384,9 @@ describe('Pipeline integration flow', () => {
       'Pipeline stage ExplodingStage threw an error: unhandled explosion',
     ]);
 
-    const failureEvents = trace.events.filter((event) => event.type === 'failure');
+    const failureEvents = trace.events.filter(
+      (event) => event.type === 'failure'
+    );
     expect(failureEvents).toEqual([
       {
         type: 'failure',

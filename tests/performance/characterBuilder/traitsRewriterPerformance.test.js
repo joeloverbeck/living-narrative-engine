@@ -41,7 +41,9 @@ describe('TraitsRewriter Performance', () => {
     // This helps reduce JIT compilation effects and ensures consistent performance baselines
     await services.generator.generateRewrittenTraits({
       'core:name': { text: 'Global Warmup Character' },
-      'core:personality': { text: 'Global warmup run for test suite stability' },
+      'core:personality': {
+        text: 'Global warmup run for test suite stability',
+      },
     });
   });
 
@@ -75,7 +77,7 @@ describe('TraitsRewriter Performance', () => {
       // Execute complete workflow with complex data
       const result =
         await services.generator.generateRewrittenTraits(complexCharacterData);
-      
+
       // The generator already processes the response internally, so we can use its result directly
       const enhanced = services.enhancer.enhanceForDisplay(
         result.rewrittenTraits,
@@ -115,7 +117,7 @@ describe('TraitsRewriter Performance', () => {
 
       const result =
         await services.generator.generateRewrittenTraits(multiTraitCharacter);
-      
+
       // The generator already processes the response internally, so we can use its result directly
       const enhanced = services.enhancer.enhanceForDisplay(
         result.rewrittenTraits,
@@ -129,9 +131,9 @@ describe('TraitsRewriter Performance', () => {
       expect(duration).toBeLessThan(6000); // Slightly higher threshold for more data
 
       // Verify all trait types were processed
-      expect(
-        Object.keys(result.rewrittenTraits).length
-      ).toBeGreaterThanOrEqual(5);
+      expect(Object.keys(result.rewrittenTraits).length).toBeGreaterThanOrEqual(
+        5
+      );
     });
 
     it('should process large trait content efficiently', async () => {
@@ -157,9 +159,9 @@ describe('TraitsRewriter Performance', () => {
       // Should handle large content without excessive processing time
       expect(duration).toBeLessThan(3000);
       expect(result.rewrittenTraits).toBeDefined();
-      expect(
-        Object.keys(result.rewrittenTraits).length
-      ).toBeGreaterThanOrEqual(1);
+      expect(Object.keys(result.rewrittenTraits).length).toBeGreaterThanOrEqual(
+        1
+      );
     });
   });
 
@@ -239,7 +241,7 @@ describe('TraitsRewriter Performance', () => {
       const promises = characterVariants.map(async (character) => {
         const generated =
           await services.generator.generateRewrittenTraits(character);
-        
+
         // The generator already processes the response internally, so we can use its result directly
         const enhanced = services.enhancer.enhanceForDisplay(
           generated.rewrittenTraits,
@@ -255,17 +257,19 @@ describe('TraitsRewriter Performance', () => {
         // Check for essential result structure rather than exact content
         expect(result.generated).toBeDefined();
         expect(result.enhanced).toBeDefined();
-        
+
         // Verify rewritten traits exist and are valid objects
         expect(result.generated.rewrittenTraits).toBeDefined();
         expect(typeof result.generated.rewrittenTraits).toBe('object');
-        expect(Object.keys(result.generated.rewrittenTraits).length).toBeGreaterThan(0);
-        
+        expect(
+          Object.keys(result.generated.rewrittenTraits).length
+        ).toBeGreaterThan(0);
+
         // Verify sections exist and are arrays
         expect(result.enhanced.sections).toBeDefined();
         expect(Array.isArray(result.enhanced.sections)).toBe(true);
         expect(result.enhanced.sections.length).toBeGreaterThan(0);
-        
+
         // More flexible character name check - allow for various test character formats
         expect(result.generated.characterName).toBeDefined();
         expect(typeof result.generated.characterName).toBe('string');
@@ -311,17 +315,26 @@ describe('TraitsRewriter Performance', () => {
 
       // Log individual timings for variance analysis and diagnostics
       mockLogger.info(
-        `Individual timings: [${timings.map(t => t.toFixed(2)).join(', ')}]ms`
+        `Individual timings: [${timings.map((t) => t.toFixed(2)).join(', ')}]ms`
       );
 
       // Analyze performance degradation trend
-      const firstHalfAvg = timings.slice(0, Math.ceil(requests / 2)).reduce((sum, time) => sum + time, 0) / Math.ceil(requests / 2);
-      const secondHalfAvg = timings.slice(Math.ceil(requests / 2)).reduce((sum, time) => sum + time, 0) / Math.floor(requests / 2);
+      const firstHalfAvg =
+        timings
+          .slice(0, Math.ceil(requests / 2))
+          .reduce((sum, time) => sum + time, 0) / Math.ceil(requests / 2);
+      const secondHalfAvg =
+        timings
+          .slice(Math.ceil(requests / 2))
+          .reduce((sum, time) => sum + time, 0) / Math.floor(requests / 2);
 
       // Use minimum baseline to prevent extreme ratios when first half is exceptionally fast
       // This happens when JIT optimization or caching makes initial requests unrealistically fast
       const MIN_TIMING_BASELINE_MS = 1.0; // 1ms minimum baseline
-      const normalizedFirstHalf = Math.max(firstHalfAvg, MIN_TIMING_BASELINE_MS);
+      const normalizedFirstHalf = Math.max(
+        firstHalfAvg,
+        MIN_TIMING_BASELINE_MS
+      );
       const degradationRatio = secondHalfAvg / normalizedFirstHalf;
 
       // Performance degradation threshold increased to 20.0 to account for:
@@ -422,7 +435,7 @@ describe('TraitsRewriter Performance', () => {
 
       const generated =
         await services.generator.generateRewrittenTraits(standardCharacter);
-      
+
       // The generator already processes the response internally, so we can use its result directly
       const enhanced = services.enhancer.enhanceForDisplay(
         generated.rewrittenTraits,
@@ -478,8 +491,10 @@ describe('TraitsRewriter Performance', () => {
 
       // Calculate standard deviation for better outlier detection
       const variance =
-        timings.reduce((sum, time) => sum + Math.pow(time - averageTime, 2), 0) /
-        timings.length;
+        timings.reduce(
+          (sum, time) => sum + Math.pow(time - averageTime, 2),
+          0
+        ) / timings.length;
       const standardDeviation = Math.sqrt(variance);
 
       // When using mocked services the execution time can drop below the measurement
@@ -512,14 +527,14 @@ describe('TraitsRewriter Performance', () => {
         maxTiming < normalizedMedian * 10
       ) {
         mockLogger.warn(
-          `Performance outlier detected but within acceptable range: max=${maxTiming.toFixed(2)}ms, median=${median.toFixed(2)}ms, ratio=${(maxTiming/medianForRatio).toFixed(2)}x`
+          `Performance outlier detected but within acceptable range: max=${maxTiming.toFixed(2)}ms, median=${median.toFixed(2)}ms, ratio=${(maxTiming / medianForRatio).toFixed(2)}x`
         );
       }
 
       expect(maxTiming).toBeLessThan(normalizedMedian * 10);
 
       mockLogger.info(
-        `Performance consistency: avg=${averageTime.toFixed(2)}ms, median=${median.toFixed(2)}ms, std_dev=${standardDeviation.toFixed(2)}ms, cv=${coefficientOfVariation.toFixed(3)}, max/median=${(maxTiming/medianForRatio).toFixed(2)}x`
+        `Performance consistency: avg=${averageTime.toFixed(2)}ms, median=${median.toFixed(2)}ms, std_dev=${standardDeviation.toFixed(2)}ms, cv=${coefficientOfVariation.toFixed(3)}, max/median=${(maxTiming / medianForRatio).toFixed(2)}x`
       );
     });
   });

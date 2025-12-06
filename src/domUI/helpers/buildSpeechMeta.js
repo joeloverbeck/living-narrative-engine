@@ -44,7 +44,8 @@ function buildCopyAllLabel({
   if (hasNotes) parts.push('notes');
 
   const joinParts = () => {
-    if (parts.length === 0) return bubbleType === 'thought' ? 'thoughts' : 'speech';
+    if (parts.length === 0)
+      return bubbleType === 'thought' ? 'thoughts' : 'speech';
     if (parts.length === 1) return parts[0];
     if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
     return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
@@ -176,14 +177,18 @@ export function buildSpeechMeta(
       cls: 'meta-btn copy-all',
     });
 
-    const { text: assembledText, hasSpeech, hasThoughts, hasNotes } =
-      assembleCopyAllPayload({
-        speechContent,
-        allowSpeechHtml: allowHtml,
-        thoughts: copyAllThoughts,
-        notes: copyAllNotes,
-        speakerName,
-      });
+    const {
+      text: assembledText,
+      hasSpeech,
+      hasThoughts,
+      hasNotes,
+    } = assembleCopyAllPayload({
+      speechContent,
+      allowSpeechHtml: allowHtml,
+      thoughts: copyAllThoughts,
+      notes: copyAllNotes,
+      speakerName,
+    });
 
     const label = buildCopyAllLabel({
       bubbleType,

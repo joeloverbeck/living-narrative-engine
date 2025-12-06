@@ -1,8 +1,17 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { ENTITY_THOUGHT_ID } from '../../../../../src/constants/eventIds.js';
 
-const MODULE_PATH = '../../../../../src/turns/states/helpers/dispatchThoughtEvent.js';
-const CONTEXT_UTILS_PATH = '../../../../../src/turns/states/helpers/contextUtils.js';
+const MODULE_PATH =
+  '../../../../../src/turns/states/helpers/dispatchThoughtEvent.js';
+const CONTEXT_UTILS_PATH =
+  '../../../../../src/turns/states/helpers/contextUtils.js';
 
 describe('dispatchThoughtEvent', () => {
   beforeEach(() => {
@@ -36,19 +45,25 @@ describe('dispatchThoughtEvent', () => {
       const payloadBase = { thought: 'pondering' };
 
       results.push(
-        await dispatchThoughtEvent(turnContext, handler, actorId, payloadBase),
+        await dispatchThoughtEvent(turnContext, handler, actorId, payloadBase)
       );
 
       results.push(
         await dispatchThoughtEvent(null, { id: 'handler-2' }, 'actor-456', {
           memo: 'empty',
-        }),
+        })
       );
     });
 
     expect(results).toEqual([undefined, undefined]);
-    expect(getDispatcherMock).toHaveBeenNthCalledWith(1, { turn: 'ctx' }, { id: 'handler-1' });
-    expect(getDispatcherMock).toHaveBeenNthCalledWith(2, null, { id: 'handler-2' });
+    expect(getDispatcherMock).toHaveBeenNthCalledWith(
+      1,
+      { turn: 'ctx' },
+      { id: 'handler-1' }
+    );
+    expect(getDispatcherMock).toHaveBeenNthCalledWith(2, null, {
+      id: 'handler-2',
+    });
     expect(dispatchMock).toHaveBeenCalledTimes(1);
     expect(dispatchMock).toHaveBeenCalledWith(ENTITY_THOUGHT_ID, {
       entityId: 'actor-123',

@@ -1,4 +1,5 @@
 # BODCLODES: Body Description Composition Architecture
+
 ## Technical Analysis for Activity Description Implementation
 
 **Document ID**: BODCLODES-001
@@ -131,21 +132,23 @@ Formatted Text Output
 **Purpose**: Extract and format top-level body descriptors that aren't tied to specific anatomy parts.
 
 **Configuration-Driven Order**:
+
 ```javascript
 // From descriptionConfiguration.js:14-35
 _defaultDescriptionOrder = [
-  'height',           // Body descriptor
-  'build',            // Body descriptor
+  'height', // Body descriptor
+  'build', // Body descriptor
   'body_composition', // Body descriptor
-  'body_hair',        // Body descriptor
-  'skin_color',       // Body descriptor
-  'hair',             // Part type
-  'eye',              // Part type
+  'body_hair', // Body descriptor
+  'skin_color', // Body descriptor
+  'hair', // Part type
+  'eye', // Part type
   // ... more part types
 ];
 ```
 
 **Extraction Logic**:
+
 ```javascript
 // bodyDescriptionComposer.js:404-435
 extractBodyLevelDescriptors(bodyEntity) {
@@ -168,6 +171,7 @@ extractBodyLevelDescriptors(bodyEntity) {
 ```
 
 **Data Source**: Two fallback mechanisms:
+
 1. **Primary**: `bodyComponent.body.descriptors.height` (nested in anatomy:body)
 2. **Fallback**: Entity-level descriptor components (deprecated)
 
@@ -180,6 +184,7 @@ extractBodyLevelDescriptors(bodyEntity) {
 **Purpose**: Process anatomy parts in configured order, applying appropriate formatting strategies.
 
 **Part Grouping**:
+
 ```javascript
 // bodyDescriptionComposer.js:180-232
 groupPartsByType(partIds) {
@@ -205,6 +210,7 @@ groupPartsByType(partIds) {
 ```
 
 **Strategy Selection**:
+
 ```javascript
 // descriptionTemplate.js:27-54
 formatDescription(partType, parts) {
@@ -259,6 +265,7 @@ formatDescription(partType, parts) {
 **Purpose**: Demonstrate extension point pattern for additional description sections.
 
 **Integration Pattern**:
+
 ```javascript
 // Injected via constructor
 constructor({
@@ -300,6 +307,7 @@ for (const partType of descriptionOrder) {
 ```
 
 **Key Observations**:
+
 - Service is **optional** (null safety)
 - Injected via **constructor dependency**
 - Checked within **configured order loop**
@@ -318,6 +326,7 @@ return lines.join('\n');
 ```
 
 **Output Structure**:
+
 ```
 Height: tall
 Build: stocky
@@ -519,21 +528,29 @@ class DescriptionConfiguration {
 
     // Default description order - body descriptors first, then parts
     this._defaultDescriptionOrder = [
-      'height',           // Body-level
-      'build',            // Body-level
+      'height', // Body-level
+      'build', // Body-level
       'body_composition', // Body-level
-      'body_hair',        // Body-level
-      'skin_color',       // Body-level
-      'hair',             // Part
-      'eye',              // Part
-      'face',             // Part
+      'body_hair', // Body-level
+      'skin_color', // Body-level
+      'hair', // Part
+      'eye', // Part
+      'face', // Part
       // ... more parts
-      'equipment',        // EXTENSION POINT
+      'equipment', // EXTENSION POINT
       // 'activity',      // FUTURE EXTENSION POINT
     ];
 
     this._defaultPairedParts = new Set([
-      'eye', 'ear', 'arm', 'leg', 'hand', 'foot', 'breast', 'wing', 'testicle',
+      'eye',
+      'ear',
+      'arm',
+      'leg',
+      'hand',
+      'foot',
+      'breast',
+      'wing',
+      'testicle',
     ]);
 
     this._defaultIrregularPlurals = {
@@ -543,18 +560,26 @@ class DescriptionConfiguration {
   }
 
   getDescriptionOrder() {
-    return this.anatomyFormattingService?.getDescriptionOrder?.() ||
-           [...this._defaultDescriptionOrder];
+    return (
+      this.anatomyFormattingService?.getDescriptionOrder?.() || [
+        ...this._defaultDescriptionOrder,
+      ]
+    );
   }
 
   getPairedParts() {
-    return this.anatomyFormattingService?.getPairedParts?.() ||
-           new Set(this._defaultPairedParts);
+    return (
+      this.anatomyFormattingService?.getPairedParts?.() ||
+      new Set(this._defaultPairedParts)
+    );
   }
 
   getIrregularPlurals() {
-    return this.anatomyFormattingService?.getIrregularPlurals?.() ||
-           { ...this._defaultIrregularPlurals };
+    return (
+      this.anatomyFormattingService?.getIrregularPlurals?.() || {
+        ...this._defaultIrregularPlurals,
+      }
+    );
   }
 }
 ```
@@ -594,13 +619,19 @@ class DescriptionTemplate {
 
     // Get the appropriate strategy
     const strategy = this.strategyFactory.getStrategy(
-      partType, parts, descriptions, this.config
+      partType,
+      parts,
+      descriptions,
+      this.config
     );
 
     // Use the strategy to format the description
     return strategy.format(
-      partType, parts, descriptions,
-      this.textFormatter, this.config
+      partType,
+      parts,
+      descriptions,
+      this.textFormatter,
+      this.config
     );
   }
 
@@ -616,7 +647,9 @@ class DescriptionTemplate {
 
         // If no persisted description, generate on-the-fly
         if (this.partDescriptionGenerator && part.id) {
-          return this.partDescriptionGenerator.generatePartDescription(part.id) || '';
+          return (
+            this.partDescriptionGenerator.generatePartDescription(part.id) || ''
+          );
         }
 
         return '';
@@ -654,7 +687,12 @@ class SinglePartStrategy extends PartGroupingStrategy {
   }
 
   format(partType, parts, descriptions, textFormatter, config) {
-    const label = textFormatter.getPartLabel(partType, 1, () => partType, new Set());
+    const label = textFormatter.getPartLabel(
+      partType,
+      1,
+      () => partType,
+      new Set()
+    );
     return textFormatter.formatLabelValue(label, descriptions[0]);
     // Output: "Torso: hairy, thick"
   }
@@ -672,7 +710,12 @@ class PairedPartsStrategy extends PartGroupingStrategy {
 
     if (allSame) {
       // Same description for both parts
-      const label = textFormatter.getPartLabel(partType, 2, pluralizer, pairedParts);
+      const label = textFormatter.getPartLabel(
+        partType,
+        2,
+        pluralizer,
+        pairedParts
+      );
       return textFormatter.formatLabelValue(label, descriptions[0]);
       // Output: "Eyes: brown, almond"
     } else {
@@ -681,11 +724,17 @@ class PairedPartsStrategy extends PartGroupingStrategy {
       for (let i = 0; i < descriptions.length; i++) {
         const name = names[i] || '';
         if (name.includes('left')) {
-          lines.push(textFormatter.formatSidedItem('Left', partType, descriptions[i]));
+          lines.push(
+            textFormatter.formatSidedItem('Left', partType, descriptions[i])
+          );
         } else if (name.includes('right')) {
-          lines.push(textFormatter.formatSidedItem('Right', partType, descriptions[i]));
+          lines.push(
+            textFormatter.formatSidedItem('Right', partType, descriptions[i])
+          );
         } else {
-          lines.push(textFormatter.formatIndexedItem(partType, i + 1, descriptions[i]));
+          lines.push(
+            textFormatter.formatIndexedItem(partType, i + 1, descriptions[i])
+          );
         }
       }
       return textFormatter.joinLines(lines);
@@ -706,7 +755,12 @@ class MultiplePartsStrategy extends PartGroupingStrategy {
     const allSame = descriptions.every((desc) => desc === descriptions[0]);
 
     if (allSame) {
-      const label = textFormatter.getPartLabel(partType, descriptions.length, pluralizer, pairedParts);
+      const label = textFormatter.getPartLabel(
+        partType,
+        descriptions.length,
+        pluralizer,
+        pairedParts
+      );
       return textFormatter.formatLabelValue(label, descriptions[0]);
       // Output: "Wings: feathered, large"
     } else {
@@ -786,7 +840,8 @@ class EquipmentDescriptionService {
 
     // 2. Calculate exposure descriptions (naked torso, exposed genitals, etc.)
     const exposureNotes = this.#calculateExposureDescriptions(
-      equippedData, entityId
+      equippedData,
+      entityId
     );
 
     if (equippedItems.length === 0 && exposureNotes.length === 0) {
@@ -797,8 +852,7 @@ class EquipmentDescriptionService {
     const groupedItems = this.#groupItemsByCategory(equippedItems);
 
     // 4. Generate item descriptions
-    const itemDescriptions =
-      await this.#generateItemDescriptions(groupedItems);
+    const itemDescriptions = await this.#generateItemDescriptions(groupedItems);
 
     // 5. Format complete equipment description
     return this.#formatEquipmentDescription(itemDescriptions, exposureNotes);
@@ -806,7 +860,8 @@ class EquipmentDescriptionService {
 
   #formatEquipmentDescription(itemDescriptions, exposureNotes = []) {
     // Get configuration
-    const config = this.#anatomyFormattingService.getEquipmentIntegrationConfig();
+    const config =
+      this.#anatomyFormattingService.getEquipmentIntegrationConfig();
 
     // Flatten all descriptions in category order
     const allDescriptions = [];
@@ -842,6 +897,7 @@ class EquipmentDescriptionService {
 ```
 
 **Key Patterns**:
+
 1. **Service Orchestration**: Coordinates multiple services (ClothingManagement, EntityManager, etc.)
 2. **Data Transformation**: Transforms structured component data → natural language
 3. **Configuration-Driven**: Uses `anatomyFormattingService.getEquipmentIntegrationConfig()` for formatting rules
@@ -849,6 +905,7 @@ class EquipmentDescriptionService {
 5. **Complete Output**: Returns fully formatted string, not individual components
 
 **Output Example**:
+
 ```
 Wearing: brown leather belt | green cotton chore jacket | deep-navy cotton fitted boxer briefs | green cotton button-down shirt | indigo denim jeans, and sand-beige leather chukka boots.
 ```
@@ -901,32 +958,24 @@ The Equipment service integration demonstrates the **exact pattern** needed for 
 
 ```javascript
 // Equipment service registration
-container.register(
-  'EquipmentDescriptionService',
-  EquipmentDescriptionService,
-  {
-    logger: tokens.ILogger,
-    entityManager: tokens.IEntityManager,
-    descriptorFormatter: 'DescriptorFormatter',
-    clothingManagementService: 'ClothingManagementService',
-    anatomyFormattingService: 'AnatomyFormattingService',
-  }
-);
+container.register('EquipmentDescriptionService', EquipmentDescriptionService, {
+  logger: tokens.ILogger,
+  entityManager: tokens.IEntityManager,
+  descriptorFormatter: 'DescriptorFormatter',
+  clothingManagementService: 'ClothingManagementService',
+  anatomyFormattingService: 'AnatomyFormattingService',
+});
 
 // BodyDescriptionComposer registration
-container.register(
-  'BodyDescriptionComposer',
-  BodyDescriptionComposer,
-  {
-    bodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
-    bodyGraphService: 'BodyGraphService',
-    entityFinder: tokens.IEntityFinder,
-    anatomyFormattingService: 'AnatomyFormattingService',
-    partDescriptionGenerator: 'PartDescriptionGenerator',
-    equipmentDescriptionService: 'EquipmentDescriptionService', // ← Injected
-    logger: tokens.ILogger,
-  }
-);
+container.register('BodyDescriptionComposer', BodyDescriptionComposer, {
+  bodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
+  bodyGraphService: 'BodyGraphService',
+  entityFinder: tokens.IEntityFinder,
+  anatomyFormattingService: 'AnatomyFormattingService',
+  partDescriptionGenerator: 'PartDescriptionGenerator',
+  equipmentDescriptionService: 'EquipmentDescriptionService', // ← Injected
+  logger: tokens.ILogger,
+});
 ```
 
 **For Activity Implementation**: Add similar registration for `ActivityDescriptionService`.
@@ -1076,7 +1125,7 @@ this._defaultDescriptionOrder = [
   'face',
   // ... more parts
   'equipment',
-  'activity',  // ← ADD THIS LINE
+  'activity', // ← ADD THIS LINE
 ];
 ```
 
@@ -1225,7 +1274,9 @@ class ActivityDescriptionService {
    */
   async generateActivityDescription(entityId) {
     try {
-      this.#logger.debug(`Generating activity description for entity: ${entityId}`);
+      this.#logger.debug(
+        `Generating activity description for entity: ${entityId}`
+      );
 
       // 1. Find all components with activity metadata
       const activities = this.#collectActivityMetadata(entityId);
@@ -1294,7 +1345,8 @@ class ActivityDescriptionService {
    * @private
    */
   #formatActivityDescription(activities) {
-    const config = this.#anatomyFormattingService.getActivityIntegrationConfig();
+    const config =
+      this.#anatomyFormattingService.getActivityIntegrationConfig();
 
     const descriptions = [];
 
@@ -1342,7 +1394,8 @@ class ActivityDescriptionService {
     // Get target entity name if available
     let targetName = '';
     if (targetEntityId) {
-      const targetEntity = this.#entityManager.getEntityInstance(targetEntityId);
+      const targetEntity =
+        this.#entityManager.getEntityInstance(targetEntityId);
       const nameComponent = targetEntity?.getComponentData('core:name');
       targetName = nameComponent?.text || targetEntityId;
     }
@@ -1399,31 +1452,23 @@ getActivityIntegrationConfig() {
 
 ```javascript
 // Register ActivityDescriptionService
-container.register(
-  'ActivityDescriptionService',
-  ActivityDescriptionService,
-  {
-    logger: tokens.ILogger,
-    entityManager: tokens.IEntityManager,
-    anatomyFormattingService: 'AnatomyFormattingService',
-  }
-);
+container.register('ActivityDescriptionService', ActivityDescriptionService, {
+  logger: tokens.ILogger,
+  entityManager: tokens.IEntityManager,
+  anatomyFormattingService: 'AnatomyFormattingService',
+});
 
 // Update BodyDescriptionComposer registration
-container.register(
-  'BodyDescriptionComposer',
-  BodyDescriptionComposer,
-  {
-    bodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
-    bodyGraphService: 'BodyGraphService',
-    entityFinder: tokens.IEntityFinder,
-    anatomyFormattingService: 'AnatomyFormattingService',
-    partDescriptionGenerator: 'PartDescriptionGenerator',
-    equipmentDescriptionService: 'EquipmentDescriptionService',
-    activityDescriptionService: 'ActivityDescriptionService', // ← ADD THIS
-    logger: tokens.ILogger,
-  }
-);
+container.register('BodyDescriptionComposer', BodyDescriptionComposer, {
+  bodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
+  bodyGraphService: 'BodyGraphService',
+  entityFinder: tokens.IEntityFinder,
+  anatomyFormattingService: 'AnatomyFormattingService',
+  partDescriptionGenerator: 'PartDescriptionGenerator',
+  equipmentDescriptionService: 'EquipmentDescriptionService',
+  activityDescriptionService: 'ActivityDescriptionService', // ← ADD THIS
+  logger: tokens.ILogger,
+});
 ```
 
 ---
@@ -1513,9 +1558,9 @@ class ActivityDescriptionService {
   }
 
   // Private helpers
-  #collectActivityMetadata(entityId) { }
-  #formatActivityDescription(activities) { }
-  #generateDescriptionFromType(activity) { }
+  #collectActivityMetadata(entityId) {}
+  #formatActivityDescription(activities) {}
+  #generateDescriptionFromType(activity) {}
 }
 ```
 
@@ -1662,7 +1707,7 @@ describe('ActivityDescriptionService', () => {
         shouldDescribeInActivity: true,
         activityType: 'interaction',
         targetEntityId: 'entity_2',
-        description: 'hugging Alicia Western'
+        description: 'hugging Alicia Western',
       });
 
       const service = createService();
@@ -1674,7 +1719,7 @@ describe('ActivityDescriptionService', () => {
     it('should format multiple activities', async () => {
       const entity = createEntityWithMultipleActivities([
         { description: 'kneeling' },
-        { description: 'holding hands with Jon Ureña' }
+        { description: 'holding hands with Jon Ureña' },
       ]);
 
       const service = createService();
@@ -1688,7 +1733,7 @@ describe('ActivityDescriptionService', () => {
       const actor = createEntityWithActivityMetadata({
         shouldDescribeInActivity: true,
         activityType: 'interaction',
-        targetEntityId: 'entity_2'
+        targetEntityId: 'entity_2',
       });
 
       const service = createService();
@@ -1819,12 +1864,12 @@ describe('Activity with multiple entities', () => {
 
     const jon = testBed.createEntity({
       id: 'jon',
-      name: 'Jon Ureña'
+      name: 'Jon Ureña',
     });
 
     const alicia = testBed.createEntity({
       id: 'alicia',
-      name: 'Alicia Western'
+      name: 'Alicia Western',
     });
 
     // Add activity metadata to jon
@@ -1833,8 +1878,8 @@ describe('Activity with multiple entities', () => {
         shouldDescribeInActivity: true,
         activityType: 'interaction',
         targetEntityId: alicia.id,
-        description: 'hugging'
-      }
+        description: 'hugging',
+      },
     });
 
     const service = testBed.getService('ActivityDescriptionService');
@@ -1913,32 +1958,32 @@ describe('Activity with multiple entities', () => {
 
 ### Key Files by Responsibility
 
-| Responsibility | File Path |
-|----------------|-----------|
-| **Top-level orchestration** | `src/anatomy/BodyDescriptionOrchestrator.js` |
-| **Main composition logic** | `src/anatomy/bodyDescriptionComposer.js` |
-| **Configuration** | `src/anatomy/configuration/descriptionConfiguration.js` |
-| **Formatting templates** | `src/anatomy/templates/descriptionTemplate.js` |
-| **Text utilities** | `src/anatomy/templates/textFormatter.js` |
-| **Formatting strategies** | `src/anatomy/configuration/partGroupingStrategies.js` |
-| **Part description generation** | `src/anatomy/PartDescriptionGenerator.js` |
-| **Part description building** | `src/anatomy/bodyPartDescriptionBuilder.js` |
-| **Equipment extension** | `src/clothing/services/equipmentDescriptionService.js` |
-| **Dependency injection** | `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` |
-| **Formatting service** | `src/services/anatomyFormattingService.js` |
+| Responsibility                  | File Path                                                              |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| **Top-level orchestration**     | `src/anatomy/BodyDescriptionOrchestrator.js`                           |
+| **Main composition logic**      | `src/anatomy/bodyDescriptionComposer.js`                               |
+| **Configuration**               | `src/anatomy/configuration/descriptionConfiguration.js`                |
+| **Formatting templates**        | `src/anatomy/templates/descriptionTemplate.js`                         |
+| **Text utilities**              | `src/anatomy/templates/textFormatter.js`                               |
+| **Formatting strategies**       | `src/anatomy/configuration/partGroupingStrategies.js`                  |
+| **Part description generation** | `src/anatomy/PartDescriptionGenerator.js`                              |
+| **Part description building**   | `src/anatomy/bodyPartDescriptionBuilder.js`                            |
+| **Equipment extension**         | `src/clothing/services/equipmentDescriptionService.js`                 |
+| **Dependency injection**        | `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` |
+| **Formatting service**          | `src/services/anatomyFormattingService.js`                             |
 
 ### Key Patterns by Location
 
-| Pattern | Location | Lines |
-|---------|----------|-------|
-| **Service injection** | `bodyDescriptionComposer.js` | 15-39 |
-| **Extension point** | `bodyDescriptionComposer.js` | 144-154 |
-| **Configuration order** | `descriptionConfiguration.js` | 14-35 |
-| **Strategy selection** | `descriptionTemplate.js` | 27-54 |
-| **Body descriptor extraction** | `bodyDescriptionComposer.js` | 404-435 |
-| **Part grouping** | `bodyDescriptionComposer.js` | 180-232 |
-| **Metadata usage** | `equipmentDescriptionService.js` | 523-564 |
-| **Final assembly** | `bodyDescriptionComposer.js` | 171 |
+| Pattern                        | Location                         | Lines   |
+| ------------------------------ | -------------------------------- | ------- |
+| **Service injection**          | `bodyDescriptionComposer.js`     | 15-39   |
+| **Extension point**            | `bodyDescriptionComposer.js`     | 144-154 |
+| **Configuration order**        | `descriptionConfiguration.js`    | 14-35   |
+| **Strategy selection**         | `descriptionTemplate.js`         | 27-54   |
+| **Body descriptor extraction** | `bodyDescriptionComposer.js`     | 404-435 |
+| **Part grouping**              | `bodyDescriptionComposer.js`     | 180-232 |
+| **Metadata usage**             | `equipmentDescriptionService.js` | 523-564 |
+| **Final assembly**             | `bodyDescriptionComposer.js`     | 171     |
 
 ### Example Output Format
 

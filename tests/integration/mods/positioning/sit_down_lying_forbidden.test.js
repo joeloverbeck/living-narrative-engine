@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 
 describe('positioning:sit_down - lying_down forbidden component', () => {
   let testFixture;

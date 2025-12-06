@@ -10,13 +10,11 @@ jest.mock('../../../src/utils/staticErrorDispatcher.js', () => ({
   safeDispatchError: jest.fn(),
 }));
 jest.mock('../../../src/utils/errorDetails.js', () => ({
-  createErrorDetails: jest
-    .fn()
-    .mockImplementation((message, stack) => ({
-      raw: message,
-      stack,
-      timestamp: 'mock-timestamp',
-    })),
+  createErrorDetails: jest.fn().mockImplementation((message, stack) => ({
+    raw: message,
+    stack,
+    timestamp: 'mock-timestamp',
+  })),
 }));
 
 beforeEach(() => {
@@ -141,7 +139,9 @@ describe('dispatchWithErrorHandling', () => {
 
   it('uses fallback stack when dispatcher error lacks stack trace', async () => {
     const dispatcherError = { message: 'stackless failure', stack: '' };
-    const dispatcher = { dispatch: jest.fn().mockRejectedValue(dispatcherError) };
+    const dispatcher = {
+      dispatch: jest.fn().mockRejectedValue(dispatcherError),
+    };
     const logger = createMockLogger();
     loggerUtils.ensureValidLogger.mockReturnValue(logger);
 

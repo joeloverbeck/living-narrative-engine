@@ -10,6 +10,7 @@
 ## Objective
 
 Implement the `ValidatedItemTransferHandler` class that:
+
 1. Validates destination capacity (inventory or container)
 2. On failure: dispatches failure event and ends turn
 3. On success: performs transfer, dispatches success event, ends turn
@@ -21,9 +22,11 @@ This handler will reduce inventory rules from ~180 lines to ~15 lines (92% reduc
 ## Files to Touch
 
 ### New Files
+
 - `src/logic/operationHandlers/validatedItemTransferHandler.js`
 
 ### Files NOT to Touch
+
 - DI registration files (OPEHANARCANA-019)
 - Test files (OPEHANARCANA-019)
 - preValidationUtils.js (OPEHANARCANA-019)
@@ -33,6 +36,7 @@ This handler will reduce inventory rules from ~180 lines to ~15 lines (92% reduc
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handlers
 - Any rule files
 - DI container or token files
@@ -74,7 +78,12 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
       requiredMethods: ['getEntityById', 'getComponentData'],
     });
     validateDependency(inventoryService, 'IInventoryService', logger, {
-      requiredMethods: ['validateCapacity', 'transferItem', 'pickUpItem', 'dropItem'],
+      requiredMethods: [
+        'validateCapacity',
+        'transferItem',
+        'pickUpItem',
+        'dropItem',
+      ],
     });
     validateDependency(eventBus, 'IEventBus', logger, {
       requiredMethods: ['dispatch'],
@@ -109,11 +118,20 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
     const itemId = this.#resolveEntityRef(item_entity_ref, event);
 
     // Resolve names for message templates
-    const names = await this.#resolveNames(fromEntityId, toEntityId, itemId, event);
+    const names = await this.#resolveNames(
+      fromEntityId,
+      toEntityId,
+      itemId,
+      event
+    );
 
     // Step 1: Validate capacity if required
     if (validation_type !== 'none') {
-      const isValid = await this.#validateCapacity(toEntityId, itemId, validation_type);
+      const isValid = await this.#validateCapacity(
+        toEntityId,
+        itemId,
+        validation_type
+      );
 
       if (!isValid) {
         return this.#handleFailure(context, {
@@ -129,7 +147,12 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
     }
 
     // Step 2: Perform the transfer
-    await this.#performTransfer(transfer_type, fromEntityId, toEntityId, itemId);
+    await this.#performTransfer(
+      transfer_type,
+      fromEntityId,
+      toEntityId,
+      itemId
+    );
 
     // Step 3: Handle success
     return this.#handleSuccess(context, {
@@ -177,13 +200,22 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
   #getEntityName(entityId) {
     if (!entityId) return 'Unknown';
 
-    const actorComp = this.#entityManager.getComponentData(entityId, 'core:actor');
+    const actorComp = this.#entityManager.getComponentData(
+      entityId,
+      'core:actor'
+    );
     if (actorComp?.name) return actorComp.name;
 
-    const itemComp = this.#entityManager.getComponentData(entityId, 'core:item');
+    const itemComp = this.#entityManager.getComponentData(
+      entityId,
+      'core:item'
+    );
     if (itemComp?.name) return itemComp.name;
 
-    const locationComp = this.#entityManager.getComponentData(entityId, 'core:location');
+    const locationComp = this.#entityManager.getComponentData(
+      entityId,
+      'core:location'
+    );
     if (locationComp?.name) return locationComp.name;
 
     return entityId;
@@ -192,9 +224,15 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
   async #validateCapacity(toEntityId, itemId, validationType) {
     try {
       if (validationType === 'inventory') {
-        return await this.#inventoryService.validateCapacity(toEntityId, itemId);
+        return await this.#inventoryService.validateCapacity(
+          toEntityId,
+          itemId
+        );
       } else if (validationType === 'container') {
-        return await this.#inventoryService.validateContainerCapacity(toEntityId, itemId);
+        return await this.#inventoryService.validateContainerCapacity(
+          toEntityId,
+          itemId
+        );
       }
       return true;
     } catch (err) {
@@ -235,7 +273,8 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
   }
 
   async #handleFailure(context, opts) {
-    const { names, failure_message_template, failure_perception_type, event } = opts;
+    const { names, failure_message_template, failure_perception_type, event } =
+      opts;
 
     const message = this.#formatMessage(failure_message_template, names);
 
@@ -261,9 +300,12 @@ class ValidatedItemTransferHandler extends BaseOperationHandler {
     context.success = false;
     context.turnEnded = true;
 
-    this.#logger.debug('ValidatedItemTransferHandler: Transfer failed due to capacity', {
-      message,
-    });
+    this.#logger.debug(
+      'ValidatedItemTransferHandler: Transfer failed due to capacity',
+      {
+        message,
+      }
+    );
 
     return context;
   }
@@ -325,11 +367,13 @@ export default ValidatedItemTransferHandler;
 ### Tests That Must Pass
 
 1. **File compiles without errors:**
+
    ```bash
    npm run typecheck
    ```
 
 2. **ESLint passes:**
+
    ```bash
    npx eslint src/logic/operationHandlers/validatedItemTransferHandler.js
    ```

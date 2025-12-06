@@ -54,7 +54,10 @@ describe('Operator Whitelist Validation - Integration', () => {
     // Assert - check that no warning about unregistered operators was emitted
     const warnings = mockLogger.warn.mock.calls.filter(
       (call) =>
-        call[0] && call[0].includes('Operators in ALLOWED_OPERATIONS whitelist but not registered')
+        call[0] &&
+        call[0].includes(
+          'Operators in ALLOWED_OPERATIONS whitelist but not registered'
+        )
     );
 
     expect(warnings.length).toBe(0);
@@ -72,18 +75,60 @@ describe('Operator Whitelist Validation - Integration', () => {
 
     // Find operators in whitelist but not registered (excluding standard json-logic-js operators and special syntax)
     const standardOperators = new Set([
-      'var', 'missing', 'missing_some', 'if', '==', '===', '!=', '!==', '!', '!!',
-      'or', 'and', '>', '>=', '<', '<=', 'max', 'min', '+', '-', '*', '/', '%',
-      'map', 'filter', 'reduce', 'all', 'none', 'some', 'merge', 'in', 'cat',
-      'substr', 'log', 'not', 'has', 'toLowerCase', 'toUpperCase',
+      'var',
+      'missing',
+      'missing_some',
+      'if',
+      '==',
+      '===',
+      '!=',
+      '!==',
+      '!',
+      '!!',
+      'or',
+      'and',
+      '>',
+      '>=',
+      '<',
+      '<=',
+      'max',
+      'min',
+      '+',
+      '-',
+      '*',
+      '/',
+      '%',
+      'map',
+      'filter',
+      'reduce',
+      'all',
+      'none',
+      'some',
+      'merge',
+      'in',
+      'cat',
+      'substr',
+      'log',
+      'not',
+      'has',
+      'toLowerCase',
+      'toUpperCase',
     ]);
 
     // These are helper syntax operators registered at service startup but not part of the custom operator set
-    const specialSyntax = new Set(['condition_ref', 'matchAtEnd', 'matchWholeWord']);
+    const specialSyntax = new Set([
+      'condition_ref',
+      'matchAtEnd',
+      'matchWholeWord',
+    ]);
 
     const unregisteredOps = [];
     for (const op of allowedOps) {
-      if (!standardOperators.has(op) && !specialSyntax.has(op) && !registeredOps.has(op)) {
+      if (
+        !standardOperators.has(op) &&
+        !specialSyntax.has(op) &&
+        !registeredOps.has(op)
+      ) {
         unregisteredOps.push(op);
       }
     }

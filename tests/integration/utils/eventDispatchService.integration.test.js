@@ -103,13 +103,21 @@ describe('EventDispatchService integration', () => {
   it('dispatchWithLogging logs success and propagates dispatcher failures', async () => {
     const service = createService();
 
-    await service.dispatchWithLogging('test:event', { sample: true }, 'success-context');
+    await service.dispatchWithLogging(
+      'test:event',
+      { sample: true },
+      'success-context'
+    );
 
     dispatcher.setBehavior('failing:event', () =>
       Promise.reject(new Error('simulated failure'))
     );
 
-    await service.dispatchWithLogging('failing:event', { id: 42 }, 'failure-context');
+    await service.dispatchWithLogging(
+      'failing:event',
+      { id: 42 },
+      'failure-context'
+    );
 
     const debugMessages = logger.byLevel('debug').map((entry) => entry.message);
     expect(
@@ -121,14 +129,18 @@ describe('EventDispatchService integration', () => {
     const errorMessages = logger.byLevel('error').map((entry) => entry.message);
     expect(
       errorMessages.some((msg) =>
-        msg.includes("Failed dispatching 'failing:event' event for failure-context")
+        msg.includes(
+          "Failed dispatching 'failing:event' event for failure-context"
+        )
       )
     ).toBe(true);
   });
 
   it('dispatchWithErrorHandling traces successful dispatches with sanitized payloads', async () => {
     dispatcher.setBehavior(ATTEMPT_ACTION_ID, () => Promise.resolve(true));
-    dispatcher.setBehavior(SYSTEM_ERROR_OCCURRED_ID, () => Promise.resolve(true));
+    dispatcher.setBehavior(SYSTEM_ERROR_OCCURRED_ID, () =>
+      Promise.resolve(true)
+    );
 
     const service = createService();
 
@@ -156,14 +168,18 @@ describe('EventDispatchService integration', () => {
     const debugMessages = logger.byLevel('debug').map((entry) => entry.message);
     expect(
       debugMessages.some((msg) =>
-        msg.includes('dispatchWithErrorHandling: Dispatch successful for romantic-context')
+        msg.includes(
+          'dispatchWithErrorHandling: Dispatch successful for romantic-context'
+        )
       )
     ).toBe(true);
   });
 
   it('dispatchWithErrorHandling reports dispatcher failures without triggering system errors', async () => {
     const failureDispatcher = new FakeSafeEventDispatcher();
-    failureDispatcher.setBehavior(ATTEMPT_ACTION_ID, () => Promise.resolve(false));
+    failureDispatcher.setBehavior(ATTEMPT_ACTION_ID, () =>
+      Promise.resolve(false)
+    );
 
     const filterDisabled = new ActionTraceFilter({ enabled: false, logger });
     const service = createService({
@@ -247,13 +263,17 @@ describe('EventDispatchService integration', () => {
     const errorMessages = logger.byLevel('error').map((entry) => entry.message);
     expect(
       errorMessages.some((msg) =>
-        msg.includes('Failed to dispatch system error event: Async failure occurred')
+        msg.includes(
+          'Failed to dispatch system error event: Async failure occurred'
+        )
       )
     ).toBe(true);
   });
 
   it('dispatchValidationError produces standardized result and emits system error event', () => {
-    dispatcher.setBehavior(SYSTEM_ERROR_OCCURRED_ID, () => Promise.resolve(true));
+    dispatcher.setBehavior(SYSTEM_ERROR_OCCURRED_ID, () =>
+      Promise.resolve(true)
+    );
 
     const service = createService();
 
@@ -288,9 +308,9 @@ describe('EventDispatchService integration', () => {
     await service.safeDispatchEvent('SAFE_THROW', { value: 2 });
 
     const debugMessages = logger.byLevel('debug').map((entry) => entry.message);
-    expect(debugMessages.some((msg) => msg.includes('Dispatched SAFE_OK'))).toBe(
-      true
-    );
+    expect(
+      debugMessages.some((msg) => msg.includes('Dispatched SAFE_OK'))
+    ).toBe(true);
 
     const errorMessages = logger.byLevel('error').map((entry) => entry.message);
     expect(
@@ -303,9 +323,13 @@ describe('EventDispatchService integration', () => {
     const invalidService = createService({ safeDispatcher: invalidDispatcher });
 
     expect(() =>
-      invalidService.dispatchSystemError('No dispatcher', {}, {
-        throwOnInvalidDispatcher: true,
-      })
+      invalidService.dispatchSystemError(
+        'No dispatcher',
+        {},
+        {
+          throwOnInvalidDispatcher: true,
+        }
+      )
     ).toThrow(InvalidDispatcherError);
   });
 });

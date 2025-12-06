@@ -13,6 +13,7 @@ Create `eject_magazine` and `insert_magazine` actions and rules for managing det
 ## Files to Create
 
 ### Eject Magazine
+
 1. Action: `eject_magazine.action.json` (spec lines 741-768)
 2. Condition: `event-is-action-eject-magazine.condition.json`
 3. Rule: `handle_eject_magazine.rule.json`
@@ -20,6 +21,7 @@ Create `eject_magazine` and `insert_magazine` actions and rules for managing det
 Operations: CREATE_ENTITY (magazine in inventory), MODIFY_COMPONENT (magazineInserted=false), DISPATCH_EVENT
 
 ### Insert Magazine
+
 1. Action: `insert_magazine.action.json` (spec lines 780-812)
 2. Condition: `event-is-action-insert-magazine.condition.json`
 3. Rule: `handle_insert_magazine.rule.json`

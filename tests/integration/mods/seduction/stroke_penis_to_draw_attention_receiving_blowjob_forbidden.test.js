@@ -110,13 +110,12 @@ function loadScenario(
  */
 describe('stroke_penis_to_draw_attention forbidden when receiving blowjob', () => {
   let testFixture;
-    beforeEach(async () => {
+  beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
-      });
+  });
 
   afterEach(() => {
     if (testFixture) {
-      
       testFixture.cleanup();
     }
   });

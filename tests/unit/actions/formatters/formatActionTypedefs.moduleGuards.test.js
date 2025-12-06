@@ -6,20 +6,21 @@
 import { describe, expect, it } from '@jest/globals';
 import * as moduleNamespace from '../../../../src/actions/formatters/formatActionTypedefs.js';
 
-const MODULE_PATH = '../../../../src/actions/formatters/formatActionTypedefs.js';
+const MODULE_PATH =
+  '../../../../src/actions/formatters/formatActionTypedefs.js';
 
 describe('formatActionTypedefs module namespace guards', () => {
   it('exposes the sentinel export as an enumerable boolean', () => {
     const descriptor = Object.getOwnPropertyDescriptor(
       moduleNamespace,
-      '__formatActionTypedefs',
+      '__formatActionTypedefs'
     );
 
     expect(descriptor).toEqual(
       expect.objectContaining({
         value: true,
         enumerable: true,
-      }),
+      })
     );
     expect(typeof moduleNamespace.__formatActionTypedefs).toBe('boolean');
   });
@@ -27,7 +28,7 @@ describe('formatActionTypedefs module namespace guards', () => {
   it('restores the sentinel value after a forced redefine attempt', () => {
     const originalDescriptor = Object.getOwnPropertyDescriptor(
       moduleNamespace,
-      '__formatActionTypedefs',
+      '__formatActionTypedefs'
     );
     const descriptorDefaults = {
       configurable: originalDescriptor?.configurable ?? true,
@@ -59,10 +60,13 @@ describe('formatActionTypedefs module namespace guards', () => {
     expect(moduleNamespace.__formatActionTypedefs).toBe(true);
     const restoredDescriptor = Object.getOwnPropertyDescriptor(
       moduleNamespace,
-      '__formatActionTypedefs',
+      '__formatActionTypedefs'
     );
     expect(restoredDescriptor).toEqual(
-      expect.objectContaining({ value: true, enumerable: descriptorDefaults.enumerable }),
+      expect.objectContaining({
+        value: true,
+        enumerable: descriptorDefaults.enumerable,
+      })
     );
   });
 

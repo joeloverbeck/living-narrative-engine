@@ -71,11 +71,19 @@ describe('domUI save slot helpers integration', () => {
     expect(defaultedSlot?.classList.contains('empty')).toBe(false);
     expect(defaultedSlot?.classList.contains('corrupted')).toBe(false);
 
-    expect(createSelectableItem(null, 'div', 'slotId', 'missing', 'Missing')).toBeNull();
+    expect(
+      createSelectableItem(null, 'div', 'slotId', 'missing', 'Missing')
+    ).toBeNull();
 
     const failingFactory = { create: () => null };
     expect(
-      createSelectableItem(failingFactory, 'div', 'slotId', 'broken', 'Broken Slot')
+      createSelectableItem(
+        failingFactory,
+        'div',
+        'slotId',
+        'broken',
+        'Broken Slot'
+      )
     ).toBeNull();
   });
 
@@ -102,7 +110,8 @@ describe('domUI save slot helpers integration', () => {
 
     const infoSection = slot?.querySelector('.slot-info');
     expect(infoSection).not.toBeNull();
-    const [nameSpan, timestampSpan] = infoSection?.querySelectorAll('span') ?? [];
+    const [nameSpan, timestampSpan] =
+      infoSection?.querySelectorAll('span') ?? [];
     expect(nameSpan?.textContent).toBe('Hero Progress');
     expect(timestampSpan?.textContent).toBe('2025-04-03 12:00');
 
@@ -131,7 +140,12 @@ describe('domUI save slot helpers integration', () => {
     expect(withTabindex?.getAttribute('tabindex')).toBe('0');
     expect(laterItem?.getAttribute('tabindex')).toBe('-1');
 
-    const defaultsSlot = renderSlotItem(domFactory, 'saveId', 'slot-default', null);
+    const defaultsSlot = renderSlotItem(
+      domFactory,
+      'saveId',
+      'slot-default',
+      null
+    );
     expect(defaultsSlot).toBeInstanceOf(HTMLElement);
     expect(defaultsSlot?.querySelector('.slot-playtime')).toBeNull();
 
@@ -142,12 +156,11 @@ describe('domUI save slot helpers integration', () => {
       div: () => null,
       span: () => null,
     };
-    const branchSlot = renderSlotItem(
-      nullFactory,
-      'saveId',
-      'slot-branch',
-      { name: 'Ignored', timestamp: 'Ignored', playtime: 'Skip' }
-    );
+    const branchSlot = renderSlotItem(nullFactory, 'saveId', 'slot-branch', {
+      name: 'Ignored',
+      timestamp: 'Ignored',
+      playtime: 'Skip',
+    });
     expect(branchSlot).toBeInstanceOf(HTMLElement);
     expect(branchSlot?.querySelector('.slot-info')).toBeNull();
     expect(branchSlot?.querySelector('.slot-playtime')).toBeNull();
@@ -248,7 +261,9 @@ describe('domUI save slot helpers integration', () => {
       span: () => null,
     };
     expect(
-      renderSlotItem(failingCreateFactory, 'saveId', 'slot-null', { name: 'Ignored' })
+      renderSlotItem(failingCreateFactory, 'saveId', 'slot-null', {
+        name: 'Ignored',
+      })
     ).toBeNull();
 
     const fallbackGeneric = renderGenericSlotItem(

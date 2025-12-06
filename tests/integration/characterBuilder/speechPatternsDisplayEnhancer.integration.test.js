@@ -31,7 +31,7 @@ const buildComprehensivePatterns = () => {
     {
       pattern: 'Casual cheerful banter during relaxed gatherings',
       example:
-        "Hey! Happy you made it, relax and grab a drink while we catch up!",
+        'Hey! Happy you made it, relax and grab a drink while we catch up!',
       circumstances: 'Casual hangouts when everyone feels comfortable',
     },
     {
@@ -41,8 +41,10 @@ const buildComprehensivePatterns = () => {
       circumstances: 'Motivational talks when team members feel stressed',
     },
     {
-      pattern: 'Shares secretive plans in hushed tones with commas and newlines',
-      example: 'Keep it quiet, stay close,\nand follow the whispered plan carefully.',
+      pattern:
+        'Shares secretive plans in hushed tones with commas and newlines',
+      example:
+        'Keep it quiet, stay close,\nand follow the whispered plan carefully.',
       circumstances: 'Coordinating quiet missions late at night',
     },
     {
@@ -52,14 +54,17 @@ const buildComprehensivePatterns = () => {
     },
     {
       pattern: 'Discusses joy and comfort in casual conversations',
-      example: 'I feel so happy and relaxed whenever we get comfortable together.',
+      example:
+        'I feel so happy and relaxed whenever we get comfortable together.',
       circumstances: 'Casual evenings filled with comfortable laughter',
     },
     {
-      pattern: 'Addresses formal audiences while remaining relaxed and composed',
+      pattern:
+        'Addresses formal audiences while remaining relaxed and composed',
       example:
         'Ladies and gentlemen, allow me to calmly outline the comforting plan ahead.',
-      circumstances: 'Formal presentations that should feel comfortable for everyone',
+      circumstances:
+        'Formal presentations that should feel comfortable for everyone',
     },
   ];
 
@@ -76,9 +81,7 @@ const expectCategoriesPresent = (patterns, categories) => {
       discovered.add(category);
     }
   }
-  categories.forEach((category) =>
-    expect(discovered).toContain(category)
-  );
+  categories.forEach((category) => expect(discovered).toContain(category));
 };
 
 describe('SpeechPatternsDisplayEnhancer integration', () => {
@@ -146,7 +149,9 @@ describe('SpeechPatternsDisplayEnhancer integration', () => {
 
     const csv = enhancer.formatAsCsv(patterns, { includeMetadata: true });
     expect(csv).toContain('Character Name,Test Character');
-    expect(csv).toContain('ID,Pattern,Example,Circumstances,Categories,Complexity');
+    expect(csv).toContain(
+      'ID,Pattern,Example,Circumstances,Categories,Complexity'
+    );
     expect(csv).toContain('"Keep it quiet, stay close');
 
     const csvWithoutMetadata = enhancer.formatAsCsv(patterns, {
@@ -167,13 +172,9 @@ describe('SpeechPatternsDisplayEnhancer integration', () => {
     expect(summaryTemplate).toContain('KEY PATTERNS (Top 3)');
     expect(summaryTemplate).toContain('... and');
 
-    const characterSheet = enhancer.applyTemplate(
-      patterns,
-      'characterSheet',
-      {
-        characterDefinition,
-      }
-    );
+    const characterSheet = enhancer.applyTemplate(patterns, 'characterSheet', {
+      characterDefinition,
+    });
     expect(characterSheet).toContain('CHARACTER SPEECH PROFILE');
     expect(characterSheet).toContain('SIGNATURE PATTERNS');
 
@@ -223,7 +224,12 @@ describe('SpeechPatternsDisplayEnhancer integration', () => {
 
     const templates = enhancer.getAvailableTemplates().map((t) => t.id);
     expect(templates).toEqual(
-      expect.arrayContaining(['default', 'detailed', 'summary', 'characterSheet'])
+      expect.arrayContaining([
+        'default',
+        'detailed',
+        'summary',
+        'characterSheet',
+      ])
     );
 
     const statistics = enhancer.generateStatistics(patterns);
@@ -233,7 +239,9 @@ describe('SpeechPatternsDisplayEnhancer integration', () => {
       statistics.complexityDistribution.medium +
       statistics.complexityDistribution.high;
     expect(complexitySum).toBe(statistics.totalPatterns);
-    expect(Object.keys(statistics.categoryDistribution).length).toBeGreaterThan(3);
+    expect(Object.keys(statistics.categoryDistribution).length).toBeGreaterThan(
+      3
+    );
   });
 
   it('guards entry points against malformed datasets', () => {

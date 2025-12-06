@@ -3,7 +3,9 @@
   "rule_id": "handle_help_target_to_their_feet",
   "comment": "Handles the 'recovery:help_target_to_their_feet' action. Removes fallen from the target and logs a supportive recovery event.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "recovery:event-is-action-help-target-to-their-feet" },
+  "condition": {
+    "condition_ref": "recovery:event-is-action-help-target-to-their-feet"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -124,7 +126,9 @@
                 {
                   "type": "IF",
                   "parameters": {
-                    "condition": { "!!": [{ "var": "context.actorFallenState" }] },
+                    "condition": {
+                      "!!": [{ "var": "context.actorFallenState" }]
+                    },
                     "then_actions": [
                       {
                         "type": "SET_VARIABLE",

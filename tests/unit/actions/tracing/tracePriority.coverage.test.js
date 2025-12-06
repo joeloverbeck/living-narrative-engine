@@ -70,9 +70,9 @@ describe('tracePriority utilities', () => {
         inferPriority({ hasError: true, actionId: 'system:bootstrap' })
       ).toBe(TracePriority.CRITICAL);
 
-      expect(
-        inferPriority({ execution: { error: new Error('boom') } })
-      ).toBe(TracePriority.CRITICAL);
+      expect(inferPriority({ execution: { error: new Error('boom') } })).toBe(
+        TracePriority.CRITICAL
+      );
 
       expect(inferPriority({ actionId: 'system:reload' })).toBe(
         TracePriority.HIGH
@@ -93,7 +93,9 @@ describe('tracePriority utilities', () => {
   });
 
   it('compares priorities with higher values sorted first', () => {
-    expect(comparePriorities(TracePriority.HIGH, TracePriority.NORMAL)).toBe(-1);
+    expect(comparePriorities(TracePriority.HIGH, TracePriority.NORMAL)).toBe(
+      -1
+    );
     expect(comparePriorities(TracePriority.NORMAL, TracePriority.HIGH)).toBe(1);
     expect(comparePriorities(TracePriority.LOW, TracePriority.LOW)).toBe(0);
   });

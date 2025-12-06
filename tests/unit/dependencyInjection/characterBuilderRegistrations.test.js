@@ -12,18 +12,27 @@ const createClassMock = (name) =>
 jest.mock('../../../src/characterBuilder/storage/characterDatabase.js', () => ({
   CharacterDatabase: createClassMock('CharacterDatabase'),
 }));
-jest.mock('../../../src/characterBuilder/services/characterStorageService.js', () => ({
-  CharacterStorageService: createClassMock('CharacterStorageService'),
-}));
-jest.mock('../../../src/characterBuilder/services/thematicDirectionGenerator.js', () => ({
-  ThematicDirectionGenerator: createClassMock('ThematicDirectionGenerator'),
-}));
+jest.mock(
+  '../../../src/characterBuilder/services/characterStorageService.js',
+  () => ({
+    CharacterStorageService: createClassMock('CharacterStorageService'),
+  })
+);
+jest.mock(
+  '../../../src/characterBuilder/services/thematicDirectionGenerator.js',
+  () => ({
+    ThematicDirectionGenerator: createClassMock('ThematicDirectionGenerator'),
+  })
+);
 jest.mock('../../../src/characterBuilder/services/ClicheGenerator.js', () => ({
   ClicheGenerator: createClassMock('ClicheGenerator'),
 }));
-jest.mock('../../../src/characterBuilder/services/CoreMotivationsGenerator.js', () => ({
-  CoreMotivationsGenerator: createClassMock('CoreMotivationsGenerator'),
-}));
+jest.mock(
+  '../../../src/characterBuilder/services/CoreMotivationsGenerator.js',
+  () => ({
+    CoreMotivationsGenerator: createClassMock('CoreMotivationsGenerator'),
+  })
+);
 jest.mock(
   '../../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js',
   () => ({
@@ -35,12 +44,18 @@ jest.mock(
 jest.mock('../../../src/characterBuilder/services/TraitsGenerator.js', () => ({
   TraitsGenerator: createClassMock('TraitsGenerator'),
 }));
-jest.mock('../../../src/characterBuilder/services/TraitsDisplayEnhancer.js', () => ({
-  TraitsDisplayEnhancer: createClassMock('TraitsDisplayEnhancer'),
-}));
-jest.mock('../../../src/characterBuilder/services/SpeechPatternsGenerator.js', () => ({
-  SpeechPatternsGenerator: createClassMock('SpeechPatternsGenerator'),
-}));
+jest.mock(
+  '../../../src/characterBuilder/services/TraitsDisplayEnhancer.js',
+  () => ({
+    TraitsDisplayEnhancer: createClassMock('TraitsDisplayEnhancer'),
+  })
+);
+jest.mock(
+  '../../../src/characterBuilder/services/SpeechPatternsGenerator.js',
+  () => ({
+    SpeechPatternsGenerator: createClassMock('SpeechPatternsGenerator'),
+  })
+);
 jest.mock(
   '../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js',
   () => ({
@@ -57,9 +72,12 @@ jest.mock(
     ),
   })
 );
-jest.mock('../../../src/characterBuilder/services/TraitsRewriterGenerator.js', () => ({
-  TraitsRewriterGenerator: createClassMock('TraitsRewriterGenerator'),
-}));
+jest.mock(
+  '../../../src/characterBuilder/services/TraitsRewriterGenerator.js',
+  () => ({
+    TraitsRewriterGenerator: createClassMock('TraitsRewriterGenerator'),
+  })
+);
 jest.mock(
   '../../../src/characterBuilder/services/TraitsRewriterResponseProcessor.js',
   () => ({
@@ -76,9 +94,12 @@ jest.mock(
     ),
   })
 );
-jest.mock('../../../src/characterBuilder/services/characterBuilderService.js', () => ({
-  CharacterBuilderService: createClassMock('CharacterBuilderService'),
-}));
+jest.mock(
+  '../../../src/characterBuilder/services/characterBuilderService.js',
+  () => ({
+    CharacterBuilderService: createClassMock('CharacterBuilderService'),
+  })
+);
 
 import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
 import { CharacterStorageService } from '../../../src/characterBuilder/services/characterStorageService.js';
@@ -195,7 +216,9 @@ describe('registerCharacterBuilder', () => {
     // = 25 total debug calls
     expect(logger.debug).toHaveBeenCalledTimes(25);
     expect(logger.debug.mock.calls[0][0]).toContain('Starting');
-    expect(logger.debug.mock.calls.at(-1)[0]).toContain('All registrations complete');
+    expect(logger.debug.mock.calls.at(-1)[0]).toContain(
+      'All registrations complete'
+    );
 
     const registrationMap = new Map(
       container.register.mock.calls.map(([token, factory, options]) => [
@@ -204,7 +227,8 @@ describe('registerCharacterBuilder', () => {
       ])
     );
 
-    const { map: baseDependencyMap, values: baseDeps } = createBaseDependencies();
+    const { map: baseDependencyMap, values: baseDeps } =
+      createBaseDependencies();
     const testContainer = new TestContainer(registrationMap, baseDependencyMap);
 
     const resolvedServices = new Map();
@@ -337,13 +361,17 @@ describe('registerCharacterBuilder', () => {
     expect(CharacterBuilderService).toHaveBeenCalledWith({
       logger: baseDeps.logger,
       storageService: resolvedServices.get(tokens.CharacterStorageService),
-      directionGenerator: resolvedServices.get(tokens.ThematicDirectionGenerator),
+      directionGenerator: resolvedServices.get(
+        tokens.ThematicDirectionGenerator
+      ),
       eventBus: baseDeps.eventBus,
       database: resolvedServices.get(tokens.CharacterDatabase),
       schemaValidator: baseDeps.schemaValidator,
       clicheGenerator: resolvedServices.get(tokens.ClicheGenerator),
       traitsGenerator: resolvedServices.get(tokens.TraitsGenerator),
-      speechPatternsGenerator: resolvedServices.get(tokens.SpeechPatternsGenerator),
+      speechPatternsGenerator: resolvedServices.get(
+        tokens.SpeechPatternsGenerator
+      ),
     });
 
     expect(resolvedServices.get(tokens.ICharacterBuilderService)).toBe(

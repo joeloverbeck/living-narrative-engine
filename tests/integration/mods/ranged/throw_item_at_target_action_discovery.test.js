@@ -46,7 +46,9 @@ describe('throw_item_at_target action definition', () => {
     });
 
     it('should require primary target to have items:portable component', () => {
-      expect(actionJson.required_components.primary).toContain('items:portable');
+      expect(actionJson.required_components.primary).toContain(
+        'items:portable'
+      );
     });
 
     it('should only require items:portable on primary (no weapon requirement)', () => {
@@ -129,7 +131,9 @@ describe('throw_item_at_target action definition', () => {
     });
 
     it('should use actors_in_location scope for secondary target', () => {
-      expect(actionJson.targets.secondary.scope).toBe('core:actors_in_location');
+      expect(actionJson.targets.secondary.scope).toBe(
+        'core:actors_in_location'
+      );
     });
 
     it('should use "target" placeholder for secondary target', () => {

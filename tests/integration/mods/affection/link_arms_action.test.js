@@ -47,9 +47,7 @@ describe('affection:link_arms action integration', () => {
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe(
-      'Alice links arms with Bob.'
-    );
+    expect(successEvent.payload.message).toBe('Alice links arms with Bob.');
 
     testFixture.assertPerceptibleEvent({
       descriptionText: 'Alice links arms with Bob.',
@@ -121,7 +119,11 @@ describe('affection:link_arms action integration', () => {
       .withBody('observer1-torso')
       .build();
     const observerTorso = new ModEntityBuilder('observer1-torso')
-      .asBodyPart({ parent: null, children: ['observer1-arm'], subType: 'torso' })
+      .asBodyPart({
+        parent: null,
+        children: ['observer1-arm'],
+        subType: 'torso',
+      })
       .atLocation('room1')
       .withLocationComponent('room1')
       .build();

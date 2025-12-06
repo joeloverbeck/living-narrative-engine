@@ -59,7 +59,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('actor1', 'lute_1');
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(actorInstance).toHaveComponent('music:performance_mood');
 
       const moodComponent = actorInstance.components['music:performance_mood'];
@@ -92,7 +93,8 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('actor1', 'guitar_1');
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(actorInstance).toHaveComponent('music:playing_music');
 
       const playingComponent = actorInstance.components['music:playing_music'];
@@ -125,8 +127,11 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('actor1', 'drum_1');
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
-      expect(actorInstance).toHaveComponent('positioning:doing_complex_performance');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
+      expect(actorInstance).toHaveComponent(
+        'positioning:doing_complex_performance'
+      );
     });
 
     it('should add all three components in a single action execution', async () => {
@@ -154,12 +159,15 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('actor1', 'flute_1');
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
 
       // Verify all three components are present
       expect(actorInstance).toHaveComponent('music:performance_mood');
       expect(actorInstance).toHaveComponent('music:playing_music');
-      expect(actorInstance).toHaveComponent('positioning:doing_complex_performance');
+      expect(actorInstance).toHaveComponent(
+        'positioning:doing_complex_performance'
+      );
 
       // Verify component data
       const moodComponent = actorInstance.components['music:performance_mood'];
@@ -234,10 +242,16 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       // The message should contain the mood adjective from the lookup
       // For 'aggressive', the adjective is 'hard-edged'
-      expect(perceptibleEvent.payload.descriptionText).toContain('Message Test Bard');
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        'Message Test Bard'
+      );
       expect(perceptibleEvent.payload.descriptionText).toContain('hard-edged');
-      expect(perceptibleEvent.payload.descriptionText).toContain('shredding guitar');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/sets a.*tone on/);
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        'shredding guitar'
+      );
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /sets a.*tone on/
+      );
     });
 
     it('should work with instrument at actor location (not in inventory)', async () => {
@@ -262,10 +276,13 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('actor1', 'lute_1');
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(actorInstance).toHaveComponent('music:performance_mood');
       expect(actorInstance).toHaveComponent('music:playing_music');
-      expect(actorInstance).toHaveComponent('positioning:doing_complex_performance');
+      expect(actorInstance).toHaveComponent(
+        'positioning:doing_complex_performance'
+      );
       expect(testFixture.events).toHaveActionSuccess();
     });
   });
@@ -394,7 +411,10 @@ describe('music:set_aggressive_mood_on_instrument - Rule Execution', () => {
     });
 
     it('should include locationId in perceptible event', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Grand Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Grand Concert Hall'
+      );
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Location Event Bard')

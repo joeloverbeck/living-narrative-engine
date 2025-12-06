@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -158,7 +165,9 @@ describe('AlertRouter integration error handling', () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter flush error:',
-      expect.objectContaining({ message: 'Missing or invalid `message` in payload' })
+      expect.objectContaining({
+        message: 'Missing or invalid `message` in payload',
+      })
     );
     expect(errorSpy).toHaveBeenCalledWith('Recovered error');
   });
@@ -216,7 +225,10 @@ describe('AlertRouter integration error handling', () => {
       message: 'Ignored warning',
     });
 
-    expect(errorSpy).toHaveBeenCalledWith('AlertRouter error:', expect.any(Error));
+    expect(errorSpy).toHaveBeenCalledWith(
+      'AlertRouter error:',
+      expect.any(Error)
+    );
   });
 
   it('logs dispatch errors when forwarding live events after the UI is ready', async () => {
@@ -226,7 +238,8 @@ describe('AlertRouter integration error handling', () => {
     router.notifyUIReady();
 
     const failure = new Error('UI offline');
-    const originalDispatch = safeEventDispatcher.dispatch.bind(safeEventDispatcher);
+    const originalDispatch =
+      safeEventDispatcher.dispatch.bind(safeEventDispatcher);
     const dispatchSpy = jest
       .spyOn(safeEventDispatcher, 'dispatch')
       .mockImplementation((eventName, payload) => {
@@ -251,7 +264,10 @@ describe('AlertRouter integration error handling', () => {
       message: 'Forward me',
     });
 
-    expect(errorSpy).toHaveBeenCalledWith('AlertRouter dispatch error:', failure);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'AlertRouter dispatch error:',
+      failure
+    );
     dispatchSpy.mockRestore();
   });
 

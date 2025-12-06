@@ -141,7 +141,8 @@ export async function configureBaseContainer(container, options = {}) {
       throw new Error(errorMessage);
     }
 
-    if (logger) logger.debug('[BaseContainerConfig] Registering GOAP services...');
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering GOAP services...');
     try {
       registerGoapServices(container);
     } catch (error) {

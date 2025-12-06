@@ -111,8 +111,8 @@ describe('hand-holding:hold_hand action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']?.facing_away_from ||
-              [];
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from || [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
               !partnerFacingAway.includes(actorId);

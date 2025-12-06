@@ -88,17 +88,18 @@ Created three turn-based tick systems that process ongoing damage effects:
 ### Stopped Event Constants
 
 Added to `damageTypeEffectsService.js`:
+
 - `BLEEDING_STOPPED_EVENT = 'anatomy:bleeding_stopped'`
 - `BURNING_STOPPED_EVENT = 'anatomy:burning_stopped'`
 - `POISONED_STOPPED_EVENT = 'anatomy:poisoned_stopped'`
 
 ### Tests Created
 
-| Test File | Tests | Coverage |
-|-----------|-------|----------|
-| `bleedingTickSystem.test.js` | 16 | Constructor validation, tick processing, expiration, cleanup |
-| `burningTickSystem.test.js` | 18 | Same as bleeding + stacking behavior |
-| `poisonTickSystem.test.js` | 21 | Same + dual scope (part/entity) handling |
+| Test File                    | Tests | Coverage                                                     |
+| ---------------------------- | ----- | ------------------------------------------------------------ |
+| `bleedingTickSystem.test.js` | 16    | Constructor validation, tick processing, expiration, cleanup |
+| `burningTickSystem.test.js`  | 18    | Same as bleeding + stacking behavior                         |
+| `poisonTickSystem.test.js`   | 21    | Same + dual scope (part/entity) handling                     |
 
 **Total**: 58 tests, all passing.
 

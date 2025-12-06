@@ -169,20 +169,32 @@ describe('Bending Over System Integration', () => {
         const actorId = context?.actor?.id;
         if (!actorId) return { success: true, value: new Set() };
 
-        const actorPosition = testEnv.entityManager.getComponentData(actorId, POSITION_COMPONENT_ID);
+        const actorPosition = testEnv.entityManager.getComponentData(
+          actorId,
+          POSITION_COMPONENT_ID
+        );
         if (!actorPosition) return { success: true, value: new Set() };
 
         const surfaces = new Set();
-        const allEntityIds = testEnv.entityManager.getEntityIds ?
-          testEnv.entityManager.getEntityIds() :
-          [];
+        const allEntityIds = testEnv.entityManager.getEntityIds
+          ? testEnv.entityManager.getEntityIds()
+          : [];
 
         for (const entityId of allEntityIds) {
-          const hasBendingComponent = testEnv.entityManager.getComponentData(entityId, 'positioning:allows_bending_over');
-          const entityPosition = testEnv.entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
+          const hasBendingComponent = testEnv.entityManager.getComponentData(
+            entityId,
+            'positioning:allows_bending_over'
+          );
+          const entityPosition = testEnv.entityManager.getComponentData(
+            entityId,
+            POSITION_COMPONENT_ID
+          );
 
-          if (hasBendingComponent && entityPosition &&
-              entityPosition.locationId === actorPosition.locationId) {
+          if (
+            hasBendingComponent &&
+            entityPosition &&
+            entityPosition.locationId === actorPosition.locationId
+          ) {
             surfaces.add(entityId);
           }
         }
@@ -195,12 +207,18 @@ describe('Bending Over System Integration', () => {
         const actorId = context?.actor?.id;
         if (!actorId) return { success: true, value: new Set() };
 
-        const bendingOverComponent = testEnv.entityManager.getComponentData(actorId, 'positioning:bending_over');
+        const bendingOverComponent = testEnv.entityManager.getComponentData(
+          actorId,
+          'positioning:bending_over'
+        );
         if (!bendingOverComponent || !bendingOverComponent.surface_id) {
           return { success: true, value: new Set() };
         }
 
-        return { success: true, value: new Set([bendingOverComponent.surface_id]) };
+        return {
+          success: true,
+          value: new Set([bendingOverComponent.surface_id]),
+        };
       }
 
       // Fallback to original resolver
@@ -219,7 +237,11 @@ describe('Bending Over System Integration', () => {
 
     // Create counter surface
     counter = 'furniture:counter';
-    testEnv.entityManager.addComponent(counter, 'positioning:allows_bending_over', {});
+    testEnv.entityManager.addComponent(
+      counter,
+      'positioning:allows_bending_over',
+      {}
+    );
     testEnv.entityManager.addComponent(counter, DESCRIPTION_COMPONENT_ID, {
       short: 'kitchen counter',
       long: 'A clean kitchen counter',
@@ -233,7 +255,11 @@ describe('Bending Over System Integration', () => {
 
     // Create table surface
     table = 'furniture:table';
-    testEnv.entityManager.addComponent(table, 'positioning:allows_bending_over', {});
+    testEnv.entityManager.addComponent(
+      table,
+      'positioning:allows_bending_over',
+      {}
+    );
     testEnv.entityManager.addComponent(table, DESCRIPTION_COMPONENT_ID, {
       short: 'wooden table',
       long: 'A sturdy wooden table',
@@ -591,7 +617,11 @@ describe('Bending Over System Integration', () => {
       testEnv.entityManager.addComponent(sofa, 'positioning:allows_sitting', {
         spots: [null, null, null],
       });
-      testEnv.entityManager.addComponent(sofa, 'positioning:allows_bending_over', {});
+      testEnv.entityManager.addComponent(
+        sofa,
+        'positioning:allows_bending_over',
+        {}
+      );
       testEnv.entityManager.addComponent(sofa, DESCRIPTION_COMPONENT_ID, {
         short: 'leather sofa',
         long: 'A comfortable leather sofa',
@@ -620,7 +650,10 @@ describe('Bending Over System Integration', () => {
       });
       // Update sofa spots
       // Directly update the sitting data by modifying the component
-      const allowsSittingComponent = testEnv.entityManager.getComponentData(sofa, 'positioning:allows_sitting');
+      const allowsSittingComponent = testEnv.entityManager.getComponentData(
+        sofa,
+        'positioning:allows_sitting'
+      );
       if (allowsSittingComponent) {
         allowsSittingComponent.spots[0] = sitter;
       }
@@ -652,7 +685,11 @@ describe('Bending Over System Integration', () => {
       testEnv.entityManager.addComponent(bench, 'positioning:allows_sitting', {
         spots: [null, null],
       });
-      testEnv.entityManager.addComponent(bench, 'positioning:allows_bending_over', {});
+      testEnv.entityManager.addComponent(
+        bench,
+        'positioning:allows_bending_over',
+        {}
+      );
       testEnv.entityManager.addComponent(bench, DESCRIPTION_COMPONENT_ID, {
         short: 'park bench',
         long: 'A weathered park bench',
@@ -712,7 +749,7 @@ describe('Bending Over System Integration', () => {
 
       // Check that attempt_action event was dispatched
       const attemptEvents = testEnv.events.filter(
-        e => e.eventType === 'core:attempt_action'
+        (e) => e.eventType === 'core:attempt_action'
       );
       expect(attemptEvents).toHaveLength(1);
       expect(attemptEvents[0].payload).toMatchObject({
@@ -740,7 +777,7 @@ describe('Bending Over System Integration', () => {
 
       // Check events
       const attemptEvents = testEnv.events.filter(
-        e => e.eventType === 'core:attempt_action'
+        (e) => e.eventType === 'core:attempt_action'
       );
       expect(attemptEvents).toHaveLength(1);
       expect(attemptEvents[0].payload).toMatchObject({

@@ -277,7 +277,6 @@ describe('MergeClosenessCircleHandler', () => {
     );
   });
 
-
   test('handles invalid evaluation context when result_variable provided', async () => {
     em.getComponentData = jest.fn(() => null);
 

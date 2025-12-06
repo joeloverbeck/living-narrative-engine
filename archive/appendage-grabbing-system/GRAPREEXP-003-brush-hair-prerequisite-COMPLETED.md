@@ -10,16 +10,16 @@ Insert a new prerequisite at the **beginning** (index 0) of the existing `prereq
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
-| `data/mods/seduction/actions/brush_hair_back_coyly.action.json` | Inserted new prerequisite at index 0 of existing `prerequisites` array |
-| `tests/integration/mods/seduction/brush_hair_back_coyly_action_discovery.test.js` | Updated prerequisite count assertion from 2 to 3 |
-| `tests/integration/mods/seduction/brush_hair_back_coyly_action.test.js` | Updated prerequisite tests to reflect new 3-prerequisite structure |
+| File                                                                              | Change                                                                 |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `data/mods/seduction/actions/brush_hair_back_coyly.action.json`                   | Inserted new prerequisite at index 0 of existing `prerequisites` array |
+| `tests/integration/mods/seduction/brush_hair_back_coyly_action_discovery.test.js` | Updated prerequisite count assertion from 2 to 3                       |
+| `tests/integration/mods/seduction/brush_hair_back_coyly_action.test.js`           | Updated prerequisite tests to reflect new 3-prerequisite structure     |
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                                           | Purpose                                                  |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | `tests/integration/mods/seduction/brush_hair_back_coyly_prerequisites.test.js` | Integration tests for prerequisite evaluation (18 tests) |
 
 ## Implementation Details
@@ -27,6 +27,7 @@ Insert a new prerequisite at the **beginning** (index 0) of the existing `prereq
 ### brush_hair_back_coyly.action.json
 
 **Previous State (2 prerequisites)**:
+
 ```json
 "prerequisites": [
   {
@@ -45,6 +46,7 @@ Insert a new prerequisite at the **beginning** (index 0) of the existing `prereq
 ```
 
 **New State (3 prerequisites)**:
+
 ```json
 "prerequisites": [
   {
@@ -79,11 +81,13 @@ Insert a new prerequisite at the **beginning** (index 0) of the existing `prereq
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Modify 1 action file
 - Modify 1 test file (discovery test)
 - Create 1 new test file (prerequisites test)
 
 **Actually Changed:**
+
 - Modified 1 action file (as planned)
 - Modified 2 existing test files (discovery test + action test - additional file discovered during testing)
 - Created 1 new test file (as planned)
@@ -94,6 +98,7 @@ The existing `brush_hair_back_coyly_action.test.js` test file also contained pre
 ### Test Coverage
 
 New test file `brush_hair_back_coyly_prerequisites.test.js` provides 18 tests covering:
+
 - Action definition structure (6 tests)
 - Multiple prerequisites validation (3 tests)
 - Pass cases for grabbing prerequisite (3 tests)
@@ -137,8 +142,8 @@ npx eslint data/mods/seduction/actions/brush_hair_back_coyly.action.json tests/i
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern template |
-| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition referenced |
-| `specs/grabbing-prerequisites-expansion.md` | Full specification |
+| File                                                                            | Purpose               |
+| ------------------------------------------------------------------------------- | --------------------- |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js`      | Test pattern template |
+| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition referenced  |
+| `specs/grabbing-prerequisites-expansion.md`                                     | Full specification    |

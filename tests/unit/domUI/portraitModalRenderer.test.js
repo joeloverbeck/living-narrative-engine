@@ -1082,7 +1082,9 @@ describe('PortraitModalRenderer', () => {
       renderer.showModal('/path.jpg', 'Speaker', mockOriginalElement);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to dispatch core:portrait_modal_opened event'),
+        expect.stringContaining(
+          'Failed to dispatch core:portrait_modal_opened event'
+        ),
         dispatchError
       );
     });
@@ -1102,7 +1104,9 @@ describe('PortraitModalRenderer', () => {
       renderer.hide();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to dispatch core:portrait_modal_closed event'),
+        expect.stringContaining(
+          'Failed to dispatch core:portrait_modal_closed event'
+        ),
         closeError
       );
     });
@@ -1395,7 +1399,7 @@ describe('PortraitModalRenderer', () => {
       });
     });
 
-  describe('Edge Cases', () => {
+    describe('Edge Cases', () => {
       it('should handle empty speaker name gracefully in alt text', () => {
         expect(() => {
           renderer.showModal('/path/to/portrait.jpg', '', mockOriginalElement);
@@ -1445,11 +1449,11 @@ describe('PortraitModalRenderer', () => {
           throw new Error('Element not in DOM');
         });
 
-      renderer.hide();
+        renderer.hide();
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not return focus to original element'),
-        expect.any(Error)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Could not return focus to original element'),
+          expect.any(Error)
         );
       });
     });
@@ -1540,7 +1544,10 @@ describe('PortraitModalRenderer', () => {
     it('should focus first or last item when Home/End keys are pressed', () => {
       const firstElement = { focus: jest.fn() };
       const lastElement = { focus: jest.fn() };
-      mockModalElement.querySelectorAll = jest.fn(() => [firstElement, lastElement]);
+      mockModalElement.querySelectorAll = jest.fn(() => [
+        firstElement,
+        lastElement,
+      ]);
 
       keydownHandler({ key: 'Home', preventDefault: jest.fn() });
       expect(firstElement.focus).toHaveBeenCalled();
@@ -1553,9 +1560,11 @@ describe('PortraitModalRenderer', () => {
       const firstElement = { focus: jest.fn() };
       const middleElement = {};
       const lastElement = { focus: jest.fn() };
-      mockModalElement.querySelectorAll = jest.fn(
-        () => [firstElement, middleElement, lastElement]
-      );
+      mockModalElement.querySelectorAll = jest.fn(() => [
+        firstElement,
+        middleElement,
+        lastElement,
+      ]);
 
       const preventDefault = jest.fn();
 

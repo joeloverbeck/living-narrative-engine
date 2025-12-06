@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { ActionDecisionWorkflow } from '../../../src/turns/states/workflows/actionDecisionWorkflow.js';
 import { LLMDecisionProvider } from '../../../src/turns/providers/llmDecisionProvider.js';
 import * as llmTimeoutConfig from '../../../src/config/llmTimeout.config.js';
@@ -108,4 +115,3 @@ describe('LLM suggestion telemetry integration', () => {
     expect(pendingTraces).toHaveLength(2);
   });
 });
-

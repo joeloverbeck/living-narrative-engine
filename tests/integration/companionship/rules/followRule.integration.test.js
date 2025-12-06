@@ -131,7 +131,9 @@ describe('core_handle_follow rule integration', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'companionship:event-is-action-follow' ? eventIsActionFollow : undefined
+        id === 'companionship:event-is-action-follow'
+          ? eventIsActionFollow
+          : undefined
       ),
       getEventDefinition: jest.fn((eventName) => {
         // Return a basic event definition for common events

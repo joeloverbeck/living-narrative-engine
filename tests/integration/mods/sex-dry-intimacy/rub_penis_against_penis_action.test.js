@@ -41,10 +41,14 @@ describe('sex-dry-intimacy:rub_penis_against_penis action integration', () => {
   it('performs the rub penis against penis action successfully', async () => {
     await testFixture.executeAction(ACTOR_ID, PRIMARY_ID);
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
   });
 
   it('emits a perceptible event with the expected metadata', async () => {

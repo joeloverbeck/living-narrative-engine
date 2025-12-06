@@ -94,7 +94,9 @@ export async function configureContainer(container, uiElements) {
 
     // --- Configure container with base configuration ---
     // The base configuration handles registration order and dependencies
-    bootstrapLog.debug('[ContainerConfig] Starting base container configuration...');
+    bootstrapLog.debug(
+      '[ContainerConfig] Starting base container configuration...'
+    );
 
     try {
       await configureBaseContainer(container, {
@@ -109,9 +111,14 @@ export async function configureContainer(container, uiElements) {
         logger: logger,
       });
 
-      bootstrapLog.debug('[ContainerConfig] Base container configuration completed.');
+      bootstrapLog.debug(
+        '[ContainerConfig] Base container configuration completed.'
+      );
     } catch (error) {
-      bootstrapLog.error('[ContainerConfig] Base container configuration failed:', error);
+      bootstrapLog.error(
+        '[ContainerConfig] Base container configuration failed:',
+        error
+      );
       throw error;
     }
 
@@ -152,9 +159,14 @@ export async function configureContainer(container, uiElements) {
     );
 
     // Final validation
-    bootstrapLog.debug('[ContainerConfig] Container configuration completed successfully.');
+    bootstrapLog.debug(
+      '[ContainerConfig] Container configuration completed successfully.'
+    );
   } catch (error) {
-    bootstrapLog.error('[ContainerConfig] Container configuration failed:', error);
+    bootstrapLog.error(
+      '[ContainerConfig] Container configuration failed:',
+      error
+    );
     throw error;
   }
 }

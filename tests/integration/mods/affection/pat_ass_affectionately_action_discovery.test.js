@@ -44,9 +44,11 @@ describe('affection:pat_ass_affectionately action discovery', () => {
           ? entityManager.getEntityInstance.bind(entityManager)
           : entityManager.getEntity.bind(entityManager);
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from ?? [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from ?? [];
         const actorKneelingBefore =
-          actorEntity.components?.['positioning:kneeling_before']?.entityId ?? null;
+          actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+          null;
 
         const validTargets = closeness.reduce((acc, partnerId) => {
           const partner = getEntity(partnerId);
@@ -55,18 +57,19 @@ describe('affection:pat_ass_affectionately action discovery', () => {
           }
 
           // Check if partner has ass anatomy
-          const hasAssAnatomy =
-            partner.components?.['anatomy:body_part_graph']?.parts?.some(
-              (part) => part.type === 'ass_cheek'
-            );
+          const hasAssAnatomy = partner.components?.[
+            'anatomy:body_part_graph'
+          ]?.parts?.some((part) => part.type === 'ass_cheek');
           if (!hasAssAnatomy) {
             return acc;
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from ?? [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ??
+            [];
           const partnerKneelingBefore =
-            partner.components?.['positioning:kneeling_before']?.entityId ?? null;
+            partner.components?.['positioning:kneeling_before']?.entityId ??
+            null;
 
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
@@ -80,7 +83,9 @@ describe('affection:pat_ass_affectionately action discovery', () => {
           const partnerKneeling = partnerKneelingBefore === actorEntity.id;
 
           const isValidTarget =
-            (facingEachOther || actorBehind) && !actorKneeling && !partnerKneeling;
+            (facingEachOther || actorBehind) &&
+            !actorKneeling &&
+            !partnerKneeling;
 
           if (isValidTarget) {
             acc.add(partnerId);

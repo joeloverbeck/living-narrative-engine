@@ -305,10 +305,13 @@ export function createTestBed() {
     createMock(name, methods = [], options = {}) {
       if (specializedMockFactories[name]) {
         if (Array.isArray(methods) && methods.length > 0) {
-          mockObjects.mockLogger.warn?.('GOAP_DEPENDENCY_WARN: Ignored manual method list for specialized mock', {
-            dependency: name,
-            requestedMethods: methods,
-          });
+          mockObjects.mockLogger.warn?.(
+            'GOAP_DEPENDENCY_WARN: Ignored manual method list for specialized mock',
+            {
+              dependency: name,
+              requestedMethods: methods,
+            }
+          );
         }
         return specializedMockFactories[name](options);
       }

@@ -96,7 +96,10 @@ export function buildLickTesticlesSittingCloseScenario(options = {}) {
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
     .withComponent('positioning:allows_sitting', {
-      spots: [includeActorSitting ? ACTOR_ID : null, includePrimarySitting ? PRIMARY_ID : null],
+      spots: [
+        includeActorSitting ? ACTOR_ID : null,
+        includePrimarySitting ? PRIMARY_ID : null,
+      ],
     })
     .build();
 
@@ -236,7 +239,11 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
       return baseResult;
     }
 
-    if (baseResult?.success && baseResult.value instanceof Set && baseResult.value.size > 0) {
+    if (
+      baseResult?.success &&
+      baseResult.value instanceof Set &&
+      baseResult.value.size > 0
+    ) {
       return baseResult;
     }
 
@@ -248,9 +255,14 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
 
     const actor = testFixture.entityManager.getEntityInstance(actorId);
     const actorSitting = actor?.components?.['positioning:sitting_on'];
-    const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+    const closenessPartners =
+      actor?.components?.['positioning:closeness']?.partners;
 
-    if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+    if (
+      !actorSitting ||
+      !Array.isArray(closenessPartners) ||
+      closenessPartners.length === 0
+    ) {
       return { success: true, value: new Set() };
     }
 
@@ -262,7 +274,8 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
       }
 
       const partnerSitting = partner.components?.['positioning:sitting_on'];
-      const partnerCloseness = partner.components?.['positioning:closeness']?.partners || [];
+      const partnerCloseness =
+        partner.components?.['positioning:closeness']?.partners || [];
 
       if (!partnerSitting || !partnerCloseness.includes(actorId)) {
         return false;
@@ -297,4 +310,3 @@ export function installSittingCloseUncoveredTesticleScopeOverride(testFixture) {
     resolver.resolveSync = originalResolveSync;
   };
 }
-

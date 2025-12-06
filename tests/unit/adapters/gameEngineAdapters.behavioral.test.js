@@ -30,7 +30,9 @@ describe('GameEngine adapters – delegation behaviour', () => {
     it('rejects with a TypeError when loadGame is not a function', async () => {
       const adapter = new GameEngineLoadAdapter({});
 
-      await expect(adapter.load('missing-method')).rejects.toBeInstanceOf(TypeError);
+      await expect(adapter.load('missing-method')).rejects.toBeInstanceOf(
+        TypeError
+      );
     });
   });
 
@@ -44,29 +46,38 @@ describe('GameEngine adapters – delegation behaviour', () => {
       expect(adapter).toBeInstanceOf(ISaveService);
 
       const payload = { slotId: 'slot-3', name: 'Quick Save' };
-      await expect(adapter.save(payload.slotId, payload.name)).resolves.toEqual({
-        saved: true,
-      });
+      await expect(adapter.save(payload.slotId, payload.name)).resolves.toEqual(
+        {
+          saved: true,
+        }
+      );
       expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
       expect(engine.triggerManualSave).toHaveBeenCalledWith(
         payload.name,
-        payload.slotId,
+        payload.slotId
       );
     });
 
     it('propagates triggerManualSave rejections', async () => {
       const failure = new Error('save failed');
-      const engine = { triggerManualSave: jest.fn().mockRejectedValue(failure) };
+      const engine = {
+        triggerManualSave: jest.fn().mockRejectedValue(failure),
+      };
       const adapter = new GameEngineSaveAdapter(engine);
 
       await expect(adapter.save('slot-7', 'Manual Save')).rejects.toBe(failure);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Manual Save', 'slot-7');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Manual Save',
+        'slot-7'
+      );
     });
 
     it('rejects with a TypeError when triggerManualSave is not present', async () => {
       const adapter = new GameEngineSaveAdapter({});
 
-      await expect(adapter.save('slot-1', 'Broken')).rejects.toBeInstanceOf(TypeError);
+      await expect(adapter.save('slot-1', 'Broken')).rejects.toBeInstanceOf(
+        TypeError
+      );
     });
   });
 });

@@ -54,12 +54,12 @@ describe('RemoveSittingClosenessHandler', () => {
 
     // Setup mock closeness circle service
     mockClosenessCircleService = closenessCircleService;
-    
+
     // Mock the service functions
-    closenessCircleService.repair.mockImplementation((partners) => 
+    closenessCircleService.repair.mockImplementation((partners) =>
       partners ? partners.slice().sort() : []
     );
-    closenessCircleService.merge.mockImplementation((...arrays) => 
+    closenessCircleService.merge.mockImplementation((...arrays) =>
       [...new Set(arrays.flat())].sort()
     );
 
@@ -394,7 +394,7 @@ describe('RemoveSittingClosenessHandler', () => {
       };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // First call: furniture validation  
+        .mockReturnValueOnce(furnitureComponent) // First call: furniture validation
         .mockReturnValueOnce({ partners: ['game:alice', 'game:charlie'] }) // Second call: Bob's closeness
         .mockReturnValueOnce(furnitureComponent) // Third call: furniture for adjacent detection
         .mockReturnValueOnce({ partners: ['game:alice', 'game:charlie'] }) // Fourth call: Bob's closeness for processing
@@ -405,7 +405,7 @@ describe('RemoveSittingClosenessHandler', () => {
         .mockReturnValueOnce({ partners: ['game:alice'] }); // Ninth call: Charlie still has Alice
 
       proximityUtils.getAdjacentSpots.mockReturnValue([0, 2]); // Adjacent to spot 1
-      
+
       // Mock repair to return proper cleaned arrays
       closenessCircleService.repair
         .mockReturnValueOnce([]) // Bob loses all sitting partners
@@ -530,8 +530,7 @@ describe('RemoveSittingClosenessHandler', () => {
         spot_index: 1,
       };
 
-      mockEntityManager.getComponentData
-        .mockReturnValueOnce(null); // Missing furniture component causes validation error
+      mockEntityManager.getComponentData.mockReturnValueOnce(null); // Missing furniture component causes validation error
 
       await handler.execute(parameters, executionContext);
 
@@ -648,18 +647,29 @@ describe('RemoveSittingClosenessHandler', () => {
       };
 
       // Set up mocks to return invalid data (duplicates should cause validation error)
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'furniture:couch' && componentType === 'positioning:allows_sitting') {
-          return furnitureComponent;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'furniture:couch' &&
+            componentType === 'positioning:allows_sitting'
+          ) {
+            return furnitureComponent;
+          }
+          if (
+            entityId === 'game:alice' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:bob', 'game:charlie', 'game:bob'] }; // Duplicate partners trigger validation error
+          }
+          if (
+            entityId === 'game:bob' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:alice'] };
+          }
+          return null;
         }
-        if (entityId === 'game:alice' && componentType === 'positioning:closeness') {
-          return { partners: ['game:bob', 'game:charlie', 'game:bob'] }; // Duplicate partners trigger validation error
-        }
-        if (entityId === 'game:bob' && componentType === 'positioning:closeness') {
-          return { partners: ['game:alice'] };
-        }
-        return null;
-      });
+      );
 
       proximityUtils.getAdjacentSpots.mockReturnValue([0]); // Bob is adjacent at spot 0
 
@@ -673,7 +683,7 @@ describe('RemoveSittingClosenessHandler', () => {
           error: expect.stringContaining('duplicate partners'),
         })
       );
-      
+
       // Verify that an error dispatch occurred
       expect(safeDispatchError).toHaveBeenCalledWith(
         mockDispatcher,
@@ -700,32 +710,42 @@ describe('RemoveSittingClosenessHandler', () => {
       };
 
       // Set up mocks to return data when called
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'furniture:couch' && componentType === 'positioning:allows_sitting') {
-          return furnitureComponent;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'furniture:couch' &&
+            componentType === 'positioning:allows_sitting'
+          ) {
+            return furnitureComponent;
+          }
+          if (
+            entityId === 'game:alice' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:bob'] };
+          }
+          if (
+            entityId === 'game:bob' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:alice'] };
+          }
+          // For final state validation and movement lock checks
+          return null;
         }
-        if (entityId === 'game:alice' && componentType === 'positioning:closeness') {
-          return { partners: ['game:bob'] };
-        }
-        if (entityId === 'game:bob' && componentType === 'positioning:closeness') {
-          return { partners: ['game:alice'] };
-        }
-        // For final state validation and movement lock checks
-        return null;
-      });
+      );
 
       proximityUtils.getAdjacentSpots.mockReturnValue([1]); // Bob is adjacent at spot 1
-      mockClosenessCircleService.repair
-        .mockReturnValue([]); // No partners left after filtering for both actors
+      mockClosenessCircleService.repair.mockReturnValue([]); // No partners left after filtering for both actors
 
       await handler.execute(parameters, executionContext);
 
-      // Verify that at least one component was removed 
+      // Verify that at least one component was removed
       expect(mockEntityManager.removeComponent).toHaveBeenCalled();
-      
+
       // Verify no errors were logged
       expect(mockLogger.error).not.toHaveBeenCalled();
-      
+
       // Verify the operation was successful
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('removed successfully'),
@@ -1131,22 +1151,36 @@ describe('RemoveSittingClosenessHandler', () => {
       };
 
       // Set up mocks to return data when called
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'furniture:couch' && componentType === 'positioning:allows_sitting') {
-          return furnitureComponent;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'furniture:couch' &&
+            componentType === 'positioning:allows_sitting'
+          ) {
+            return furnitureComponent;
+          }
+          if (
+            entityId === 'game:bob' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:alice', 'game:charlie'] };
+          }
+          if (
+            entityId === 'game:alice' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:bob', 'game:charlie'] };
+          }
+          if (
+            entityId === 'game:charlie' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:alice', 'game:bob'] };
+          }
+          // For final state validation and movement lock checks
+          return null;
         }
-        if (entityId === 'game:bob' && componentType === 'positioning:closeness') {
-          return { partners: ['game:alice', 'game:charlie'] };
-        }
-        if (entityId === 'game:alice' && componentType === 'positioning:closeness') {
-          return { partners: ['game:bob', 'game:charlie'] };
-        }
-        if (entityId === 'game:charlie' && componentType === 'positioning:closeness') {
-          return { partners: ['game:alice', 'game:bob'] };
-        }
-        // For final state validation and movement lock checks
-        return null;
-      });
+      );
 
       proximityUtils.getAdjacentSpots.mockReturnValue([0, 2]); // Alice and Charlie are adjacent
       mockClosenessCircleService.repair
@@ -1161,7 +1195,7 @@ describe('RemoveSittingClosenessHandler', () => {
         'game:bob',
         'positioning:closeness'
       );
-      
+
       // Alice and Charlie should keep their components with each other
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'game:alice',
@@ -1173,7 +1207,7 @@ describe('RemoveSittingClosenessHandler', () => {
         'positioning:closeness',
         { partners: ['game:alice'] }
       );
-      
+
       // Verify the total number of component operations
       expect(mockEntityManager.removeComponent).toHaveBeenCalledTimes(1); // Only Bob
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(2); // Alice and Charlie
@@ -1220,8 +1254,9 @@ describe('RemoveSittingClosenessHandler', () => {
         spots: [], // Empty spots array fails validation
       };
 
-      mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent); // First call gets furniture
+      mockEntityManager.getComponentData.mockReturnValueOnce(
+        furnitureComponent
+      ); // First call gets furniture
 
       await handler.execute(parameters, executionContext);
 

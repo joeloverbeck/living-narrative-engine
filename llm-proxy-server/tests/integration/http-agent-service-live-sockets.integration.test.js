@@ -4,13 +4,7 @@
  *              to cover memory estimation and agent destruction paths.
  */
 
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import http from 'node:http';
 import { setTimeout as delay } from 'node:timers/promises';
 

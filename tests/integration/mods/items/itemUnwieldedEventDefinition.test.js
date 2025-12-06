@@ -5,7 +5,14 @@
  * @see src/logic/operationHandlers/unwieldItemHandler.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
@@ -29,7 +36,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
     );
 
     if (!schemaValidator.isSchemaLoaded(eventSchema.$id || EVENT_SCHEMA_PATH)) {
-      await schemaValidator.addSchema(eventSchema, eventSchema.$id || EVENT_SCHEMA_PATH);
+      await schemaValidator.addSchema(
+        eventSchema,
+        eventSchema.$id || EVENT_SCHEMA_PATH
+      );
     }
   });
 
@@ -76,7 +86,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         actorEntity: 'actor-001',
@@ -93,7 +106,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         actorEntity: 'actor-001',
@@ -110,7 +126,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         // missing actorEntity
@@ -122,7 +141,9 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'actorEntity')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'actorEntity'
+        )
       ).toBe(true);
     });
 
@@ -130,7 +151,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         actorEntity: 'actor-001',
@@ -142,7 +166,9 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'itemEntity')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'itemEntity'
+        )
       ).toBe(true);
     });
 
@@ -150,7 +176,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         actorEntity: 'actor-001',
@@ -162,7 +191,9 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'remainingWieldedItems')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'remainingWieldedItems'
+        )
       ).toBe(true);
     });
 
@@ -170,7 +201,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         actorEntity: 'actor-001',
@@ -187,7 +221,10 @@ describe('Missing Event Definition Fix - items:item_unwielded', () => {
       const payloadSchemaId = `${itemUnwieldedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(itemUnwieldedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        itemUnwieldedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         actorEntity: 'actor-001',

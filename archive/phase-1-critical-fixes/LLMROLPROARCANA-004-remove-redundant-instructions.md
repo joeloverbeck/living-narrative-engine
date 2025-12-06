@@ -21,15 +21,18 @@ After codebase analysis, only ONE actual redundancy was found:
 **Assumptions Corrected:**
 
 ❌ **INCORRECT**: "Multiple CRITICAL DISTINCTIONS sections for note types"
+
 - **ACTUAL**: Only ONE "CRITICAL DISTINCTION - THOUGHTS vs SPEECH" section exists
 - **LOCATION**: Already consolidated in `finalLlmInstructionText`
 - **ACTION**: No changes needed
 
 ❌ **INCORRECT**: "Speech pattern examples overlap" (~200 tokens)
+
 - **USER DIRECTIVE**: "don't implement 'Speech Pattern Deduplication'"
 - **ACTION**: Excluded from this ticket (handled separately)
 
 ❌ **INCORRECT**: "Action tag rules appear in multiple sections" (~300 tokens)
+
 - **STATUS**: Being addressed in LLMROLPROARCANA-003
 - **ACTION**: Not in scope for this ticket
 
@@ -58,11 +61,13 @@ Remove the INNER VOICE GUIDANCE from the end of `finalLlmInstructionText`, keepi
 ### What Was Changed
 
 **Removed from `finalLlmInstructionText` (end of field):**
+
 ```
 INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. Remember: thoughts are PRIVATE - they reveal what your character thinks but doesn't say. Your internal monologue should sound distinctly like {{name}}, using their vocabulary, concerns, and way of processing the world. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.
 ```
 
 **Kept (unchanged in `promptDataFormatter.js`):**
+
 - Dynamic `formatThoughtsVoiceGuidance()` method
 - Contextual placement right before thoughts section
 - Conditional logic based on whether previous thoughts exist
@@ -70,6 +75,7 @@ INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your characte
 ### Why This Works
 
 The INNER VOICE GUIDANCE is better placed dynamically because:
+
 1. **Context**: Appears right before thoughts section (more salient)
 2. **Adaptive**: Changes based on whether previous thoughts exist
 3. **Proximity**: Close to where it's needed (reduced attention decay)
@@ -80,6 +86,7 @@ The INNER VOICE GUIDANCE is better placed dynamically because:
 ### Test Results
 
 ✅ **Redundancy Detection Tests**
+
 ```javascript
 // tests/unit/prompting/promptRedundancy.test.js
 describe('Prompt Redundancy Tests', () => {
@@ -93,11 +100,13 @@ describe('Prompt Redundancy Tests', () => {
 ```
 
 ✅ **Integration Tests**
+
 - Full prompt assembly produces valid output
 - Token count reduced by ~150 tokens
 - thoughtsVoiceGuidance still appears correctly
 
 ✅ **Existing Tests**
+
 - All prompting tests pass
 - No regressions in prompt generation
 
@@ -111,15 +120,16 @@ describe('Prompt Redundancy Tests', () => {
 
 ## Success Metrics
 
-| Metric | Baseline | Target | Actual |
-|--------|----------|--------|--------|
-| INNER VOICE GUIDANCE occurrences | 2 locations | 1 location | 1 location ✅ |
-| Token reduction | 0 | ~150 tokens | ~150 tokens ✅ |
-| Test pass rate | 100% | 100% | 100% ✅ |
+| Metric                           | Baseline    | Target      | Actual         |
+| -------------------------------- | ----------- | ----------- | -------------- |
+| INNER VOICE GUIDANCE occurrences | 2 locations | 1 location  | 1 location ✅  |
+| Token reduction                  | 0           | ~150 tokens | ~150 tokens ✅ |
+| Test pass rate                   | 100%        | 100%        | 100% ✅        |
 
 ## Rollback Plan
 
 If LLM comprehension degrades:
+
 1. The removed text can be easily re-added to `finalLlmInstructionText`
 2. Alternative: Enhance the dynamic `thoughtsVoiceGuidance` with additional context
 3. No code changes required - only JSON content update
@@ -127,11 +137,13 @@ If LLM comprehension degrades:
 ## Implementation Summary
 
 **What Changed:**
+
 - Removed INNER VOICE GUIDANCE from `data/prompts/corePromptText.json` (finalLlmInstructionText field)
 - No code changes required
 - Token savings: ~150 tokens
 
 **What Stayed:**
+
 - Dynamic thoughtsVoiceGuidance (better placement)
 - All other prompt sections unchanged
 - All functionality preserved
@@ -149,11 +161,13 @@ If LLM comprehension degrades:
 **Completed:** 2024-01-24
 
 **Changes Made:**
+
 - Removed redundant INNER VOICE GUIDANCE from `finalLlmInstructionText` in `data/prompts/corePromptText.json`
 - Preserved dynamic placement in `thoughtsVoiceGuidance` for better contextual saliency
 - Token savings: ~150 tokens
 
 **vs Original Plan:**
+
 - Original estimate: 500-800 tokens across multiple redundancies
 - Actual: 150 tokens from one verified redundancy
 - Other assumed redundancies did not exist in codebase

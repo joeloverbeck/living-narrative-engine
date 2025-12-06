@@ -9,10 +9,12 @@
 **Module Role:** Turn state machine state that waits for external `core:turn_ended` events with timeout protection
 
 **Class Hierarchy:**
+
 - Extends: `AbstractTurnState` (src/turns/states/abstractTurnState.js)
 - Implements: Turn state lifecycle contract (enterState, exitState, destroy)
 
 **Related Components:**
+
 - Turn State Machine: `BaseTurnHandler` (src/turns/handlers/baseTurnHandler.js)
 - Other States: TurnIdleState, ProcessingCommandState, TurnEndingState, AwaitingActorDecisionState
 - Event System: SafeEventDispatcher, event constants (src/constants/eventIds.js)
@@ -34,17 +36,20 @@ The `AwaitingExternalTurnEndState` class is a **critical safety mechanism** in t
 ### Dependencies and Integration Points
 
 **Direct Dependencies:**
+
 - `AbstractTurnState` - Base class providing handler context and lifecycle methods
 - `timeoutUtils.js` (line 8) - Timeout error creation utilities
 - `safeDispatchErrorUtils.js` (line 9) - Error event dispatching helpers
 - `contextUtils.js` (line 10) - Logger and dispatcher extraction from context
 
 **Indirect Dependencies:**
+
 - `ITurnContext` - Turn context interface (actor, services, state management)
 - `BaseTurnHandler` - State machine host providing transitions and context
 - Timer APIs: `setTimeout`, `clearTimeout` (browser/Node.js global functions)
 
 **Integration Points:**
+
 - **Event System**: Subscribes to `TURN_ENDED_ID` (line 97), dispatches `SYSTEM_ERROR_OCCURRED_ID` (line 116)
 - **Turn Context**: Manages `awaitingExternalEvent` flag (lines 101, 176), triggers `endTurn()` (line 121)
 - **State Machine**: Lifecycle managed via `enterState()` (line 88) / `exitState()` (line 144) / `destroy()` (line 170)
@@ -59,6 +64,7 @@ The `AwaitingExternalTurnEndState` class is a **critical safety mechanism** in t
 `tests/integration/turns/states/awaitingExternalTurnEndState.production.integration.test.js:111`
 
 **Failure Message:**
+
 ```
 expect(jest.fn()).toHaveBeenCalledWith(...expected)
 Expected: Any<Function>, 30000
@@ -67,6 +73,7 @@ Received: [Function anonymous], 3000
 
 **Test Expectation:**
 The test attempted to verify production behavior:
+
 1. Module loads with `NODE_ENV=production`
 2. Timeout configured to 30,000ms (production value)
 3. Real `setTimeout`/`clearTimeout` used (not mocks)
@@ -79,6 +86,7 @@ The test received a 3,000ms timeout (development value) instead of the expected 
 ### Root Cause Analysis
 
 **Problematic Code** (awaitingExternalTurnEndState.js:30-33):
+
 ```javascript
 const IS_DEV =
   (typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production') ||
@@ -118,11 +126,13 @@ Changed line 59 from `delete process.env.NODE_ENV` to `process.env.NODE_ENV = 'p
 ### Relevant Documentation
 
 **Turn State System:**
+
 - **Pattern Source**: `AbstractTurnState` implementation (src/turns/states/abstractTurnState.js:1-316)
 - **State Lifecycle Contract**: Constructor → enterState() → exitState() → destroy()
 - **No Dedicated Docs**: Turn state lifecycle not formally documented in docs/ folder
 
 **Environment Management:**
+
 - **Interface**: `src/interfaces/IEnvironmentProvider.js` - Standard environment abstraction
   ```javascript
   interface IEnvironmentProvider {
@@ -180,7 +190,7 @@ Changed line 59 from `delete process.env.NODE_ENV` to `process.env.NODE_ENV = 'p
    - Clear timeout guard (line 137)
    - End turn successfully (no error) (line 140)
 
-3. **On Timeout** (_onTimeout):
+3. **On Timeout** (\_onTimeout):
    - Dispatch `SYSTEM_ERROR_OCCURRED` event (line 116)
    - End turn with `TURN_END_TIMEOUT` error (line 121)
 
@@ -196,6 +206,7 @@ Changed line 59 from `delete process.env.NODE_ENV` to `process.env.NODE_ENV = 'p
 ### External Contracts
 
 **Timer APIs (Browser + Node.js):**
+
 - `setTimeout(callback: Function, ms: number): TimeoutID`
   - Returns timeout ID (number in browser, Timeout object in Node.js)
   - Callback invoked after `ms` milliseconds
@@ -207,6 +218,7 @@ Changed line 59 from `delete process.env.NODE_ENV` to `process.env.NODE_ENV = 'p
 
 **Environment Detection:**
 Project must handle three environments:
+
 1. **Browser (Production)**: `typeof process === 'undefined'`
    - No `process.env` global
    - Should default to production timeouts (fail-safe)
@@ -218,6 +230,7 @@ Project must handle three environments:
    - Environment variables can change between tests
 
 **Common Patterns in Project:**
+
 - **Direct checks**: 47+ files use `process.env.NODE_ENV` directly
 - **Utils pattern**: `environmentUtils.js` provides standardized helpers
 - **DI pattern**: `IEnvironmentProvider` interface for testable environment detection
@@ -229,6 +242,7 @@ Project must handle three environments:
 ### Normal Cases
 
 **Production Environment (Browser Deployment):**
+
 ```javascript
 // Given: Browser build without process.env
 // When: State enters and waits for turn end event
@@ -239,6 +253,7 @@ Project must handle three environments:
 ```
 
 **Development Environment (Node.js Dev Server):**
+
 ```javascript
 // Given: Development server with NODE_ENV=development
 // When: State enters and waits for turn end event
@@ -249,6 +264,7 @@ Project must handle three environments:
 ```
 
 **Test Environment (Jest Test Runner):**
+
 ```javascript
 // Given: Unit test with custom timeout override
 // When: State created with { timeoutMs: 1000 }
@@ -261,6 +277,7 @@ Project must handle three environments:
 ### Edge Cases
 
 **Undefined/Missing NODE_ENV:**
+
 ```javascript
 // Given: Browser build without NODE_ENV environment variable injection
 // When: Module loads in production browser
@@ -270,6 +287,7 @@ Project must handle three environments:
 ```
 
 **Custom Timeout Overrides:**
+
 ```javascript
 // Given: Constructor called with explicit { timeoutMs: 5000 }
 // When: State enters
@@ -279,6 +297,7 @@ Project must handle three environments:
 ```
 
 **Environment Transition Scenarios:**
+
 ```javascript
 // Given: Hot module reload changes NODE_ENV
 // When: Module already loaded with different NODE_ENV
@@ -288,6 +307,7 @@ Project must handle three environments:
 ```
 
 **Timeout Override with Zero/Negative:**
+
 ```javascript
 // Given: Constructor called with { timeoutMs: 0 } or { timeoutMs: -1000 }
 // When: State enters
@@ -297,6 +317,7 @@ Project must handle three environments:
 ```
 
 **Missing Handler Context:**
+
 ```javascript
 // Given: enterState called but handler.getTurnContext() returns null
 // When: Attempting to set timeout
@@ -308,6 +329,7 @@ Project must handle three environments:
 ### Failure Modes
 
 **Timeout Expiration (Normal Failure Path):**
+
 ```javascript
 // Given: State waiting for core:turn_ended event
 // When: Timeout expires (30s production, 3s development) without event arrival
@@ -327,6 +349,7 @@ Project must handle three environments:
 ```
 
 **State Cleanup on Errors:**
+
 ```javascript
 // Given: State entered successfully with active timeout and subscription
 // When: Unexpected error occurs during event handling or state operation
@@ -341,6 +364,7 @@ Project must handle three environments:
 ```
 
 **Invalid Configuration (Constructor Validation):**
+
 ```javascript
 // Given: Constructor called with invalid timeoutMs (NaN, null, "invalid", etc.)
 // When: State instantiated
@@ -352,6 +376,7 @@ Project must handle three environments:
 ```
 
 **Timer Function Injection Errors:**
+
 ```javascript
 // Given: Constructor called with non-function setTimeoutFn or clearTimeoutFn
 // When: State attempts to schedule timeout
@@ -403,11 +428,11 @@ Project must handle three environments:
 **Timeout Guarantees:**
 
 1. **Bounded Wait**: Turn MUST end within timeout period (no infinite wait)
-   - Guaranteed by: setTimeout() contract and _onTimeout() handler
+   - Guaranteed by: setTimeout() contract and \_onTimeout() handler
    - Failure mode: Only if timer API completely fails (rare)
 
 2. **Cleanup After Fire**: Timeout callback clears its own ID
-   - Implementation: `this.#timeoutId = null;` in _onTimeout (line 110)
+   - Implementation: `this.#timeoutId = null;` in \_onTimeout (line 110)
    - Purpose: Prevents double-cleanup in exitState
 
 3. **No Orphan Timers**: Timer cleared in all exit paths
@@ -498,14 +523,17 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 **Constructor Parameters (Backward Compatible):**
 
 Current signature (line 57-76):
+
 ```javascript
-constructor(handler, { timeoutMs, setTimeoutFn, clearTimeoutFn } = {})
+constructor(handler, ({ timeoutMs, setTimeoutFn, clearTimeoutFn } = {}));
 ```
 
 **Required Parameters:**
+
 - `handler`: BaseTurnHandler instance (validated in AbstractTurnState)
 
 **Optional Parameters (default values maintain backward compatibility):**
+
 - `options.timeoutMs`: Explicit timeout override
   - Type: `number` (positive finite)
   - Default: Environment-based (30s production, 3s dev)
@@ -520,17 +548,20 @@ constructor(handler, { timeoutMs, setTimeoutFn, clearTimeoutFn } = {})
   - Purpose: Allow fake timers in tests
 
 **State Lifecycle Methods:**
+
 - Inherited from `AbstractTurnState`, MUST call `super` implementations where applicable
 - MUST handle context absence gracefully (null checks)
 - MUST log transitions at debug level (AbstractTurnState contract)
 
 **Event Handling:**
+
 - `handleTurnEndedEvent`: Processes `TURN_ENDED_ID` events
   - MUST verify actor ID matches
   - MUST clear timeout on event arrival
   - MUST call `context.endTurn()` to complete turn
 
 **Testing Utilities:**
+
 - `getInternalStateForTest()`: Exposes internal state for verification
   - Returns: `{ timeoutId, hasSubscription, ... }`
   - Purpose: Allow tests to verify resource management
@@ -672,15 +703,21 @@ describe('AwaitingExternalTurnEndState - Timer Injection', () => {
 
   // ADD: Validation tests for invalid timer functions
   test('throws error when setTimeoutFn is not a function', () => {
-    expect(() => new AwaitingExternalTurnEndState(handler, {
-      setTimeoutFn: "not-a-function"
-    })).toThrow(InvalidArgumentError);
+    expect(
+      () =>
+        new AwaitingExternalTurnEndState(handler, {
+          setTimeoutFn: 'not-a-function',
+        })
+    ).toThrow(InvalidArgumentError);
   });
 
   test('throws error when clearTimeoutFn is not a function', () => {
-    expect(() => new AwaitingExternalTurnEndState(handler, {
-      clearTimeoutFn: null
-    })).toThrow(InvalidArgumentError);
+    expect(
+      () =>
+        new AwaitingExternalTurnEndState(handler, {
+          clearTimeoutFn: null,
+        })
+    ).toThrow(InvalidArgumentError);
   });
 });
 ```
@@ -722,6 +759,7 @@ File: `tests/integration/turns/states/awaitingExternalTurnEndState.production.in
 **Current State:** Uses complex module isolation with cache busting
 
 **Improvements Needed:**
+
 ```javascript
 describe('AwaitingExternalTurnEndState production defaults integration', () => {
   // CURRENT: Complex jest.isolateModulesAsync with URL cache busting
@@ -918,7 +956,9 @@ describe('Property Tests: Configuration Invariants', () => {
         ),
         (invalidTimeout) => {
           expect(() => {
-            new AwaitingExternalTurnEndState(handler, { timeoutMs: invalidTimeout });
+            new AwaitingExternalTurnEndState(handler, {
+              timeoutMs: invalidTimeout,
+            });
           }).toThrow();
         }
       )
@@ -933,7 +973,7 @@ describe('Property Tests: Configuration Invariants', () => {
         (setTimeoutFn, clearTimeoutFn) => {
           const state = new AwaitingExternalTurnEndState(handler, {
             setTimeoutFn,
-            clearTimeoutFn
+            clearTimeoutFn,
           });
           // State should be constructible with any callable functions
           return state !== null;
@@ -947,12 +987,12 @@ describe('Property Tests: Configuration Invariants', () => {
       fc.property(
         fc.record({
           IS_PRODUCTION: fc.boolean(),
-          NODE_ENV: fc.constantFrom('production', 'development', 'test')
+          NODE_ENV: fc.constantFrom('production', 'development', 'test'),
         }),
         (env) => {
           const mockProvider = { getEnvironment: () => env };
           const state = new AwaitingExternalTurnEndState(handler, {
-            environmentProvider: mockProvider
+            environmentProvider: mockProvider,
           });
           // Should construct successfully with any valid environment
           return state !== null;
@@ -973,49 +1013,43 @@ import * as fc from 'fast-check';
 describe('Property Tests: State Lifecycle', () => {
   test('enterState always sets exactly one timeout', async () => {
     fc.assert(
-      await fc.asyncProperty(
-        fc.nat({ max: 100_000 }),
-        async (timeoutMs) => {
-          const setTimeoutSpy = jest.fn((cb, ms) => setTimeout(cb, ms));
-          const state = new AwaitingExternalTurnEndState(handler, {
-            timeoutMs,
-            setTimeoutFn: setTimeoutSpy
-          });
+      await fc.asyncProperty(fc.nat({ max: 100_000 }), async (timeoutMs) => {
+        const setTimeoutSpy = jest.fn((cb, ms) => setTimeout(cb, ms));
+        const state = new AwaitingExternalTurnEndState(handler, {
+          timeoutMs,
+          setTimeoutFn: setTimeoutSpy,
+        });
 
-          await state.enterState(handler, null);
+        await state.enterState(handler, null);
 
-          // Exactly one setTimeout call
-          return setTimeoutSpy.mock.calls.length === 1;
-        }
-      )
+        // Exactly one setTimeout call
+        return setTimeoutSpy.mock.calls.length === 1;
+      })
     );
   });
 
   test('exitState always clears all resources', async () => {
     fc.assert(
-      await fc.asyncProperty(
-        fc.nat({ max: 100_000 }),
-        async (timeoutMs) => {
-          const clearTimeoutSpy = jest.fn();
-          const unsubscribeSpy = jest.fn();
+      await fc.asyncProperty(fc.nat({ max: 100_000 }), async (timeoutMs) => {
+        const clearTimeoutSpy = jest.fn();
+        const unsubscribeSpy = jest.fn();
 
-          // Setup state with spies
-          const state = new AwaitingExternalTurnEndState(handler, {
-            timeoutMs,
-            clearTimeoutFn: clearTimeoutSpy
-          });
+        // Setup state with spies
+        const state = new AwaitingExternalTurnEndState(handler, {
+          timeoutMs,
+          clearTimeoutFn: clearTimeoutSpy,
+        });
 
-          await state.enterState(handler, null);
-          await state.exitState(handler, null);
+        await state.enterState(handler, null);
+        await state.exitState(handler, null);
 
-          // Verify cleanup occurred
-          return (
-            clearTimeoutSpy.mock.calls.length >= 1 && // timeout cleared
-            context.isAwaitingExternalEvent() === false // flag reset
-            // subscription removed (verify via listener count)
-          );
-        }
-      )
+        // Verify cleanup occurred
+        return (
+          clearTimeoutSpy.mock.calls.length >= 1 && // timeout cleared
+          context.isAwaitingExternalEvent() === false // flag reset
+          // subscription removed (verify via listener count)
+        );
+      })
     );
   });
 
@@ -1121,12 +1155,15 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
    * @param {Function} [options.setTimeoutFn] - setTimeout implementation
    * @param {Function} [options.clearTimeoutFn] - clearTimeout implementation
    */
-  constructor(handler, {
-    timeoutMs,
-    environmentProvider = new ProcessEnvironmentProvider(),
-    setTimeoutFn = setTimeout,
-    clearTimeoutFn = clearTimeout
-  } = {}) {
+  constructor(
+    handler,
+    {
+      timeoutMs,
+      environmentProvider = new ProcessEnvironmentProvider(),
+      setTimeoutFn = setTimeout,
+      clearTimeoutFn = clearTimeout,
+    } = {}
+  ) {
     super(handler);
 
     // Store environment provider
@@ -1200,7 +1237,10 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
     context.setAwaitingExternalEvent?.(true, context.actor?.id);
 
     // Start timeout with configured value
-    this.#timeoutId = this.#setTimeoutFn(() => this.#onTimeout(handler), this.#timeoutConfig);
+    this.#timeoutId = this.#setTimeoutFn(
+      () => this.#onTimeout(handler),
+      this.#timeoutConfig
+    );
 
     this.#getLogger(handler)?.debug?.(
       `AwaitingExternalTurnEndState: Timeout set to ${this.#timeoutConfig}ms`
@@ -1212,6 +1252,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 ```
 
 **Benefits:**
+
 - ✅ **Testable**: Inject `TestEnvironmentProvider` for predictable behavior
 - ✅ **Flexible**: Supports runtime environment changes between instances
 - ✅ **Standard**: Uses existing `IEnvironmentProvider` interface (project pattern)
@@ -1220,6 +1261,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 - ✅ **Fail-Safe**: Defaults to production timeout on provider errors
 
 **Migration Path:**
+
 1. Add `environmentProvider` option to constructor (optional, defaults to `ProcessEnvironmentProvider`)
 2. Replace module-level `IS_DEV` with instance method `#getDefaultTimeout()`
 3. Update tests to inject `TestEnvironmentProvider` instead of module isolation
@@ -1285,6 +1327,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 ```
 
 **Benefits:**
+
 - ✅ **Consistent**: Matches 47+ other files using `environmentUtils.js`
 - ✅ **Robust**: Handles browser/Node.js/Jest correctly in one place
 - ✅ **Maintained**: Single source of truth for environment logic
@@ -1292,6 +1335,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 - ⚠️ **Less Testable**: Still couples to global environment (but matches project pattern)
 
 **When to Choose:**
+
 - Project prefers consistency over DI purity
 - Other state classes use direct `environmentUtils.js` calls
 - Testing can tolerate environment variable manipulation
@@ -1324,7 +1368,8 @@ export class TimeoutConfiguration {
    */
   constructor({ timeoutMs, environmentProvider } = {}) {
     this.#explicitTimeout = timeoutMs;
-    this.#environmentProvider = environmentProvider ?? new ProcessEnvironmentProvider();
+    this.#environmentProvider =
+      environmentProvider ?? new ProcessEnvironmentProvider();
   }
 
   /**
@@ -1386,7 +1431,10 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 
     // Use configuration
     const timeoutMs = this.#timeoutConfig.getTimeoutMs();
-    this.#timeoutId = this.#setTimeoutFn(() => this.#onTimeout(handler), timeoutMs);
+    this.#timeoutId = this.#setTimeoutFn(
+      () => this.#onTimeout(handler),
+      timeoutMs
+    );
 
     this.#getLogger(handler)?.debug?.(
       `AwaitingExternalTurnEndState: Timeout set to ${timeoutMs}ms`
@@ -1398,6 +1446,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 ```
 
 **Benefits:**
+
 - ✅ **Single Responsibility**: `TimeoutConfiguration` handles ONLY timeout logic
 - ✅ **Testable**: Can unit test configuration independently
 - ✅ **Reusable**: Other states could use same configuration pattern
@@ -1405,6 +1454,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 - ✅ **Extensible**: Easy to add new configuration options (staging tier, custom validators)
 
 **When to Choose:**
+
 - Multiple states need similar timeout configuration
 - Configuration logic is complex enough to warrant extraction
 - Project values separation of concerns highly
@@ -1418,12 +1468,14 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 **Goal:** Fix immediate test fragility with minimal risk
 
 **Changes:**
+
 1. Replace module-level `IS_DEV` constant with constructor call to `getEnvironmentMode()` from `environmentUtils.js`
 2. Move timeout resolution from module-level to constructor
 3. Add validation for `timeoutMs` parameter
 4. Keep all existing test infrastructure working
 
 **Code Diff:**
+
 ```javascript
 // BEFORE (lines 30-33)
 const IS_DEV =
@@ -1442,7 +1494,8 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 
   constructor(handler, options = {}) {
     super(handler);
-    this.#configuredTimeout = options.timeoutMs ?? this.#resolveDefaultTimeout();
+    this.#configuredTimeout =
+      options.timeoutMs ?? this.#resolveDefaultTimeout();
     // ... validation ...
   }
 
@@ -1456,6 +1509,7 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 ```
 
 **Testing:**
+
 - Update production integration test to remove module isolation
 - Verify all existing tests pass
 - Add regression test to prevent module-level constant pattern
@@ -1467,12 +1521,14 @@ class AwaitingExternalTurnEndState extends AbstractTurnState {
 **Goal:** Align with project patterns (DI, IEnvironmentProvider)
 
 **Changes:**
+
 1. Add `environmentProvider` option to constructor (optional, defaults to `ProcessEnvironmentProvider`)
 2. Use `IEnvironmentProvider` interface for environment detection
 3. Add `TestEnvironmentProvider` injection in tests
 4. Remove need for environment variable manipulation in tests
 
 **Code Additions:**
+
 ```javascript
 constructor(handler, {
   timeoutMs,
@@ -1493,6 +1549,7 @@ constructor(handler, {
 ```
 
 **Testing:**
+
 - Add environment provider integration tests
 - Update existing tests to use `TestEnvironmentProvider` injection
 - Verify backward compatibility (default provider works)
@@ -1504,6 +1561,7 @@ constructor(handler, {
 **Goal:** Complete separation of concerns and comprehensive validation
 
 **Changes:**
+
 1. Extract `TimeoutConfiguration` class
 2. Add comprehensive validation for all configuration options
 3. Add detailed configuration documentation
@@ -1511,10 +1569,12 @@ constructor(handler, {
 5. Add property tests for invariants
 
 **New Files:**
+
 - `src/turns/config/timeoutConfiguration.js`
 - `tests/unit/turns/config/timeoutConfiguration.test.js`
 
 **Documentation:**
+
 - Add JSDoc for all configuration options
 - Document migration path for future timeout changes
 - Add examples in developer guide
@@ -1526,20 +1586,24 @@ constructor(handler, {
 ## Recommended Approach
 
 **Immediate (This Sprint):**
+
 - ✅ Apply Phase 1 (Minimal Change) - Fix test fragility NOW
 - ✅ Add regression tests to prevent recurrence
 
 **Short-term (Next Sprint):**
+
 - Phase 2 (Standard Patterns) - Align with project DI patterns
 - Add environment provider integration tests
 - Update developer documentation
 
 **Long-term (Backlog):**
+
 - Phase 3 (Robustness) - IF multiple states need similar configuration
 - Extract shared configuration patterns
 - Add comprehensive property tests
 
 **Breaking Change Assessment:**
+
 - Phase 1: ✅ No breaking changes (internal only)
 - Phase 2: ✅ No breaking changes (optional parameter with default)
 - Phase 3: ✅ No breaking changes (new class, optional usage)

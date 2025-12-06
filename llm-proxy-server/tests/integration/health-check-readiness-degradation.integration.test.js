@@ -1,17 +1,14 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { createLivenessCheck, createReadinessCheck } from '../../src/middleware/healthCheck.js';
+import {
+  createLivenessCheck,
+  createReadinessCheck,
+} from '../../src/middleware/healthCheck.js';
 import { createConsoleLogger } from '../../src/consoleLogger.js';
 import { NodeFileSystemReader } from '../../src/nodeFileSystemReader.js';
 import {
@@ -25,7 +22,9 @@ import HttpAgentService from '../../src/services/httpAgentService.js';
 const ORIGINAL_ENV = { ...process.env };
 
 const createTempInvalidConfig = () => {
-  const directory = mkdtempSync(path.join(tmpdir(), 'health-readiness-degrade-'));
+  const directory = mkdtempSync(
+    path.join(tmpdir(), 'health-readiness-degrade-')
+  );
   const filePath = path.join(directory, 'llm-configs.json');
   writeFileSync(filePath, '{"invalidJson": }', 'utf8');
   return { directory, filePath };
@@ -184,7 +183,9 @@ describe('health check readiness degradation integration', () => {
 
     const processCheck = dependencies.find((dep) => dep.name === 'nodeProcess');
     expect(processCheck.status).toBe('DOWN');
-    expect(processCheck.details.memoryUsage.percentage).toBeGreaterThanOrEqual(98);
+    expect(processCheck.details.memoryUsage.percentage).toBeGreaterThanOrEqual(
+      98
+    );
 
     const livenessResponse = await request(app).get('/health');
     expect(livenessResponse.status).toBe(200);

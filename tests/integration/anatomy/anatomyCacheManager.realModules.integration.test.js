@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 import EntityManager from '../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
@@ -11,7 +18,11 @@ import {
   createMockValidatedEventDispatcherForIntegration,
 } from '../../common/mockFactories/index.js';
 
-const registerComponentDefinition = (registry, id, dataSchema = { type: 'object' }) => {
+const registerComponentDefinition = (
+  registry,
+  id,
+  dataSchema = { type: 'object' }
+) => {
   registry.store('components', id, { id, dataSchema });
 };
 
@@ -71,7 +82,12 @@ const createPartDefinition = (registry, id, subType) => {
   });
 };
 
-const createSimpleAnatomy = async (registry, entityManager, actorId, parts = {}) => {
+const createSimpleAnatomy = async (
+  registry,
+  entityManager,
+  actorId,
+  parts = {}
+) => {
   const partIds = {
     torso: parts.torso ?? `${actorId}-torso`,
     arm: parts.arm ?? `${actorId}-arm`,
@@ -272,9 +288,9 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
   });
 
   it('throws when buildCache is invoked without required dependencies', async () => {
-    await expect(manager.buildCache(undefined, entityManager)).rejects.toBeInstanceOf(
-      InvalidArgumentError
-    );
+    await expect(
+      manager.buildCache(undefined, entityManager)
+    ).rejects.toBeInstanceOf(InvalidArgumentError);
     await expect(manager.buildCache('root', undefined)).rejects.toBeInstanceOf(
       InvalidArgumentError
     );
@@ -299,7 +315,10 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
     const actorId = 'actor-without-joints';
     await createSimpleAnatomy(registry, entityManager, actorId);
 
-    const original = getOriginalGetter(entityManager, 'getEntitiesWithComponent');
+    const original = getOriginalGetter(
+      entityManager,
+      'getEntitiesWithComponent'
+    );
     const spy = jest.spyOn(entityManager, 'getEntitiesWithComponent');
     spy.mockImplementationOnce(() => null);
     spy.mockImplementation(original);
@@ -348,7 +367,9 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
     await manager.buildCache(actorId, entityManager);
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining(`Failed to build cache node for entity '${faultyId}'`),
+      expect.stringContaining(
+        `Failed to build cache node for entity '${faultyId}'`
+      ),
       expect.any(Object)
     );
   });
@@ -361,7 +382,9 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
     createPartDefinition(registry, rootPartId, 'torso');
     createPartDefinition(registry, childId, 'arm');
 
-    await entityManager.createEntityInstance(rootPartId, { instanceId: rootPartId });
+    await entityManager.createEntityInstance(rootPartId, {
+      instanceId: rootPartId,
+    });
     await entityManager.createEntityInstance(childId, { instanceId: childId });
     await entityManager.addComponent(childId, 'anatomy:joint', {
       parentId: rootPartId,
@@ -400,7 +423,9 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
     createPartDefinition(registry, rootPartId, 'torso');
     createPartDefinition(registry, childId, 'arm');
 
-    await entityManager.createEntityInstance(rootPartId, { instanceId: rootPartId });
+    await entityManager.createEntityInstance(rootPartId, {
+      instanceId: rootPartId,
+    });
     await entityManager.createEntityInstance(childId, { instanceId: childId });
     await entityManager.addComponent(childId, 'anatomy:joint', {
       parentId: rootPartId,
@@ -462,7 +487,9 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
     const validation = manager.validateCache(entityManager);
     expect(validation.valid).toBe(false);
     expect(validation.issues).toEqual(
-      expect.arrayContaining([expect.stringContaining("Child 'ghost-child' of")])
+      expect.arrayContaining([
+        expect.stringContaining("Child 'ghost-child' of"),
+      ])
     );
   });
 
@@ -477,4 +504,3 @@ describe('AnatomyCacheManager integration with real EntityManager', () => {
     expect(manager.size()).toBe(0);
   });
 });
-

@@ -9,9 +9,7 @@
         "primary": "head_gear",
         "secondary": []
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "metal"
@@ -29,9 +27,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "head_gear"
-      ],
+      "covers": ["head_gear"],
       "coveragePriority": "accessories"
     },
     "items:item": {},

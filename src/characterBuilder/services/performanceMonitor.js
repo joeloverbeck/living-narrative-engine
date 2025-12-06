@@ -55,7 +55,8 @@ export class PerformanceMonitor {
   }) {
     this.#logger = logger;
     this.#eventBus = eventBus;
-    this.#threshold = typeof threshold === 'number' && threshold >= 0 ? threshold : 100;
+    this.#threshold =
+      typeof threshold === 'number' && threshold >= 0 ? threshold : 100;
     this.#contextName = contextName;
     this.#performanceRef = performanceRef ?? globalPerformance;
     this.#marks = new Map();
@@ -102,7 +103,10 @@ export class PerformanceMonitor {
       this.#logger?.debug?.(`Performance mark: ${markName}`, { timestamp });
       return timestamp;
     } catch (error) {
-      this.#logger?.warn?.(`Failed to create performance mark: ${markName}`, error);
+      this.#logger?.warn?.(
+        `Failed to create performance mark: ${markName}`,
+        error
+      );
       return null;
     }
   }
@@ -155,10 +159,13 @@ export class PerformanceMonitor {
       try {
         this.#performanceRef?.measure?.(measureName, startMark, endMark);
       } catch (nativeError) {
-        this.#logger?.debug?.('PerformanceMonitor: native measure fallback used', {
-          measureName,
-          error: nativeError,
-        });
+        this.#logger?.debug?.(
+          'PerformanceMonitor: native measure fallback used',
+          {
+            measureName,
+            error: nativeError,
+          }
+        );
       }
 
       this.#logger?.debug?.(`Performance measurement: ${measureName}`, {
@@ -175,7 +182,10 @@ export class PerformanceMonitor {
 
       return measurement;
     } catch (error) {
-      this.#logger?.warn?.(`Failed to measure performance: ${measureName}`, error);
+      this.#logger?.warn?.(
+        `Failed to measure performance: ${measureName}`,
+        error
+      );
       return null;
     }
   }
@@ -203,7 +213,10 @@ export class PerformanceMonitor {
           this.#performanceRef?.clearMarks?.(markKey);
         }
       } catch (error) {
-        this.#logger?.debug?.('PerformanceMonitor: clearMarks failed', { markKey, error });
+        this.#logger?.debug?.('PerformanceMonitor: clearMarks failed', {
+          markKey,
+          error,
+        });
       }
     };
 
@@ -239,7 +252,9 @@ export class PerformanceMonitor {
         this.#performanceRef?.clearMarks?.();
         this.#performanceRef?.clearMeasures?.();
       } catch (error) {
-        this.#logger?.debug?.('PerformanceMonitor: clear all failed', { error });
+        this.#logger?.debug?.('PerformanceMonitor: clear all failed', {
+          error,
+        });
       }
     }
 
@@ -267,7 +282,9 @@ export class PerformanceMonitor {
       return null;
     }
 
-    const durations = Array.from(this.#measurements.values()).map((m) => m.duration);
+    const durations = Array.from(this.#measurements.values()).map(
+      (m) => m.duration
+    );
     const total = durations.reduce((sum, d) => sum + d, 0);
 
     return {
@@ -361,7 +378,10 @@ export class PerformanceMonitor {
         payload
       );
     } catch (error) {
-      this.#logger?.warn?.('PerformanceMonitor: Failed to dispatch warning event', error);
+      this.#logger?.warn?.(
+        'PerformanceMonitor: Failed to dispatch warning event',
+        error
+      );
       throw error;
     }
   }
@@ -382,7 +402,10 @@ export class PerformanceMonitor {
       try {
         listener(measurementName, measurement);
       } catch (error) {
-        this.#logger?.warn?.('PerformanceMonitor: stats listener threw error', error);
+        this.#logger?.warn?.(
+          'PerformanceMonitor: stats listener threw error',
+          error
+        );
       }
     }
   }
@@ -394,7 +417,10 @@ export class PerformanceMonitor {
    * @returns {number}
    */
   #now() {
-    if (this.#performanceRef && typeof this.#performanceRef.now === 'function') {
+    if (
+      this.#performanceRef &&
+      typeof this.#performanceRef.now === 'function'
+    ) {
       return this.#performanceRef.now();
     }
     return Date.now();

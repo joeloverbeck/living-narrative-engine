@@ -36,18 +36,22 @@ describe('OrphanDetectionRule', () => {
   describe('validate', () => {
     it('returns no issues when every joint resolves to an entity in the graph', async () => {
       mockContext.entityIds = ['root', 'child'];
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId !== 'anatomy:joint') return null;
-        if (entityId === 'child') {
-          return { parentId: 'root', socketId: 'neck' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId !== 'anatomy:joint') return null;
+          if (entityId === 'child') {
+            return { parentId: 'root', socketId: 'neck' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const issues = await rule.validate(mockContext);
 
       expect(issues).toEqual([]);
-      expect(mockContext.setMetadata).toHaveBeenCalledWith('rootEntities', ['root']);
+      expect(mockContext.setMetadata).toHaveBeenCalledWith('rootEntities', [
+        'root',
+      ]);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'OrphanDetectionRule: Checking for orphans in graph with 2 entities'
       );
@@ -58,19 +62,22 @@ describe('OrphanDetectionRule', () => {
 
     it('flags orphaned parts whose parents are missing from the graph', async () => {
       mockContext.entityIds = ['stray-arm'];
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === 'anatomy:joint' && entityId === 'stray-arm') {
-          return { parentId: 'missing-torso', socketId: 'shoulder' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (componentId === 'anatomy:joint' && entityId === 'stray-arm') {
+            return { parentId: 'missing-torso', socketId: 'shoulder' };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       const issues = await rule.validate(mockContext);
 
       expect(issues).toHaveLength(1);
       expect(issues[0]).toEqual({
         severity: 'error',
-        message: "Orphaned part 'stray-arm' has parent 'missing-torso' not in graph",
+        message:
+          "Orphaned part 'stray-arm' has parent 'missing-torso' not in graph",
         ruleId: 'orphan-detection',
         context: {
           entityId: 'stray-arm',
@@ -100,10 +107,10 @@ describe('OrphanDetectionRule', () => {
           count: 2,
         },
       });
-      expect(mockContext.setMetadata).toHaveBeenCalledWith(
-        'rootEntities',
-        ['root-a', 'root-b']
-      );
+      expect(mockContext.setMetadata).toHaveBeenCalledWith('rootEntities', [
+        'root-a',
+        'root-b',
+      ]);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'OrphanDetectionRule: Found 0 orphans and 2 root entities'
       );

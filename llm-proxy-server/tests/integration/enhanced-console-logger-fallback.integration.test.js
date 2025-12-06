@@ -8,8 +8,14 @@ import {
 } from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 function setTtyCapabilities() {
   if (stdoutDescriptor?.configurable) {
@@ -108,7 +114,9 @@ describe('Enhanced console logger fallback resilience', () => {
     const fallbackCall = infoSpy.mock.calls.find(
       ([firstArg]) =>
         typeof firstArg === 'string' &&
-        firstArg.startsWith('[FALLBACK] INFO: SecurityService: initiating fallback pathway validation')
+        firstArg.startsWith(
+          '[FALLBACK] INFO: SecurityService: initiating fallback pathway validation'
+        )
     );
 
     expect(fallbackCall).toBeDefined();

@@ -405,11 +405,15 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
 
     it('should mark legacy player entities as player thoughts', () => {
       const mockLegacyPlayerEntity = {
-        hasComponent: jest.fn((componentId) => componentId === PLAYER_COMPONENT_ID),
+        hasComponent: jest.fn(
+          (componentId) => componentId === PLAYER_COMPONENT_ID
+        ),
         getComponentData: jest.fn(),
       };
 
-      mockEntityManager.getEntityInstance.mockReturnValue(mockLegacyPlayerEntity);
+      mockEntityManager.getEntityInstance.mockReturnValue(
+        mockLegacyPlayerEntity
+      );
 
       const mockThoughtEntry = createMockElement('div');
       mockDomElementFactory.create.mockImplementation((tag, options) => {
@@ -424,7 +428,9 @@ describe('SpeechBubbleRenderer - Thought Functionality', () => {
         thoughts: 'Legacy players count too.',
       });
 
-      expect(mockThoughtEntry.classList.add).toHaveBeenCalledWith('player-thought');
+      expect(mockThoughtEntry.classList.add).toHaveBeenCalledWith(
+        'player-thought'
+      );
     });
 
     it('should scroll when no portrait element can be created', () => {

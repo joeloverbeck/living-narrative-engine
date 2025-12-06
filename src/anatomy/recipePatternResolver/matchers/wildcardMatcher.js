@@ -4,7 +4,10 @@
  * @see src/anatomy/recipePatternResolver.js - Parent resolver
  */
 
-import { assertNonBlankString, assertPresent } from '../../../utils/dependencyUtils.js';
+import {
+  assertNonBlankString,
+  assertPresent,
+} from '../../../utils/dependencyUtils.js';
 import { ValidationError } from '../../../errors/validationError.js';
 
 /**
@@ -16,16 +19,11 @@ import { ValidationError } from '../../../errors/validationError.js';
  * @returns {string[]} Array of matching slot keys
  */
 export function resolveWildcardPattern(pattern, slotKeys, logger) {
-  assertNonBlankString(
-    pattern,
-    'Pattern',
-    'resolveWildcardPattern',
-    logger
-  );
+  assertNonBlankString(pattern, 'Pattern', 'resolveWildcardPattern', logger);
   assertPresent(slotKeys, 'Slot keys array is required');
 
   const regex = wildcardToRegex(pattern);
-  const matches = slotKeys.filter(key => regex.test(key));
+  const matches = slotKeys.filter((key) => regex.test(key));
 
   logger.debug(
     `Wildcard pattern '${pattern}' matched ${matches.length} of ${slotKeys.length} slots`
@@ -43,7 +41,12 @@ export function resolveWildcardPattern(pattern, slotKeys, logger) {
  * @param {object} logger - Logger instance
  * @throws {ValidationError} If pattern is invalid
  */
-export function validateMatchesPattern(pattern, blueprint, patternIndex, logger) {
+export function validateMatchesPattern(
+  pattern,
+  blueprint,
+  patternIndex,
+  logger
+) {
   const patternStr = pattern.matchesPattern;
 
   // Check pattern is non-empty string

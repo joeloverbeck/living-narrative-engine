@@ -18,45 +18,59 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
 ### Modified Files (by mod)
 
 **positioning:**
+
 - `data/mods/positioning/rules/*.rule.json`
 
 **movement:**
+
 - `data/mods/movement/rules/*.rule.json`
 
 **physical-control:**
+
 - `data/mods/physical-control/rules/*.rule.json`
 
 **companionship:**
+
 - `data/mods/companionship/rules/*.rule.json`
 
 **violence:**
+
 - `data/mods/violence/rules/*.rule.json`
 
 **distress:**
+
 - `data/mods/distress/rules/*.rule.json`
 
 **gymnastics:**
+
 - `data/mods/gymnastics/rules/*.rule.json`
 
 **ballet:**
+
 - `data/mods/ballet/rules/*.rule.json`
 
 **music:**
+
 - `data/mods/music/rules/*.rule.json`
 
 **exercise:**
+
 - `data/mods/exercise/rules/*.rule.json`
 
 **patrol:**
+
 - `data/mods/patrol/rules/*.rule.json`
 
 **activity:**
+
 - `data/mods/activity/rules/*.rule.json`
 
 **weapons:**
+
 - `data/mods/weapons/rules/*.rule.json`
 
 **furniture:**
+
 - `data/mods/furniture/rules/*.rule.json`
 
 ---
@@ -64,6 +78,7 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Action files (only rules)
 - Condition files
 - Component files
@@ -76,7 +91,7 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
   - hand-holding (OPEHANARCANA-016)
   - items (OPEHANARCANA-020)
   - seduction (OPEHANARCANA-021)
-  - sex-* mods (OPEHANARCANA-022)
+  - sex-\* mods (OPEHANARCANA-022)
 - Handler implementations
 - DI or schema files
 
@@ -85,6 +100,7 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
 ## Migration Pattern
 
 ### Before (~100 lines per rule)
+
 ```json
 {
   "actions": [
@@ -103,6 +119,7 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
 ```
 
 ### After (~15 lines)
+
 ```json
 {
   "id": "[mod]:handle_[action_name]",
@@ -127,17 +144,20 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
 ## Migration Checklist
 
 ### Priority 1 (Large mods)
+
 - [ ] positioning
 - [ ] movement
 - [ ] physical-control
 - [ ] violence
 
 ### Priority 2 (Medium mods)
+
 - [ ] companionship
 - [ ] weapons
 - [ ] furniture
 
 ### Priority 3 (Small mods)
+
 - [ ] distress
 - [ ] gymnastics
 - [ ] ballet
@@ -153,11 +173,13 @@ Migrate all remaining mods from the expanded pattern to use `PREPARE_ACTION_CONT
 ### Tests That Must Pass
 
 1. **Integration tests for each mod:**
+
    ```bash
    npm run test:integration -- tests/integration/mods/[mod]/
    ```
 
 2. **Full validation:**
+
    ```bash
    npm run validate
    ```

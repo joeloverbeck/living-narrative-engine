@@ -6,8 +6,8 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                           | Purpose           |
+| -------------------------------------------------------------- | ----------------- |
 | `data/mods/ranged/rules/handle_throw_item_at_target.rule.json` | Main rule handler |
 
 ## Implementation Details
@@ -19,7 +19,9 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_throw_item_at_target",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "ranged:event-is-action-throw-item-at-target" },
+  "condition": {
+    "condition_ref": "ranged:event-is-action-throw-item-at-target"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -27,11 +29,17 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "throwableName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "throwableName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -85,7 +93,9 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowCritical" }]
       }
     },
@@ -93,7 +103,9 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
       "type": "IF",
       "comment": "Handle SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowHit" }]
       }
     },
@@ -101,7 +113,9 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
       "type": "IF",
       "comment": "Handle FUMBLE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowFumble" }]
       }
     },
@@ -109,7 +123,9 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
       "type": "IF",
       "comment": "Handle FAILURE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowMiss" }]
       }
     }
@@ -128,14 +144,14 @@ Create the rule that handles the `throw_item_at_target` action. The rule process
 
 ### Key Operations Used
 
-| Operation | Purpose |
-|-----------|---------|
-| `GET_NAME` | Get display names for narrative text |
-| `QUERY_COMPONENT` | Get actor's position component |
+| Operation                 | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| `GET_NAME`                | Get display names for narrative text   |
+| `QUERY_COMPONENT`         | Get actor's position component         |
 | `GET_DAMAGE_CAPABILITIES` | Calculate damage from weapon or weight |
-| `RESOLVE_OUTCOME` | Determine outcome using skill contest |
-| `SET_VARIABLE` | Set up context variables for macros |
-| `IF` | Branch to appropriate outcome macro |
+| `RESOLVE_OUTCOME`         | Determine outcome using skill contest  |
+| `SET_VARIABLE`            | Set up context variables for macros    |
+| `IF`                      | Branch to appropriate outcome macro    |
 
 ## Out of Scope
 
@@ -175,6 +191,7 @@ npm run validate
 ## Reference Files
 
 For understanding rule patterns:
+
 - `data/mods/weapons/rules/handle_swing_at_target.rule.json` - Similar combat rule
 
 ## Dependencies

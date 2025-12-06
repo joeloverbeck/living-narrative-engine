@@ -963,7 +963,10 @@ export class CharacterBuilderBootstrap {
     };
 
     const optionalServices = [
-      ['controllerLifecycleOrchestrator', tokens.ControllerLifecycleOrchestrator],
+      [
+        'controllerLifecycleOrchestrator',
+        tokens.ControllerLifecycleOrchestrator,
+      ],
       ['domElementManager', tokens.DOMElementManager],
       ['eventListenerRegistry', tokens.EventListenerRegistry],
       ['asyncUtilitiesToolkit', tokens.AsyncUtilitiesToolkit],

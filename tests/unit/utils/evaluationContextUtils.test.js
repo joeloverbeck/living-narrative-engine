@@ -7,10 +7,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 import * as safeDispatchErrorUtils from '../../../src/utils/safeDispatchErrorUtils.js';
 
-const safeDispatchSpy = jest.spyOn(
-  safeDispatchErrorUtils,
-  'safeDispatchError'
-);
+const safeDispatchSpy = jest.spyOn(safeDispatchErrorUtils, 'safeDispatchError');
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -70,7 +67,9 @@ describe('ensureEvaluationContext', () => {
     const result = ensureEvaluationContext(ctx, null, logger);
 
     expect(result).toBeNull();
-    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(messageMatcher));
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringMatching(messageMatcher)
+    );
     expect(safeDispatchSpy).not.toHaveBeenCalled();
   });
 
@@ -82,7 +81,9 @@ describe('ensureEvaluationContext', () => {
     const result = ensureEvaluationContext(ctx, dispatcher, logger);
 
     expect(result).toBeNull();
-    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(messageMatcher));
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringMatching(messageMatcher)
+    );
     expect(safeDispatchSpy).not.toHaveBeenCalled();
   });
 });

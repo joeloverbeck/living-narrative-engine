@@ -263,9 +263,14 @@ export function createErrorResponse(error, operationType, options = {}) {
  * @param {object} [options] - Additional options
  * @returns {QueryResponse} Query response
  */
-export function createQueryResponse(items, pagination, operationType, options = {}) {
+export function createQueryResponse(
+  items,
+  pagination,
+  operationType,
+  options = {}
+) {
   const response = createSuccessResponse({}, operationType, options);
-  
+
   response.data = items;
   response.pagination = {
     total: pagination.total || items.length,
@@ -296,9 +301,14 @@ export function createQueryResponse(items, pagination, operationType, options = 
  * @param {object} [options] - Additional options
  * @returns {ModificationResponse} Modification response
  */
-export function createModificationResponse(data, changes, operationType, options = {}) {
+export function createModificationResponse(
+  data,
+  changes,
+  operationType,
+  options = {}
+) {
   const response = createSuccessResponse(data, operationType, options);
-  
+
   response.changes = changes;
 
   if (options.affectedEntities) {
@@ -346,7 +356,11 @@ export function createBulkResponse(results, operationType, options = {}) {
  * @param {object} [options] - Additional options
  * @returns {ValidationResponse} Validation response
  */
-export function createValidationResponse(validation, operationType, options = {}) {
+export function createValidationResponse(
+  validation,
+  operationType,
+  options = {}
+) {
   const response = createSuccessResponse(validation, operationType, options);
 
   if (options.suggestions) {
@@ -394,8 +408,16 @@ export function createGraphResponse(graphData, operationType, options = {}) {
  * @param {object} [options] - Additional options
  * @returns {DescriptionResponse} Description response
  */
-export function createDescriptionResponse(descriptionData, operationType, options = {}) {
-  const response = createSuccessResponse(descriptionData, operationType, options);
+export function createDescriptionResponse(
+  descriptionData,
+  operationType,
+  options = {}
+) {
+  const response = createSuccessResponse(
+    descriptionData,
+    operationType,
+    options
+  );
 
   if (options.generationMetadata) {
     response.generationMetadata = options.generationMetadata;
@@ -427,14 +449,13 @@ export async function withTiming(operation, operationType, options = {}) {
     }
 
     // Wrap result in success response
-    return createSuccessResponse(result, operationType, { 
+    return createSuccessResponse(result, operationType, {
       duration,
       ...options,
     });
-
   } catch (error) {
     const duration = Date.now() - startTime;
-    return createErrorResponse(error, operationType, { 
+    return createErrorResponse(error, operationType, {
       duration,
       ...options,
     });

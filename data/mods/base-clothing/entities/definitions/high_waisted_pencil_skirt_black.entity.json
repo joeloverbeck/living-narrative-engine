@@ -8,10 +8,7 @@
       "equipmentSlots": {
         "primary": "torso_lower"
       },
-      "allowedLayers": [
-        "underwear",
-        "base"
-      ]
+      "allowedLayers": ["underwear", "base"]
     },
     "core:material": {
       "material": "fabric"

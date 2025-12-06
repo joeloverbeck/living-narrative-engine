@@ -141,7 +141,9 @@ describe('validateOperations script - Validation Logic', () => {
 
   describe('checkSchemaReferences', () => {
     it('should detect missing schema reference', () => {
-      const operations = [{ schemaFile: 'drinkFrom.schema.json', type: 'DRINK_FROM' }];
+      const operations = [
+        { schemaFile: 'drinkFrom.schema.json', type: 'DRINK_FROM' },
+      ];
       const operationSchema = {
         $defs: {
           Operation: {
@@ -217,7 +219,11 @@ describe('validateOperations script - Validation Logic', () => {
 
     it('should pass when all tokens are defined', () => {
       const operations = [{ type: 'DRINK_FROM' }, { type: 'ADD_COMPONENT' }];
-      const definedTokens = ['DrinkFromHandler', 'AddComponentHandler', 'OtherHandler'];
+      const definedTokens = [
+        'DrinkFromHandler',
+        'AddComponentHandler',
+        'OtherHandler',
+      ];
 
       const missing = findMissingTokens(operations, definedTokens);
       expect(missing).toHaveLength(0);
@@ -280,7 +286,7 @@ function convertOperationTypeToTokenName(operationType) {
   return (
     operationType
       .split('_')
-      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
       .join('') + 'Handler'
   );
 }
@@ -294,7 +300,9 @@ function convertOperationTypeToFileName(operationType) {
   return (
     parts
       .map((word, idx) =>
-        idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase()
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
       )
       .join('') + 'Handler.js'
   );
@@ -309,7 +317,9 @@ function convertOperationTypeToSchemaName(operationType) {
   return (
     parts
       .map((word, idx) =>
-        idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase()
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
       )
       .join('') + '.schema.json'
   );
@@ -321,7 +331,9 @@ function convertOperationTypeToSchemaName(operationType) {
  */
 function filterOperationSchemas(schemaFiles) {
   return schemaFiles.filter(
-    f => !f.endsWith('base-operation.schema.json') && !f.endsWith('nested-operation.schema.json')
+    (f) =>
+      !f.endsWith('base-operation.schema.json') &&
+      !f.endsWith('nested-operation.schema.json')
   );
 }
 
@@ -340,11 +352,13 @@ function extractOperationType(schema) {
  */
 function findMissingSchemaReferences(operations, operationSchema) {
   const referencedSchemas =
-    operationSchema.$defs?.Operation?.anyOf?.map(ref => path.basename(ref.$ref)) || [];
+    operationSchema.$defs?.Operation?.anyOf?.map((ref) =>
+      path.basename(ref.$ref)
+    ) || [];
 
   return operations
-    .filter(op => !referencedSchemas.includes(op.schemaFile))
-    .map(op => op.schemaFile);
+    .filter((op) => !referencedSchemas.includes(op.schemaFile))
+    .map((op) => op.schemaFile);
 }
 
 /**
@@ -353,7 +367,9 @@ function findMissingSchemaReferences(operations, operationSchema) {
  * @param knownTypes
  */
 function findMissingWhitelistEntries(operations, knownTypes) {
-  return operations.filter(op => !knownTypes.includes(op.type)).map(op => op.type);
+  return operations
+    .filter((op) => !knownTypes.includes(op.type))
+    .map((op) => op.type);
 }
 
 /**
@@ -363,8 +379,8 @@ function findMissingWhitelistEntries(operations, knownTypes) {
  */
 function findMissingTokens(operations, definedTokens) {
   return operations
-    .map(op => convertOperationTypeToTokenName(op.type))
-    .filter(token => !definedTokens.includes(token));
+    .map((op) => convertOperationTypeToTokenName(op.type))
+    .filter((token) => !definedTokens.includes(token));
 }
 
 /**

@@ -81,7 +81,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -168,21 +169,29 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
       structure: { rootPartId: partIds.torso },
     });
 
-    entityManager.addComponent(partIds.torso, 'anatomy:part', { subType: 'torso' });
+    entityManager.addComponent(partIds.torso, 'anatomy:part', {
+      subType: 'torso',
+    });
     entityManager.addComponent(partIds.torso, 'anatomy:joint', {
       parentId: actorId,
       socketId: 'spine-base',
     });
     entityManager.addComponent(partIds.torso, 'custom:metadata', {});
 
-    entityManager.addComponent(partIds.head, 'anatomy:part', { subType: 'head' });
+    entityManager.addComponent(partIds.head, 'anatomy:part', {
+      subType: 'head',
+    });
     entityManager.addComponent(partIds.head, 'anatomy:joint', {
       parentId: partIds.torso,
       socketId: 'neck',
     });
-    entityManager.addComponent(partIds.head, 'core:description', { text: 'head' });
+    entityManager.addComponent(partIds.head, 'core:description', {
+      text: 'head',
+    });
 
-    entityManager.addComponent(partIds.leftArm, 'anatomy:part', { subType: 'arm' });
+    entityManager.addComponent(partIds.leftArm, 'anatomy:part', {
+      subType: 'arm',
+    });
     entityManager.addComponent(partIds.leftArm, 'anatomy:joint', {
       parentId: partIds.torso,
       socketId: 'left-shoulder',
@@ -191,7 +200,9 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
       posture: { state: 'braced' },
     });
 
-    entityManager.addComponent(partIds.leftHand, 'anatomy:part', { subType: 'hand' });
+    entityManager.addComponent(partIds.leftHand, 'anatomy:part', {
+      subType: 'hand',
+    });
     entityManager.addComponent(partIds.leftHand, 'anatomy:joint', {
       parentId: partIds.leftArm,
       socketId: 'left-wrist',
@@ -200,7 +211,9 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
       itemId: 'sword-01',
     });
 
-    entityManager.addComponent(partIds.rightArm, 'anatomy:part', { subType: 'arm' });
+    entityManager.addComponent(partIds.rightArm, 'anatomy:part', {
+      subType: 'arm',
+    });
     entityManager.addComponent(partIds.rightArm, 'anatomy:joint', {
       parentId: partIds.torso,
       socketId: 'right-shoulder',
@@ -210,25 +223,33 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
     });
     entityManager.addComponent(partIds.rightArm, 'core:description', {});
 
-    entityManager.addComponent(partIds.rightHand, 'anatomy:part', { subType: 'hand' });
+    entityManager.addComponent(partIds.rightHand, 'anatomy:part', {
+      subType: 'hand',
+    });
     entityManager.addComponent(partIds.rightHand, 'anatomy:joint', {
       parentId: partIds.rightArm,
       socketId: 'right-wrist',
     });
 
-    entityManager.addComponent(partIds.heart, 'anatomy:part', { subType: 'heart' });
+    entityManager.addComponent(partIds.heart, 'anatomy:part', {
+      subType: 'heart',
+    });
     entityManager.addComponent(partIds.heart, 'anatomy:joint', {
       parentId: partIds.torso,
       socketId: 'chest',
     });
 
-    entityManager.addComponent(partIds.leftLeg, 'anatomy:part', { subType: 'leg' });
+    entityManager.addComponent(partIds.leftLeg, 'anatomy:part', {
+      subType: 'leg',
+    });
     entityManager.addComponent(partIds.leftLeg, 'anatomy:joint', {
       parentId: partIds.torso,
       socketId: 'hip',
     });
 
-    entityManager.addComponent(orphanPartId, 'anatomy:part', { subType: 'orphan' });
+    entityManager.addComponent(orphanPartId, 'anatomy:part', {
+      subType: 'orphan',
+    });
 
     const service = new BodyGraphService({
       entityManager,
@@ -237,9 +258,15 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
       queryCache,
     });
 
-    const bodyComponent = entityManager.getComponentData(actorId, 'anatomy:body');
+    const bodyComponent = entityManager.getComponentData(
+      actorId,
+      'anatomy:body'
+    );
 
-    const buildCacheSpy = jest.spyOn(AnatomyCacheManager.prototype, 'buildCache');
+    const buildCacheSpy = jest.spyOn(
+      AnatomyCacheManager.prototype,
+      'buildCache'
+    );
     const findPartsSpy = jest.spyOn(AnatomyGraphAlgorithms, 'findPartsByType');
     const allPartsSpy = jest.spyOn(AnatomyGraphAlgorithms, 'getAllParts');
     const pathSpy = jest.spyOn(AnatomyGraphAlgorithms, 'getPath');
@@ -267,11 +294,7 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
     expect(allPartsSpy).toHaveBeenCalledTimes(1);
 
     expect(service.getAllParts({ root: partIds.torso })).toEqual(
-      expect.arrayContaining([
-        partIds.torso,
-        partIds.head,
-        partIds.leftArm,
-      ])
+      expect.arrayContaining([partIds.torso, partIds.head, partIds.leftArm])
     );
 
     expect(service.getAllParts({ body: {} })).toEqual([]);
@@ -304,10 +327,12 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
     const actorPartsSecond = service.getAllParts(bodyComponent, actorId);
     expect(allPartsSpy).toHaveBeenCalledTimes(2);
 
-    expect(service.hasPartWithComponent(bodyComponent, 'equipment:grip')).toBe(true);
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'custom:metadata')
-    ).toBe(false);
+    expect(service.hasPartWithComponent(bodyComponent, 'equipment:grip')).toBe(
+      true
+    );
+    expect(service.hasPartWithComponent(bodyComponent, 'custom:metadata')).toBe(
+      false
+    );
 
     expect(
       service.hasPartWithComponentValue(
@@ -383,7 +408,9 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
     );
     expect(subgraphSpy).toHaveBeenCalled();
 
-    await expect(service.getBodyGraph(42)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph(42)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('ghost')).rejects.toThrow(
       /has no anatomy:body/
     );
@@ -413,7 +440,9 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
     );
     expect(graph.getConnectedParts('missing-node')).toEqual([]);
 
-    await expect(service.getAnatomyData(99)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData(99)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getAnatomyData('ghost')).resolves.toBeNull();
     await expect(service.getAnatomyData(actorId)).resolves.toEqual({
       recipeId: 'test:humanoid',
@@ -487,12 +516,12 @@ describe('BodyGraphService integration - cache and query orchestration', () => {
       expect.objectContaining({ reason: 'manual' })
     );
 
-    expect(
-      queryCache.allPartsCaches.map((entry) => entry.rootId)
-    ).toEqual(expect.arrayContaining([partIds.torso, actorId]));
-    expect(
-      queryCache.findPartsCaches.map((entry) => entry.rootId)
-    ).toContain(actorId);
+    expect(queryCache.allPartsCaches.map((entry) => entry.rootId)).toEqual(
+      expect.arrayContaining([partIds.torso, actorId])
+    );
+    expect(queryCache.findPartsCaches.map((entry) => entry.rootId)).toContain(
+      actorId
+    );
     expect(
       queryCache.invalidations.filter((rootId) => rootId === actorId).length
     ).toBeGreaterThanOrEqual(2);

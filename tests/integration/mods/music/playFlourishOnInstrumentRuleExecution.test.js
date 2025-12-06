@@ -34,7 +34,10 @@ describe('music:play_flourish_on_instrument - Rule Execution', () => {
 
   describe('Successfully executes play_flourish_on_instrument action', () => {
     it('should dispatch perceptible event with mood-adjective-flavored message', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Felix')
@@ -74,8 +77,12 @@ describe('music:play_flourish_on_instrument - Rule Execution', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('Felix');
       expect(perceptibleEvent.payload.descriptionText).toContain('teasing');
       expect(perceptibleEvent.payload.descriptionText).toContain('flourish');
-      expect(perceptibleEvent.payload.descriptionText).toContain('silver flute');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/flashes a.*flourish on/);
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        'silver flute'
+      );
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /flashes a.*flourish on/
+      );
     });
 
     it('should dispatch action success event', async () => {
@@ -195,7 +202,10 @@ describe('music:play_flourish_on_instrument - Rule Execution', () => {
 
   describe('Edge cases and validation', () => {
     it('should handle multiple sequential flourish performances correctly', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Lyra')

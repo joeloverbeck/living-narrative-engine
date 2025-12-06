@@ -5,9 +5,7 @@
   "description": "Take an item from an open container",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "forbidden_components": {
     "actor": [

@@ -49,19 +49,25 @@ data/mods/[mod-id]/
   "description": "Human-readable description of what this task achieves",
   "structuralGates": {
     "description": "Coarse applicability check",
-    "condition": { /* JSON Logic expression */ }
+    "condition": {
+      /* JSON Logic expression */
+    }
   },
   "planningScope": "modId:scope_name",
   "planningPreconditions": [
     {
       "description": "Precondition description",
-      "condition": { /* JSON Logic expression */ }
+      "condition": {
+        /* JSON Logic expression */
+      }
     }
   ],
   "planningEffects": [
     {
       "type": "OPERATION_TYPE",
-      "parameters": { /* operation-specific parameters */ }
+      "parameters": {
+        /* operation-specific parameters */
+      }
     }
   ],
   "refinementMethods": [
@@ -161,7 +167,7 @@ data/mods/[mod-id]/
 
 ### Phase 2: Structural Validation
 
-1. **TaskLoader._validateTaskStructure()** performs:
+1. **TaskLoader.\_validateTaskStructure()** performs:
    - Planning scope reference format validation
    - Refinement method ID format validation
    - Method ID to task ID consistency check
@@ -270,8 +276,8 @@ Task {taskId}: Each planning effect must have a 'type' property
     "description": "Actor must have hands and combat capability",
     "condition": {
       "and": [
-        {"has_component": ["actor", "core:has_hands"]},
-        {"has_component": ["actor", "core:combat_capable"]}
+        { "has_component": ["actor", "core:has_hands"] },
+        { "has_component": ["actor", "core:combat_capable"] }
       ]
     }
   },
@@ -281,8 +287,8 @@ Task {taskId}: Each planning effect must have a 'type' property
       "description": "Weapon must be accessible",
       "condition": {
         "or": [
-          {"has_component": ["weapon", "core:in_reach"]},
-          {"has_component": ["weapon", "core:in_inventory"]}
+          { "has_component": ["weapon", "core:in_reach"] },
+          { "has_component": ["weapon", "core:in_inventory"] }
         ]
       }
     },
@@ -370,6 +376,7 @@ Task {taskId}: Each planning effect must have a 'type' property
 ### Unit Tests
 
 Test TaskLoader validation logic:
+
 - Scope reference format validation
 - Method ID format validation
 - Method ID to task ID consistency
@@ -378,6 +385,7 @@ Test TaskLoader validation logic:
 ### Integration Tests
 
 Test complete loading workflow:
+
 - Load tasks from mod
 - Verify registration in data registry
 - Check loaded data structure
@@ -386,6 +394,7 @@ Test complete loading workflow:
 ### End-to-End Tests
 
 Test with GOAP planner:
+
 - Task selection based on preconditions
 - Refinement method applicability
 - Action sequence execution

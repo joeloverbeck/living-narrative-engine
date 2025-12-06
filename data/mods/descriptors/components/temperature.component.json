@@ -8,13 +8,7 @@
       "temperature": {
         "type": "string",
         "description": "The temperature characteristic",
-        "enum": [
-          "normal",
-          "cold",
-          "hot",
-          "unnaturally-warm",
-          "variable"
-        ],
+        "enum": ["normal", "cold", "hot", "unnaturally-warm", "variable"],
         "default": "normal"
       }
     },

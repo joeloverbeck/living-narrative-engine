@@ -23,6 +23,7 @@ Each pattern has specific root causes and requires targeted refactoring approach
 ## Pattern 1: Entity System Circular Dependencies
 
 ### Overview
+
 **Affected Files:** 21+
 **Root Cause:** Type imports in `serviceInitializerUtils.js` from `logic/defs.js` creating circular chain through monitoring system
 
@@ -51,6 +52,7 @@ createDefaultServicesWithConfig.js  [CYCLE DETECTED]
 ### Detailed Cycle Analysis
 
 #### Primary Cycle Chain
+
 1. `src/entities/utils/createDefaultServicesWithConfig.js` - Creates monitoring services
 2. `src/entities/monitoring/MonitoringCoordinator.js` - Coordinates monitoring
 3. `src/entities/monitoring/MemoryMonitor.js` - Memory monitoring implementation
@@ -61,13 +63,16 @@ createDefaultServicesWithConfig.js  [CYCLE DETECTED]
 8. Back to step 1
 
 #### Multiple Cycle Variations
+
 The cycle manifests through different service paths:
+
 - Through `EntityRepositoryAdapter` → MonitoringCoordinator → MemoryMonitor → ...
 - Through `ComponentMutationService` → MonitoringCoordinator → MemoryMonitor → ...
 - Through `EntityLifecycleManager` → MonitoringCoordinator → MemoryMonitor → ...
 - Through `BatchOperationManager` → EntityLifecycleManager → ...
 
 #### Secondary Affected Files
+
 - All services created by `createDefaultServicesWithConfig.js`
 - All monitoring strategies extending `serviceBase.js`
 - All components depending on EntityManager
@@ -75,6 +80,7 @@ The cycle manifests through different service paths:
 ### Root Cause Analysis
 
 **Problem 1: Type Import Coupling**
+
 ```javascript
 // serviceInitializerUtils.js (line 76)
 /**
@@ -88,6 +94,7 @@ resolveExecutionLogger(defaultLogger, executionContext) {
 ```
 
 **Problem 2: Monitoring System Integration**
+
 ```javascript
 // createDefaultServicesWithConfig.js
 const monitoringCoordinator = new MonitoringCoordinator({...});
@@ -100,6 +107,7 @@ const entityRepository = new EntityRepositoryAdapter({
 ```
 
 **Problem 3: Type Definition Location**
+
 ```javascript
 // logic/defs.js - Contains ExecutionContext type
 /**
@@ -122,6 +130,7 @@ const entityRepository = new EntityRepositoryAdapter({
 **Action:** Move ExecutionContext type definition to break the circular import
 
 **New File:** `src/logic/types/executionTypes.js`
+
 ```javascript
 /**
  * @file Execution context type definitions
@@ -167,6 +176,7 @@ export {};
 #### Phase 2: Update serviceInitializerUtils.js
 
 **Modified:** `src/utils/serviceInitializerUtils.js`
+
 ```javascript
 /**
  * @file Service initialization utilities (refactored)
@@ -199,6 +209,7 @@ export class ServiceSetup {
 #### Phase 3: Update logic/defs.js
 
 **Modified:** `src/logic/defs.js`
+
 ```javascript
 /**
  * @file Operation handler type definitions
@@ -252,11 +263,24 @@ describe('Entity System - Circular Dependency Resolution', () => {
 
   it('should resolve execution logger with ExecutionContext', () => {
     const serviceSetup = new ServiceSetup();
-    const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-    const contextLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
+    const contextLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
 
     const executionContext = { logger: contextLogger };
-    const resolved = serviceSetup.resolveExecutionLogger(mockLogger, executionContext);
+    const resolved = serviceSetup.resolveExecutionLogger(
+      mockLogger,
+      executionContext
+    );
 
     expect(resolved).toBe(contextLogger);
   });
@@ -264,7 +288,9 @@ describe('Entity System - Circular Dependency Resolution', () => {
   it('should maintain backward compatibility with logic/defs.js exports', () => {
     // Verify re-exports work correctly
     const { ExecutionContext: ExportedType } = require('../logic/defs.js');
-    const { ExecutionContext: OriginalType } = require('../logic/types/executionTypes.js');
+    const {
+      ExecutionContext: OriginalType,
+    } = require('../logic/types/executionTypes.js');
 
     // Both should reference the same type definition
     expect(typeof ExportedType).toBe(typeof OriginalType);
@@ -279,6 +305,7 @@ describe('Entity System - Circular Dependency Resolution', () => {
 **Test Coverage Required:** 85%+
 
 **Benefits:**
+
 - ✅ Eliminates 21+ circular dependency warnings with minimal code changes
 - ✅ Improves code maintainability and module resolution
 - ✅ Enables better tree-shaking and bundling
@@ -286,6 +313,7 @@ describe('Entity System - Circular Dependency Resolution', () => {
 - ✅ No runtime performance impact (type-only changes)
 
 **Risks:**
+
 - ⚠️ Need to verify all ExecutionContext usages still work
 - ⚠️ Backward compatibility depends on re-exports
 
@@ -294,6 +322,7 @@ describe('Entity System - Circular Dependency Resolution', () => {
 ## Pattern 2: Character Builder Cache Circularity
 
 ### Overview
+
 **Affected Files:** 3
 **Root Cause:** Three-way circular dependency through event constants and cache helper imports
 
@@ -310,6 +339,7 @@ CoreMotivationsCacheManager.js  [CYCLE DETECTED]
 ```
 
 **Alternative Cycle Path:**
+
 ```
 characterBuilderService.js
     ↓ (imports CacheKeys)
@@ -323,6 +353,7 @@ characterBuilderService.js  [CYCLE DETECTED]
 ### Detailed Cycle Analysis
 
 #### Files Involved
+
 1. `src/characterBuilder/services/characterBuilderService.js` - Defines CHARACTER_BUILDER_EVENTS, imports cache helpers
 2. `src/characterBuilder/cache/cacheHelpers.js` - Utility functions with type imports from CoreMotivationsCacheManager
 3. `src/characterBuilder/cache/CoreMotivationsCacheManager.js` - Imports CHARACTER_BUILDER_EVENTS from service
@@ -330,6 +361,7 @@ characterBuilderService.js  [CYCLE DETECTED]
 ### Root Cause Analysis
 
 **Problem 1: Shared Event Constants**
+
 ```javascript
 // characterBuilderService.js (lines 50-100) - Defines events
 export const CHARACTER_BUILDER_EVENTS = {
@@ -353,6 +385,7 @@ export class CoreMotivationsCacheManager {
 ```
 
 **Problem 2: Cache Helpers Type Coupling**
+
 ```javascript
 // characterBuilderService.js (line 22) - Imports cache helpers
 import { CacheKeys, CacheInvalidation } from '../cache/cacheHelpers.js';
@@ -364,11 +397,12 @@ import { CacheKeys, CacheInvalidation } from '../cache/cacheHelpers.js';
 export const CacheInvalidation = {
   invalidateConcept(cache, conceptId) {
     // This JSDoc type import creates the third leg of the cycle!
-  }
+  },
 };
 ```
 
 **Problem 3: Three-Way Dependency**
+
 ```javascript
 // The complete cycle:
 // 1. CoreMotivationsCacheManager imports CHARACTER_BUILDER_EVENTS from service
@@ -383,6 +417,7 @@ export const CacheInvalidation = {
 **Action:** Create dedicated event constants file
 
 **New File:** `src/characterBuilder/events/characterBuilderEvents.js`
+
 ```javascript
 /**
  * @file Character Builder Event Constants
@@ -432,6 +467,7 @@ export const CHARACTER_BUILDER_EVENTS = {
 **Action:** Remove dependencies from cache helpers
 
 **Modified:** `src/characterBuilder/cache/cacheHelpers.js`
+
 ```javascript
 /**
  * @file Cache Helpers (refactored)
@@ -460,8 +496,14 @@ export const CacheInvalidation = {
   ALL_DIRECTIONS: /^directions:/,
   ALL_CLICHES: /^cliches:/,
   ALL_MOTIVATIONS: /^motivations:/,
-  CONCEPT_RELATED: (conceptId) => new RegExp(`(concepts:by-id:${conceptId}|motivations:by-concept:${conceptId})`),
-  DIRECTION_RELATED: (directionId) => new RegExp(`(directions:by-id:${directionId}|cliches:by-direction:${directionId})`),
+  CONCEPT_RELATED: (conceptId) =>
+    new RegExp(
+      `(concepts:by-id:${conceptId}|motivations:by-concept:${conceptId})`
+    ),
+  DIRECTION_RELATED: (directionId) =>
+    new RegExp(
+      `(directions:by-id:${directionId}|cliches:by-direction:${directionId})`
+    ),
 };
 
 /**
@@ -493,6 +535,7 @@ export function getInvalidationPattern(type, param = null) {
 #### Phase 3: Update Cache Manager
 
 **Modified:** `src/characterBuilder/cache/CoreMotivationsCacheManager.js`
+
 ```javascript
 /**
  * @file Core Motivations Cache Manager (refactored)
@@ -535,6 +578,7 @@ export class CoreMotivationsCacheManager {
 #### Phase 4: Update Character Builder Service
 
 **Modified:** `src/characterBuilder/services/characterBuilderService.js`
+
 ```javascript
 /**
  * @file Character Builder Service (refactored)
@@ -543,7 +587,11 @@ export class CoreMotivationsCacheManager {
 
 // Import from dedicated events file
 import { CHARACTER_BUILDER_EVENTS } from '../events/characterBuilderEvents.js';
-import { CacheKeys, CacheInvalidation, generateCacheKey } from '../cache/cacheHelpers.js';
+import {
+  CacheKeys,
+  CacheInvalidation,
+  generateCacheKey,
+} from '../cache/cacheHelpers.js';
 
 /**
  * Main character builder orchestration service
@@ -563,7 +611,9 @@ export class CharacterBuilderService {
 
   async createConcept(conceptData) {
     // Use cache helpers without circular dependency
-    const cacheKey = generateCacheKey(CacheKeys.CONCEPT_BY_ID, { id: conceptData.id });
+    const cacheKey = generateCacheKey(CacheKeys.CONCEPT_BY_ID, {
+      id: conceptData.id,
+    });
 
     // Dispatch events
     this.#eventBus.dispatch({
@@ -612,8 +662,12 @@ export { CHARACTER_BUILDER_EVENTS };
 // Test: Verify event constants are accessible
 describe('Character Builder Events', () => {
   it('should provide all event constants', () => {
-    expect(CHARACTER_BUILDER_EVENTS.CACHE_INITIALIZED).toBe('core:cache_initialized');
-    expect(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED).toBe('core:character_concept_created');
+    expect(CHARACTER_BUILDER_EVENTS.CACHE_INITIALIZED).toBe(
+      'core:cache_initialized'
+    );
+    expect(CHARACTER_BUILDER_EVENTS.CONCEPT_CREATED).toBe(
+      'core:character_concept_created'
+    );
   });
 });
 
@@ -634,9 +688,15 @@ describe('Cache Helpers', () => {
 // Test: Verify no circular dependencies
 describe('Character Builder - Circular Dependencies', () => {
   it('should import events without circular dependency', () => {
-    const { CHARACTER_BUILDER_EVENTS } = require('../events/characterBuilderEvents.js');
-    const { CoreMotivationsCacheManager } = require('../cache/CoreMotivationsCacheManager.js');
-    const { CharacterBuilderService } = require('../services/characterBuilderService.js');
+    const {
+      CHARACTER_BUILDER_EVENTS,
+    } = require('../events/characterBuilderEvents.js');
+    const {
+      CoreMotivationsCacheManager,
+    } = require('../cache/CoreMotivationsCacheManager.js');
+    const {
+      CharacterBuilderService,
+    } = require('../services/characterBuilderService.js');
 
     // All imports should succeed without circular dependency errors
     expect(CHARACTER_BUILDER_EVENTS).toBeDefined();
@@ -653,12 +713,14 @@ describe('Character Builder - Circular Dependencies', () => {
 **Test Coverage Required:** 85%+
 
 **Benefits:**
+
 - ✅ Eliminates 3 circular dependency warnings
 - ✅ Clearer event constant management
 - ✅ Pure functional cache helpers
 - ✅ Better code organization
 
 **Risks:**
+
 - ⚠️ Need to verify all event constant usage
 - ⚠️ Backward compatibility requires re-exports
 
@@ -667,6 +729,7 @@ describe('Character Builder - Circular Dependencies', () => {
 ## Pattern 3: Unified Cache System Circularity
 
 ### Overview
+
 **Affected Files:** Multiple (part of Pattern 1)
 **Root Cause:** Same as Pattern 1 - UnifiedCache participates in the type import circular dependency chain
 
@@ -691,6 +754,7 @@ UnifiedCache.js  [CYCLE DETECTED]
 ### Detailed Cycle Analysis
 
 #### Files Involved
+
 1. `src/cache/UnifiedCache.js` - Extends BaseService
 2. `src/utils/serviceBase.js` - Calls initializeServiceLogger
 3. `src/utils/serviceInitializerUtils.js` - Has ExecutionContext type import
@@ -698,6 +762,7 @@ UnifiedCache.js  [CYCLE DETECTED]
 ### Root Cause Analysis
 
 **The Real Problem: Same Type Import Issue as Pattern 1**
+
 ```javascript
 // UnifiedCache.js (line 8) - Extends BaseService
 import { BaseService } from '../utils/serviceBase.js';
@@ -705,7 +770,7 @@ import { BaseService } from '../utils/serviceBase.js';
 export class UnifiedCache extends BaseService {
   constructor({ logger }, config = {}) {
     super();
-    this.#logger = this._init('UnifiedCache', logger);  // Calls BaseService._init
+    this.#logger = this._init('UnifiedCache', logger); // Calls BaseService._init
   }
 }
 
@@ -798,7 +863,7 @@ describe('UnifiedCache - Post Pattern 1 Fix', () => {
       debug: jest.fn(),
     };
 
-    ['lru', 'lfu', 'fifo'].forEach(policy => {
+    ['lru', 'lfu', 'fifo'].forEach((policy) => {
       const cache = new UnifiedCache(
         { logger: mockLogger },
         { evictionPolicy: policy }
@@ -816,12 +881,14 @@ describe('UnifiedCache - Post Pattern 1 Fix', () => {
 **Test Coverage Required:** Existing tests sufficient
 
 **Benefits:**
+
 - ✅ Eliminates 2+ circular dependency warnings (part of 21+ total from Pattern 1)
 - ✅ No code changes required for UnifiedCache or BaseService
 - ✅ Preserves all existing functionality
 - ✅ Zero risk since no modifications needed
 
 **Risks:**
+
 - None - this is automatically fixed by Pattern 1
 
 ---
@@ -829,10 +896,12 @@ describe('UnifiedCache - Post Pattern 1 Fix', () => {
 ## Implementation Roadmap
 
 ### Phase 1: Extract ExecutionContext Type (Pattern 1 Fix)
+
 **Duration:** 1.5 hours
 **Focus:** Break circular dependency by moving type definition
 
 **Tasks:**
+
 1. Create `src/logic/types/executionTypes.js` (30 min)
    - Move ExecutionContext and related types from logic/defs.js
    - Ensure all JSDoc imports are correct
@@ -846,10 +915,12 @@ describe('UnifiedCache - Post Pattern 1 Fix', () => {
    - Run `npm run typecheck` - no type errors
 
 ### Phase 2: Extract Character Builder Events (Pattern 2 Fix)
+
 **Duration:** 2 hours
 **Focus:** Break three-way circular dependency through event constants
 
 **Tasks:**
+
 1. Create `src/characterBuilder/events/characterBuilderEvents.js` (45 min)
    - Move CHARACTER_BUILDER_EVENTS from service
    - Add comprehensive JSDoc
@@ -863,10 +934,12 @@ describe('UnifiedCache - Post Pattern 1 Fix', () => {
    - Check cache operations
 
 ### Phase 3: Verification & Documentation (All Patterns)
+
 **Duration:** 1.5 hours
 **Focus:** Ensure all fixes work and document changes
 
 **Tasks:**
+
 1. Comprehensive Testing (45 min)
    - Run full test suite
    - Verify UnifiedCache (Pattern 3 auto-fixed)
@@ -889,6 +962,7 @@ describe('UnifiedCache - Post Pattern 1 Fix', () => {
 ### Automated Validation
 
 **Dependency Check:**
+
 ```bash
 # Should show 0 circular dependency warnings
 npm run depcruise
@@ -898,6 +972,7 @@ npm run depcruise
 ```
 
 **Test Coverage:**
+
 ```bash
 # Unit tests
 npm run test:unit -- --coverage
@@ -909,6 +984,7 @@ npm run test:integration -- --coverage
 ```
 
 **Type Checking:**
+
 ```bash
 # Should pass without errors
 npm run typecheck
@@ -919,6 +995,7 @@ npm run typecheck
 ### Manual Validation Checklist
 
 **Entity System:**
+
 - [ ] Entity creation works correctly
 - [ ] Component management functions properly
 - [ ] System execution is unaffected
@@ -926,6 +1003,7 @@ npm run typecheck
 - [ ] Memory monitoring still functions
 
 **Character Builder:**
+
 - [ ] Concept creation works
 - [ ] Direction generation succeeds
 - [ ] Cliché generation operates correctly
@@ -934,6 +1012,7 @@ npm run typecheck
 - [ ] Event dispatching works
 
 **Unified Cache:**
+
 - [ ] LRU eviction works
 - [ ] LFU eviction works
 - [ ] FIFO eviction works
@@ -944,16 +1023,19 @@ npm run typecheck
 ### Performance Benchmarks
 
 **Before Refactoring:**
+
 - Measure module load time
 - Measure service initialization time
 - Measure cache operation latency
 
 **After Refactoring:**
+
 - Compare module load time (should be similar or faster)
 - Compare service initialization time (may have slight overhead from lazy loading)
 - Compare cache operation latency (should be identical)
 
 **Acceptance Criteria:**
+
 - Module load time: ±10% variance acceptable
 - Service initialization: +15% maximum acceptable overhead
 - Cache operations: 0% degradation (must be identical)
@@ -965,6 +1047,7 @@ npm run typecheck
 ### Rollback Strategy
 
 1. **Git Branch Strategy:**
+
    ```bash
    # Create feature branch
    git checkout -b refactor/circular-dependency-resolution
@@ -995,16 +1078,19 @@ npm run typecheck
 ### Known Issues and Workarounds
 
 **Issue 1: Lazy Loading Async Complexity**
+
 - **Risk:** Async initialization may cause timing issues
 - **Mitigation:** Implement ready() method for explicit wait
 - **Workaround:** Fallback to synchronous loading with flag
 
 **Issue 2: Interface Abstraction Overhead**
+
 - **Risk:** Additional abstraction layer may confuse developers
 - **Mitigation:** Comprehensive documentation and examples
 - **Workaround:** Maintain backward compatibility with re-exports
 
 **Issue 3: Composition Pattern Learning Curve**
+
 - **Risk:** Team unfamiliar with composition over inheritance
 - **Mitigation:** Provide migration guide and pair programming
 - **Workaround:** Keep both patterns available during transition
@@ -1035,6 +1121,7 @@ This comprehensive analysis identified and corrected the assumptions in the orig
 ### Expected Outcomes
 
 **After Implementation (5 hours total, not 30-35):**
+
 - ✅ **0 circular dependency warnings** (down from 30+)
 - ✅ **Improved maintainability** through clearer type organization
 - ✅ **Better tree-shaking** and bundling optimization

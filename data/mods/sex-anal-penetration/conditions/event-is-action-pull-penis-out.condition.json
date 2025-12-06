@@ -5,7 +5,12 @@
   "logic": {
     "and": [
       { "==": [{ "var": "event.type" }, "core:attempt_action"] },
-      { "==": [{ "var": "event.payload.actionId" }, "sex-anal-penetration:pull_penis_out"] }
+      {
+        "==": [
+          { "var": "event.payload.actionId" },
+          "sex-anal-penetration:pull_penis_out"
+        ]
+      }
     ]
   }
 }

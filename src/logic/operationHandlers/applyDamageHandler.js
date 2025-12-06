@@ -81,7 +81,13 @@ class ApplyDamageHandler extends BaseOperationHandler {
       },
       damageAccumulator: {
         value: damageAccumulator,
-        requiredMethods: ['createSession', 'recordDamage', 'recordEffect', 'queueEvent', 'finalize'],
+        requiredMethods: [
+          'createSession',
+          'recordDamage',
+          'recordEffect',
+          'queueEvent',
+          'finalize',
+        ],
       },
       damageNarrativeComposer: {
         value: damageNarrativeComposer,
@@ -106,7 +112,9 @@ class ApplyDamageHandler extends BaseOperationHandler {
       });
 
     if (!this.#damageResolutionService?.resolve) {
-      throw new Error('ApplyDamageHandler requires a DamageResolutionService with a resolve method');
+      throw new Error(
+        'ApplyDamageHandler requires a DamageResolutionService with a resolve method'
+      );
     }
   }
 
@@ -129,13 +137,16 @@ class ApplyDamageHandler extends BaseOperationHandler {
     if (typeof ref === 'object' && ref !== null) {
       try {
         const resolved = this.#jsonLogicService.evaluate(ref, context);
-        if (typeof resolved === 'string' && resolved.trim()) return resolved.trim();
+        if (typeof resolved === 'string' && resolved.trim())
+          return resolved.trim();
         if (typeof resolved === 'object' && resolved !== null) {
           const id = resolved.id || resolved.entityId;
           if (typeof id === 'string' && id.trim()) return id.trim();
         }
       } catch (err) {
-        logger.warn('APPLY_DAMAGE: Failed to evaluate ref', { error: err.message });
+        logger.warn('APPLY_DAMAGE: Failed to evaluate ref', {
+          error: err.message,
+        });
       }
     }
     return null;
@@ -155,13 +166,16 @@ class ApplyDamageHandler extends BaseOperationHandler {
     if (typeof ref === 'object' && ref !== null) {
       try {
         const resolved = this.#jsonLogicService.evaluate(ref, context);
-        if (typeof resolved === 'string' && resolved.trim()) return resolved.trim();
+        if (typeof resolved === 'string' && resolved.trim())
+          return resolved.trim();
         if (typeof resolved === 'object' && resolved !== null) {
-           const id = resolved.id || resolved.entityId;
-           if (typeof id === 'string' && id.trim()) return id.trim();
+          const id = resolved.id || resolved.entityId;
+          if (typeof id === 'string' && id.trim()) return id.trim();
         }
       } catch (err) {
-        logger.warn('APPLY_DAMAGE: Failed to evaluate ref', { error: err.message });
+        logger.warn('APPLY_DAMAGE: Failed to evaluate ref', {
+          error: err.message,
+        });
       }
     }
     return null;
@@ -174,7 +188,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
         const resolved = this.#jsonLogicService.evaluate(value, context);
         if (typeof resolved === type) return resolved;
       } catch (err) {
-        logger.warn(`APPLY_DAMAGE: Failed to evaluate value (expected ${type})`, { error: err.message });
+        logger.warn(
+          `APPLY_DAMAGE: Failed to evaluate value (expected ${type})`,
+          { error: err.message }
+        );
       }
     }
     return type === 'number' ? NaN : null;
@@ -183,22 +200,38 @@ class ApplyDamageHandler extends BaseOperationHandler {
   #resolveMetadata(metadata, executionContext, logger) {
     if (metadata === undefined || metadata === null) return {};
 
-    if (typeof metadata === 'object' && metadata !== null && !metadata.var && !metadata.if) {
+    if (
+      typeof metadata === 'object' &&
+      metadata !== null &&
+      !metadata.var &&
+      !metadata.if
+    ) {
       return metadata;
     }
 
     if (typeof metadata === 'object' && metadata !== null) {
       try {
-        const resolved = this.#jsonLogicService.evaluate(metadata, executionContext);
-        if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) {
+        const resolved = this.#jsonLogicService.evaluate(
+          metadata,
+          executionContext
+        );
+        if (
+          resolved &&
+          typeof resolved === 'object' &&
+          !Array.isArray(resolved)
+        ) {
           return resolved;
         }
       } catch (err) {
-        logger.warn('APPLY_DAMAGE: Failed to evaluate metadata', { error: err.message });
+        logger.warn('APPLY_DAMAGE: Failed to evaluate metadata', {
+          error: err.message,
+        });
       }
     }
 
-    logger.warn('APPLY_DAMAGE: Ignoring metadata - expected object', { metadata });
+    logger.warn('APPLY_DAMAGE: Ignoring metadata - expected object', {
+      metadata,
+    });
     return {};
   }
 
@@ -206,17 +239,29 @@ class ApplyDamageHandler extends BaseOperationHandler {
     if (damageTags === undefined || damageTags === null) return [];
 
     let resolved = damageTags;
-    if (!Array.isArray(damageTags) && typeof damageTags === 'object' && damageTags !== null) {
+    if (
+      !Array.isArray(damageTags) &&
+      typeof damageTags === 'object' &&
+      damageTags !== null
+    ) {
       try {
-        resolved = this.#jsonLogicService.evaluate(damageTags, executionContext);
+        resolved = this.#jsonLogicService.evaluate(
+          damageTags,
+          executionContext
+        );
       } catch (err) {
-        logger.warn('APPLY_DAMAGE: Failed to evaluate damage_tags', { error: err.message });
+        logger.warn('APPLY_DAMAGE: Failed to evaluate damage_tags', {
+          error: err.message,
+        });
         resolved = [];
       }
     }
 
     if (!Array.isArray(resolved)) {
-      logger.warn('APPLY_DAMAGE: damage_tags must resolve to an array of strings', { damage_tags: damageTags });
+      logger.warn(
+        'APPLY_DAMAGE: damage_tags must resolve to an array of strings',
+        { damage_tags: damageTags }
+      );
       return [];
     }
 
@@ -230,17 +275,28 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
 
     let resolved = hitStrategy;
-    if (typeof hitStrategy === 'object' && hitStrategy !== null && (hitStrategy.var || hitStrategy.if)) {
+    if (
+      typeof hitStrategy === 'object' &&
+      hitStrategy !== null &&
+      (hitStrategy.var || hitStrategy.if)
+    ) {
       try {
-        resolved = this.#jsonLogicService.evaluate(hitStrategy, executionContext);
+        resolved = this.#jsonLogicService.evaluate(
+          hitStrategy,
+          executionContext
+        );
       } catch (err) {
-        logger.warn('APPLY_DAMAGE: Failed to evaluate hit_strategy', { error: err.message });
+        logger.warn('APPLY_DAMAGE: Failed to evaluate hit_strategy', {
+          error: err.message,
+        });
         return { reuseCachedHit: true, hintPartId: null };
       }
     }
 
     const reuseCachedHit =
-      typeof resolved?.reuse_cached === 'boolean' ? resolved.reuse_cached : true;
+      typeof resolved?.reuse_cached === 'boolean'
+        ? resolved.reuse_cached
+        : true;
     const hintPartId =
       resolved && Object.prototype.hasOwnProperty.call(resolved, 'hint_part')
         ? this.#resolveRef(resolved.hint_part, executionContext, logger)
@@ -257,13 +313,17 @@ class ApplyDamageHandler extends BaseOperationHandler {
       try {
         resolvedRef = this.#jsonLogicService.evaluate(rngRef, executionContext);
       } catch (err) {
-        logger.warn('APPLY_DAMAGE: Failed to evaluate rng_ref', { error: err.message });
+        logger.warn('APPLY_DAMAGE: Failed to evaluate rng_ref', {
+          error: err.message,
+        });
         return null;
       }
     }
 
     if (typeof resolvedRef !== 'string' || !resolvedRef.trim()) {
-      logger.warn('APPLY_DAMAGE: rng_ref must resolve to a string', { rng_ref: rngRef });
+      logger.warn('APPLY_DAMAGE: rng_ref must resolve to a string', {
+        rng_ref: rngRef,
+      });
       return null;
     }
 
@@ -279,9 +339,12 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     if (provider) return provider[resolvedRef];
 
-    logger.warn('APPLY_DAMAGE: rng_ref provided but no matching RNG found on executionContext', {
-      rng_ref: resolvedRef,
-    });
+    logger.warn(
+      'APPLY_DAMAGE: rng_ref provided but no matching RNG found on executionContext',
+      {
+        rng_ref: resolvedRef,
+      }
+    );
     return null;
   }
 
@@ -292,7 +355,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
     if (executionContext && typeof executionContext.rng === 'function') {
       return executionContext.rng;
     }
-    if (executionContext && typeof executionContext.rngProvider === 'function') {
+    if (
+      executionContext &&
+      typeof executionContext.rngProvider === 'function'
+    ) {
       return executionContext.rngProvider;
     }
     return Math.random;
@@ -300,19 +366,30 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
   #selectRandomPart(entityId, logger, rng = Math.random) {
     if (!this.#entityManager.hasComponent(entityId, BODY_COMPONENT_ID)) {
-      logger.warn(`APPLY_DAMAGE: Entity ${entityId} has no anatomy:body component.`);
+      logger.warn(
+        `APPLY_DAMAGE: Entity ${entityId} has no anatomy:body component.`
+      );
       return null;
     }
 
-    const bodyComponent = this.#entityManager.getComponentData(entityId, BODY_COMPONENT_ID);
+    const bodyComponent = this.#entityManager.getComponentData(
+      entityId,
+      BODY_COMPONENT_ID
+    );
 
     try {
-      const allPartIds = this.#bodyGraphService.getAllParts(bodyComponent, entityId);
+      const allPartIds = this.#bodyGraphService.getAllParts(
+        bodyComponent,
+        entityId
+      );
 
       // Build array of parts with components for filtering
       const partsWithComponents = allPartIds.map((partId) => ({
         id: partId,
-        component: this.#entityManager.getComponentData(partId, PART_COMPONENT_ID),
+        component: this.#entityManager.getComponentData(
+          partId,
+          PART_COMPONENT_ID
+        ),
       }));
 
       // Use shared helper for consistent weight resolution and filtering
@@ -320,7 +397,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
       if (candidateParts.length === 0) return null;
 
-      const totalWeight = candidateParts.reduce((sum, part) => sum + part.weight, 0);
+      const totalWeight = candidateParts.reduce(
+        (sum, part) => sum + part.weight,
+        0
+      );
       if (totalWeight <= 0) return candidateParts[0].id;
 
       let randomValue = rng() * totalWeight;
@@ -330,7 +410,10 @@ class ApplyDamageHandler extends BaseOperationHandler {
       }
       return candidateParts[candidateParts.length - 1].id;
     } catch (error) {
-      logger.error(`APPLY_DAMAGE: Error resolving hit location for ${entityId}`, error);
+      logger.error(
+        `APPLY_DAMAGE: Error resolving hit location for ${entityId}`,
+        error
+      );
       return null;
     }
   }
@@ -357,7 +440,11 @@ class ApplyDamageHandler extends BaseOperationHandler {
     const rngOverride = this.#resolveNamedRng(rng_ref, executionContext, log);
     const rng = this.#getRng(executionContext, rngOverride);
 
-    if (executionContext && typeof executionContext === 'object' && !executionContext.rng) {
+    if (
+      executionContext &&
+      typeof executionContext === 'object' &&
+      !executionContext.rng
+    ) {
       executionContext.rng = rng;
     }
 
@@ -367,13 +454,22 @@ class ApplyDamageHandler extends BaseOperationHandler {
     const isTopLevel = !propagatedFrom;
     const hitLocationCache = executionContext?.hitLocationCache || null;
     if (!entityId) {
-      safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid entity_ref', { entity_ref }, log);
+      safeDispatchError(
+        this.#dispatcher,
+        'APPLY_DAMAGE: Invalid entity_ref',
+        { entity_ref },
+        log
+      );
       return;
     }
 
     // 2. Resolve Part
     let partId = null;
-    const { reuseCachedHit, hintPartId } = this.#resolveHitStrategy(hit_strategy, executionContext, log);
+    const { reuseCachedHit, hintPartId } = this.#resolveHitStrategy(
+      hit_strategy,
+      executionContext,
+      log
+    );
 
     if (part_ref) {
       partId = this.#resolveRef(part_ref, executionContext, log);
@@ -384,7 +480,12 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
 
     // Reuse the same resolved hit location for multiple damage entries in the same action
-    if (!partId && isTopLevel && reuseCachedHit && hitLocationCache?.[entityId]) {
+    if (
+      !partId &&
+      isTopLevel &&
+      reuseCachedHit &&
+      hitLocationCache?.[entityId]
+    ) {
       partId = hitLocationCache[entityId];
     }
 
@@ -392,14 +493,20 @@ class ApplyDamageHandler extends BaseOperationHandler {
       // Auto-resolve if missing or failed to resolve
       partId = this.#selectRandomPart(entityId, log, rng);
       if (!partId) {
-         safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Could not resolve target part', { entityId }, log);
-         return;
+        safeDispatchError(
+          this.#dispatcher,
+          'APPLY_DAMAGE: Could not resolve target part',
+          { entityId },
+          log
+        );
+        return;
       }
     }
 
     // Cache the chosen hit location so subsequent APPLY_DAMAGE calls for the same entity reuse it
     if (isTopLevel && reuseCachedHit) {
-      executionContext.hitLocationCache = executionContext.hitLocationCache || {};
+      executionContext.hitLocationCache =
+        executionContext.hitLocationCache || {};
       executionContext.hitLocationCache[entityId] = partId;
     }
 
@@ -407,44 +514,97 @@ class ApplyDamageHandler extends BaseOperationHandler {
     let resolvedDamageEntry;
     if (damage_entry) {
       // New mode: use damage_entry object directly or resolve from JSON Logic
-      if (typeof damage_entry === 'object' && damage_entry !== null && !damage_entry.var && !damage_entry.if) {
+      if (
+        typeof damage_entry === 'object' &&
+        damage_entry !== null &&
+        !damage_entry.var &&
+        !damage_entry.if
+      ) {
         // Direct object with damage entry structure
         resolvedDamageEntry = damage_entry;
       } else {
         // JSON Logic expression - evaluate it
         try {
-          resolvedDamageEntry = this.#jsonLogicService.evaluate(damage_entry, executionContext);
+          resolvedDamageEntry = this.#jsonLogicService.evaluate(
+            damage_entry,
+            executionContext
+          );
         } catch (err) {
-          safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Failed to evaluate damage_entry', { error: err.message }, log);
+          safeDispatchError(
+            this.#dispatcher,
+            'APPLY_DAMAGE: Failed to evaluate damage_entry',
+            { error: err.message },
+            log
+          );
           return;
         }
       }
-      if (!resolvedDamageEntry || typeof resolvedDamageEntry.amount !== 'number') {
-        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_entry (missing amount)', { damage_entry: resolvedDamageEntry }, log);
+      if (
+        !resolvedDamageEntry ||
+        typeof resolvedDamageEntry.amount !== 'number'
+      ) {
+        safeDispatchError(
+          this.#dispatcher,
+          'APPLY_DAMAGE: Invalid damage_entry (missing amount)',
+          { damage_entry: resolvedDamageEntry },
+          log
+        );
         return;
       }
       if (!resolvedDamageEntry.name) {
-        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_entry (missing name)', { damage_entry: resolvedDamageEntry }, log);
+        safeDispatchError(
+          this.#dispatcher,
+          'APPLY_DAMAGE: Invalid damage_entry (missing name)',
+          { damage_entry: resolvedDamageEntry },
+          log
+        );
         return;
       }
     } else if (damage_type !== undefined && amount !== undefined) {
       // Legacy mode: construct damage entry from individual parameters
-      log.warn('DEPRECATED: Using damage_type + amount parameters. Migrate to damage_entry object.');
-      const resolvedAmount = this.#resolveValue(amount, executionContext, log, 'number');
-      const resolvedType = this.#resolveValue(damage_type, executionContext, log, 'string');
+      log.warn(
+        'DEPRECATED: Using damage_type + amount parameters. Migrate to damage_entry object.'
+      );
+      const resolvedAmount = this.#resolveValue(
+        amount,
+        executionContext,
+        log,
+        'number'
+      );
+      const resolvedType = this.#resolveValue(
+        damage_type,
+        executionContext,
+        log,
+        'string'
+      );
 
       if (isNaN(resolvedAmount) || resolvedAmount < 0) {
-        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid amount', { amount: resolvedAmount }, log);
+        safeDispatchError(
+          this.#dispatcher,
+          'APPLY_DAMAGE: Invalid amount',
+          { amount: resolvedAmount },
+          log
+        );
         return;
       }
       if (!resolvedType) {
-        safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid damage_type', { damage_type }, log);
+        safeDispatchError(
+          this.#dispatcher,
+          'APPLY_DAMAGE: Invalid damage_type',
+          { damage_type },
+          log
+        );
         return;
       }
 
       resolvedDamageEntry = { name: resolvedType, amount: resolvedAmount };
     } else {
-      safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Either damage_entry or (damage_type + amount) required', { params }, log);
+      safeDispatchError(
+        this.#dispatcher,
+        'APPLY_DAMAGE: Either damage_entry or (damage_type + amount) required',
+        { params },
+        log
+      );
       return;
     }
 
@@ -453,22 +613,36 @@ class ApplyDamageHandler extends BaseOperationHandler {
       let resolvedExcludeTypes = exclude_damage_types;
 
       // Resolve JSON Logic if needed
-      if (typeof exclude_damage_types === 'object' && !Array.isArray(exclude_damage_types)) {
+      if (
+        typeof exclude_damage_types === 'object' &&
+        !Array.isArray(exclude_damage_types)
+      ) {
         try {
-          resolvedExcludeTypes = this.#jsonLogicService.evaluate(exclude_damage_types, executionContext);
+          resolvedExcludeTypes = this.#jsonLogicService.evaluate(
+            exclude_damage_types,
+            executionContext
+          );
         } catch (err) {
-          log.warn('APPLY_DAMAGE: Failed to evaluate exclude_damage_types', { error: err.message });
+          log.warn('APPLY_DAMAGE: Failed to evaluate exclude_damage_types', {
+            error: err.message,
+          });
           resolvedExcludeTypes = [];
         }
       }
 
       // Validate and check
-      if (Array.isArray(resolvedExcludeTypes) && resolvedExcludeTypes.length > 0) {
+      if (
+        Array.isArray(resolvedExcludeTypes) &&
+        resolvedExcludeTypes.length > 0
+      ) {
         const damageTypeName = resolvedDamageEntry.name;
         if (resolvedExcludeTypes.includes(damageTypeName)) {
-          log.debug(`APPLY_DAMAGE: Skipping excluded damage type '${damageTypeName}'`, {
-            excluded: resolvedExcludeTypes
-          });
+          log.debug(
+            `APPLY_DAMAGE: Skipping excluded damage type '${damageTypeName}'`,
+            {
+              excluded: resolvedExcludeTypes,
+            }
+          );
           return; // Early return - do not apply this damage
         }
       }
@@ -490,8 +664,16 @@ class ApplyDamageHandler extends BaseOperationHandler {
       return;
     }
 
-    const resolvedMetadata = this.#resolveMetadata(metadata, executionContext, log);
-    const resolvedDamageTags = this.#resolveDamageTags(damage_tags, executionContext, log);
+    const resolvedMetadata = this.#resolveMetadata(
+      metadata,
+      executionContext,
+      log
+    );
+    const resolvedDamageTags = this.#resolveDamageTags(
+      damage_tags,
+      executionContext,
+      log
+    );
 
     // Apply multiplier to amount while preserving other fields
     const finalDamageEntry = {

@@ -8,8 +8,8 @@ Add the `ranged` mod to the `data/game.json` mods array to enable the mod to be 
 
 ## Files to Modify
 
-| File | Modification |
-|------|-------------|
+| File             | Modification                     |
+| ---------------- | -------------------------------- |
 | `data/game.json` | Add `"ranged"` to the mods array |
 
 ## Implementation Details
@@ -17,6 +17,7 @@ Add the `ranged` mod to the `data/game.json` mods array to enable the mod to be 
 ### game.json Modification
 
 Add `"ranged"` to the `mods` array. The mod should be placed **after** its dependencies:
+
 - `core`
 - `items`
 - `skills`
@@ -34,7 +35,7 @@ Example (exact position depends on current array):
     "damage-types",
     "positioning",
     // ... other mods ...
-    "ranged"  // Add here, after dependencies
+    "ranged" // Add here, after dependencies
   ]
 }
 ```
@@ -42,6 +43,7 @@ Example (exact position depends on current array):
 ### Load Order Rationale
 
 The `ranged` mod must load after:
+
 1. **core** - Base game systems (actors, events, positions)
 2. **items** - `items:portable` component, inventory system
 3. **skills** - `skills:ranged_skill`, `skills:defense_skill` components
@@ -121,13 +123,14 @@ Upon implementation review, `ranged` was **already present** in `data/game.json`
 
 ### Actual Changes vs Originally Planned
 
-| Planned | Actual |
-|---------|--------|
+| Planned                                | Actual                             |
+| -------------------------------------- | ---------------------------------- |
 | Add `"ranged"` to game.json mods array | No change needed - already present |
 
 ### New/Modified Tests
 
 Per ticket specification ("DO NOT create test files"), no new tests were created. The ticket explicitly prohibits test file creation. Validation was performed using the existing `npm run validate` command which confirmed:
+
 - 52 mods validated successfully
 - 0 cross-reference violations
 - `ranged` mod's references to `items`, `positioning`, and `skills` resolved correctly

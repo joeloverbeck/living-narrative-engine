@@ -99,11 +99,17 @@ function createOrchestratorScenario({ actions, actorComponents, preBuild }) {
   };
 
   const commandFormatter = {
-    format: jest.fn((actionDef, targetContext, manager, _options, { displayNameFn }) => {
-      const entity = manager.getEntityInstance(targetContext.entityId);
-      const targetName = displayNameFn(entity, targetContext.entityId, logger);
-      return { ok: true, value: `${actionDef.name} -> ${targetName}` };
-    }),
+    format: jest.fn(
+      (actionDef, targetContext, manager, _options, { displayNameFn }) => {
+        const entity = manager.getEntityInstance(targetContext.entityId);
+        const targetName = displayNameFn(
+          entity,
+          targetContext.entityId,
+          logger
+        );
+        return { ok: true, value: `${actionDef.name} -> ${targetName}` };
+      }
+    ),
   };
 
   const orchestrator = new ActionPipelineOrchestrator({
@@ -116,21 +122,27 @@ function createOrchestratorScenario({ actions, actorComponents, preBuild }) {
     getEntityDisplayNameFn: (entity, fallback) =>
       entity?.components?.identity?.name ?? fallback,
     errorBuilder: {
-      buildErrorContext: jest.fn((input) => ({ ...input, stage: 'action-index-integration' })),
+      buildErrorContext: jest.fn((input) => ({
+        ...input,
+        stage: 'action-index-integration',
+      })),
     },
     logger,
     unifiedScopeResolver: { resolve: jest.fn() },
     targetContextBuilder: { build: jest.fn() },
     multiTargetResolutionStage: new SimpleMultiTargetResolutionStage(
       entityManager,
-      TARGET_ID,
+      TARGET_ID
     ),
     targetComponentValidator: {
       validateTargetComponents: jest.fn(() => ({ valid: true })),
       validateEntityComponents: jest.fn(() => ({ valid: true })),
     },
     targetRequiredComponentsValidator: {
-      validateTargetRequirements: jest.fn(() => ({ valid: true, missingComponents: [] })),
+      validateTargetRequirements: jest.fn(() => ({
+        valid: true,
+        missingComponents: [],
+      })),
     },
   });
 
@@ -192,40 +204,47 @@ describe('ActionIndex integration coverage', () => {
     const result = await orchestrator.discoverActions(
       { id: ACTOR_ID },
       { mood: 'kind' },
-      { trace },
+      { trace }
     );
 
     expect(result.actions).toHaveLength(2);
     expect(result.actions.map((action) => action.id)).toEqual(
-      expect.arrayContaining(['core:help', 'core:meditate']),
+      expect.arrayContaining(['core:help', 'core:meditate'])
     );
-    expect(result.actions.map((action) => action.id)).not.toContain('core:secret');
-    expect(result.actions.map((action) => action.id)).not.toContain('core:steal');
+    expect(result.actions.map((action) => action.id)).not.toContain(
+      'core:secret'
+    );
+    expect(result.actions.map((action) => action.id)).not.toContain(
+      'core:steal'
+    );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Skipping invalid action definition'),
+      expect.stringContaining('Skipping invalid action definition')
     );
 
     expect(
       trace.info.mock.calls.some(
         ([message, , metadata]) =>
           message.includes('Removed 1 actions due to forbidden components.') &&
-          metadata.removedActionIds.includes('core:secret'),
-      ),
+          metadata.removedActionIds.includes('core:secret')
+      )
     ).toBe(true);
 
     expect(
       trace.info.mock.calls.some(
         ([message, , metadata]) =>
-          message.includes("Excluding action 'core:steal' - actor missing required components.") &&
-          metadata.required.includes('skill:theft'),
-      ),
+          message.includes(
+            "Excluding action 'core:steal' - actor missing required components."
+          ) && metadata.required.includes('skill:theft')
+      )
     ).toBe(true);
 
     expect(trace.success).toHaveBeenCalledWith(
       expect.stringContaining('Final candidate list contains 2 unique actions'),
       'ActionIndex.getCandidateActions',
-      expect.objectContaining({ actionIds: expect.arrayContaining(['core:help', 'core:meditate']) }),
+      expect.objectContaining({
+        actionIds: expect.arrayContaining(['core:help', 'core:meditate']),
+      })
     );
   });
 
@@ -248,12 +267,12 @@ describe('ActionIndex integration coverage', () => {
     });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'ActionIndex.buildIndex: allActionDefinitions must be an array. Skipping index build.',
+      'ActionIndex.buildIndex: allActionDefinitions must be an array. Skipping index build.'
     );
 
     const result = await orchestrator.discoverActions(
       { id: ACTOR_ID },
-      { focus: 'alert' },
+      { focus: 'alert' }
     );
 
     expect(result.actions).toHaveLength(1);
@@ -261,7 +280,7 @@ describe('ActionIndex integration coverage', () => {
 
     actionIndex.buildIndex(undefined);
     expect(logger.warn).toHaveBeenCalledWith(
-      'ActionIndex.buildIndex: allActionDefinitions must be an array. Skipping index build.',
+      'ActionIndex.buildIndex: allActionDefinitions must be an array. Skipping index build.'
     );
   });
 });

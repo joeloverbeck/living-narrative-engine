@@ -107,7 +107,7 @@ const createTargetDefinitions = (overrides = {}) => ({
 });
 
 const getErrorMessage = (error) =>
-  typeof error === 'string' ? error : error?.message ?? String(error);
+  typeof error === 'string' ? error : (error?.message ?? String(error));
 
 const buildStrategyTestContext = (options = {}) => {
   const logger = createMockLogger();
@@ -241,8 +241,20 @@ describe('PerActionMetadataStrategy integration', () => {
         super(baseFormatter, logger);
       }
 
-      formatMultiTarget(actionDef, resolvedTargets, entityManager, options, deps) {
-        super.formatMultiTarget(actionDef, resolvedTargets, entityManager, options, deps);
+      formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        entityManager,
+        options,
+        deps
+      ) {
+        super.formatMultiTarget(
+          actionDef,
+          resolvedTargets,
+          entityManager,
+          options,
+          deps
+        );
         throw new Error('format explosion');
       }
     }
@@ -257,7 +269,12 @@ describe('PerActionMetadataStrategy integration', () => {
       actor: context.actor,
       actionWithTargets: {
         actionDef,
-        targetContexts: [createTargetContext({ placeholder: 'secondary', entityId: 'target-1' })],
+        targetContexts: [
+          createTargetContext({
+            placeholder: 'secondary',
+            entityId: 'target-1',
+          }),
+        ],
         resolvedTargets: {
           primary: [{ placeholder: 'primary', displayName: 'Broken Entry' }],
           secondary: [{ id: 'target-1', displayName: 'Target One' }],
@@ -303,7 +320,13 @@ describe('PerActionMetadataStrategy integration', () => {
         super(baseFormatter, logger);
       }
 
-      formatMultiTarget(actionDef, resolvedTargets, entityManager, options, deps) {
+      formatMultiTarget(
+        actionDef,
+        resolvedTargets,
+        entityManager,
+        options,
+        deps
+      ) {
         const baseResult = super.formatMultiTarget(
           actionDef,
           resolvedTargets,
@@ -424,7 +447,7 @@ describe('PerActionMetadataStrategy integration', () => {
     const errors = context.accumulator.getErrors();
     expect(errors).toHaveLength(1);
     expect(getErrorMessage(errors[0].error)).toContain(
-      "entityId is missing for action test:per-action"
+      'entityId is missing for action test:per-action'
     );
     expect(context.accumulator.getActionSummary(actionDef.id)).toEqual(
       expect.objectContaining({ successes: 0, failures: 1 })

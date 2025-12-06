@@ -2,13 +2,7 @@
  * @file Additional integration tests for ActionCandidateProcessor to close coverage gaps.
  */
 
-import {
-  jest,
-  describe,
-  it,
-  expect,
-  beforeEach,
-} from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
@@ -67,17 +61,14 @@ const createProcessor = (overrides = {}) => {
     overrides.prerequisiteEvaluationService ?? {
       evaluate: jest.fn().mockReturnValue(true),
     };
-  const targetResolutionService =
-    overrides.targetResolutionService ?? {
-      resolveTargets: jest
-        .fn()
-        .mockReturnValue(ActionResult.success([ActionTargetContext.noTarget()])),
-    };
-  const commandFormatter =
-    overrides.commandFormatter ??
-    ({
-      format: jest.fn().mockReturnValue({ ok: true, value: 'default-command' }),
-    });
+  const targetResolutionService = overrides.targetResolutionService ?? {
+    resolveTargets: jest
+      .fn()
+      .mockReturnValue(ActionResult.success([ActionTargetContext.noTarget()])),
+  };
+  const commandFormatter = overrides.commandFormatter ?? {
+    format: jest.fn().mockReturnValue({ ok: true, value: 'default-command' }),
+  };
   const entityManager = overrides.entityManager ?? createEntityManager();
   const safeEventDispatcher = overrides.safeEventDispatcher ?? {
     dispatchSafe: jest.fn(),
@@ -154,19 +145,28 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
       ActionTargetContext.forEntity('target-3'),
     ];
 
-    const { processor, actionErrorContextBuilder, logger, targetResolutionService } =
-      createProcessor({
-        commandFormatter,
-        targetResolutionService: {
-          resolveTargets: jest
-            .fn()
-            .mockReturnValue(ActionResult.success(targetContexts)),
-        },
-      });
+    const {
+      processor,
+      actionErrorContextBuilder,
+      logger,
+      targetResolutionService,
+    } = createProcessor({
+      commandFormatter,
+      targetResolutionService: {
+        resolveTargets: jest
+          .fn()
+          .mockReturnValue(ActionResult.success(targetContexts)),
+      },
+    });
 
     const trace = createTraceWithSpan();
 
-    const result = processor.process(actionDef, actor, { actorId: actor.id }, trace);
+    const result = processor.process(
+      actionDef,
+      actor,
+      { actorId: actor.id },
+      trace
+    );
 
     expect(trace.withSpan).toHaveBeenCalledWith(
       'candidate.process',
@@ -201,7 +201,9 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
       params: { targetId: 'target-1' },
     });
     expect(result.value.errors).toHaveLength(2);
-    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(2);
+    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(
+      2
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       `Failed to format command for action '${actionDef.id}' with target 'target-2'.`,
       expect.objectContaining({ targetId: 'target-2' })
@@ -222,7 +224,9 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
       targetResolutionService: {
         resolveTargets: jest
           .fn()
-          .mockReturnValue(ActionResult.success([ActionTargetContext.noTarget()])),
+          .mockReturnValue(
+            ActionResult.success([ActionTargetContext.noTarget()])
+          ),
       },
     });
 
@@ -231,7 +235,12 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
       failure: jest.fn(),
     };
 
-    const result = processor.process(actionDef, actor, { actorId: actor.id }, trace);
+    const result = processor.process(
+      actionDef,
+      actor,
+      { actorId: actor.id },
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(0);
@@ -251,12 +260,14 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
     const actionErrorContextBuilder = {
       buildErrorContext: jest
         .fn()
-        .mockImplementationOnce(({ actionDef: def, actorId, error, phase }) => ({
-          actionId: def.id,
-          actorId,
-          error,
-          phase,
-        }))
+        .mockImplementationOnce(
+          ({ actionDef: def, actorId, error, phase }) => ({
+            actionId: def.id,
+            actorId,
+            error,
+            phase,
+          })
+        )
         .mockImplementation(({ actionDef: def, actorId, error, phase }) => ({
           actionId: def.id,
           actorId,
@@ -277,14 +288,21 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
 
     const trace = createTraceWithSpan();
 
-    const result = processor.process(actionDef, actor, { actorId: actor.id }, trace);
+    const result = processor.process(
+      actionDef,
+      actor,
+      { actorId: actor.id },
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(0);
     expect(result.value.cause).toBe('prerequisite-error');
     expect(result.value.errors).toHaveLength(1);
     expect(result.value.errors[0].error.error).toBe(thrownError);
-    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(2);
+    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(
+      2
+    );
     expect(logger.error).toHaveBeenCalledWith(
       `Error checking prerequisites for action '${actionDef.id}'.`,
       expect.objectContaining({ actionId: actionDef.id })
@@ -306,15 +324,18 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
       targetResolutionService: {
         resolveTargets: jest
           .fn()
-          .mockReturnValue(
-            ActionResult.failure([existingContext, plainError])
-          ),
+          .mockReturnValue(ActionResult.failure([existingContext, plainError])),
       },
     });
 
     const trace = createTraceWithSpan();
 
-    const result = processor.process(actionDef, actor, { actorId: actor.id }, trace);
+    const result = processor.process(
+      actionDef,
+      actor,
+      { actorId: actor.id },
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(0);
@@ -322,7 +343,9 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
     expect(result.value.errors).toHaveLength(2);
     expect(result.value.errors[0].error).toBe(existingContextError);
     expect(result.value.errors[1].error).toBe(plainError);
-    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(1);
+    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   it('captures thrown errors from target resolution with additional scope context', () => {
@@ -338,14 +361,23 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
 
     const trace = createTraceWithSpan();
 
-    const result = processor.process(actionDef, actor, { actorId: actor.id }, trace);
+    const result = processor.process(
+      actionDef,
+      actor,
+      { actorId: actor.id },
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(0);
     expect(result.value.cause).toBe('resolution-error');
     expect(result.value.errors).toHaveLength(1);
-    expect(result.value.errors[0].additionalContext.scope).toBe(actionDef.scope);
-    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(1);
+    expect(result.value.errors[0].additionalContext.scope).toBe(
+      actionDef.scope
+    );
+    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(
+      1
+    );
     expect(logger.error).toHaveBeenCalledWith(
       `Error resolving scope for action '${actionDef.id}': ${resolutionError.message}`,
       expect.objectContaining({ actionId: actionDef.id })
@@ -361,7 +393,12 @@ describe('ActionCandidateProcessor coverage scenarios', () => {
 
     const trace = createTraceWithSpan();
 
-    const result = processor.process(actionDef, actor, { actorId: actor.id }, trace);
+    const result = processor.process(
+      actionDef,
+      actor,
+      { actorId: actor.id },
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(0);

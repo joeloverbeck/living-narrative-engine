@@ -7,7 +7,7 @@ GOAPDebugger aggregates every diagnostics channel that `GoapController` exposes.
 `GoapPlanner.testTaskReducesDistance` records telemetry whenever `planningEffectsSimulator` throws or returns `{ success: false }`. The planner immediately calls `#failForInvalidEffect` with `code = GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION`, which surfaces two artifacts inside GOAPDebugger:
 
 1. **Failure History**: The planner failure snapshot lists `GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION` with the same `taskId`/`goalId` metadata GoapController captures.
-2. **Effect Failure Telemetry section**: `GOAPDebugger.generateReport(actorId)` allocates a block labeled *Effect Failure Telemetry*. Each entry mirrors the payload captured by `#recordEffectFailureTelemetry`:
+2. **Effect Failure Telemetry section**: `GOAPDebugger.generateReport(actorId)` allocates a block labeled _Effect Failure Telemetry_. Each entry mirrors the payload captured by `#recordEffectFailureTelemetry`:
    - `taskId`, `goalId`, and `phase` (distance-check or reuse check) identify where the fatal failure occurred.
    - `message` and optional `errorType` explain what the simulator returned/threw.
    - `timestamp` is recorded when the guard observed the failure; only the last ten entries per actor are held.
@@ -34,7 +34,7 @@ QA/content workflows:
 
 GOAPDebugger replays the logger stream inside its report, so you can line up telemetry with the `goalHasPureNumericRoot(goal)` check inside `GoapPlanner`:
 
-- Guard activation is annotated under **Numeric Constraint Diagnostics**. If the report says *Numeric Heuristic: BYPASSED*, your goal root was not a pure comparator and the guard never ran.
+- Guard activation is annotated under **Numeric Constraint Diagnostics**. If the report says _Numeric Heuristic: BYPASSED_, your goal root was not a pure comparator and the guard never ran.
 - When heuristics sanitize (NaN, Infinity, negative values, or thrown calculations), the planner logs `Heuristic produced invalid value` (warn) once per `(actorId, goalId, heuristicId)` tuple and immediately prints `Heuristic distance invalid, bypassing guard` (debug) before returning `true`. History viewers within GOAPDebugger surface these breadcrumbs so data teams know instrumentation—not behavior—caused the bypass.
 - A missing entry here combined with an Effect Failure Telemetry row means the run aborted before heuristics were even invoked, reinforcing that `GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION` always wins over guard logic.
 
@@ -50,11 +50,13 @@ const report = await goapDebugger.generateReport(actorId);
 const { effectFailureTelemetry } = report;
 
 if (effectFailureTelemetry.totalFailures > 0) {
-  console.table(effectFailureTelemetry.failures.map(({ taskId, phase, message }) => ({
-    taskId,
-    phase,
-    message
-  })));
+  console.table(
+    effectFailureTelemetry.failures.map(({ taskId, phase, message }) => ({
+      taskId,
+      phase,
+      message,
+    }))
+  );
 }
 ```
 

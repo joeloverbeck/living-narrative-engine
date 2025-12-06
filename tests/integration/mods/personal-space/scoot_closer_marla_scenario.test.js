@@ -66,7 +66,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
 
     // Assert: scoot_closer should be discovered
     const scootAction = actions.find(
-      a => a.id === 'personal-space:scoot_closer'
+      (a) => a.id === 'personal-space:scoot_closer'
     );
 
     expect(scootAction).toBeDefined();
@@ -116,7 +116,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
 
     // Assert: scoot_closer should NOT be discovered
     const scootAction = actions.find(
-      a => a.id === 'personal-space:scoot_closer'
+      (a) => a.id === 'personal-space:scoot_closer'
     );
 
     expect(scootAction).toBeUndefined();
@@ -176,7 +176,7 @@ describe('scoot_closer action discovery - Marla scenario reproduction', () => {
 
     // Assert: scoot_closer should be discovered
     const scootAction = actions.find(
-      a => a.id === 'personal-space:scoot_closer'
+      (a) => a.id === 'personal-space:scoot_closer'
     );
 
     expect(scootAction).toBeDefined();

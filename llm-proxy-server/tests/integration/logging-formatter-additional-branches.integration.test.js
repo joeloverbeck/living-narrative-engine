@@ -1,8 +1,21 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 const resetEnv = () => {
   process.env = { ...ORIGINAL_ENV };
@@ -121,5 +134,4 @@ describe('log formatter integration additional branches', () => {
       '                    ↳ Details[0]: scalar-detail-value'
     );
   });
-
 });

@@ -77,7 +77,9 @@ describe('timeout middleware branch hardening integration coverage', () => {
     );
 
     expect(fallbackWarning).toBeDefined();
-    expect(fallbackWarning?.[1]).toMatchObject({ existingCommitment: undefined });
+    expect(fallbackWarning?.[1]).toMatchObject({
+      existingCommitment: undefined,
+    });
   });
 
   it('records diagnostics when response helpers execute after timeout completion', async () => {

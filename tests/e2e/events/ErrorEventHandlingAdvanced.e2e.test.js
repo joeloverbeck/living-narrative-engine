@@ -6,12 +6,19 @@
  * @jest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { 
+import {
   SYSTEM_ERROR_OCCURRED_ID,
-  SYSTEM_WARNING_OCCURRED_ID 
+  SYSTEM_WARNING_OCCURRED_ID,
 } from '../../../src/constants/systemEventIds.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -36,40 +43,42 @@ class ErrorEventTestBed extends IntegrationTestBed {
 
   async initialize() {
     await super.initialize();
-    
+
     // Store original console methods
     this.originalConsoleError = console.error;
     this.originalConsoleWarn = console.warn;
     this.originalConsoleLog = console.log;
-    
+
     // Create console mocks
     this.consoleErrorMock = jest.fn();
     this.consoleWarnMock = jest.fn();
     this.consoleLogMock = jest.fn();
-    
+
     // Replace console methods
     console.error = this.consoleErrorMock;
     console.warn = this.consoleWarnMock;
     console.log = this.consoleLogMock;
-    
+
     // Create real event system components like BatchModeGameLoading test
     this.logger = this.container.resolve(tokens.ILogger);
     this._customEventBus = new EventBus({ logger: this.logger });
-    
+
     // Create ValidatedEventDispatcher (needed by SafeEventDispatcher)
     const schemaValidator = this.container.resolve(tokens.ISchemaValidator);
-    const gameDataRepository = this.container.resolve(tokens.IGameDataRepository);
-    
+    const gameDataRepository = this.container.resolve(
+      tokens.IGameDataRepository
+    );
+
     this._customValidatedEventDispatcher = new ValidatedEventDispatcher({
       eventBus: this._customEventBus,
       schemaValidator: schemaValidator,
       gameDataRepository: gameDataRepository,
-      logger: this.logger
+      logger: this.logger,
     });
-    
+
     this._customSafeEventDispatcher = new SafeEventDispatcher({
       validatedEventDispatcher: this._customValidatedEventDispatcher,
-      logger: this.logger
+      logger: this.logger,
     });
   }
 
@@ -78,7 +87,7 @@ class ErrorEventTestBed extends IntegrationTestBed {
     if (this.originalConsoleError) console.error = this.originalConsoleError;
     if (this.originalConsoleWarn) console.warn = this.originalConsoleWarn;
     if (this.originalConsoleLog) console.log = this.originalConsoleLog;
-    
+
     await super.cleanup();
   }
 
@@ -98,12 +107,12 @@ class ErrorEventTestBed extends IntegrationTestBed {
 describe('Error Event Handling Advanced E2E Test', () => {
   /** @type {ErrorEventTestBed} */
   let testBed;
-  
+
   beforeEach(async () => {
     testBed = new ErrorEventTestBed();
     await testBed.initialize();
   });
-  
+
   afterEach(async () => {
     await testBed.cleanup();
   });
@@ -116,31 +125,36 @@ describe('Error Event Handling Advanced E2E Test', () => {
           throw new Error('ValidatedEventDispatcher failure');
         }),
         subscribe: jest.fn(),
-        unsubscribe: jest.fn()
+        unsubscribe: jest.fn(),
       };
 
       const safeDispatcherWithThrowingVED = new SafeEventDispatcher({
         validatedEventDispatcher: throwingDispatcher,
-        logger: testBed.logger
+        logger: testBed.logger,
       });
 
       const errorPayload = {
         message: 'Test system error',
         context: { source: 'test' },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Act - dispatch a system error event that should trigger console fallback
-      const result = await safeDispatcherWithThrowingVED.dispatch(SYSTEM_ERROR_OCCURRED_ID, errorPayload);
+      const result = await safeDispatcherWithThrowingVED.dispatch(
+        SYSTEM_ERROR_OCCURRED_ID,
+        errorPayload
+      );
 
       // Assert
       expect(result).toBe(false); // SafeEventDispatcher should return false after catching exception
       expect(throwingDispatcher.dispatch).toHaveBeenCalled();
       expect(testBed.consoleErrorMock).toHaveBeenCalled();
-      
+
       // Verify the console error message contains expected content
-      const consoleCall = testBed.consoleErrorMock.mock.calls.find(call => 
-        call[0].includes('SafeEventDispatcher') && call[0].includes('system_error_occurred')
+      const consoleCall = testBed.consoleErrorMock.mock.calls.find(
+        (call) =>
+          call[0].includes('SafeEventDispatcher') &&
+          call[0].includes('system_error_occurred')
       );
       expect(consoleCall).toBeTruthy();
     });
@@ -156,25 +170,30 @@ describe('Error Event Handling Advanced E2E Test', () => {
           throw new Error('ValidatedEventDispatcher failure for error event');
         }),
         subscribe: jest.fn(),
-        unsubscribe: jest.fn()
+        unsubscribe: jest.fn(),
       };
 
       const safeDispatcherWithThrowingVED = new SafeEventDispatcher({
         validatedEventDispatcher: throwingDispatcher,
-        logger: testBed.logger
+        logger: testBed.logger,
       });
 
       // Act
-      const result = await safeDispatcherWithThrowingVED.dispatch(errorEvent, errorPayload);
+      const result = await safeDispatcherWithThrowingVED.dispatch(
+        errorEvent,
+        errorPayload
+      );
 
       // Assert
       expect(result).toBe(false);
       expect(throwingDispatcher.dispatch).toHaveBeenCalled();
       expect(testBed.consoleErrorMock).toHaveBeenCalled();
-      
+
       // Verify console fallback was triggered due to error keywords
-      const consoleCall = testBed.consoleErrorMock.mock.calls.find(call => 
-        call[0].includes('SafeEventDispatcher') && call[0].includes('critical_error_occurred')
+      const consoleCall = testBed.consoleErrorMock.mock.calls.find(
+        (call) =>
+          call[0].includes('SafeEventDispatcher') &&
+          call[0].includes('critical_error_occurred')
       );
       expect(consoleCall).toBeTruthy();
     });
@@ -188,7 +207,7 @@ describe('Error Event Handling Advanced E2E Test', () => {
         error: jest.fn(() => {
           throw new Error('Logger failure');
         }),
-        log: jest.fn()
+        log: jest.fn(),
       };
 
       // Create a ValidatedEventDispatcher that throws exceptions (triggering logger usage)
@@ -197,30 +216,35 @@ describe('Error Event Handling Advanced E2E Test', () => {
           throw new Error('ValidatedEventDispatcher failure to trigger logger');
         }),
         subscribe: jest.fn(),
-        unsubscribe: jest.fn()
+        unsubscribe: jest.fn(),
       };
-      
+
       // Create SafeEventDispatcher with failing logger and throwing dispatcher
       const safeDispatcherWithFailingLogger = new SafeEventDispatcher({
         validatedEventDispatcher: throwingDispatcher,
-        logger: failingLogger
+        logger: failingLogger,
       });
 
       const normalEvent = 'test:normal_event';
       const eventPayload = { message: 'Test normal event' };
 
       // Act
-      const result = await safeDispatcherWithFailingLogger.dispatch(normalEvent, eventPayload);
+      const result = await safeDispatcherWithFailingLogger.dispatch(
+        normalEvent,
+        eventPayload
+      );
 
       // Assert
       expect(result).toBe(false);
       expect(throwingDispatcher.dispatch).toHaveBeenCalled();
       expect(failingLogger.error).toHaveBeenCalled();
       expect(testBed.consoleErrorMock).toHaveBeenCalled();
-      
+
       // Verify console was used as ultimate fallback
-      const consoleCall = testBed.consoleErrorMock.mock.calls.find(call =>
-        call[0].includes('SafeEventDispatcher: Logger failed while handling error')
+      const consoleCall = testBed.consoleErrorMock.mock.calls.find((call) =>
+        call[0].includes(
+          'SafeEventDispatcher: Logger failed while handling error'
+        )
       );
       expect(consoleCall).toBeTruthy();
     });
@@ -235,9 +259,9 @@ describe('Error Event Handling Advanced E2E Test', () => {
         severity: 'high',
         context: {
           component: 'SafeEventDispatcher',
-          operation: 'error_handling_test'
+          operation: 'error_handling_test',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       const systemErrorHandler = jest.fn();
@@ -248,18 +272,21 @@ describe('Error Event Handling Advanced E2E Test', () => {
       testBed.eventBus.subscribe('*', wildcardHandler);
 
       // Act
-      const result = await testBed.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, errorPayload);
+      const result = await testBed.safeEventDispatcher.dispatch(
+        SYSTEM_ERROR_OCCURRED_ID,
+        errorPayload
+      );
 
       // Assert
       expect(result).toBe(true); // Should succeed with real event system
       expect(systemErrorHandler).toHaveBeenCalledWith({
         type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: errorPayload
+        payload: errorPayload,
       });
-      
+
       expect(wildcardHandler).toHaveBeenCalledWith({
         type: SYSTEM_ERROR_OCCURRED_ID,
-        payload: errorPayload
+        payload: errorPayload,
       });
     });
 
@@ -270,20 +297,23 @@ describe('Error Event Handling Advanced E2E Test', () => {
         source: 'test',
         severity: 'low',
         context: { warning: true },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       const warningHandler = jest.fn();
       testBed.eventBus.subscribe(SYSTEM_WARNING_OCCURRED_ID, warningHandler);
 
       // Act
-      const result = await testBed.safeEventDispatcher.dispatch(SYSTEM_WARNING_OCCURRED_ID, warningPayload);
+      const result = await testBed.safeEventDispatcher.dispatch(
+        SYSTEM_WARNING_OCCURRED_ID,
+        warningPayload
+      );
 
       // Assert
       expect(result).toBe(true);
       expect(warningHandler).toHaveBeenCalledWith({
         type: SYSTEM_WARNING_OCCURRED_ID,
-        payload: warningPayload
+        payload: warningPayload,
       });
     });
 
@@ -294,15 +324,18 @@ describe('Error Event Handling Advanced E2E Test', () => {
         source: 'test',
         severity: 'medium',
         context: { test: true },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       const validEventHandler = jest.fn();
       testBed.eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, validEventHandler);
 
       // Act & Assert - Valid payload should succeed
-      const result = await testBed.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, validPayload);
-      
+      const result = await testBed.safeEventDispatcher.dispatch(
+        SYSTEM_ERROR_OCCURRED_ID,
+        validPayload
+      );
+
       expect(result).toBe(true);
       expect(validEventHandler).toHaveBeenCalled();
     });
@@ -313,7 +346,7 @@ describe('Error Event Handling Advanced E2E Test', () => {
       // Arrange
       const normalEvent = 'test:normal_operation';
       const errorEvent = 'test:error_operation';
-      
+
       const normalHandler = jest.fn();
       const errorHandler = jest.fn(() => {
         throw new Error('Intentional error for recovery test');
@@ -323,8 +356,12 @@ describe('Error Event Handling Advanced E2E Test', () => {
       testBed.eventBus.subscribe(errorEvent, errorHandler);
 
       // Act - Trigger error, then normal operation
-      await testBed.safeEventDispatcher.dispatch(errorEvent, { message: 'Error test' });
-      await testBed.safeEventDispatcher.dispatch(normalEvent, { message: 'Normal test' });
+      await testBed.safeEventDispatcher.dispatch(errorEvent, {
+        message: 'Error test',
+      });
+      await testBed.safeEventDispatcher.dispatch(normalEvent, {
+        message: 'Normal test',
+      });
 
       // Assert
       expect(errorHandler).toHaveBeenCalled();
@@ -333,7 +370,7 @@ describe('Error Event Handling Advanced E2E Test', () => {
       // Verify system continues to operate normally
       expect(normalHandler.mock.calls[0][0]).toEqual({
         type: normalEvent,
-        payload: { message: 'Normal test' }
+        payload: { message: 'Normal test' },
       });
     });
 
@@ -341,9 +378,11 @@ describe('Error Event Handling Advanced E2E Test', () => {
       // Arrange - Create a scenario that would crash without SafeEventDispatcher
       const crashingEvent = 'test:crashing_event';
       const followupEvent = 'test:followup_event';
-      
+
       const crashingHandler = jest.fn(() => {
-        throw new Error('This would crash the system without SafeEventDispatcher');
+        throw new Error(
+          'This would crash the system without SafeEventDispatcher'
+        );
       });
       const followupHandler = jest.fn();
 
@@ -351,21 +390,27 @@ describe('Error Event Handling Advanced E2E Test', () => {
       testBed.eventBus.subscribe(followupEvent, followupHandler);
 
       // Act - These dispatches should not crash the test
-      const crashResult = await testBed.safeEventDispatcher.dispatch(crashingEvent, { message: 'crash test' });
-      const followupResult = await testBed.safeEventDispatcher.dispatch(followupEvent, { message: 'followup test' });
+      const crashResult = await testBed.safeEventDispatcher.dispatch(
+        crashingEvent,
+        { message: 'crash test' }
+      );
+      const followupResult = await testBed.safeEventDispatcher.dispatch(
+        followupEvent,
+        { message: 'followup test' }
+      );
 
       // Assert
       expect(crashingHandler).toHaveBeenCalled();
       expect(followupHandler).toHaveBeenCalled();
-      
+
       // SafeEventDispatcher allows the crash but continues processing
       expect(crashResult).toBe(true); // Event was dispatched (handler throwing doesn't affect dispatch result)
       expect(followupResult).toBe(true);
-      
+
       // System continues to function normally
       expect(followupHandler.mock.calls[0][0]).toEqual({
         type: followupEvent,
-        payload: { message: 'followup test' }
+        payload: { message: 'followup test' },
       });
     });
   });

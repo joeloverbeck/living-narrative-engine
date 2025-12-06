@@ -17,9 +17,11 @@ import MonitoringCoordinator from '../../../src/entities/monitoring/MonitoringCo
  */
 function createTestLogger() {
   const logs = [];
-  const makeRecorder = (level) => (...args) => {
-    logs.push({ level, args });
-  };
+  const makeRecorder =
+    (level) =>
+    (...args) => {
+      logs.push({ level, args });
+    };
   return {
     logs,
     debug: makeRecorder('debug'),
@@ -115,9 +117,12 @@ describe('ClothingErrorHandler integration', () => {
       { stage: 'accessibility' }
     );
 
-    const coverageError = new CoverageAnalysisError('Coverage analysis failed', {
-      items: ['vest'],
-    });
+    const coverageError = new CoverageAnalysisError(
+      'Coverage analysis failed',
+      {
+        items: ['vest'],
+      }
+    );
 
     const priorityError = new PriorityCalculationError(
       'Priority calculation failed',
@@ -139,10 +144,21 @@ describe('ClothingErrorHandler integration', () => {
     const validationContext = { requestId: 'req-4' };
 
     const results = [];
-    results.push(await clothingErrorHandler.handleError(accessibilityError, accessibilityContext));
-    results.push(await clothingErrorHandler.handleError(coverageError, coverageContext));
-    results.push(await clothingErrorHandler.handleError(priorityError, priorityContext));
-    results.push(await clothingErrorHandler.handleError(validationError, validationContext));
+    results.push(
+      await clothingErrorHandler.handleError(
+        accessibilityError,
+        accessibilityContext
+      )
+    );
+    results.push(
+      await clothingErrorHandler.handleError(coverageError, coverageContext)
+    );
+    results.push(
+      await clothingErrorHandler.handleError(priorityError, priorityContext)
+    );
+    results.push(
+      await clothingErrorHandler.handleError(validationError, validationContext)
+    );
 
     const simpleAccessibility = await clothingErrorHandler.handleError(
       new ClothingAccessibilityError(
@@ -234,7 +250,12 @@ describe('ClothingErrorHandler integration', () => {
     );
 
     const result = await clothingErrorHandler.handleError(
-      new ClothingValidationError('Schema mismatch', 'material', 'felt', 'string'),
+      new ClothingValidationError(
+        'Schema mismatch',
+        'material',
+        'felt',
+        'string'
+      ),
       { stage: 'validation' }
     );
 
@@ -251,9 +272,12 @@ describe('ClothingErrorHandler integration', () => {
     const harnessWithCentral = createHarness({ includeCentral: true });
     const { clothingErrorHandler, centralErrorHandler } = harnessWithCentral;
 
-    centralErrorHandler.registerRecoveryStrategy('CoverageAnalysisError', () => {
-      throw new Error('central strategy failure');
-    });
+    centralErrorHandler.registerRecoveryStrategy(
+      'CoverageAnalysisError',
+      () => {
+        throw new Error('central strategy failure');
+      }
+    );
 
     const result = await clothingErrorHandler.handleError(
       new CoverageAnalysisError('Coverage graph failure', { items: ['coat'] }),
@@ -282,7 +306,10 @@ describe('ClothingErrorHandler integration', () => {
       via: 'sync-fallback',
     });
 
-    centralErrorHandler.registerRecoveryStrategy('ClothingAccessibilityError', syncStrategy);
+    centralErrorHandler.registerRecoveryStrategy(
+      'ClothingAccessibilityError',
+      syncStrategy
+    );
 
     const result = clothingErrorHandler.handleErrorSync(
       new ClothingAccessibilityError('Cannot reach item', 'actor-22', 'item-9'),
@@ -298,7 +325,8 @@ describe('ClothingErrorHandler integration', () => {
 
   it('logs a warning and falls back locally when the central sync handler throws', () => {
     const harnessWithCentral = createHarness({ includeCentral: true });
-    const { clothingErrorHandler, centralErrorHandler, logger } = harnessWithCentral;
+    const { clothingErrorHandler, centralErrorHandler, logger } =
+      harnessWithCentral;
 
     const syncFailure = () => {
       throw new Error('sync failure');
@@ -306,7 +334,11 @@ describe('ClothingErrorHandler integration', () => {
     centralErrorHandler.handleSync = syncFailure;
 
     const result = clothingErrorHandler.handleErrorSync(
-      new ClothingServiceError('Sync central failure', 'ClothingAccessibilityService', 'sync-handle'),
+      new ClothingServiceError(
+        'Sync central failure',
+        'ClothingAccessibilityService',
+        'sync-handle'
+      ),
       { stage: 'sync-failure' }
     );
 
@@ -336,6 +368,10 @@ describe('ClothingErrorHandler integration', () => {
       }
     );
 
-    expect(legacyFallback).toEqual({ mode: 'legacy', items: [], accessible: true });
+    expect(legacyFallback).toEqual({
+      mode: 'legacy',
+      items: [],
+      accessible: true,
+    });
   });
 });

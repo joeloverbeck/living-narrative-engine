@@ -366,7 +366,9 @@ describe('GlobalMultiTargetStrategy - Integration', () => {
       const formattedActions = accumulator.getFormattedActions();
       expect(formattedActions).toHaveLength(1);
       expect(formattedActions[0].command).toBe('inspect');
-      expect(formattedActions[0].params.targetIds.primary).toEqual(['statue-1']);
+      expect(formattedActions[0].params.targetIds.primary).toEqual([
+        'statue-1',
+      ]);
 
       const summary = accumulator.getActionSummary('explore:inspect');
       expect(summary?.successes).toBe(1);

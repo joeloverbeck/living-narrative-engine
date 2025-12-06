@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base"
-      ]
+      "allowedLayers": ["base"]
     },
     "core:material": {
       "material": "leather"
@@ -31,9 +29,7 @@
       "size": "105mm stiletto heel"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

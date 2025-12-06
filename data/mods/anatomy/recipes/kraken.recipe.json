@@ -27,24 +27,18 @@
     },
     "ink_sac": {
       "partType": "ink_reservoir",
-      "tags": [
-        "anatomy:part"
-      ]
+      "tags": ["anatomy:part"]
     },
     "beak": {
       "partType": "beak",
-      "tags": [
-        "anatomy:part"
-      ]
+      "tags": ["anatomy:part"]
     }
   },
   "patterns": [
     {
       "matchesGroup": "limbSet:tentacle",
       "partType": "tentacle",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:size_category": {
           "size": "enormous"
@@ -66,18 +60,13 @@
     {
       "matchesGroup": "appendage:head",
       "partType": "head",
-      "tags": [
-        "anatomy:part"
-      ]
+      "tags": ["anatomy:part"]
     }
   ],
   "constraints": {
     "requires": [
       {
-        "partTypes": [
-          "tentacle",
-          "ink_reservoir"
-        ]
+        "partTypes": ["tentacle", "ink_reservoir"]
       }
     ]
   }

@@ -2,7 +2,14 @@
  * @file Integration tests covering failure and diagnostic paths for RecipeValidationRunner.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import AnatomyBlueprintRepository from '../../../../src/anatomy/repositories/anatomyBlueprintRepository.js';
@@ -75,7 +82,10 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
   function seedCoreComponents() {
     dataRegistry.store('components', 'core:muscle', {
       id: 'core:muscle',
-      dataSchema: { type: 'object', properties: { strength: { type: 'string' } } },
+      dataSchema: {
+        type: 'object',
+        properties: { strength: { type: 'string' } },
+      },
     });
     dataRegistry.store('components', 'descriptors:muscle', {
       id: 'descriptors:muscle',
@@ -138,7 +148,9 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
     const json = report.toJSON();
 
     expect(report).toBeInstanceOf(ValidationReport);
-    expect(json.errors.some((e) => e.type === 'BLUEPRINT_NOT_FOUND')).toBe(true);
+    expect(json.errors.some((e) => e.type === 'BLUEPRINT_NOT_FOUND')).toBe(
+      true
+    );
     // Blueprint validator runs with failFast=true and stops pipeline,
     // so pattern/generated slot validators never run
     expect(logger.warn).toHaveBeenCalledWith(
@@ -364,7 +376,9 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
       expect.any(Error)
     );
     expect(
-      json.errors.some((entry) => entry.check === 'generated_slot_part_availability')
+      json.errors.some(
+        (entry) => entry.check === 'generated_slot_part_availability'
+      )
     ).toBe(true);
   });
 
@@ -462,8 +476,10 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
 
     // DEBUG: Log all errors and passed checks to understand what's happening
     if (json.errors.length === 0 && json.passed.length > 0) {
-       
-      console.log('Test expects errors but validation passed:', JSON.stringify(json.passed, null, 2));
+      console.log(
+        'Test expects errors but validation passed:',
+        JSON.stringify(json.passed, null, 2)
+      );
     }
 
     const generatedSlotError = json.errors.find(
@@ -473,16 +489,18 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
     // This test may be outdated if the validator logic changed or patterns don't match generated slots
     // Skip the assertion if no error is found, as this might indicate a test assumption issue
     if (!generatedSlotError) {
-       
       console.warn(
         'Generated slot error not found. Test assumption may be outdated.',
-        'Errors:', JSON.stringify(json.errors, null, 2)
+        'Errors:',
+        JSON.stringify(json.errors, null, 2)
       );
       return; // Skip remaining assertions
     }
 
     expect(generatedSlotError).toBeDefined();
-    expect(generatedSlotError.location.pattern).toContain("matchesPattern 'arm_*");
+    expect(generatedSlotError.location.pattern).toContain(
+      "matchesPattern 'arm_*"
+    );
   });
 
   it('reports generic entity load failures and logs diagnostic errors', async () => {
@@ -525,7 +543,9 @@ describe('RecipeValidationRunner - Failure mode integration coverage', () => {
     });
 
     const json = report.toJSON();
-    const failure = json.errors.find((entry) => entry.type === 'ENTITY_LOAD_FAILURE');
+    const failure = json.errors.find(
+      (entry) => entry.type === 'ENTITY_LOAD_FAILURE'
+    );
 
     expect(failure).toBeDefined();
     expect(failure.details.error).toBe('Unexpected parse failure');

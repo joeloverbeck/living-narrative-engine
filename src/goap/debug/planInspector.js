@@ -66,7 +66,12 @@ class PlanInspector {
    * @returns {string} Formatted plan text
    */
   inspect(actorId) {
-    assertNonBlankString(actorId, 'actorId', 'PlanInspector.inspect', this.#logger);
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'PlanInspector.inspect',
+      this.#logger
+    );
 
     const plan = this.#goapController.getActivePlan(actorId);
     if (!plan) {
@@ -86,7 +91,12 @@ class PlanInspector {
    * @returns {object|null} Plan data or null
    */
   inspectJSON(actorId) {
-    assertNonBlankString(actorId, 'actorId', 'PlanInspector.inspectJSON', this.#logger);
+    assertNonBlankString(
+      actorId,
+      'actorId',
+      'PlanInspector.inspectJSON',
+      this.#logger
+    );
 
     const plan = this.#goapController.getActivePlan(actorId);
     if (!plan) {
@@ -193,7 +203,9 @@ class PlanInspector {
         lines.push(`    ${goalId}: ${failures.length} failure(s)`);
         failures.forEach(({ reason, code, timestamp }) => {
           const label = code ? `[${code}] ` : '';
-          lines.push(`      - ${label}${reason} (${new Date(timestamp).toISOString()})`);
+          lines.push(
+            `      - ${label}${reason} (${new Date(timestamp).toISOString()})`
+          );
         });
       });
     }
@@ -205,7 +217,9 @@ class PlanInspector {
         lines.push(`    ${taskId}: ${failures.length} failure(s)`);
         failures.forEach(({ reason, code, timestamp }) => {
           const label = code ? `[${code}] ` : '';
-          lines.push(`      - ${label}${reason} (${new Date(timestamp).toISOString()})`);
+          lines.push(
+            `      - ${label}${reason} (${new Date(timestamp).toISOString()})`
+          );
         });
       });
     }
@@ -260,7 +274,11 @@ class PlanInspector {
   #formatTask(task, index, currentStep) {
     const taskDef = this.#dataRegistry.get('tasks', task.id);
     const status =
-      index < currentStep ? 'COMPLETED' : index === currentStep ? 'CURRENT' : 'PENDING';
+      index < currentStep
+        ? 'COMPLETED'
+        : index === currentStep
+          ? 'CURRENT'
+          : 'PENDING';
 
     const lines = [];
     lines.push(`  ${index + 1}. [${task.id}] (${status})`);
@@ -289,8 +307,14 @@ class PlanInspector {
    */
   #formatParameter(key, value) {
     // If value looks like an entity ID, try to resolve name
-    if (typeof value === 'string' && this.#entityManager.getEntityInstance(value)) {
-      const entityName = this.#entityDisplayDataProvider.getEntityName(value, value);
+    if (
+      typeof value === 'string' &&
+      this.#entityManager.getEntityInstance(value)
+    ) {
+      const entityName = this.#entityDisplayDataProvider.getEntityName(
+        value,
+        value
+      );
       return `${key}: "${entityName}" (${value})`;
     }
 
@@ -338,7 +362,6 @@ class PlanInspector {
 
     return lines;
   }
-
 }
 
 export default PlanInspector;

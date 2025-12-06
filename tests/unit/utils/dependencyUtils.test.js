@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
@@ -127,7 +134,13 @@ describe('dependencyUtils', () => {
       };
 
       expect(() =>
-        assertMethods(dependency, ['start', 'stop'], 'missing method', CustomError, logger)
+        assertMethods(
+          dependency,
+          ['start', 'stop'],
+          'missing method',
+          CustomError,
+          logger
+        )
       ).toThrow(CustomError);
 
       expect(dependency.start).not.toHaveBeenCalled();
@@ -139,7 +152,13 @@ describe('dependencyUtils', () => {
       const logger = { error: jest.fn() };
 
       try {
-        assertMethods({}, ['execute'], 'missing execute', InvalidArgumentError, logger);
+        assertMethods(
+          {},
+          ['execute'],
+          'missing execute',
+          InvalidArgumentError,
+          logger
+        );
         throw new Error('expected assertMethods to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidArgumentError);
@@ -153,13 +172,17 @@ describe('dependencyUtils', () => {
   describe('assertValidId', () => {
     it('passes for a non-blank string id', () => {
       const logger = { error: jest.fn() };
-      expect(() => assertValidId('entity-123', 'TestContext', logger)).not.toThrow();
+      expect(() =>
+        assertValidId('entity-123', 'TestContext', logger)
+      ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('throws InvalidArgumentError and logs context when id is invalid', () => {
       const logger = { error: jest.fn() };
-      expect(() => assertValidId('  ', 'Ctx', logger)).toThrow(InvalidArgumentError);
+      expect(() => assertValidId('  ', 'Ctx', logger)).toThrow(
+        InvalidArgumentError
+      );
       expect(logger.error).toHaveBeenCalledWith(
         "Ctx: Invalid ID '  '. Expected non-blank string.",
         expect.objectContaining({
@@ -173,7 +196,9 @@ describe('dependencyUtils', () => {
     it('logs type information when a non-string id is supplied', () => {
       const logger = { error: jest.fn() };
 
-      expect(() => assertValidId(null, 'Ctx', logger)).toThrow(InvalidArgumentError);
+      expect(() => assertValidId(null, 'Ctx', logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "Ctx: Invalid ID 'null'. Expected non-blank string.",
@@ -193,7 +218,9 @@ describe('dependencyUtils', () => {
         throw new Error('expected assertValidId to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidArgumentError);
-        expect(error.message).toBe("DirectCtx: Invalid ID ''. Expected non-blank string.");
+        expect(error.message).toBe(
+          "DirectCtx: Invalid ID ''. Expected non-blank string."
+        );
       }
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -258,7 +285,9 @@ describe('dependencyUtils', () => {
         throw new Error('expected assertNonBlankString to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(InvalidArgumentError);
-        expect(error.message).toBe("Direct: Invalid param '   '. Expected non-blank string.");
+        expect(error.message).toBe(
+          "Direct: Invalid param '   '. Expected non-blank string."
+        );
       }
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -273,7 +302,9 @@ describe('dependencyUtils', () => {
     });
 
     it('falls back to console.error when logger is not provided', () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       expect(() => assertNonBlankString('', 'param')).toThrow(
         InvalidArgumentError
@@ -292,7 +323,9 @@ describe('dependencyUtils', () => {
     });
 
     it('omits context metadata when context is empty or whitespace', () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       try {
         assertNonBlankString('   ', 'param', '  ');
@@ -314,7 +347,9 @@ describe('dependencyUtils', () => {
 
   describe('validateDependency', () => {
     it('throws when dependency is missing and falls back to console error', () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
       expect(() => validateDependency(null, 'MissingService')).toThrow(
         InvalidArgumentError
       );
@@ -325,7 +360,9 @@ describe('dependencyUtils', () => {
 
     it('uses console error when provided logger lacks an error function', () => {
       const logger = {};
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       expect(() =>
         validateDependency(undefined, 'ConsoleFallback', logger)
@@ -339,9 +376,9 @@ describe('dependencyUtils', () => {
     it('uses the provided logger when dependency is missing', () => {
       const logger = { error: jest.fn() };
 
-      expect(() => validateDependency(undefined, 'LoggerService', logger)).toThrow(
-        InvalidArgumentError
-      );
+      expect(() =>
+        validateDependency(undefined, 'LoggerService', logger)
+      ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(
         'Missing required dependency: LoggerService.'
@@ -427,7 +464,9 @@ describe('dependencyUtils', () => {
       const logger = { error: jest.fn() };
       const dependency = { optional: jest.fn() };
 
-      expect(() => validateDependency(dependency, 'Optional', logger)).not.toThrow();
+      expect(() =>
+        validateDependency(dependency, 'Optional', logger)
+      ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
 

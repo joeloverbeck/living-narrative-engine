@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-001: Add Duplicate Key Detection to mapSlotToEntity
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-001
 - **Priority**: CRITICAL
 - **Severity**: P1
@@ -17,6 +18,7 @@
 The `mapSlotToEntity()` method in `AnatomyGraphContext` silently overwrites existing mappings when a duplicate slot key is used. This allows data corruption to occur without any warning or error.
 
 ### Current Behavior
+
 ```javascript
 // src/anatomy/anatomyGraphContext.js:143-146 (corrected from ticket's 144-146)
 mapSlotToEntity(slotKey, entityId) {
@@ -25,6 +27,7 @@ mapSlotToEntity(slotKey, entityId) {
 ```
 
 ### Impact
+
 - If two slots have the same key, the second one silently replaces the first
 - The first entity becomes orphaned and unreachable via slot lookups
 - This was the root cause of the "chicken bug" where one leg's children were overwritten by the other's
@@ -33,8 +36,8 @@ mapSlotToEntity(slotKey, entityId) {
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
+| File                                 | Line(s)    | Change Type              |
+| ------------------------------------ | ---------- | ------------------------ |
 | `src/anatomy/anatomyGraphContext.js` | 7, 147-156 | Modify (import + method) |
 
 ---

@@ -29,9 +29,11 @@ Create the health thresholds lookup file that defines the mapping between health
 ## Files to Touch
 
 ### New Files
+
 - `data/mods/anatomy/lookups/part_health_thresholds.json`
 
 ### Modified Files
+
 - None (will need `lookups` directory created if it doesn't exist)
 
 ---
@@ -39,6 +41,7 @@ Create the health thresholds lookup file that defines the mapping between health
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any component files
 - Any entity definition files
 - Any operation handler source code
@@ -47,6 +50,7 @@ Create the health thresholds lookup file that defines the mapping between health
 - Any test files
 
 **DO NOT implement:**
+
 - Per-part-type threshold overrides (hook only)
 - Creature-type threshold overrides (hook only)
 - Dynamic threshold loading in handlers (handler reads thresholds in its ticket)
@@ -134,6 +138,7 @@ Create `data/mods/anatomy/lookups/part_health_thresholds.json`:
 ### Tests That Must Pass
 
 1. **JSON validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/anatomy/lookups/part_health_thresholds.json'))"
    ```
@@ -203,10 +208,10 @@ npm run test:ci
 
 ### Deviation From Original Plan
 
-| Original Ticket Spec | Actual Implementation | Reason |
-|---------------------|----------------------|--------|
+| Original Ticket Spec            | Actual Implementation             | Reason                                            |
+| ------------------------------- | --------------------------------- | ------------------------------------------------- |
 | `minPercentage`/`maxPercentage` | `min_percentage`/`max_percentage` | Consistency with `hunger_thresholds.json` pattern |
-| `defaultThresholds` array | `thresholds` array | Consistency with `hunger_thresholds.json` pattern |
+| `defaultThresholds` array       | `thresholds` array                | Consistency with `hunger_thresholds.json` pattern |
 
 ### Verification Results
 

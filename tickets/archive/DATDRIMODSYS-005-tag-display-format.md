@@ -9,6 +9,7 @@ Extend `MultiTargetActionFormatter.js` to render active modifier tags in action 
 ## File List
 
 Files to modify:
+
 - `src/actions/formatters/MultiTargetActionFormatter.js` (add tag rendering logic)
 
 ## Out of Scope
@@ -40,14 +41,15 @@ if (
   // ... existing target resolution logic ...
 
   if (canCalculate) {
-    const displayResult =
-      _options.chanceCalculationService.calculateForDisplay({
+    const displayResult = _options.chanceCalculationService.calculateForDisplay(
+      {
         actorId: _options.actorId,
         primaryTargetId: targetId,
         secondaryTargetId: combination.secondary?.[0]?.id,
         tertiaryTargetId: combination.tertiary?.[0]?.id,
         actionDef,
-      });
+      }
+    );
 
     // Replace chance placeholder
     template = template.replace(
@@ -124,14 +126,13 @@ Ensure the `calculateForDisplay` call passes all target IDs correctly:
 
 ```javascript
 // In #formatCombinations, update the calculateForDisplay call:
-const displayResult =
-  _options.chanceCalculationService.calculateForDisplay({
-    actorId: _options.actorId,
-    primaryTargetId: targetId,
-    secondaryTargetId: combination.secondary?.[0]?.id ?? null,
-    tertiaryTargetId: combination.tertiary?.[0]?.id ?? null,
-    actionDef,
-  });
+const displayResult = _options.chanceCalculationService.calculateForDisplay({
+  actorId: _options.actorId,
+  primaryTargetId: targetId,
+  secondaryTargetId: combination.secondary?.[0]?.id ?? null,
+  tertiaryTargetId: combination.tertiary?.[0]?.id ?? null,
+  actionDef,
+});
 ```
 
 ### 5. Handle Edge Cases
@@ -142,14 +143,15 @@ Add defensive handling for various scenarios:
 // In the chance calculation block:
 if (canCalculate) {
   try {
-    const displayResult =
-      _options.chanceCalculationService.calculateForDisplay({
+    const displayResult = _options.chanceCalculationService.calculateForDisplay(
+      {
         actorId: _options.actorId,
         primaryTargetId: targetId,
         secondaryTargetId: combination.secondary?.[0]?.id,
         tertiaryTargetId: combination.tertiary?.[0]?.id,
         actionDef,
-      });
+      }
+    );
 
     // Replace chance placeholder (handle both {chance} and {chance}%)
     template = template.replace(
@@ -240,16 +242,19 @@ npx eslint src/actions/formatters/MultiTargetActionFormatter.js
 ## Visual Examples
 
 ### Before (Current)
+
 ```
 restrain target (45% chance)
 ```
 
 ### After (With Modifiers)
+
 ```
 restrain target (45% chance) [target restrained]
 ```
 
 ### Multiple Tags
+
 ```
 swing at target (60% chance) [target prone] [low light] [flanking]
 ```
@@ -270,6 +275,7 @@ swing at target (60% chance) [target prone] [low light] [flanking]
 ### Changes Made vs Originally Planned
 
 #### As Planned
+
 - ✅ Added `#formatModifierTags(tags)` helper method to format tags with brackets
 - ✅ Added `#appendTagsToTemplate(template, tagsString)` helper method
 - ✅ Updated `calculateForDisplay` call to pass all target role IDs (`primaryTargetId`, `secondaryTargetId`, `tertiaryTargetId`)
@@ -277,10 +283,12 @@ swing at target (60% chance) [target prone] [low light] [flanking]
 - ✅ Created comprehensive test file `MultiTargetActionFormatter.tags.test.js` with 12 test cases
 
 #### Deviations from Plan
+
 - **Line numbers updated**: Ticket originally referenced approximate line numbers; corrected to actual ~175-216
 - **Parameter naming**: Changed from `targetId` to `primaryTargetId` for consistency with ChanceCalculationService API (this required updating 3 existing test expectations in `MultiTargetActionFormatter.fixedDifficulty.test.js`)
 
 ### Test Results
+
 - **New tests**: 12 tests in `MultiTargetActionFormatter.tags.test.js` - all pass
 - **Existing formatter tests**: 111 tests - all pass
 - **Total coverage areas**:
@@ -294,6 +302,7 @@ swing at target (60% chance) [target prone] [low light] [flanking]
   - Templates without chance placeholder (no tags appended)
 
 ### Files Modified
+
 1. `src/actions/formatters/MultiTargetActionFormatter.js` - Added tag formatting logic
 2. `tests/unit/actions/formatters/MultiTargetActionFormatter.fixedDifficulty.test.js` - Updated test expectations for new parameter names
 3. `tests/unit/actions/formatters/MultiTargetActionFormatter.tags.test.js` - NEW comprehensive test file

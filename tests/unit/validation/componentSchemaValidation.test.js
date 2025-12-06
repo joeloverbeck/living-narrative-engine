@@ -3,13 +3,7 @@
  * @description Tests validation of component schemas with optional validationRules property
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';

@@ -11,10 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:facing_away"
-    ]
+    "actor": ["positioning:closeness", "positioning:facing_away"]
   },
   "forbidden_components": {
     "actor": [

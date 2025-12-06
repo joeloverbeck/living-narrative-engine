@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
 import {
@@ -23,7 +30,7 @@ function createLoggerWithoutError(setup, baseLogger, serviceName) {
   const prefixed = setup.createLogger(serviceName, baseLogger);
   // Simulate an unexpected runtime mutation that strips the error method
   // (observed in some mod integration environments).
-   
+
   prefixed.error = undefined;
   return prefixed;
 }
@@ -49,23 +56,31 @@ describe('dependencyUtils logger fallback integration', () => {
   });
 
   it('falls back to console logging when ServiceSetup logger loses its error method', () => {
-    const degradedLogger = createLoggerWithoutError(setup, baseLogger, 'FaultyService');
+    const degradedLogger = createLoggerWithoutError(
+      setup,
+      baseLogger,
+      'FaultyService'
+    );
 
     expect(() =>
       setup.validateDeps('FaultyService', degradedLogger, {
         orchestrator: { value: {}, requiredMethods: ['discoverActions'] },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Invalid or missing method 'discoverActions' on dependency 'FaultyService: orchestrator'.",
+      "Invalid or missing method 'discoverActions' on dependency 'FaultyService: orchestrator'."
     );
     expect(consoleWarnSpy).not.toHaveBeenCalled();
     expect(consoleInfoSpy).not.toHaveBeenCalled();
   });
 
   it('reports assertion errors through the console when injected logger cannot emit errors', () => {
-    const degradedLogger = createLoggerWithoutError(setup, baseLogger, 'DiagnosticsService');
+    const degradedLogger = createLoggerWithoutError(
+      setup,
+      baseLogger,
+      'DiagnosticsService'
+    );
 
     expect(() =>
       assertFunction(
@@ -73,8 +88,8 @@ describe('dependencyUtils logger fallback integration', () => {
         'execute',
         'DiagnosticsService requires execute()',
         InvalidArgumentError,
-        degradedLogger,
-      ),
+        degradedLogger
+      )
     ).toThrow(InvalidArgumentError);
 
     // The degraded logger cannot emit errors, so the console fallback is not
@@ -83,7 +98,11 @@ describe('dependencyUtils logger fallback integration', () => {
   });
 
   it('continues iterating dependency specifications even with degraded loggers', () => {
-    const degradedLogger = createLoggerWithoutError(setup, baseLogger, 'LifecycleService');
+    const degradedLogger = createLoggerWithoutError(
+      setup,
+      baseLogger,
+      'LifecycleService'
+    );
 
     const dependencySpecs = [
       {
@@ -99,25 +118,29 @@ describe('dependencyUtils logger fallback integration', () => {
     ];
 
     expect(() => validateDependencies(dependencySpecs, degradedLogger)).toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Invalid or missing method 'stop' on dependency 'LifecycleService: lifecycle'.",
+      "Invalid or missing method 'stop' on dependency 'LifecycleService: lifecycle'."
     );
   });
 
   it('uses console fallback when validateDependency checks function-only dependencies', () => {
-    const degradedLogger = createLoggerWithoutError(setup, baseLogger, 'FunctionService');
+    const degradedLogger = createLoggerWithoutError(
+      setup,
+      baseLogger,
+      'FunctionService'
+    );
 
     expect(() =>
       validateDependency({ run: () => {} }, 'FunctionService', degradedLogger, {
         isFunction: true,
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Dependency 'FunctionService' must be a function, but got object.",
+      "Dependency 'FunctionService' must be a function, but got object."
     );
   });
 });

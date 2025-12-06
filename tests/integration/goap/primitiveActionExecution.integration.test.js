@@ -50,7 +50,9 @@ describe('Primitive Action Execution - Integration', () => {
     });
 
     // Mock other dependencies
-    mockOperationInterpreter = testBed.createMock('IOperationInterpreter', ['execute']);
+    mockOperationInterpreter = testBed.createMock('IOperationInterpreter', [
+      'execute',
+    ]);
     mockActionIndex = testBed.createMock('IActionIndex', ['getActionById']);
     mockGameDataRepository = testBed.createMock('IGameDataRepository', [
       'getAllActions',
@@ -220,7 +222,9 @@ describe('Primitive Action Execution - Integration', () => {
       // Capture the state manager instance that will be used
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.IRefinementStateManager) {
-          capturedStateManager = new RefinementStateManager({ logger: mockLogger });
+          capturedStateManager = new RefinementStateManager({
+            logger: mockLogger,
+          });
           capturedStateManager.initialize({});
           return capturedStateManager;
         }
@@ -324,7 +328,9 @@ describe('Primitive Action Execution - Integration', () => {
       // Capture the state manager instance that will be used
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.IRefinementStateManager) {
-          capturedStateManager = new RefinementStateManager({ logger: mockLogger });
+          capturedStateManager = new RefinementStateManager({
+            logger: mockLogger,
+          });
           capturedStateManager.initialize({});
           return capturedStateManager;
         }
@@ -366,13 +372,19 @@ describe('Primitive Action Execution - Integration', () => {
       // Mock actions for workflow
       const mockAction1 = {
         id: 'test:log_action',
-        operation: { type: 'LOG', parameters: { message: 'Starting workflow' } },
+        operation: {
+          type: 'LOG',
+          parameters: { message: 'Starting workflow' },
+        },
         parameters: {},
       };
 
       const mockAction2 = {
         id: 'test:set_variable',
-        operation: { type: 'SET_VARIABLE', parameters: { key: 'workflowStep', value: 'completed' } },
+        operation: {
+          type: 'SET_VARIABLE',
+          parameters: { key: 'workflowStep', value: 'completed' },
+        },
         parameters: {},
       };
 

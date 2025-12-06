@@ -16,16 +16,16 @@ The following assumptions in the original ticket were corrected after reviewing 
 
 ## File List (Corrected)
 
-| File | Action |
-|------|--------|
-| `data/mods/anatomy/entities/definitions/human_heart.entity.json` | CREATE |
-| `data/mods/anatomy/entities/definitions/human_brain.entity.json` | CREATE |
-| `data/mods/anatomy/entities/definitions/human_spine.entity.json` | CREATE |
-| `data/mods/anatomy/entities/definitions/human_male_torso.entity.json` | MODIFY - add damage_propagation, sockets |
-| `data/mods/anatomy/entities/definitions/human_female_torso.entity.json` | MODIFY - add damage_propagation, sockets |
-| `data/mods/anatomy/entities/definitions/humanoid_head.entity.json` | MODIFY - add damage_propagation, brain socket |
-| `data/mods/anatomy/parts/humanoid_core.part.json` | MODIFY - add organ slot definitions |
-| `data/mods/anatomy/libraries/humanoid.slot-library.json` | MODIFY - add organ slot types |
+| File                                                                    | Action                                        |
+| ----------------------------------------------------------------------- | --------------------------------------------- |
+| `data/mods/anatomy/entities/definitions/human_heart.entity.json`        | CREATE                                        |
+| `data/mods/anatomy/entities/definitions/human_brain.entity.json`        | CREATE                                        |
+| `data/mods/anatomy/entities/definitions/human_spine.entity.json`        | CREATE                                        |
+| `data/mods/anatomy/entities/definitions/human_male_torso.entity.json`   | MODIFY - add damage_propagation, sockets      |
+| `data/mods/anatomy/entities/definitions/human_female_torso.entity.json` | MODIFY - add damage_propagation, sockets      |
+| `data/mods/anatomy/entities/definitions/humanoid_head.entity.json`      | MODIFY - add damage_propagation, brain socket |
+| `data/mods/anatomy/parts/humanoid_core.part.json`                       | MODIFY - add organ slot definitions           |
+| `data/mods/anatomy/libraries/humanoid.slot-library.json`                | MODIFY - add organ slot types                 |
 
 ## Out of Scope
 
@@ -81,11 +81,13 @@ See `specs/injury-reporting-and-user-interface.md` section 4.4 for damage propag
 ### What Was Actually Changed
 
 **Created Files (3):**
+
 - `data/mods/anatomy/entities/definitions/human_heart.entity.json` - Heart entity with 50 maxHealth, vital_organ component
 - `data/mods/anatomy/entities/definitions/human_brain.entity.json` - Brain entity with 40 maxHealth, vital_organ component
 - `data/mods/anatomy/entities/definitions/human_spine.entity.json` - Spine entity with 60 maxHealth, vital_organ component
 
 **Modified Files (5):**
+
 - `data/mods/anatomy/entities/definitions/human_male_torso.entity.json` - Added `heart_socket`, `spine_socket`, and `anatomy:damage_propagation` component
 - `data/mods/anatomy/entities/definitions/human_female_torso.entity.json` - Added `heart_socket`, `spine_socket`, and `anatomy:damage_propagation` component
 - `data/mods/anatomy/entities/definitions/humanoid_head.entity.json` - Added `brain_socket` and `anatomy:damage_propagation` component
@@ -93,6 +95,7 @@ See `specs/injury-reporting-and-user-interface.md` section 4.4 for damage propag
 - `data/mods/anatomy/libraries/humanoid.slot-library.json` - Added `standard_heart`, `standard_spine`, `standard_brain` slot definitions
 
 **New Test File:**
+
 - `tests/integration/anatomy/vitalOrganEntities.integration.test.js` - 16 tests validating:
   - Organ entity structure and health values
   - Torso socket and damage propagation configuration

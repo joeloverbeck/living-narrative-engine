@@ -209,67 +209,78 @@ class SystemLogicInterpreter extends BaseService {
   /* Rule caching                                                          */
 
   #loadAndCacheRules() {
-  const rawRules = /** @type {SystemRule[]} */ (
-    this.#dataRegistry.getAllSystemRules() || []
-  );
-
-  // Debug: Check raw rule before resolution
-  const targetRule = rawRules.find(r => r.rule_id === 'handle_sit_down_at_distance');
-  if (targetRule) {
-    this.#logger.debug(
-      `[DEBUG] #loadAndCacheRules - RAW rule 'handle_sit_down_at_distance' from dataRegistry:`
+    const rawRules = /** @type {SystemRule[]} */ (
+      this.#dataRegistry.getAllSystemRules() || []
     );
-    console.log(`  - actions is Array: ${Array.isArray(targetRule.actions)}`);
-    console.log(`  - actions.length: ${targetRule.actions ? targetRule.actions.length : 'N/A'}`);
-  }
 
-  // Resolve condition references in all rules before caching
-  const resolvedRules = rawRules.map((rule) => {
-    try {
+    // Debug: Check raw rule before resolution
+    const targetRule = rawRules.find(
+      (r) => r.rule_id === 'handle_sit_down_at_distance'
+    );
+    if (targetRule) {
       this.#logger.debug(
-        `Resolving condition references for rule '${rule.rule_id || 'NO_ID'}'`,
-        { condition: rule.condition }
+        `[DEBUG] #loadAndCacheRules - RAW rule 'handle_sit_down_at_distance' from dataRegistry:`
       );
-
-      // Resolve condition_ref entries to actual JsonLogic conditions
-      const resolvedRule = resolveConditionRefs(
-        rule,
-        this.#dataRegistry,
-        this.#logger
+      console.log(`  - actions is Array: ${Array.isArray(targetRule.actions)}`);
+      console.log(
+        `  - actions.length: ${targetRule.actions ? targetRule.actions.length : 'N/A'}`
       );
-
-      this.#logger.debug(
-        `Resolved rule '${rule.rule_id || 'NO_ID'}' condition`,
-        { resolvedCondition: resolvedRule.condition }
-      );
-
-      // Debug: Check actions after resolution
-      if (rule.rule_id === 'handle_sit_down_at_distance') {
-        this.#logger.debug(
-          `[DEBUG] #loadAndCacheRules - RESOLVED rule 'handle_sit_down_at_distance':`
-        );
-        console.log(`  - actions is Array: ${Array.isArray(resolvedRule.actions)}`);
-        console.log(`  - actions.length: ${resolvedRule.actions ? resolvedRule.actions.length : 'N/A'}`);
-      }
-
-      return resolvedRule;
-    } catch (err) {
-      this.#logger.error(
-        `Failed to resolve condition references in rule '${rule.rule_id || 'NO_ID'}': ${err.message}`,
-        err
-      );
-      console.error(`[SystemLogicInterpreter] ERROR resolving condition for rule '${rule.rule_id || 'NO_ID'}':`, err.message);
-      // Return rule with a condition that always fails
-      return { ...rule, condition: { '==': [true, false] } };
     }
-  });
 
-  this.#ruleCache = buildRuleCache(resolvedRules, this.#logger);
+    // Resolve condition references in all rules before caching
+    const resolvedRules = rawRules.map((rule) => {
+      try {
+        this.#logger.debug(
+          `Resolving condition references for rule '${rule.rule_id || 'NO_ID'}'`,
+          { condition: rule.condition }
+        );
 
-  this.#logger.debug(
-    `Finished caching rules. ${this.#ruleCache.size} event types have associated rules.`
-  );
-}
+        // Resolve condition_ref entries to actual JsonLogic conditions
+        const resolvedRule = resolveConditionRefs(
+          rule,
+          this.#dataRegistry,
+          this.#logger
+        );
+
+        this.#logger.debug(
+          `Resolved rule '${rule.rule_id || 'NO_ID'}' condition`,
+          { resolvedCondition: resolvedRule.condition }
+        );
+
+        // Debug: Check actions after resolution
+        if (rule.rule_id === 'handle_sit_down_at_distance') {
+          this.#logger.debug(
+            `[DEBUG] #loadAndCacheRules - RESOLVED rule 'handle_sit_down_at_distance':`
+          );
+          console.log(
+            `  - actions is Array: ${Array.isArray(resolvedRule.actions)}`
+          );
+          console.log(
+            `  - actions.length: ${resolvedRule.actions ? resolvedRule.actions.length : 'N/A'}`
+          );
+        }
+
+        return resolvedRule;
+      } catch (err) {
+        this.#logger.error(
+          `Failed to resolve condition references in rule '${rule.rule_id || 'NO_ID'}': ${err.message}`,
+          err
+        );
+        console.error(
+          `[SystemLogicInterpreter] ERROR resolving condition for rule '${rule.rule_id || 'NO_ID'}':`,
+          err.message
+        );
+        // Return rule with a condition that always fails
+        return { ...rule, condition: { '==': [true, false] } };
+      }
+    });
+
+    this.#ruleCache = buildRuleCache(resolvedRules, this.#logger);
+
+    this.#logger.debug(
+      `Finished caching rules. ${this.#ruleCache.size} event types have associated rules.`
+    );
+  }
 
   /* --------------------------------------------------------------------- */
 
@@ -554,7 +565,7 @@ class SystemLogicInterpreter extends BaseService {
       this.#logger.debug(
         `[DEBUG] #processRule - NO ACTIONS to execute for rule '${ruleId}' - rule.actions is not a non-empty array`
       );
-      
+
       this.#logger.debug(
         `⚠️ [SystemLogicInterpreter] Rule ${ruleId}: No actions to execute`
       );

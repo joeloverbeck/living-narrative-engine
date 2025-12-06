@@ -76,7 +76,9 @@ function isRuleDefinition(candidate) {
     return false;
   }
 
-  const rule = /** @type {{ rule_id?: unknown, actions?: unknown }} */ (candidate);
+  const rule = /** @type {{ rule_id?: unknown, actions?: unknown }} */ (
+    candidate
+  );
   return (
     typeof rule.rule_id === 'string' &&
     (Array.isArray(rule.actions) || rule.actions === undefined)
@@ -221,7 +223,10 @@ export class ModTestFixture {
     }
 
     // Load operation.schema.json (depends on operation schemas)
-    const operationSchemaPath = resolvePath(schemasDir, 'operation.schema.json');
+    const operationSchemaPath = resolvePath(
+      schemasDir,
+      'operation.schema.json'
+    );
     try {
       const content = await fsPromises.readFile(operationSchemaPath, 'utf8');
       const schema = JSON.parse(content);
@@ -872,7 +877,10 @@ export class ModTestFixture {
       throw new Error('skipValidation must be a boolean');
     }
 
-    if (autoRegisterScopes !== undefined && typeof autoRegisterScopes !== 'boolean') {
+    if (
+      autoRegisterScopes !== undefined &&
+      typeof autoRegisterScopes !== 'boolean'
+    ) {
       throw new Error('autoRegisterScopes must be a boolean');
     }
 
@@ -881,7 +889,13 @@ export class ModTestFixture {
         throw new Error('scopeCategories must be an array');
       }
 
-      const validCategories = ['positioning', 'inventory', 'items', 'anatomy', 'clothing'];
+      const validCategories = [
+        'positioning',
+        'inventory',
+        'items',
+        'anatomy',
+        'clothing',
+      ];
       const invalidCategories = scopeCategories.filter(
         (cat) => !validCategories.includes(cat)
       );
@@ -1020,7 +1034,10 @@ class BaseModTestFixture {
       executionContext.evaluationContext.event.payload = {};
     }
 
-    await this.testEnv.operationInterpreter.execute(operation, executionContext);
+    await this.testEnv.operationInterpreter.execute(
+      operation,
+      executionContext
+    );
 
     return executionContext.evaluationContext.context;
   }
@@ -1266,10 +1283,10 @@ class BaseModTestFixture {
       entities: [],
       rules: uniqueRules, // Pass unexpanded rules - createBaseRuleEnvironment will expand them
       actions: actionDefinitions,
-      conditions,  // Pass conditions map instead of dataRegistry
-      macros,  // Pass macros for expansion
-      lookups,  // Pass lookups for QUERY_LOOKUP operations
-      scopes,  // Pass scopes for scope resolution
+      conditions, // Pass conditions map instead of dataRegistry
+      macros, // Pass macros for expansion
+      lookups, // Pass lookups for QUERY_LOOKUP operations
+      scopes, // Pass scopes for scope resolution
       debugPrerequisites: this.options.debugPrerequisites || false,
     });
   }
@@ -1285,7 +1302,7 @@ class BaseModTestFixture {
     try {
       const files = await fs.readdir(actionsDir);
 
-      const actionFiles = files.filter(f => f.endsWith('.action.json'));
+      const actionFiles = files.filter((f) => f.endsWith('.action.json'));
 
       const actions = await Promise.all(
         actionFiles.map(async (file) => {
@@ -1296,9 +1313,15 @@ class BaseModTestFixture {
 
             // Validate action definition
             try {
-              createActionValidationProxy(parsed, `${this.modId}:${file} action`);
+              createActionValidationProxy(
+                parsed,
+                `${this.modId}:${file} action`
+              );
             } catch (validationError) {
-              console.warn(`⚠️  Action validation failed for ${file}:`, validationError.message);
+              console.warn(
+                `⚠️  Action validation failed for ${file}:`,
+                validationError.message
+              );
               return null;
             }
             return parsed;
@@ -1310,9 +1333,12 @@ class BaseModTestFixture {
       );
 
       // Filter out nulls from failed loads
-      const validActions = actions.filter(a => a !== null);
+      const validActions = actions.filter((a) => a !== null);
 
-      console.log(`[ModTestFixture] Loaded ${validActions.length} action(s) for mod '${this.modId}':`, validActions.map(a => a.id));
+      console.log(
+        `[ModTestFixture] Loaded ${validActions.length} action(s) for mod '${this.modId}':`,
+        validActions.map((a) => a.id)
+      );
 
       return validActions;
     } catch (error) {
@@ -1332,7 +1358,7 @@ class BaseModTestFixture {
     try {
       const files = await fs.readdir(lookupsDir);
 
-      const lookupFiles = files.filter(f => f.endsWith('.lookup.json'));
+      const lookupFiles = files.filter((f) => f.endsWith('.lookup.json'));
 
       const lookups = await Promise.all(
         lookupFiles.map(async (file) => {
@@ -1380,7 +1406,7 @@ class BaseModTestFixture {
     try {
       const files = await fs.readdir(scopesDir);
 
-      const scopeFiles = files.filter(f => f.endsWith('.scope'));
+      const scopeFiles = files.filter((f) => f.endsWith('.scope'));
 
       const allScopes = {};
 
@@ -1518,7 +1544,9 @@ class BaseModTestFixture {
     }
 
     if (typeof components !== 'object' || components === null) {
-      throw new Error('ModTestFixture.createEntity: config.components must be an object or array');
+      throw new Error(
+        'ModTestFixture.createEntity: config.components must be an object or array'
+      );
     }
 
     if (!this.testEnv || !this.testEnv.entityManager) {
@@ -1537,7 +1565,9 @@ class BaseModTestFixture {
     if (Array.isArray(components)) {
       for (const component of components) {
         if (!component.componentId) {
-          throw new Error('ModTestFixture.createEntity: Array components must have componentId property');
+          throw new Error(
+            'ModTestFixture.createEntity: Array components must have componentId property'
+          );
         }
         this.testEnv.entityManager.addComponent(
           id,
@@ -1601,7 +1631,9 @@ class BaseModTestFixture {
    */
   get eventBus() {
     if (!this.testEnv || !this.testEnv.eventBus) {
-      throw new Error('ModTestFixture: Test environment or event bus not initialized');
+      throw new Error(
+        'ModTestFixture: Test environment or event bus not initialized'
+      );
     }
 
     return this.testEnv.eventBus;
@@ -1686,18 +1718,24 @@ class BaseModTestFixture {
    */
   getFilterBreakdown(entityId = null) {
     const trace = this.scopeTracer.getTrace();
-    const filterEvals = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+    const filterEvals = trace.steps.filter(
+      (s) => s.type === 'FILTER_EVALUATION'
+    );
 
     if (entityId) {
-      const found = filterEvals.find(e => e.entityId === entityId);
-      return found ? {
-        ...found,
-        hasBreakdown: !!found.breakdown,
-        clauses: found.breakdown ? this.#extractClauses(found.breakdown) : [],
-      } : null;
+      const found = filterEvals.find((e) => e.entityId === entityId);
+      return found
+        ? {
+            ...found,
+            hasBreakdown: !!found.breakdown,
+            clauses: found.breakdown
+              ? this.#extractClauses(found.breakdown)
+              : [],
+          }
+        : null;
     }
 
-    return filterEvals.map(e => ({
+    return filterEvals.map((e) => ({
       entityId: e.entityId,
       result: e.result,
       logic: e.logic,
@@ -1897,7 +1935,11 @@ export class ModActionTestFixture extends BaseModTestFixture {
    * @returns {Promise<void>}
    */
   async initialize() {
-    await this.setupEnvironment(this.ruleFile, this.conditionFile, this.conditionId);
+    await this.setupEnvironment(
+      this.ruleFile,
+      this.conditionFile,
+      this.conditionId
+    );
   }
 
   /**
@@ -2142,7 +2184,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
    * @returns {object} Scenario details including multiple furniture entities
    */
   createSeparateFurnitureArrangement(options = {}) {
-    const scenario = ModEntityScenarios.createSeparateFurnitureArrangement(options);
+    const scenario =
+      ModEntityScenarios.createSeparateFurnitureArrangement(options);
     this.reset([...scenario.entities]);
     return scenario;
   }
@@ -2263,7 +2306,9 @@ export class ModActionTestFixture extends BaseModTestFixture {
       return {
         blocked: true,
         reason: errorMsg,
-        attemptedAction: this.actionId.includes(':') ? this.actionId : `${this.modId}:${this.actionId}`,
+        attemptedAction: this.actionId.includes(':')
+          ? this.actionId
+          : `${this.modId}:${this.actionId}`,
         attemptedActor: actorId,
       };
     }
@@ -2274,7 +2319,9 @@ export class ModActionTestFixture extends BaseModTestFixture {
       return {
         blocked: true,
         reason: errorMsg,
-        attemptedAction: this.actionId.includes(':') ? this.actionId : `${this.modId}:${this.actionId}`,
+        attemptedAction: this.actionId.includes(':')
+          ? this.actionId
+          : `${this.modId}:${this.actionId}`,
         attemptedActor: actorId,
       };
     }
@@ -2557,7 +2604,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
     if (category) {
       // Known scope - suggest auto-registration and manual registration
       const actionName = this.actionId.split(':')[1] || this.actionId;
-      console.warn(`
+      console.warn(
+        `
 ⚠️  Action Discovery Hint
 
 Action discovery returned 0 actions for actor '${actorId}'.
@@ -2586,11 +2634,13 @@ beforeEach(async () => {
 });
 
 📚 Documentation: See docs/testing/mod-testing-guide.md#testing-actions-with-custom-scopes
-      `.trim());
+      `.trim()
+      );
     } else {
       // Unknown scope - suggest custom resolver
       const actionName = this.actionId.split(':')[1] || this.actionId;
-      console.warn(`
+      console.warn(
+        `
 ⚠️  Action Discovery Hint
 
 Action discovery returned 0 actions for actor '${actorId}'.
@@ -2625,7 +2675,8 @@ beforeEach(async () => {
 });
 
 📚 Documentation: See docs/testing/scope-resolver-registry.md#creating-custom-scope-resolvers
-      `.trim());
+      `.trim()
+      );
     }
   }
 
@@ -2658,12 +2709,16 @@ beforeEach(async () => {
     const loadPromises = conditionIds.map(async (id) => {
       // Validate ID format
       if (typeof id !== 'string' || !id.includes(':')) {
-        throw new Error(`Invalid condition ID format: "${id}". Expected "modId:conditionId"`);
+        throw new Error(
+          `Invalid condition ID format: "${id}". Expected "modId:conditionId"`
+        );
       }
 
       const parts = id.split(':');
       if (parts.length !== 2 || !parts[0] || !parts[1]) {
-        throw new Error(`Invalid condition ID format: "${id}". Expected "modId:conditionId"`);
+        throw new Error(
+          `Invalid condition ID format: "${id}". Expected "modId:conditionId"`
+        );
       }
 
       const [modId, conditionId] = parts;
@@ -2673,7 +2728,9 @@ beforeEach(async () => {
 
       try {
         // Load condition file
-        const conditionModule = await import(conditionPath, { assert: { type: 'json' } });
+        const conditionModule = await import(conditionPath, {
+          assert: { type: 'json' },
+        });
         const conditionDef = conditionModule.default;
 
         // Store for later lookup
@@ -2785,7 +2842,8 @@ beforeEach(async () => {
 
     if (loadConditions) {
       // Extract condition references from the parsed AST
-      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeData);
+      const conditionRefs =
+        ScopeConditionAnalyzer.extractConditionRefs(scopeData);
 
       if (conditionRefs.size > 0) {
         // Discover transitive dependencies
@@ -2862,7 +2920,11 @@ beforeEach(async () => {
         const actorEntity = context.actorEntity || context.actor || context;
 
         // Resolve using the AST
-        const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
+        const result = scopeEngine.resolve(
+          scopeData.ast,
+          actorEntity,
+          runtimeCtx
+        );
 
         return { success: true, value: result };
       } catch (err) {
@@ -2882,7 +2944,8 @@ beforeEach(async () => {
               expected: 'Entity instance with id property',
               received: 'Full context object with actor, targets properties',
               hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()',
-              suggestion: 'Use: const actorEntity = context.actorEntity || context.actor',
+              suggestion:
+                'Use: const actorEntity = context.actorEntity || context.actor',
               example:
                 'const actorEntity = context.actorEntity || context.actor;\n' +
                 'const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',

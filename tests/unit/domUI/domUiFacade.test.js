@@ -125,7 +125,7 @@ describe('DomUiFacade', () => {
       ],
     ])('validates the %s dependency', (_, override, expectedMessage) => {
       expect(() => new DomUiFacade(createDependencies(override))).toThrow(
-        expectedMessage,
+        expectedMessage
       );
     });
   });

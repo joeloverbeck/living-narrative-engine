@@ -39,12 +39,14 @@ npm run test:ci
 ### 2. Color Scheme Validation
 
 Verify WCAG AA compliance:
+
 - Items mod (Teal): #004d61 / #e0f7fa = 12.74:1 ✓
 - Weapons mod (Arctic Steel): #112a46 / #e6f1ff = 12.74:1 ✓
 
 ### 3. Documentation Updates
 
 Update files:
+
 1. `README.md` - Add weapons mod to features list
 2. `docs/mods/weapons-mod-guide.md` - Create user guide (NEW FILE)
 3. `docs/testing/mod-testing-guide.md` - Add weapons mod examples
@@ -53,6 +55,7 @@ Update files:
 ### 4. Validation Checklist
 
 **Functional:**
+
 - [ ] Aiming system works for all items
 - [ ] Shooting decrements ammo correctly
 - [ ] Reloading transfers ammo correctly
@@ -64,6 +67,7 @@ Update files:
 - [ ] All actions discoverable when conditions met
 
 **Technical:**
+
 - [ ] All schemas validate
 - [ ] All tests pass (unit, integration, e2e)
 - [ ] Code coverage > 80%
@@ -74,6 +78,7 @@ Update files:
 - [ ] No console errors in development
 
 **Content:**
+
 - [ ] 75+ files created
 - [ ] Items mod: 13 files
 - [ ] Weapons mod: 43 files

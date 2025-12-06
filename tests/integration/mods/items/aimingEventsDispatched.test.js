@@ -12,7 +12,10 @@ describe('Items Mod - Aiming Events', () => {
 
   beforeEach(async () => {
     aimFixture = await ModTestFixture.forAction('items', 'items:aim_item');
-    lowerAimFixture = await ModTestFixture.forAction('items', 'items:lower_aim');
+    lowerAimFixture = await ModTestFixture.forAction(
+      'items',
+      'items:lower_aim'
+    );
   });
 
   afterEach(() => {

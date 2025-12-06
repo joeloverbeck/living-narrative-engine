@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { SuspiciousPatternsManager } from '../../../src/middleware/rateLimiting.js';
 
 /**
@@ -53,7 +60,9 @@ describe('SuspiciousPatternsManager additional branches', () => {
 
     expect(cleaned).toBe(0);
     expect(manager.patterns.get('active-without-array').requests).toBeNull();
-    expect(Array.isArray(manager.patterns.get('active-with-array').requests)).toBe(true);
+    expect(
+      Array.isArray(manager.patterns.get('active-with-array').requests)
+    ).toBe(true);
   });
 
   it('leaves recent entries untouched during full cleanup', () => {

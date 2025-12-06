@@ -7,12 +7,14 @@ Add a startup phase validation that compares `KNOWN_OPERATION_TYPES` against the
 ## Background
 
 Per the spec's desired behavior:
+
 - After all handlers are registered, compare `KNOWN_OPERATION_TYPES` against registered handlers
 - Report any mismatches as warnings:
   - Operation types in whitelist but no handler (missing handlers)
   - Handlers registered but not in whitelist (orphaned handlers - valid but unusual)
 
 This is a diagnostic/developer-experience feature, not a hard failure. It helps catch:
+
 1. New operation types added to whitelist but handler not registered
 2. Handler registered but whitelist not updated (unlikely but possible)
 
@@ -20,21 +22,21 @@ This is a diagnostic/developer-experience feature, not a hard failure. It helps 
 
 ### Modify
 
-| File | Change |
-|------|--------|
-| `src/main/` (appropriate bootstrap file) | Add validation call after DI setup |
-| `src/dependencyInjection/registrations/` (appropriate file) | Ensure validator is available |
+| File                                                        | Change                             |
+| ----------------------------------------------------------- | ---------------------------------- |
+| `src/main/` (appropriate bootstrap file)                    | Add validation call after DI setup |
+| `src/dependencyInjection/registrations/` (appropriate file) | Ensure validator is available      |
 
 ### Create
 
-| File | Purpose |
-|------|---------|
+| File                                                                        | Purpose           |
+| --------------------------------------------------------------------------- | ----------------- |
 | `tests/integration/validation/startupHandlerValidation.integration.test.js` | Integration tests |
 
 ### Possibly Create
 
-| File | Purpose |
-|------|---------|
+| File                                 | Purpose                                                  |
+| ------------------------------------ | -------------------------------------------------------- |
 | `src/validation/startupValidator.js` | Orchestrates startup validations (if not already exists) |
 
 ## Out of Scope
@@ -51,6 +53,7 @@ This is a diagnostic/developer-experience feature, not a hard failure. It helps 
 ### Validation Call Location
 
 Find the appropriate place in application startup AFTER:
+
 1. DI container is fully configured
 2. All handler registrations are complete
 3. BEFORE any rules are loaded/executed
@@ -96,7 +99,9 @@ function validateHandlerCompleteness(container) {
       );
     }
   } else {
-    logger.debug('Handler completeness check passed: all operation types have handlers registered.');
+    logger.debug(
+      'Handler completeness check passed: all operation types have handlers registered.'
+    );
   }
 }
 ```

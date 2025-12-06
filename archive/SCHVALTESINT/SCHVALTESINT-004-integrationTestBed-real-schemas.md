@@ -17,22 +17,22 @@ Update `IntegrationTestBed` to optionally load real project schemas from `data/s
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                 | Change Type                                      |
+| ------------------------------------ | ------------------------------------------------ |
 | `tests/common/integrationTestBed.js` | Add option to load real schemas via SchemaLoader |
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                      | Purpose                    |
+| --------------------------------------------------------- | -------------------------- |
 | `tests/unit/common/integrationTestBed.validation.test.js` | Test new validation option |
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `src/loaders/schemaLoader.js` | Understand how production loads schemas |
-| `src/validation/ajvSchemaValidator.js` | Understand validator interface |
+| File                                   | Purpose                                 |
+| -------------------------------------- | --------------------------------------- |
+| `src/loaders/schemaLoader.js`          | Understand how production loads schemas |
+| `src/validation/ajvSchemaValidator.js` | Understand validator interface          |
 
 ---
 
@@ -164,7 +164,10 @@ describe('Integration with Real Schemas', () => {
 
     // This would pass with test schemas but fail with real schemas if invalid
     expect(() => {
-      validator.validate('schema://living-narrative-engine/rule.schema.json', invalidRule);
+      validator.validate(
+        'schema://living-narrative-engine/rule.schema.json',
+        invalidRule
+      );
     }).toThrow();
   });
 });
@@ -188,10 +191,10 @@ describe('Integration with Real Schemas', () => {
 
 ## Performance Considerations
 
-| Mode | Schema Load Time | Validation Speed |
-|------|-----------------|------------------|
-| Default (test schemas) | ~5-10ms | Fast (minimal schemas) |
-| Real (all schemas) | ~500-1000ms | Fast after load |
+| Mode                   | Schema Load Time | Validation Speed       |
+| ---------------------- | ---------------- | ---------------------- |
+| Default (test schemas) | ~5-10ms          | Fast (minimal schemas) |
+| Real (all schemas)     | ~500-1000ms      | Fast after load        |
 
 **Recommendation**: Only use `useRealSchemas: true` for tests that specifically need to validate against production schemas.
 
@@ -218,6 +221,7 @@ describe('Integration with Real Schemas', () => {
 ### What Was Actually Changed
 
 **Files Modified:**
+
 - `tests/common/integrationTestBed.js`
   - Added imports: `readFile` from `node:fs/promises`, `SchemaLoader`, `StaticConfiguration`, `DefaultPathResolver`
   - Added `#useRealSchemas` private field
@@ -226,6 +230,7 @@ describe('Integration with Real Schemas', () => {
   - Added `isUsingRealSchemas()` method for test introspection
 
 **Files Created:**
+
 - `tests/integration/common/integrationTestBed.validation.test.js` (originally planned as unit test, moved to integration due to file system access requirements)
   - 13 test cases covering:
     - `isUsingRealSchemas()` return values (3 tests)

@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import bendOverAction from '../../../../data/mods/positioning/actions/bend_over.action.json';
 
 describe('positioning:bend_over action discovery', () => {
@@ -28,8 +31,12 @@ describe('positioning:bend_over action discovery', () => {
     it('should have correct forbidden components structure', () => {
       expect(bendOverAction.forbidden_components).toBeDefined();
       expect(bendOverAction.forbidden_components.actor).toBeInstanceOf(Array);
-      expect(bendOverAction.forbidden_components.actor).toContain('positioning:being_hugged');
-      expect(bendOverAction.forbidden_components.actor).toContain('positioning:biting_neck');
+      expect(bendOverAction.forbidden_components.actor).toContain(
+        'positioning:being_hugged'
+      );
+      expect(bendOverAction.forbidden_components.actor).toContain(
+        'positioning:biting_neck'
+      );
     });
 
     it('should NOT appear when actor has fucking_anally component', () => {
@@ -50,7 +57,9 @@ describe('positioning:bend_over action discovery', () => {
 
       testFixture.reset([room, furniture, scenario.actor]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
       expect(ids).not.toContain('positioning:bend_over');

@@ -35,7 +35,9 @@ describe('affection:rest_head_against_flat_chest - giving_blowjob forbidden comp
 
       scopeResolver.__restHeadFlatChestOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'affection:actors_without_breasts_facing_each_other') {
+        if (
+          scopeName === 'affection:actors_without_breasts_facing_each_other'
+        ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };

@@ -181,7 +181,10 @@ describe('formatAjvErrors integration', () => {
       type: 'UNKNOWN_OPERATION',
     };
 
-    const allowedValues = Array.from({ length: 12 }, (_, index) => `TYPE_${index}`);
+    const allowedValues = Array.from(
+      { length: 12 },
+      (_, index) => `TYPE_${index}`
+    );
     const typeErrors = allowedValues.map((value, index) =>
       createError({
         schemaPath: `#/anyOf/${index}/type/const`,

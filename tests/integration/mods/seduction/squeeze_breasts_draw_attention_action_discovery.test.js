@@ -122,9 +122,7 @@ function loadScenario(
 
   if (coveringSockets.length > 0) {
     entities.push(
-      new ModEntityBuilder(COVERING_ITEM_ID)
-        .withName('Teal Shawl')
-        .build()
+      new ModEntityBuilder(COVERING_ITEM_ID).withName('Teal Shawl').build()
     );
   }
 
@@ -146,15 +144,13 @@ function loadScenario(
 
 describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
   let testFixture;
-    beforeEach(async () => {
+  beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
     testFixture.suppressHints();
-
-      });
+  });
 
   afterEach(() => {
     if (testFixture) {
-      
       testFixture.cleanup();
       testFixture = null;
     }
@@ -167,7 +163,7 @@ describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
         coverRightBreast: true,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
       expect(availableActions).toHaveAction(ACTION_ID);
     });
 
@@ -177,7 +173,7 @@ describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
         includeRightBreast: false,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
 
@@ -187,7 +183,7 @@ describe('seduction:squeeze_breasts_draw_attention action discovery', () => {
         coverRightBreast: true,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
   });

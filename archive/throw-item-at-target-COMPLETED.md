@@ -6,15 +6,15 @@ This specification defines a new **ranged attack action** that allows actors to 
 
 ## Requirements Summary
 
-| Aspect | Requirement |
-|--------|-------------|
-| **Mod** | New `ranged` mod |
-| **Action ID** | `ranged:throw_item_at_target` |
-| **Template** | `throw {throwable} at {target} ({chance}% chance)` |
-| **Primary Target** | Throwable items (wielded OR inventory with `items:portable`) |
-| **Secondary Target** | Actors in location (`core:actors_in_location`) |
-| **Skill** | `skills:ranged_skill` vs `skills:defense_skill` |
-| **Damage Source** | `GET_DAMAGE_CAPABILITIES` operation handler |
+| Aspect               | Requirement                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| **Mod**              | New `ranged` mod                                             |
+| **Action ID**        | `ranged:throw_item_at_target`                                |
+| **Template**         | `throw {throwable} at {target} ({chance}% chance)`           |
+| **Primary Target**   | Throwable items (wielded OR inventory with `items:portable`) |
+| **Secondary Target** | Actors in location (`core:actors_in_location`)               |
+| **Skill**            | `skills:ranged_skill` vs `skills:defense_skill`              |
+| **Damage Source**    | `GET_DAMAGE_CAPABILITIES` operation handler                  |
 
 ---
 
@@ -52,6 +52,7 @@ ranged:throwable_items := actor.components.positioning:wielding.wielded_item_ids
 ```
 
 **Rationale**:
+
 - Union (`|`) combines wielded items AND inventory items
 - Filter `{"has_component": ["items:portable"]}` ensures only portable items are included
 - All weapons have `items:portable`, so they're automatically included
@@ -128,6 +129,7 @@ ranged:throwable_items := actor.components.positioning:wielding.wielded_item_ids
 ```
 
 **Key Differences from Melee Actions**:
+
 - `required_components.actor`: Empty (no wielding requirement)
 - `required_components.primary`: Only `items:portable` (not `weapons:weapon` or `damage-types:damage_capabilities`)
 - `actorSkill.component`: `skills:ranged_skill` (not `skills:melee_skill`)
@@ -146,10 +148,7 @@ ranged:throwable_items := actor.components.positioning:wielding.wielded_item_ids
   "id": "ranged:event-is-action-throw-item-at-target",
   "description": "Checks if the current event is a throw_item_at_target action",
   "rule": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "ranged:throw_item_at_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "ranged:throw_item_at_target"]
   }
 }
 ```
@@ -161,6 +160,7 @@ ranged:throwable_items := actor.components.positioning:wielding.wielded_item_ids
 ### 5.1 Purpose
 
 The FUMBLE outcome requires picking a random entity from the location that is:
+
 - NOT the acting actor
 - NOT the intended target
 - Preferably a non-actor entity (furniture, items on ground)
@@ -189,19 +189,13 @@ The FUMBLE outcome requires picking a random entity from the location that is:
           "properties": {
             "location_id": {
               "description": "Location to search for entities",
-              "oneOf": [
-                { "type": "string" },
-                { "type": "object" }
-              ]
+              "oneOf": [{ "type": "string" }, { "type": "object" }]
             },
             "exclude_entities": {
               "description": "Array of entity IDs to exclude from selection",
               "type": "array",
               "items": {
-                "oneOf": [
-                  { "type": "string" },
-                  { "type": "object" }
-                ]
+                "oneOf": [{ "type": "string" }, { "type": "object" }]
               },
               "default": []
             },
@@ -236,6 +230,7 @@ The FUMBLE outcome requires picking a random entity from the location that is:
 **File**: `src/logic/operationHandlers/pickRandomEntityHandler.js`
 
 **Behavior**:
+
 1. Get all entities at `location_id` via `entityManager.getEntitiesInLocation()`
 2. Filter out entities in `exclude_entities`
 3. Filter for entities having ALL `require_components`
@@ -244,6 +239,7 @@ The FUMBLE outcome requires picking a random entity from the location that is:
 6. If no candidates: store `null` in `result_variable`
 
 **Registration Requirements**:
+
 1. **Token**: Add `PickRandomEntityHandler: 'PickRandomEntityHandler'` to `src/dependencyInjection/tokens/tokens-core.js`
 2. **Handler Factory**: Add factory to `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
 3. **Interpreter Mapping**: Add `registry.register('PICK_RANDOM_ENTITY', bind(tokens.PickRandomEntityHandler))` to `src/dependencyInjection/registrations/interpreterRegistrations.js`
@@ -263,7 +259,9 @@ The FUMBLE outcome requires picking a random entity from the location that is:
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_throw_item_at_target",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "ranged:event-is-action-throw-item-at-target" },
+  "condition": {
+    "condition_ref": "ranged:event-is-action-throw-item-at-target"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -271,11 +269,17 @@ The FUMBLE outcome requires picking a random entity from the location that is:
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "throwableName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "throwableName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -329,7 +333,9 @@ The FUMBLE outcome requires picking a random entity from the location that is:
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowCritical" }]
       }
     },
@@ -337,7 +343,9 @@ The FUMBLE outcome requires picking a random entity from the location that is:
       "type": "IF",
       "comment": "Handle SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowHit" }]
       }
     },
@@ -345,7 +353,9 @@ The FUMBLE outcome requires picking a random entity from the location that is:
       "type": "IF",
       "comment": "Handle FUMBLE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowFumble" }]
       }
     },
@@ -353,7 +363,9 @@ The FUMBLE outcome requires picking a random entity from the location that is:
       "type": "IF",
       "comment": "Handle FAILURE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowMiss" }]
       }
     }
@@ -362,6 +374,7 @@ The FUMBLE outcome requires picking a random entity from the location that is:
 ```
 
 **Key Differences from Melee Rules**:
+
 - Uses `GET_DAMAGE_CAPABILITIES` instead of `QUERY_COMPONENT` for damage
 - Uses `skills:ranged_skill` instead of `skills:melee_skill`
 - References `ranged:` macros instead of `weapons:` macros
@@ -673,6 +686,7 @@ This macro handles the special FUMBLE case where the thrown item might hit an un
 ```
 
 **FUMBLE Behavior**:
+
 1. Item is always dropped (unwielded then dropped)
 2. Attempts to find a random non-actor entity at the location (furniture, items on ground, etc.)
 3. If found: Message indicates item hit that entity (no damage to inanimate objects)
@@ -687,6 +701,7 @@ This macro handles the special FUMBLE case where the thrown item might hit an un
 **File**: `tests/integration/mods/ranged/throw_item_at_target_action_discovery.test.js`
 
 Tests should cover:
+
 1. Action has correct ID (`ranged:throw_item_at_target`)
 2. Action has correct template (`throw {throwable} at {target} ({chance}% chance)`)
 3. Action has no required actor components
@@ -705,6 +720,7 @@ Tests should cover:
 **File**: `tests/integration/mods/ranged/throw_item_at_target_rule_execution.test.js`
 
 Tests should cover:
+
 1. **CRITICAL_SUCCESS outcome**:
    - Item is removed from inventory/wielded
    - Item is placed at location
@@ -744,6 +760,7 @@ Tests should cover:
 **File**: `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js`
 
 Tests should cover:
+
 1. Returns random entity from location
 2. Excludes specified entities
 3. Filters by required components
@@ -759,53 +776,57 @@ Tests should cover:
 
 ### New Files to Create
 
-| File | Type | Description |
-|------|------|-------------|
-| `data/mods/ranged/mod-manifest.json` | Config | Mod manifest |
-| `data/mods/ranged/scopes/throwable_items.scope` | Scope | Union of throwable items |
-| `data/mods/ranged/actions/throw_item_at_target.action.json` | Action | Main action definition |
-| `data/mods/ranged/conditions/event-is-action-throw-item-at-target.condition.json` | Condition | Event condition |
-| `data/mods/ranged/rules/handle_throw_item_at_target.rule.json` | Rule | Main rule handler |
-| `data/mods/ranged/macros/handleThrowCritical.macro.json` | Macro | Critical success handler |
-| `data/mods/ranged/macros/handleThrowHit.macro.json` | Macro | Success handler |
-| `data/mods/ranged/macros/handleThrowMiss.macro.json` | Macro | Failure handler |
-| `data/mods/ranged/macros/handleThrowFumble.macro.json` | Macro | Fumble handler |
-| `data/schemas/operations/pickRandomEntity.schema.json` | Schema | Operation schema |
-| `src/logic/operationHandlers/pickRandomEntityHandler.js` | Handler | Operation handler |
-| `tests/integration/mods/ranged/throw_item_at_target_action_discovery.test.js` | Test | Action discovery tests |
-| `tests/integration/mods/ranged/throw_item_at_target_rule_execution.test.js` | Test | Rule execution tests |
-| `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` | Test | Handler unit tests |
+| File                                                                              | Type      | Description              |
+| --------------------------------------------------------------------------------- | --------- | ------------------------ |
+| `data/mods/ranged/mod-manifest.json`                                              | Config    | Mod manifest             |
+| `data/mods/ranged/scopes/throwable_items.scope`                                   | Scope     | Union of throwable items |
+| `data/mods/ranged/actions/throw_item_at_target.action.json`                       | Action    | Main action definition   |
+| `data/mods/ranged/conditions/event-is-action-throw-item-at-target.condition.json` | Condition | Event condition          |
+| `data/mods/ranged/rules/handle_throw_item_at_target.rule.json`                    | Rule      | Main rule handler        |
+| `data/mods/ranged/macros/handleThrowCritical.macro.json`                          | Macro     | Critical success handler |
+| `data/mods/ranged/macros/handleThrowHit.macro.json`                               | Macro     | Success handler          |
+| `data/mods/ranged/macros/handleThrowMiss.macro.json`                              | Macro     | Failure handler          |
+| `data/mods/ranged/macros/handleThrowFumble.macro.json`                            | Macro     | Fumble handler           |
+| `data/schemas/operations/pickRandomEntity.schema.json`                            | Schema    | Operation schema         |
+| `src/logic/operationHandlers/pickRandomEntityHandler.js`                          | Handler   | Operation handler        |
+| `tests/integration/mods/ranged/throw_item_at_target_action_discovery.test.js`     | Test      | Action discovery tests   |
+| `tests/integration/mods/ranged/throw_item_at_target_rule_execution.test.js`       | Test      | Rule execution tests     |
+| `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js`              | Test      | Handler unit tests       |
 
 ### Files to Modify
 
-| File | Modification |
-|------|-------------|
-| `src/dependencyInjection/tokens/tokens-core.js` | Add `PickRandomEntityHandler` token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add handler factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Add operation mapping |
-| `src/utils/preValidationUtils.js` | Add `'PICK_RANDOM_ENTITY'` to whitelist |
-| `data/schemas/operation.schema.json` | Add `$ref` to pickRandomEntity schema |
-| `data/game.json` | Add `"ranged"` to mods array |
+| File                                                                     | Modification                            |
+| ------------------------------------------------------------------------ | --------------------------------------- |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add `PickRandomEntityHandler` token     |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add handler factory                     |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Add operation mapping                   |
+| `src/utils/preValidationUtils.js`                                        | Add `'PICK_RANDOM_ENTITY'` to whitelist |
+| `data/schemas/operation.schema.json`                                     | Add `$ref` to pickRandomEntity schema   |
+| `data/game.json`                                                         | Add `"ranged"` to mods array            |
 
 ---
 
 ## 10. Reference Files
 
 ### Melee Attack Patterns
+
 - `data/mods/weapons/actions/swing_at_target.action.json` - Action structure
 - `data/mods/weapons/rules/handle_swing_at_target.rule.json` - Rule structure
 - `data/mods/weapons/macros/handleMeleeCritical.macro.json` - Critical macro pattern
 - `data/mods/weapons/macros/handleMeleeFumble.macro.json` - Fumble macro pattern
 
 ### Drop Item Patterns
+
 - `data/mods/items/rules/handle_drop_item.rule.json` - Item dropping pattern
 - `data/mods/items/scopes/wielded_items.scope` - Wielded items scope
 - `data/mods/items/scopes/non_wielded_inventory_items.scope` - Inventory items scope
 
 ### Damage System
+
 - `src/logic/operationHandlers/getDamageCapabilitiesHandler.js` - Damage calculation
 - `data/schemas/operations/getDamageCapabilities.schema.json` - Operation schema
 
 ### Testing Patterns
+
 - `tests/integration/mods/weapons/swing_at_target_action_discovery.test.js` - Action test pattern
 - `tests/integration/mods/weapons/swingAtTargetOutcomeResolution.test.js` - Outcome test pattern

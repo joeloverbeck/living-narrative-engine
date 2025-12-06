@@ -85,12 +85,8 @@ describe('MultiTargetActionFormatter - fallback placeholder resolution', () => {
     };
 
     const resolvedTargets = {
-      primary: [
-        { id: 'hero', displayName: 'Aria' },
-      ],
-      secondary: [
-        { id: 'item-1', displayName: 'Shield' },
-      ],
+      primary: [{ id: 'hero', displayName: 'Aria' }],
+      secondary: [{ id: 'item-1', displayName: 'Shield' }],
     };
 
     const targetDefinitions = {
@@ -116,12 +112,8 @@ describe('MultiTargetActionFormatter - fallback placeholder resolution', () => {
     };
 
     const resolvedTargets = {
-      primary: [
-        { id: 'leader', displayName: 'Morgan' },
-      ],
-      secondary: [
-        { id: 'support-1', displayName: 'Scout' },
-      ],
+      primary: [{ id: 'leader', displayName: 'Morgan' }],
+      secondary: [{ id: 'support-1', displayName: 'Scout' }],
     };
 
     const targetDefinitions = {
@@ -147,9 +139,7 @@ describe('MultiTargetActionFormatter - fallback placeholder resolution', () => {
     };
 
     const resolvedTargets = {
-      primary: [
-        { id: 'hero-1', displayName: 'Iris' },
-      ],
+      primary: [{ id: 'hero-1', displayName: 'Iris' }],
       secondary: [
         {
           id: 'blade-1',

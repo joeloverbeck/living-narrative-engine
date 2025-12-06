@@ -67,11 +67,7 @@ describe('RealScheduler integration with real modules', () => {
 
     const event = await handlerPromise;
     // After awaiting, the order should still be the same
-    expect(callOrder).toEqual([
-      'before-dispatch',
-      'handler',
-      'after-dispatch',
-    ]);
+    expect(callOrder).toEqual(['before-dispatch', 'handler', 'after-dispatch']);
     expect(event.type).toBe(TURN_ENDED_ID);
     expect(event.payload).toEqual({
       actorId: 'npc-1',

@@ -197,7 +197,12 @@ class TestDirectiveResolver {
  * @param root0.actor
  * @param root0.onEndTurn
  */
-function createTurnContextEnvironment({ logger, dispatcher, actor, onEndTurn }) {
+function createTurnContextEnvironment({
+  logger,
+  dispatcher,
+  actor,
+  onEndTurn,
+}) {
   const entityManager = new TestEntityManager(actor);
   const turnEndPort = new TestTurnEndPort();
   const strategy = {
@@ -277,7 +282,10 @@ function buildWorkflow({
     directiveExecutor,
   });
 
-  if (directiveExecutor && typeof directiveExecutor.setResolver === 'function') {
+  if (
+    directiveExecutor &&
+    typeof directiveExecutor.setResolver === 'function'
+  ) {
     directiveExecutor.setResolver(resolver);
   }
 
@@ -323,7 +331,9 @@ class NullReturningCommandDispatcher {
   }
 
   validateContextAfterDispatch() {
-    throw new Error('validateContextAfterDispatch should not be called when dispatch returns null');
+    throw new Error(
+      'validateContextAfterDispatch should not be called when dispatch returns null'
+    );
   }
 }
 
@@ -393,7 +403,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
       getStateName: () => 'ProcessingCommandState',
     };
     const resolver = new TestDirectiveResolver();
-    const interpreter = new TestCommandOutcomeInterpreter(async () => TurnDirective.END_TURN_SUCCESS);
+    const interpreter = new TestCommandOutcomeInterpreter(
+      async () => TurnDirective.END_TURN_SUCCESS
+    );
 
     expect(
       () =>
@@ -408,7 +420,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
       () =>
         new CommandProcessingWorkflow({
           state,
-          commandProcessor: new TestCommandProcessor(async () => ({ success: true })),
+          commandProcessor: new TestCommandProcessor(async () => ({
+            success: true,
+          })),
           directiveStrategyResolver: resolver,
         })
     ).toThrow('commandOutcomeInterpreter is required');
@@ -417,7 +431,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
       () =>
         new CommandProcessingWorkflow({
           state,
-          commandProcessor: new TestCommandProcessor(async () => ({ success: true })),
+          commandProcessor: new TestCommandProcessor(async () => ({
+            success: true,
+          })),
           commandOutcomeInterpreter: interpreter,
         })
     ).toThrow('directiveStrategyResolver is required');
@@ -445,15 +461,16 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('handles invalid context after dispatch without ending the turn', async () => {
-    const { workflow, state, turnContext, actor, logger, endTurnCalls } = buildWorkflow({
-      commandProcessorImpl: async () => {
-        state.overrideTurnContext({
-          getLogger: () => turnContext.getLogger(),
-          endTurn: turnContext.endTurn.bind(turnContext),
-        });
-        return { success: true };
-      },
-    });
+    const { workflow, state, turnContext, actor, logger, endTurnCalls } =
+      buildWorkflow({
+        commandProcessorImpl: async () => {
+          state.overrideTurnContext({
+            getLogger: () => turnContext.getLogger(),
+            endTurn: turnContext.endTurn.bind(turnContext),
+          });
+          return { success: true };
+        },
+      });
 
     await workflow.processCommand(turnContext, actor, {
       actionDefinitionId: 'test:action',
@@ -495,7 +512,8 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('reports a service lookup error when the command processor disappears', async () => {
-    const { workflow, state, turnContext, actor, endTurnCalls, logger } = buildWorkflow();
+    const { workflow, state, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow();
 
     workflow._commandProcessor = null;
 
@@ -507,7 +525,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
     expect(state.isProcessing).toBe(false);
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(ServiceLookupError);
-    expect(endTurnCalls[0].message).toContain('ICommandProcessor could not be resolved');
+    expect(endTurnCalls[0].message).toContain(
+      'ICommandProcessor could not be resolved'
+    );
     expect(
       logger.calls.error.some(([message]) =>
         message.includes('Command processor not available')
@@ -516,7 +536,8 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('throws when the command outcome interpreter is missing at runtime', async () => {
-    const { workflow, turnContext, actor, endTurnCalls, logger } = buildWorkflow();
+    const { workflow, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow();
 
     workflow._commandOutcomeInterpreter = null;
 
@@ -527,7 +548,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(Error);
-    expect(endTurnCalls[0].message).toContain('Command outcome interpreter not available');
+    expect(endTurnCalls[0].message).toContain(
+      'Command outcome interpreter not available'
+    );
     expect(
       logger.calls.error.some(([message]) =>
         message.includes('Error during result interpretation')
@@ -536,7 +559,8 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('handles invalid directive types returned by the interpreter', async () => {
-    const { workflow, interpreter, turnContext, actor, endTurnCalls, logger } = buildWorkflow();
+    const { workflow, interpreter, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow();
 
     interpreter.impl = async () => null;
 
@@ -556,7 +580,10 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('uses optional command dispatcher to deliver command results', async () => {
-    const dispatcher = new ValidatingCommandDispatcher({ success: true, via: 'dispatcher' });
+    const dispatcher = new ValidatingCommandDispatcher({
+      success: true,
+      via: 'dispatcher',
+    });
 
     const { workflow, state, turnContext, actor, logger } = buildWorkflow({
       commandDispatcher: dispatcher,
@@ -595,11 +622,12 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('catches errors thrown during fallback dispatch', async () => {
-    const { workflow, state, turnContext, actor, endTurnCalls, logger } = buildWorkflow({
-      commandProcessorImpl: async () => {
-        throw new Error('dispatch boom');
-      },
-    });
+    const { workflow, state, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow({
+        commandProcessorImpl: async () => {
+          throw new Error('dispatch boom');
+        },
+      });
 
     await workflow.processCommand(turnContext, actor, {
       actionDefinitionId: 'test:action',
@@ -693,16 +721,17 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
       },
     });
 
-    const { workflow, state, handler, turnContext, actor, logger } = buildWorkflow({
-      strategyMap: {
-        [TurnDirective.END_TURN_SUCCESS]: new SilentStrategy(),
-      },
-      directiveExecutor,
-      onAfterCreate: ({ state: createdState, handler: createdHandler }) => {
-        capturedState = createdState;
-        capturedHandler = createdHandler;
-      },
-    });
+    const { workflow, state, handler, turnContext, actor, logger } =
+      buildWorkflow({
+        strategyMap: {
+          [TurnDirective.END_TURN_SUCCESS]: new SilentStrategy(),
+        },
+        directiveExecutor,
+        onAfterCreate: ({ state: createdState, handler: createdHandler }) => {
+          capturedState = createdState;
+          capturedHandler = createdHandler;
+        },
+      });
 
     await workflow.processCommand(turnContext, actor, {
       actionDefinitionId: 'test:action',
@@ -712,14 +741,17 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
     expect(state.finishCalls).toBe(1);
     expect(
       logger.calls.debug.some(([message]) =>
-        message.includes('state changed from ProcessingCommandState to OtherState')
+        message.includes(
+          'state changed from ProcessingCommandState to OtherState'
+        )
       )
     ).toBe(true);
     expect(capturedState.isProcessing).toBe(false);
   });
 
   it('throws when directive strategy resolver disappears', async () => {
-    const { workflow, turnContext, actor, endTurnCalls, logger } = buildWorkflow();
+    const { workflow, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow();
 
     workflow._directiveStrategyResolver = null;
 
@@ -730,7 +762,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(Error);
-    expect(endTurnCalls[0].message).toContain('Directive strategy resolver not available');
+    expect(endTurnCalls[0].message).toContain(
+      'Directive strategy resolver not available'
+    );
     const resolverError = logger.calls.error.find(([message]) =>
       message.includes('Error during directive execution')
     );
@@ -740,15 +774,19 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('handles missing strategy resolution gracefully', async () => {
-    const resolver = new TestDirectiveResolver({}, {
-      onResolve: () => null,
-    });
+    const resolver = new TestDirectiveResolver(
+      {},
+      {
+        onResolve: () => null,
+      }
+    );
 
-    const { workflow, turnContext, actor, endTurnCalls, logger } = buildWorkflow({
-      onAfterCreate: ({ workflow: createdWorkflow }) => {
-        createdWorkflow._directiveStrategyResolver = resolver;
-      },
-    });
+    const { workflow, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow({
+        onAfterCreate: ({ workflow: createdWorkflow }) => {
+          createdWorkflow._directiveStrategyResolver = resolver;
+        },
+      });
 
     await workflow.processCommand(turnContext, actor, {
       actionDefinitionId: 'test:action',
@@ -757,7 +795,9 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(Error);
-    expect(endTurnCalls[0].message).toContain('Could not resolve ITurnDirectiveStrategy');
+    expect(endTurnCalls[0].message).toContain(
+      'Could not resolve ITurnDirectiveStrategy'
+    );
     const resolveError = logger.calls.error.find(([message]) =>
       message.includes('Error during directive execution')
     );
@@ -767,15 +807,18 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   });
 
   it('logs when fallback strategy execution toggles processing flag to false', async () => {
-    const { workflow, state, resolver, turnContext, actor, logger } = buildWorkflow({
-      strategyMap: {
-        [TurnDirective.END_TURN_SUCCESS]: new SilentStrategy(),
-      },
-    });
+    const { workflow, state, resolver, turnContext, actor, logger } =
+      buildWorkflow({
+        strategyMap: {
+          [TurnDirective.END_TURN_SUCCESS]: new SilentStrategy(),
+        },
+      });
 
     resolver.map[TurnDirective.END_TURN_SUCCESS] = {
       execute: async (ctx, directive, result) => {
-        ctx.getLogger().debug('custom strategy executed', { directive, result });
+        ctx
+          .getLogger()
+          .debug('custom strategy executed', { directive, result });
         state.setProcessing(false);
       },
     };
@@ -797,11 +840,12 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
   it('finishes processing when fallback strategy changes the state', async () => {
     const otherState = { getStateName: () => 'AlternateState' };
 
-    const { workflow, state, handler, resolver, turnContext, actor, logger } = buildWorkflow({
-      strategyMap: {
-        [TurnDirective.END_TURN_SUCCESS]: new SilentStrategy(),
-      },
-    });
+    const { workflow, state, handler, resolver, turnContext, actor, logger } =
+      buildWorkflow({
+        strategyMap: {
+          [TurnDirective.END_TURN_SUCCESS]: new SilentStrategy(),
+        },
+      });
 
     resolver.map[TurnDirective.END_TURN_SUCCESS] = {
       execute: async () => {
@@ -818,13 +862,16 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
     expect(state.isProcessing).toBe(false);
     expect(
       logger.calls.debug.some(([message]) =>
-        message.includes('state changed from ProcessingCommandState to AlternateState')
+        message.includes(
+          'state changed from ProcessingCommandState to AlternateState'
+        )
       )
     ).toBe(true);
   });
 
   it('routes strategy execution errors through the exception handler', async () => {
-    const { workflow, resolver, turnContext, actor, endTurnCalls, logger } = buildWorkflow();
+    const { workflow, resolver, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow();
 
     resolver.map[TurnDirective.END_TURN_SUCCESS] = {
       async execute() {
@@ -856,9 +903,10 @@ describe('CommandProcessingWorkflow fallback coverage integration', () => {
       },
     });
 
-    const { workflow, turnContext, actor, endTurnCalls, logger } = buildWorkflow({
-      directiveExecutor,
-    });
+    const { workflow, turnContext, actor, endTurnCalls, logger } =
+      buildWorkflow({
+        directiveExecutor,
+      });
 
     await workflow.processCommand(turnContext, actor, {
       actionDefinitionId: 'test:action',

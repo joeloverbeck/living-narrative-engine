@@ -29,7 +29,11 @@ describe('CharacterBuilderError', () => {
     const context = { stage: 'initialization', attempt: 2 };
     const cause = new Error('low level failure');
 
-    const error = new CharacterBuilderError('Something went wrong', context, cause);
+    const error = new CharacterBuilderError(
+      'Something went wrong',
+      context,
+      cause
+    );
 
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('CharacterBuilderError');
@@ -46,7 +50,7 @@ describe('CharacterBuilderError', () => {
         context,
         cause: 'low level failure',
         timestamp: fixedDate.toISOString(),
-      }),
+      })
     );
     expect(typeof json.stack).toBe('string');
   });
@@ -71,7 +75,11 @@ describe('Specialized CharacterBuilder errors', () => {
     const context = { directionId: 'dir-1', conceptId: 'concept-42' };
     const cause = new Error('generation failed');
 
-    const error = new ClicheGenerationError('Unable to generate', context, cause);
+    const error = new ClicheGenerationError(
+      'Unable to generate',
+      context,
+      cause
+    );
 
     expect(error).toBeInstanceOf(CharacterBuilderError);
     expect(error.name).toBe('ClicheGenerationError');
@@ -91,7 +99,12 @@ describe('Specialized CharacterBuilder errors', () => {
     const cause = new Error('disk full');
     const context = { storage: 'local' };
 
-    const error = new ClicheStorageError('Unable to persist', 'save', context, cause);
+    const error = new ClicheStorageError(
+      'Unable to persist',
+      'save',
+      context,
+      cause
+    );
 
     expect(error).toBeInstanceOf(CharacterBuilderError);
     expect(error.name).toBe('ClicheStorageError');

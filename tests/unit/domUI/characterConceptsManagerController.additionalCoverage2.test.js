@@ -18,7 +18,10 @@ import {
   createMockEventBus,
 } from './characterConceptsManagerController.testUtils.js';
 import { CharacterConceptsManagerTestBase } from './characterConceptsManagerController.testUtils.enhanced.js';
-import { createTestContainer, resolveControllerDependencies } from '../../common/testContainerConfig.js';
+import {
+  createTestContainer,
+  resolveControllerDependencies,
+} from '../../common/testContainerConfig.js';
 
 describe('CharacterConceptsManagerController - targeted coverage', () => {
   describe('constructor compatibility shims', () => {
@@ -33,7 +36,9 @@ describe('CharacterConceptsManagerController - targeted coverage', () => {
       eventBus = createMockEventBus();
       schemaValidator = {
         validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
-        validateAgainstSchema: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+        validateAgainstSchema: jest
+          .fn()
+          .mockReturnValue({ isValid: true, errors: [] }),
       };
 
       container = await createTestContainer();
@@ -54,7 +59,9 @@ describe('CharacterConceptsManagerController - targeted coverage', () => {
 
       expect(controller.characterBuilderService).not.toBe(service);
       await expect(
-        controller.characterBuilderService.generateThematicDirections('concept-id')
+        controller.characterBuilderService.generateThematicDirections(
+          'concept-id'
+        )
       ).resolves.toEqual([]);
     });
 
@@ -67,7 +74,10 @@ describe('CharacterConceptsManagerController - targeted coverage', () => {
         ...controllerDependencies,
       });
 
-      expect(controller.schemaValidator.validate()).toEqual({ isValid: true, errors: [] });
+      expect(controller.schemaValidator.validate()).toEqual({
+        isValid: true,
+        errors: [],
+      });
       expect(controller.schemaValidator.validateAgainstSchema()).toEqual({
         isValid: true,
         errors: [],
@@ -84,8 +94,8 @@ describe('CharacterConceptsManagerController - targeted coverage', () => {
             characterBuilderService: null,
             eventBus,
             schemaValidator,
-          ...controllerDependencies,
-        })
+            ...controllerDependencies,
+          })
       ).toThrow('Missing required dependency: CharacterBuilderService');
     });
 
@@ -97,8 +107,8 @@ describe('CharacterConceptsManagerController - targeted coverage', () => {
             characterBuilderService: createMockCharacterBuilderService(),
             eventBus: null,
             schemaValidator,
-          ...controllerDependencies,
-        })
+            ...controllerDependencies,
+          })
       ).toThrow('Missing required dependency: ISafeEventDispatcher');
     });
   });

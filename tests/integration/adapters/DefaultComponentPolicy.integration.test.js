@@ -153,7 +153,9 @@ describe('DefaultComponentPolicy integration', () => {
     expect(entity.getComponentData(GOALS_COMPONENT_ID)).toEqual({ goals: [] });
 
     expect(logs.error).toHaveLength(2);
-    expect(logs.error[0]).toContain('Default STM component injection for entity');
+    expect(logs.error[0]).toContain(
+      'Default STM component injection for entity'
+    );
     expect(logs.error[0]).toContain('"reason": "invalid structure"');
     expect(logs.error[1]).toContain('Failed to inject default component');
   });

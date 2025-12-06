@@ -53,7 +53,9 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, actor, target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -86,7 +88,9 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, actor, target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -118,7 +122,9 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, actor, target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -150,7 +156,9 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, actor, target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -170,7 +178,9 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('empty_room', 'Empty Room');
       testFixture.reset([room, actor]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -200,7 +210,9 @@ describe('vampirism:lunge_bite_neck_violently - Action Discovery', () => {
       const roomB = ModEntityScenarios.createRoom('room_b', 'Room B');
       testFixture.reset([roomA, roomB, actor, target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);

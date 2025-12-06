@@ -462,7 +462,9 @@ describe('Trait Model', () => {
         expect(result.valid).toBe(false);
         expect(
           result.errors.some((e) =>
-            e.includes('Personality[0] must be an object with trait and explanation')
+            e.includes(
+              'Personality[0] must be an object with trait and explanation'
+            )
           )
         ).toBe(true);
       });
@@ -499,7 +501,9 @@ describe('Trait Model', () => {
         expect(result.valid).toBe(false);
         expect(
           result.errors.some((e) =>
-            e.includes('Personality[0].trait is required and must be a non-empty string')
+            e.includes(
+              'Personality[0].trait is required and must be a non-empty string'
+            )
           )
         ).toBe(true);
       });
@@ -683,7 +687,10 @@ describe('Trait Model', () => {
       it('should validate short-term goals are non-empty strings', () => {
         const trait = new Trait({
           ...validTraitData,
-          goals: { shortTerm: ['   '], longTerm: validTraitData.goals.longTerm },
+          goals: {
+            shortTerm: ['   '],
+            longTerm: validTraitData.goals.longTerm,
+          },
         });
         const result = trait.validate();
 
@@ -851,7 +858,9 @@ describe('Trait Model', () => {
       const trait = new Trait(validTraitData);
       const summary = trait.getSummary(1000);
 
-      expect(summary.physicalDescription).toBe(validTraitData.physicalDescription);
+      expect(summary.physicalDescription).toBe(
+        validTraitData.physicalDescription
+      );
       expect(summary.profile).toBe(validTraitData.profile);
     });
   });

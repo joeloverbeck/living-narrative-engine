@@ -4,7 +4,14 @@
  *              to capture real HTTP and LLM metrics without mocks.
  */
 
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import MetricsService from '../../src/services/metricsService.js';
@@ -168,7 +175,10 @@ describe('MetricsService live middleware collaboration', () => {
     );
     expect(logger.debug).toHaveBeenCalledWith(
       'LLM request metrics recorded',
-      expect.objectContaining({ provider: 'openrouter_anthropic', model: 'claude-3-haiku' })
+      expect.objectContaining({
+        provider: 'openrouter_anthropic',
+        model: 'claude-3-haiku',
+      })
     );
   });
 });

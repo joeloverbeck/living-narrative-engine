@@ -54,9 +54,9 @@ Longevity: Will outlive all current problems by centuries
 Immunity to Performance: Literally cannot perceive social manipulation quickly enough to be affected
 
 ## Weaknesses
+
 Glacial Speed: Everything takes forever; urgent matters are not processed urgently
 Alien Psychology: Cannot truly understand mammalian urgency or emotional reasoning
 Rigid Inflexibility: Rules are rules; no exceptions regardless of circumstances
 Physical Limitations: Cannot move quickly, vulnerable if forced to leave his post, shell limits mobility
 Temperature Dependent: Cold weather makes him dramatically slower
-

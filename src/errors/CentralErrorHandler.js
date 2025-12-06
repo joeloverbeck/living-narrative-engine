@@ -11,7 +11,7 @@ import BaseError from './baseError.js'; // Note: lowercase 'b' in baseError.js
 import {
   getErrorConfig,
   getFallbackValue,
-  ErrorSeverity
+  ErrorSeverity,
 } from '../config/errorHandling.config.js';
 
 /**
@@ -32,14 +32,23 @@ class CentralErrorHandler {
 
   constructor({ logger, eventBus, monitoringCoordinator }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'error', 'warn', 'debug']
+      requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
     validateDependency(eventBus, 'IEventBus', logger, {
-      requiredMethods: ['dispatch', 'subscribe']
+      requiredMethods: ['dispatch', 'subscribe'],
     });
-    validateDependency(monitoringCoordinator, 'IMonitoringCoordinator', logger, {
-      requiredMethods: ['executeMonitored', 'getStats', 'getPerformanceMonitor']
-    });
+    validateDependency(
+      monitoringCoordinator,
+      'IMonitoringCoordinator',
+      logger,
+      {
+        requiredMethods: [
+          'executeMonitored',
+          'getStats',
+          'getPerformanceMonitor',
+        ],
+      }
+    );
 
     this.#logger = logger;
     this.#eventBus = eventBus;
@@ -51,7 +60,7 @@ class CentralErrorHandler {
       recoveredErrors: 0,
       failedRecoveries: 0,
       errorsByType: new Map(),
-      errorsBySeverity: new Map()
+      errorsBySeverity: new Map(),
     };
 
     // Load configuration
@@ -66,7 +75,10 @@ class CentralErrorHandler {
   async handle(error, context = {}) {
     // Apply transforms if registered
     let transformedError = error;
-    if (error instanceof BaseError && this.#errorTransforms.has(error.constructor.name)) {
+    if (
+      error instanceof BaseError &&
+      this.#errorTransforms.has(error.constructor.name)
+    ) {
       transformedError = this.#applyTransform(error);
     }
 
@@ -91,7 +103,7 @@ class CentralErrorHandler {
       } catch (recoveryError) {
         this.#logger.error('Recovery failed', {
           originalError: errorInfo,
-          recoveryError: recoveryError.message
+          recoveryError: recoveryError.message,
         });
       }
     }
@@ -104,7 +116,10 @@ class CentralErrorHandler {
   handleSync(error, context = {}) {
     // Apply transforms if registered
     let transformedError = error;
-    if (error instanceof BaseError && this.#errorTransforms.has(error.constructor.name)) {
+    if (
+      error instanceof BaseError &&
+      this.#errorTransforms.has(error.constructor.name)
+    ) {
       transformedError = this.#applyTransform(error);
     }
 
@@ -113,7 +128,10 @@ class CentralErrorHandler {
     this.#logError(errorInfo);
     this.#notifyError(errorInfo);
 
-    if (errorInfo.recoverable && this.#hasSyncRecoveryStrategy(errorInfo.type)) {
+    if (
+      errorInfo.recoverable &&
+      this.#hasSyncRecoveryStrategy(errorInfo.type)
+    ) {
       const fallback = this.#getSyncFallback(errorInfo);
       if (fallback !== undefined) {
         return fallback;
@@ -126,7 +144,9 @@ class CentralErrorHandler {
   // Register recovery strategy
   registerRecoveryStrategy(errorType, strategy) {
     if (this.#recoveryStrategies.has(errorType)) {
-      this.#logger.warn(`Overwriting existing recovery strategy for ${errorType}`);
+      this.#logger.warn(
+        `Overwriting existing recovery strategy for ${errorType}`
+      );
     }
     this.#recoveryStrategies.set(errorType, strategy);
     this.#logger.debug(`Registered recovery strategy for ${errorType}`);
@@ -156,13 +176,16 @@ class CentralErrorHandler {
     const config = getErrorConfig();
 
     // Truncate context if needed
-    let truncatedContext = { ...context, ...(isBaseError ? error.context : {}) };
+    let truncatedContext = {
+      ...context,
+      ...(isBaseError ? error.context : {}),
+    };
     const contextString = JSON.stringify(truncatedContext);
     if (contextString.length > this.#maxContextSize) {
       truncatedContext = {
         ...truncatedContext,
         _truncated: true,
-        _originalSize: contextString.length
+        _originalSize: contextString.length,
       };
     }
 
@@ -176,9 +199,9 @@ class CentralErrorHandler {
       context: {
         ...truncatedContext,
         timestamp: Date.now(),
-        stack: config.global.includeStackTrace ? error.stack : undefined
+        stack: config.global.includeStackTrace ? error.stack : undefined,
       },
-      originalError: error
+      originalError: error,
     };
   }
 
@@ -191,7 +214,7 @@ class CentralErrorHandler {
     } catch (transformError) {
       this.#logger.error('Error transform failed', {
         errorType: error.constructor.name,
-        transformError: transformError.message
+        transformError: transformError.message,
       });
     }
     return error;
@@ -217,7 +240,6 @@ class CentralErrorHandler {
     enhancedError.addContext('errorId', errorInfo.id);
     return enhancedError;
   }
-
 
   async #attemptRecovery(errorInfo) {
     const strategy = this.#recoveryStrategies.get(errorInfo.type);
@@ -247,7 +269,7 @@ class CentralErrorHandler {
       severity: errorInfo.severity,
       recoverable: errorInfo.recoverable,
       message: errorInfo.message,
-      context: errorInfo.context
+      context: errorInfo.context,
     };
 
     // Log based on severity
@@ -275,14 +297,16 @@ class CentralErrorHandler {
         severity: errorInfo.severity,
         recoverable: errorInfo.recoverable,
         message: errorInfo.message,
-        timestamp: errorInfo.context.timestamp
-      }
+        timestamp: errorInfo.context.timestamp,
+      },
     });
   }
 
   #hasSyncRecoveryStrategy(errorType) {
-    return this.#recoveryStrategies.has(errorType) &&
-           this.#recoveryStrategies.get(errorType).sync === true;
+    return (
+      this.#recoveryStrategies.has(errorType) &&
+      this.#recoveryStrategies.get(errorType).sync === true
+    );
   }
 
   #getSyncFallback(errorInfo) {
@@ -300,13 +324,14 @@ class CentralErrorHandler {
     this.#metrics.errorsByType.set(errorInfo.type, typeCount + 1);
 
     // Track errors by severity
-    const severityCount = this.#metrics.errorsBySeverity.get(errorInfo.severity) || 0;
+    const severityCount =
+      this.#metrics.errorsBySeverity.get(errorInfo.severity) || 0;
     this.#metrics.errorsBySeverity.set(errorInfo.severity, severityCount + 1);
 
     // Register in error registry
     this.#errorRegistry.set(errorInfo.id, {
       ...errorInfo,
-      registeredAt: Date.now()
+      registeredAt: Date.now(),
     });
 
     // Clean old entries based on configuration
@@ -334,9 +359,10 @@ class CentralErrorHandler {
       errorsByType: Object.fromEntries(this.#metrics.errorsByType),
       errorsBySeverity: Object.fromEntries(this.#metrics.errorsBySeverity),
       registrySize: this.#errorRegistry.size,
-      recoveryRate: this.#metrics.totalErrors > 0
-        ? this.#metrics.recoveredErrors / this.#metrics.totalErrors
-        : 0
+      recoveryRate:
+        this.#metrics.totalErrors > 0
+          ? this.#metrics.recoveredErrors / this.#metrics.totalErrors
+          : 0,
     };
   }
 

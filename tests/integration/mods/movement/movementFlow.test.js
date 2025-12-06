@@ -20,21 +20,21 @@ describe('Movement Flow Integration', () => {
     // Load action
     const actionPath = path.resolve(
       process.cwd(),
-      'data/mods/movement/actions/go.action.json',
+      'data/mods/movement/actions/go.action.json'
     );
     const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
     // Load referenced condition
     const conditionPath = path.resolve(
       process.cwd(),
-      'data/mods/movement/conditions/actor-can-move.condition.json',
+      'data/mods/movement/conditions/actor-can-move.condition.json'
     );
     const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 
     // Load referenced scope
     const scopePath = path.resolve(
       process.cwd(),
-      'data/mods/movement/scopes/clear_directions.scope',
+      'data/mods/movement/scopes/clear_directions.scope'
     );
     const scopeContent = fs.readFileSync(scopePath, 'utf8');
 
@@ -49,7 +49,7 @@ describe('Movement Flow Integration', () => {
     // Load the movement rule
     const rulePath = path.resolve(
       process.cwd(),
-      'data/mods/movement/rules/go.rule.json',
+      'data/mods/movement/rules/go.rule.json'
     );
     const rule = JSON.parse(fs.readFileSync(rulePath, 'utf8'));
 
@@ -64,9 +64,12 @@ describe('Movement Flow Integration', () => {
     // Load all movement components
     const action = JSON.parse(
       fs.readFileSync(
-        path.resolve(process.cwd(), 'data/mods/movement/actions/go.action.json'),
-        'utf8',
-      ),
+        path.resolve(
+          process.cwd(),
+          'data/mods/movement/actions/go.action.json'
+        ),
+        'utf8'
+      )
     );
     const conditions = [
       'actor-can-move',
@@ -77,11 +80,11 @@ describe('Movement Flow Integration', () => {
         fs.readFileSync(
           path.resolve(
             process.cwd(),
-            `data/mods/movement/conditions/${name}.condition.json`,
+            `data/mods/movement/conditions/${name}.condition.json`
           ),
-          'utf8',
-        ),
-      ),
+          'utf8'
+        )
+      )
     );
 
     // Verify action and conditions use movement namespace
@@ -93,8 +96,8 @@ describe('Movement Flow Integration', () => {
     const rule = JSON.parse(
       fs.readFileSync(
         path.resolve(process.cwd(), 'data/mods/movement/rules/go.rule.json'),
-        'utf8',
-      ),
+        'utf8'
+      )
     );
     expect(rule.condition.condition_ref).toMatch(/^movement:/);
   });
@@ -102,30 +105,37 @@ describe('Movement Flow Integration', () => {
   it('should have valid schema references for all components', () => {
     const action = JSON.parse(
       fs.readFileSync(
-        path.resolve(process.cwd(), 'data/mods/movement/actions/go.action.json'),
-        'utf8',
-      ),
+        path.resolve(
+          process.cwd(),
+          'data/mods/movement/actions/go.action.json'
+        ),
+        'utf8'
+      )
     );
     const rule = JSON.parse(
       fs.readFileSync(
         path.resolve(process.cwd(), 'data/mods/movement/rules/go.rule.json'),
-        'utf8',
-      ),
+        'utf8'
+      )
     );
     const condition = JSON.parse(
       fs.readFileSync(
         path.resolve(
           process.cwd(),
-          'data/mods/movement/conditions/actor-can-move.condition.json',
+          'data/mods/movement/conditions/actor-can-move.condition.json'
         ),
-        'utf8',
-      ),
+        'utf8'
+      )
     );
 
-    expect(action.$schema).toBe('schema://living-narrative-engine/action.schema.json');
-    expect(rule.$schema).toBe('schema://living-narrative-engine/rule.schema.json');
+    expect(action.$schema).toBe(
+      'schema://living-narrative-engine/action.schema.json'
+    );
+    expect(rule.$schema).toBe(
+      'schema://living-narrative-engine/rule.schema.json'
+    );
     expect(condition.$schema).toBe(
-      'schema://living-narrative-engine/condition.schema.json',
+      'schema://living-narrative-engine/condition.schema.json'
     );
   });
 
@@ -133,15 +143,18 @@ describe('Movement Flow Integration', () => {
     // Load components
     const action = JSON.parse(
       fs.readFileSync(
-        path.resolve(process.cwd(), 'data/mods/movement/actions/go.action.json'),
-        'utf8',
-      ),
+        path.resolve(
+          process.cwd(),
+          'data/mods/movement/actions/go.action.json'
+        ),
+        'utf8'
+      )
     );
     const rule = JSON.parse(
       fs.readFileSync(
         path.resolve(process.cwd(), 'data/mods/movement/rules/go.rule.json'),
-        'utf8',
-      ),
+        'utf8'
+      )
     );
 
     // Verify action has prerequisites
@@ -160,7 +173,7 @@ describe('Movement Flow Integration', () => {
   it('should have mod manifest with correct dependencies', () => {
     const manifestPath = path.resolve(
       process.cwd(),
-      'data/mods/movement/mod-manifest.json',
+      'data/mods/movement/mod-manifest.json'
     );
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
@@ -175,9 +188,12 @@ describe('Movement Flow Integration', () => {
     it('should have all referenced conditions exist', () => {
       const action = JSON.parse(
         fs.readFileSync(
-          path.resolve(process.cwd(), 'data/mods/movement/actions/go.action.json'),
-          'utf8',
-        ),
+          path.resolve(
+            process.cwd(),
+            'data/mods/movement/actions/go.action.json'
+          ),
+          'utf8'
+        )
       );
 
       // Extract all condition references from prerequisites
@@ -190,7 +206,7 @@ describe('Movement Flow Integration', () => {
         const conditionId = ref.split(':')[1]; // Remove namespace
         const conditionPath = path.resolve(
           process.cwd(),
-          `data/mods/movement/conditions/${conditionId}.condition.json`,
+          `data/mods/movement/conditions/${conditionId}.condition.json`
         );
         expect(fs.existsSync(conditionPath)).toBe(true);
       });
@@ -199,9 +215,12 @@ describe('Movement Flow Integration', () => {
     it('should have all referenced scopes exist', () => {
       const action = JSON.parse(
         fs.readFileSync(
-          path.resolve(process.cwd(), 'data/mods/movement/actions/go.action.json'),
-          'utf8',
-        ),
+          path.resolve(
+            process.cwd(),
+            'data/mods/movement/actions/go.action.json'
+          ),
+          'utf8'
+        )
       );
 
       // Extract scope reference
@@ -209,7 +228,7 @@ describe('Movement Flow Integration', () => {
       const scopeId = scopeRef.split(':')[1]; // Remove namespace
       const scopePath = path.resolve(
         process.cwd(),
-        `data/mods/movement/scopes/${scopeId}.scope`,
+        `data/mods/movement/scopes/${scopeId}.scope`
       );
 
       expect(fs.existsSync(scopePath)).toBe(true);
@@ -220,7 +239,7 @@ describe('Movement Flow Integration', () => {
     it('should have consistent visual theme across movement actions', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 

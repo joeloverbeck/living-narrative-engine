@@ -252,7 +252,9 @@ describe('Parameter Validation Integration', () => {
       expect(error.message).toContain(
         'actorEntity.id must not be the string "undefined"'
       );
-      expect(error.context.hint).toContain('suggests an error in entity creation');
+      expect(error.context.hint).toContain(
+        'suggests an error in entity creation'
+      );
     });
   });
 
@@ -343,7 +345,11 @@ describe('Parameter Validation Integration', () => {
       // Second attempt with valid params should succeed (or fail for different reason)
       let error2;
       try {
-        const result = scopeEngine.resolve(validAST, validActorEntity, runtimeCtx);
+        const result = scopeEngine.resolve(
+          validAST,
+          validActorEntity,
+          runtimeCtx
+        );
         // Should resolve successfully
         expect(result).toBeDefined();
       } catch (err) {

@@ -186,7 +186,7 @@ describe('registerWorldAndEntity', () => {
       [tokens.IEntityManager]: { getEntityInstance: jest.fn() },
       [tokens.AnatomyFormattingService]: { getFormattingProfile: jest.fn() },
       [tokens.JsonLogicEvaluationService]: { evaluate: jest.fn() },
-      'IActivityCacheManager': {
+      IActivityCacheManager: {
         registerCache: jest.fn(),
         get: jest.fn(),
         set: jest.fn(),
@@ -194,21 +194,21 @@ describe('registerWorldAndEntity', () => {
         invalidateAll: jest.fn(),
         clearAll: jest.fn(),
       },
-      'IActivityIndexManager': { buildIndex: jest.fn() },
-      'IActivityMetadataCollectionSystem': {
+      IActivityIndexManager: { buildIndex: jest.fn() },
+      IActivityMetadataCollectionSystem: {
         collectActivityMetadata: jest.fn().mockReturnValue([]),
       },
-      'IActivityGroupingSystem': {
+      IActivityGroupingSystem: {
         groupActivities: jest.fn().mockReturnValue([]),
         sortByPriority: jest.fn().mockReturnValue([]),
       },
-      'IActivityNLGSystem': {
+      IActivityNLGSystem: {
         formatActivityDescription: jest.fn().mockReturnValue(''),
       },
-      'IActivityFilteringSystem': {
+      IActivityFilteringSystem: {
         filterByConditions: jest.fn().mockReturnValue([]),
       },
-      'IActivityContextBuildingSystem': {
+      IActivityContextBuildingSystem: {
         buildActivityContext: jest.fn().mockReturnValue({}),
         applyContextualTone: jest.fn().mockReturnValue({}),
         invalidateClosenessCache: jest.fn(),
@@ -519,18 +519,18 @@ describe('registerWorldAndEntity', () => {
       lifecycle: 'singletonFactory',
       deps: undefined,
     },
-      {
-        token: tokens.ClothingManagementService,
-        Class: ClothingManagementService,
-        lifecycle: 'singletonFactory',
-        deps: undefined,
-      },
-      {
-        token: tokens.ClothingAccessibilityService,
-        Class: ClothingAccessibilityService,
-        lifecycle: 'singletonFactory',
-        deps: undefined,
-      },
+    {
+      token: tokens.ClothingManagementService,
+      Class: ClothingManagementService,
+      lifecycle: 'singletonFactory',
+      deps: undefined,
+    },
+    {
+      token: tokens.ClothingAccessibilityService,
+      Class: ClothingAccessibilityService,
+      lifecycle: 'singletonFactory',
+      deps: undefined,
+    },
     {
       token: tokens.EquipmentDescriptionService,
       Class: EquipmentDescriptionService,
@@ -773,8 +773,12 @@ describe('registerWorldAndEntity', () => {
       const instance = factory(stubContainer);
 
       expect(instance).toBeInstanceOf(ActivityDescriptionService);
-      expect(dependencyMap['IActivityCacheManager'].registerCache).toHaveBeenCalledTimes(4);
-      expect(stubContainer.resolve).toHaveBeenCalledWith('IActivityFilteringSystem');
+      expect(
+        dependencyMap['IActivityCacheManager'].registerCache
+      ).toHaveBeenCalledTimes(4);
+      expect(stubContainer.resolve).toHaveBeenCalledWith(
+        'IActivityFilteringSystem'
+      );
     });
 
     test('ActivityDescriptionFacade factory instantiates facade with event bus support', () => {
@@ -789,8 +793,12 @@ describe('registerWorldAndEntity', () => {
       const instance = factory(stubContainer);
 
       expect(instance).toBeInstanceOf(ActivityDescriptionFacade);
-      expect(dependencyMap['IActivityCacheManager'].registerCache).toHaveBeenCalled();
-      expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.AnatomyFormattingService);
+      expect(
+        dependencyMap['IActivityCacheManager'].registerCache
+      ).toHaveBeenCalled();
+      expect(stubContainer.resolve).toHaveBeenCalledWith(
+        tokens.AnatomyFormattingService
+      );
     });
 
     test('EntityMatcherService factory wires logger and data registry', () => {
@@ -833,7 +841,11 @@ describe('registerWorldAndEntity', () => {
       const factory = getFactoryForToken(tokens.IRecipeValidationRunner);
       const dependencyMap = {
         [tokens.ILogger]: createTestLogger(),
-        [tokens.IDataRegistry]: { get: jest.fn(), getAll: jest.fn(), getEntityDefinition: jest.fn() },
+        [tokens.IDataRegistry]: {
+          get: jest.fn(),
+          getAll: jest.fn(),
+          getEntityDefinition: jest.fn(),
+        },
         [tokens.IAnatomyBlueprintRepository]: {
           getBlueprint: jest.fn(),
           getRecipe: jest.fn(),
@@ -855,7 +867,9 @@ describe('registerWorldAndEntity', () => {
       const instance = factory(stubContainer);
 
       expect(instance).toBeInstanceOf(RecipeValidationRunner);
-      expect(stubContainer.resolve).toHaveBeenCalledWith(tokens.IEntityMatcherService);
+      expect(stubContainer.resolve).toHaveBeenCalledWith(
+        tokens.IEntityMatcherService
+      );
     });
   });
 });

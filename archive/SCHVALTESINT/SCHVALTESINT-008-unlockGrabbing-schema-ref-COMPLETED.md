@@ -17,8 +17,8 @@ Update `unlockGrabbing.schema.json` to use `$ref` to `common.schema.json` for th
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                                 | Change Type                             |
+| ---------------------------------------------------- | --------------------------------------- |
 | `data/schemas/operations/unlockGrabbing.schema.json` | Replace local oneOf with $ref to common |
 
 ### Files to Create
@@ -27,9 +27,9 @@ None
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/common.schema.json` | Target for $ref (from SCHVALTESINT-006) |
+| File                                               | Purpose                                   |
+| -------------------------------------------------- | ----------------------------------------- |
+| `data/schemas/common.schema.json`                  | Target for $ref (from SCHVALTESINT-006)   |
 | `data/schemas/operations/lockGrabbing.schema.json` | Pattern reference (from SCHVALTESINT-007) |
 
 ---
@@ -171,6 +171,7 @@ None
 ### Manual Verification Steps
 
 1. Run existing tests:
+
    ```bash
    NODE_ENV=test npx jest tests/integration/mods/weapons/wield_grabbing_schema_validation.test.js --no-coverage
    ```
@@ -215,6 +216,7 @@ None
 #### Ticket Corrections
 
 The original ticket assumed a simpler inline schema structure. Upon verification, the actual `unlockGrabbing.schema.json` had:
+
 - A `$defs` section with a `Parameters` definition (not inline)
 - Internal `$ref` to `#/$defs/Parameters` for parameters
 - A permissive pattern `^\\{.+\\}$` (accepts any `{...}` string)
@@ -230,6 +232,7 @@ The ticket was updated to reflect the actual "before" state and correct the "aft
 #### Tests Added
 
 Added 3 new tests to `tests/integration/mods/weapons/wield_grabbing_schema_validation.test.js` for UNLOCK_GRABBING to match LOCK_GRABBING coverage:
+
 - `should reject plain string (non-template) for count parameter`
 - `should reject zero for count parameter (must be ≥1)`
 - `should reject negative integer for count parameter`

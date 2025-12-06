@@ -179,7 +179,8 @@ export class ActionFormattingStage extends PipelineStage {
 
     // Add chance calculation service for per-combination injection in formatters
     if (this.#chanceCalculationService) {
-      formatterOptions.chanceCalculationService = this.#chanceCalculationService;
+      formatterOptions.chanceCalculationService =
+        this.#chanceCalculationService;
       formatterOptions.actorId = context.actor?.id;
     }
 

@@ -8,9 +8,7 @@ import {
 } from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import {
-  configureBaseContainer,
-} from '../../../src/dependencyInjection/baseContainerConfig.js';
+import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
 import * as actionCategorizationRegistrations from '../../../src/dependencyInjection/registrations/actionCategorizationRegistrations.js';
 
 /**
@@ -177,17 +175,12 @@ describe('configureBaseContainer (integration)', () => {
   it('logs and rethrows errors from registration failures with contextual information', async () => {
     const registrationError = new Error('intentional failure');
     jest
-      .spyOn(
-        actionCategorizationRegistrations,
-        'registerActionCategorization'
-      )
+      .spyOn(actionCategorizationRegistrations, 'registerActionCategorization')
       .mockImplementation(() => {
         throw registrationError;
       });
 
-    await expect(
-      configureBaseContainer(container, { logger })
-    ).rejects.toThrow(
+    await expect(configureBaseContainer(container, { logger })).rejects.toThrow(
       'Failed to register action categorization services: intentional failure'
     );
 

@@ -3,7 +3,9 @@
   "rule_id": "handle_lick_glans_lying_close",
   "comment": "Handles the lick_glans_lying_close action: actor licks primary's glans while both are lying close together",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex-penile-oral:event-is-action-lick-glans-lying-close" },
+  "condition": {
+    "condition_ref": "sex-penile-oral:event-is-action-lick-glans-lying-close"
+  },
   "actions": [
     {
       "type": "GET_NAME",

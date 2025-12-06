@@ -1,7 +1,15 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const MAIN_MODULE_PATH = '../../../src/character-concepts-manager-main.js';
-const BOOTSTRAP_PATH = '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
+const BOOTSTRAP_PATH =
+  '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 
 /**
  *
@@ -54,7 +62,9 @@ describe('character-concepts-manager main integration', () => {
       handleOnline: jest.fn(),
       handleOffline: jest.fn(),
     };
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
 
     let capturedConfig;
     const bootstrapImplementation = async (config) => {
@@ -83,7 +93,9 @@ describe('character-concepts-manager main integration', () => {
       expect.objectContaining({ elementId: 'error-display', dismissible: true })
     );
     expect(config.hooks.postInit).toBeInstanceOf(Function);
-    expect(config.controllerClass.name).toBe('CharacterConceptsManagerController');
+    expect(config.controllerClass.name).toBe(
+      'CharacterConceptsManagerController'
+    );
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
       'Character Concepts Manager initialized successfully in 12.34ms'

@@ -82,7 +82,10 @@ describe('Config ID Validation Patterns', () => {
 
       // Mixed patterns
       { id: 'openai-gpt-3.5-turbo-0125', description: 'full OpenAI model ID' },
-      { id: 'anthropic-claude-3.5-sonnet-20241022', description: 'full Anthropic model ID' },
+      {
+        id: 'anthropic-claude-3.5-sonnet-20241022',
+        description: 'full Anthropic model ID',
+      },
       { id: 'meta-llama-3.1-8b', description: 'Meta Llama with version' },
     ];
 
@@ -188,11 +191,16 @@ describe('Config ID Validation Patterns', () => {
 
       // Verify the config is accessible
       expect(realWorldConfig.configs['claude-sonnet-4.5']).toBeDefined();
-      expect(realWorldConfig.configs['claude-sonnet-4.5'].configId).toBe('claude-sonnet-4.5');
-      expect(realWorldConfig.configs['claude-sonnet-4.5'].modelIdentifier).toBe('anthropic/claude-sonnet-4.5');
+      expect(realWorldConfig.configs['claude-sonnet-4.5'].configId).toBe(
+        'claude-sonnet-4.5'
+      );
+      expect(realWorldConfig.configs['claude-sonnet-4.5'].modelIdentifier).toBe(
+        'anthropic/claude-sonnet-4.5'
+      );
 
       // Verify defaultConfigId lookup works
-      const defaultConfig = realWorldConfig.configs[realWorldConfig.defaultConfigId];
+      const defaultConfig =
+        realWorldConfig.configs[realWorldConfig.defaultConfigId];
       expect(defaultConfig).toBeDefined();
       expect(defaultConfig.displayName).toContain('Claude Sonnet 4.5');
     });
@@ -236,7 +244,7 @@ describe('Config ID Validation Patterns', () => {
       };
 
       // All configs should be accessible
-      Object.keys(providerConfigs.configs).forEach(configId => {
+      Object.keys(providerConfigs.configs).forEach((configId) => {
         expect(providerConfigs.configs[configId]).toBeDefined();
         expect(providerConfigs.configs[configId].configId).toBe(configId);
       });

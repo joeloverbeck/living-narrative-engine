@@ -9,10 +9,7 @@
  * @see src/anatomy/services/activityDescriptionService.js (original source)
  */
 
-import {
-  validateDependency,
-  ensureValidLogger,
-} from '../../utils/index.js';
+import { validateDependency, ensureValidLogger } from '../../utils/index.js';
 import { ACTOR_COMPONENT_ID } from '../../constants/componentIds.js';
 
 const GENDER_COMPONENT_ID = 'core:gender';
@@ -712,7 +709,7 @@ class ActivityNLGSystem {
    * @param {Array<object>} groups - Activity groups from ActivityGroupingSystem
    * @param {object} [options] - Formatting options
    * @param {string} [options.prefix] - Text to prepend to description
-   * @param {string} [options.suffix] - Text to append to description  
+   * @param {string} [options.suffix] - Text to append to description
    * @param {string} [options.separator] - Separator between activity groups (default: ". ")
    * @param {number} [options.maxLength] - Maximum description length (default: 500)
    * @returns {string} Formatted activity description

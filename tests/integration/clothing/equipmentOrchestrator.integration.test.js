@@ -90,12 +90,7 @@ describe('EquipmentOrchestrator integration', () => {
    */
   async function addWearable(
     clothingItemId,
-    {
-      layer,
-      primarySlot,
-      secondarySlots,
-      additionalProps = {},
-    }
+    { layer, primarySlot, secondarySlots, additionalProps = {} }
   ) {
     await entityManager.addComponent(clothingItemId, 'clothing:wearable', {
       layer,
@@ -143,9 +138,9 @@ describe('EquipmentOrchestrator integration', () => {
     expect(result.success).toBe(true);
     const torsoEquipment = getEquipped('torso');
     expect(torsoEquipment.base).toBe('item:newShirt');
-    expect(
-      Object.values(torsoEquipment || {}).includes('item:oldShirt')
-    ).toBe(false);
+    expect(Object.values(torsoEquipment || {}).includes('item:oldShirt')).toBe(
+      false
+    );
     expect(eventDispatcher.events).toHaveLength(1);
     expect(eventDispatcher.events[0]).toEqual(
       expect.objectContaining({
@@ -237,16 +232,18 @@ describe('EquipmentOrchestrator integration', () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.errors).toEqual([
-      "Item 'item:vanishing' is not wearable",
-    ]);
+    expect(result.errors).toEqual(["Item 'item:vanishing' is not wearable"]);
   });
 
   it('fails when the wearable component lacks a primary slot definition', async () => {
-    await entityManager.addComponent('item:brokenHarness', 'clothing:wearable', {
-      layer: 'outer',
-      equipmentSlots: {},
-    });
+    await entityManager.addComponent(
+      'item:brokenHarness',
+      'clothing:wearable',
+      {
+        layer: 'outer',
+        equipmentSlots: {},
+      }
+    );
 
     const result = await orchestrator.orchestrateEquipment({
       entityId: actorId,
@@ -273,7 +270,10 @@ describe('EquipmentOrchestrator integration', () => {
     expect(result.success).toBe(false);
     expect(result.conflicts).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: 'layer_requirement', requiredLayer: 'base' }),
+        expect.objectContaining({
+          type: 'layer_requirement',
+          requiredLayer: 'base',
+        }),
       ])
     );
     expect(result.errors).toContain(
@@ -486,7 +486,10 @@ describe('EquipmentOrchestrator integration', () => {
   it('propagates equipment errors from the entity manager without dispatching events', async () => {
     class ThrowingEntityManager extends SimpleEntityManager {
       async addComponent(id, type, data) {
-        if (type === 'clothing:equipment' && data?.equipped?.torso?.base === 'item:newShirt') {
+        if (
+          type === 'clothing:equipment' &&
+          data?.equipped?.torso?.base === 'item:newShirt'
+        ) {
           throw new Error('Storage failure');
         }
         return super.addComponent(id, type, data);
@@ -905,9 +908,7 @@ describe('EquipmentOrchestrator integration', () => {
       async checkLayerConflicts() {
         return {
           hasConflicts: true,
-          conflicts: [
-            { type: 'layer_requirement', requiredLayer: 'base' },
-          ],
+          conflicts: [{ type: 'layer_requirement', requiredLayer: 'base' }],
         };
       }
     }

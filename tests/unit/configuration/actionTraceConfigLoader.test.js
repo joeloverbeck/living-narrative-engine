@@ -456,7 +456,6 @@ describe('ActionTraceConfigLoader', () => {
 
       try {
         for (let i = 0; i < 5; i += 1) {
-           
           await perfLoader.loadConfig();
         }
       } finally {
@@ -472,8 +471,9 @@ describe('ActionTraceConfigLoader', () => {
         })
       );
 
-      const regressionWarnings = mockLogger.warn.mock.calls.filter(([message]) =>
-        message.startsWith('Performance regression detected in config-load')
+      const regressionWarnings = mockLogger.warn.mock.calls.filter(
+        ([message]) =>
+          message.startsWith('Performance regression detected in config-load')
       );
 
       expect(regressionWarnings).toHaveLength(1);
@@ -1329,7 +1329,9 @@ describe('ActionTraceConfigLoader', () => {
 
         await loaderWithMockLogger.loadConfig();
 
-        const warnMessages = mockLogger.warn.mock.calls.map(([message]) => message);
+        const warnMessages = mockLogger.warn.mock.calls.map(
+          ([message]) => message
+        );
 
         expect(mockLogger.warn).toHaveBeenCalledTimes(4);
         expect(warnMessages).toEqual(

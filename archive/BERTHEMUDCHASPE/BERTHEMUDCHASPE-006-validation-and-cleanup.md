@@ -1,12 +1,15 @@
 # BERTHEMUDCHASPE-006: Final Validation and Documentation
 
 ## Description
+
 Run all validation commands, verify file references resolve correctly, and create final implementation summary. This ticket ensures everything integrates properly and documents the completed work.
 
 ## Prerequisites
+
 - **MUST complete BERTHEMUDCHASPE-001** through **BERTHEMUDCHASPE-005**
 
 ## Files Expected to Touch
+
 - VERIFY: All created files from previous tickets
 - CREATE: `claudedocs/bertram-implementation-summary.md`
 - MODIFY: `data/mods/fantasy/mod-manifest.json` (final verification)
@@ -14,6 +17,7 @@ Run all validation commands, verify file references resolve correctly, and creat
 - MODIFY: `data/mods/anatomy/mod-manifest.json` (final verification)
 
 ## Explicit Out of Scope
+
 - **NO creation** of new entities (all created in previous tickets)
 - **NO modification** of entity content (only validation)
 - **NO portrait creation** (external, out of scope)
@@ -23,6 +27,7 @@ Run all validation commands, verify file references resolve correctly, and creat
 ## Actual Validation Errors Found
 
 ### Critical Issues to Fix
+
 1. **leather_work_apron.entity.json** - Invalid texture component:
    - Error: `descriptors:texture` has value "worn" which is not in the enum
    - Fix: Change to valid enum value like "rough" or "coarse"
@@ -42,17 +47,22 @@ Run all validation commands, verify file references resolve correctly, and creat
 ## Acceptance Criteria
 
 ### Required Validation Checks
+
 1. **Recipe Validation** (CRITICAL):
+
    ```bash
    npm run validate:recipe data/mods/fantasy/recipes/bertram_the_muddy.recipe.json
    ```
+
    - MUST pass for `bertram_the_muddy.recipe.json`
    - Output: "Validation PASSED" with 0 errors
 
 2. **General Mod Validation**:
+
    ```bash
    npm run validate
    ```
+
    - MUST pass without errors
    - All mod manifests load correctly
    - All entity references resolve
@@ -61,10 +71,13 @@ Run all validation commands, verify file references resolve correctly, and creat
    ```bash
    npm run validate:strict
    ```
+
    - Should pass without warnings
 
 ### Reference Resolution Checks
+
 Verify all entity references resolve correctly:
+
 1. **Recipe References**:
    - Blueprint: `anatomy:human_male` → exists
    - All slot parts → exist (created or reused)
@@ -80,7 +93,9 @@ Verify all entity references resolve correctly:
    - Anatomy mod manifest includes any new parts
 
 ### Required Documentation
+
 Create `claudedocs/bertram-implementation-summary.md` containing:
+
 1. **Files Created**: Complete list with purposes
 2. **Files Modified**: Manifest updates only
 3. **Anatomy Parts Decision**: Which parts created vs reused (from audit)
@@ -89,6 +104,7 @@ Create `claudedocs/bertram-implementation-summary.md` containing:
 6. **Next Steps**: Optional world integration, portrait creation
 
 ### Specific Tests That Must Pass
+
 - `npm run validate:recipe` passes for Bertram recipe
 - `npm run validate` passes for all mods
 - All entity ID references resolve (no dangling references)
@@ -96,6 +112,7 @@ Create `claudedocs/bertram-implementation-summary.md` containing:
 - Implementation summary document exists and is complete
 
 ### Invariants That Must Remain True
+
 - **NO entity content modifications** (only validation)
 - **NO new file creation** except documentation
 - All files created in previous tickets still validate
@@ -103,6 +120,7 @@ Create `claudedocs/bertram-implementation-summary.md` containing:
 - No validation errors introduced
 
 ## Validation Commands Summary
+
 ```bash
 # Primary validation (REQUIRED)
 npm run validate:recipe
@@ -120,7 +138,9 @@ npm run scope:lint
 ## Implementation Notes
 
 ### Expected Validation Failures to Investigate
+
 If validation fails, check:
+
 1. Entity ID format: `modId:identifier`
 2. Component type registration: all components valid
 3. Schema conformance: all data matches schemas
@@ -128,6 +148,7 @@ If validation fails, check:
 5. Manifest structure: correct JSON format
 
 ### Common Issues
+
 - Missing entity in manifest
 - Typo in entity ID reference
 - Invalid enum value in component
@@ -135,12 +156,14 @@ If validation fails, check:
 - Clothing slot/layer mismatch
 
 ### Success Criteria
+
 - All validation passes
 - All references resolve
 - Implementation summary documents completion
 - Ready for optional world integration
 
 ## Reference
+
 - See `specs/bertram-the-muddy-character-spec.md` Section 6 for validation requirements
 - See all previous tickets for created file list
 - Check `claudedocs/bertram-anatomy-audit-results.md` for entity decisions
@@ -167,15 +190,16 @@ All validation errors have been successfully resolved. The ticket assumptions ab
    - `core:likes`, `core:fears`, `core:secrets`, `core:internal_tensions`: Incorporated "notes" content into main "text" fields
    - `core:goals`: Added notes content as a goal item with NOTE prefix
    - `core:notes`:
-     * Removed "entityId" field (not allowed by schema)
-     * Changed subjectType "person" → "character"
-     * Changed subjectType "profession" → "skill"
-     * Changed subjectType "entity" → "event" for notice reference
+     - Removed "entityId" field (not allowed by schema)
+     - Changed subjectType "person" → "character"
+     - Changed subjectType "profession" → "skill"
+     - Changed subjectType "entity" → "event" for notice reference
    - `core:player_type`: Changed from `{"type": "npc"}` to `{"type": "llm"}` (NPCs are LLM-controlled in this system)
 
 ### Validation Results
 
 **Recipe Validation**: ✅ PASSED
+
 ```
 npm run validate:recipe data/mods/fantasy/recipes/bertram_the_muddy.recipe.json
 ✅ Validation PASSED: 1 recipe(s) valid

@@ -28,8 +28,7 @@ describe('jot_down_notes Rule Validation', () => {
     });
 
     // Load the actual rule file
-    const rulePath =
-      './data/mods/items/rules/handle_jot_down_notes.rule.json';
+    const rulePath = './data/mods/items/rules/handle_jot_down_notes.rule.json';
     const ruleContent = await fs.readFile(rulePath, 'utf-8');
     ruleData = JSON.parse(ruleContent);
   });
@@ -67,10 +66,7 @@ describe('jot_down_notes Rule Validation', () => {
         console.log('Action data:', JSON.stringify(action, null, 2));
 
         // Use the enhanced formatter to get a better error message
-        const enhancedMessage = formatAjvErrorsEnhanced(
-          result.errors,
-          action
-        );
+        const enhancedMessage = formatAjvErrorsEnhanced(result.errors, action);
         console.log('\nEnhanced error message:');
         console.log(enhancedMessage);
       }

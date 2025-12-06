@@ -5,7 +5,10 @@
 
 import { BaseService } from '../../../utils/serviceBase.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
-import { triggerGarbageCollection, getMemoryUsageBytes } from '../../../utils/environmentUtils.js';
+import {
+  triggerGarbageCollection,
+  getMemoryUsageBytes,
+} from '../../../utils/environmentUtils.js';
 
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../interfaces/coreServices.js').IEventBus} IEventBus */
@@ -302,7 +305,7 @@ export default class LowMemoryStrategy extends BaseService {
       });
 
       // Wait a bit for components to respond
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // We can't accurately measure freed memory from other components
       // but we log the request

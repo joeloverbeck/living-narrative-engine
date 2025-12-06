@@ -1,11 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EventLoader from '../../../src/loaders/eventLoader.js';
 
 const createConfig = () => ({
   getContentTypeSchemaId: jest
     .fn()
     .mockImplementation((key) =>
-      key === 'events' ? 'schema://living-narrative-engine/event.schema.json' : null
+      key === 'events'
+        ? 'schema://living-narrative-engine/event.schema.json'
+        : null
     ),
   getModsBasePath: jest.fn().mockReturnValue('/mods'),
   getSchemaBasePath: jest.fn(),
@@ -27,7 +36,9 @@ const createDataFetcher = () => ({
 
 const createSchemaValidator = () => ({
   validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
-  getValidator: jest.fn().mockReturnValue(() => ({ isValid: true, errors: null })),
+  getValidator: jest
+    .fn()
+    .mockReturnValue(() => ({ isValid: true, errors: null })),
   isSchemaLoaded: jest.fn().mockReturnValue(true),
   addSchema: jest.fn().mockResolvedValue(undefined),
   removeSchema: jest.fn(),
@@ -95,10 +106,18 @@ describe('EventLoader payload handling', () => {
     expect(propName).toBe('payloadSchema');
     expect(schemaId).toBe('core:test.event#payload');
     expect(messages).toMatchObject({
-      warnMessage: expect.stringContaining("EventLoader [core]: Payload schema ID 'core:test.event#payload'"),
-      successDebugMessage: expect.stringContaining('Successfully registered payload schema'),
-      errorLogMessage: expect.stringContaining('CRITICAL - Failed to register payload schema'),
-      throwErrorMessage: expect.stringContaining('CRITICAL: Failed to register payload schema'),
+      warnMessage: expect.stringContaining(
+        "EventLoader [core]: Payload schema ID 'core:test.event#payload'"
+      ),
+      successDebugMessage: expect.stringContaining(
+        'Successfully registered payload schema'
+      ),
+      errorLogMessage: expect.stringContaining(
+        'CRITICAL - Failed to register payload schema'
+      ),
+      throwErrorMessage: expect.stringContaining(
+        'CRITICAL: Failed to register payload schema'
+      ),
     });
 
     expect(messages.errorContext?.()).toEqual({
@@ -114,7 +133,10 @@ describe('EventLoader payload handling', () => {
       { id: 'core:test.event', payloadSchema },
       'event.json'
     );
-    expect(result).toEqual({ qualifiedId: 'core:test.event', didOverride: false });
+    expect(result).toEqual({
+      qualifiedId: 'core:test.event',
+      didOverride: false,
+    });
 
     // ensure logging captures the informative branches as well
     expect(logger.debug).toHaveBeenCalledWith(
@@ -146,7 +168,10 @@ describe('EventLoader payload handling', () => {
       { id: 'core:test.event', payloadSchema: {} },
       'event.json'
     );
-    expect(result).toEqual({ qualifiedId: 'core:test.event', didOverride: true });
+    expect(result).toEqual({
+      qualifiedId: 'core:test.event',
+      didOverride: true,
+    });
 
     // verify debug logging covers the storage delegation path
     expect(logger.debug).toHaveBeenCalledWith(

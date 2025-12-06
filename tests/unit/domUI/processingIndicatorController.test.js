@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ProcessingIndicatorController } from '../../../src/domUI/processingIndicatorController.js';
 import {
   TURN_PROCESSING_STARTED,
@@ -138,7 +132,8 @@ describe('ProcessingIndicatorController', () => {
     };
 
     const domElementFactory =
-      options.domElementFactory ?? createDomElementFactory(options.factoryOverrides);
+      options.domElementFactory ??
+      createDomElementFactory(options.factoryOverrides);
 
     const controller = new ProcessingIndicatorController({
       logger,

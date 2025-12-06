@@ -770,9 +770,11 @@ describe('TargetDisplayNameResolver', () => {
           if (id === 'valid-entity') {
             return {
               id,
-              getComponentData: jest.fn().mockImplementation((comp) =>
-                comp === 'core:name' ? { text: 'Valid Name' } : null
-              ),
+              getComponentData: jest
+                .fn()
+                .mockImplementation((comp) =>
+                  comp === 'core:name' ? { text: 'Valid Name' } : null
+                ),
             };
           }
 

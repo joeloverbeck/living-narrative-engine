@@ -3,12 +3,12 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { 
+import {
   ClothingAccessibilityError,
   CoverageAnalysisError,
   PriorityCalculationError,
   ClothingServiceError,
-  ClothingValidationError
+  ClothingValidationError,
 } from './clothingErrors.js';
 
 /**
@@ -29,25 +29,35 @@ export class ClothingErrorHandler {
    * @param {object} [deps.centralErrorHandler] - Central error handler instance
    * @param {object} [deps.recoveryStrategyManager] - Recovery strategy manager instance
    */
-  constructor({ logger, eventBus, centralErrorHandler, recoveryStrategyManager }) {
+  constructor({
+    logger,
+    eventBus,
+    centralErrorHandler,
+    recoveryStrategyManager,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['error', 'warn', 'info', 'debug']
+      requiredMethods: ['error', 'warn', 'info', 'debug'],
     });
     validateDependency(eventBus, 'IEventBus', logger, {
-      requiredMethods: ['dispatch']
+      requiredMethods: ['dispatch'],
     });
 
     // New dependencies - Optional for backward compatibility
     if (centralErrorHandler) {
       validateDependency(centralErrorHandler, 'ICentralErrorHandler', logger, {
-        requiredMethods: ['handle', 'handleSync']
+        requiredMethods: ['handle', 'handleSync'],
       });
     }
 
     if (recoveryStrategyManager) {
-      validateDependency(recoveryStrategyManager, 'IRecoveryStrategyManager', logger, {
-        requiredMethods: ['executeWithRecovery', 'registerStrategy']
-      });
+      validateDependency(
+        recoveryStrategyManager,
+        'IRecoveryStrategyManager',
+        logger,
+        {
+          requiredMethods: ['executeWithRecovery', 'registerStrategy'],
+        }
+      );
     }
 
     this.#logger = logger;
@@ -84,13 +94,16 @@ export class ClothingErrorHandler {
       try {
         return await this.#centralErrorHandler.handle(error, {
           ...context,
-          domain: 'clothing'
+          domain: 'clothing',
         });
       } catch (centralError) {
         // Fall back to local handling if central fails
-        this.#logger.warn('Central error handler failed, using local handling', {
-          error: centralError.message
-        });
+        this.#logger.warn(
+          'Central error handler failed, using local handling',
+          {
+            error: centralError.message,
+          }
+        );
       }
     }
 
@@ -111,13 +124,16 @@ export class ClothingErrorHandler {
       try {
         return this.#centralErrorHandler.handleSync(error, {
           ...context,
-          domain: 'clothing'
+          domain: 'clothing',
         });
       } catch (centralError) {
         // Fall back to local handling if central fails
-        this.#logger.warn('Central error handler failed, using local handling', {
-          error: centralError.message
-        });
+        this.#logger.warn(
+          'Central error handler failed, using local handling',
+          {
+            error: centralError.message,
+          }
+        );
       }
     }
 
@@ -151,7 +167,7 @@ export class ClothingErrorHandler {
       errorId,
       recovered: recovery.success,
       fallbackData: recovery.data,
-      recoveryStrategy: recovery.strategy
+      recoveryStrategy: recovery.strategy,
     };
   }
 
@@ -170,7 +186,7 @@ export class ClothingErrorHandler {
       errorMessage: error.message,
       errorContext: error.context || {},
       handlerContext: context,
-      stack: error.stack
+      stack: error.stack,
     };
 
     // Check for clothing-specific error types
@@ -179,7 +195,7 @@ export class ClothingErrorHandler {
       'CoverageAnalysisError',
       'PriorityCalculationError',
       'ClothingServiceError',
-      'ClothingValidationError'
+      'ClothingValidationError',
     ];
 
     if (clothingErrorTypes.includes(error.constructor.name)) {
@@ -200,7 +216,9 @@ export class ClothingErrorHandler {
     const strategy = this.#localRecoveryStrategies.get(error.constructor.name);
 
     if (!strategy) {
-      this.#logger.warn(`No recovery strategy for error type: ${error.constructor.name}`);
+      this.#logger.warn(
+        `No recovery strategy for error type: ${error.constructor.name}`
+      );
       return { success: false, data: null, strategy: 'none' };
     }
 
@@ -208,14 +226,14 @@ export class ClothingErrorHandler {
       const recoveryResult = strategy(error, context);
       this.#logger.info(`Error recovery successful: ${strategy.name}`, {
         errorType: error.constructor.name,
-        strategy: strategy.name
+        strategy: strategy.name,
       });
       return { success: true, data: recoveryResult, strategy: strategy.name };
     } catch (recoveryError) {
       this.#logger.error('Error recovery failed', {
         originalError: error.message,
         recoveryError: recoveryError.message,
-        strategy: strategy.name
+        strategy: strategy.name,
       });
       return { success: false, data: null, strategy: strategy.name };
     }
@@ -235,58 +253,63 @@ export class ClothingErrorHandler {
     this.#recoveryStrategyManager.registerStrategy('ClothingServiceError', {
       retry: {
         maxRetries: 3,
-        backoff: 'exponential'
+        backoff: 'exponential',
       },
       fallback: (error, operation) => {
         return this.#fallbackToLegacyClothingLogic({ operation });
       },
       circuitBreaker: {
         failureThreshold: 5,
-        resetTimeout: 60000
-      }
+        resetTimeout: 60000,
+      },
     });
 
     this.#recoveryStrategyManager.registerStrategy('CoverageAnalysisError', {
       retry: {
         maxRetries: 2,
-        backoff: 'linear'
+        backoff: 'linear',
       },
       fallback: (error, operation) => {
         return this.#fallbackToLayerPriorityOnly({ operation });
-      }
+      },
     });
 
     this.#recoveryStrategyManager.registerStrategy('PriorityCalculationError', {
       retry: {
         maxRetries: 1,
-        backoff: 'constant'
+        backoff: 'constant',
       },
       fallback: (error, operation) => {
         return this.#fallbackToDefaultPriorities({ operation });
-      }
+      },
     });
 
     this.#recoveryStrategyManager.registerStrategy('ClothingValidationError', {
       retry: {
         maxRetries: 2,
-        backoff: 'exponential'
+        backoff: 'exponential',
       },
       fallback: (error, operation) => {
         return this.#sanitizeAndRetry(error, { operation });
-      }
-    });
-
-    this.#recoveryStrategyManager.registerStrategy('ClothingAccessibilityError', {
-      retry: {
-        maxRetries: 2,
-        backoff: 'linear'
       },
-      fallback: (error, operation) => {
-        return this.#fallbackToSimpleAccessibility({ operation });
-      }
     });
 
-    this.#logger.info('Clothing recovery strategies registered with central system');
+    this.#recoveryStrategyManager.registerStrategy(
+      'ClothingAccessibilityError',
+      {
+        retry: {
+          maxRetries: 2,
+          backoff: 'linear',
+        },
+        fallback: (error, operation) => {
+          return this.#fallbackToSimpleAccessibility({ operation });
+        },
+      }
+    );
+
+    this.#logger.info(
+      'Clothing recovery strategies registered with central system'
+    );
   }
 
   /**
@@ -296,32 +319,47 @@ export class ClothingErrorHandler {
    */
   #initializeRecoveryStrategies() {
     // Recovery strategy for accessibility service failures
-    this.#localRecoveryStrategies.set('ClothingServiceError', (error, context) => {
-      if (error.serviceName === 'ClothingAccessibilityService') {
-        return this.#fallbackToLegacyClothingLogic(context);
+    this.#localRecoveryStrategies.set(
+      'ClothingServiceError',
+      (error, context) => {
+        if (error.serviceName === 'ClothingAccessibilityService') {
+          return this.#fallbackToLegacyClothingLogic(context);
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     // Recovery strategy for coverage analysis failures
-    this.#localRecoveryStrategies.set('CoverageAnalysisError', (error, context) => {
-      return this.#fallbackToLayerPriorityOnly(context);
-    });
+    this.#localRecoveryStrategies.set(
+      'CoverageAnalysisError',
+      (error, context) => {
+        return this.#fallbackToLayerPriorityOnly(context);
+      }
+    );
 
     // Recovery strategy for priority calculation failures
-    this.#localRecoveryStrategies.set('PriorityCalculationError', (error, context) => {
-      return this.#fallbackToDefaultPriorities(context);
-    });
+    this.#localRecoveryStrategies.set(
+      'PriorityCalculationError',
+      (error, context) => {
+        return this.#fallbackToDefaultPriorities(context);
+      }
+    );
 
     // Recovery strategy for validation errors
-    this.#localRecoveryStrategies.set('ClothingValidationError', (error, context) => {
-      return this.#sanitizeAndRetry(error, context);
-    });
+    this.#localRecoveryStrategies.set(
+      'ClothingValidationError',
+      (error, context) => {
+        return this.#sanitizeAndRetry(error, context);
+      }
+    );
 
     // Recovery strategy for accessibility errors
-    this.#localRecoveryStrategies.set('ClothingAccessibilityError', (error, context) => {
-      return this.#fallbackToSimpleAccessibility(context);
-    });
+    this.#localRecoveryStrategies.set(
+      'ClothingAccessibilityError',
+      (error, context) => {
+        return this.#fallbackToSimpleAccessibility(context);
+      }
+    );
   }
 
   /**
@@ -357,14 +395,14 @@ export class ClothingErrorHandler {
   #fallbackToDefaultPriorities(context) {
     this.#logger.warn('Priority calculation failed, using default priorities');
     // Use hardcoded priority values
-    return { 
+    return {
       mode: 'default_priorities',
       priorities: {
         outer: 1,
         base: 2,
         underwear: 3,
-        accessories: 4
-      }
+        accessories: 4,
+      },
     };
   }
 
@@ -378,11 +416,11 @@ export class ClothingErrorHandler {
   #sanitizeAndRetry(error, context) {
     this.#logger.warn('Validation error, attempting data sanitization');
     // Return sanitized data structure
-    return { 
-      mode: 'sanitized', 
+    return {
+      mode: 'sanitized',
       retryable: true,
       sanitizedField: error.field,
-      sanitizedValue: null
+      sanitizedValue: null,
     };
   }
 
@@ -395,9 +433,9 @@ export class ClothingErrorHandler {
   #fallbackToSimpleAccessibility(context) {
     this.#logger.warn('Accessibility check failed, using simple fallback');
     // Return all items as accessible
-    return { 
+    return {
       mode: 'simple_accessibility',
-      allAccessible: true
+      allAccessible: true,
     };
   }
 
@@ -417,8 +455,8 @@ export class ClothingErrorHandler {
         errorType: error.constructor.name,
         message: error.message,
         context: error.context || context,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 
@@ -430,11 +468,14 @@ export class ClothingErrorHandler {
    */
   #updateErrorMetrics(error) {
     const errorType = error.constructor.name;
-    const current = this.#errorMetrics.get(errorType) || { count: 0, lastOccurrence: null };
-    
+    const current = this.#errorMetrics.get(errorType) || {
+      count: 0,
+      lastOccurrence: null,
+    };
+
     this.#errorMetrics.set(errorType, {
       count: current.count + 1,
-      lastOccurrence: new Date().toISOString()
+      lastOccurrence: new Date().toISOString(),
     });
   }
 

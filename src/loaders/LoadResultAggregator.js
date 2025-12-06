@@ -89,7 +89,12 @@ export class LoadResultAggregator {
     this.#modResults[registryKey] = res;
 
     if (!this.#totalCounts[registryKey]) {
-      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0, failures: [] };
+      this.#totalCounts[registryKey] = {
+        count: 0,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      };
     }
     this.#totalCounts[registryKey].count += res.count;
     this.#totalCounts[registryKey].overrides += res.overrides;
@@ -109,12 +114,22 @@ export class LoadResultAggregator {
    */
   recordFailure(registryKey) {
     if (!this.#modResults[registryKey]) {
-      this.#modResults[registryKey] = { count: 0, overrides: 0, errors: 0, failures: [] };
+      this.#modResults[registryKey] = {
+        count: 0,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      };
     }
     this.#modResults[registryKey].errors += 1;
 
     if (!this.#totalCounts[registryKey]) {
-      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0, failures: [] };
+      this.#totalCounts[registryKey] = {
+        count: 0,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      };
     }
     this.#totalCounts[registryKey].errors += 1;
   }

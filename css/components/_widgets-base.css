@@ -30,8 +30,8 @@
 }
 
 /* Last-child margin adjustment for widgets within panels */
-.panel>div[id$='-widget']:last-child,
-.panel>div[id$='-container']:last-child {
+.panel > div[id$='-widget']:last-child,
+.panel > div[id$='-container']:last-child {
   margin-bottom: 0;
 }
 

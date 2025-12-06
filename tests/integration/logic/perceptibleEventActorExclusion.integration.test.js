@@ -180,18 +180,18 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const event1Specs =
       entityManager.batchAddComponentsOptimized.mock.calls[0][0];
     expect(event1Specs).toHaveLength(3);
-    expect(
-      event1Specs.every((spec) => spec.instanceId !== 'npc:alice')
-    ).toBe(true);
-    expect(
-      event1Specs.some((spec) => spec.instanceId === 'npc:bob')
-    ).toBe(true);
-    expect(
-      event1Specs.some((spec) => spec.instanceId === 'npc:charlie')
-    ).toBe(true);
-    expect(
-      event1Specs.some((spec) => spec.instanceId === 'npc:dave')
-    ).toBe(true);
+    expect(event1Specs.every((spec) => spec.instanceId !== 'npc:alice')).toBe(
+      true
+    );
+    expect(event1Specs.some((spec) => spec.instanceId === 'npc:bob')).toBe(
+      true
+    );
+    expect(event1Specs.some((spec) => spec.instanceId === 'npc:charlie')).toBe(
+      true
+    );
+    expect(event1Specs.some((spec) => spec.instanceId === 'npc:dave')).toBe(
+      true
+    );
 
     // Event 2: Alice, Charlie, Dave get log (Bob excluded)
     const event2Specs =
@@ -200,15 +200,15 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     expect(event2Specs.every((spec) => spec.instanceId !== 'npc:bob')).toBe(
       true
     );
-    expect(
-      event2Specs.some((spec) => spec.instanceId === 'npc:alice')
-    ).toBe(true);
-    expect(
-      event2Specs.some((spec) => spec.instanceId === 'npc:charlie')
-    ).toBe(true);
-    expect(
-      event2Specs.some((spec) => spec.instanceId === 'npc:dave')
-    ).toBe(true);
+    expect(event2Specs.some((spec) => spec.instanceId === 'npc:alice')).toBe(
+      true
+    );
+    expect(event2Specs.some((spec) => spec.instanceId === 'npc:charlie')).toBe(
+      true
+    );
+    expect(event2Specs.some((spec) => spec.instanceId === 'npc:dave')).toBe(
+      true
+    );
   });
 
   test('backward compatibility: events without excludedActorIds work as before', async () => {
@@ -256,9 +256,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const batchSpecs =
       entityManager.batchAddComponentsOptimized.mock.calls[0][0];
     expect(batchSpecs).toHaveLength(3);
-    expect(batchSpecs.map((s) => s.instanceId).sort()).toEqual(
-      actors.sort()
-    );
+    expect(batchSpecs.map((s) => s.instanceId).sort()).toEqual(actors.sort());
   });
 
   test('mutual exclusivity: error when both recipientIds and excludedActorIds provided', async () => {
@@ -346,9 +344,9 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     // 3. Only non-excluded actors in batch (Bob, Charlie, Dave)
     const batchSpecs = batchAddSpy.mock.calls[0][0];
     expect(batchSpecs).toHaveLength(3);
-    expect(
-      batchSpecs.every((spec) => spec.instanceId !== 'npc:alice')
-    ).toBe(true);
+    expect(batchSpecs.every((spec) => spec.instanceId !== 'npc:alice')).toBe(
+      true
+    );
 
     // 4. Individual addComponent NOT called (batch optimization working)
     expect(entityManager.addComponent).not.toHaveBeenCalled();

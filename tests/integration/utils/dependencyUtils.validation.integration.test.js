@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
 import { withValidatedDeps } from '../../../src/utils/withValidatedDeps.js';
 import { MultiTargetEventBuilder } from '../../../src/entities/multiTarget/multiTargetEventBuilder.js';
@@ -20,9 +15,7 @@ import {
 } from '../../../src/errors/InitializationError.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import getDefinition from '../../../src/entities/utils/definitionLookup.js';
-import {
-  validateInstanceAndComponent,
-} from '../../../src/utils/idValidation.js';
+import { validateInstanceAndComponent } from '../../../src/utils/idValidation.js';
 
 class MemoryLogger {
   constructor() {
@@ -75,7 +68,7 @@ describe('dependencyUtils integration coverage', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(logger.messages('error')).toContain(
-        "Inventory: Invalid or missing method 'get' on dependency 'Inventory: repository'.",
+        "Inventory: Invalid or missing method 'get' on dependency 'Inventory: repository'."
       );
     });
 
@@ -116,7 +109,7 @@ describe('dependencyUtils integration coverage', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(logger.messages('error')).toContain(
-        "Bootstrap: Dependency 'Bootstrap: runner' must be a function, but got object.",
+        "Bootstrap: Dependency 'Bootstrap: runner' must be a function, but got object."
       );
     });
 
@@ -134,7 +127,7 @@ describe('dependencyUtils integration coverage', () => {
       ).toThrow(InvalidArgumentError);
 
       expect(logger.messages('error')).toContain(
-        "Bootstrap: Missing required dependency: Bootstrap: dispatcher.",
+        'Bootstrap: Missing required dependency: Bootstrap: dispatcher.'
       );
     });
 
@@ -175,7 +168,7 @@ describe('dependencyUtils integration coverage', () => {
             name: 'ReportService.repository',
             methods: ['list'],
           },
-        ],
+        ]
       );
 
       const partialLogger = {
@@ -185,16 +178,19 @@ describe('dependencyUtils integration coverage', () => {
         },
       };
 
-      expect(() =>
-        new ValidatedReportService({
-          repository: { list: 'not-a-function' },
-          logger: partialLogger,
-        })
+      expect(
+        () =>
+          new ValidatedReportService({
+            repository: { list: 'not-a-function' },
+            logger: partialLogger,
+          })
       ).toThrow(
-        "Invalid or missing method 'list' on dependency 'ReportService.repository'.",
+        "Invalid or missing method 'list' on dependency 'ReportService.repository'."
       );
 
-      expect(partialLogger.debugMessages).toContain('ReportService constructed');
+      expect(partialLogger.debugMessages).toContain(
+        'ReportService constructed'
+      );
     });
   });
 
@@ -208,11 +204,15 @@ describe('dependencyUtils integration coverage', () => {
 
       expect(() => builder.setActor('  ')).toThrow(InvalidArgumentError);
       expect(logger.messages('error')).toContain(
-        "MultiTargetEventBuilder.setActor: Invalid actorId '  '. Expected non-blank string.",
+        "MultiTargetEventBuilder.setActor: Invalid actorId '  '. Expected non-blank string."
       );
 
-      expect(() => builder.setTargetsFromExtraction(null)).toThrow('Target extraction result is required');
-      expect(logger.messages('error')).toContain('Target extraction result is required');
+      expect(() => builder.setTargetsFromExtraction(null)).toThrow(
+        'Target extraction result is required'
+      );
+      expect(logger.messages('error')).toContain(
+        'Target extraction result is required'
+      );
     });
 
     it('sets targets from a real extraction result when dependencies are valid', () => {
@@ -222,7 +222,7 @@ describe('dependencyUtils integration coverage', () => {
 
       builder.setTargetsFromExtraction(extraction);
       expect(logger.messages('debug')).toContain(
-        'Targets set from extraction result',
+        'Targets set from extraction result'
       );
     });
   });
@@ -233,9 +233,11 @@ describe('dependencyUtils integration coverage', () => {
       const registry = new InMemoryDataRegistry({ logger: registryLogger });
       const logger = new MemoryLogger();
 
-      expect(() => getDefinition('  ', registry, logger)).toThrow(InvalidArgumentError);
+      expect(() => getDefinition('  ', registry, logger)).toThrow(
+        InvalidArgumentError
+      );
       expect(logger.messages('warn')).toContain(
-        "definitionLookup.getDefinition called with invalid definitionId: '  '",
+        "definitionLookup.getDefinition called with invalid definitionId: '  '"
       );
     });
 
@@ -245,20 +247,22 @@ describe('dependencyUtils integration coverage', () => {
       const logger = new MemoryLogger();
 
       expect(() => getDefinition('entity:missing', registry, logger)).toThrow(
-        DefinitionNotFoundError,
+        DefinitionNotFoundError
       );
-      expect(logger.messages('warn')).toContain('Definition not found in registry: entity:missing');
+      expect(logger.messages('warn')).toContain(
+        'Definition not found in registry: entity:missing'
+      );
     });
 
     it('logs and wraps errors when component IDs are invalid', () => {
       const logger = new MemoryLogger();
 
       expect(() =>
-        validateInstanceAndComponent('entity:1', '   ', logger, 'TestContext'),
+        validateInstanceAndComponent('entity:1', '   ', logger, 'TestContext')
       ).toThrow(InvalidArgumentError);
 
       expect(logger.entries.error[0].message).toContain(
-        "TestContext: Invalid componentTypeId '   '. Expected non-blank string.",
+        "TestContext: Invalid componentTypeId '   '. Expected non-blank string."
       );
     });
   });
@@ -314,21 +318,27 @@ describe('dependencyUtils integration coverage', () => {
       const deps = buildDeps();
       delete deps.gameDataRepository.get;
 
-      expect(() => new WorldInitializer(deps)).toThrow(WorldInitializationError);
+      expect(() => new WorldInitializer(deps)).toThrow(
+        WorldInitializationError
+      );
     });
 
     it('throws WorldInitializationError when event dispatcher lacks dispatchWithLogging', () => {
       const deps = buildDeps();
       deps.eventDispatchService = {};
 
-      expect(() => new WorldInitializer(deps)).toThrow(WorldInitializationError);
+      expect(() => new WorldInitializer(deps)).toThrow(
+        WorldInitializationError
+      );
     });
 
     it('throws WorldInitializationError when world context is missing', () => {
       const deps = buildDeps();
       deps.worldContext = null;
 
-      expect(() => new WorldInitializer(deps)).toThrow(WorldInitializationError);
+      expect(() => new WorldInitializer(deps)).toThrow(
+        WorldInitializationError
+      );
     });
   });
 
@@ -367,11 +377,11 @@ describe('dependencyUtils integration coverage', () => {
       };
 
       expect(() => new InitializationService(deps)).toThrow(
-        SystemInitializationError,
+        SystemInitializationError
       );
 
       expect(logger.messages('error')).toContain(
-        "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.",
+        "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
       );
     });
   });
@@ -384,11 +394,11 @@ describe('dependencyUtils integration coverage', () => {
         .mockImplementation(() => {});
 
       expect(
-        () => new EventValidationService({ logger, schemaValidator: null }),
+        () => new EventValidationService({ logger, schemaValidator: null })
       ).toThrow(InvalidArgumentError);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Missing required dependency: ISchemaValidator.',
+        'Missing required dependency: ISchemaValidator.'
       );
       consoleSpy.mockRestore();
     });
@@ -403,9 +413,9 @@ describe('dependencyUtils integration coverage', () => {
             validatedEventDispatcher: { dispatch: () => true },
             eventDispatchService: { dispatchWithLogging: () => true },
             initializationTag: 'core',
-          }),
+          })
       ).toThrow(
-        "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'.",
+        "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
       );
     });
 
@@ -419,7 +429,7 @@ describe('dependencyUtils integration coverage', () => {
             validatedEventDispatcher: { dispatch: () => true },
             eventDispatchService: { dispatchWithLogging: () => true },
             initializationTag: 'core',
-          }),
+          })
       ).toThrow('SystemInitializer requires an ILogger instance.');
     });
 
@@ -432,7 +442,7 @@ describe('dependencyUtils integration coverage', () => {
             this.logger = baseLogger;
           }
         },
-        () => undefined,
+        () => undefined
       );
 
       const instance = new NoSpecService({ logger });

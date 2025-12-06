@@ -7,7 +7,10 @@
  * @see tickets/GOAPIMPL-011-method-selection-algorithm.md
  */
 
-import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 import MethodSelectionError from '../errors/methodSelectionError.js';
 
 /**
@@ -90,9 +93,17 @@ class MethodSelectionService {
     validateDependency(gameDataRepository, 'IGameDataRepository', logger, {
       requiredMethods: ['get'],
     });
-    validateDependency(contextAssemblyService, 'IContextAssemblyService', logger, {
-      requiredMethods: ['assembleRefinementContext', 'assembleConditionContext'],
-    });
+    validateDependency(
+      contextAssemblyService,
+      'IContextAssemblyService',
+      logger,
+      {
+        requiredMethods: [
+          'assembleRefinementContext',
+          'assembleConditionContext',
+        ],
+      }
+    );
     const logicService = jsonLogicService ?? jsonLogicEvaluationService;
 
     validateDependency(logicService, 'JsonLogicEvaluationService', logger, {
@@ -137,11 +148,14 @@ class MethodSelectionService {
       );
     }
 
-    this.#logger.debug(`[MethodSelection] Selecting method for task '${taskId}'`, {
-      taskId,
-      actorId,
-      taskParams,
-    });
+    this.#logger.debug(
+      `[MethodSelection] Selecting method for task '${taskId}'`,
+      {
+        taskId,
+        actorId,
+        taskParams,
+      }
+    );
 
     // Load task definition
     const task = this.#loadTask(taskId);
@@ -218,13 +232,10 @@ class MethodSelectionService {
     const tasks = this.#gameDataRepository.get('tasks');
 
     if (!tasks || typeof tasks !== 'object') {
-      throw new MethodSelectionError(
-        `Task registry not available`,
-        {
-          taskId,
-          reason: 'Task registry not initialized',
-        }
-      );
+      throw new MethodSelectionError(`Task registry not available`, {
+        taskId,
+        reason: 'Task registry not initialized',
+      });
     }
 
     const task = tasks[taskId];
@@ -263,7 +274,8 @@ class MethodSelectionService {
           taskId,
           methodId,
           refPath,
-          reason: 'Method registry not initialized - ensure mod loading completed successfully',
+          reason:
+            'Method registry not initialized - ensure mod loading completed successfully',
         }
       );
     }
@@ -279,7 +291,9 @@ class MethodSelectionService {
           methodId,
           refPath,
           reason: 'Method not loaded or $ref path incorrect',
-          availableMethods: Object.keys(methods).filter((id) => id.startsWith(taskId.split(':')[1])),
+          availableMethods: Object.keys(methods).filter((id) =>
+            id.startsWith(taskId.split(':')[1])
+          ),
         }
       );
     }
@@ -346,19 +360,24 @@ class MethodSelectionService {
 
     try {
       // Assemble refinement context for condition evaluation
-      const refinementContext = this.#contextAssemblyService.assembleRefinementContext(
-        actorId,
-        { id: taskId, params: taskParams }, // Build task object
-        {} // Empty localState during method selection
-      );
+      const refinementContext =
+        this.#contextAssemblyService.assembleRefinementContext(
+          actorId,
+          { id: taskId, params: taskParams }, // Build task object
+          {} // Empty localState during method selection
+        );
 
       // Transform to condition context for JSON Logic
-      const conditionContext = this.#contextAssemblyService.assembleConditionContext(
-        refinementContext
-      );
+      const conditionContext =
+        this.#contextAssemblyService.assembleConditionContext(
+          refinementContext
+        );
 
       // Evaluate condition
-      const result = this.#jsonLogicService.evaluate(condition, conditionContext);
+      const result = this.#jsonLogicService.evaluate(
+        condition,
+        conditionContext
+      );
 
       if (result === true) {
         return {

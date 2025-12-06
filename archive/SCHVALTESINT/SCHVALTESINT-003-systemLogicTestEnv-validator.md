@@ -17,22 +17,22 @@ Update `systemLogicTestEnv.js` to inject a real schema validator dependency, ena
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                        | Change Type                                                     |
+| ------------------------------------------- | --------------------------------------------------------------- |
 | `tests/common/engine/systemLogicTestEnv.js` | Add schema validator injection to `createBaseRuleEnvironment()` |
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                             | Purpose                        |
+| ---------------------------------------------------------------- | ------------------------------ |
 | `tests/unit/common/engine/systemLogicTestEnv.validation.test.js` | Test new validation capability |
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `src/validation/ajvSchemaValidator.js` | Understand validator interface |
-| `tests/common/mods/ModTestFixture.js` | Reference pattern from SCHVALTESINT-001 |
+| File                                   | Purpose                                 |
+| -------------------------------------- | --------------------------------------- |
+| `src/validation/ajvSchemaValidator.js` | Understand validator interface          |
+| `tests/common/mods/ModTestFixture.js`  | Reference pattern from SCHVALTESINT-001 |
 
 ---
 
@@ -82,7 +82,7 @@ The original ticket contained some incorrect assumptions about the code structur
 export function createBaseRuleEnvironment({
   createHandlers,
   entities = [],
-  rules = [],  // <-- Rules passed as array
+  rules = [], // <-- Rules passed as array
   actions = [],
   // ... other params
 }) {
@@ -236,6 +236,7 @@ export function createBaseRuleEnvironment({
 ### Changes Made
 
 **Modified File**: `tests/common/engine/systemLogicTestEnv.js`
+
 - Added `schemaValidator = null` and `validateOnSetup = true` parameters to `createBaseRuleEnvironment()`
 - Added validation logic after macro expansion (before environment creation)
 - Added `validateRule(ruleData)` method to returned environment object
@@ -244,6 +245,7 @@ export function createBaseRuleEnvironment({
 - Error messages support both `rule_id` (per schema) and `id` (for compatibility) fields
 
 **Created File**: `tests/unit/common/engine/systemLogicTestEnv.validation.test.js`
+
 - 15 comprehensive tests covering:
   - `hasValidation()` returning false/true based on validator presence
   - `validateRule()` throwing appropriate errors

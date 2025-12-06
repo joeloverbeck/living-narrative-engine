@@ -25,9 +25,15 @@ async function setupContainer(container = new AppContainer()) {
   const logger = createLoggerMock();
 
   container.register(tokens.ILogger, () => logger);
-  container.register(tokens.ISafeEventDispatcher, () => ({ dispatch: jest.fn() }));
-  container.register(tokens.IValidatedEventDispatcher, () => ({ dispatchValidated: jest.fn() }));
-  container.register(tokens.IPathConfiguration, () => ({ scopePath: 'scopes' }));
+  container.register(tokens.ISafeEventDispatcher, () => ({
+    dispatch: jest.fn(),
+  }));
+  container.register(tokens.IValidatedEventDispatcher, () => ({
+    dispatchValidated: jest.fn(),
+  }));
+  container.register(tokens.IPathConfiguration, () => ({
+    scopePath: 'scopes',
+  }));
 
   await registerLoaders(container);
 
@@ -66,8 +72,12 @@ describe('registerLoaders', () => {
     const { container, logger } = await setupContainer();
 
     expect(container.isRegistered(tokens.IModReferenceExtractor)).toBe(true);
-    expect(container.isRegistered(tokens.IModCrossReferenceValidator)).toBe(true);
-    expect(container.isRegistered(tokens.IModValidationOrchestrator)).toBe(true);
+    expect(container.isRegistered(tokens.IModCrossReferenceValidator)).toBe(
+      true
+    );
+    expect(container.isRegistered(tokens.IModValidationOrchestrator)).toBe(
+      true
+    );
     expect(container.isRegistered(tokens.IViolationReporter)).toBe(true);
 
     const orchestrator = container.resolve(tokens.IModValidationOrchestrator);
@@ -78,10 +88,16 @@ describe('registerLoaders', () => {
   });
 
   it('skips mod validation services when process is unavailable', async () => {
-    const originalProcessDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'process');
+    const originalProcessDescriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      'process'
+    );
     const originalWindow = globalThis.window;
 
-    Object.defineProperty(globalThis, 'process', { value: undefined, configurable: true });
+    Object.defineProperty(globalThis, 'process', {
+      value: undefined,
+      configurable: true,
+    });
     globalThis.window = {};
 
     let container;
@@ -105,7 +121,9 @@ describe('registerLoaders', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       'Skipped mod cross-reference validation services (browser environment)'
     );
-    expect(container.isRegistered(tokens.IModValidationOrchestrator)).toBe(false);
+    expect(container.isRegistered(tokens.IModValidationOrchestrator)).toBe(
+      false
+    );
   });
 
   it('logs a debug message when mod validation services fail to register', async () => {
@@ -116,6 +134,8 @@ describe('registerLoaders', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       'Failed to register validation services (likely browser environment): forced mod validation failure'
     );
-    expect(container.isRegistered(tokens.IModValidationOrchestrator)).toBe(false);
+    expect(container.isRegistered(tokens.IModValidationOrchestrator)).toBe(
+      false
+    );
   });
 });

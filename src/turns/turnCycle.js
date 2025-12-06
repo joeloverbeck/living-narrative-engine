@@ -24,7 +24,10 @@ export default class TurnCycle {
    */
   constructor(service, entityManager, logger) {
     // Validate entityManager
-    if (!entityManager || typeof entityManager.getComponentData !== 'function') {
+    if (
+      !entityManager ||
+      typeof entityManager.getComponentData !== 'function'
+    ) {
       throw new Error('TurnCycle requires a valid EntityManager instance.');
     }
 
@@ -89,7 +92,7 @@ export default class TurnCycle {
       // All actors exhausted or all non-participating
       this.#logger.warn(
         'TurnCycle.nextActor(): No participating actors found in turn queue after ' +
-        `${attempts} attempts (max: ${maxAttempts})`
+          `${attempts} attempts (max: ${maxAttempts})`
       );
       return null;
     } catch (error) {

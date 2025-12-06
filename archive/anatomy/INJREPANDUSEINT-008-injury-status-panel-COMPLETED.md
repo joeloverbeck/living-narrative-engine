@@ -6,16 +6,16 @@ Create left-pane widget displaying character's current physical condition.
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/domUI/injuryStatusPanel.js` | CREATE |
-| `game.html` | MODIFY - add panel HTML between current-turn-actor-panel and perception-log-widget |
-| `css/components/_injury-status-panel.css` | CREATE |
-| `css/style.css` | MODIFY - import new CSS |
-| `src/domUI/domUiFacade.js` | MODIFY - add injuryStatusPanel |
-| `src/dependencyInjection/tokens/tokens-ui.js` | MODIFY - add token |
-| `src/dependencyInjection/registrations/uiRegistrations.js` | MODIFY - add registration |
-| `tests/unit/domUI/injuryStatusPanel.test.js` | CREATE |
+| File                                                       | Action                                                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/domUI/injuryStatusPanel.js`                           | CREATE                                                                             |
+| `game.html`                                                | MODIFY - add panel HTML between current-turn-actor-panel and perception-log-widget |
+| `css/components/_injury-status-panel.css`                  | CREATE                                                                             |
+| `css/style.css`                                            | MODIFY - import new CSS                                                            |
+| `src/domUI/domUiFacade.js`                                 | MODIFY - add injuryStatusPanel                                                     |
+| `src/dependencyInjection/tokens/tokens-ui.js`              | MODIFY - add token                                                                 |
+| `src/dependencyInjection/registrations/uiRegistrations.js` | MODIFY - add registration                                                          |
+| `tests/unit/domUI/injuryStatusPanel.test.js`               | CREATE                                                                             |
 
 ## Out of Scope
 
@@ -82,18 +82,18 @@ See `specs/injury-reporting-and-user-interface.md` section 7.1 for UI widget spe
 
 All planned files were created/modified as specified:
 
-| File | Status |
-|------|--------|
-| `src/domUI/injuryStatusPanel.js` | ✅ Created |
-| `game.html` | ✅ Modified - HTML added between current-turn-actor-panel and perception-log-widget |
-| `css/components/_injury-status-panel.css` | ✅ Created |
-| `css/style.css` | ✅ Modified - import added |
-| `src/domUI/domUiFacade.js` | ✅ Modified - injuryStatusPanel getter added |
-| `src/dependencyInjection/tokens/tokens-ui.js` | ✅ Modified - InjuryStatusPanel token added |
-| `src/dependencyInjection/registrations/uiRegistrations.js` | ✅ Modified - registration added |
-| `src/domUI/index.js` | ✅ Modified - export added |
-| `tests/unit/domUI/injuryStatusPanel.test.js` | ✅ Created |
-| `tests/unit/domUI/domUiFacade.test.js` | ✅ Modified - added injuryStatusPanel dependency and tests |
+| File                                                       | Status                                                                              |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `src/domUI/injuryStatusPanel.js`                           | ✅ Created                                                                          |
+| `game.html`                                                | ✅ Modified - HTML added between current-turn-actor-panel and perception-log-widget |
+| `css/components/_injury-status-panel.css`                  | ✅ Created                                                                          |
+| `css/style.css`                                            | ✅ Modified - import added                                                          |
+| `src/domUI/domUiFacade.js`                                 | ✅ Modified - injuryStatusPanel getter added                                        |
+| `src/dependencyInjection/tokens/tokens-ui.js`              | ✅ Modified - InjuryStatusPanel token added                                         |
+| `src/dependencyInjection/registrations/uiRegistrations.js` | ✅ Modified - registration added                                                    |
+| `src/domUI/index.js`                                       | ✅ Modified - export added                                                          |
+| `tests/unit/domUI/injuryStatusPanel.test.js`               | ✅ Created                                                                          |
+| `tests/unit/domUI/domUiFacade.test.js`                     | ✅ Modified - added injuryStatusPanel dependency and tests                          |
 
 ### Test Coverage
 
@@ -105,6 +105,7 @@ All planned files were created/modified as specified:
 ### Deviations from Ticket
 
 **Event Subscriptions**: The ticket specified subscribing to multiple anatomy events:
+
 - `anatomy:damage_applied`
 - `anatomy:internal_damage_propagated`
 - `anatomy:entity_dying`

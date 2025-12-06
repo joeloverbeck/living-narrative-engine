@@ -3,7 +3,14 @@
  *       and a concrete entity manager implementation.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import {
@@ -180,7 +187,10 @@ describe('ActionErrorContextBuilder integration', () => {
         id: 'actor-1',
         type: 'integration:actor',
         components: {
-          'core:actor': { name: 'Integration Actor', biography: 'Extensive background data' },
+          'core:actor': {
+            name: 'Integration Actor',
+            biography: 'Extensive background data',
+          },
           'core:location': { value: 'observation-deck' },
           'core:inventory': { items: longInventory },
           'core:notes': { text: 'N'.repeat(1200) },
@@ -190,9 +200,7 @@ describe('ActionErrorContextBuilder integration', () => {
             layers: [
               {
                 stage: 'outer',
-                children: [
-                  { stage: 'inner', tags: ['alpha', 'beta'] },
-                ],
+                children: [{ stage: 'inner', tags: ['alpha', 'beta'] }],
               },
             ],
             metadata: { critical: true, notes: null },
@@ -213,7 +221,12 @@ describe('ActionErrorContextBuilder integration', () => {
         {
           all: [
             { hasComponent: 'core:discipline' },
-            { any: [{ hasComponent: 'core:focus' }, { hasComponent: 'core:perception' }] },
+            {
+              any: [
+                { hasComponent: 'core:focus' },
+                { hasComponent: 'core:perception' },
+              ],
+            },
             [
               { hasComponent: 'core:resilience' },
               { hasComponent: 'core:resolve' },
@@ -250,10 +263,15 @@ describe('ActionErrorContextBuilder integration', () => {
     addLog(TRACE_INFO, 'General validation info', 'ValidationEngine', {
       sample: 'info',
     });
-    addLog(TRACE_ERROR, 'condition_ref core:mobility failed', 'ValidationEngine', {
-      input: { condition_ref: 'core:mobility' },
-      output: { success: false },
-    });
+    addLog(
+      TRACE_ERROR,
+      'condition_ref core:mobility failed',
+      'ValidationEngine',
+      {
+        input: { condition_ref: 'core:mobility' },
+        output: { success: false },
+      }
+    );
     addLog(
       TRACE_FAILURE,
       'Scope service failed to resolve target',
@@ -315,13 +333,14 @@ describe('ActionErrorContextBuilder integration', () => {
       _reason: 'Failed to serialize component',
     });
 
-    expect(snapshot.components['core:nested'].layers[0].children[0].tags).toEqual([
-      'alpha',
-      'beta',
-    ]);
+    expect(
+      snapshot.components['core:nested'].layers[0].children[0].tags
+    ).toEqual(['alpha', 'beta']);
     expect(snapshot.components['core:optional'].note).toBeNull();
 
-    const stepTypes = errorContext.evaluationTrace.steps.map((step) => step.type);
+    const stepTypes = errorContext.evaluationTrace.steps.map(
+      (step) => step.type
+    );
     expect(stepTypes).toEqual([
       EVALUATION_STEP_TYPES.PREREQUISITE,
       EVALUATION_STEP_TYPES.JSON_LOGIC,
@@ -332,7 +351,9 @@ describe('ActionErrorContextBuilder integration', () => {
       EVALUATION_STEP_TYPES.VALIDATION,
     ]);
 
-    const durations = errorContext.evaluationTrace.steps.map((step) => step.duration);
+    const durations = errorContext.evaluationTrace.steps.map(
+      (step) => step.duration
+    );
     for (let i = 1; i < durations.length; i += 1) {
       expect(durations[i]).toBeGreaterThanOrEqual(durations[i - 1]);
     }
@@ -345,7 +366,9 @@ describe('ActionErrorContextBuilder integration', () => {
       attempts: 1,
     });
 
-    const fixTypes = new Set(errorContext.suggestedFixes.map((fix) => fix.type));
+    const fixTypes = new Set(
+      errorContext.suggestedFixes.map((fix) => fix.type)
+    );
     expect(fixTypes).toEqual(
       new Set([
         FIX_TYPES.MISSING_COMPONENT,
@@ -356,9 +379,9 @@ describe('ActionErrorContextBuilder integration', () => {
       ])
     );
     for (let i = 1; i < errorContext.suggestedFixes.length; i += 1) {
-      expect(errorContext.suggestedFixes[i - 1].confidence).toBeGreaterThanOrEqual(
-        errorContext.suggestedFixes[i].confidence
-      );
+      expect(
+        errorContext.suggestedFixes[i - 1].confidence
+      ).toBeGreaterThanOrEqual(errorContext.suggestedFixes[i].confidence);
     }
 
     expect(errorContext.environmentContext).toMatchObject({
@@ -392,7 +415,11 @@ describe('ActionErrorContextBuilder integration', () => {
       fixSuggestionEngine: suggestionEngine,
     });
 
-    const actionDef = { id: 'integration:fallback', scope: 'none', prerequisites: [] };
+    const actionDef = {
+      id: 'integration:fallback',
+      scope: 'none',
+      prerequisites: [],
+    };
     const error = new Error('Target not found for action');
     const trace = new TraceContext();
     trace.addLog(TRACE_INFO, 'Starting resolution phase', 'ValidationEngine', {
@@ -413,7 +440,9 @@ describe('ActionErrorContextBuilder integration', () => {
     );
     expect(context.actorSnapshot.components).toEqual({});
     expect(context.actorSnapshot.location).toBe('unknown');
-    expect(context.actorSnapshot.metadata.error).toBe('Failed to capture snapshot');
+    expect(context.actorSnapshot.metadata.error).toBe(
+      'Failed to capture snapshot'
+    );
 
     expect(context.evaluationTrace.steps).toHaveLength(1);
     expect(context.evaluationTrace.steps[0].type).toBe(
@@ -421,7 +450,9 @@ describe('ActionErrorContextBuilder integration', () => {
     );
     expect(context.evaluationTrace.steps[0].success).toBe(true);
 
-    const fallbackFixTypes = new Set(context.suggestedFixes.map((fix) => fix.type));
+    const fallbackFixTypes = new Set(
+      context.suggestedFixes.map((fix) => fix.type)
+    );
     expect(fallbackFixTypes.has(FIX_TYPES.INVALID_TARGET)).toBe(true);
     expect(context.environmentContext.phase).toBe('resolution');
   });

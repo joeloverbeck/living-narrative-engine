@@ -671,9 +671,7 @@ describe('ModEntityBuilder', () => {
         const builder = new ModEntityBuilder('valid_id');
         builder.entityData.id = '   '; // Set blank ID after construction
 
-        expect(() => builder.validate()).toThrow(
-          'Entity ID cannot be blank'
-        );
+        expect(() => builder.validate()).toThrow('Entity ID cannot be blank');
         expect(() => builder.validate()).toThrow(
           'Entity IDs must be non-empty strings'
         );

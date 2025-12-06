@@ -4,13 +4,7 @@
  * and actionable fix suggestions without relying on mocked modules.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
@@ -86,7 +80,10 @@ describe('ActionErrorContextBuilder real services integration', () => {
             label: `Item ${index}`,
           })),
         },
-        'core:array': Array.from({ length: 105 }, (_, index) => `entry-${index}`),
+        'core:array': Array.from(
+          { length: 105 },
+          (_, index) => `entry-${index}`
+        ),
       },
     });
 
@@ -114,7 +111,9 @@ describe('ActionErrorContextBuilder real services integration', () => {
       component: 'core:position',
     });
 
-    const error = new Error("Missing component 'core:position' detected during validation");
+    const error = new Error(
+      "Missing component 'core:position' detected during validation"
+    );
     error.name = 'ComponentNotFoundError';
     const actionDef = actions.find((action) => action.id === 'movement:go');
 
@@ -133,7 +132,9 @@ describe('ActionErrorContextBuilder real services integration', () => {
     expect(context.additionalContext).toEqual({ requestId: 'ctx-42' });
 
     expect(context.actorSnapshot.id).toBe(actorId);
-    expect(context.actorSnapshot.metadata.capturedAt).toEqual(expect.any(Number));
+    expect(context.actorSnapshot.metadata.capturedAt).toEqual(
+      expect.any(Number)
+    );
     expect(context.actorSnapshot.metadata.entityType).toBe('unknown');
     expect(context.actorSnapshot.location).toBe('central-plaza');
 
@@ -150,21 +151,34 @@ describe('ActionErrorContextBuilder real services integration', () => {
     expect(sanitizedComponents['core:note']).toMatch(/\.{3}\(truncated\)$/);
     expect(sanitizedComponents['core:inventory'].items).toHaveLength(101);
     expect(
-      sanitizedComponents['core:inventory'].items[sanitizedComponents['core:inventory'].items.length - 1]
+      sanitizedComponents['core:inventory'].items[
+        sanitizedComponents['core:inventory'].items.length - 1
+      ]
     ).toEqual({ _truncated: true, _originalLength: 105 });
     expect(sanitizedComponents['core:array']).toHaveLength(101);
 
     expect(context.evaluationTrace.steps).toHaveLength(3);
     expect(context.evaluationTrace.steps[0]).toEqual(
-      expect.objectContaining({ type: EVALUATION_STEP_TYPES.VALIDATION, success: true })
+      expect.objectContaining({
+        type: EVALUATION_STEP_TYPES.VALIDATION,
+        success: true,
+      })
     );
     expect(context.evaluationTrace.steps[1]).toEqual(
-      expect.objectContaining({ type: EVALUATION_STEP_TYPES.PREREQUISITE, success: true })
+      expect.objectContaining({
+        type: EVALUATION_STEP_TYPES.PREREQUISITE,
+        success: true,
+      })
     );
     expect(context.evaluationTrace.steps[2]).toEqual(
-      expect.objectContaining({ type: EVALUATION_STEP_TYPES.PREREQUISITE, success: false })
+      expect.objectContaining({
+        type: EVALUATION_STEP_TYPES.PREREQUISITE,
+        success: false,
+      })
     );
-    expect(context.evaluationTrace.failurePoint).toBe('Missing component core:position');
+    expect(context.evaluationTrace.failurePoint).toBe(
+      'Missing component core:position'
+    );
 
     expect(context.suggestedFixes.length).toBeGreaterThan(0);
     expect(context.suggestedFixes).toEqual(

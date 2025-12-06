@@ -88,17 +88,14 @@ function normalizeTasksPayload(rawTasks, { logger }) {
   const normalizeTaskMap = (namespace, tasksObject) => {
     const namespaceTasks = {};
     for (const [taskId, taskDef] of Object.entries(tasksObject)) {
-      namespaceTasks[taskId] = normalizeSingleTask(
-        taskDef,
-        warnings,
-        logger
-      );
+      namespaceTasks[taskId] = normalizeSingleTask(taskDef, warnings, logger);
     }
     registerNamespace(namespace, namespaceTasks);
   };
 
   if (Array.isArray(rawTasks)) {
-    const warning = 'Deprecated task array payload detected. Tasks will be registered under the "test" namespace automatically.';
+    const warning =
+      'Deprecated task array payload detected. Tasks will be registered under the "test" namespace automatically.';
     warnings.push(warning);
     logger?.warn(warning);
 
@@ -144,9 +141,15 @@ function normalizeTasksPayload(rawTasks, { logger }) {
  * @param planningState
  * @param options
  */
-export async function registerPlanningStateSnapshot(entityManager, planningState, options = {}) {
+export async function registerPlanningStateSnapshot(
+  entityManager,
+  planningState,
+  options = {}
+) {
   if (!planningState || typeof planningState !== 'object') {
-    throw new Error('registerPlanningStateSnapshot requires a planning state object');
+    throw new Error(
+      'registerPlanningStateSnapshot requires a planning state object'
+    );
   }
 
   const createdEntities = new Set();
@@ -262,7 +265,9 @@ function validatePlanningEffect(effect, taskId, index, warnings, logger) {
     parameters: effect.parameters ? { ...effect.parameters } : undefined,
   };
 
-  const supportedTypes = Object.values(PlanningEffectsSimulator.OPERATION_TYPES);
+  const supportedTypes = Object.values(
+    PlanningEffectsSimulator.OPERATION_TYPES
+  );
 
   if (!normalized.type) {
     throwSetupError(
@@ -474,7 +479,9 @@ export async function createGoapTestSetup(config = {}) {
   const taskNormalization = guardsEnabled
     ? normalizeTasksPayload(tasks, { logger: guardLogger })
     : null;
-  const normalizedTasks = taskNormalization ? taskNormalization.tasks : (tasks || {});
+  const normalizedTasks = taskNormalization
+    ? taskNormalization.tasks
+    : tasks || {};
   const taskWarnings = taskNormalization ? taskNormalization.warnings : [];
 
   // 1. Create real EntityManager
@@ -528,14 +535,18 @@ export async function createGoapTestSetup(config = {}) {
     logger: testBed.createMockLogger(),
   });
 
-  baseJsonLogicService.addOperation('has_component', function (entityPath, componentId) {
-    return hasComponentOp.evaluate([entityPath, componentId], this);
-  });
+  baseJsonLogicService.addOperation(
+    'has_component',
+    function (entityPath, componentId) {
+      return hasComponentOp.evaluate([entityPath, componentId], this);
+    }
+  );
 
   // Wrap to provide evaluateCondition method (GOAP expects this)
   const jsonLogicService = {
     evaluate: (logic, data) => baseJsonLogicService.evaluate(logic, data),
-    evaluateCondition: (logic, data) => baseJsonLogicService.evaluate(logic, data),
+    evaluateCondition: (logic, data) =>
+      baseJsonLogicService.evaluate(logic, data),
   };
 
   // 5. Create scope system
@@ -559,10 +570,12 @@ export async function createGoapTestSetup(config = {}) {
   });
 
   // Add mock methods that RefinementEngine expects
-  contextAssemblyService.assembleRefinementContext = jest.fn(async (actorId) => {
-    const actor = entityManager.getEntityInstance(actorId);
-    return { actor, world: {} };
-  });
+  contextAssemblyService.assembleRefinementContext = jest.fn(
+    async (actorId) => {
+      const actor = entityManager.getEntityInstance(actorId);
+      return { actor, world: {} };
+    }
+  );
 
   // Add mock method that GoapController expects
   contextAssemblyService.assemblePlanningContext = jest.fn((actorId) => {
@@ -647,7 +660,9 @@ export async function createGoapTestSetup(config = {}) {
         (probe) => probe && typeof probe.record === 'function'
       );
     }
-    return probeList.filter((probe) => probe && typeof probe.record === 'function');
+    return probeList.filter(
+      (probe) => probe && typeof probe.record === 'function'
+    );
   };
 
   const initialProbes = [
@@ -674,12 +689,16 @@ export async function createGoapTestSetup(config = {}) {
 
   const attachEventTraceProbe = (probe) => {
     if (!probe || typeof probe.record !== 'function') {
-      throw new Error('attachEventTraceProbe requires a probe with a record() method');
+      throw new Error(
+        'attachEventTraceProbe requires a probe with a record() method'
+      );
     }
     if (typeof goapEventDispatcher.registerProbe === 'function') {
       return goapEventDispatcher.registerProbe(probe);
     }
-    throw new Error('GOAP event dispatcher does not support dynamic probe registration');
+    throw new Error(
+      'GOAP event dispatcher does not support dynamic probe registration'
+    );
   };
 
   const bootstrapEventTraceProbe = ({ logger, forceNew } = {}) => {

@@ -135,7 +135,10 @@ class RefinementStateManager {
     this.#ensureInitialized('store');
 
     // Validate key format
-    if (typeof key !== 'string' || !RefinementStateManager.#KEY_PATTERN.test(key)) {
+    if (
+      typeof key !== 'string' ||
+      !RefinementStateManager.#KEY_PATTERN.test(key)
+    ) {
       const error = new RefinementError(
         `Invalid state key: "${key}". Must be a valid JavaScript identifier (alphanumeric + underscore, cannot start with digit)`,
         {
@@ -344,7 +347,13 @@ class RefinementStateManager {
       );
     }
 
-    const requiredFields = ['success', 'data', 'error', 'timestamp', 'actionId'];
+    const requiredFields = [
+      'success',
+      'data',
+      'error',
+      'timestamp',
+      'actionId',
+    ];
     const missingFields = requiredFields.filter((field) => !(field in value));
 
     if (missingFields.length > 0) {

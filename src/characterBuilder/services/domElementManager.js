@@ -95,7 +95,10 @@ export class DOMElementManager {
       validateDependency(documentRef, 'documentRef', this.#logger, {
         requiredMethods: ['getElementById', 'querySelector'],
       });
-      if (!documentRef.body || typeof documentRef.body.contains !== 'function') {
+      if (
+        !documentRef.body ||
+        typeof documentRef.body.contains !== 'function'
+      ) {
         throw new Error(
           'Invalid documentRef provided. Missing body.contains method.'
         );

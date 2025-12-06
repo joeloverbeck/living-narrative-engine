@@ -103,7 +103,11 @@ describe('ScopeDSL slot access resolver integration', () => {
         'item:emergency-pants',
         'item:emergency-skirt',
       ]);
-      entityManager.addComponent(archiveEntityId, 'torso_lower', 'item:archived-uniform');
+      entityManager.addComponent(
+        archiveEntityId,
+        'torso_lower',
+        'item:archived-uniform'
+      );
 
       const clothingResults = clothingStepResolver.resolve(
         {

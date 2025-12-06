@@ -539,7 +539,9 @@ export class BaseTurnHandler {
     // Wait for any active state transition to complete before destruction
     // This prevents the race condition where destroy() runs mid-transition
     if (this._transitionLock) {
-      logger.debug(`${name}.destroy: Waiting for active state transition to complete.`);
+      logger.debug(
+        `${name}.destroy: Waiting for active state transition to complete.`
+      );
       await this._transitionLock;
     }
 

@@ -16,7 +16,11 @@ jest.mock('../../../../src/utils/environmentUtils.js', () => ({
 
 const MB = 1024 * 1024;
 
-const buildMemoryUsage = (heapUsed, heapTotal = heapUsed * 2, external = 0) => ({
+const buildMemoryUsage = (
+  heapUsed,
+  heapTotal = heapUsed * 2,
+  external = 0
+) => ({
   heapUsed,
   heapTotal,
   external,
@@ -69,7 +73,10 @@ describe('MemoryProfiler', () => {
       operations: 0,
       activeOperations: 0,
       trackedObjects: 0,
-      config: expect.objectContaining({ maxSnapshots: 2, snapshotInterval: 10 }),
+      config: expect.objectContaining({
+        maxSnapshots: 2,
+        snapshotInterval: 10,
+      }),
     });
   });
 
@@ -212,12 +219,9 @@ describe('MemoryProfiler', () => {
     ).resolves.toBe('done');
 
     await expect(
-      profiler.measureAsyncOperation(
-        async () => {
-          throw new Error('async failure');
-        },
-        'asyncTask'
-      )
+      profiler.measureAsyncOperation(async () => {
+        throw new Error('async failure');
+      }, 'asyncTask')
     ).rejects.toThrow('async failure');
 
     expect(profiler.getStatistics().operations).toBeGreaterThanOrEqual(1);
@@ -300,7 +304,10 @@ describe('MemoryProfiler', () => {
 
     const retained = profiler.analyzeRetainedObjects();
     expect(retained).toEqual(
-      expect.objectContaining({ totalTracked: 3, byClass: { Widget: 2, Panel: 1 } })
+      expect.objectContaining({
+        totalTracked: 3,
+        byClass: { Widget: 2, Panel: 1 },
+      })
     );
 
     const report = profiler.generateReport();

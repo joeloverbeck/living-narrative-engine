@@ -3,7 +3,14 @@
  * @description Tests configuration loading, merging, and helper functions
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   errorHandlingConfig,
   getErrorConfig,
@@ -11,12 +18,12 @@ import {
   getCircuitBreakerConfig,
   getFallbackValue,
   isRetriable,
-  ErrorSeverity
+  ErrorSeverity,
 } from '../../../src/config/errorHandling.config.js';
 
 // Mock environmentUtils
 jest.mock('../../../src/utils/environmentUtils.js', () => ({
-  getEnvironmentMode: jest.fn()
+  getEnvironmentMode: jest.fn(),
 }));
 
 import { getEnvironmentMode } from '../../../src/utils/environmentUtils.js';
@@ -46,23 +53,37 @@ describe('Error Handling Configuration', () => {
         maxAttempts: expect.any(Number),
         backoff: expect.objectContaining({
           type: expect.any(String),
-          initialDelay: expect.any(Number)
+          initialDelay: expect.any(Number),
         }),
-        timeout: expect.any(Number)
+        timeout: expect.any(Number),
       });
     });
 
     it('should have domain-specific overrides', () => {
-      expect(errorHandlingConfig.retry.overrides).toHaveProperty('ClothingError');
-      expect(errorHandlingConfig.retry.overrides).toHaveProperty('AnatomyVisualizationError');
-      expect(errorHandlingConfig.retry.overrides).toHaveProperty('LLMInteractionError');
-      expect(errorHandlingConfig.retry.overrides).toHaveProperty('NetworkError');
+      expect(errorHandlingConfig.retry.overrides).toHaveProperty(
+        'ClothingError'
+      );
+      expect(errorHandlingConfig.retry.overrides).toHaveProperty(
+        'AnatomyVisualizationError'
+      );
+      expect(errorHandlingConfig.retry.overrides).toHaveProperty(
+        'LLMInteractionError'
+      );
+      expect(errorHandlingConfig.retry.overrides).toHaveProperty(
+        'NetworkError'
+      );
     });
 
     it('should define non-retriable error types', () => {
-      expect(errorHandlingConfig.retry.nonRetriable).toContain('ValidationError');
-      expect(errorHandlingConfig.retry.nonRetriable).toContain('ConfigurationError');
-      expect(errorHandlingConfig.retry.nonRetriable).toContain('AuthenticationError');
+      expect(errorHandlingConfig.retry.nonRetriable).toContain(
+        'ValidationError'
+      );
+      expect(errorHandlingConfig.retry.nonRetriable).toContain(
+        'ConfigurationError'
+      );
+      expect(errorHandlingConfig.retry.nonRetriable).toContain(
+        'AuthenticationError'
+      );
     });
   });
 
@@ -200,7 +221,7 @@ describe('Error Handling Configuration', () => {
       expect(getFallbackValue('clothing', 'getEquipment')).toEqual([]);
       expect(getFallbackValue('clothing', 'getAccessibility')).toEqual({
         accessible: true,
-        items: []
+        items: [],
       });
     });
 
@@ -209,7 +230,7 @@ describe('Error Handling Configuration', () => {
       expect(anatomyFallback.parts).toHaveLength(6);
       expect(anatomyFallback.parts[0]).toMatchObject({
         id: 'head',
-        type: 'head'
+        type: 'head',
       });
 
       expect(getFallbackValue('anatomy', 'generateDescription')).toBe(
@@ -218,10 +239,12 @@ describe('Error Handling Configuration', () => {
     });
 
     it('should return domain-specific fallback for llm', () => {
-      expect(getFallbackValue('llm', 'generateText')).toBe('[Text generation unavailable]');
+      expect(getFallbackValue('llm', 'generateText')).toBe(
+        '[Text generation unavailable]'
+      );
       expect(getFallbackValue('llm', 'analyzePrompt')).toEqual({
         tokens: 0,
-        valid: false
+        valid: false,
       });
       expect(getFallbackValue('llm', 'complete')).toBe(null);
     });
@@ -260,7 +283,7 @@ describe('Error Handling Configuration', () => {
       expect(config.reporting.sampling).toMatchObject({
         enabled: expect.any(Boolean),
         rate: expect.any(Number),
-        alwaysReport: expect.any(Array)
+        alwaysReport: expect.any(Array),
       });
 
       expect(config.reporting.sampling.rate).toBeGreaterThanOrEqual(0);
@@ -281,13 +304,13 @@ describe('Error Handling Configuration', () => {
       expect(config.recovery.strategies[ErrorSeverity.CRITICAL]).toMatchObject({
         strategy: 'fail-fast',
         notify: true,
-        fallback: false
+        fallback: false,
       });
 
       expect(config.recovery.strategies[ErrorSeverity.ERROR]).toMatchObject({
         strategy: 'retry-with-fallback',
         notify: false,
-        fallback: true
+        fallback: true,
       });
     });
 

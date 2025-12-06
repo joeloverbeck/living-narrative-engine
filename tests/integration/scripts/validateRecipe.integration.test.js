@@ -50,7 +50,9 @@ describe('validate-recipe CLI integration tests', () => {
   let originalFetch;
 
   beforeAll(async () => {
-    ({ runValidation } = await import('../../../scripts/validate-recipe-v2.js'));
+    ({ runValidation } = await import(
+      '../../../scripts/validate-recipe-v2.js'
+    ));
     // Mock fetch to read from filesystem
     originalFetch = global.fetch;
     global.fetch = jest.fn((url) => {
@@ -65,7 +67,9 @@ describe('validate-recipe CLI integration tests', () => {
           json: () => Promise.resolve(JSON.parse(content)),
         });
       } catch (error) {
-        return Promise.reject(new Error(`Failed to load ${url}: ${error.message}`));
+        return Promise.reject(
+          new Error(`Failed to load ${url}: ${error.message}`)
+        );
       }
     });
 
@@ -77,7 +81,9 @@ describe('validate-recipe CLI integration tests', () => {
     const dataRegistry = container.resolve(tokens.IDataRegistry);
 
     // Load essential mods
-    const { createLoadContext } = await import('../../../src/loaders/LoadContext.js');
+    const { createLoadContext } = await import(
+      '../../../src/loaders/LoadContext.js'
+    );
 
     const loadContext = createLoadContext({
       worldName: 'test-world',
@@ -128,7 +134,9 @@ describe('validate-recipe CLI integration tests', () => {
 
   describe('Recipe validation with mod loading', () => {
     it('should validate human_male recipe successfully', async () => {
-      const recipe = loadRecipe('data/mods/anatomy/recipes/human_male.recipe.json');
+      const recipe = loadRecipe(
+        'data/mods/anatomy/recipes/human_male.recipe.json'
+      );
       const report = await validator.validate(recipe, {
         recipePath: 'data/mods/anatomy/recipes/human_male.recipe.json',
       });
@@ -139,7 +147,9 @@ describe('validate-recipe CLI integration tests', () => {
     });
 
     it('should validate human_female recipe successfully', async () => {
-      const recipe = loadRecipe('data/mods/anatomy/recipes/human_female.recipe.json');
+      const recipe = loadRecipe(
+        'data/mods/anatomy/recipes/human_female.recipe.json'
+      );
       const report = await validator.validate(recipe, {
         recipePath: 'data/mods/anatomy/recipes/human_female.recipe.json',
       });
@@ -150,7 +160,9 @@ describe('validate-recipe CLI integration tests', () => {
     });
 
     it('should validate red_dragon recipe with structure template', async () => {
-      const recipe = loadRecipe('data/mods/anatomy/recipes/red_dragon.recipe.json');
+      const recipe = loadRecipe(
+        'data/mods/anatomy/recipes/red_dragon.recipe.json'
+      );
       const report = await validator.validate(recipe, {
         recipePath: 'data/mods/anatomy/recipes/red_dragon.recipe.json',
       });
@@ -174,14 +186,16 @@ describe('validate-recipe CLI integration tests', () => {
         results.push(report);
       }
 
-      expect(results.every(r => r.isValid)).toBe(true);
+      expect(results.every((r) => r.isValid)).toBe(true);
       expect(results.length).toBe(3);
     });
   });
 
   describe('Validation report format', () => {
     it('should include all required report properties', async () => {
-      const recipe = loadRecipe('data/mods/anatomy/recipes/human_male.recipe.json');
+      const recipe = loadRecipe(
+        'data/mods/anatomy/recipes/human_male.recipe.json'
+      );
       const report = await validator.validate(recipe, {
         recipePath: 'data/mods/anatomy/recipes/human_male.recipe.json',
       });

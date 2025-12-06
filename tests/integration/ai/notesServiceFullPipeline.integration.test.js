@@ -1,10 +1,15 @@
 import { describe, expect, it } from '@jest/globals';
 import { NotesPersistenceListener } from '../../../src/ai/notesPersistenceListener.js';
 import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import ComponentAccessService from '../../../src/entities/componentAccessService.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  SUBJECT_TYPES,
+} from '../../../src/constants/subjectTypes.js';
 
 class TestLogger {
   constructor() {
@@ -57,13 +62,27 @@ describe('NotesService integration through persistence workflows', () => {
 
     const action = {
       notes: [
-        { text: 'Anchor this memory', subject: 'Archivist', subjectType: SUBJECT_TYPES.ENTITY },
+        {
+          text: 'Anchor this memory',
+          subject: 'Archivist',
+          subjectType: SUBJECT_TYPES.ENTITY,
+        },
       ],
     };
 
     expect(() =>
-      persistNotes(action, actor, logger, dispatcher, notesService, new Date('2025-03-01T10:00:00.000Z'), componentAccess)
-    ).toThrow('notesComp must be an object conforming to the core:notes schema with a `notes` array.');
+      persistNotes(
+        action,
+        actor,
+        logger,
+        dispatcher,
+        notesService,
+        new Date('2025-03-01T10:00:00.000Z'),
+        componentAccess
+      )
+    ).toThrow(
+      'notesComp must be an object conforming to the core:notes schema with a `notes` array.'
+    );
 
     expect(actor.components[NOTES_COMPONENT_ID]).toEqual({ corrupted: true });
     expect(logger.debugMessages).toHaveLength(0);
@@ -183,7 +202,9 @@ describe('NotesService integration through persistence workflows', () => {
       context: 'Temporal anomaly investigation',
     });
 
-    const eventMessages = dispatcher.events.map(({ payload }) => payload.message);
+    const eventMessages = dispatcher.events.map(
+      ({ payload }) => payload.message
+    );
     expect(eventMessages).toEqual(
       expect.arrayContaining([
         'NotesPersistenceHook: Invalid note skipped',
@@ -197,7 +218,11 @@ describe('NotesService integration through persistence workflows', () => {
       text: 'Existing Insight',
     });
     expect(normalizationKey).toBe(
-      normalizeNoteText({ subject: 'Lorekeeper', subjectType: SUBJECT_TYPES.ENTITY, text: 'existing insight!!' })
+      normalizeNoteText({
+        subject: 'Lorekeeper',
+        subjectType: SUBJECT_TYPES.ENTITY,
+        text: 'existing insight!!',
+      })
     );
     expect(normalizeNoteText(null)).toBe('');
     expect(normalizeNoteText({})).toBe('');

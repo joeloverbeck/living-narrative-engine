@@ -48,20 +48,31 @@ describe('MethodSelectionError', () => {
         taskId: 'consume_nourishing_item',
         methodIds: ['method_1', 'method_2', 'method_3'],
         evaluationResults: [
-          { methodId: 'method_1', applicable: false, reason: 'No food available' },
+          {
+            methodId: 'method_1',
+            applicable: false,
+            reason: 'No food available',
+          },
           { methodId: 'method_2', applicable: false, reason: 'Not in kitchen' },
-          { methodId: 'method_3', applicable: false, reason: 'Inventory full' }
+          { methodId: 'method_3', applicable: false, reason: 'Inventory full' },
         ],
-        actorId: 'actor-123'
+        actorId: 'actor-123',
       };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(error.message).toBe('Method selection failed');
       expect(error.context).toEqual(context);
     });
 
     it('should create error with correlation ID option', () => {
       const correlationId = 'custom-correlation-id';
-      const error = new MethodSelectionError('Method selection failed', {}, { correlationId });
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -69,35 +80,56 @@ describe('MethodSelectionError', () => {
   describe('Context Properties', () => {
     it('should preserve taskId in context', () => {
       const context = { taskId: 'consume_nourishing_item' };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(error.context.taskId).toBe('consume_nourishing_item');
     });
 
     it('should preserve methodIds in context', () => {
       const context = { methodIds: ['method_1', 'method_2'] };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(error.context.methodIds).toEqual(['method_1', 'method_2']);
     });
 
     it('should preserve evaluationResults in context', () => {
       const evaluationResults = [
-        { methodId: 'method_1', applicable: false, reason: 'Precondition not met' }
+        {
+          methodId: 'method_1',
+          applicable: false,
+          reason: 'Precondition not met',
+        },
       ];
       const context = { evaluationResults };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(error.context.evaluationResults).toEqual(evaluationResults);
     });
 
     it('should preserve actorId in context', () => {
       const context = { actorId: 'actor-player' };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(error.context.actorId).toBe('actor-player');
     });
 
     it('should preserve reason in context', () => {
       const context = { reason: 'All methods failed applicability check' };
-      const error = new MethodSelectionError('Method selection failed', context);
-      expect(error.context.reason).toBe('All methods failed applicability check');
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
+      expect(error.context.reason).toBe(
+        'All methods failed applicability check'
+      );
     });
 
     it('should preserve all context properties', () => {
@@ -105,9 +137,12 @@ describe('MethodSelectionError', () => {
         taskId: 'test_task',
         methodIds: ['m1', 'm2'],
         actorId: 'actor-123',
-        reason: 'No applicable methods'
+        reason: 'No applicable methods',
       };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(error.context).toEqual(context);
     });
   });
@@ -131,9 +166,12 @@ describe('MethodSelectionError', () => {
       const context = {
         taskId: 'test_task',
         methodIds: ['m1', 'm2'],
-        actorId: 'actor-123'
+        actorId: 'actor-123',
       };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       const json = error.toJSON();
 
       expect(json).toHaveProperty('name', 'MethodSelectionError');
@@ -149,7 +187,10 @@ describe('MethodSelectionError', () => {
 
     it('should be JSON-safe (no circular references)', () => {
       const context = { taskId: 'test_task', actorId: 'actor-123' };
-      const error = new MethodSelectionError('Method selection failed', context);
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        context
+      );
       expect(() => JSON.stringify(error.toJSON())).not.toThrow();
     });
   });
@@ -167,7 +208,9 @@ describe('MethodSelectionError', () => {
     it('should have ISO format timestamp', () => {
       const error = new MethodSelectionError('Method selection failed');
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should generate correlation ID automatically', () => {
@@ -179,7 +222,11 @@ describe('MethodSelectionError', () => {
 
     it('should use custom correlation ID if provided', () => {
       const correlationId = 'custom-id-789';
-      const error = new MethodSelectionError('Method selection failed', {}, { correlationId });
+      const error = new MethodSelectionError(
+        'Method selection failed',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -188,14 +235,30 @@ describe('MethodSelectionError', () => {
     it('should handle no applicable methods scenario', () => {
       const context = {
         taskId: 'consume_nourishing_item',
-        methodIds: ['use_from_inventory', 'pick_up_and_consume', 'receive_from_npc'],
+        methodIds: [
+          'use_from_inventory',
+          'pick_up_and_consume',
+          'receive_from_npc',
+        ],
         evaluationResults: [
-          { methodId: 'use_from_inventory', applicable: false, reason: 'Inventory empty' },
-          { methodId: 'pick_up_and_consume', applicable: false, reason: 'No food nearby' },
-          { methodId: 'receive_from_npc', applicable: false, reason: 'No friendly NPCs nearby' }
+          {
+            methodId: 'use_from_inventory',
+            applicable: false,
+            reason: 'Inventory empty',
+          },
+          {
+            methodId: 'pick_up_and_consume',
+            applicable: false,
+            reason: 'No food nearby',
+          },
+          {
+            methodId: 'receive_from_npc',
+            applicable: false,
+            reason: 'No friendly NPCs nearby',
+          },
         ],
         actorId: 'actor-player',
-        reason: 'All methods failed applicability check'
+        reason: 'All methods failed applicability check',
       };
       const error = new MethodSelectionError(
         'No applicable method found for task "consume_nourishing_item"',
@@ -215,16 +278,22 @@ describe('MethodSelectionError', () => {
         evaluationResults: [
           { methodId: 'walk', applicable: false, reason: 'Actor is sitting' },
           { methodId: 'run', applicable: false, reason: 'Actor is sitting' },
-          { methodId: 'teleport', applicable: false, reason: 'No teleport ability' }
+          {
+            methodId: 'teleport',
+            applicable: false,
+            reason: 'No teleport ability',
+          },
         ],
-        actorId: 'actor-npc-01'
+        actorId: 'actor-npc-01',
       };
       const error = new MethodSelectionError(
         'Cannot move: Actor must be standing',
         context
       );
 
-      expect(error.context.evaluationResults[0].reason).toBe('Actor is sitting');
+      expect(error.context.evaluationResults[0].reason).toBe(
+        'Actor is sitting'
+      );
       expect(error.severity).toBe('error');
     });
 
@@ -233,7 +302,7 @@ describe('MethodSelectionError', () => {
         taskId: 'perform_impossible_action',
         methodIds: [],
         actorId: 'actor-123',
-        reason: 'No methods registered for this task'
+        reason: 'No methods registered for this task',
       };
       const error = new MethodSelectionError(
         'No methods registered for task "perform_impossible_action"',

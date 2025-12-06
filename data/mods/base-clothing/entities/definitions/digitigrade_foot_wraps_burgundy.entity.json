@@ -8,17 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "linen",
-      "properties": [
-        "breathable",
-        "flexible"
-      ]
+      "properties": ["breathable", "flexible"]
     },
     "core:name": {
       "text": "digitigrade foot wraps"
@@ -33,9 +27,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

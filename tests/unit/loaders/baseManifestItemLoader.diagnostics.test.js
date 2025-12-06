@@ -98,7 +98,12 @@ describe('BaseManifestItemLoader.fetchContent', () => {
     const payload = { some: 'data' };
     mockFetcher.fetch.mockResolvedValue(payload);
 
-    const result = await loader.fetchContent(path, modId, filename, registryKey);
+    const result = await loader.fetchContent(
+      path,
+      modId,
+      filename,
+      registryKey
+    );
 
     expect(result).toBe(payload);
     expect(mockFetcher.fetch).toHaveBeenCalledWith(path);
@@ -117,7 +122,10 @@ describe('BaseManifestItemLoader.fetchContent', () => {
 
     await loader.fetchContent(path, modId, filename, registryKey);
 
-    const diagnosticSnapshot = JSON.stringify(payload, null, 2).substring(0, 500);
+    const diagnosticSnapshot = JSON.stringify(payload, null, 2).substring(
+      0,
+      500
+    );
 
     expect(mockFetcher.fetch).toHaveBeenCalledWith(path);
     expect(mockLogger.debug).toHaveBeenCalledWith(

@@ -26,7 +26,11 @@ describe('LlmConfigLoader - Period in Config ID Support', () => {
 
     // Create mock configuration
     mockConfiguration = {
-      getContentTypeSchemaId: jest.fn().mockReturnValue('schema://living-narrative-engine/llm-configs.schema.json'),
+      getContentTypeSchemaId: jest
+        .fn()
+        .mockReturnValue(
+          'schema://living-narrative-engine/llm-configs.schema.json'
+        ),
     };
 
     // Create mock event dispatcher
@@ -89,7 +93,9 @@ describe('LlmConfigLoader - Period in Config ID Support', () => {
       expect(result).toEqual(mockConfigWithPeriods);
       expect(result.defaultConfigId).toBe('claude-sonnet-4.5');
       expect(result.configs['claude-sonnet-4.5']).toBeDefined();
-      expect(result.configs['claude-sonnet-4.5'].configId).toBe('claude-sonnet-4.5');
+      expect(result.configs['claude-sonnet-4.5'].configId).toBe(
+        'claude-sonnet-4.5'
+      );
       expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
         'schema://living-narrative-engine/llm-configs.schema.json',
         mockConfigWithPeriods
@@ -258,7 +264,9 @@ describe('LlmConfigLoader - Period in Config ID Support', () => {
 
       // Assert
       expect(result.configs['api.v2.3.4.stable']).toBeDefined();
-      expect(result.configs['api.v2.3.4.stable'].configId).toBe('api.v2.3.4.stable');
+      expect(result.configs['api.v2.3.4.stable'].configId).toBe(
+        'api.v2.3.4.stable'
+      );
     });
   });
 

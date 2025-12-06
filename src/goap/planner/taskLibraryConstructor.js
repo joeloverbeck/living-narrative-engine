@@ -92,7 +92,9 @@ class TaskLibraryConstructor {
       throw new Error(message);
     }
 
-    this.#logger.debug(`[TaskLibraryConstructor] Constructing task library for actor: ${actorId}`);
+    this.#logger.debug(
+      `[TaskLibraryConstructor] Constructing task library for actor: ${actorId}`
+    );
 
     try {
       // 1. Generate cache key from actor's actual components
@@ -112,10 +114,15 @@ class TaskLibraryConstructor {
 
       // 3. Get all tasks from registry
       const allTasks = this.#getAllTasksFromRegistry();
-      this.#logger.debug(`[TaskLibraryConstructor] Retrieved ${allTasks.length} total tasks`);
+      this.#logger.debug(
+        `[TaskLibraryConstructor] Retrieved ${allTasks.length} total tasks`
+      );
 
       // 4. Filter by structural gates
-      const applicableTasks = this.#filterTasksByStructuralGates(allTasks, actorId);
+      const applicableTasks = this.#filterTasksByStructuralGates(
+        allTasks,
+        actorId
+      );
 
       // 5. Cache and log
       this.#cache.set(cacheKey, applicableTasks);
@@ -138,7 +145,9 @@ class TaskLibraryConstructor {
   clearCache() {
     const size = this.#cache.size;
     this.#cache.clear();
-    this.#logger.debug(`[TaskLibraryConstructor] Cache cleared: ${size} entries removed`);
+    this.#logger.debug(
+      `[TaskLibraryConstructor] Cache cleared: ${size} entries removed`
+    );
     return size;
   }
 
@@ -165,7 +174,8 @@ class TaskLibraryConstructor {
   #generateCacheKey(actorId) {
     try {
       // Use getAllComponentTypesForEntity which directly returns component type IDs
-      const componentIds = this.#entityManager.getAllComponentTypesForEntity(actorId);
+      const componentIds =
+        this.#entityManager.getAllComponentTypesForEntity(actorId);
       if (!componentIds || componentIds.length === 0) {
         throw new Error(`Actor not found or has no components: ${actorId}`);
       }
@@ -260,7 +270,10 @@ class TaskLibraryConstructor {
       const context = this.#contextAssembly.assemblePlanningContext(actorId);
 
       // Evaluate structural gate condition
-      const result = this.#jsonLogicService.evaluate(task.structuralGates.condition, context);
+      const result = this.#jsonLogicService.evaluate(
+        task.structuralGates.condition,
+        context
+      );
 
       this.#logger.debug(
         `[TaskLibraryConstructor] Structural gate evaluation for task ${task.id || 'unknown'}: ${result ? 'PASS' : 'FAIL'}`
@@ -285,7 +298,8 @@ class TaskLibraryConstructor {
    */
   #logLibraryStats(actorId, totalTasks, applicableTasks) {
     const filteredCount = totalTasks - applicableTasks;
-    const filterPercentage = totalTasks > 0 ? ((filteredCount / totalTasks) * 100).toFixed(1) : 0;
+    const filterPercentage =
+      totalTasks > 0 ? ((filteredCount / totalTasks) * 100).toFixed(1) : 0;
 
     this.#logger.info(
       `[TaskLibraryConstructor] Library constructed for ${actorId}: ${applicableTasks}/${totalTasks} tasks (${filterPercentage}% filtered)`

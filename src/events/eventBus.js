@@ -137,11 +137,11 @@ class EventBus extends IEventBus {
 
   /**
    * Resets recursion depth counters for all event types.
-   * 
+   *
    * This method clears the accumulated recursion tracking state, which can build up
    * during normal gameplay even though events are separated by time. Call this between
    * game turns or at other logical boundaries to prevent false recursion warnings.
-   * 
+   *
    * @public
    */
   resetRecursionCounters() {
@@ -412,11 +412,12 @@ class EventBus extends IEventBus {
     const AUTO_RESET_THRESHOLD_MS = 5000;
 
     if (timeSinceLastDispatch > AUTO_RESET_THRESHOLD_MS) {
-      const hadEntries = this.#recursionDepth.size > 0 || this.#handlerExecutionDepth.size > 0;
+      const hadEntries =
+        this.#recursionDepth.size > 0 || this.#handlerExecutionDepth.size > 0;
       if (hadEntries) {
         this.#logger.debug(
           `EventBus: Auto-reset triggered (${timeSinceLastDispatch}ms since last dispatch). ` +
-          `Clearing recursion counters.`
+            `Clearing recursion counters.`
         );
         this.#recursionDepth.clear();
         this.#handlerExecutionDepth.clear();
@@ -620,7 +621,10 @@ class EventBus extends IEventBus {
         listenersToNotify = wildcardListeners;
       } else {
         // Only create union when both have listeners
-        listenersToNotify = new Set([...specificListeners, ...wildcardListeners]);
+        listenersToNotify = new Set([
+          ...specificListeners,
+          ...wildcardListeners,
+        ]);
       }
 
       if (listenersToNotify.size > 0) {

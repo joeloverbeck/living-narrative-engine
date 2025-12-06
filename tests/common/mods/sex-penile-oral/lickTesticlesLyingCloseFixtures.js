@@ -43,7 +43,10 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   const clothingId = 'clothing-underwear';
 
   // Build room
-  const room = new ModEntityBuilder(roomId).withName('Bedroom').asRoom('Bedroom').build();
+  const room = new ModEntityBuilder(roomId)
+    .withName('Bedroom')
+    .asRoom('Bedroom')
+    .build();
 
   // Build furniture
   const bed = new ModEntityBuilder(bedId)
@@ -81,7 +84,9 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', { target_id: primaryId });
+    actorBuilder.withComponent('positioning:giving_blowjob', {
+      target_id: primaryId,
+    });
   }
 
   const actor = actorBuilder.build();
@@ -117,7 +122,9 @@ export function buildLickTesticlesLyingCloseScenario(options = {}) {
   }
 
   if (targetFuckingActor) {
-    primaryBuilder.withComponent('positioning:fucking_vaginally', { targetId: actorId });
+    primaryBuilder.withComponent('positioning:fucking_vaginally', {
+      targetId: actorId,
+    });
   }
 
   const primary = primaryBuilder.build();
@@ -197,7 +204,8 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
 
       // Filter partners by criteria
       const validPartners = actorCloseness.partners.filter((partnerId) => {
-        const partnerEntity = testFixture.entityManager.getEntityInstance(partnerId);
+        const partnerEntity =
+          testFixture.entityManager.getEntityInstance(partnerId);
         if (!partnerEntity) return false;
 
         // Check lying position
@@ -208,7 +216,8 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
         if (actorLying.furniture_id !== partnerLying.furniture_id) return false;
 
         // Check mutual closeness
-        const partnerCloseness = partnerEntity.components['positioning:closeness'];
+        const partnerCloseness =
+          partnerEntity.components['positioning:closeness'];
         if (!partnerCloseness?.partners?.includes(actorId)) return false;
 
         // Check for testicle anatomy
@@ -232,7 +241,8 @@ export function installLyingCloseUncoveredTesticleScopeOverride(testFixture) {
         if (!leftUncovered && !rightUncovered) return false;
 
         // Check not currently fucking actor vaginally
-        const fuckingVaginally = partnerEntity.components['positioning:fucking_vaginally'];
+        const fuckingVaginally =
+          partnerEntity.components['positioning:fucking_vaginally'];
         if (fuckingVaginally?.targetId === actorId) return false;
 
         return true;

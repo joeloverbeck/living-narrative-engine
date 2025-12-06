@@ -41,12 +41,12 @@ The parameter binding mechanism provides:
 
 **Parameter Sources** (Four types):
 
-| Source | Availability | Description | Example |
-|--------|--------------|-------------|---------|
-| `task.params` | All steps | Parameters from planning scope | `task.params.targetItem` |
-| `refinement.localState` | Subsequent steps | Accumulated step results | `refinement.localState.step1Result` |
-| `actor` | All steps | Current actor entity data | `actor.position.room` |
-| `world` | All steps (TBD) | World state facts | `world.currentTime` |
+| Source                  | Availability     | Description                    | Example                             |
+| ----------------------- | ---------------- | ------------------------------ | ----------------------------------- |
+| `task.params`           | All steps        | Parameters from planning scope | `task.params.targetItem`            |
+| `refinement.localState` | Subsequent steps | Accumulated step results       | `refinement.localState.step1Result` |
+| `actor`                 | All steps        | Current actor entity data      | `actor.position.room`               |
+| `world`                 | All steps (TBD)  | World state facts              | `world.currentTime`                 |
 
 ## Architecture
 
@@ -127,6 +127,7 @@ At any point during refinement execution, the following context is available:
 **Purpose**: Parameters bound from the planning scope when the task is selected.
 
 **Characteristics**:
+
 - **Immutable**: Cannot be modified during refinement
 - **Available**: To all steps in the refinement method
 - **Scope**: Defined by task schema (GOAPIMPL-005)
@@ -160,6 +161,7 @@ At any point during refinement execution, the following context is available:
 **Purpose**: Accumulate and share results between steps within a refinement method.
 
 **Characteristics**:
+
 - **Mutable**: Updated as steps complete
 - **Scoped**: Only visible to subsequent steps
 - **Initialized**: Empty object `{}` at refinement start
@@ -233,6 +235,7 @@ Steps can store their execution results using the `storeResultAs` field:
 **Purpose**: Access current actor's entity data from the ECS.
 
 **Characteristics**:
+
 - **Dynamic**: Reflects current entity state
 - **Available**: To all steps
 - **Mutable**: Changes as actions modify the actor
@@ -248,23 +251,20 @@ Steps can store their execution results using the `storeResultAs` field:
     "destination": "task.params.location"
   },
   "condition": {
-    "!=": [
-      {"var": "actor.position.room"},
-      {"var": "task.params.location"}
-    ]
+    "!=": [{ "var": "actor.position.room" }, { "var": "task.params.location" }]
   }
 }
 ```
 
 **Common Actor Properties**:
 
-| Property | Description | Example |
-|----------|-------------|---------|
-| `actor.id` | Actor entity ID | `"player_1"` |
-| `actor.name` | Actor display name | `"Player"` |
-| `actor.position` | Current position component | `{ room: "room_12" }` |
-| `actor.inventory` | Inventory items | `["sword_1", "potion_3"]` |
-| `actor.health` | Health component | `{ current: 80, max: 100 }` |
+| Property          | Description                | Example                     |
+| ----------------- | -------------------------- | --------------------------- |
+| `actor.id`        | Actor entity ID            | `"player_1"`                |
+| `actor.name`      | Actor display name         | `"Player"`                  |
+| `actor.position`  | Current position component | `{ room: "room_12" }`       |
+| `actor.inventory` | Inventory items            | `["sword_1", "potion_3"]`   |
+| `actor.health`    | Health component           | `{ current: 80, max: 100 }` |
 
 **Note**: Available properties depend on which components the actor entity has.
 
@@ -280,14 +280,15 @@ Steps can store their execution results using the `storeResultAs` field:
 {
   "condition": {
     "and": [
-      {">": [{"var": "world.currentTime"}, 1200]},
-      {"==": [{"var": "world.weather"}, "clear"]}
+      { ">": [{ "var": "world.currentTime" }, 1200] },
+      { "==": [{ "var": "world.weather" }, "clear"] }
     ]
   }
 }
 ```
 
 **Characteristics**:
+
 - **Global**: Shared across all tasks and actors
 - **Read-Only**: Cannot be modified through parameter binding
 - **Dynamic**: Updated by game systems
@@ -336,8 +337,8 @@ Steps can store their execution results using the `storeResultAs` field:
   "stepType": "conditional",
   "condition": {
     "==": [
-      {"var": "actor.position.room"},
-      {"var": "task.params.targetLocation"}
+      { "var": "actor.position.room" },
+      { "var": "task.params.targetLocation" }
     ]
   }
 }
@@ -350,13 +351,13 @@ Steps can store their execution results using the `storeResultAs` field:
   "condition": {
     "and": [
       // Check task parameter
-      {"!=": [{"var": "task.params.item"}, null]},
+      { "!=": [{ "var": "task.params.item" }, null] },
 
       // Check local state
-      {"==": [{"var": "refinement.localState.moveResult.success"}, true]},
+      { "==": [{ "var": "refinement.localState.moveResult.success" }, true] },
 
       // Check actor state
-      {">": [{"var": "actor.inventory.length"}, 0]}
+      { ">": [{ "var": "actor.inventory.length" }, 0] }
     ]
   }
 }
@@ -384,10 +385,7 @@ Steps can store their execution results using the `storeResultAs` field:
 ```json
 {
   "condition": {
-    "in": [
-      {"var": "task.params.requiredItem"},
-      {"var": "actor.inventory"}
-    ]
+    "in": [{ "var": "task.params.requiredItem" }, { "var": "actor.inventory" }]
   }
 }
 ```
@@ -424,23 +422,23 @@ Steps can store their execution results using the `storeResultAs` field:
 ```javascript
 task.params = {
   item: {
-    entityId: "apple_7",
-    location: "room_12",
+    entityId: 'apple_7',
+    location: 'room_12',
     owner: {
-      id: "npc_5",
-      name: "Merchant"
-    }
-  }
-}
+      id: 'npc_5',
+      name: 'Merchant',
+    },
+  },
+};
 ```
 
 **Binding Resolution**:
 
 ```javascript
 targetBindings = {
-  location: "room_12",      // Resolved from task.params.item.location
-  ownerId: "npc_5"          // Resolved from task.params.item.owner.id
-}
+  location: 'room_12', // Resolved from task.params.item.location
+  ownerId: 'npc_5', // Resolved from task.params.item.owner.id
+};
 ```
 
 ### Computed Values (Conditional Logic)
@@ -453,14 +451,14 @@ targetBindings = {
     {
       "stepType": "conditional",
       "condition": {
-        ">": [{"var": "actor.inventory.length"}, 5]
+        ">": [{ "var": "actor.inventory.length" }, 5]
       },
       "trueBranch": [
         {
           "stepType": "primitive_action",
           "actionId": "items:drop_item",
           "targetBindings": {
-            "item": "actor.inventory.0"  // Drop first item
+            "item": "actor.inventory.0" // Drop first item
           },
           "storeResultAs": "dropResult"
         }
@@ -516,7 +514,7 @@ targetBindings = {
     {
       "stepType": "conditional",
       "condition": {
-        "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+        "==": [{ "var": "refinement.localState.pickupResult.success" }, true]
       },
       "trueBranch": [
         {
@@ -555,10 +553,10 @@ When multiple parameter sources define the same property name, the following pre
 
 ```javascript
 // If all sources define "item":
-refinement.localState.item  // ✅ Takes precedence
-task.params.item            // Used if localState.item doesn't exist
-actor.item                  // Used if neither above exist
-world.item                  // Used if none above exist
+refinement.localState.item; // ✅ Takes precedence
+task.params.item; // Used if localState.item doesn't exist
+actor.item; // Used if neither above exist
+world.item; // Used if none above exist
 ```
 
 ### Visibility Rules
@@ -568,9 +566,9 @@ world.item                  // Used if none above exist
 ```json
 {
   "steps": [
-    {"targetBindings": {"item": "task.params.item"}},  // ✅ Visible
-    {"targetBindings": {"item": "task.params.item"}},  // ✅ Visible
-    {"targetBindings": {"item": "task.params.item"}}   // ✅ Visible
+    { "targetBindings": { "item": "task.params.item" } }, // ✅ Visible
+    { "targetBindings": { "item": "task.params.item" } }, // ✅ Visible
+    { "targetBindings": { "item": "task.params.item" } } // ✅ Visible
   ]
 }
 ```
@@ -586,15 +584,15 @@ world.item                  // Used if none above exist
     },
     {
       "targetBindings": {
-        "value": "refinement.localState.result1.data.value"  // ✅ Can access result1
+        "value": "refinement.localState.result1.data.value" // ✅ Can access result1
       },
       "storeResultAs": "result2"
       // ❌ Cannot access: refinement.localState.result2
     },
     {
       "targetBindings": {
-        "val1": "refinement.localState.result1.data.value",  // ✅ Can access result1
-        "val2": "refinement.localState.result2.data.value"   // ✅ Can access result2
+        "val1": "refinement.localState.result1.data.value", // ✅ Can access result1
+        "val2": "refinement.localState.result2.data.value" // ✅ Can access result2
       }
     }
   ]
@@ -631,7 +629,7 @@ world.item                  // Used if none above exist
   "steps": [
     {
       "targetBindings": {
-        "location": "actor.position.room"  // Reads current position
+        "location": "actor.position.room" // Reads current position
       }
     },
     {
@@ -644,7 +642,7 @@ world.item                  // Used if none above exist
     },
     {
       "targetBindings": {
-        "location": "actor.position.room"  // Reads UPDATED position
+        "location": "actor.position.room" // Reads UPDATED position
       }
     }
   ]
@@ -678,8 +676,8 @@ refinement.localState.item = "orange_3"
 ```json
 {
   "targetBindings": {
-    "originalItem": "task.params.item",        // Explicit
-    "modifiedItem": "refinement.localState.item"  // Explicit
+    "originalItem": "task.params.item", // Explicit
+    "modifiedItem": "refinement.localState.item" // Explicit
   }
 }
 ```
@@ -689,16 +687,19 @@ refinement.localState.item = "orange_3"
 ### Validation Timing
 
 **1. Schema Validation** (Load Time)
+
 - Validate refinement method structure
 - Validate target binding syntax
 - Validate condition JSON Logic syntax
 
 **2. Parameter Validation** (Before Step Execution)
+
 - Validate required parameters exist
 - Validate parameter types match expected types
 - Validate reference resolution (parameter source exists)
 
 **3. Runtime Validation** (During Execution)
+
 - Validate action target bindings resolve successfully
 - Validate condition expressions evaluate successfully
 - Validate stored results match expected structure
@@ -727,7 +728,7 @@ refinement.localState.item = "orange_3"
   "stepType": "primitive_action",
   "actionId": "items:pick_up_item",
   "targetBindings": {
-    "item": "task.params.targetItem"  // ✅ Required placeholder provided
+    "item": "task.params.targetItem" // ✅ Required placeholder provided
   }
 }
 ```
@@ -738,7 +739,7 @@ refinement.localState.item = "orange_3"
 {
   "stepType": "primitive_action",
   "actionId": "items:pick_up_item",
-  "targetBindings": {}  // ❌ Missing required "item" binding
+  "targetBindings": {} // ❌ Missing required "item" binding
 }
 ```
 
@@ -757,11 +758,13 @@ refinement.localState.item = "orange_3"
 ```
 
 **Validation**:
+
 - `task.params.itemId` must resolve to a valid entity ID
 - Entity must exist in the ECS
 - Entity must have required components (defined by action schema)
 
 **Validation Failure**:
+
 - **Missing Parameter**: "Parameter 'task.params.itemId' not found in context"
 - **Invalid Entity**: "Entity 'invalid_123' does not exist"
 - **Missing Component**: "Entity 'apple_7' missing required component 'items:pickupable'"
@@ -773,9 +776,9 @@ refinement.localState.item = "orange_3"
 ```json
 {
   "targetBindings": {
-    "item": "task.params.item",                          // ✅ Valid
-    "location": "actor.position.room",                   // ✅ Valid
-    "result": "refinement.localState.step1.data.value"   // ✅ Valid (if step1 executed)
+    "item": "task.params.item", // ✅ Valid
+    "location": "actor.position.room", // ✅ Valid
+    "result": "refinement.localState.step1.data.value" // ✅ Valid (if step1 executed)
   }
 }
 ```
@@ -785,9 +788,9 @@ refinement.localState.item = "orange_3"
 ```json
 {
   "targetBindings": {
-    "item": "task.params.nonexistent",                   // ❌ Parameter doesn't exist
-    "location": "actor.invalid.property",                // ❌ Property path invalid
-    "result": "refinement.localState.futureStep.value"   // ❌ Step not yet executed
+    "item": "task.params.nonexistent", // ❌ Parameter doesn't exist
+    "location": "actor.invalid.property", // ❌ Property path invalid
+    "result": "refinement.localState.futureStep.value" // ❌ Step not yet executed
   }
 }
 ```
@@ -803,17 +806,17 @@ When validation fails, the refinement method can specify fallback behavior:
   "targetBindings": {
     "item": "task.params.item"
   },
-  "onFailure": "replan"  // Options: "replan", "fail", "continue"
+  "onFailure": "replan" // Options: "replan", "fail", "continue"
 }
 ```
 
 **Fallback Options**:
 
-| Option | Behavior |
-|--------|----------|
-| `replan` | Abandon current plan, trigger replanning |
-| `fail` | Fail entire refinement method |
-| `continue` | Skip this step, continue to next step |
+| Option     | Behavior                                 |
+| ---------- | ---------------------------------------- |
+| `replan`   | Abandon current plan, trigger replanning |
+| `fail`     | Fail entire refinement method            |
+| `continue` | Skip this step, continue to next step    |
 
 ## Integration with JSON Logic
 
@@ -821,9 +824,9 @@ When validation fails, the refinement method can specify fallback behavior:
 
 **Key Distinction**:
 
-| Context | Format | Example |
-|---------|--------|---------|
-| Target Bindings | Direct string reference | `"task.params.item"` |
+| Context                 | Format                      | Example                       |
+| ----------------------- | --------------------------- | ----------------------------- |
+| Target Bindings         | Direct string reference     | `"task.params.item"`          |
 | Conditional Expressions | JSON Logic `{"var": "..."}` | `{"var": "task.params.item"}` |
 
 **Why The Difference?**
@@ -839,9 +842,9 @@ When validation fails, the refinement method can specify fallback behavior:
 {
   "condition": {
     "and": [
-      {"==": [{"var": "task.params.item"}, "apple_7"]},
-      {">": [{"var": "actor.health.current"}, 50]},
-      {"in": [{"var": "task.params.room"}, {"var": "actor.visited"}]}
+      { "==": [{ "var": "task.params.item" }, "apple_7"] },
+      { ">": [{ "var": "actor.health.current" }, 50] },
+      { "in": [{ "var": "task.params.room" }, { "var": "actor.visited" }] }
     ]
   }
 }
@@ -852,10 +855,7 @@ When validation fails, the refinement method can specify fallback behavior:
 ```json
 {
   "condition": {
-    "entity-has-component": [
-      {"var": "task.params.item"},
-      "items:consumable"
-    ]
+    "entity-has-component": [{ "var": "task.params.item" }, "items:consumable"]
   }
 }
 ```
@@ -871,19 +871,26 @@ See [Condition Patterns Guide](./condition-patterns-guide.md) for complete opera
   "condition": {
     "and": [
       // Task parameter exists
-      {"!=": [{"var": "task.params.item"}, null]},
+      { "!=": [{ "var": "task.params.item" }, null] },
 
       // Actor has space in inventory
-      {"<": [{"var": "actor.inventory.length"}, {"var": "actor.inventory.maxSize"}]},
+      {
+        "<": [
+          { "var": "actor.inventory.length" },
+          { "var": "actor.inventory.maxSize" }
+        ]
+      },
 
       // Previous step succeeded
-      {"==": [{"var": "refinement.localState.moveResult.success"}, true]},
+      { "==": [{ "var": "refinement.localState.moveResult.success" }, true] },
 
       // Item is in same room as actor
-      {"==": [
-        {"var": "task.params.item.location"},
-        {"var": "actor.position.room"}
-      ]}
+      {
+        "==": [
+          { "var": "task.params.item.location" },
+          { "var": "actor.position.room" }
+        ]
+      }
     ]
   }
 }
@@ -937,6 +944,7 @@ Error: Parameter 'task.params.nonexistent' not found in context
 ```
 
 **Solution**: Verify parameter name and source:
+
 - Check task schema for parameter definition
 - Verify parameter is passed when task is created
 - Check spelling and case sensitivity
@@ -948,6 +956,7 @@ Error: Cannot read property 'location' of undefined (task.params.item.location)
 ```
 
 **Solution**: Validate nested structure:
+
 - Check that parent object exists
 - Verify property exists on object
 - Use conditional checks before accessing deep properties
@@ -959,6 +968,7 @@ Error: Local state 'refinement.localState.step5Result' not available - step not 
 ```
 
 **Solution**: Verify execution order:
+
 - Ensure step storing result executes before step accessing result
 - Check conditional branch logic - state may not be available in all branches
 
@@ -969,6 +979,7 @@ Error: Action "items:drink_from" expects placeholder "primary", but "item" was p
 ```
 
 **Solution**: Check action schema for correct placeholder names:
+
 - Read action definition file
 - Use exact placeholder names from action schema
 - Different actions use different placeholder names
@@ -979,20 +990,18 @@ Error: Action "items:drink_from" expects placeholder "primary", but "item" was p
 
 ```javascript
 // Get current parameter context for a refinement
-inspector.getContext(refinementId)
-  .then(context => {
-    console.log('Task Params:', context.task.params);
-    console.log('Local State:', context.refinement.localState);
-    console.log('Actor:', context.actor);
-  });
+inspector.getContext(refinementId).then((context) => {
+  console.log('Task Params:', context.task.params);
+  console.log('Local State:', context.refinement.localState);
+  console.log('Actor:', context.actor);
+});
 
 // Get parameter resolution trace
-inspector.getParameterTrace(refinementId, stepIndex)
-  .then(trace => {
-    trace.forEach(resolution => {
-      console.log(`${resolution.binding} → ${resolution.value}`);
-    });
+inspector.getParameterTrace(refinementId, stepIndex).then((trace) => {
+  trace.forEach((resolution) => {
+    console.log(`${resolution.binding} → ${resolution.value}`);
   });
+});
 ```
 
 ## Best Practices
@@ -1045,8 +1054,8 @@ inspector.getParameterTrace(refinementId, stepIndex)
 ```json
 {
   "targetBindings": {
-    "item": "targetItem",  // Which scope?
-    "location": "room"     // Which scope?
+    "item": "targetItem", // Which scope?
+    "location": "room" // Which scope?
   }
 }
 ```
@@ -1062,13 +1071,22 @@ inspector.getParameterTrace(refinementId, stepIndex)
       "stepType": "conditional",
       "condition": {
         "and": [
-          {"!=": [{"var": "task.params.item"}, null]},
-          {"entity-exists": [{"var": "task.params.item"}]},
-          {"entity-has-component": [{"var": "task.params.item"}, "items:pickupable"]}
+          { "!=": [{ "var": "task.params.item" }, null] },
+          { "entity-exists": [{ "var": "task.params.item" }] },
+          {
+            "entity-has-component": [
+              { "var": "task.params.item" },
+              "items:pickupable"
+            ]
+          }
         ]
       },
-      "trueBranch": [/* proceed with pickup */],
-      "falseBranch": [{"stepType": "fail", "reason": "Invalid item parameter"}]
+      "trueBranch": [
+        /* proceed with pickup */
+      ],
+      "falseBranch": [
+        { "stepType": "fail", "reason": "Invalid item parameter" }
+      ]
     }
   ]
 }
@@ -1083,7 +1101,9 @@ inspector.getParameterTrace(refinementId, stepIndex)
   "$schema": "schema://living-narrative-engine/refinement-method.schema.json",
   "id": "tasks:get_and_consume_item",
   "description": "Acquire and consume an item. Requires task.params.item (entity ID of consumable item).",
-  "steps": [/* ... */]
+  "steps": [
+    /* ... */
+  ]
 }
 ```
 
@@ -1098,14 +1118,14 @@ inspector.getParameterTrace(refinementId, stepIndex)
       "description": "Acquire item",
       "stepType": "primitive_action",
       "actionId": "items:pick_up_item",
-      "targetBindings": {"item": "task.params.item"},
+      "targetBindings": { "item": "task.params.item" },
       "storeResultAs": "acquireResult"
     },
     {
       "description": "Validate item acquired",
       "stepType": "conditional",
       "condition": {
-        "==": [{"var": "refinement.localState.acquireResult.success"}, true]
+        "==": [{ "var": "refinement.localState.acquireResult.success" }, true]
       },
       "trueBranch": [
         {
@@ -1118,7 +1138,7 @@ inspector.getParameterTrace(refinementId, stepIndex)
         }
       ],
       "falseBranch": [
-        {"stepType": "fail", "reason": "Could not acquire item"}
+        { "stepType": "fail", "reason": "Could not acquire item" }
       ]
     }
   ]
@@ -1134,15 +1154,15 @@ inspector.getParameterTrace(refinementId, stepIndex)
   "stepType": "conditional",
   "condition": {
     "and": [
-      {"!=": [{"var": "task.params.optionalItem"}, null]},
-      {"!=": [{"var": "task.params.optionalItem"}, undefined]}
+      { "!=": [{ "var": "task.params.optionalItem" }, null] },
+      { "!=": [{ "var": "task.params.optionalItem" }, undefined] }
     ]
   },
   "trueBranch": [
     {
       "stepType": "primitive_action",
       "actionId": "items:use_item",
-      "targetBindings": {"item": "task.params.optionalItem"}
+      "targetBindings": { "item": "task.params.optionalItem" }
     }
   ],
   "falseBranch": []
@@ -1167,7 +1187,7 @@ inspector.getParameterTrace(refinementId, stepIndex)
 
 ```json
 {
-  "storeResultAs": "entireWorldState"  // ❌ Too much data
+  "storeResultAs": "entireWorldState" // ❌ Too much data
 }
 ```
 
@@ -1182,10 +1202,10 @@ inspector.getParameterTrace(refinementId, stepIndex)
   "PrimitiveActionStep": {
     "type": "object",
     "properties": {
-      "stepType": {"const": "primitive_action"},
-      "actionId": {"type": "string"},
-      "targetBindings": {"type": "object"},
-      "parameters": {"type": "object"},
+      "stepType": { "const": "primitive_action" },
+      "actionId": { "type": "string" },
+      "targetBindings": { "type": "object" },
+      "parameters": { "type": "object" },
       "storeResultAs": {
         "type": "string",
         "description": "Variable name to store action result in refinement.localState",
@@ -1208,10 +1228,10 @@ inspector.getParameterTrace(refinementId, stepIndex)
 ```typescript
 interface StepResult {
   success: boolean;
-  data: Record<string, any>;  // Action-specific result data
-  error: string | null;        // Error message if success === false
-  timestamp: number;           // Execution timestamp
-  actionId: string;            // Action that produced this result
+  data: Record<string, any>; // Action-specific result data
+  error: string | null; // Error message if success === false
+  timestamp: number; // Execution timestamp
+  actionId: string; // Action that produced this result
 }
 ```
 
@@ -1247,7 +1267,7 @@ interface StepResult {
 **Refinement Start**:
 
 ```javascript
-refinement.localState = {}
+refinement.localState = {};
 ```
 
 **After Each Step with `storeResultAs`**:
@@ -1265,7 +1285,7 @@ refinement.localState[storeResultAs] = {
 **Refinement End**:
 
 ```javascript
-refinement.localState = {}  // Cleared
+refinement.localState = {}; // Cleared
 ```
 
 ## Related Documentation
@@ -1287,9 +1307,9 @@ See `docs/goap/examples/` for complete working examples:
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | 2025-01-13 | Initial specification - parameter binding mechanism design |
+| Version | Date       | Changes                                                    |
+| ------- | ---------- | ---------------------------------------------------------- |
+| 1.0.0   | 2025-01-13 | Initial specification - parameter binding mechanism design |
 
 ---
 

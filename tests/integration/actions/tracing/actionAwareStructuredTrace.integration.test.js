@@ -376,7 +376,9 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // Normal operation
-      actionTrace.captureActionData('stage1', 'movement:go', { normal: 'data' });
+      actionTrace.captureActionData('stage1', 'movement:go', {
+        normal: 'data',
+      });
       expect(actionTrace.isActionTraced('movement:go')).toBe(true);
 
       // Introduce a problematic filter state
@@ -385,7 +387,9 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // Should handle the error gracefully
-      actionTrace.captureActionData('stage2', 'movement:go', { after: 'error' });
+      actionTrace.captureActionData('stage2', 'movement:go', {
+        after: 'error',
+      });
 
       // Should have logged the error but continued working
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -397,7 +401,9 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       actionFilter.getVerbosityLevel = jest.fn().mockReturnValue('standard');
 
       // Should work normally again
-      actionTrace.captureActionData('stage3', 'movement:go', { recovered: 'data' });
+      actionTrace.captureActionData('stage3', 'movement:go', {
+        recovered: 'data',
+      });
 
       const actionData = actionTrace.getActionTrace('movement:go');
       expect(actionData.stages.stage1).toBeDefined();
@@ -480,7 +486,8 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
         prerequisites: [{ test: 'data' }],
       });
 
-      capturedData = actionTrace.getActionTrace('movement:go').stages.stage2.data;
+      capturedData =
+        actionTrace.getActionTrace('movement:go').stages.stage2.data;
       expect(capturedData.passed).toBe(true);
       expect(capturedData.actorComponents).toEqual(['core:position']);
       expect(capturedData.prerequisites).toEqual([{ test: 'data' }]);
@@ -507,7 +514,9 @@ describe('ActionAwareStructuredTrace - Integration Tests', () => {
       });
 
       // These should not be traced
-      actionTrace.captureActionData('test', 'movement:go', { should: 'not trace' });
+      actionTrace.captureActionData('test', 'movement:go', {
+        should: 'not trace',
+      });
       actionTrace.captureActionData('test', 'core:debug', {
         should: 'not trace',
       });

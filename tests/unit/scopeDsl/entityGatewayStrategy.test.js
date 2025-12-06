@@ -15,7 +15,10 @@ describe('entityLookupStrategy', () => {
     expect(result).toBe(entity);
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('alpha');
     expect(entityManager.getEntity).not.toHaveBeenCalled();
-    expect(strategy.describeOrder()).toEqual(['getEntityInstance', 'getEntity']);
+    expect(strategy.describeOrder()).toEqual([
+      'getEntityInstance',
+      'getEntity',
+    ]);
   });
 
   it('falls back to getEntity when getEntityInstance returns undefined', () => {
@@ -31,7 +34,10 @@ describe('entityLookupStrategy', () => {
     expect(result).toBe(fallback);
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('beta');
     expect(entityManager.getEntity).toHaveBeenCalledWith('beta');
-    expect(strategy.describeOrder()).toEqual(['getEntityInstance', 'getEntity']);
+    expect(strategy.describeOrder()).toEqual([
+      'getEntityInstance',
+      'getEntity',
+    ]);
   });
 
   it('throws a developer assertion when entity manager lacks lookup helpers (non-production)', () => {

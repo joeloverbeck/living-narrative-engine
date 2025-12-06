@@ -9,6 +9,7 @@ Create a new scope file `grabbable_weapons_in_inventory.scope` that filters weap
 ## Context
 
 The new scope uses the operators from WEAHANREQFIL-001 and WEAHANREQFIL-002 (registered in WEAHANREQFIL-003) to filter the actor's inventory for weapons that:
+
 1. Have the `weapons:weapon` component
 2. Can be grabbed by the actor (enough free hands)
 3. Are not already being held
@@ -17,11 +18,11 @@ This preserves backward compatibility by creating a new scope rather than modify
 
 ## Files to Touch
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope` | CREATE | New scope definition |
-| `data/mods/weapons/mod-manifest.json` | MODIFY | Add scope to manifest |
-| `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.js` | CREATE | Integration tests |
+| File                                                                         | Action | Purpose               |
+| ---------------------------------------------------------------------------- | ------ | --------------------- |
+| `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope`              | CREATE | New scope definition  |
+| `data/mods/weapons/mod-manifest.json`                                        | MODIFY | Add scope to manifest |
+| `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.js` | CREATE | Integration tests     |
 
 ## Out of Scope
 
@@ -34,6 +35,7 @@ This preserves backward compatibility by creating a new scope rather than modify
 ## Implementation Details
 
 ### New Scope File
+
 Create `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope`:
 
 ```
@@ -41,6 +43,7 @@ weapons:grabbable_weapons_in_inventory := actor.components.items:inventory.items
 ```
 
 This scope:
+
 1. Starts with `actor.components.items:inventory.items[]` - iterates inventory items
 2. Applies filter with three conditions ANDed together:
    - `{"!!": {"var": "entity.components.weapons:weapon"}}` - is a weapon
@@ -48,9 +51,11 @@ This scope:
    - `{"not": {"isItemBeingGrabbed": ["actor", "entity"]}}` - not already held
 
 ### Manifest Update
+
 Modify `data/mods/weapons/mod-manifest.json`:
 
 Change:
+
 ```json
 "scopes": [
   "weapons_in_inventory.scope"
@@ -58,6 +63,7 @@ Change:
 ```
 
 To:
+
 ```json
 "scopes": [
   "weapons_in_inventory.scope",
@@ -68,6 +74,7 @@ To:
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 Create `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.js`:
 
 1. **Basic Filtering**
@@ -146,18 +153,18 @@ Create `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.
 
 ### New/Modified Tests
 
-| Test | Rationale |
-|------|-----------|
-| `should return weapons when actor has enough free hands` | Core happy path - verifies scope returns weapons when conditions met |
-| `should exclude weapons requiring more hands than actor has free` | Validates canActorGrabItem filtering |
-| `should exclude weapons already being held` | Validates isItemBeingGrabbed filtering |
-| `should return empty array when no weapons are grabbable` | Edge case - all weapons filtered out |
-| `should default to 1 hand for weapons without anatomy:requires_grabbing` | Verifies default behavior from canActorGrabItem operator |
-| `should include weapons with handsRequired: 0 (rings, etc.)` | Edge case - zero-hand items |
-| `should return empty array when actor has no anatomy:body` | Edge case - missing anatomy component |
-| `should handle actor with multiple grabbing appendages` | Complex scenario - multiple hands |
-| `should show 1-hand sword when actor has 1 free hand` | Realistic scenario test |
-| `should hide 2-hand sword when actor has 1 free hand` | Realistic scenario test |
-| `should show 2-hand sword when actor has 2 free hands` | Realistic scenario test |
-| `should hide weapon that actor is currently wielding` | Realistic scenario test |
-| `should exclude non-weapon items from results` | Additional coverage - ensures non-weapons filtered |
+| Test                                                                     | Rationale                                                            |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `should return weapons when actor has enough free hands`                 | Core happy path - verifies scope returns weapons when conditions met |
+| `should exclude weapons requiring more hands than actor has free`        | Validates canActorGrabItem filtering                                 |
+| `should exclude weapons already being held`                              | Validates isItemBeingGrabbed filtering                               |
+| `should return empty array when no weapons are grabbable`                | Edge case - all weapons filtered out                                 |
+| `should default to 1 hand for weapons without anatomy:requires_grabbing` | Verifies default behavior from canActorGrabItem operator             |
+| `should include weapons with handsRequired: 0 (rings, etc.)`             | Edge case - zero-hand items                                          |
+| `should return empty array when actor has no anatomy:body`               | Edge case - missing anatomy component                                |
+| `should handle actor with multiple grabbing appendages`                  | Complex scenario - multiple hands                                    |
+| `should show 1-hand sword when actor has 1 free hand`                    | Realistic scenario test                                              |
+| `should hide 2-hand sword when actor has 1 free hand`                    | Realistic scenario test                                              |
+| `should show 2-hand sword when actor has 2 free hands`                   | Realistic scenario test                                              |
+| `should hide weapon that actor is currently wielding`                    | Realistic scenario test                                              |
+| `should exclude non-weapon items from results`                           | Additional coverage - ensures non-weapons filtered                   |

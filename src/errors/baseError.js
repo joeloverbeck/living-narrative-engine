@@ -36,10 +36,14 @@ class BaseError extends Error {
   constructor(message, code, context = {}, options = {}) {
     // Validate required parameters following project patterns
     if (!isNonBlankString(message)) {
-      throw new Error(`BaseError constructor: Invalid message '${message}'. Expected non-blank string.`);
+      throw new Error(
+        `BaseError constructor: Invalid message '${message}'. Expected non-blank string.`
+      );
     }
     if (!isNonBlankString(code)) {
-      throw new Error(`BaseError constructor: Invalid code '${code}'. Expected non-blank string.`);
+      throw new Error(
+        `BaseError constructor: Invalid code '${code}'. Expected non-blank string.`
+      );
     }
 
     // Context can be undefined/null, defaulting to empty object
@@ -54,7 +58,8 @@ class BaseError extends Error {
     this.#timestamp = new Date().toISOString(); // ISO format like ModValidationError
     this.#severity = this.getSeverity();
     this.#recoverable = this.isRecoverable();
-    this.#correlationId = options.correlationId || this.#generateCorrelationId();
+    this.#correlationId =
+      options.correlationId || this.#generateCorrelationId();
 
     // Capture stack trace for V8 environments (existing pattern)
     if (Error.captureStackTrace) {
@@ -107,7 +112,7 @@ class BaseError extends Error {
       return new Date(obj.getTime());
     }
     if (obj instanceof Array) {
-      return obj.map(item => this.#deepCopy(item));
+      return obj.map((item) => this.#deepCopy(item));
     }
     if (obj instanceof Object) {
       const clonedObj = {};
@@ -122,12 +127,24 @@ class BaseError extends Error {
   }
 
   // Getters following existing patterns
-  get code() { return this.#code; }
-  get context() { return this.#deepCopy(this.#context); } // Return deep defensive copy
-  get timestamp() { return this.#timestamp; }
-  get severity() { return this.#severity; }
-  get recoverable() { return this.#recoverable; }
-  get correlationId() { return this.#correlationId; }
+  get code() {
+    return this.#code;
+  }
+  get context() {
+    return this.#deepCopy(this.#context);
+  } // Return deep defensive copy
+  get timestamp() {
+    return this.#timestamp;
+  }
+  get severity() {
+    return this.#severity;
+  }
+  get recoverable() {
+    return this.#recoverable;
+  }
+  get correlationId() {
+    return this.#correlationId;
+  }
 
   /**
    * Serializes the error for logging or reporting (matches ModValidationError pattern)
@@ -144,7 +161,7 @@ class BaseError extends Error {
       severity: this.#severity,
       recoverable: this.#recoverable,
       correlationId: this.#correlationId,
-      stack: this.stack
+      stack: this.stack,
     };
   }
 
@@ -166,7 +183,9 @@ class BaseError extends Error {
    */
   addContext(key, value) {
     if (!isNonBlankString(key)) {
-      throw new Error(`addContext: Invalid context key '${key}'. Expected non-blank string.`);
+      throw new Error(
+        `addContext: Invalid context key '${key}'. Expected non-blank string.`
+      );
     }
     this.#context[key] = value;
     return this;
@@ -179,7 +198,9 @@ class BaseError extends Error {
    * @returns {*} Context value or entire context object if key is null
    */
   getContext(key = null) {
-    return key ? this.#deepCopy(this.#context[key]) : this.#deepCopy(this.#context);
+    return key
+      ? this.#deepCopy(this.#context[key])
+      : this.#deepCopy(this.#context);
   }
 }
 

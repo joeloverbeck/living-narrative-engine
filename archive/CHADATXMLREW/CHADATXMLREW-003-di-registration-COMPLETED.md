@@ -12,6 +12,7 @@
 ## Problem Statement
 
 Register the new XML builder classes in the dependency injection system:
+
 1. Add tokens for `XmlElementBuilder` and `CharacterDataXmlBuilder`
 2. Register singleton factories in the prompting engine registration
 
@@ -43,9 +44,9 @@ This enables proper DI usage when `AIPromptContentProvider` is modified (CHADATX
 
 ### Tests Added/Modified
 
-| Test | File | Rationale |
-|------|------|-----------|
-| XmlElementBuilder registration test | `aiRegistrations.test.js` | Verifies stateless utility is registered and can be resolved |
+| Test                                      | File                      | Rationale                                                                |
+| ----------------------------------------- | ------------------------- | ------------------------------------------------------------------------ |
+| XmlElementBuilder registration test       | `aiRegistrations.test.js` | Verifies stateless utility is registered and can be resolved             |
 | CharacterDataXmlBuilder registration test | `aiRegistrations.test.js` | Verifies class receives correct dependencies (logger, xmlElementBuilder) |
 
 ### Verification
@@ -59,11 +60,11 @@ This enables proper DI usage when `AIPromptContentProvider` is modified (CHADATX
 
 ## Files Modified
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/dependencyInjection/tokens/tokens-ai.js` | MODIFIED | Added 2 new tokens |
-| `src/dependencyInjection/registrations/aiRegistrations.js` | MODIFIED | Added 2 factory registrations + imports |
-| `tests/unit/dependencyInjection/registrations/aiRegistrations.test.js` | MODIFIED | Added mocks and registration tests |
+| File                                                                   | Action   | Description                             |
+| ---------------------------------------------------------------------- | -------- | --------------------------------------- |
+| `src/dependencyInjection/tokens/tokens-ai.js`                          | MODIFIED | Added 2 new tokens                      |
+| `src/dependencyInjection/registrations/aiRegistrations.js`             | MODIFIED | Added 2 factory registrations + imports |
+| `tests/unit/dependencyInjection/registrations/aiRegistrations.test.js` | MODIFIED | Added mocks and registration tests      |
 
 ---
 

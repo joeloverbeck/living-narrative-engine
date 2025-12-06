@@ -72,7 +72,13 @@ export class ITargetResolutionTracingOrchestrator {
    * @param {object} [_detailedResults] - Optional detailed results payload
    * @returns {void}
    */
-  captureResolutionData(_trace, _actionDef, _actor, _resolutionData, _detailedResults) {
+  captureResolutionData(
+    _trace,
+    _actionDef,
+    _actor,
+    _resolutionData,
+    _detailedResults
+  ) {
     throw new Error('Method must be implemented by concrete class');
   }
 
@@ -121,7 +127,14 @@ export class ITargetResolutionTracingOrchestrator {
    * @param {number} _actionsWithTargets - Number of actions that resolved to targets
    * @returns {Promise<void>} Resolves when performance capture completes
    */
-  async capturePerformanceData(_trace, _actionDef, _startTime, _endTime, _totalCandidates, _actionsWithTargets) {
+  async capturePerformanceData(
+    _trace,
+    _actionDef,
+    _startTime,
+    _endTime,
+    _totalCandidates,
+    _actionsWithTargets
+  ) {
     throw new Error('Method must be implemented by concrete class');
   }
 

@@ -86,7 +86,8 @@ class InMemoryEntityManager {
 
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -150,12 +151,16 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
       body: { root: ids.blueprintTorso },
       structure: { rootPartId: ids.blueprintTorso },
     });
-    entityManager.addComponent(ids.blueprintTorso, 'anatomy:part', { subType: 'torso' });
+    entityManager.addComponent(ids.blueprintTorso, 'anatomy:part', {
+      subType: 'torso',
+    });
     entityManager.addComponent(ids.blueprintTorso, 'anatomy:joint', {
       parentId: ids.blueprintRoot,
       socketId: 'core',
     });
-    entityManager.addComponent(ids.blueprintArm, 'anatomy:part', { subType: 'arm' });
+    entityManager.addComponent(ids.blueprintArm, 'anatomy:part', {
+      subType: 'arm',
+    });
     entityManager.addComponent(ids.blueprintArm, 'anatomy:joint', {
       parentId: ids.blueprintTorso,
       socketId: 'left-shoulder',
@@ -182,22 +187,30 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
       parentId: ids.torso,
       socketId: 'left-shoulder',
     });
-    entityManager.addComponent(ids.rightArm, 'anatomy:part', { subType: 'arm' });
+    entityManager.addComponent(ids.rightArm, 'anatomy:part', {
+      subType: 'arm',
+    });
     entityManager.addComponent(ids.rightArm, 'anatomy:joint', {
       parentId: ids.torso,
       socketId: 'right-shoulder',
     });
-    entityManager.addComponent(ids.leftHand, 'anatomy:part', { subType: 'hand' });
+    entityManager.addComponent(ids.leftHand, 'anatomy:part', {
+      subType: 'hand',
+    });
     entityManager.addComponent(ids.leftHand, 'anatomy:joint', {
       parentId: ids.leftArm,
       socketId: 'wrist',
     });
-    entityManager.addComponent(ids.rightHand, 'anatomy:part', { subType: 'hand' });
+    entityManager.addComponent(ids.rightHand, 'anatomy:part', {
+      subType: 'hand',
+    });
     entityManager.addComponent(ids.rightHand, 'anatomy:joint', {
       parentId: ids.rightArm,
       socketId: 'wrist',
     });
-    entityManager.addComponent(ids.leftFinger, 'anatomy:part', { subType: 'finger' });
+    entityManager.addComponent(ids.leftFinger, 'anatomy:part', {
+      subType: 'finger',
+    });
     entityManager.addComponent(ids.leftFinger, 'anatomy:joint', {
       parentId: ids.leftHand,
       socketId: 'finger-1',
@@ -211,9 +224,14 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
     });
 
     // Non-body entity for negative scenarios
-    entityManager.addComponent(ids.nonBodyEntity, 'inventory:slot', { capacity: 2 });
+    entityManager.addComponent(ids.nonBodyEntity, 'inventory:slot', {
+      capacity: 2,
+    });
 
-    actorBodyComponent = entityManager.getComponentData(ids.actor, 'anatomy:body');
+    actorBodyComponent = entityManager.getComponentData(
+      ids.actor,
+      'anatomy:body'
+    );
     blueprintBodyComponent = entityManager.getComponentData(
       ids.blueprintRoot,
       'anatomy:body'
@@ -226,15 +244,27 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
     const localDispatcher = createEventDispatcher([]);
 
     expect(
-      () => new BodyGraphService({ logger: localLogger, eventDispatcher: localDispatcher })
+      () =>
+        new BodyGraphService({
+          logger: localLogger,
+          eventDispatcher: localDispatcher,
+        })
     ).toThrow('entityManager is required');
 
     expect(
-      () => new BodyGraphService({ entityManager: localEntityManager, eventDispatcher: localDispatcher })
+      () =>
+        new BodyGraphService({
+          entityManager: localEntityManager,
+          eventDispatcher: localDispatcher,
+        })
     ).toThrow('logger is required');
 
     expect(
-      () => new BodyGraphService({ entityManager: localEntityManager, logger: localLogger })
+      () =>
+        new BodyGraphService({
+          entityManager: localEntityManager,
+          logger: localLogger,
+        })
     ).toThrow('eventDispatcher is required');
   });
 
@@ -273,7 +303,10 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
       ])
     );
 
-    const fallbackToBlueprint = service.getAllParts(actorBodyComponent, 'untracked-actor');
+    const fallbackToBlueprint = service.getAllParts(
+      actorBodyComponent,
+      'untracked-actor'
+    );
     expect(fallbackToBlueprint).toEqual(
       expect.arrayContaining(
         actorPartsFirst.filter((partId) => partId !== ids.actor)
@@ -303,7 +336,9 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
     const rootFromHand = service.getAnatomyRoot(ids.leftHand);
     expect(rootFromHand).toBe(ids.actor);
 
-    entityManager.addComponent(ids.orphanSensor, 'anatomy:part', { subType: 'sensor' });
+    entityManager.addComponent(ids.orphanSensor, 'anatomy:part', {
+      subType: 'sensor',
+    });
     entityManager.addComponent(ids.orphanSensor, 'anatomy:joint', {
       parentId: ids.leftHand,
       socketId: 'sensor',
@@ -325,9 +360,15 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
 
     expect(service.getPath(ids.leftHand, 'missing-hand')).toBeNull();
 
-    expect(service.hasPartWithComponent(actorBodyComponent, 'status:health')).toBe(true);
-    expect(service.hasPartWithComponent(actorBodyComponent, 'status:empty')).toBe(false);
-    expect(service.hasPartWithComponent(actorBodyComponent, 'nonexistent:component')).toBe(false);
+    expect(
+      service.hasPartWithComponent(actorBodyComponent, 'status:health')
+    ).toBe(true);
+    expect(
+      service.hasPartWithComponent(actorBodyComponent, 'status:empty')
+    ).toBe(false);
+    expect(
+      service.hasPartWithComponent(actorBodyComponent, 'nonexistent:component')
+    ).toBe(false);
 
     const sensorMatch = service.hasPartWithComponentValue(
       actorBodyComponent,
@@ -345,7 +386,9 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
     );
     expect(sensorMiss).toEqual({ found: false });
 
-    await expect(service.getBodyGraph(null)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph(null)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph(ids.nonBodyEntity)).rejects.toThrow(
       `Entity ${ids.nonBodyEntity} has no anatomy:body component`
     );
@@ -356,11 +399,16 @@ describe('BodyGraphService integration – comprehensive coverage', () => {
     expect(bodyGraph.getConnectedParts(ids.leftArm)).toEqual([ids.leftHand]);
     expect(bodyGraph.getConnectedParts('missing-node')).toEqual([]);
 
-    await expect(service.getAnatomyData(null)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData(null)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getAnatomyData('unknown-entity')).resolves.toBeNull();
 
     const anatomyData = await service.getAnatomyData(ids.actor);
-    expect(anatomyData).toEqual({ recipeId: 'actor:synthetic', rootEntityId: ids.actor });
+    expect(anatomyData).toEqual({
+      recipeId: 'actor:synthetic',
+      rootEntityId: ids.actor,
+    });
 
     const blueprintData = await service.getAnatomyData(ids.blueprintRoot);
     expect(blueprintData).toEqual({

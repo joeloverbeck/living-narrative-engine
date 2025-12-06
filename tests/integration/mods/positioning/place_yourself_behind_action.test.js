@@ -392,7 +392,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
-    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
+    await testFixture.executeAction('test:player', 'test:npc', {
+      skipDiscovery: true,
+    });
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
@@ -419,7 +421,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // In normal action discovery, this action would not appear in available actions
     // because the actor has the positioning:kneeling_before component.
-    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
+    await testFixture.executeAction('test:player', 'test:npc', {
+      skipDiscovery: true,
+    });
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
@@ -481,7 +485,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
-    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
+    await testFixture.executeAction('test:player', 'test:npc', {
+      skipDiscovery: true,
+    });
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
@@ -525,7 +531,8 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     testFixture.reset(Object.values(entities));
 
     // Verify initial state
-    const initialActor = testFixture.entityManager.getEntityInstance('test:player');
+    const initialActor =
+      testFixture.entityManager.getEntityInstance('test:player');
     expect(initialActor.components['positioning:straddling_waist']).toEqual({
       target_id: 'test:straddled_target',
       facing_away: false,
@@ -537,7 +544,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // NOTE: This test shows what would happen if somehow the action was triggered
     // In real gameplay, the action discovery system prevents this scenario
-    await testFixture.executeAction('test:player', 'test:npc', { skipDiscovery: true });
+    await testFixture.executeAction('test:player', 'test:npc', {
+      skipDiscovery: true,
+    });
 
     // The rule itself would still execute because we're bypassing action discovery
     const target = testFixture.entityManager.getEntityInstance('test:npc');
@@ -553,7 +562,8 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     );
 
     // Actor still retains straddling component as rule doesn't remove it
-    const updatedActor = testFixture.entityManager.getEntityInstance('test:player');
+    const updatedActor =
+      testFixture.entityManager.getEntityInstance('test:player');
     expect(updatedActor.components['positioning:straddling_waist']).toEqual({
       target_id: 'test:straddled_target',
       facing_away: false,

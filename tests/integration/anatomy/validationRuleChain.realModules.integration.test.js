@@ -60,9 +60,7 @@ describe('ValidationRuleChain integration with real rules', () => {
   it('executes anatomy validation rules end-to-end and aggregates issues from each module', async () => {
     entityManager.addEntity('torso-1', {
       'anatomy:sockets': {
-        sockets: [
-          { id: 'shoulder-left', allowedTypes: ['arm'] },
-        ],
+        sockets: [{ id: 'shoulder-left', allowedTypes: ['arm'] }],
       },
     });
 
@@ -71,9 +69,7 @@ describe('ValidationRuleChain integration with real rules', () => {
       'anatomy:part': { subType: 'hand' },
     });
 
-    const socketOccupancy = new Set([
-      'torso-1:missing-socket',
-    ]);
+    const socketOccupancy = new Set(['torso-1:missing-socket']);
 
     const recipe = {
       constraints: {
@@ -109,7 +105,11 @@ describe('ValidationRuleChain integration with real rules', () => {
     chain
       .addRule(new SocketLimitRule())
       .addRule(new PartTypeCompatibilityRule())
-      .addRule(new RecipeConstraintRule({ recipeConstraintEvaluator: constraintEvaluator }));
+      .addRule(
+        new RecipeConstraintRule({
+          recipeConstraintEvaluator: constraintEvaluator,
+        })
+      );
 
     await chain.execute(context);
 
@@ -128,24 +128,24 @@ describe('ValidationRuleChain integration with real rules', () => {
         expect.stringContaining("Socket 'missing-socket' not found"),
         expect.stringContaining("Part type 'hand' not allowed"),
         expect.stringContaining('Required constraint not satisfied'),
-        expect.stringContaining("Slot 'hands': expected at least 2 parts of type 'hand'"),
+        expect.stringContaining(
+          "Slot 'hands': expected at least 2 parts of type 'hand'"
+        ),
       ])
     );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      "ValidationRuleChain: Executing 3 validation rules"
+      'ValidationRuleChain: Executing 3 validation rules'
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      "ValidationRuleChain: Completed validation with 4 errors and 0 warnings"
+      'ValidationRuleChain: Completed validation with 4 errors and 0 warnings'
     );
   });
 
   it('skips inapplicable rules and records failures without stopping the chain', async () => {
     entityManager.addEntity('torso-1', {
       'anatomy:sockets': {
-        sockets: [
-          { id: 'shoulder-left', allowedTypes: ['arm', '*'] },
-        ],
+        sockets: [{ id: 'shoulder-left', allowedTypes: ['arm', '*'] }],
       },
     });
 
@@ -205,7 +205,7 @@ describe('ValidationRuleChain integration with real rules', () => {
       expect.objectContaining({ error: 'kaboom' })
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      "ValidationRuleChain: Completed validation with 1 errors and 0 warnings"
+      'ValidationRuleChain: Completed validation with 1 errors and 0 warnings'
     );
   });
 

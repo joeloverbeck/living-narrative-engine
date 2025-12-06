@@ -39,20 +39,32 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     const parts = anatomyData.body.parts;
 
     // Count tentacles
-    const tentacles = Object.keys(parts).filter((name) => name.includes('tentacle'));
+    const tentacles = Object.keys(parts).filter((name) =>
+      name.includes('tentacle')
+    );
     expect(tentacles).toHaveLength(8);
 
     // Verify each tentacle has kraken-specific properties
     for (const tentacleName of tentacles) {
-      const tentacleEntity = entityManager.getEntityInstance(parts[tentacleName]);
+      const tentacleEntity = entityManager.getEntityInstance(
+        parts[tentacleName]
+      );
       expect(tentacleEntity).toBeDefined();
 
       // Check for kraken-specific descriptor components
-      const sizeCategory = tentacleEntity.getComponentData('descriptors:size_category');
-      const lengthCategory = tentacleEntity.getComponentData('descriptors:length_category');
+      const sizeCategory = tentacleEntity.getComponentData(
+        'descriptors:size_category'
+      );
+      const lengthCategory = tentacleEntity.getComponentData(
+        'descriptors:length_category'
+      );
       const texture = tentacleEntity.getComponentData('descriptors:texture');
-      const color = tentacleEntity.getComponentData('descriptors:color_extended');
-      const shape = tentacleEntity.getComponentData('descriptors:shape_general');
+      const color = tentacleEntity.getComponentData(
+        'descriptors:color_extended'
+      );
+      const shape = tentacleEntity.getComponentData(
+        'descriptors:shape_general'
+      );
 
       expect(sizeCategory).toBeDefined();
       expect(sizeCategory.size).toBe('enormous');
@@ -86,8 +98,12 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     const parts = anatomyData.body.parts;
 
     // Find first tentacle
-    const firstTentacleName = Object.keys(parts).find((name) => name.includes('tentacle'));
-    const tentacleEntity = entityManager.getEntityInstance(parts[firstTentacleName]);
+    const firstTentacleName = Object.keys(parts).find((name) =>
+      name.includes('tentacle')
+    );
+    const tentacleEntity = entityManager.getEntityInstance(
+      parts[firstTentacleName]
+    );
 
     // Assert - Check that it uses tentacle subType
     const partComponent = tentacleEntity.getComponentData('anatomy:part');
@@ -96,16 +112,28 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
     // Verify it's based on anatomy:kraken_tentacle definition (has all required properties)
     expect(tentacleEntity.definitionId).toBe('anatomy:kraken_tentacle');
-    const entityDefinition = testBed.getEntityDefinition('anatomy:kraken_tentacle');
+    const entityDefinition = testBed.getEntityDefinition(
+      'anatomy:kraken_tentacle'
+    );
     expect(entityDefinition).toBeDefined();
-    expect(entityDefinition.components['anatomy:part'].subType).toBe('tentacle');
+    expect(entityDefinition.components['anatomy:part'].subType).toBe(
+      'tentacle'
+    );
 
     // Verify it has all kraken-specific properties
-    expect(entityDefinition.components['descriptors:size_category']).toBeDefined();
-    expect(entityDefinition.components['descriptors:length_category']).toBeDefined();
+    expect(
+      entityDefinition.components['descriptors:size_category']
+    ).toBeDefined();
+    expect(
+      entityDefinition.components['descriptors:length_category']
+    ).toBeDefined();
     expect(entityDefinition.components['descriptors:texture']).toBeDefined();
-    expect(entityDefinition.components['descriptors:color_extended']).toBeDefined();
-    expect(entityDefinition.components['descriptors:shape_general']).toBeDefined();
+    expect(
+      entityDefinition.components['descriptors:color_extended']
+    ).toBeDefined();
+    expect(
+      entityDefinition.components['descriptors:shape_general']
+    ).toBeDefined();
   });
 
   it('should validate part type compatibility after migration', async () => {
@@ -141,7 +169,9 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
     // Verify tentacles were actually generated
     const parts = anatomyData.body.parts;
-    const tentacles = Object.keys(parts).filter((name) => name.includes('tentacle'));
+    const tentacles = Object.keys(parts).filter((name) =>
+      name.includes('tentacle')
+    );
     expect(tentacles.length).toBeGreaterThan(0);
   });
 
@@ -156,9 +186,10 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
     const entityManager = testBed.container.get('IEntityManager');
     const actorInstance = entityManager.getEntityInstance(actor.id);
-    const description = await testBed.anatomyDescriptionService.getOrGenerateBodyDescription(
-      actorInstance
-    );
+    const description =
+      await testBed.anatomyDescriptionService.getOrGenerateBodyDescription(
+        actorInstance
+      );
 
     // Assert - Description should include body descriptors
     expect(description).toBeDefined();
@@ -188,7 +219,9 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     const parts = anatomyData.body.parts;
 
     // Recipe requires tentacle and ink_reservoir
-    const hasTentacles = Object.keys(parts).some((name) => name.includes('tentacle'));
+    const hasTentacles = Object.keys(parts).some((name) =>
+      name.includes('tentacle')
+    );
     const hasInkReservoir = Object.values(parts).some((partId) => {
       const partEntity = entityManager.getEntityInstance(partId);
       const partComp = partEntity.getComponentData('anatomy:part');
@@ -205,13 +238,17 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     expect(krakenEntity).toBeDefined();
     expect(krakenEntity.components['anatomy:part'].subType).toBe('tentacle');
     expect(krakenEntity.components['descriptors:size_category']).toBeDefined();
-    expect(krakenEntity.components['descriptors:length_category']).toBeDefined();
+    expect(
+      krakenEntity.components['descriptors:length_category']
+    ).toBeDefined();
     expect(krakenEntity.components['descriptors:texture']).toBeDefined();
     expect(krakenEntity.components['descriptors:color_extended']).toBeDefined();
     expect(krakenEntity.components['descriptors:shape_general']).toBeDefined();
 
     // Specialized tentacle entities should exist for different species
-    const octopusEntity = testBed.getEntityDefinition('anatomy:octopus_tentacle');
+    const octopusEntity = testBed.getEntityDefinition(
+      'anatomy:octopus_tentacle'
+    );
     expect(octopusEntity).toBeDefined();
     expect(octopusEntity.components['anatomy:part'].subType).toBe('tentacle');
     const squidEntity = testBed.getEntityDefinition('anatomy:squid_tentacle');

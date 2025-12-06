@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 let mockBootstrapperInstance;
 const bootstrapMock = jest.fn();
@@ -101,7 +108,11 @@ describe('anatomy-visualizer entrypoint', () => {
     document.body.innerHTML = '';
 
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     }
 
     if (originalLocationDescriptor) {
@@ -333,18 +344,18 @@ describe('anatomy-visualizer entrypoint', () => {
 
     expect(mockUIInitialize).toHaveBeenCalledTimes(1);
     await expect(bootstrapMock.mock.results[0].value).rejects.toBe(
-      initializationError,
+      initializationError
     );
 
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'Anatomy Visualizer: Initializing UI...',
+      'Anatomy Visualizer: Initializing UI...'
     );
     expect(logger.warn).not.toHaveBeenCalled();
 
     expect(displayFatalStartupErrorMock).toHaveBeenCalledWith(
       'Failed to initialize anatomy visualizer: UI initialization failure',
-      initializationError,
+      initializationError
     );
   });
 

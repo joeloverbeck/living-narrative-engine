@@ -4,7 +4,14 @@
  *              and other services, ensuring error handling paths receive coverage.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -58,7 +65,11 @@ describe('MetricsService resilience integration coverage', () => {
       requestSize: 128,
       responseSize: 256,
     });
-    service.recordError({ errorType: 'test', component: 'disabled', severity: 'low' });
+    service.recordError({
+      errorType: 'test',
+      component: 'disabled',
+      severity: 'low',
+    });
 
     const metricsOutput = await service.getMetrics();
     expect(metricsOutput).toBe('# Metrics collection is disabled\n');
@@ -68,24 +79,33 @@ describe('MetricsService resilience integration coverage', () => {
   });
 
   it('continues serving requests and logs when collectors throw runtime errors', async () => {
-    const service = new MetricsService({ logger, collectDefaultMetrics: false });
+    const service = new MetricsService({
+      logger,
+      collectDefaultMetrics: false,
+    });
 
     const restoreSpies = [];
 
     const wrapToThrow = (target, methodName, label) => {
-      const spy = jest
-        .spyOn(target, methodName)
-        .mockImplementation(() => {
-          throw new Error(label);
-        });
+      const spy = jest.spyOn(target, methodName).mockImplementation(() => {
+        throw new Error(label);
+      });
       restoreSpies.push(spy);
     };
 
-    wrapToThrow(service.httpRequestDuration, 'observe', 'http-request-duration');
+    wrapToThrow(
+      service.httpRequestDuration,
+      'observe',
+      'http-request-duration'
+    );
     wrapToThrow(service.llmRequestDuration, 'observe', 'llm-request-duration');
     wrapToThrow(service.cacheOperationsTotal, 'inc', 'cache-operations-total');
     wrapToThrow(service.rateLimitHits, 'inc', 'rate-limit-hits');
-    wrapToThrow(service.securityValidationResults, 'inc', 'security-validation');
+    wrapToThrow(
+      service.securityValidationResults,
+      'inc',
+      'security-validation'
+    );
     wrapToThrow(service.apiKeyOperations, 'inc', 'api-key-operations');
     wrapToThrow(service.healthCheckResults, 'inc', 'health-check-results');
     wrapToThrow(service.errorsTotal, 'inc', 'errors-total');
@@ -102,7 +122,7 @@ describe('MetricsService resilience integration coverage', () => {
         metricsService: service,
         logger,
         enabled: service.isEnabled(),
-      }),
+      })
     );
 
     app.post(
@@ -154,7 +174,7 @@ describe('MetricsService resilience integration coverage', () => {
         res.status(500).json({
           usage: { prompt_tokens: 5, completion_tokens: 2 },
         });
-      },
+      }
     );
 
     const response = await request(app)
@@ -168,42 +188,44 @@ describe('MetricsService resilience integration coverage', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording HTTP request metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording LLM request metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording cache operation metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording rate limiting metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording security validation metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording API key operation metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording health check metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error recording error metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     // Exercise reset() and clear() error paths by temporarily forcing registry failures.
     const registry = service.getRegistry();
-    const resetSpy = jest.spyOn(registry, 'resetMetrics').mockImplementation(() => {
-      throw new Error('reset-failure');
-    });
+    const resetSpy = jest
+      .spyOn(registry, 'resetMetrics')
+      .mockImplementation(() => {
+        throw new Error('reset-failure');
+      });
     const clearSpy = jest.spyOn(registry, 'clear').mockImplementation(() => {
       throw new Error('clear-failure');
     });
@@ -213,11 +235,11 @@ describe('MetricsService resilience integration coverage', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       'Error resetting metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       'Error clearing metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     resetSpy.mockRestore();

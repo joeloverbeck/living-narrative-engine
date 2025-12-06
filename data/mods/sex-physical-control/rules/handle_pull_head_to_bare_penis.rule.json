@@ -13,7 +13,10 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "primaryName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -73,7 +76,9 @@
     {
       "type": "IF",
       "parameters": {
-        "condition": { "var": "context.actorExistingReceivingBlowjobComponent" },
+        "condition": {
+          "var": "context.actorExistingReceivingBlowjobComponent"
+        },
         "then_actions": [
           {
             "type": "REMOVE_COMPONENT",
@@ -103,7 +108,9 @@
     {
       "type": "IF",
       "parameters": {
-        "condition": { "var": "context.primaryExistingReceivingBlowjobComponent" },
+        "condition": {
+          "var": "context.primaryExistingReceivingBlowjobComponent"
+        },
         "then_actions": [
           {
             "type": "REMOVE_COMPONENT",

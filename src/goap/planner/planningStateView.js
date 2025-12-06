@@ -328,7 +328,10 @@ export class PlanningStateView {
         for (const [componentId, componentValue] of Object.entries(
           componentsObject
         )) {
-          if (componentId.includes('_') && componentsObject[componentId.replace(/_/g, ':')]) {
+          if (
+            componentId.includes('_') &&
+            componentsObject[componentId.replace(/_/g, ':')]
+          ) {
             continue; // Skip flattened aliases when colon key exists
           }
           register(
@@ -345,7 +348,10 @@ export class PlanningStateView {
       for (const [componentId, componentValue] of Object.entries(
         this.#actorSnapshot.components
       )) {
-        if (componentId.includes('_') && this.#actorSnapshot.components[componentId.replace(/_/g, ':')]) {
+        if (
+          componentId.includes('_') &&
+          this.#actorSnapshot.components[componentId.replace(/_/g, ':')]
+        ) {
           continue;
         }
         register(
@@ -381,7 +387,9 @@ export class PlanningStateView {
     };
 
     if (actorData?.components && typeof actorData.components === 'object') {
-      for (const [componentId, componentValue] of Object.entries(actorData.components)) {
+      for (const [componentId, componentValue] of Object.entries(
+        actorData.components
+      )) {
         registerComponent(componentId, componentValue);
       }
     }

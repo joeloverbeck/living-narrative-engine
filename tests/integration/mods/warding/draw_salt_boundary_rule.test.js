@@ -11,13 +11,14 @@ import wardingManifest from '../../../../data/mods/warding/mod-manifest.json' as
 const findIfByOutcome = (actions, outcomeValue) =>
   actions.find(
     (op) =>
-      op.type === 'IF' &&
-      op.parameters?.condition?.['==']?.[1] === outcomeValue
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcomeValue
   );
 
 describe('handle_draw_salt_boundary rule', () => {
   it('registers rule and condition correctly', () => {
-    expect(handleDrawSaltBoundaryRule.rule_id).toBe('handle_draw_salt_boundary');
+    expect(handleDrawSaltBoundaryRule.rule_id).toBe(
+      'handle_draw_salt_boundary'
+    );
     expect(handleDrawSaltBoundaryRule.event_type).toBe('core:attempt_action');
     expect(handleDrawSaltBoundaryRule.condition.condition_ref).toBe(
       'warding:event-is-action-draw-salt-boundary'
@@ -103,14 +104,25 @@ describe('handle_draw_salt_boundary rule', () => {
     );
 
     expect(ifOps).toHaveLength(4);
-    expect(findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
-    expect(findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'SUCCESS')).toBeDefined();
-    expect(findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'FAILURE')).toBeDefined();
-    expect(findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'FUMBLE')).toBeDefined();
+    expect(
+      findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'CRITICAL_SUCCESS')
+    ).toBeDefined();
+    expect(
+      findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'SUCCESS')
+    ).toBeDefined();
+    expect(
+      findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'FAILURE')
+    ).toBeDefined();
+    expect(
+      findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'FUMBLE')
+    ).toBeDefined();
   });
 
   it('dispatches correct message on CRITICAL_SUCCESS', () => {
-    const branch = findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'CRITICAL_SUCCESS');
+    const branch = findIfByOutcome(
+      handleDrawSaltBoundaryRule.actions,
+      'CRITICAL_SUCCESS'
+    );
     const actions = branch?.parameters.then_actions ?? [];
 
     const expectedMessage =
@@ -120,7 +132,9 @@ describe('handle_draw_salt_boundary rule', () => {
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
     const logMessage = actions.find(
-      (op) => op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+      (op) =>
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
@@ -143,7 +157,10 @@ describe('handle_draw_salt_boundary rule', () => {
   });
 
   it('dispatches correct message on SUCCESS', () => {
-    const branch = findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'SUCCESS');
+    const branch = findIfByOutcome(
+      handleDrawSaltBoundaryRule.actions,
+      'SUCCESS'
+    );
     const actions = branch?.parameters.then_actions ?? [];
 
     const expectedMessage =
@@ -153,7 +170,9 @@ describe('handle_draw_salt_boundary rule', () => {
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
     const logMessage = actions.find(
-      (op) => op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+      (op) =>
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
@@ -175,7 +194,10 @@ describe('handle_draw_salt_boundary rule', () => {
   });
 
   it('leaves state unchanged on FAILURE but logs the correct message', () => {
-    const branch = findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'FAILURE');
+    const branch = findIfByOutcome(
+      handleDrawSaltBoundaryRule.actions,
+      'FAILURE'
+    );
     const actions = branch?.parameters.then_actions ?? [];
 
     expect(actions.some((op) => op.type === 'ADD_COMPONENT')).toBe(false);
@@ -184,7 +206,9 @@ describe('handle_draw_salt_boundary rule', () => {
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
     const logMessage = actions.find(
-      (op) => op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+      (op) =>
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
 
     const expectedMessage =
@@ -200,7 +224,10 @@ describe('handle_draw_salt_boundary rule', () => {
   });
 
   it('adds fallen state and regenerates description on FUMBLE', () => {
-    const branch = findIfByOutcome(handleDrawSaltBoundaryRule.actions, 'FUMBLE');
+    const branch = findIfByOutcome(
+      handleDrawSaltBoundaryRule.actions,
+      'FUMBLE'
+    );
     const actions = branch?.parameters.then_actions ?? [];
 
     const fallenAdd = actions.find(
@@ -219,15 +246,17 @@ describe('handle_draw_salt_boundary rule', () => {
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
     const logMessage = actions.find(
-      (op) => op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+      (op) =>
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
-    expect(actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')).toBe(
-      true
-    );
+    expect(
+      actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')
+    ).toBe(true);
   });
 
   it('has positioning as a dependency for fallen component', () => {

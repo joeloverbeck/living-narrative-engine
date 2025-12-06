@@ -259,7 +259,9 @@ describe('ModTestFixture.forAction() Schema Validation', () => {
           invalidRuleFile,
           validConditionFile
         )
-      ).rejects.toThrow(/Schema: schema:\/\/living-narrative-engine\/rule\.schema\.json/);
+      ).rejects.toThrow(
+        /Schema: schema:\/\/living-narrative-engine\/rule\.schema\.json/
+      );
     });
 
     it('should include specific validation errors in error message', async () => {

@@ -62,26 +62,17 @@
   },
   "patterns": [
     {
-      "matches": [
-        "left_arm",
-        "right_arm"
-      ],
+      "matches": ["left_arm", "right_arm"],
       "partType": "arm",
       "preferId": "anatomy:humanoid_arm_scarred"
     },
     {
-      "matches": [
-        "left_leg",
-        "right_leg"
-      ],
+      "matches": ["left_leg", "right_leg"],
       "partType": "leg",
       "preferId": "anatomy:human_leg"
     },
     {
-      "matches": [
-        "left_breast",
-        "right_breast"
-      ],
+      "matches": ["left_breast", "right_breast"],
       "partType": "breast",
       "properties": {
         "descriptors:size_specific": {
@@ -96,10 +87,7 @@
       }
     },
     {
-      "matches": [
-        "left_ass",
-        "right_ass"
-      ],
+      "matches": ["left_ass", "right_ass"],
       "partType": "ass_cheek",
       "properties": {
         "descriptors:firmness": {

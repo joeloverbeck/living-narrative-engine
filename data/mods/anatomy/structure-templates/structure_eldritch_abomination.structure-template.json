@@ -13,7 +13,12 @@
         "socketPattern": {
           "idTemplate": "tentacle_{{index}}",
           "orientationScheme": "indexed",
-          "allowedTypes": ["eldritch_tentacle", "eldritch_tentacle_large", "eldritch_tentacle_sensory", "eldritch_tentacle_feeding"],
+          "allowedTypes": [
+            "eldritch_tentacle",
+            "eldritch_tentacle_large",
+            "eldritch_tentacle_sensory",
+            "eldritch_tentacle_feeding"
+          ],
           "nameTpl": "tentacle {{index}}"
         }
       },
@@ -61,7 +66,11 @@
         "socketPattern": {
           "idTemplate": "mouth_{{index}}",
           "orientationScheme": "indexed",
-          "allowedTypes": ["eldritch_lamprey_mouth", "eldritch_vertical_maw", "eldritch_speaking_orifice"],
+          "allowedTypes": [
+            "eldritch_lamprey_mouth",
+            "eldritch_vertical_maw",
+            "eldritch_speaking_orifice"
+          ],
           "nameTpl": "mouth {{index}}"
         }
       },

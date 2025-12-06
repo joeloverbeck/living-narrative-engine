@@ -93,7 +93,10 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
     let partEntityId;
     if (typeof part_entity_ref === 'string' && part_entity_ref.trim()) {
       partEntityId = part_entity_ref.trim();
-    } else if (typeof part_entity_ref === 'object' && part_entity_ref !== null) {
+    } else if (
+      typeof part_entity_ref === 'object' &&
+      part_entity_ref !== null
+    ) {
       // Handle object references (e.g., from scope resolution)
       partEntityId = part_entity_ref.id || part_entity_ref.entityId;
     }
@@ -157,8 +160,7 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
       const newState = calculateStateFromPercentage(healthPercentage);
 
       // Update turnsInState: increment if same state, reset to 0 if changed
-      const newTurnsInState =
-        newState === previousState ? turnsInState + 1 : 0;
+      const newTurnsInState = newState === previousState ? turnsInState + 1 : 0;
 
       // Update part_health component
       await this.#entityManager.batchAddComponentsOptimized(

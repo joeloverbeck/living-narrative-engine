@@ -12,6 +12,7 @@
 **THE DROP-PICKUP WORKFLOW IS NOT BROKEN**. The original bug report was based on incorrect assumptions about both the `batchAddComponentsOptimized` method and how the Entity API should be accessed.
 
 **Actual Problem**: The `Entity` class lacks a `.components` getter property that tests expect to exist. This creates an API inconsistency where:
+
 - Tests try to access `entity.components['componentId']`
 - But Entity only provides `entity.getComponentData(componentId)` and `entity.getAllComponents()`
 
@@ -33,17 +34,20 @@ The original analysis made two fundamental errors:
 #### Error #1: Misunderstood `batchAddComponentsOptimized`
 
 **Actual Method Signature**:
+
 ```javascript
 async batchAddComponentsOptimized(componentSpecs, emitBatchEvent = true)
 ```
 
 **What the parameters actually do**:
+
 - `componentSpecs`: Array of `{instanceId, componentTypeId, componentData}` objects
 - `emitBatchEvent`:
   - `true` → Emit single `core:components_batch_added` event
   - `false` → Emit individual `COMPONENT_ADDED` events for each update
 
 **What the method actually does** (componentMutationService.js:435-532):
+
 ```javascript
 for (const spec of componentSpecs) {
   // Get entity
@@ -53,7 +57,12 @@ for (const spec of componentSpecs) {
   const validatedData = this.#validateComponentData(/*...*/);
 
   // Apply ONLY the specified component, preserving all others
-  this.#applyComponentUpdate(entity, spec.componentTypeId, validatedData, spec.instanceId);
+  this.#applyComponentUpdate(
+    entity,
+    spec.componentTypeId,
+    validatedData,
+    spec.instanceId
+  );
   //                             ↓
   //                    entity.addComponent(componentTypeId, validatedData)
   //                             ↓
@@ -79,15 +88,24 @@ The report claimed components were being lost after drop operations. However, th
 **Location**: `src/entities/entity.js`
 
 **Current Entity API** (lines 1-244):
+
 ```javascript
 class Entity {
   #data; // EntityInstanceData
 
   // ✅ Available methods:
-  addComponent(componentTypeId, componentData) { /* ... */ }
-  getComponentData(componentTypeId) { /* ... */ }
-  getAllComponents() { /* returns {componentId: data, ...} */ }
-  hasComponent(componentTypeId) { /* ... */ }
+  addComponent(componentTypeId, componentData) {
+    /* ... */
+  }
+  getComponentData(componentTypeId) {
+    /* ... */
+  }
+  getAllComponents() {
+    /* returns {componentId: data, ...} */
+  }
+  hasComponent(componentTypeId) {
+    /* ... */
+  }
 
   // ❌ Missing:
   // get components() { return this.getAllComponents(); }
@@ -95,13 +113,15 @@ class Entity {
 ```
 
 **What tests expect** (tests/integration/mods/items/dropItemRuleExecution.test.js:84-85):
+
 ```javascript
 const item = testFixture.entityManager.getEntityInstance('letter-1');
-expect(item.components['core:position']).toBeDefined();        // ❌ item.components is undefined
-expect(item.components['core:position'].locationId).toBe('saloon1');  // ❌ Cannot read property of undefined
+expect(item.components['core:position']).toBeDefined(); // ❌ item.components is undefined
+expect(item.components['core:position'].locationId).toBe('saloon1'); // ❌ Cannot read property of undefined
 ```
 
 **What tests should use**:
+
 ```javascript
 const item = testFixture.entityManager.getEntityInstance('letter-1');
 
@@ -118,6 +138,7 @@ expect(item.getComponentData('core:position').locationId).toBe('saloon1');
 ### Evidence of API Inconsistency
 
 **Code that expects `.components` property** (src/entities/entityAccessService.js:154-155):
+
 ```javascript
 if (entity.components && typeof entity.components === 'object') {
   entity.components[componentId] = data;
@@ -128,6 +149,7 @@ if (entity.components && typeof entity.components === 'object') {
 This code checks if `entity.components` exists as a fallback mechanism, acknowledging that some entities may not have this property.
 
 **EntityDefinition HAS `.components`** (src/entities/entityDefinition.js:73):
+
 ```javascript
 this.components = deepFreeze(frozenComponents);
 ```
@@ -156,7 +178,7 @@ const updates = [
   {
     instanceId: itemEntity,
     componentTypeId: POSITION_COMPONENT_ID,
-    componentData: { locationId },  // ← ONLY updates position component
+    componentData: { locationId }, // ← ONLY updates position component
   },
 ];
 
@@ -178,6 +200,7 @@ await this.#entityManager.batchAddComponentsOptimized(updates, true);
 ### How `entity.addComponent()` Works
 
 **Entity.addComponent** (entity.js:73-83):
+
 ```javascript
 addComponent(componentTypeId, componentData) {
   if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
@@ -189,6 +212,7 @@ addComponent(componentTypeId, componentData) {
 ```
 
 **EntityInstanceData.setComponentOverride** (entityInstanceData.js:132-145):
+
 ```javascript
 setComponentOverride(componentTypeId, componentData) {
   if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
@@ -236,6 +260,7 @@ getComponentData(componentTypeId) {
 ```
 
 **Component Resolution Logic**:
+
 1. Check if component has an instance override → return it
 2. Else, check if component exists in entity definition → return it
 3. Else, return undefined
@@ -255,6 +280,7 @@ get allComponentTypeIds() {
 ```
 
 **This merges**:
+
 - Components from the entity definition
 - Components from instance overrides
 - Result: ALL components the entity has access to
@@ -268,12 +294,14 @@ get allComponentTypeIds() {
 ### Test Access Pattern
 
 **Tests use** (dropItemRuleExecution.test.js:84):
+
 ```javascript
 const item = testFixture.entityManager.getEntityInstance('letter-1');
 expect(item.components['core:position']).toBeDefined();
 ```
 
 **What `getEntityInstance` returns**:
+
 ```javascript
 // EntityManager.getEntityInstance (entityManager.js:485-487)
 getEntityInstance(instanceId) {
@@ -293,23 +321,33 @@ getEntityInstance(instanceId) {
 ### Why `entity.components` is Undefined
 
 **Entity class structure** (entity.js:16-244):
+
 ```javascript
 class Entity {
   #data; // EntityInstanceData
 
-  get id() { return this.#data.instanceId; }
-  get definitionId() { return this.#data.definition.id; }
+  get id() {
+    return this.#data.instanceId;
+  }
+  get definitionId() {
+    return this.#data.definition.id;
+  }
 
   // ❌ NO .components getter
   // ❌ NO .components property
 
   // ✅ Has these methods instead:
-  getComponentData(componentTypeId) { return this.#data.getComponentData(componentTypeId); }
-  getAllComponents() { /* returns object map */ }
+  getComponentData(componentTypeId) {
+    return this.#data.getComponentData(componentTypeId);
+  }
+  getAllComponents() {
+    /* returns object map */
+  }
 }
 ```
 
 **When tests access `item.components`**:
+
 - JavaScript returns `undefined` (property doesn't exist)
 - Tests then try `undefined['core:position']` → `undefined`
 - Test assertion fails: `expect(undefined).toBeDefined()` ❌
@@ -336,6 +374,7 @@ items:items_at_location := entities(core:position)[][{"and": [
 ```
 
 **This scope expects**:
+
 1. Entity to have `items:item` component
 2. Entity to have `items:portable` component
 3. Entity to have `core:position` component matching actor's location
@@ -358,6 +397,7 @@ The scope DSL likely operates on the raw entity data structure or uses the Entit
 ### Why This is the Right Fix
 
 **Benefits**:
+
 1. **Backward Compatibility**: Existing tests continue to work
 2. **API Consistency**: Matches `EntityDefinition.components` pattern
 3. **Intuitive Access**: Developers expect `entity.components['id']` to work
@@ -380,6 +420,7 @@ get components() {
 ```
 
 **Alternative (Lazy Evaluation)**:
+
 ```javascript
 get components() {
   // Cache the components object for performance
@@ -407,6 +448,7 @@ addComponent(componentTypeId, componentData) {
 ### Correct Test Patterns
 
 **✅ Option 1: Use `.components` getter (after fix)**:
+
 ```javascript
 const item = entityManager.getEntityInstance('letter-1');
 expect(item.components['items:item']).toBeDefined();
@@ -415,6 +457,7 @@ expect(item.components['core:position'].locationId).toBe('saloon1');
 ```
 
 **✅ Option 2: Use `getComponentData()`**:
+
 ```javascript
 const item = entityManager.getEntityInstance('letter-1');
 expect(item.getComponentData('items:item')).toBeDefined();
@@ -423,6 +466,7 @@ expect(item.getComponentData('core:position').locationId).toBe('saloon1');
 ```
 
 **✅ Option 3: Use `getAllComponents()`**:
+
 ```javascript
 const item = entityManager.getEntityInstance('letter-1');
 const components = item.getAllComponents();
@@ -460,9 +504,7 @@ describe('Drop Item - Component Preservation', () => {
 
   it('should preserve ALL item components when dropping', async () => {
     // Arrange: Create item with multiple components
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('TestActor')
@@ -480,7 +522,7 @@ describe('Drop Item - Component Preservation', () => {
       .withComponent('items:portable', {})
       .withComponent('items:weight', { weight: 0.05 })
       .withComponent('items:description', {
-        text: 'A sealed letter with a wax stamp'
+        text: 'A sealed letter with a wax stamp',
       })
       .withComponent('items:value', { gold: 5 })
       .build();
@@ -499,16 +541,16 @@ describe('Drop Item - Component Preservation', () => {
     const componentsAfter = Object.keys(itemAfter.getAllComponents()).sort();
 
     // Should have all original components
-    expect(componentsAfter).toEqual(
-      expect.arrayContaining(componentsBefore)
-    );
+    expect(componentsAfter).toEqual(expect.arrayContaining(componentsBefore));
 
     // Should have position component added
     expect(componentsAfter).toContain('core:position');
 
     // Verify each component explicitly
     expect(itemAfter.getComponentData('core:name')).toBeDefined();
-    expect(itemAfter.getComponentData('core:name').name).toBe('Mysterious Letter');
+    expect(itemAfter.getComponentData('core:name').name).toBe(
+      'Mysterious Letter'
+    );
 
     expect(itemAfter.getComponentData('items:item')).toBeDefined();
     expect(itemAfter.getComponentData('items:portable')).toBeDefined();
@@ -516,13 +558,17 @@ describe('Drop Item - Component Preservation', () => {
     expect(itemAfter.getComponentData('items:weight').weight).toBe(0.05);
 
     expect(itemAfter.getComponentData('items:description')).toBeDefined();
-    expect(itemAfter.getComponentData('items:description').text).toContain('sealed letter');
+    expect(itemAfter.getComponentData('items:description').text).toContain(
+      'sealed letter'
+    );
 
     expect(itemAfter.getComponentData('items:value')).toBeDefined();
     expect(itemAfter.getComponentData('items:value').gold).toBe(5);
 
     expect(itemAfter.getComponentData('core:position')).toBeDefined();
-    expect(itemAfter.getComponentData('core:position').locationId).toBe('test-room');
+    expect(itemAfter.getComponentData('core:position').locationId).toBe(
+      'test-room'
+    );
 
     // Verify component count increased by exactly 1 (position added)
     expect(componentsAfter.length).toBe(componentsBefore.length + 1);
@@ -533,8 +579,13 @@ describe('Drop Item - Component Preservation', () => {
     // Use a shared fixture that includes both actions
 
     const fullFixture = await ModTestFixture.forActions([
-      { mod: 'items', actionId: 'items:drop_item', rule: dropItemRule, condition: eventIsActionDropItem },
-      { mod: 'items', actionId: 'items:pick_up_item', /* ... */ }
+      {
+        mod: 'items',
+        actionId: 'items:drop_item',
+        rule: dropItemRule,
+        condition: eventIsActionDropItem,
+      },
+      { mod: 'items', actionId: 'items:pick_up_item' /* ... */ },
     ]);
 
     const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
@@ -563,7 +614,8 @@ describe('Drop Item - Component Preservation', () => {
     // Discover available actions (should include pickup)
     const actions = await fullFixture.actionDiscovery.discover('test:actor1');
     const pickupActions = actions.filter(
-      a => a.actionId === 'items:pick_up_item' && a.targets.primary === 'test-item'
+      (a) =>
+        a.actionId === 'items:pick_up_item' && a.targets.primary === 'test-item'
     );
 
     expect(pickupActions.length).toBeGreaterThan(0);
@@ -614,7 +666,7 @@ it('should complete full drop-pickup cycle maintaining data integrity', async ()
   // Verify discoverable
   const actions = await fixture.actionDiscovery.discover('actor');
   const pickupAction = actions.find(
-    a => a.actionId === 'items:pick_up_item' && a.targets.primary === 'sword'
+    (a) => a.actionId === 'items:pick_up_item' && a.targets.primary === 'sword'
   );
   expect(pickupAction).toBeDefined();
 
@@ -642,6 +694,7 @@ it('should complete full drop-pickup cycle maintaining data integrity', async ()
 **File**: `src/entities/entity.js`
 
 **Code**:
+
 ```javascript
 // Add after line 161 (after componentTypeIds getter)
 
@@ -665,6 +718,7 @@ get components() {
 **Task**: Update tests to use correct Entity API
 
 **Files**:
+
 - `tests/integration/mods/items/dropItemRuleExecution.test.js`
 - `tests/integration/mods/items/pickUpItemRuleExecution.test.js`
 - `tests/integration/mods/items/dropItemTimeout.integration.test.js`
@@ -680,6 +734,7 @@ get components() {
 **New File**: `tests/integration/mods/items/dropItemComponentPreservation.test.js`
 
 **Tests**:
+
 1. Drop preserves ALL item components
 2. Dropped item is discoverable by pickup
 3. Full drop-pickup cycle maintains data integrity
@@ -692,6 +747,7 @@ get components() {
 **Task**: Document Entity API patterns
 
 **Files**:
+
 - `CLAUDE.md` - Add Entity API section
 - `docs/architecture/entity-component-system.md` - Document component access patterns
 - `docs/testing/entity-testing-patterns.md` - Document proper test patterns
@@ -703,18 +759,21 @@ get components() {
 ## Verification Checklist
 
 ### Code Verification
+
 - [x] Analyze `batchAddComponentsOptimized` implementation
 - [x] Trace component storage in EntityInstanceData
 - [x] Verify Entity wrapper class API
 - [x] Identify API inconsistency (missing `.components` getter)
 
 ### Root Cause Confirmation
+
 - [x] Prove batchAddComponentsOptimized does NOT remove components
 - [x] Prove component overrides are preserved correctly
 - [x] Identify why tests appeared to show component loss
 - [x] Confirm Entity class lacks `.components` property
 
 ### Solution Validation
+
 - [x] Design `.components` getter implementation
 - [x] Document correct test patterns
 - [x] Create comprehensive test strategy
@@ -734,6 +793,7 @@ get components() {
 ### Immediate Action
 
 **Add `.components` getter to Entity class**:
+
 ```javascript
 get components() {
   return this.getAllComponents();
@@ -741,6 +801,7 @@ get components() {
 ```
 
 This single-line addition will:
+
 - Fix all failing tests ✅
 - Maintain backward compatibility ✅
 - Provide intuitive API ✅
@@ -758,6 +819,7 @@ This single-line addition will:
 ## References
 
 ### Source Files Analyzed
+
 - `src/logic/operationHandlers/dropItemAtLocationHandler.js` - Drop operation handler
 - `src/entities/services/componentMutationService.js` - Batch component operations
 - `src/entities/entity.js` - Entity wrapper class
@@ -766,12 +828,14 @@ This single-line addition will:
 - `data/mods/items/scopes/items_at_location.scope` - Scope query definition
 
 ### Test Files Analyzed
+
 - `tests/integration/mods/items/dropItemRuleExecution.test.js`
 - `tests/integration/mods/items/pickUpItemRuleExecution.test.js`
 - `tests/integration/mods/items/dropItemEventDispatch.integration.test.js`
 - `tests/integration/mods/items/dropItemTimeout.integration.test.js`
 
 ### Previous Reports
+
 - `reports/drop-pickup-workflow-bug-analysis.md` - Original (incorrect) analysis
 
 ---

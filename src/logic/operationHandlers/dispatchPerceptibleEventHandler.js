@@ -118,19 +118,31 @@ class DispatchPerceptibleEventHandler {
         ? { ...contextual_data }
         : {};
 
-    if (!Object.prototype.hasOwnProperty.call(normalizedContextualData, 'recipientIds')) {
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        normalizedContextualData,
+        'recipientIds'
+      )
+    ) {
       normalizedContextualData.recipientIds = [];
     }
 
-    if (!Object.prototype.hasOwnProperty.call(normalizedContextualData, 'excludedActorIds')) {
+    if (
+      !Object.prototype.hasOwnProperty.call(
+        normalizedContextualData,
+        'excludedActorIds'
+      )
+    ) {
       normalizedContextualData.excludedActorIds = [];
     }
 
     // Validate mutual exclusivity
-    const hasRecipients = Array.isArray(normalizedContextualData.recipientIds)
-      && normalizedContextualData.recipientIds.length > 0;
-    const hasExclusions = Array.isArray(normalizedContextualData.excludedActorIds)
-      && normalizedContextualData.excludedActorIds.length > 0;
+    const hasRecipients =
+      Array.isArray(normalizedContextualData.recipientIds) &&
+      normalizedContextualData.recipientIds.length > 0;
+    const hasExclusions =
+      Array.isArray(normalizedContextualData.excludedActorIds) &&
+      normalizedContextualData.excludedActorIds.length > 0;
 
     if (hasRecipients && hasExclusions) {
       safeDispatchError(
@@ -138,7 +150,7 @@ class DispatchPerceptibleEventHandler {
         'DISPATCH_PERCEPTIBLE_EVENT: recipientIds and excludedActorIds are mutually exclusive',
         {
           recipientIds: normalizedContextualData.recipientIds,
-          excludedActorIds: normalizedContextualData.excludedActorIds
+          excludedActorIds: normalizedContextualData.excludedActorIds,
         },
         this.#logger
       );

@@ -184,7 +184,8 @@ describe('SpeechPatternsDisplayEnhancer', () => {
         generatedAt: new Date().toISOString(),
       };
 
-      const [{ categories }] = enhancer.enhanceForDisplay(complexPatterns).patterns;
+      const [{ categories }] =
+        enhancer.enhanceForDisplay(complexPatterns).patterns;
 
       expect(categories).toEqual(
         expect.arrayContaining([

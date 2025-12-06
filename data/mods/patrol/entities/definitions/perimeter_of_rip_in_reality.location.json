@@ -1,23 +1,23 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "patrol:perimeter_of_rip_in_reality",
-    "components": {
-        "core:name": {
-            "text": "perimeter of rip in reality"
-        },
-        "core:description": {
-            "text": "The sky is pale blue and bleached. A vast white salt flat extends to a hazy horizon under hard, mid-morning sunlight. The ground forms interlocking polygonal crusts with shallow, glossy brine pooling along the seams. Heat shimmer and slight mirage ripples distort the distant view. At mid-distance center, a vertical elliptical distortion stands in the air. It refracts the horizon, shows subtle chromatic fringing, and carries a faint glowing rim; its reflection appears in the wet surface below. Four compact quadcopter drones patrol the area, hovering with rotor cages and small red-white nav beacons lit. The propellers register as motion-blurred disks, and each drone casts a sharp shadow on the salt."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/perimeter_of_rip_in_reality.png",
-            "altText": "Perimeter of rip in reality."
-        },
-        "movement:exits": [
-            {
-                "direction": "through the dimensional rift",
-                "target": "patrol:eldritch_dimension_instance",
-                "blocker": "patrol:dimensional_rift_blocker_instance"
-            }
-        ]
-    }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "patrol:perimeter_of_rip_in_reality",
+  "components": {
+    "core:name": {
+      "text": "perimeter of rip in reality"
+    },
+    "core:description": {
+      "text": "The sky is pale blue and bleached. A vast white salt flat extends to a hazy horizon under hard, mid-morning sunlight. The ground forms interlocking polygonal crusts with shallow, glossy brine pooling along the seams. Heat shimmer and slight mirage ripples distort the distant view. At mid-distance center, a vertical elliptical distortion stands in the air. It refracts the horizon, shows subtle chromatic fringing, and carries a faint glowing rim; its reflection appears in the wet surface below. Four compact quadcopter drones patrol the area, hovering with rotor cages and small red-white nav beacons lit. The propellers register as motion-blurred disks, and each drone casts a sharp shadow on the salt."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/perimeter_of_rip_in_reality.png",
+      "altText": "Perimeter of rip in reality."
+    },
+    "movement:exits": [
+      {
+        "direction": "through the dimensional rift",
+        "target": "patrol:eldritch_dimension_instance",
+        "blocker": "patrol:dimensional_rift_blocker_instance"
+      }
+    ]
+  }
 }

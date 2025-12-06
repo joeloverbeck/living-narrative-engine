@@ -11,8 +11,15 @@ import { describe, it, beforeEach, expect } from '@jest/globals';
 import { UnifiedErrorHandler } from '../../../../src/actions/errors/unifiedErrorHandler.js';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
-import { ERROR_PHASES, FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
-import { TraceContext, TRACE_DATA, TRACE_INFO } from '../../../../src/actions/tracing/traceContext.js';
+import {
+  ERROR_PHASES,
+  FIX_TYPES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  TraceContext,
+  TRACE_DATA,
+  TRACE_INFO,
+} from '../../../../src/actions/tracing/traceContext.js';
 
 /**
  * Lightweight logger implementation that records the payload of each call so
@@ -218,9 +225,13 @@ describe('UnifiedErrorHandler – real module integration', () => {
         fix.details?.source === 'prerequisite_analysis'
     );
     expect(prerequisiteFixes.length).toBeGreaterThan(0);
-    expect(
-      prerequisiteFixes.map((fix) => fix.details.componentId)
-    ).toEqual(expect.arrayContaining(['core:inventory', 'core:hands', 'core:telekinesis']));
+    expect(prerequisiteFixes.map((fix) => fix.details.componentId)).toEqual(
+      expect.arrayContaining([
+        'core:inventory',
+        'core:hands',
+        'core:telekinesis',
+      ])
+    );
   });
 
   it('captures evaluation trace data when execution errors occur', () => {
@@ -279,11 +290,14 @@ describe('UnifiedErrorHandler – real module integration', () => {
   });
 
   it('creates discovery contexts with the correct stage metadata', () => {
-    const context = handler.handleDiscoveryError(new Error('Discovery failure'), {
-      actorId: 'actor-1',
-      actionDef: actionDefinition,
-      additionalContext: { scenario: 'search' },
-    });
+    const context = handler.handleDiscoveryError(
+      new Error('Discovery failure'),
+      {
+        actorId: 'actor-1',
+        actionDef: actionDefinition,
+        additionalContext: { scenario: 'search' },
+      }
+    );
 
     expect(context.environmentContext).toMatchObject({
       stage: 'discovery',
@@ -293,13 +307,18 @@ describe('UnifiedErrorHandler – real module integration', () => {
   });
 
   it('tracks the processing stage when command workflows fail', () => {
-    const context = handler.handleProcessingError(new Error('Directive failure'), {
-      actorId: 'actor-1',
-      stage: 'directive',
-      additionalContext: { step: 'apply_directive' },
-    });
+    const context = handler.handleProcessingError(
+      new Error('Directive failure'),
+      {
+        actorId: 'actor-1',
+        stage: 'directive',
+        additionalContext: { step: 'apply_directive' },
+      }
+    );
 
-    expect(context.environmentContext.stage).toBe('command_processing_directive');
+    expect(context.environmentContext.stage).toBe(
+      'command_processing_directive'
+    );
     expect(context.environmentContext.step).toBe('apply_directive');
   });
 
@@ -327,12 +346,15 @@ describe('UnifiedErrorHandler – real module integration', () => {
   });
 
   it('enforces dependency contracts for builder and logger', () => {
-    expect(() =>
-      new UnifiedErrorHandler({ actionErrorContextBuilder: errorContextBuilder })
+    expect(
+      () =>
+        new UnifiedErrorHandler({
+          actionErrorContextBuilder: errorContextBuilder,
+        })
     ).toThrow('UnifiedErrorHandler requires logger');
 
-    expect(() =>
-      new UnifiedErrorHandler({ actionErrorContextBuilder: null, logger })
+    expect(
+      () => new UnifiedErrorHandler({ actionErrorContextBuilder: null, logger })
     ).toThrow('UnifiedErrorHandler requires actionErrorContextBuilder');
   });
 
@@ -445,4 +467,3 @@ describe('UnifiedErrorHandler – real module integration', () => {
     expect(finalLog.extra).not.toHaveProperty('channel');
   });
 });
-

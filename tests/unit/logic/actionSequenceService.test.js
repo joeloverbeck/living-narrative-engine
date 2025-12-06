@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, beforeAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  beforeAll,
+} from '@jest/globals';
 
 let mockExecuteActionSequence;
 
@@ -68,24 +75,29 @@ describe('ActionSequenceService', () => {
             logger,
             operationInterpreter: invalidInterpreter,
           })
-      ).toThrow("Invalid or missing method 'execute' on dependency 'ActionSequenceService: operationInterpreter'.");
+      ).toThrow(
+        "Invalid or missing method 'execute' on dependency 'ActionSequenceService: operationInterpreter'."
+      );
     });
   });
 
   describe('execute', () => {
     it('throws when sequence lacks an actions array', async () => {
       await expect(
-        service.execute({ notActions: [] }, { jsonLogic: {}, evaluationContext: {} })
+        service.execute(
+          { notActions: [] },
+          { jsonLogic: {}, evaluationContext: {} }
+        )
       ).rejects.toThrow(
-        "ActionSequenceService.execute: sequence must have an actions array"
+        'ActionSequenceService.execute: sequence must have an actions array'
       );
       expect(mockExecuteActionSequence).not.toHaveBeenCalled();
     });
 
     it('throws when execution context is missing or invalid', async () => {
-      await expect(
-        service.execute({ actions: [] }, null)
-      ).rejects.toThrow('ActionSequenceService.execute: context is required');
+      await expect(service.execute({ actions: [] }, null)).rejects.toThrow(
+        'ActionSequenceService.execute: context is required'
+      );
       expect(mockExecuteActionSequence).not.toHaveBeenCalled();
     });
 

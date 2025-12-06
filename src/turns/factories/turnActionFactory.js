@@ -21,7 +21,7 @@ export class TurnActionFactory extends ITurnActionFactory {
    */
   create(composite, speech = null) {
     const trimmedSpeech =
-      typeof speech === 'string' ? speech.trim() : speech ?? null;
+      typeof speech === 'string' ? speech.trim() : (speech ?? null);
 
     const obj = {
       actionDefinitionId: composite.actionId,

@@ -74,16 +74,18 @@ describe('Body Descriptor System Consistency', () => {
     });
 
     it('should have unique display orders', () => {
-      const displayOrders = Object.values(BODY_DESCRIPTOR_REGISTRY)
-        .map(meta => meta.displayOrder);
+      const displayOrders = Object.values(BODY_DESCRIPTOR_REGISTRY).map(
+        (meta) => meta.displayOrder
+      );
 
       const uniqueOrders = new Set(displayOrders);
       expect(uniqueOrders.size).toBe(displayOrders.length);
     });
 
     it('should have unique display keys', () => {
-      const displayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY)
-        .map(meta => meta.displayKey);
+      const displayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY).map(
+        (meta) => meta.displayKey
+      );
 
       const uniqueKeys = new Set(displayKeys);
       expect(uniqueKeys.size).toBe(displayKeys.length);
@@ -105,11 +107,15 @@ describe('Body Descriptor System Consistency', () => {
     it('should have matching validValues between registry and schema', () => {
       for (const [name, metadata] of Object.entries(BODY_DESCRIPTOR_REGISTRY)) {
         if (metadata.validValues) {
-          const schemaProperty = recipeSchema.properties.bodyDescriptors
-            .properties[metadata.schemaProperty];
+          const schemaProperty =
+            recipeSchema.properties.bodyDescriptors.properties[
+              metadata.schemaProperty
+            ];
 
           if (schemaProperty?.enum) {
-            expect(metadata.validValues.sort()).toEqual(schemaProperty.enum.sort());
+            expect(metadata.validValues.sort()).toEqual(
+              schemaProperty.enum.sort()
+            );
           }
         }
       }
@@ -120,8 +126,9 @@ describe('Body Descriptor System Consistency', () => {
         recipeSchema.properties.bodyDescriptors.properties
       );
 
-      const registrySchemaProperties = Object.values(BODY_DESCRIPTOR_REGISTRY)
-        .map(meta => meta.schemaProperty);
+      const registrySchemaProperties = Object.values(
+        BODY_DESCRIPTOR_REGISTRY
+      ).map((meta) => meta.schemaProperty);
 
       for (const schemaProp of schemaProperties) {
         expect(registrySchemaProperties).toContain(schemaProp);
@@ -139,16 +146,18 @@ describe('Body Descriptor System Consistency', () => {
     });
 
     it('should not have orphaned body descriptor displayKeys in formatting config', () => {
-      const registeredDisplayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY)
-        .map(meta => meta.displayKey);
+      const registeredDisplayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY).map(
+        (meta) => meta.displayKey
+      );
 
       // Note: descriptionOrder contains both body descriptors (height, skin_color, etc.)
       // AND anatomy part types (head, hair, eye, etc.). We only validate body descriptors.
       // A displayKey is orphaned only if it matches a registered body descriptor key
       // but is not actually in the registry.
-      const bodyDescriptorKeysInConfig = formattingConfig.descriptionOrder.filter(
-        key => registeredDisplayKeys.includes(key)
-      );
+      const bodyDescriptorKeysInConfig =
+        formattingConfig.descriptionOrder.filter((key) =>
+          registeredDisplayKeys.includes(key)
+        );
 
       // All body descriptor keys found in config should be in registry
       for (const key of bodyDescriptorKeysInConfig) {
@@ -174,7 +183,7 @@ describe('Body Descriptor System Consistency', () => {
         body: {
           descriptors: {
             height: 'tall',
-            skinColor: 'tan',        // camelCase in component data
+            skinColor: 'tan', // camelCase in component data
             build: 'athletic',
             composition: 'lean',
             hairDensity: 'moderate', // camelCase in component data

@@ -18,9 +18,12 @@ const currentDir = path.dirname(currentFilePath);
 const repoRoot = path.resolve(currentDir, '../../../..');
 
 const EVENT_FILES = {
-  'core:traits_generation_started': 'data/mods/core/events/traits_generation_started.event.json',
-  'core:traits_generation_completed': 'data/mods/core/events/traits_generation_completed.event.json',
-  'core:traits_generation_failed': 'data/mods/core/events/traits_generation_failed.event.json',
+  'core:traits_generation_started':
+    'data/mods/core/events/traits_generation_started.event.json',
+  'core:traits_generation_completed':
+    'data/mods/core/events/traits_generation_completed.event.json',
+  'core:traits_generation_failed':
+    'data/mods/core/events/traits_generation_failed.event.json',
 };
 
 const EVENT_DEFINITIONS = Object.fromEntries(
@@ -312,7 +315,8 @@ function buildUserInputs() {
     coreMotivation: 'To protect every ally who places trust in them.',
     internalContradiction:
       'Craves genuine connection yet hides behind strategic distance.',
-    centralQuestion: 'Will sacrifice finally balance the scales of past failure?',
+    centralQuestion:
+      'Will sacrifice finally balance the scales of past failure?',
   };
 }
 
@@ -324,7 +328,9 @@ function buildCliches() {
     categories: {
       redemption: ['Brooding hero who refuses to forgive himself'],
     },
-    tropesAndStereotypes: ['Lone wolf who pushes allies away to keep them safe'],
+    tropesAndStereotypes: [
+      'Lone wolf who pushes allies away to keep them safe',
+    ],
   };
 }
 

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { validateAgainstSchema } from '../../../src/utils/schemaValidationUtils.js';
 import * as preValidationUtils from '../../../src/utils/preValidationUtils.js';
 import { createMockLogger } from '../testUtils.js';
@@ -47,14 +54,16 @@ describe('validateAgainstSchema pre-validation coverage', () => {
         {
           filePath: '/mods/example/rule.json',
           failureContext: { stage: 'loading' },
-        },
-      ),
-    ).toThrow("Pre-validation failed for 'rule.json': Unexpected structure\nDetails:\nFormatted pre-validation error");
+        }
+      )
+    ).toThrow(
+      "Pre-validation failed for 'rule.json': Unexpected structure\nDetails:\nFormatted pre-validation error"
+    );
 
     expect(performSpy).toHaveBeenCalledWith(
       data,
       'schema://living-narrative-engine/rule.schema.json',
-      '/mods/example/rule.json',
+      '/mods/example/rule.json'
     );
     expect(formatSpy).toHaveBeenCalledWith(
       {
@@ -64,21 +73,26 @@ describe('validateAgainstSchema pre-validation coverage', () => {
         suggestions: ['Ensure type is provided'],
       },
       'rule.json',
-      'schema://living-narrative-engine/rule.schema.json',
+      'schema://living-narrative-engine/rule.schema.json'
     );
-    expect(logger.error).toHaveBeenCalledWith("Pre-validation failed for 'rule.json'", {
-      stage: 'loading',
-      schemaId: 'schema://living-narrative-engine/rule.schema.json',
-      preValidationError: 'Unexpected structure',
-      preValidationPath: 'root.operations[0]',
-      preValidationSuggestions: ['Ensure type is provided'],
-    });
+    expect(logger.error).toHaveBeenCalledWith(
+      "Pre-validation failed for 'rule.json'",
+      {
+        stage: 'loading',
+        schemaId: 'schema://living-narrative-engine/rule.schema.json',
+        preValidationError: 'Unexpected structure',
+        preValidationPath: 'root.operations[0]',
+        preValidationSuggestions: ['Ensure type is provided'],
+      }
+    );
     expect(validator.validate).not.toHaveBeenCalled();
   });
 
   it('logs success when pre-validation passes with a file path', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
-    validator.validate.mockReturnValue(/** @type {ValidationResult} */ ({ isValid: true, errors: null }));
+    validator.validate.mockReturnValue(
+      /** @type {ValidationResult} */ ({ isValid: true, errors: null })
+    );
 
     jest.spyOn(preValidationUtils, 'performPreValidation').mockReturnValue({
       isValid: true,
@@ -92,18 +106,20 @@ describe('validateAgainstSchema pre-validation coverage', () => {
       'schema://living-narrative-engine/rule.schema.json',
       { operations: [] },
       logger,
-      { filePath: '/mods/example/rule.json' },
+      { filePath: '/mods/example/rule.json' }
     );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      "Pre-validation passed for '/mods/example/rule.json' against schema 'schema://living-narrative-engine/rule.schema.json'",
+      "Pre-validation passed for '/mods/example/rule.json' against schema 'schema://living-narrative-engine/rule.schema.json'"
     );
     expect(result).toEqual({ isValid: true, errors: null });
   });
 
   it('skips pre-validation when requested', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
-    validator.validate.mockReturnValue(/** @type {ValidationResult} */ ({ isValid: true, errors: null }));
+    validator.validate.mockReturnValue(
+      /** @type {ValidationResult} */ ({ isValid: true, errors: null })
+    );
 
     const performSpy = jest.spyOn(preValidationUtils, 'performPreValidation');
 
@@ -112,13 +128,13 @@ describe('validateAgainstSchema pre-validation coverage', () => {
       'schema://living-narrative-engine/rule.schema.json',
       { operations: [] },
       logger,
-      { skipPreValidation: true, filePath: '/mods/example/rule.json' },
+      { skipPreValidation: true, filePath: '/mods/example/rule.json' }
     );
 
     expect(performSpy).not.toHaveBeenCalled();
     expect(result).toEqual({ isValid: true, errors: null });
     expect(logger.debug).not.toHaveBeenCalledWith(
-      expect.stringContaining('Pre-validation passed for'),
+      expect.stringContaining('Pre-validation passed for')
     );
   });
 });

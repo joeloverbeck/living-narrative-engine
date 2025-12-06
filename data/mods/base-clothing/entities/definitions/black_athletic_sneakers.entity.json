@@ -8,16 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base"
-      ]
+      "allowedLayers": ["base"]
     },
     "core:material": {
       "material": "synthetic",
-      "properties": [
-        "breathable",
-        "flexible"
-      ]
+      "properties": ["breathable", "flexible"]
     },
     "core:name": {
       "text": "sneakers"

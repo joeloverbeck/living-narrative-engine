@@ -290,9 +290,7 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateRemoteConfig({ endpoint: 'invalid' });
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual([
-        'Remote validation error: Remote crash',
-      ]);
+      expect(result.errors).toEqual(['Remote validation error: Remote crash']);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error validating remote configuration',
         expect.any(Error)
@@ -414,13 +412,11 @@ describe('DebugLoggingConfigValidator', () => {
         errors: [],
       });
 
-      jest
-        .spyOn(validator, 'validateRemoteConfig')
-        .mockReturnValue({
-          isValid: false,
-          errors: ['remote invalid'],
-          formattedErrors: 'remote invalid',
-        });
+      jest.spyOn(validator, 'validateRemoteConfig').mockReturnValue({
+        isValid: false,
+        errors: ['remote invalid'],
+        formattedErrors: 'remote invalid',
+      });
 
       const report = validator.performDetailedValidation(config);
 

@@ -120,13 +120,16 @@ describe('Torso Descriptor-Based Selection Integration', () => {
       // NOTE: PartSelectionService does NOT filter by properties (see partSelectionService.js:351-355)
       // Properties are componentOverrides applied AFTER selection
       // Both torsos meet basic requirements (partType=torso, has anatomy:part), so either could be selected
-      expect(['anatomy:human_male_torso', 'anatomy:human_male_torso_thick_hairy']).toContain(
-        rootEntity.definitionId
-      );
+      expect([
+        'anatomy:human_male_torso',
+        'anatomy:human_male_torso_thick_hairy',
+      ]).toContain(rootEntity.definitionId);
 
       // Verify that recipe properties ARE applied via componentOverrides
       const buildComponent = rootEntity.getComponentData('descriptors:build');
-      const bodyHairComponent = rootEntity.getComponentData('descriptors:body_hair');
+      const bodyHairComponent = rootEntity.getComponentData(
+        'descriptors:body_hair'
+      );
       expect(buildComponent?.build).toBe('thick');
       expect(bodyHairComponent?.hairDensity).toBe('hairy');
     });
@@ -214,13 +217,16 @@ describe('Torso Descriptor-Based Selection Integration', () => {
 
       // Selection is random between matching entities (both meet partType and component requirements)
       // The selected torso should be one of the registered entities
-      expect(['anatomy:human_male_torso', 'anatomy:human_male_torso_thick_hairy']).toContain(
-        rootEntity.definitionId
-      );
+      expect([
+        'anatomy:human_male_torso',
+        'anatomy:human_male_torso_thick_hairy',
+      ]).toContain(rootEntity.definitionId);
 
       // Verify that recipe properties ARE applied via componentOverrides
       const buildComponent = rootEntity.getComponentData('descriptors:build');
-      const bodyHairComponent = rootEntity.getComponentData('descriptors:body_hair');
+      const bodyHairComponent = rootEntity.getComponentData(
+        'descriptors:body_hair'
+      );
       expect(buildComponent?.build).toBe('thick');
       expect(bodyHairComponent?.hairDensity).toBe('hairy');
     });

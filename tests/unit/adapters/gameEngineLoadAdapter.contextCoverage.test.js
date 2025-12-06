@@ -51,7 +51,7 @@ describe('GameEngineLoadAdapter context-sensitive coverage', () => {
     const adapter = new GameEngineLoadAdapter({ loadGame: 42 });
 
     await expect(adapter.load('epsilon')).rejects.toThrow(
-      /this\[#engine\]\.loadGame is not a function/,
+      /this\[#engine\]\.loadGame is not a function/
     );
   });
 });

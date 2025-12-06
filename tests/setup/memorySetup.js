@@ -245,6 +245,8 @@ global.memoryTestUtils = {
       await new Promise((resolve) => setTimeout(resolve, 30)); // Reduced from 100ms
     }
 
-    console.log(`Pre-test stabilization completed (${minimumDelayMs}ms + GC cycles)`);
+    console.log(
+      `Pre-test stabilization completed (${minimumDelayMs}ms + GC cycles)`
+    );
   },
 };

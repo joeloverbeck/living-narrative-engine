@@ -54,10 +54,7 @@ async function createTestServer(routeInitializer) {
  * }>}
  */
 async function createService(options = {}) {
-  const {
-    httpAgentEnabled = true,
-    retryManagerClass = RetryManager,
-  } = options;
+  const { httpAgentEnabled = true, retryManagerClass = RetryManager } = options;
 
   const previousNodeEnv = process.env.NODE_ENV;
   const previousHttpAgentEnabled = process.env.HTTP_AGENT_ENABLED;
@@ -196,9 +193,9 @@ describe('LlmRequestService integration error coverage', () => {
       expect(result.errorStage).toBe('llm_forwarding_unexpected_llm_status');
       expect(result.errorMessage).toContain('unexpected status');
       expect(result.errorDetailsForClient.llmApiStatusCode).toBe(399);
-      expect(
-        result.errorDetailsForClient.llmApiResponseBodyPreview
-      ).toContain('Non standard response');
+      expect(result.errorDetailsForClient.llmApiResponseBodyPreview).toContain(
+        'Non standard response'
+      );
     } finally {
       await server.close();
       await cleanup();

@@ -10,7 +10,9 @@ describe('IRecipeValidator Interface', () => {
     });
 
     it('should throw when name getter not implemented', () => {
-      expect(() => validator.name).toThrow('IRecipeValidator.name not implemented');
+      expect(() => validator.name).toThrow(
+        'IRecipeValidator.name not implemented'
+      );
     });
 
     it('should throw when priority getter not implemented', () => {
@@ -91,24 +93,28 @@ describe('IRecipeValidator Interface', () => {
       expect(() => {
         // Access the name getter to trigger the error
         return validator.name;
-      }).toThrow(expect.objectContaining({
-        message: expect.stringContaining('IRecipeValidator.name')
-      }));
+      }).toThrow(
+        expect.objectContaining({
+          message: expect.stringContaining('IRecipeValidator.name'),
+        })
+      );
     });
 
     it('should throw clear error for unimplemented priority', () => {
       expect(() => {
         // Access the priority getter to trigger the error
         return validator.priority;
-      }).toThrow(expect.objectContaining({
-        message: expect.stringContaining('IRecipeValidator.priority')
-      }));
+      }).toThrow(
+        expect.objectContaining({
+          message: expect.stringContaining('IRecipeValidator.priority'),
+        })
+      );
     });
 
     it('should throw clear error for unimplemented validate', async () => {
       await expect(validator.validate({}, {})).rejects.toThrow(
         expect.objectContaining({
-          message: expect.stringContaining('IRecipeValidator.validate')
+          message: expect.stringContaining('IRecipeValidator.validate'),
         })
       );
     });

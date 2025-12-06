@@ -19,7 +19,8 @@
  */
 export async function executeClothingInstantiation(context, dependencies) {
   const { ownerId, recipeId, partsMap, slotEntityMappings } = context;
-  const { clothingInstantiationService, dataRegistry, entityManager, logger } = dependencies;
+  const { clothingInstantiationService, dataRegistry, entityManager, logger } =
+    dependencies;
 
   // Only execute if clothingInstantiationService is available
   if (!clothingInstantiationService) {
@@ -37,7 +38,11 @@ export async function executeClothingInstantiation(context, dependencies) {
   const recipe = dataRegistry.get('anatomyRecipes', recipeId);
 
   // Check if recipe has clothingEntities
-  if (!recipe || !recipe.clothingEntities || recipe.clothingEntities.length === 0) {
+  if (
+    !recipe ||
+    !recipe.clothingEntities ||
+    recipe.clothingEntities.length === 0
+  ) {
     logger.debug(
       `ClothingInstantiationStage: No clothing entities in recipe '${recipeId}'`
     );

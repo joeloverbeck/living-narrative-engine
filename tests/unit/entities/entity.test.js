@@ -225,9 +225,7 @@ describe('Entity Class', () => {
   describe('getComponent alias', () => {
     it('should forward to getComponentData and return the same result', () => {
       const sentinel = { current: 77 };
-      jest
-        .spyOn(entity, 'getComponentData')
-        .mockReturnValueOnce(sentinel);
+      jest.spyOn(entity, 'getComponentData').mockReturnValueOnce(sentinel);
 
       const result = entity.getComponent('core:health');
 
@@ -387,9 +385,10 @@ describe('Entity Class', () => {
         max: 100,
         regen: 5,
       });
-      expect(
-        mockDefinition.components['core:health']
-      ).toEqual({ current: 100, max: 100 });
+      expect(mockDefinition.components['core:health']).toEqual({
+        current: 100,
+        max: 100,
+      });
     });
 
     it('should add a component when one does not already exist', () => {

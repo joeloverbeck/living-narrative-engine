@@ -38,7 +38,9 @@ describe('ScopeResolverHelpers.registerCustomScope() - Condition Loading', () =>
 
       // Verify condition was loaded into registry
       expect(testEnv._loadedConditions).toBeDefined();
-      expect(testEnv._loadedConditions.has('positioning:actor-in-entity-facing-away')).toBe(true);
+      expect(
+        testEnv._loadedConditions.has('positioning:actor-in-entity-facing-away')
+      ).toBe(true);
 
       // Verify condition can be retrieved from dataRegistry
       const conditionDef = testEnv.dataRegistry.getConditionDefinition(
@@ -57,7 +59,9 @@ describe('ScopeResolverHelpers.registerCustomScope() - Condition Loading', () =>
       );
 
       // Verify the primary condition was loaded
-      expect(testEnv._loadedConditions.has('positioning:actor-in-entity-facing-away')).toBe(true);
+      expect(
+        testEnv._loadedConditions.has('positioning:actor-in-entity-facing-away')
+      ).toBe(true);
 
       // All discovered conditions should be retrievable
       const allLoadedIds = Array.from(testEnv._loadedConditions.keys());

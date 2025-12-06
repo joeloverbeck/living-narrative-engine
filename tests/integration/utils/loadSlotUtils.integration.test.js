@@ -29,7 +29,9 @@ const createStorageProvider = () => {
   return {
     async writeFileAtomically(path, data) {
       const buffer =
-        data instanceof Uint8Array ? new Uint8Array(data) : new Uint8Array(data);
+        data instanceof Uint8Array
+          ? new Uint8Array(data)
+          : new Uint8Array(data);
       files.set(path, buffer);
       return { success: true };
     },
@@ -66,7 +68,11 @@ const createStorageProvider = () => {
   };
 };
 
-const buildGameState = ({ timestamp, playtimeSeconds, gameTitle = 'Integration Test World' }) => ({
+const buildGameState = ({
+  timestamp,
+  playtimeSeconds,
+  gameTitle = 'Integration Test World',
+}) => ({
   metadata: {
     saveFormatVersion: '1.0.0',
     engineVersion: 'integration-test',
@@ -178,11 +184,13 @@ describe('Integration: loadSlotUtils with persistence pipeline', () => {
       getManualSavePath('AlphaSlot'),
     ]);
 
-    const corrupted = formattedSlots.filter((slot) => slot.slotItemMeta.isCorrupted);
-    expect(corrupted).toHaveLength(2);
-    expect(corrupted[0].slotItemMeta.name <= corrupted[1].slotItemMeta.name).toBe(
-      true
+    const corrupted = formattedSlots.filter(
+      (slot) => slot.slotItemMeta.isCorrupted
     );
+    expect(corrupted).toHaveLength(2);
+    expect(
+      corrupted[0].slotItemMeta.name <= corrupted[1].slotItemMeta.name
+    ).toBe(true);
     expect(corrupted[0].slotItemMeta.timestamp).toBe('Timestamp: N/A');
   });
 

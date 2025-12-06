@@ -69,7 +69,9 @@ const createInitializationDeps = (logger, overrides = {}) => {
       scopeRegistry: { initialize: () => Promise.resolve() },
       dataRegistry: { getAll: () => [] },
       systemInitializer: { initializeAll: () => Promise.resolve() },
-      worldInitializer: { initializeWorldEntities: () => Promise.resolve(true) },
+      worldInitializer: {
+        initializeWorldEntities: () => Promise.resolve(true),
+      },
       contentDependencyValidator: { validate: () => Promise.resolve() },
       llmAdapterInitializer: { initialize: () => Promise.resolve(true) },
       anatomyFormattingService: { initialize: () => Promise.resolve() },
@@ -140,9 +142,7 @@ describe('dependencyUtils integration with real modules', () => {
     expect(() => manager.setTargets(null)).toThrow(
       'Targets object is required'
     );
-    expect(logger.errorMessages[0].message).toBe(
-      'Targets object is required'
-    );
+    expect(logger.errorMessages[0].message).toBe('Targets object is required');
   });
 
   test('EventDispatchService throws when required dispatcher is missing', () => {
@@ -203,9 +203,7 @@ describe('dependencyUtils integration with real modules', () => {
         deps
       );
       prefixedLogger.debug('hello');
-      expect(baseLogger.debugMessages[0].message).toBe(
-        'RealService: hello'
-      );
+      expect(baseLogger.debugMessages[0].message).toBe('RealService: hello');
     });
 
     test('missing required method triggers InvalidArgumentError and logs detail', () => {
@@ -257,7 +255,7 @@ describe('dependencyUtils integration with real modules', () => {
         serviceSetup.validateDeps('BrokenAnalytics', baseLogger, badDeps)
       ).toThrow(InvalidArgumentError);
       expect(baseLogger.errorMessages[0].message).toBe(
-        "Missing required dependency: BrokenAnalytics: analytics."
+        'Missing required dependency: BrokenAnalytics: analytics.'
       );
     });
 
@@ -274,7 +272,12 @@ describe('dependencyUtils integration with real modules', () => {
     const componentLogger = new RecordingLogger();
 
     expect(() =>
-      validateInstanceAndComponent('entity-1', '   ', componentLogger, 'TestContext')
+      validateInstanceAndComponent(
+        'entity-1',
+        '   ',
+        componentLogger,
+        'TestContext'
+      )
     ).toThrow(InvalidArgumentError);
 
     expect(componentLogger.errorMessages[0].message).toBe(
@@ -286,7 +289,12 @@ describe('dependencyUtils integration with real modules', () => {
 
     const idLogger = new RecordingLogger();
     expect(() =>
-      validateInstanceAndComponent('', 'component-type', idLogger, 'TestContext')
+      validateInstanceAndComponent(
+        '',
+        'component-type',
+        idLogger,
+        'TestContext'
+      )
     ).toThrow(InvalidArgumentError);
     expect(idLogger.errorMessages[0].message).toBe(
       "TestContext: Invalid ID ''. Expected non-blank string."
@@ -312,16 +320,17 @@ describe('dependencyUtils integration with real modules', () => {
     const logger = new RecordingLogger();
     const scopeRegistry = { initialize: () => Promise.resolve() };
 
-    expect(() =>
-      new WorldInitializer({
-        entityManager,
-        worldContext,
-        gameDataRepository: repository,
-        validatedEventDispatcher: dispatcher,
-        eventDispatchService,
-        logger,
-        scopeRegistry,
-      })
+    expect(
+      () =>
+        new WorldInitializer({
+          entityManager,
+          worldContext,
+          gameDataRepository: repository,
+          validatedEventDispatcher: dispatcher,
+          eventDispatchService,
+          logger,
+          scopeRegistry,
+        })
     ).toThrow();
   });
 });

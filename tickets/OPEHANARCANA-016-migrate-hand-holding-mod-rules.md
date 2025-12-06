@@ -16,6 +16,7 @@ Migrate all rules in the `hand-holding` mod from the expanded pattern to use `ES
 ## Files to Touch
 
 ### Modified Files (~8 rules estimated)
+
 - `data/mods/hand-holding/rules/handle_hold_hand.rule.json`
 - `data/mods/hand-holding/rules/handle_release_hand.rule.json`
 - `data/mods/hand-holding/rules/handle_interlock_fingers.rule.json` (if exists)
@@ -27,6 +28,7 @@ Migrate all rules in the `hand-holding` mod from the expanded pattern to use `ES
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any action files (only rules)
 - Any condition files
 - Any component files
@@ -148,11 +150,13 @@ Migrate all rules in the `hand-holding` mod from the expanded pattern to use `ES
 ### Tests That Must Pass
 
 1. **All hand-holding mod integration tests:**
+
    ```bash
    npm run test:integration -- tests/integration/mods/hand-holding/
    ```
 
 2. **Mod validation:**
+
    ```bash
    npm run validate:mod:hand-holding
    ```

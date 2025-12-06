@@ -92,7 +92,12 @@ describe('CacheService sentinel eviction coverage integration', () => {
       enableAutoCleanup: false,
     });
 
-    apiKeyService = new ApiKeyService(logger, fsReader, appConfig, cacheService);
+    apiKeyService = new ApiKeyService(
+      logger,
+      fsReader,
+      appConfig,
+      cacheService
+    );
   });
 
   afterEach(() => {

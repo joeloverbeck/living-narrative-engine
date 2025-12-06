@@ -37,12 +37,14 @@ All files must pass validation via `npm run validate:recipe`, which checks:
 From the Body Descriptor Registry (`src/anatomy/registries/bodyDescriptorRegistry.js`):
 
 **Enumerated Values (must use exact strings):**
+
 - `height`: microscopic, minuscule, tiny, petite, short, average, tall, very-tall, gigantic, colossal, titanic
 - `build`: skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky, frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky
 - `composition`: underweight, lean, average, soft, chubby, overweight, obese, atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting
 - `hairDensity`: hairless, sparse, light, moderate, hairy, very-hairy, furred
 
 **Free-form Values (any string):**
+
 - `skinColor`: E.g., "olive-green", "mottled-brown", "grey-green"
 - `smell`: E.g., "earthy", "musty", "damp"
 
@@ -51,11 +53,13 @@ From the Body Descriptor Registry (`src/anatomy/registries/bodyDescriptorRegistr
 The recipe system supports three pattern matching approaches:
 
 1. **`matchesGroup`** - Template-driven (recommended for limbs):
+
    ```json
    { "matchesGroup": "limbSet:arm", "partType": "tortoise_arm" }
    ```
 
 2. **`matches`** - Explicit slot list (for specific parts):
+
    ```json
    { "matches": ["left_eye", "right_eye"], "partType": "tortoise_eye" }
    ```
@@ -72,6 +76,7 @@ The recipe system supports three pattern matching approaches:
 **Species:** Tortoise-person (bipedal upright tortoise)
 
 **Physical Characteristics:**
+
 - **Height:** Approximately 4'2" (short by humanoid standards)
 - **Build:** Stocky, barrel-chested due to shell structure
 - **Shell:** Massive dark amber-brown carapace with visible growth rings
@@ -212,6 +217,7 @@ The recipe system supports three pattern matching approaches:
 ```
 
 **Notes:**
+
 - `additionalSlots` define shell mounting points on the torso
 - `clothingSlotMappings` allow shell-specific armor/accessories
 - Structure template handles limb and appendage sockets
@@ -376,6 +382,7 @@ The recipe system supports three pattern matching approaches:
 ```
 
 **Notes:**
+
 - `slots` handle unique parts (shell, head, tail)
 - `patterns` use `matchesGroup` for bilateral limbs (preferred approach)
 - `patterns` use `matches` for specific socket lists (eyes, hands, feet)
@@ -1082,12 +1089,16 @@ describe('Tortoise Person Anatomy Integration', () => {
       const carapace = result.partsMap.carapace;
       expect(carapace).toBeDefined();
       expect(carapace.components['descriptors:texture'].texture).toBe('scaled');
-      expect(carapace.components['descriptors:shape_general'].shape).toBe('domed');
+      expect(carapace.components['descriptors:shape_general'].shape).toBe(
+        'domed'
+      );
 
       const plastron = result.partsMap.plastron;
       expect(plastron).toBeDefined();
       expect(plastron.components['descriptors:texture'].texture).toBe('smooth');
-      expect(plastron.components['descriptors:shape_general'].shape).toBe('flat');
+      expect(plastron.components['descriptors:shape_general'].shape).toBe(
+        'flat'
+      );
     });
 
     it('should have clawed hands and feet', async () => {
@@ -1098,20 +1109,28 @@ describe('Tortoise Person Anatomy Integration', () => {
 
       // Check hands
       const leftHand = result.partsMap.left_hand;
-      expect(leftHand.components['descriptors:projection'].projection).toBe('clawed');
+      expect(leftHand.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
       expect(leftHand.components['descriptors:digit_count'].count).toBe(3);
 
       const rightHand = result.partsMap.right_hand;
-      expect(rightHand.components['descriptors:projection'].projection).toBe('clawed');
+      expect(rightHand.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
       expect(rightHand.components['descriptors:digit_count'].count).toBe(3);
 
       // Check feet
       const leftFoot = result.partsMap.left_foot;
-      expect(leftFoot.components['descriptors:projection'].projection).toBe('clawed');
+      expect(leftFoot.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
       expect(leftFoot.components['descriptors:digit_count'].count).toBe(3);
 
       const rightFoot = result.partsMap.right_foot;
-      expect(rightFoot.components['descriptors:projection'].projection).toBe('clawed');
+      expect(rightFoot.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
       expect(rightFoot.components['descriptors:digit_count'].count).toBe(3);
     });
 
@@ -1168,9 +1187,11 @@ describe('Tortoise Person Anatomy Integration', () => {
 ### Texture Values (from `descriptors:texture.component.json`)
 
 Valid values for `texture` property:
+
 - `bumpy`, `chitinous`, `coarse`, `faceted`, `fuzzy`, `glossy`, `leathery`, `matte`, `mucous`, `ridged`, `rough`, `rugged`, `scarred`, `scaled`, `serrated-edges`, `silky`, `slick`, `slimy`, `smooth`, `soft`, `translucent`, `velvety`, `webbed-clawed`
 
 **Recommended for Tortoise:**
+
 - Shell: `scaled` (scute texture)
 - Exposed skin: `leathery` (thick, wrinkled)
 - Beak: `ridged` (horny keratin)
@@ -1178,6 +1199,7 @@ Valid values for `texture` property:
 ### Pattern Values (if applicable)
 
 Common patterns for shells:
+
 - `hexagonal-scutes` (suggested for carapace)
 - `growth-rings` (alternative for aged appearance)
 - `mottled` (color variation)
@@ -1185,6 +1207,7 @@ Common patterns for shells:
 ### Shape Values
 
 From `descriptors:shape_general.component.json`:
+
 - `domed` (for carapace)
 - `flat` (for plastron)
 - `blunt` (for head)

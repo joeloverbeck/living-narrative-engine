@@ -66,10 +66,10 @@ After removal, the `clothing` mod should have **111 entity definitions** remaini
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
-| `data/mods/clothing/mod-manifest.json` | Remove 14 entries from definitions |
-| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 14 files |
+| File                                                    | Action                             |
+| ------------------------------------------------------- | ---------------------------------- |
+| `data/mods/clothing/mod-manifest.json`                  | Remove 14 entries from definitions |
+| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 14 files                    |
 
 ## Acceptance Criteria
 
@@ -112,6 +112,7 @@ grep -r '"id": "clothing:black_tactical_work_belt"' data/mods/
 ## Post-Completion State
 
 After this ticket:
+
 - **Accessories migration is complete**
 - `clothing` mod: 111 entities (down from 125)
 - `accessories` mod: 14 entities
@@ -141,10 +142,12 @@ git checkout data/mods/clothing/mod-manifest.json
 ### What was actually changed vs originally planned
 
 **Planned Changes (all completed as specified):**
+
 - ✅ Deleted 14 accessory entity files from `data/mods/clothing/entities/definitions/`
 - ✅ Removed 14 entries from `data/mods/clothing/mod-manifest.json`
 
 **Additional Changes Required (not in original scope):**
+
 - Updated `tests/unit/clothing/entities/jon_urena_clothing_entities.test.js`:
   - Removed "Dark-Brown Leather Belt" test block (entity migrated to accessories mod)
   - Updated Cross-Entity Validation test to exclude belt file
@@ -156,11 +159,13 @@ git checkout data/mods/clothing/mod-manifest.json
   - Changed `clothing:black_calfskin_belt` references to `accessories:black_calfskin_belt`
 
 ### Test Results
+
 - Unit tests: 2233 suites, 36863 tests passed
 - Integration tests: 1807 suites, 13577 tests passed
 - Validation: PASSED with 0 violations across 42 mods
 
 ### Final State
+
 - `clothing` mod: 111 entity definitions
 - `accessories` mod: 14 entity definitions
 - No duplicate entity IDs

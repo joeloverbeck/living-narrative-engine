@@ -80,7 +80,10 @@ describe('music:stop_playing_instrument - Action Discovery', () => {
   describe('Discovery scenarios', () => {
     describe('When musician is actively playing', () => {
       it('should discover stop_playing_instrument action', () => {
-        const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+        const room = ModEntityScenarios.createRoom(
+          'concert_hall',
+          'Concert Hall'
+        );
 
         const musician = new ModEntityBuilder('musician1')
           .withName('Lyra')

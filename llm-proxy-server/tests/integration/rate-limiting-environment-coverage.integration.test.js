@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -18,17 +25,13 @@ const buildRateLimitedApp = (createApiRateLimiter, createLlmRateLimiter) => {
     }
   );
 
-  app.get(
-    '/llm',
-    createLlmRateLimiter({ trustProxy: true }),
-    (req, res) => {
-      res.json({
-        limit: req.rateLimit.limit,
-        remaining: req.rateLimit.remaining,
-        resetTime: req.rateLimit.resetTime,
-      });
-    }
-  );
+  app.get('/llm', createLlmRateLimiter({ trustProxy: true }), (req, res) => {
+    res.json({
+      limit: req.rateLimit.limit,
+      remaining: req.rateLimit.remaining,
+      resetTime: req.rateLimit.resetTime,
+    });
+  });
 
   return app;
 };
@@ -49,35 +52,43 @@ describe('Rate limiting environment configuration coverage', () => {
     process.env.NODE_ENV = 'test';
     jest.resetModules();
 
-    const [{ createApiRateLimiter, createLlmRateLimiter }, constants] = await Promise.all([
-      import('../../src/middleware/rateLimiting.js'),
-      import('../../src/config/constants.js'),
-    ]);
+    const [{ createApiRateLimiter, createLlmRateLimiter }, constants] =
+      await Promise.all([
+        import('../../src/middleware/rateLimiting.js'),
+        import('../../src/config/constants.js'),
+      ]);
 
     const app = buildRateLimitedApp(createApiRateLimiter, createLlmRateLimiter);
     const agent = request(app);
 
     const generalResponse = await agent.get('/general');
     expect(generalResponse.status).toBe(200);
-    expect(generalResponse.body.limit).toBe(constants.RATE_LIMIT_GENERAL_MAX_REQUESTS);
+    expect(generalResponse.body.limit).toBe(
+      constants.RATE_LIMIT_GENERAL_MAX_REQUESTS
+    );
     expect(generalResponse.body.limit).toBe(2000);
-    expect(generalResponse.body.remaining).toBe(constants.RATE_LIMIT_GENERAL_MAX_REQUESTS - 1);
+    expect(generalResponse.body.remaining).toBe(
+      constants.RATE_LIMIT_GENERAL_MAX_REQUESTS - 1
+    );
 
     const llmResponse = await agent.get('/llm');
     expect(llmResponse.status).toBe(200);
     expect(llmResponse.body.limit).toBe(constants.RATE_LIMIT_LLM_MAX_REQUESTS);
     expect(llmResponse.body.limit).toBe(100);
-    expect(llmResponse.body.remaining).toBe(constants.RATE_LIMIT_LLM_MAX_REQUESTS - 1);
+    expect(llmResponse.body.remaining).toBe(
+      constants.RATE_LIMIT_LLM_MAX_REQUESTS - 1
+    );
   });
 
   it('enforces production thresholds with strict limits', async () => {
     process.env.NODE_ENV = 'production';
     jest.resetModules();
 
-    const [{ createApiRateLimiter, createLlmRateLimiter }, constants] = await Promise.all([
-      import('../../src/middleware/rateLimiting.js'),
-      import('../../src/config/constants.js'),
-    ]);
+    const [{ createApiRateLimiter, createLlmRateLimiter }, constants] =
+      await Promise.all([
+        import('../../src/middleware/rateLimiting.js'),
+        import('../../src/config/constants.js'),
+      ]);
 
     expect(constants.RATE_LIMIT_GENERAL_MAX_REQUESTS).toBe(100);
     expect(constants.RATE_LIMIT_LLM_MAX_REQUESTS).toBe(10);

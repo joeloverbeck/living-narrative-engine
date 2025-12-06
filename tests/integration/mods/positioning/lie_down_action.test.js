@@ -42,10 +42,7 @@ describe('positioning:lie_down action rule execution', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'lie_down'
-    );
+    testFixture = await ModTestFixture.forAction('positioning', 'lie_down');
   });
 
   afterEach(() => {
@@ -100,12 +97,13 @@ describe('positioning:lie_down action rule execution', () => {
       expect(perceptibleEvents.length).toBeGreaterThan(0);
 
       const event = perceptibleEvents[0];
-      expect(event.payload.descriptionText).toBe('Alice lies down on Queen Bed.');
+      expect(event.payload.descriptionText).toBe(
+        'Alice lies down on Queen Bed.'
+      );
       expect(event.payload.locationId).toBe('bedroom');
       expect(event.payload.actorId).toBe('test:actor1');
       expect(event.payload.targetId).toBe('test:bed1');
     });
-
   });
 
   describe('Lying on different furniture types', () => {
@@ -143,10 +141,11 @@ describe('positioning:lie_down action rule execution', () => {
 
       await testFixture.executeAction('test:actor1', 'test:couch1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(updatedActor.components['positioning:lying_down'].furniture_id).toBe(
-        'test:couch1'
-      );
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        updatedActor.components['positioning:lying_down'].furniture_id
+      ).toBe('test:couch1');
     });
 
     it('should work with any furniture marked with allows_lying_on', async () => {
@@ -169,11 +168,12 @@ describe('positioning:lie_down action rule execution', () => {
 
       await testFixture.executeAction('test:actor1', 'test:hammock1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:lying_down']).toBeDefined();
-      expect(updatedActor.components['positioning:lying_down'].furniture_id).toBe(
-        'test:hammock1'
-      );
+      expect(
+        updatedActor.components['positioning:lying_down'].furniture_id
+      ).toBe('test:hammock1');
     });
   });
 
@@ -208,14 +208,15 @@ describe('positioning:lie_down action rule execution', () => {
       await testFixture.executeAction('test:bob', 'test:bed1');
 
       // Assert: Both should have lying_down component
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       expect(aliceEntity.components['positioning:lying_down']).toBeDefined();
       expect(bobEntity.components['positioning:lying_down']).toBeDefined();
-      expect(aliceEntity.components['positioning:lying_down'].furniture_id).toBe(
-        'test:bed1'
-      );
+      expect(
+        aliceEntity.components['positioning:lying_down'].furniture_id
+      ).toBe('test:bed1');
       expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe(
         'test:bed1'
       );
@@ -257,19 +258,21 @@ describe('positioning:lie_down action rule execution', () => {
       await testFixture.executeAction('test:carol', 'test:bed1');
 
       // Assert: All three should have lying_down component
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
-      const carolEntity = testFixture.entityManager.getEntityInstance('test:carol');
+      const carolEntity =
+        testFixture.entityManager.getEntityInstance('test:carol');
 
-      expect(aliceEntity.components['positioning:lying_down'].furniture_id).toBe(
-        'test:bed1'
-      );
+      expect(
+        aliceEntity.components['positioning:lying_down'].furniture_id
+      ).toBe('test:bed1');
       expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe(
         'test:bed1'
       );
-      expect(carolEntity.components['positioning:lying_down'].furniture_id).toBe(
-        'test:bed1'
-      );
+      expect(
+        carolEntity.components['positioning:lying_down'].furniture_id
+      ).toBe('test:bed1');
     });
   });
 
@@ -302,13 +305,18 @@ describe('positioning:lie_down action rule execution', () => {
       await testFixture.executeAction('test:bob', 'test:bed1');
 
       // Assert: Both actors should be in closeness circle
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       expect(aliceEntity.components['positioning:closeness']).toBeDefined();
       expect(bobEntity.components['positioning:closeness']).toBeDefined();
-      expect(aliceEntity.components['positioning:closeness'].partners).toContain('test:bob');
-      expect(bobEntity.components['positioning:closeness'].partners).toContain('test:alice');
+      expect(
+        aliceEntity.components['positioning:closeness'].partners
+      ).toContain('test:bob');
+      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+        'test:alice'
+      );
     });
 
     it('should establish closeness for all actors on same bed', async () => {
@@ -346,16 +354,30 @@ describe('positioning:lie_down action rule execution', () => {
       await testFixture.executeAction('test:carol', 'test:bed1');
 
       // Assert: All should be in closeness with each other
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
-      const carolEntity = testFixture.entityManager.getEntityInstance('test:carol');
+      const carolEntity =
+        testFixture.entityManager.getEntityInstance('test:carol');
 
-      expect(aliceEntity.components['positioning:closeness'].partners).toContain('test:bob');
-      expect(aliceEntity.components['positioning:closeness'].partners).toContain('test:carol');
-      expect(bobEntity.components['positioning:closeness'].partners).toContain('test:alice');
-      expect(bobEntity.components['positioning:closeness'].partners).toContain('test:carol');
-      expect(carolEntity.components['positioning:closeness'].partners).toContain('test:alice');
-      expect(carolEntity.components['positioning:closeness'].partners).toContain('test:bob');
+      expect(
+        aliceEntity.components['positioning:closeness'].partners
+      ).toContain('test:bob');
+      expect(
+        aliceEntity.components['positioning:closeness'].partners
+      ).toContain('test:carol');
+      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+        'test:alice'
+      );
+      expect(bobEntity.components['positioning:closeness'].partners).toContain(
+        'test:carol'
+      );
+      expect(
+        carolEntity.components['positioning:closeness'].partners
+      ).toContain('test:alice');
+      expect(
+        carolEntity.components['positioning:closeness'].partners
+      ).toContain('test:bob');
     });
 
     it('should not establish closeness when actors are on different beds', async () => {
@@ -392,7 +414,8 @@ describe('positioning:lie_down action rule execution', () => {
       await testFixture.executeAction('test:bob', 'test:bed2');
 
       // Assert: They should NOT be in closeness circle
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       // Closeness component should not exist since they're alone on their respective beds
@@ -442,9 +465,9 @@ describe('positioning:lie_down action rule execution', () => {
 
       testFixture.reset([room, actor, hugger, bed]);
 
-      await expect(
-        testFixture.executeAction(actor.id, bed.id)
-      ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+      await expect(testFixture.executeAction(actor.id, bed.id)).rejects.toThrow(
+        /forbidden component.*positioning:being_hugged/i
+      );
     });
 
     it('rejects the action when the actor is hugging someone else', async () => {
@@ -474,9 +497,9 @@ describe('positioning:lie_down action rule execution', () => {
 
       testFixture.reset([room, actor, huggee, bed]);
 
-      await expect(
-        testFixture.executeAction(actor.id, bed.id)
-      ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+      await expect(testFixture.executeAction(actor.id, bed.id)).rejects.toThrow(
+        /forbidden component.*positioning:hugging/i
+      );
     });
   });
 
@@ -510,7 +533,8 @@ describe('positioning:lie_down action rule execution', () => {
       expect(addComponentActions.length).toBeGreaterThan(0);
 
       const lyingDownComponentAction = addComponentActions.find(
-        (action) => action.parameters.component_type === 'positioning:lying_down'
+        (action) =>
+          action.parameters.component_type === 'positioning:lying_down'
       );
       expect(lyingDownComponentAction).toBeDefined();
     });

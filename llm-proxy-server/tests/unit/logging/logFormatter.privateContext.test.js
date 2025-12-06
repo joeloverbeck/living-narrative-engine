@@ -185,7 +185,9 @@ describe('LogFormatter primitive context coverage', () => {
               statementCoverage &&
               typeof statementCoverage[statementId] === 'number'
             ) {
-              const currentValue = Number.isFinite(statementCoverage[statementId])
+              const currentValue = Number.isFinite(
+                statementCoverage[statementId]
+              )
                 ? statementCoverage[statementId]
                 : 0;
               statementCoverage[statementId] = Math.max(1, currentValue, 1);

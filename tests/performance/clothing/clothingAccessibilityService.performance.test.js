@@ -55,58 +55,60 @@ describe('ClothingAccessibilityService Performance', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
-    
+
     mockEntityManager = {
       getComponentData: jest.fn(),
-      hasComponent: jest.fn()
+      hasComponent: jest.fn(),
     };
-    
+
     mockEntitiesGateway = {
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
   });
 
   describe('Large wardrobe performance', () => {
     beforeEach(() => {
       // Create mock with large wardrobe (100+ items)
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          const equipment = { equipped: {} };
-          
-          // Generate 100+ items across 20 slots
-          for (let slot = 0; slot < 20; slot++) {
-            equipment.equipped[`slot_${slot}`] = {
-              outer: `outer_${slot}`,
-              base: `base_${slot}`,
-              underwear: `underwear_${slot}`,
-              accessories: [`accessory_${slot}_1`, `accessory_${slot}_2`]
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            const equipment = { equipped: {} };
+
+            // Generate 100+ items across 20 slots
+            for (let slot = 0; slot < 20; slot++) {
+              equipment.equipped[`slot_${slot}`] = {
+                outer: `outer_${slot}`,
+                base: `base_${slot}`,
+                underwear: `underwear_${slot}`,
+                accessories: [`accessory_${slot}_1`, `accessory_${slot}_2`],
+              };
+            }
+            return equipment;
+          }
+
+          if (component === 'clothing:coverage_mapping') {
+            // Mock coverage mapping for all items
+            return {
+              covers: ['body_area'],
+              coveragePriority: 'base',
             };
           }
-          return equipment;
+
+          return null;
         }
-        
-        if (component === 'clothing:coverage_mapping') {
-          // Mock coverage mapping for all items
-          return {
-            covers: ['body_area'],
-            coveragePriority: 'base'
-          };
-        }
-        
-        return null;
-      });
+      );
 
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -131,7 +133,8 @@ describe('ClothingAccessibilityService Performance', () => {
         measurements.push(duration);
       }
 
-      const avgTime = measurements.reduce((sum, time) => sum + time, 0) / iterations;
+      const avgTime =
+        measurements.reduce((sum, time) => sum + time, 0) / iterations;
 
       // Calculate 95th percentile for stable performance threshold
       const sorted = measurements.slice().sort((a, b) => a - b);
@@ -139,7 +142,9 @@ describe('ClothingAccessibilityService Performance', () => {
       const maxTime = Math.max(...measurements);
       const minTime = Math.min(...measurements);
 
-      console.log(`Performance stats - Avg: ${avgTime.toFixed(2)}ms, P95: ${p95Time.toFixed(2)}ms, Max: ${maxTime.toFixed(2)}ms, Min: ${minTime.toFixed(2)}ms`);
+      console.log(
+        `Performance stats - Avg: ${avgTime.toFixed(2)}ms, P95: ${p95Time.toFixed(2)}ms, Max: ${maxTime.toFixed(2)}ms, Min: ${minTime.toFixed(2)}ms`
+      );
 
       expect(avgTime).toBeLessThan(15); // Production requirement: Less than 15ms per query average
       expect(p95Time).toBeLessThan(60); // Stable performance guarantee: 95th percentile under 60ms
@@ -149,14 +154,14 @@ describe('ClothingAccessibilityService Performance', () => {
     it('should maintain performance under high concurrent load', () => {
       const promises = [];
       const concurrentRequests = 50;
-      
+
       const start = performance.now();
 
       // Simulate concurrent requests
       for (let i = 0; i < concurrentRequests; i++) {
         const promise = Promise.resolve().then(() => {
-          return service.getAccessibleItems(`concurrent_entity_${i}`, { 
-            mode: 'topmost' 
+          return service.getAccessibleItems(`concurrent_entity_${i}`, {
+            mode: 'topmost',
           });
         });
         promises.push(promise);
@@ -168,9 +173,9 @@ describe('ClothingAccessibilityService Performance', () => {
 
         expect(results).toHaveLength(concurrentRequests);
         expect(avgTimePerRequest).toBeLessThan(15); // Should handle concurrency well
-        
+
         // All results should have items (100 items per entity)
-        results.forEach(result => {
+        results.forEach((result) => {
           expect(result.length).toBeGreaterThan(0);
         });
       });
@@ -180,28 +185,30 @@ describe('ClothingAccessibilityService Performance', () => {
       const itemCounts = [25, 50, 100, 200];
       const measurements = [];
 
-      itemCounts.forEach(itemCount => {
+      itemCounts.forEach((itemCount) => {
         // Setup entity with specific item count
-        mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-          if (component === 'clothing:equipment') {
-            const equipment = { equipped: {} };
-            const slotsNeeded = Math.ceil(itemCount / 4);
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, component) => {
+            if (component === 'clothing:equipment') {
+              const equipment = { equipped: {} };
+              const slotsNeeded = Math.ceil(itemCount / 4);
 
-            for (let slot = 0; slot < slotsNeeded; slot++) {
-              equipment.equipped[`slot_${slot}`] = {
-                outer: `outer_${slot}`,
-                base: `base_${slot}`,
-                underwear: `underwear_${slot}`,
-                accessories: [`accessory_${slot}`]
-              };
+              for (let slot = 0; slot < slotsNeeded; slot++) {
+                equipment.equipped[`slot_${slot}`] = {
+                  outer: `outer_${slot}`,
+                  base: `base_${slot}`,
+                  underwear: `underwear_${slot}`,
+                  accessories: [`accessory_${slot}`],
+                };
 
-              // Stop when we reach the desired item count
-              if ((slot + 1) * 4 >= itemCount) break;
+                // Stop when we reach the desired item count
+                if ((slot + 1) * 4 >= itemCount) break;
+              }
+              return equipment;
             }
-            return equipment;
+            return null;
           }
-          return null;
-        });
+        );
 
         // Clear cache to ensure fresh measurement
         service.clearAllCache();
@@ -233,11 +240,15 @@ describe('ClothingAccessibilityService Performance', () => {
       // But only for operations that take significant time
       for (let i = 1; i < measurements.length; i++) {
         const ratio = measurements[i].duration / measurements[i - 1].duration;
-        const itemRatio = measurements[i].itemCount / measurements[i - 1].itemCount;
+        const itemRatio =
+          measurements[i].itemCount / measurements[i - 1].itemCount;
 
         // Skip ratio check for very fast operations (< 10ms) as they're unreliable
         // Focus on absolute performance limits instead
-        if (measurements[i - 1].duration < 10.0 || measurements[i].duration < 10.0) {
+        if (
+          measurements[i - 1].duration < 10.0 ||
+          measurements[i].duration < 10.0
+        ) {
           // For fast operations, just ensure they stay fast
           // eslint-disable-next-line jest/no-conditional-expect
           expect(measurements[i].duration).toBeLessThan(50); // Absolute limit
@@ -250,12 +261,15 @@ describe('ClothingAccessibilityService Performance', () => {
       }
 
       // Also verify absolute performance bounds regardless of scaling
-      measurements.forEach(m => {
+      measurements.forEach((m) => {
         // No operation should exceed 100ms even for 200 items
         expect(m.duration).toBeLessThan(100);
       });
 
-      console.log('Scaling measurements (median of 5 runs each):', measurements);
+      console.log(
+        'Scaling measurements (median of 5 runs each):',
+        measurements
+      );
     });
   });
 
@@ -265,19 +279,19 @@ describe('ClothingAccessibilityService Performance', () => {
         equipped: {
           slot1: { base: 'item1' },
           slot2: { base: 'item2' },
-          slot3: { base: 'item3' }
-        }
+          slot3: { base: 'item3' },
+        },
       });
 
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -306,10 +320,14 @@ describe('ClothingAccessibilityService Performance', () => {
         cachedTimes.push(cachedTime);
       }
 
-      const avgUncachedTime = uncachedTimes.reduce((sum, time) => sum + time, 0) / iterations;
-      const avgCachedTime = cachedTimes.reduce((sum, time) => sum + time, 0) / iterations;
+      const avgUncachedTime =
+        uncachedTimes.reduce((sum, time) => sum + time, 0) / iterations;
+      const avgCachedTime =
+        cachedTimes.reduce((sum, time) => sum + time, 0) / iterations;
 
-      console.log(`Cache performance - Avg Uncached: ${avgUncachedTime.toFixed(3)}ms, Avg Cached: ${avgCachedTime.toFixed(3)}ms`);
+      console.log(
+        `Cache performance - Avg Uncached: ${avgUncachedTime.toFixed(3)}ms, Avg Cached: ${avgCachedTime.toFixed(3)}ms`
+      );
 
       // Only test speedup if uncached time is significant enough to measure reliably
       if (avgUncachedTime > 0.1) {
@@ -321,27 +339,31 @@ describe('ClothingAccessibilityService Performance', () => {
         // If operations are too fast to measure reliably, just verify cache returns same results
         // eslint-disable-next-line jest/no-conditional-expect
         expect(avgCachedTime).toBeDefined();
-        console.log('Operations too fast for reliable speedup measurement, verifying cache correctness instead');
+        console.log(
+          'Operations too fast for reliable speedup measurement, verifying cache correctness instead'
+        );
       }
     });
 
     it('should maintain cache efficiency under load', () => {
       const entity = 'cache_load_test';
       const iterations = 1000;
-      
+
       // Warm up cache
       service.getAccessibleItems(entity, { mode: 'topmost' });
 
       const start = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         service.getAccessibleItems(entity, { mode: 'topmost' });
       }
-      
+
       const totalTime = performance.now() - start;
       const avgTime = totalTime / iterations;
 
-      console.log(`Cache load test - ${iterations} iterations, avg: ${avgTime.toFixed(3)}ms per call`);
+      console.log(
+        `Cache load test - ${iterations} iterations, avg: ${avgTime.toFixed(3)}ms per call`
+      );
 
       // Cached calls should be very fast
       expect(avgTime).toBeLessThan(0.5); // Sub-millisecond performance when cached
@@ -349,10 +371,10 @@ describe('ClothingAccessibilityService Performance', () => {
 
     it('should handle cache invalidation efficiently', () => {
       const entity = 'cache_invalidation_test';
-      
+
       // Populate cache
       service.getAccessibleItems(entity, { mode: 'topmost' });
-      
+
       const invalidationStart = performance.now();
       service.clearCache(entity);
       const invalidationTime = performance.now() - invalidationStart;
@@ -377,20 +399,20 @@ describe('ClothingAccessibilityService Performance', () => {
         largeEquipment.equipped[`slot_${slot}`] = {
           outer: `outer_${slot}`,
           base: `base_${slot}`,
-          underwear: `underwear_${slot}`
+          underwear: `underwear_${slot}`,
         };
       }
 
       mockEntityManager.getComponentData.mockReturnValue(largeEquipment);
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -400,32 +422,35 @@ describe('ClothingAccessibilityService Performance', () => {
 
       for (let i = 0; i < iterations; i++) {
         service.clearAllCache(); // Ensure fresh calculation each time
-        
+
         const start = performance.now();
         service.getAccessibleItems(`priority_test_${i}`, {
           mode: 'all',
-          sortByPriority: true
+          sortByPriority: true,
         });
         const duration = performance.now() - start;
-        
+
         measurements.push(duration);
       }
 
-      const avgTime = measurements.reduce((sum, time) => sum + time, 0) / iterations;
-      
-      console.log(`Priority sorting performance - avg: ${avgTime.toFixed(2)}ms for 150 items`);
-      
+      const avgTime =
+        measurements.reduce((sum, time) => sum + time, 0) / iterations;
+
+      console.log(
+        `Priority sorting performance - avg: ${avgTime.toFixed(2)}ms for 150 items`
+      );
+
       expect(avgTime).toBeLessThan(50); // Allow for CI timing variance while ensuring reasonable performance
     });
 
     it('should benefit from priority cache', () => {
       const entity = 'priority_cache_test';
-      
+
       // First call - builds priority cache
       const firstStart = performance.now();
       service.getAccessibleItems(entity, {
         mode: 'all',
-        sortByPriority: true
+        sortByPriority: true,
       });
       const firstTime = performance.now() - firstStart;
 
@@ -433,11 +458,13 @@ describe('ClothingAccessibilityService Performance', () => {
       const secondStart = performance.now();
       service.getAccessibleItems(entity, {
         mode: 'all',
-        sortByPriority: true
+        sortByPriority: true,
       });
       const secondTime = performance.now() - secondStart;
 
-      console.log(`Priority cache - First: ${firstTime.toFixed(2)}ms, Second: ${secondTime.toFixed(2)}ms`);
+      console.log(
+        `Priority cache - First: ${firstTime.toFixed(2)}ms, Second: ${secondTime.toFixed(2)}ms`
+      );
 
       // Should be faster with cache
       expect(secondTime).toBeLessThan(firstTime);
@@ -453,20 +480,20 @@ describe('ClothingAccessibilityService Performance', () => {
           outer: `outer_${slot}`,
           base: `base_${slot}`,
           underwear: `underwear_${slot}`,
-          accessories: [`acc1_${slot}`, `acc2_${slot}`]
+          accessories: [`acc1_${slot}`, `acc2_${slot}`],
         };
       }
 
       mockEntityManager.getComponentData.mockReturnValue(equipment);
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -475,7 +502,7 @@ describe('ClothingAccessibilityService Performance', () => {
       const entity = 'mode_performance_test';
       const measurements = {};
 
-      modes.forEach(mode => {
+      modes.forEach((mode) => {
         service.clearAllCache(); // Fresh measurement for each mode
 
         // Warm-up iterations to ensure JIT compilation
@@ -491,15 +518,18 @@ describe('ClothingAccessibilityService Performance', () => {
 
         measurements[mode] = {
           duration,
-          itemCount: result.length
+          itemCount: result.length,
         };
       });
 
       console.log('Mode performance:', measurements);
 
       // All modes should complete within reasonable time
-      const durations = Object.values(measurements).map(measurement => measurement.duration);
-      const avgDuration = durations.reduce((sum, value) => sum + value, 0) / durations.length;
+      const durations = Object.values(measurements).map(
+        (measurement) => measurement.duration
+      );
+      const avgDuration =
+        durations.reduce((sum, value) => sum + value, 0) / durations.length;
       const maxDuration = Math.max(...durations);
 
       expect(avgDuration).toBeLessThan(60); // Average case should remain comfortably fast
@@ -512,11 +542,16 @@ describe('ClothingAccessibilityService Performance', () => {
       // to avoid unreliable micro-benchmark comparisons at sub-millisecond levels
       const significantTime = 5.0; // 5ms threshold for reliable measurement (increased from 1ms)
 
-      if (measurements.all.duration > significantTime && measurements.topmost.duration > significantTime) {
+      if (
+        measurements.all.duration > significantTime &&
+        measurements.topmost.duration > significantTime
+      ) {
         // When both operations take significant time, check the ratio
         // Increased tolerance from 15x to 20x for better stability
         // eslint-disable-next-line jest/no-conditional-expect
-        expect(measurements.topmost.duration).toBeLessThanOrEqual(measurements.all.duration * 20.0);
+        expect(measurements.topmost.duration).toBeLessThanOrEqual(
+          measurements.all.duration * 20.0
+        );
       } else {
         // For very fast operations, just ensure they complete within reasonable absolute time
         // This avoids flaky failures when 'all' mode runs in <5ms due to JIT optimization
@@ -527,7 +562,7 @@ describe('ClothingAccessibilityService Performance', () => {
       }
 
       // Verify that simpler modes (single layer) are reasonably efficient
-      ['outer', 'base', 'underwear'].forEach(mode => {
+      ['outer', 'base', 'underwear'].forEach((mode) => {
         expect(measurements[mode].duration).toBeLessThan(100); // Single-layer modes should stay well under 100ms even on slow hosts
       });
     });
@@ -542,70 +577,78 @@ describe('ClothingAccessibilityService Performance', () => {
           outer: `outer_${slot}`,
           base: `base_${slot}`,
           underwear: `underwear_${slot}`,
-          accessories: [`acc1_${slot}`, `acc2_${slot}`]
+          accessories: [`acc1_${slot}`, `acc2_${slot}`],
         };
       }
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return equipment;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return equipment;
+          }
+          if (component === 'clothing:coverage_mapping') {
+            return {
+              covers: ['body_area'],
+              coveragePriority: 'base',
+            };
+          }
+          return null;
         }
-        if (component === 'clothing:coverage_mapping') {
-          return {
-            covers: ['body_area'],
-            coveragePriority: 'base'
-          };
-        }
-        return null;
-      });
+      );
 
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
     it('should handle extreme wardrobe sizes', () => {
       // Create extremely large wardrobe (500+ items)
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          const equipment = { equipped: {} };
-          
-          // Generate 500+ items across 100 slots
-          for (let slot = 0; slot < 100; slot++) {
-            equipment.equipped[`slot_${slot}`] = {
-              outer: `outer_${slot}`,
-              base: `base_${slot}`,
-              underwear: `underwear_${slot}`,
-              accessories: [`acc1_${slot}`, `acc2_${slot}`, `acc3_${slot}`]
-            };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            const equipment = { equipped: {} };
+
+            // Generate 500+ items across 100 slots
+            for (let slot = 0; slot < 100; slot++) {
+              equipment.equipped[`slot_${slot}`] = {
+                outer: `outer_${slot}`,
+                base: `base_${slot}`,
+                underwear: `underwear_${slot}`,
+                accessories: [`acc1_${slot}`, `acc2_${slot}`, `acc3_${slot}`],
+              };
+            }
+            return equipment;
           }
-          return equipment;
+          return null;
         }
-        return null;
-      });
+      );
 
       mockEntitiesGateway.getComponentData.mockReturnValue({
         covers: ['body_area'],
-        coveragePriority: 'base'
+        coveragePriority: 'base',
       });
 
       const extremeService = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
 
       const start = performance.now();
-      const result = extremeService.getAccessibleItems('extreme_entity', { mode: 'all' });
+      const result = extremeService.getAccessibleItems('extreme_entity', {
+        mode: 'all',
+      });
       const duration = performance.now() - start;
 
-      console.log(`Extreme test - ${result.length} items processed in ${duration.toFixed(2)}ms`);
+      console.log(
+        `Extreme test - ${result.length} items processed in ${duration.toFixed(2)}ms`
+      );
 
       expect(result.length).toBeGreaterThan(500);
       expect(duration).toBeLessThan(100); // Should handle extreme cases within 100ms
@@ -620,18 +663,22 @@ describe('ClothingAccessibilityService Performance', () => {
         const start = performance.now();
         service.getAccessibleItems(`pressure_entity_${i}`, { mode: 'topmost' });
         const duration = performance.now() - start;
-        
+
         measurements.push(duration);
       }
 
       // Performance shouldn't degrade significantly over time
       const firstQuarter = measurements.slice(0, 25);
       const lastQuarter = measurements.slice(-25);
-      
-      const avgFirst = firstQuarter.reduce((sum, time) => sum + time, 0) / firstQuarter.length;
-      const avgLast = lastQuarter.reduce((sum, time) => sum + time, 0) / lastQuarter.length;
 
-      console.log(`Memory pressure test - First quarter avg: ${avgFirst.toFixed(2)}ms, Last quarter avg: ${avgLast.toFixed(2)}ms`);
+      const avgFirst =
+        firstQuarter.reduce((sum, time) => sum + time, 0) / firstQuarter.length;
+      const avgLast =
+        lastQuarter.reduce((sum, time) => sum + time, 0) / lastQuarter.length;
+
+      console.log(
+        `Memory pressure test - First quarter avg: ${avgFirst.toFixed(2)}ms, Last quarter avg: ${avgLast.toFixed(2)}ms`
+      );
 
       const significantTime = 5.0; // Below this threshold, ratio comparisons become unreliable
       const allowedDriftMs = 3.0; // Absolute drift allowance for micro-benchmarks

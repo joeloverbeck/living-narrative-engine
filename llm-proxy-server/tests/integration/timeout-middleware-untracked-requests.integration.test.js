@@ -86,7 +86,10 @@ describe('size limit configuration with exotic unit strings', () => {
 
   it('falls back to byte interpretation for unknown units while enforcing security ceilings', async () => {
     const app = express();
-    const config = createSizeLimitConfig({ jsonLimit: '42parsecs', enforceMaxLimit: true });
+    const config = createSizeLimitConfig({
+      jsonLimit: '42parsecs',
+      enforceMaxLimit: true,
+    });
 
     app.use(express.json(config.json));
     app.post('/exotic-limit', (req, res) => {

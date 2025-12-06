@@ -35,7 +35,10 @@ import { ValidationError } from '../../errors/index.js';
  * @returns {AnatomyBlueprint} The loaded and processed blueprint
  * @throws {InvalidArgumentError} If blueprint not found
  */
-export function loadBlueprint(blueprintId, { dataRegistry, blueprintProcessorService }) {
+export function loadBlueprint(
+  blueprintId,
+  { dataRegistry, blueprintProcessorService }
+) {
   const blueprint = dataRegistry.get('anatomyBlueprints', blueprintId);
   if (!blueprint) {
     throw new InvalidArgumentError(

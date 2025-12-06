@@ -54,9 +54,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
         })
         .build();
 
-      const room2 = new ModEntityBuilder('test:room2')
-        .asRoom('Room 2')
-        .build();
+      const room2 = new ModEntityBuilder('test:room2').asRoom('Room 2').build();
 
       const table = new ModEntityBuilder('test:table')
         .withName('Table')

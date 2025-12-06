@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "ankle",
-          "allowedTypes": [
-            "foot"
-          ],
+          "allowedTypes": ["foot"],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]

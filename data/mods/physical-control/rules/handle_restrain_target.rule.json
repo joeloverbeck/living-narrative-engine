@@ -44,7 +44,10 @@
     },
     {
       "type": "SET_VARIABLE",
-      "parameters": { "variable_name": "perceptionType", "value": "action_target_general" }
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
     },
     {
       "type": "SET_VARIABLE",
@@ -102,8 +105,14 @@
               "item_id": "{event.payload.targetId}"
             }
           },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "target" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
@@ -130,10 +139,7 @@
       "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.restrainResult.outcome" },
-            "SUCCESS"
-          ]
+          "==": [{ "var": "context.restrainResult.outcome" }, "SUCCESS"]
         },
         "then_actions": [
           {
@@ -174,8 +180,14 @@
               "item_id": "{event.payload.targetId}"
             }
           },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "target" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
@@ -202,10 +214,7 @@
       "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.restrainResult.outcome" },
-            "FAILURE"
-          ]
+          "==": [{ "var": "context.restrainResult.outcome" }, "FAILURE"]
         },
         "then_actions": [
           {
@@ -234,10 +243,7 @@
       "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.restrainResult.outcome" },
-            "FUMBLE"
-          ]
+          "==": [{ "var": "context.restrainResult.outcome" }, "FUMBLE"]
         },
         "then_actions": [
           {

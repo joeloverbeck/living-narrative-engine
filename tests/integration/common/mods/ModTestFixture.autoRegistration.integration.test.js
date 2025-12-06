@@ -79,7 +79,10 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
 
   it('should maintain backward compatibility with manual registration', async () => {
     // Arrange
-    testFixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:sit_down'
+    );
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
     // Create simple scenario with actor and furniture
@@ -120,7 +123,9 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const availableActions = testFixture.discoverActions(scenario.actor.id);
 
     // Assert - without scope registration, actions won't be discovered
-    expect(availableActions.map((a) => a.id)).not.toContain('positioning:sit_down');
+    expect(availableActions.map((a) => a.id)).not.toContain(
+      'positioning:sit_down'
+    );
   });
 
   it('should work with inventory scopes using "items" alias', async () => {

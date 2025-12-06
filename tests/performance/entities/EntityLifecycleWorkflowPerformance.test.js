@@ -36,7 +36,6 @@ describe('Entity Lifecycle Workflow Performance', () => {
   });
 
   describe('Entity Creation Performance', () => {
-
     it('should validate entity creation performance within acceptable limits', async () => {
       // Arrange
       const definitionId = 'test:performance_entity';
@@ -100,7 +99,9 @@ describe('Entity Lifecycle Workflow Performance', () => {
 
         // Log variance for diagnostics (helps identify patterns in failures)
         if (variance > baseMaxVariance * 0.5) {
-          console.log(`Performance variance: ${variance.toFixed(2)} (min: ${performanceStats.min}ms, max: ${performanceStats.max}ms, avg: ${performanceStats.average}ms)`);
+          console.log(
+            `Performance variance: ${variance.toFixed(2)} (min: ${performanceStats.min}ms, max: ${performanceStats.max}ms, avg: ${performanceStats.average}ms)`
+          );
         }
       } else {
         // If min is 0, just ensure we have some performance data
@@ -292,7 +293,8 @@ describe('Entity Lifecycle Workflow Performance', () => {
 
         // Use median to minimize impact from single noisy samples
         const sortedSamples = [...sampleTimings].sort((a, b) => a - b);
-        const medianSample = sortedSamples[Math.floor(sortedSamples.length / 2)];
+        const medianSample =
+          sortedSamples[Math.floor(sortedSamples.length / 2)];
 
         aggregatedResults.push({
           size,

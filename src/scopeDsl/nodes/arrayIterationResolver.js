@@ -45,11 +45,16 @@ export default function createArrayIterationResolver({
       requiredMethods: ['handleError', 'getErrorBuffer'],
     });
   }
-  
+
   if (clothingAccessibilityService) {
-    validateDependency(clothingAccessibilityService, 'ClothingAccessibilityService', console, {
-      requiredMethods: ['getAccessibleItems'],
-    });
+    validateDependency(
+      clothingAccessibilityService,
+      'ClothingAccessibilityService',
+      console,
+      {
+        requiredMethods: ['getAccessibleItems'],
+      }
+    );
   }
 
   const MAX_ARRAY_SIZE = 10000;
@@ -64,10 +69,12 @@ export default function createArrayIterationResolver({
    */
   function processClothingAccess(clothingAccess, trace) {
     const { entityId, mode = 'topmost' } = clothingAccess;
-    
+
     if (!clothingAccessibilityService) {
       if (trace && trace.addStep) {
-        trace.addStep('No clothing accessibility service available, returning empty array');
+        trace.addStep(
+          'No clothing accessibility service available, returning empty array'
+        );
       }
       if (errorHandler) {
         errorHandler.handleError(
@@ -79,13 +86,13 @@ export default function createArrayIterationResolver({
       }
       return [];
     }
-    
+
     try {
       // Delegate to accessibility service
       const options = {
         mode,
         context: 'removal', // Default context for array iteration
-        sortByPriority: true
+        sortByPriority: true,
       };
 
       const accessibleItems = clothingAccessibilityService.getAccessibleItems(
@@ -94,7 +101,9 @@ export default function createArrayIterationResolver({
       );
 
       if (trace && trace.addStep) {
-        trace.addStep(`Retrieved ${accessibleItems.length} accessible items for mode: ${mode}`);
+        trace.addStep(
+          `Retrieved ${accessibleItems.length} accessible items for mode: ${mode}`
+        );
       }
 
       return accessibleItems;
@@ -152,7 +161,9 @@ export default function createArrayIterationResolver({
       const bodyPartIds = bodyGraphService.getAllParts(bodyComponent, entityId);
 
       if (trace && trace.addStep) {
-        trace.addStep(`Retrieved ${bodyPartIds.length} body parts for entity: ${entityId}`);
+        trace.addStep(
+          `Retrieved ${bodyPartIds.length} body parts for entity: ${entityId}`
+        );
       }
 
       return bodyPartIds;
@@ -221,9 +232,9 @@ export default function createArrayIterationResolver({
         {
           parentResultsSize: parentResults.size,
           parentResultsPreview: parentResultsArray.slice(0, 3),
-          parentResultsTypes: parentResultsArray.slice(0, 3).map(v =>
-            Array.isArray(v) ? `Array(${v.length})` : typeof v
-          ),
+          parentResultsTypes: parentResultsArray
+            .slice(0, 3)
+            .map((v) => (Array.isArray(v) ? `Array(${v.length})` : typeof v)),
         }
       );
 
@@ -248,7 +259,7 @@ export default function createArrayIterationResolver({
                   'Array size limit exceeded',
                   {
                     limit: MAX_ARRAY_SIZE,
-                    current: totalArrayElements
+                    current: totalArrayElements,
                   },
                   'ArrayIterationResolver',
                   ErrorCodes.MEMORY_LIMIT
@@ -273,7 +284,7 @@ export default function createArrayIterationResolver({
                   'Array size limit exceeded',
                   {
                     limit: MAX_ARRAY_SIZE,
-                    current: totalArrayElements
+                    current: totalArrayElements,
                   },
                   'ArrayIterationResolver',
                   ErrorCodes.MEMORY_LIMIT
@@ -295,15 +306,17 @@ export default function createArrayIterationResolver({
             {
               arrayLength: parentValue.length,
               arrayPreview: parentValue.slice(0, 5),
-              arrayItemTypes: parentValue.slice(0, 5).map(item =>
-                item === null
-                  ? 'null'
-                  : item === undefined
-                    ? 'undefined'
-                    : typeof item === 'string'
-                      ? 'string'
-                      : typeof item
-              ),
+              arrayItemTypes: parentValue
+                .slice(0, 5)
+                .map((item) =>
+                  item === null
+                    ? 'null'
+                    : item === undefined
+                      ? 'undefined'
+                      : typeof item === 'string'
+                        ? 'string'
+                        : typeof item
+                ),
             }
           );
 

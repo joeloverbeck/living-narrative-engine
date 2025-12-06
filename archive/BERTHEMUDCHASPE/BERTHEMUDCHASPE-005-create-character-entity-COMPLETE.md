@@ -3,18 +3,22 @@
 ## Status: ✅ COMPLETED
 
 ## Description
+
 Create Bertram's character entity (definition and instance), including all personality components, notes, and system components. This is the main character assembly that ties together recipe, clothing, and profile.
 
 ## Prerequisites
+
 - **MUST complete BERTHEMUDCHASPE-003** (recipe exists)
 - **MUST complete BERTHEMUDCHASPE-004** (apron exists)
 
 ## Files Expected to Touch
+
 - CREATE: `data/mods/fantasy/entities/definitions/bertram_the_muddy.character.json`
 - CREATE: `data/mods/fantasy/entities/instances/bertram_the_muddy.character.json`
 - MODIFY: `data/mods/fantasy/mod-manifest.json` (add character references)
 
 ## Explicit Out of Scope
+
 - **NO recipe creation** (completed in BERTHEMUDCHASPE-003)
 - **NO anatomy part creation** (completed in BERTHEMUDCHASPE-002)
 - **NO clothing creation** (completed in BERTHEMUDCHASPE-004)
@@ -25,6 +29,7 @@ Create Bertram's character entity (definition and instance), including all perso
 ## Acceptance Criteria
 
 ### Required Components - Identity (5 components)
+
 1. **core:name**: `{"value": "Bertram"}`
 2. **core:apparent_age**: `{"value": "fifties"}`
 3. **core:profile**: Full biographical description (see spec Section 5.1)
@@ -32,6 +37,7 @@ Create Bertram's character entity (definition and instance), including all perso
 5. **core:notes**: 4 subjects (reciprocal services, Anna, leatherworking, Mudbrook)
 
 ### Required Components - Personality (7 components)
+
 1. **core:personality**: 7 traits + description capturing radical sincerity
 2. **core:speech_patterns**: 7 examples + notes on directness
 3. **core:strengths**: 7 values (master craftsman, sincerity, emotional health, etc.)
@@ -41,6 +47,7 @@ Create Bertram's character entity (definition and instance), including all perso
 7. **core:fears**: Empty array with note "genuinely content"
 
 ### Required Components - Goals & Tensions (3 components)
+
 1. **core:goals**:
    - Short-term: reciprocal services, saddle commission, maintain quality
    - Long-term: contentment, preserve craft, maintain health
@@ -48,11 +55,13 @@ Create Bertram's character entity (definition and instance), including all perso
 3. **core:internal_tensions**: 1 resolved tension (physical needs → practical solution)
 
 ### Required Components - System (3 components)
+
 1. **core:actor**: Empty object
 2. **core:player_type**: `{"type": "npc"}`
 3. **core:perception_log**: `{"entries": []}`
 
 ### Instance File Requirements
+
 - Reference all 7 clothing items in equipped inventory:
   1. `clothing:graphite_wool_briefs` (groin/base)
   2. `clothing:shale_gray_nylon_field_pants` (legs/base)
@@ -65,6 +74,7 @@ Create Bertram's character entity (definition and instance), including all perso
 - Empty unequipped inventory
 
 ### Critical Character Essence to Preserve
+
 1. **Radical Sincerity**: No secrets, no hidden depths, complete transparency
 2. **Emotional Health**: Properly processed grief, no ongoing crisis
 3. **Transactional Wisdom**: Practical problem-solving for all needs
@@ -73,6 +83,7 @@ Create Bertram's character entity (definition and instance), including all perso
 6. **Zero Performativity**: Just IS Bertram, no questioning or drama
 
 ### Specific Tests That Must Pass
+
 - Both definition and instance files validate against character schema
 - Entity ID is `fantasy:bertram_the_muddy`
 - All component types are valid registered components
@@ -82,6 +93,7 @@ Create Bertram's character entity (definition and instance), including all perso
 - `npm run validate` passes for fantasy mod
 
 ### Invariants That Must Remain True
+
 - **NO modification** of existing character entities
 - **NO modification** of recipe or clothing files
 - All personality traits align with "radical sincerity" theme
@@ -92,13 +104,16 @@ Create Bertram's character entity (definition and instance), including all perso
 ## Implementation Notes
 
 ### Contrast to Vespera
+
 Bertram is designed as opposite to complex characters:
+
 - Where Vespera has layers → Bertram is transparent
 - Where Vespera performs identity → Bertram just IS
 - Where Vespera has secrets → Bertram has none
 - This contrast makes both characters more interesting
 
 ### Speech Pattern Guidelines
+
 - Use practical leatherwork metaphors naturally
 - Discuss dead wife, sexual needs with same matter-of-fact tone
 - Ask sincere questions when confused
@@ -106,9 +121,11 @@ Bertram is designed as opposite to complex characters:
 - Clear, direct, literal communication
 
 ### Component Size Warning
+
 This is a LARGE file with 18 components. Keep definition and instance separate for clarity.
 
 ## Reference
+
 - See `specs/bertram-the-muddy-character-spec.md` Section 5 for all component specifications
 - Reference `vespera_nightwhisper.character.json` for character structure
 - Reference `threadscar_melissa.character.json` for practical personality example
@@ -120,6 +137,7 @@ This is a LARGE file with 18 components. Keep definition and instance separate f
 ### What Was Changed
 
 **Files Created:**
+
 1. `data/mods/fantasy/entities/definitions/bertram_the_muddy.character.json`
    - All 18 required components implemented
    - Identity components (5): name, apparent_age, profile, anatomy:body, notes
@@ -140,6 +158,7 @@ This is a LARGE file with 18 components. Keep definition and instance separate f
    - Tests verify instance configuration (clothing, location, inventory)
 
 **Files Modified:**
+
 1. `data/mods/fantasy/mod-manifest.json`
    - Added `bertram_the_muddy.character.json` to definitions array
    - Added `bertram_the_muddy.character.json` to instances array
@@ -174,6 +193,7 @@ This is a LARGE file with 18 components. Keep definition and instance separate f
 ### Differences from Original Plan
 
 **Minor Adjustments:**
+
 - Component structure uses `text` field instead of `value` for most components (matching Vespera pattern)
 - Notes structure uses `text` field instead of `content` (matching existing patterns)
 - Instance uses `clothing:equipped_inventory` component (standard pattern)

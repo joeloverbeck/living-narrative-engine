@@ -71,7 +71,8 @@ async function buildRealTargetResolutionHarness() {
   });
 
   const player = services.entityManager.getEntityInstance('test-player');
-  const lockedActor = services.entityManager.getEntityInstance('test-locked-actor');
+  const lockedActor =
+    services.entityManager.getEntityInstance('test-locked-actor');
 
   const discoveryContext = {
     currentLocation: 'test-location-1',
@@ -120,16 +121,22 @@ describe('TargetResolutionService with real scope resolver dependencies', () => 
     expect(result.value.map((ctx) => ctx.entityId)).toEqual(
       expect.arrayContaining(['test-npc', 'test-follower'])
     );
-    result.value.forEach((ctx) => expect(ctx).toBeInstanceOf(ActionTargetContext));
+    result.value.forEach((ctx) =>
+      expect(ctx).toBeInstanceOf(ActionTargetContext)
+    );
 
     const spanTree = trace.getHierarchicalView();
     expect(spanTree?.operation).toBe('target.resolve');
-    expect(spanTree?.children.some((child) => child.operation === 'scope.resolve')).toBe(true);
+    expect(
+      spanTree?.children.some((child) => child.operation === 'scope.resolve')
+    ).toBe(true);
 
     const infoLogs = trace.logs.filter((entry) => entry.type === 'info');
     expect(
       infoLogs.some((log) =>
-        log.message.includes("Scope 'positioning:available_furniture' resolved to")
+        log.message.includes(
+          "Scope 'positioning:available_furniture' resolved to"
+        )
       )
     ).toBe(true);
 
@@ -138,17 +145,23 @@ describe('TargetResolutionService with real scope resolver dependencies', () => 
       .filter((message) => typeof message === 'string');
     expect(
       debugMessages.some((message) =>
-        message.includes('TargetResolutionService: Resolving scope for sit_down')
+        message.includes(
+          'TargetResolutionService: Resolving scope for sit_down'
+        )
       )
     ).toBe(true);
     expect(
       debugMessages.some((message) =>
-        message.includes('TargetResolutionService: Context built for UnifiedScopeResolver')
+        message.includes(
+          'TargetResolutionService: Context built for UnifiedScopeResolver'
+        )
       )
     ).toBe(true);
     expect(
       debugMessages.some((message) =>
-        message.includes('TargetResolutionService: UnifiedScopeResolver result for sit_down')
+        message.includes(
+          'TargetResolutionService: UnifiedScopeResolver result for sit_down'
+        )
       )
     ).toBe(true);
 
@@ -159,7 +172,12 @@ describe('TargetResolutionService with real scope resolver dependencies', () => 
     const { targetResolutionService, player, discoveryContext } = harness;
     const trace = new TraceContext();
 
-    const result = targetResolutionService.resolveTargets('none', player, discoveryContext, trace);
+    const result = targetResolutionService.resolveTargets(
+      'none',
+      player,
+      discoveryContext,
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value).toHaveLength(1);
@@ -167,7 +185,9 @@ describe('TargetResolutionService with real scope resolver dependencies', () => 
     expect(result.value[0].entityId).toBeNull();
     expect(
       trace.logs.some((log) =>
-        log.message.includes("Scope 'none' resolved to no targets - returning noTarget context.")
+        log.message.includes(
+          "Scope 'none' resolved to no targets - returning noTarget context."
+        )
       )
     ).toBe(true);
   });
@@ -193,7 +213,9 @@ describe('TargetResolutionService with real scope resolver dependencies', () => 
     expect(result.value).toEqual([]);
     expect(
       trace.logs.some((log) =>
-        log.message.includes("Scope 'core:nearby_actors' resolved to no targets.")
+        log.message.includes(
+          "Scope 'core:nearby_actors' resolved to no targets."
+        )
       )
     ).toBe(true);
   });
@@ -212,6 +234,6 @@ describe('TargetResolutionService with real scope resolver dependencies', () => 
 
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
-    expect(result.errors[0].message).toContain("Missing scope definition");
+    expect(result.errors[0].message).toContain('Missing scope definition');
   });
 });

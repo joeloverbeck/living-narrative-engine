@@ -232,7 +232,11 @@ describe('KnowledgeManager', () => {
         'actor1',
         'core:known_to',
         expect.objectContaining({
-          entities: expect.arrayContaining(['actor1', 'oldEntity', 'newEntity']),
+          entities: expect.arrayContaining([
+            'actor1',
+            'oldEntity',
+            'newEntity',
+          ]),
         })
       );
     });
@@ -283,7 +287,11 @@ describe('KnowledgeManager', () => {
         components: { 'core:position': { locationId: 'room2' } },
       };
 
-      mockEntityManager.entities = [actor, sameLocationEntity, differentLocationEntity];
+      mockEntityManager.entities = [
+        actor,
+        sameLocationEntity,
+        differentLocationEntity,
+      ];
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         return mockEntityManager.entities.find((e) => e.id === id);
       });
@@ -692,7 +700,9 @@ describe('KnowledgeManager', () => {
       });
 
       // Should not throw
-      await expect(manager.updateKnowledge('actor1', {})).resolves.not.toThrow();
+      await expect(
+        manager.updateKnowledge('actor1', {})
+      ).resolves.not.toThrow();
 
       expect(mockLogger.error).toHaveBeenCalled();
     });

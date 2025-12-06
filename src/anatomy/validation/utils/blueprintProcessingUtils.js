@@ -74,9 +74,9 @@ export async function ensureBlueprintProcessed({
   };
 
   logger.debug(
-    `BlueprintProcessingUtils: Generated ${Object.keys(generatedSlots).length} slots, merged with ${Object.keys(
-      additionalSlots
-    ).length} additionalSlots = ${Object.keys(mergedSlots).length} total`
+    `BlueprintProcessingUtils: Generated ${Object.keys(generatedSlots).length} slots, merged with ${
+      Object.keys(additionalSlots).length
+    } additionalSlots = ${Object.keys(mergedSlots).length} total`
   );
 
   return {

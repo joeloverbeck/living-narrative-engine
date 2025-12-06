@@ -35,10 +35,7 @@ describe('Tracer Performance Overhead', () => {
     // Baseline: no tracer injected
     const start1 = performance.now();
     for (let i = 0; i < 1000; i++) {
-      testBed.resolveSyncNoTracer(
-        'positioning:close_actors',
-        actorEntity
-      );
+      testBed.resolveSyncNoTracer('positioning:close_actors', actorEntity);
     }
     const duration1 = performance.now() - start1;
 
@@ -56,8 +53,20 @@ describe('Tracer Performance Overhead', () => {
     const overheadMs = duration2 - duration1;
     const overhead = ((duration2 - duration1) / duration1) * 100;
 
-    console.log('Disabled tracer overhead: ' + overhead.toFixed(2) + '% (' + overheadMs.toFixed(2) + 'ms)');
-    console.log('Baseline: ' + duration1.toFixed(2) + 'ms, With tracer disabled: ' + duration2.toFixed(2) + 'ms');
+    console.log(
+      'Disabled tracer overhead: ' +
+        overhead.toFixed(2) +
+        '% (' +
+        overheadMs.toFixed(2) +
+        'ms)'
+    );
+    console.log(
+      'Baseline: ' +
+        duration1.toFixed(2) +
+        'ms, With tracer disabled: ' +
+        duration2.toFixed(2) +
+        'ms'
+    );
 
     // Performance variance handling:
     // For fast baselines (< 20ms), percentage overhead is noisy due to
@@ -106,9 +115,17 @@ describe('Tracer Performance Overhead', () => {
     const overhead = (overheadMs / duration1) * 100;
 
     console.log('Enabled tracer overhead: ' + overhead.toFixed(2) + '%');
-    console.log('Enabled tracer overhead (ms): ' + overheadMs.toFixed(2) + 'ms');
+    console.log(
+      'Enabled tracer overhead (ms): ' + overheadMs.toFixed(2) + 'ms'
+    );
 
-    console.log('Baseline: ' + duration1.toFixed(2) + 'ms, With tracer enabled: ' + duration2.toFixed(2) + 'ms');
+    console.log(
+      'Baseline: ' +
+        duration1.toFixed(2) +
+        'ms, With tracer enabled: ' +
+        duration2.toFixed(2) +
+        'ms'
+    );
 
     // Tracer work is dominated by serialization, metadata capture, and timestamp recording for
     // each resolver node. Those costs are roughly constant per resolution, so percent overhead
@@ -138,7 +155,13 @@ describe('Tracer Performance Overhead', () => {
 
     const trace = testBed.getScopeTraceData();
 
-    console.log('Large trace (' + trace.steps.length + ' steps) took ' + duration.toFixed(2) + 'ms');
+    console.log(
+      'Large trace (' +
+        trace.steps.length +
+        ' steps) took ' +
+        duration.toFixed(2) +
+        'ms'
+    );
 
     // Should complete in reasonable time even with many steps
     expect(duration).toBeLessThan(1000); // Less than 1 second
@@ -166,7 +189,13 @@ describe('Tracer Performance Overhead', () => {
     const formatted = testBed.getScopeTrace();
     const duration = performance.now() - start;
 
-    console.log('Formatting took ' + duration.toFixed(2) + 'ms for ' + formatted.split('\n').length + ' lines');
+    console.log(
+      'Formatting took ' +
+        duration.toFixed(2) +
+        'ms for ' +
+        formatted.split('\n').length +
+        ' lines'
+    );
 
     // Formatting should be fast
     expect(duration).toBeLessThan(100); // Less than 100ms

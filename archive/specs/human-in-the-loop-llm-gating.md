@@ -33,13 +33,13 @@
 
 ## Core Flow (LLM Turn)
 
-1) `GenericTurnStrategy.decideAction` obtains `decisionResult` from `LLMDecisionProvider` (contains `chosenIndex`, optional speech/thoughts/notes).
-2) Emit speech/thoughts/notes to perception logs as today.
-3) Instead of transitioning to `ProcessingCommandState`, set a **pending approval** flag on the turn context/actor and emit a new event `llm:suggested_action` with payload: `{ actorId, suggestedIndex, suggestedActionDescriptor, speech?, thoughts?, notes? }`.
-4) Dispatch `PLAYER_TURN_PROMPT_ID` via `PromptCoordinator`/`EventBusPromptAdapter` with the available actions to render `ActionButtonsRenderer`. Preselect `suggestedIndex` when it is still valid; otherwise highlight “wait/idle” fallback.
-5) Wait for `PLAYER_TURN_SUBMITTED_ID` carrying the final index (accepted or overridden). Clear pending flag, record decision, and then invoke `requestProcessingCommandStateTransition` with the submitted action.
-6) If a timeout/fallback is enabled (configurable), auto-accept the suggestion or choose `wait` after N seconds; log this path.
-7) Prevent other actors/turns from advancing while pending approval is set.
+1. `GenericTurnStrategy.decideAction` obtains `decisionResult` from `LLMDecisionProvider` (contains `chosenIndex`, optional speech/thoughts/notes).
+2. Emit speech/thoughts/notes to perception logs as today.
+3. Instead of transitioning to `ProcessingCommandState`, set a **pending approval** flag on the turn context/actor and emit a new event `llm:suggested_action` with payload: `{ actorId, suggestedIndex, suggestedActionDescriptor, speech?, thoughts?, notes? }`.
+4. Dispatch `PLAYER_TURN_PROMPT_ID` via `PromptCoordinator`/`EventBusPromptAdapter` with the available actions to render `ActionButtonsRenderer`. Preselect `suggestedIndex` when it is still valid; otherwise highlight “wait/idle” fallback.
+5. Wait for `PLAYER_TURN_SUBMITTED_ID` carrying the final index (accepted or overridden). Clear pending flag, record decision, and then invoke `requestProcessingCommandStateTransition` with the submitted action.
+6. If a timeout/fallback is enabled (configurable), auto-accept the suggestion or choose `wait` after N seconds; log this path.
+7. Prevent other actors/turns from advancing while pending approval is set.
 
 ---
 

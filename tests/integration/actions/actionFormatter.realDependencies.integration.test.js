@@ -164,7 +164,9 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
     expect(validatedDispatcher.events).toHaveLength(0);
     expect(
       logger.logs.debug.some((entry) =>
-        entry.message?.includes('Final formatted command: "inspect Ancient Statue"')
+        entry.message?.includes(
+          'Final formatted command: "inspect Ancient Statue"'
+        )
       )
     ).toBe(true);
   });
@@ -175,7 +177,11 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
       template: 'focus on {focus}',
     };
 
-    const context = { type: 'entity', entityId: 'target-1', placeholder: 'focus' };
+    const context = {
+      type: 'entity',
+      entityId: 'target-1',
+      placeholder: 'focus',
+    };
 
     const result = formatActionCommand(
       actionDefinition,
@@ -247,7 +253,9 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
     expect(result).toEqual({ ok: true, value: 'wait for {target}' });
     expect(
       logger.logs.warn.some((entry) =>
-        entry.message?.includes("target_domain 'none' but template \"wait for {target}\" contains placeholders.")
+        entry.message?.includes(
+          'target_domain \'none\' but template "wait for {target}" contains placeholders.'
+        )
       )
     ).toBe(true);
   });
@@ -278,7 +286,10 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
       }
     );
 
-    expect(result).toEqual({ ok: false, error: 'formatter rejected the context' });
+    expect(result).toEqual({
+      ok: false,
+      error: 'formatter rejected the context',
+    });
     expect(validatedDispatcher.events).toHaveLength(0);
   });
 
@@ -381,7 +392,8 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
 
       expect(result).toEqual({
         ok: false,
-        error: 'formatActionCommand: Invalid or missing actionDefinition or template.',
+        error:
+          'formatActionCommand: Invalid or missing actionDefinition or template.',
       });
       expect(validatedDispatcher.events).toHaveLength(1);
       expect(validatedDispatcher.events[0].payload.message).toContain(
@@ -441,7 +453,8 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
 
       expect(result).toEqual({
         ok: false,
-        error: 'formatActionCommand: getEntityDisplayName utility function is not available.',
+        error:
+          'formatActionCommand: getEntityDisplayName utility function is not available.',
       });
       expect(validatedDispatcher.events).toHaveLength(1);
     });
@@ -463,7 +476,9 @@ describe('ActionCommandFormatter - Real Dependencies Integration', () => {
           safeEventDispatcher: {},
         }
       )
-    ).toThrow("Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'.");
+    ).toThrow(
+      "Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'."
+    );
   });
 
   it('reports unsupported multi-target formatting via the default implementation', () => {

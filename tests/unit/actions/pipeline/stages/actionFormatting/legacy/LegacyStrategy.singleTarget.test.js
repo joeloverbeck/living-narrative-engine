@@ -216,7 +216,9 @@ describe('LegacyStrategy - Single Target Formatting', () => {
       expect(outcome.formattedCommands.length).toBe(0);
       expect(outcome.errors.length).toBe(1);
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to format command for action \'test:action\''),
+        expect.stringContaining(
+          "Failed to format command for action 'test:action'"
+        ),
         expect.objectContaining({ error: expect.any(Error) })
       );
       expect(createError).toHaveBeenCalled();

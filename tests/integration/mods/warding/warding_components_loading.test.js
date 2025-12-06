@@ -50,9 +50,7 @@ describe('Warding Mod Components - Integration', () => {
       process.cwd(),
       'data/mods/warding/components/is_spiritual_anchor.component.json'
     );
-    anchorComponent = JSON.parse(
-      fs.readFileSync(anchorComponentPath, 'utf8')
-    );
+    anchorComponent = JSON.parse(fs.readFileSync(anchorComponentPath, 'utf8'));
 
     const resolveSkillPath = path.resolve(
       process.cwd(),
@@ -96,9 +94,9 @@ describe('Warding Mod Components - Integration', () => {
       expect(corruptedComponent.description).toBeDefined();
       expect(typeof corruptedComponent.description).toBe('string');
       expect(corruptedComponent.description.length).toBeGreaterThan(0);
-      expect(
-        corruptedComponent.description.toLowerCase()
-      ).toContain('corrupted');
+      expect(corruptedComponent.description.toLowerCase()).toContain(
+        'corrupted'
+      );
     });
 
     it('should be a marker component with empty properties', () => {
@@ -118,7 +116,9 @@ describe('Warding Mod Components - Integration', () => {
       );
       const isVampire = JSON.parse(fs.readFileSync(isVampirePath, 'utf8'));
 
-      expect(corruptedComponent.dataSchema.type).toBe(isVampire.dataSchema.type);
+      expect(corruptedComponent.dataSchema.type).toBe(
+        isVampire.dataSchema.type
+      );
       expect(corruptedComponent.dataSchema.properties).toEqual(
         isVampire.dataSchema.properties
       );
@@ -155,9 +155,9 @@ describe('Warding Mod Components - Integration', () => {
       expect(wardingSkillComponent.description).toBeDefined();
       expect(typeof wardingSkillComponent.description).toBe('string');
       expect(wardingSkillComponent.description.length).toBeGreaterThan(0);
-      expect(
-        wardingSkillComponent.description.toLowerCase()
-      ).toContain('warding');
+      expect(wardingSkillComponent.description.toLowerCase()).toContain(
+        'warding'
+      );
     });
 
     it('should have value property with correct constraints', () => {
@@ -189,9 +189,9 @@ describe('Warding Mod Components - Integration', () => {
       expect(wardingSkillComponent.dataSchema.type).toBe(
         meleeSkill.dataSchema.type
       );
-      expect(
-        Object.keys(wardingSkillComponent.dataSchema.properties)
-      ).toEqual(Object.keys(meleeSkill.dataSchema.properties));
+      expect(Object.keys(wardingSkillComponent.dataSchema.properties)).toEqual(
+        Object.keys(meleeSkill.dataSchema.properties)
+      );
       expect(wardingSkillComponent.dataSchema.required).toEqual(
         meleeSkill.dataSchema.required
       );

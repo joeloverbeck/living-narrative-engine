@@ -62,7 +62,9 @@ const createTestLogger = () => {
 
 const createRealWorkflow = ({ includeRootPart = true } = {}) => {
   const { logger, entries } = createTestLogger();
-  const entityManager = new SimpleEntityManager(buildEntityData({ includeRootPart }));
+  const entityManager = new SimpleEntityManager(
+    buildEntityData({ includeRootPart })
+  );
   const eventDispatcher = { dispatch: jest.fn(async () => true) };
   const bodyGraphService = new BodyGraphService({
     entityManager,
@@ -93,7 +95,13 @@ describe('GraphBuildingWorkflow integration', () => {
       await workflow.buildCache(ROOT_ID);
 
       expect(workflow.hasCacheForRoot(ROOT_ID)).toBe(true);
-      expect(entries.some((entry) => entry.level === 'warn' && entry.message.includes('does not have anatomy:part component'))).toBe(true);
+      expect(
+        entries.some(
+          (entry) =>
+            entry.level === 'warn' &&
+            entry.message.includes('does not have anatomy:part component')
+        )
+      ).toBe(true);
 
       const validation = await workflow.validateCache(ROOT_ID);
       expect(validation.valid).toBe(true);
@@ -121,7 +129,9 @@ describe('GraphBuildingWorkflow integration', () => {
         bodyGraphService: throwingService,
       });
 
-      await expect(workflow.buildCache(ROOT_ID)).rejects.toThrow(GraphBuildingError);
+      await expect(workflow.buildCache(ROOT_ID)).rejects.toThrow(
+        GraphBuildingError
+      );
       expect(throwingService.buildAdjacencyCache).toHaveBeenCalledWith(ROOT_ID);
     });
 
@@ -248,7 +258,9 @@ describe('GraphBuildingWorkflow integration', () => {
       });
       const erroredResult = await workflow.validateCache(ROOT_ID);
       expect(erroredResult.valid).toBe(false);
-      expect(erroredResult.issues).toEqual(['Validation error: validation failed']);
+      expect(erroredResult.issues).toEqual([
+        'Validation error: validation failed',
+      ]);
     });
   });
 });

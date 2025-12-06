@@ -492,7 +492,12 @@ export class PrerequisiteEvaluationService extends BaseService {
         prerequisiteIndex: ruleNumber - 1,
         prerequisiteLogic: prereqObject.logic,
         evaluator: () =>
-          this.#resolveAndEvaluate(prereqObject, actionId, evaluationContext, trace),
+          this.#resolveAndEvaluate(
+            prereqObject,
+            actionId,
+            evaluationContext,
+            trace
+          ),
         context: evaluationContext,
       });
 
@@ -667,13 +672,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    *   into the generated prerequisite context (e.g. resolved targets).
    * @returns {boolean} True if all prerequisites pass, false otherwise.
    */
-  evaluate(
-    prerequisites,
-    actionDefinition,
-    actor,
-    trace = null,
-    options = {}
-  ) {
+  evaluate(prerequisites, actionDefinition, actor, trace = null, options = {}) {
     const source = 'PrerequisiteEvaluationService.evaluate';
     const actionId = actionDefinition?.id ?? 'unknown_action';
     const actorId = actor?.id ?? 'unknown_actor';

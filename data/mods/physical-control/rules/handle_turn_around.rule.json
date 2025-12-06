@@ -3,7 +3,9 @@
   "rule_id": "handle_turn_around",
   "comment": "Handles the 'physical-control:turn_around' action. Toggles the facing_away state between actors in closeness.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "physical-control:event-is-action-turn-around" },
+  "condition": {
+    "condition_ref": "physical-control:event-is-action-turn-around"
+  },
   "actions": [
     {
       "type": "GET_NAME",

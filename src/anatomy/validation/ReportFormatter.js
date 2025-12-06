@@ -35,7 +35,8 @@ export class ReportFormatter {
 
     let html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n';
     html += '  <meta charset="UTF-8">\n';
-    html += '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
+    html +=
+      '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
     html += `  <title>Validation Report - ${this.#escapeHtml(summary.recipeId)}</title>\n`;
     html += '  <style>\n';
     html += this.#getHTMLStyles();
@@ -189,7 +190,8 @@ export class ReportFormatter {
     const suggestions = this.#report.suggestions;
 
     // CSV header
-    let csv = 'Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion\n';
+    let csv =
+      'Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion\n';
 
     // Add errors
     for (const error of errors) {

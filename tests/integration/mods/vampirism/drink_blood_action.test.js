@@ -13,7 +13,7 @@ import eventIsActionDrinkBlood from '../../../../data/mods/vampirism/conditions/
 
 const ACTION_ID = 'vampirism:drink_blood';
 const EXPECTED_MESSAGE_TEMPLATE =
-  '{actor} drinks {target}\'s blood through the wound in {target}\'s neck.';
+  "{actor} drinks {target}'s blood through the wound in {target}'s neck.";
 
 describe('vampirism:drink_blood - Rule Execution', () => {
   let testFixture;
@@ -116,7 +116,9 @@ describe('vampirism:drink_blood - Rule Execution', () => {
       );
 
       expect(actorInstance).toHaveComponent('positioning:biting_neck');
-      expect(targetInstance).toHaveComponent('positioning:being_bitten_in_neck');
+      expect(targetInstance).toHaveComponent(
+        'positioning:being_bitten_in_neck'
+      );
     });
   });
 

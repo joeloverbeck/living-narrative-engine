@@ -42,15 +42,23 @@ Each descriptor contains 9 required properties:
 ```javascript
 export const BODY_DESCRIPTOR_REGISTRY = {
   height: {
-    schemaProperty: 'height',           // Property name in JSON schema (camelCase)
-    displayLabel: 'Height',             // Human-readable label for display
-    displayKey: 'height',               // Key in formatting config descriptionOrder
+    schemaProperty: 'height', // Property name in JSON schema (camelCase)
+    displayLabel: 'Height', // Human-readable label for display
+    displayKey: 'height', // Key in formatting config descriptionOrder
     dataPath: 'body.descriptors.height', // Path to access data in body component
-    validValues: ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'],
-    displayOrder: 10,                   // Display priority (lower numbers first)
+    validValues: [
+      'gigantic',
+      'very-tall',
+      'tall',
+      'average',
+      'short',
+      'petite',
+      'tiny',
+    ],
+    displayOrder: 10, // Display priority (lower numbers first)
     extractor: (bodyComponent) => bodyComponent?.body?.descriptors?.height,
     formatter: (value) => `Height: ${value}`,
-    required: false,                    // Whether descriptor is required
+    required: false, // Whether descriptor is required
   },
   // ... additional descriptors
 };
@@ -70,7 +78,7 @@ import {
 // Get specific descriptor metadata
 const heightMeta = getDescriptorMetadata('height');
 console.log(heightMeta.displayLabel); // "Height"
-console.log(heightMeta.validValues);  // ['gigantic', 'very-tall', ...]
+console.log(heightMeta.validValues); // ['gigantic', 'very-tall', ...]
 
 // Get all descriptor names
 const allNames = getAllDescriptorNames();
@@ -86,6 +94,7 @@ const result = validateDescriptorValue('height', 'tall');
 **Command**: `npm run validate:body-descriptors`
 
 Validates:
+
 - Registry completeness
 - Formatting configuration
 - Sample recipes
@@ -110,6 +119,7 @@ if (!result.valid) {
 ```
 
 **Documentation**:
+
 - [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ### Data Flow

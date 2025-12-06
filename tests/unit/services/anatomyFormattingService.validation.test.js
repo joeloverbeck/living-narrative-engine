@@ -90,7 +90,9 @@ describe('AnatomyFormattingService - Bootstrap Validation', () => {
       expect(logger.warn).toHaveBeenCalled();
       const warningCalls = logger.warn.mock.calls.map((call) => call[0]);
       expect(
-        warningCalls.some((msg) => msg.includes('missing from descriptionOrder'))
+        warningCalls.some((msg) =>
+          msg.includes('missing from descriptionOrder')
+        )
       ).toBe(true);
     });
 
@@ -128,7 +130,9 @@ describe('AnatomyFormattingService - Bootstrap Validation', () => {
       expect(logger.warn).toHaveBeenCalled();
       const warningCalls = logger.warn.mock.calls.map((call) => call[0]);
       expect(
-        warningCalls.some((msg) => msg.includes('missing from descriptionOrder'))
+        warningCalls.some((msg) =>
+          msg.includes('missing from descriptionOrder')
+        )
       ).toBe(true);
     });
 
@@ -461,7 +465,9 @@ describe('AnatomyFormattingService - Bootstrap Validation', () => {
 
       service.initialize();
 
-      const warningMessages = logger.warn.mock.calls.map((call) => call[0]).join(' ');
+      const warningMessages = logger.warn.mock.calls
+        .map((call) => call[0])
+        .join(' ');
       expect(warningMessages).toContain('missing from descriptionOrder');
       expect(warningMessages).toContain('Body Descriptor Config');
     });

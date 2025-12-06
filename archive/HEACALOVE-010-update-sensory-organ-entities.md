@@ -3,9 +3,11 @@
 **Status: COMPLETED**
 
 ## Overview
+
 Add `health_calculation_weight` to sensory organs and internal organs (excluding vital organs handled in HEACALOVE-005).
 
 ## Weight Values
+
 - Eyes: `health_calculation_weight: 2` (Tier 6: Sensory)
 - Ears: `health_calculation_weight: 1` (Tier 6: Sensory)
 - Nose: `health_calculation_weight: 1` (Tier 6: Sensory)
@@ -15,11 +17,13 @@ Add `health_calculation_weight` to sensory organs and internal organs (excluding
 ## Files to Modify
 
 ### Eye Entities
+
 ```bash
 ls data/mods/anatomy/entities/definitions/*eye*.entity.json
 ```
 
 Expected eye files:
+
 - `human_eye_amber.entity.json`
 - `human_eye_blue.entity.json`
 - `human_eye_blue_hooded.entity.json`
@@ -41,61 +45,74 @@ Expected eye files:
 - `eldritch_compound_eye_stalk.entity.json`
 
 ### Ear Entities
+
 ```bash
 ls data/mods/anatomy/entities/definitions/*ear*.entity.json
 ```
 
 Expected ear files:
+
 - `humanoid_ear.entity.json`
 - `cat_ear.entity.json`
 - `cat_ear_decorated.entity.json`
 
 ### Nose Entities
+
 ```bash
 ls data/mods/anatomy/entities/definitions/*nose*.entity.json
 ```
 
 Expected nose files:
+
 - `humanoid_nose.entity.json`
 - `humanoid_nose_scarred.entity.json`
 - `humanoid_nose_small.entity.json`
 
 ### Mouth Entities
+
 ```bash
 ls data/mods/anatomy/entities/definitions/*mouth*.entity.json
 ```
 
 Expected mouth files:
+
 - `humanoid_mouth.entity.json`
 - `eldritch_lamprey_mouth.entity.json`
 
 ### Teeth Entities
+
 ```bash
 ls data/mods/anatomy/entities/definitions/*teeth*.entity.json
 ```
 
 Expected teeth files:
+
 - `humanoid_teeth.entity.json`
 
 ## Implementation
 
 ### Eyes (weight: 2)
+
 ```json
 "health_calculation_weight": 2
 ```
 
 ### Ears, Nose, Mouth (weight: 1)
+
 ```json
 "health_calculation_weight": 1
 ```
 
 ### Teeth (weight: 0.5)
+
 ```json
 "health_calculation_weight": 0.5
 ```
 
 ## Example Change (Eye)
+
 Before:
+
 ```json
 "anatomy:part": {
   "subType": "eye",
@@ -105,6 +122,7 @@ Before:
 ```
 
 After:
+
 ```json
 "anatomy:part": {
   "subType": "eye",
@@ -115,11 +133,13 @@ After:
 ```
 
 ## Rationale
+
 - **Eyes (2)**: Vision loss significantly impacts quality of life and function
 - **Ears/Nose/Mouth (1)**: Important sensory organs but less critical than eyes
 - **Teeth (0.5)**: Loss is impactful but not life-threatening
 
 ## Acceptance Criteria
+
 - [x] All eye entities have `health_calculation_weight: 2`
 - [x] All ear entities have `health_calculation_weight: 1`
 - [x] All nose entities have `health_calculation_weight: 1`
@@ -128,9 +148,11 @@ After:
 - [x] All files pass schema validation: `npm run validate`
 
 ## Dependencies
+
 - HEACALOVE-001: Schema must have `health_calculation_weight` property
 
 ## Notes
+
 - Excludes vital organs (brain, heart, spine) - handled in HEACALOVE-005
 - Includes creature variants (feline eyes, cat ears, eldritch parts)
 - Beaks handled in HEACALOVE-012 as they're structural rather than purely sensory
@@ -147,14 +169,14 @@ After:
 
 ### Summary of Changes
 
-| Category | Files Modified | Weight Applied |
-|----------|---------------|----------------|
-| Eyes | 19 entities | 2 |
-| Ears | 3 entities | 1 |
-| Noses | 3 entities | 1 |
-| Mouths | 2 entities | 1 |
-| Teeth | 1 entity | 0.5 |
-| **Total** | **28 entities** | - |
+| Category  | Files Modified  | Weight Applied |
+| --------- | --------------- | -------------- |
+| Eyes      | 19 entities     | 2              |
+| Ears      | 3 entities      | 1              |
+| Noses     | 3 entities      | 1              |
+| Mouths    | 2 entities      | 1              |
+| Teeth     | 1 entity        | 0.5            |
+| **Total** | **28 entities** | -              |
 
 ### New Tests Created
 
@@ -178,6 +200,7 @@ After:
 All 28 entity files in `data/mods/anatomy/entities/definitions/`:
 
 **Eyes (19 files)**:
+
 - human_eye_amber.entity.json
 - human_eye_blue.entity.json
 - human_eye_blue_hooded.entity.json
@@ -199,18 +222,22 @@ All 28 entity files in `data/mods/anatomy/entities/definitions/`:
 - eldritch_compound_eye_stalk.entity.json
 
 **Ears (3 files)**:
+
 - humanoid_ear.entity.json
 - cat_ear.entity.json
 - cat_ear_decorated.entity.json
 
 **Noses (3 files)**:
+
 - humanoid_nose.entity.json
 - humanoid_nose_scarred.entity.json
 - humanoid_nose_small.entity.json
 
 **Mouths (2 files)**:
+
 - humanoid_mouth.entity.json
 - eldritch_lamprey_mouth.entity.json
 
 **Teeth (1 file)**:
+
 - humanoid_teeth.entity.json

@@ -149,8 +149,9 @@ function stableSerializeForKey(value, seen = new WeakSet()) {
     seen.add(value);
     const keys = Object.keys(value).sort();
     const serialized = `{${keys
-      .map((key) =>
-        `${JSON.stringify(key)}:${stableSerializeForKey(value[key], seen)}`
+      .map(
+        (key) =>
+          `${JSON.stringify(key)}:${stableSerializeForKey(value[key], seen)}`
       )
       .join(',')}}`;
     seen.delete(value);
@@ -226,7 +227,11 @@ function partitionDiscoveredActions(discovered) {
     }
 
     const command = candidate.command;
-    if (command !== undefined && command !== null && typeof command !== 'string') {
+    if (
+      command !== undefined &&
+      command !== null &&
+      typeof command !== 'string'
+    ) {
       invalid.push({
         index,
         reason: 'invalid-command',

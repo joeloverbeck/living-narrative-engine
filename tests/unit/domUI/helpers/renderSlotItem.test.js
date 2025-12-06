@@ -122,7 +122,13 @@ describe('renderSlotItem', () => {
   it('omits playtime element when metadata is missing the value', () => {
     const stubFactory = createStubFactory();
 
-    const slot = renderSlotItem(stubFactory, 'slotId', '3', undefined, undefined);
+    const slot = renderSlotItem(
+      stubFactory,
+      'slotId',
+      '3',
+      undefined,
+      undefined
+    );
 
     expect(slot?.querySelector('.slot-playtime')).toBeNull();
     expect(slot?.dataset.slotId).toBe('3');

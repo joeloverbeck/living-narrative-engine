@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import FileOperationCircuitBreaker, {
   CircuitBreakerState,
   CircuitBreakerError,
@@ -57,7 +64,9 @@ describe('FileOperationCircuitBreaker', () => {
       expect.objectContaining({ failureThreshold: 5, recoveryTimeout: 60000 })
     );
 
-    const consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+    const consoleDebugSpy = jest
+      .spyOn(console, 'debug')
+      .mockImplementation(() => {});
 
     try {
       const fallbackBreaker = new FileOperationCircuitBreaker({});
@@ -88,7 +97,9 @@ describe('FileOperationCircuitBreaker', () => {
   it('executes operations successfully when closed', async () => {
     const operation = jest.fn().mockResolvedValue('ok');
 
-    const result = await breaker.executeOperation(operation, { id: 'success-case' });
+    const result = await breaker.executeOperation(operation, {
+      id: 'success-case',
+    });
 
     expect(result).toBe('ok');
     expect(operation).toHaveBeenCalledTimes(1);
@@ -108,12 +119,12 @@ describe('FileOperationCircuitBreaker', () => {
   it('opens after reaching failure threshold and rejects new attempts', async () => {
     const failure = jest.fn().mockRejectedValue(new Error('disk full'));
 
-    await expect(breaker.executeOperation(failure, { attempt: 1 })).rejects.toThrow(
-      'disk full'
-    );
-    await expect(breaker.executeOperation(failure, { attempt: 2 })).rejects.toThrow(
-      'disk full'
-    );
+    await expect(
+      breaker.executeOperation(failure, { attempt: 1 })
+    ).rejects.toThrow('disk full');
+    await expect(
+      breaker.executeOperation(failure, { attempt: 2 })
+    ).rejects.toThrow('disk full');
 
     expect(breaker.state).toBe(CircuitBreakerState.OPEN);
     expect(logger.error).toHaveBeenCalledWith(
@@ -157,7 +168,9 @@ describe('FileOperationCircuitBreaker', () => {
       throw new Error('transient blip');
     };
 
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('transient blip');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'transient blip'
+    );
 
     const midStats = breaker.getStats();
     expect(midStats.failureCount).toBe(1);
@@ -175,8 +188,12 @@ describe('FileOperationCircuitBreaker', () => {
     const failure = async () => {
       throw new Error('temporary');
     };
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('temporary');
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('temporary');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'temporary'
+    );
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'temporary'
+    );
 
     await advanceTimers(1000);
     expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
@@ -197,14 +214,18 @@ describe('FileOperationCircuitBreaker', () => {
     const failure = async () => {
       throw new Error('transient');
     };
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('transient');
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('transient');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'transient'
+    );
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'transient'
+    );
     await advanceTimers(1000);
     expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
 
-    await expect(breaker.executeOperation(failure, { phase: 'retry' })).rejects.toThrow(
-      'transient'
-    );
+    await expect(
+      breaker.executeOperation(failure, { phase: 'retry' })
+    ).rejects.toThrow('transient');
     expect(breaker.state).toBe(CircuitBreakerState.OPEN);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Circuit breaker opened'),
@@ -264,7 +285,10 @@ describe('FileOperationCircuitBreaker', () => {
   });
 
   it('cleans failures outside monitoring window', async () => {
-    const shortWindowBreaker = createBreaker({ monitoringWindow: 100, recoveryTimeout: 500 });
+    const shortWindowBreaker = createBreaker({
+      monitoringWindow: 100,
+      recoveryTimeout: 500,
+    });
     await expect(
       shortWindowBreaker.executeOperation(async () => {
         throw new Error('first');
@@ -304,8 +328,12 @@ describe('FileOperationCircuitBreaker', () => {
       throw new Error('delayed transition');
     };
 
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('delayed transition');
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('delayed transition');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'delayed transition'
+    );
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'delayed transition'
+    );
 
     const initialStats = breaker.getStats();
     expect(initialStats.timeUntilRetry).toBeGreaterThan(0);
@@ -323,8 +351,12 @@ describe('FileOperationCircuitBreaker', () => {
       throw new Error('no response');
     };
 
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('no response');
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('no response');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'no response'
+    );
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'no response'
+    );
 
     await advanceTimers(breaker.recoveryTimeout);
     expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
@@ -345,13 +377,19 @@ describe('FileOperationCircuitBreaker', () => {
       throw new Error('stale timer');
     };
 
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('stale timer');
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('stale timer');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'stale timer'
+    );
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'stale timer'
+    );
 
     await advanceTimers(breaker.recoveryTimeout);
     expect(breaker.state).toBe(CircuitBreakerState.HALF_OPEN);
 
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout').mockImplementation(() => {});
+    const clearTimeoutSpy = jest
+      .spyOn(global, 'clearTimeout')
+      .mockImplementation(() => {});
     const success = jest.fn().mockResolvedValue('ok');
 
     try {
@@ -379,8 +417,12 @@ describe('FileOperationCircuitBreaker', () => {
       throw new Error('transient glitch');
     };
 
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('transient glitch');
-    await expect(breaker.executeOperation(failure)).rejects.toThrow('transient glitch');
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'transient glitch'
+    );
+    await expect(breaker.executeOperation(failure)).rejects.toThrow(
+      'transient glitch'
+    );
 
     // Move system time forward beyond the recovery timeout without running scheduled timers
     const current = Date.now();

@@ -95,7 +95,10 @@ describe('rate limiting identifier fallback integration', () => {
         delete req.headers['x-real-ip'];
         delete req.headers['x-client-ip'];
         delete req.headers['forwarded'];
-        req.headers = { ...req.headers, 'user-agent': 'integration-fallback-agent/1.0' };
+        req.headers = {
+          ...req.headers,
+          'user-agent': 'integration-fallback-agent/1.0',
+        };
         stripClientIp(req);
         next();
       },
@@ -140,9 +143,7 @@ describe('rate limiting identifier fallback integration', () => {
 
     await exhaustLimiter('/llm-api-key');
 
-    const limitedResponse = await request(app)
-      .post('/llm-api-key')
-      .send({});
+    const limitedResponse = await request(app).post('/llm-api-key').send({});
 
     expect(limitedResponse.status).toBe(429);
     expect(limitedResponse.body.error.details.clientType).toBe('api');
@@ -168,9 +169,7 @@ describe('rate limiting identifier fallback integration', () => {
 
     await exhaustLimiter('/llm-global');
 
-    const limitedResponse = await request(app)
-      .post('/llm-global')
-      .send({});
+    const limitedResponse = await request(app).post('/llm-global').send({});
 
     expect(limitedResponse.status).toBe(429);
     expect(limitedResponse.body.error.details.clientType).toBe('global');

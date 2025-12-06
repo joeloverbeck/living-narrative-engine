@@ -174,24 +174,24 @@ export class FilterClauseAnalyzer {
       case 'hasPartWithComponentValue':
       case 'hasPartOfType':
       case 'hasPartOfTypeWithComponentValue':
-        return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+        return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
 
       // Custom clothing operators
       case 'hasClothingInSlot':
       case 'hasClothingInSlotLayer':
       case 'isSocketCovered':
-        return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+        return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
 
       // Custom positioning operators
       case 'hasSittingSpaceToRight':
       case 'canScootCloser':
       case 'isClosestLeftOccupant':
       case 'isClosestRightOccupant':
-        return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+        return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
 
       default:
         // Generic description for any other operator
-        return `${operator}(${Array.isArray(args) ? args.map(a => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+        return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
     }
   }
 
@@ -211,7 +211,7 @@ export class FilterClauseAnalyzer {
         return `condition_ref("${value.condition_ref}")`;
       }
       if (Array.isArray(value)) {
-        return `[${value.map(v => this.#formatValue(v)).join(', ')}]`;
+        return `[${value.map((v) => this.#formatValue(v)).join(', ')}]`;
       }
       return JSON.stringify(value);
     }

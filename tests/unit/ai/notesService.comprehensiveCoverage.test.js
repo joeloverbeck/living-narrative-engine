@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import {
   DEFAULT_SUBJECT_TYPE,
   SUBJECT_TYPES,
@@ -19,7 +21,9 @@ describe('normalizeNoteText', () => {
       text: '  Calculates Analytical Engine output!  ',
     });
 
-    expect(normalized).toBe('entity:ada lovelace: calculates analytical engine output');
+    expect(normalized).toBe(
+      'entity:ada lovelace: calculates analytical engine output'
+    );
   });
 
   it('falls back to the default subject type when none is provided', () => {
@@ -38,7 +42,9 @@ describe('normalizeNoteText', () => {
   });
 
   it('collapses whitespace and strips punctuation for plain text notes', () => {
-    const normalized = normalizeNoteText({ text: '  Multiple!!!\nLines -- merged.  ' });
+    const normalized = normalizeNoteText({
+      text: '  Multiple!!!\nLines -- merged.  ',
+    });
 
     expect(normalized).toBe('multiple lines merged');
   });

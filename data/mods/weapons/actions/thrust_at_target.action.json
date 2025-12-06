@@ -6,13 +6,8 @@
   "template": "thrust {weapon} at {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "positioning:wielding"
-    ],
-    "primary": [
-      "weapons:weapon",
-      "damage-types:damage_capabilities"
-    ]
+    "actor": ["positioning:wielding"],
+    "primary": ["weapons:weapon", "damage-types:damage_capabilities"]
   },
   "forbidden_components": {
     "actor": [
@@ -76,7 +71,11 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.secondary.components.positioning:being_restrained" }]
+            "!!": [
+              {
+                "var": "entity.secondary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "type": "flat",

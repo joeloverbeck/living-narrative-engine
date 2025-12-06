@@ -3,6 +3,9 @@
   "id": "affection:event-is-action-ruffle-hair-playfully",
   "description": "Checks if the triggering event is for the 'affection:ruffle_hair_playfully' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "affection:ruffle_hair_playfully"]
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:ruffle_hair_playfully"
+    ]
   }
 }

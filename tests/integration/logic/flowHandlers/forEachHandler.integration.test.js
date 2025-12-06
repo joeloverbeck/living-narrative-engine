@@ -108,7 +108,10 @@ describe('handleForEach integration', () => {
             item_variable: 'currentItem',
             actions: [
               createNestedAction(),
-              { type: 'ACCUMULATE_QUANTITY', parameters: { totalKey: 'totalQuantity' } },
+              {
+                type: 'ACCUMULATE_QUANTITY',
+                parameters: { totalKey: 'totalQuantity' },
+              },
             ],
           },
         },
@@ -150,7 +153,10 @@ describe('handleForEach integration', () => {
             item_variable: 'currentItem',
             actions: [
               createNestedAction(),
-              { type: 'ACCUMULATE_QUANTITY', parameters: { totalKey: 'totalQuantity' } },
+              {
+                type: 'ACCUMULATE_QUANTITY',
+                parameters: { totalKey: 'totalQuantity' },
+              },
             ],
           },
         },
@@ -203,12 +209,15 @@ describe('handleForEach integration', () => {
       }),
     },
   ])('warns and skips when parameters invalid (%s)', async ({ parameters }) => {
-    const { evaluationContext, executionContext } = buildExecutionContext(logger, {
-      items: [{ id: 'alpha', quantity: 1 }],
-      processed: [],
-      totalQuantity: 0,
-      currentItem: 'original',
-    });
+    const { evaluationContext, executionContext } = buildExecutionContext(
+      logger,
+      {
+        items: [{ id: 'alpha', quantity: 1 }],
+        processed: [],
+        totalQuantity: 0,
+        currentItem: 'original',
+      }
+    );
 
     await executeActionSequence(
       [
@@ -265,12 +274,15 @@ describe('handleForEach integration', () => {
   });
 
   test('warns when the collection path does not resolve to an array', async () => {
-    const { evaluationContext, executionContext } = buildExecutionContext(logger, {
-      items: { apple: { quantity: 4 } },
-      processed: [],
-      totalQuantity: 10,
-      currentItem: 'still-here',
-    });
+    const { evaluationContext, executionContext } = buildExecutionContext(
+      logger,
+      {
+        items: { apple: { quantity: 4 } },
+        processed: [],
+        totalQuantity: 10,
+        currentItem: 'still-here',
+      }
+    );
 
     await executeActionSequence(
       [

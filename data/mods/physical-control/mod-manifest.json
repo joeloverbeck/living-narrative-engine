@@ -63,9 +63,7 @@
       "event-is-action-restrain-target.condition.json",
       "event-is-action-turn-around.condition.json"
     ],
-    "events": [
-      "actor_turned_around.event.json"
-    ],
+    "events": ["actor_turned_around.event.json"],
     "scopes": [
       "restrained_entity_i_am_holding.scope",
       "restraining_entity_from_being_restrained.scope"

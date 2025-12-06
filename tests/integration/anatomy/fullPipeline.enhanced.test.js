@@ -225,10 +225,7 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
 
   describe('Pipeline Validation', () => {
     it('should ensure all sockets have corresponding slots', async () => {
-      const recipes = [
-        'anatomy:human_male',
-        'anatomy:octopus_common',
-      ];
+      const recipes = ['anatomy:human_male', 'anatomy:octopus_common'];
 
       for (const recipeId of recipes) {
         const actor = await testBed.createActor({ recipeId });
@@ -317,9 +314,8 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
 
     it('should handle invalid actor ID gracefully', async () => {
       // Graceful handling means it should NOT throw, but return false
-      const result = await anatomyGenerationService.generateAnatomy(
-        'invalid_actor_id'
-      );
+      const result =
+        await anatomyGenerationService.generateAnatomy('invalid_actor_id');
       expect(result).toBe(false);
     });
 

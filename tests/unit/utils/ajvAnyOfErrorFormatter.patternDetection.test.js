@@ -145,7 +145,9 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
 
       const result = formatAjvErrorsEnhanced(errors, data);
 
-      expect(result).toContain('{"type": "OPERATION_NAME", "parameters": {...}}');
+      expect(result).toContain(
+        '{"type": "OPERATION_NAME", "parameters": {...}}'
+      );
       expect(result).toContain('{"macro": "namespace:macroId"}');
     });
 
@@ -213,12 +215,12 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
       const data = { parameters: {} }; // No type or macro
 
       const result51 = formatAjvErrorsEnhanced(errors51, data);
-      
+
       // Should trigger pattern detection
       expect(result51).toContain('Missing operation type');
       expect(result51).toContain('QUERY_COMPONENT');
       expect(result51).toContain('MODIFY_COMPONENT');
-      
+
       // Test with 50 errors (at threshold) - should NOT trigger
       const errors50 = Array(50)
         .fill(null)
@@ -227,9 +229,9 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
           instancePath: '',
           schemaPath: '#/anyOf',
         }));
-      
+
       const result50 = formatAjvErrorsEnhanced(errors50, data);
-      
+
       // With exactly 50 errors, should NOT trigger pattern detection (>50 required)
       // Will fall through to anyOf formatter
       expect(result50).toBeTruthy();
@@ -279,7 +281,9 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
       expect(result).toContain('VALUE_2');
       expect(result).toContain('VALUE_3');
       expect(result).toContain('VALUE_4');
-      expect(result).toContain('Allowed values: [VALUE_1, VALUE_2, VALUE_3, VALUE_4]');
+      expect(result).toContain(
+        'Allowed values: [VALUE_1, VALUE_2, VALUE_3, VALUE_4]'
+      );
     });
 
     it('should infer schema file from operation type', () => {
@@ -344,7 +348,10 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
       const testCases = [
         { opType: 'ADD_COMPONENT', schemaFile: 'addComponent.schema.json' },
         { opType: 'QUERY_COMPONENT', schemaFile: 'queryComponent.schema.json' },
-        { opType: 'MODIFY_COMPONENT', schemaFile: 'modifyComponent.schema.json' },
+        {
+          opType: 'MODIFY_COMPONENT',
+          schemaFile: 'modifyComponent.schema.json',
+        },
       ];
 
       testCases.forEach(({ opType, schemaFile }) => {
@@ -560,7 +567,9 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
 
         const result = formatAjvErrorsEnhanced(errors, data);
 
-        expect(result).toContain("Unknown or invalid operation type: 'LOCK_GRABB'");
+        expect(result).toContain(
+          "Unknown or invalid operation type: 'LOCK_GRABB'"
+        );
         expect(result).toContain('Did you mean');
         expect(result).toContain('LOCK_GRABBING');
       });
@@ -577,7 +586,9 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
 
         const result = formatAjvErrorsEnhanced(errors, data);
 
-        expect(result).toContain("Unknown or invalid operation type: 'COMPLETELY_DIFFERENT_XYZ123'");
+        expect(result).toContain(
+          "Unknown or invalid operation type: 'COMPLETELY_DIFFERENT_XYZ123'"
+        );
         expect(result).not.toContain('Did you mean');
       });
 
@@ -611,7 +622,8 @@ describe('ajvAnyOfErrorFormatter - Pattern Detection', () => {
         const data = { type: 'QUERY_COMPONENT' };
         const context = {
           filePath: '/path/to/rule.json',
-          fileContent: '{\n  "actions": [\n    { "type": "QUERY_COMPONENT" }\n  ]\n}',
+          fileContent:
+            '{\n  "actions": [\n    { "type": "QUERY_COMPONENT" }\n  ]\n}',
           ruleId: 'test_rule',
         };
 

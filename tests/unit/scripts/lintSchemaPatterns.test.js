@@ -6,7 +6,14 @@
  * @see tickets/SCHVALTESINT-009-schema-pattern-lint-script.md
  */
 
-import { jest, describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 describe('lintSchemaPatterns', () => {
   let lintSchemaPatterns;
@@ -51,13 +58,15 @@ describe('lintSchemaPatterns', () => {
     test('should return only .schema.json files', async () => {
       const { getSchemaFiles } = lintSchemaPatterns;
       const mockFs = {
-        readdir: jest.fn().mockResolvedValue([
-          'lockGrabbing.schema.json',
-          'unlockGrabbing.schema.json',
-          'base-operation.schema.json',
-          'README.md',
-          '.gitkeep',
-        ]),
+        readdir: jest
+          .fn()
+          .mockResolvedValue([
+            'lockGrabbing.schema.json',
+            'unlockGrabbing.schema.json',
+            'base-operation.schema.json',
+            'README.md',
+            '.gitkeep',
+          ]),
       };
 
       const result = await getSchemaFiles('/mock/operations', mockFs);

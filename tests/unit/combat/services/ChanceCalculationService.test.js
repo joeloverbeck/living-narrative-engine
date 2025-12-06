@@ -283,12 +283,16 @@ describe('ChanceCalculationService', () => {
           'skills:melee_skill',
           0
         );
-        expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith({
+        expect(
+          mocks.modifierCollectorService.collectModifiers
+        ).toHaveBeenCalledWith({
           actorId: 'actor-123',
           primaryTargetId: undefined,
           actionConfig: actionDef.chanceBased,
         });
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith({
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith({
           actorSkill: 50,
           targetSkill: 0,
           difficulty: 0,
@@ -380,21 +384,19 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.skillResolverService.getSkillValue).toHaveBeenCalledTimes(2);
-        expect(mocks.skillResolverService.getSkillValue).toHaveBeenNthCalledWith(
-          1,
-          'actor-123',
-          'skills:melee_skill',
-          0
+        expect(mocks.skillResolverService.getSkillValue).toHaveBeenCalledTimes(
+          2
         );
-        expect(mocks.skillResolverService.getSkillValue).toHaveBeenNthCalledWith(
-          2,
-          'target-456',
-          'skills:defense_skill',
-          10
-        );
+        expect(
+          mocks.skillResolverService.getSkillValue
+        ).toHaveBeenNthCalledWith(1, 'actor-123', 'skills:melee_skill', 0);
+        expect(
+          mocks.skillResolverService.getSkillValue
+        ).toHaveBeenNthCalledWith(2, 'target-456', 'skills:defense_skill', 10);
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(
           expect.objectContaining({
             actorSkill: 50,
             targetSkill: 30,
@@ -417,8 +419,12 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.skillResolverService.getSkillValue).toHaveBeenCalledTimes(1);
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
+        expect(mocks.skillResolverService.getSkillValue).toHaveBeenCalledTimes(
+          1
+        );
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(
           expect.objectContaining({
             targetSkill: 0,
           })
@@ -440,7 +446,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.skillResolverService.getSkillValue).toHaveBeenCalledTimes(1);
+        expect(mocks.skillResolverService.getSkillValue).toHaveBeenCalledTimes(
+          1
+        );
       });
     });
 
@@ -453,7 +461,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(
           expect.objectContaining({ formula: 'logistic' })
         );
       });
@@ -466,9 +476,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
-          expect.objectContaining({ formula: 'linear' })
-        );
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(expect.objectContaining({ formula: 'linear' }));
       });
 
       it('should default to ratio formula when not specified', () => {
@@ -480,9 +490,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
-          expect.objectContaining({ formula: 'ratio' })
-        );
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(expect.objectContaining({ formula: 'ratio' }));
       });
     });
 
@@ -497,7 +507,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(
           expect.objectContaining({ bounds: { min: 10, max: 90 } })
         );
       });
@@ -511,7 +523,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(
           expect.objectContaining({ bounds: { min: 5, max: 95 } })
         );
       });
@@ -526,9 +540,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
-          expect.objectContaining({ difficulty: -10 })
-        );
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(expect.objectContaining({ difficulty: -10 }));
       });
 
       it('should default to 0 difficulty when not specified', () => {
@@ -540,9 +554,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.probabilityCalculatorService.calculate).toHaveBeenCalledWith(
-          expect.objectContaining({ difficulty: 0 })
-        );
+        expect(
+          mocks.probabilityCalculatorService.calculate
+        ).toHaveBeenCalledWith(expect.objectContaining({ difficulty: 0 }));
       });
     });
 
@@ -711,7 +725,9 @@ describe('ChanceCalculationService', () => {
           actionDef,
         });
 
-        expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+        expect(
+          mocks.modifierCollectorService.collectModifiers
+        ).toHaveBeenCalledWith(
           expect.objectContaining({ primaryTargetId: 'target-456' })
         );
       });
@@ -851,7 +867,9 @@ describe('ChanceCalculationService', () => {
         actionDef,
       });
 
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           actorId: 'actor-123',
           primaryTargetId: 'primary-target-456',
@@ -868,7 +886,9 @@ describe('ChanceCalculationService', () => {
         actionDef,
       });
 
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           secondaryTargetId: 'secondary-target-789',
         })
@@ -884,7 +904,9 @@ describe('ChanceCalculationService', () => {
         actionDef,
       });
 
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           tertiaryTargetId: 'tertiary-target-012',
         })
@@ -902,7 +924,9 @@ describe('ChanceCalculationService', () => {
         actionDef,
       });
 
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith({
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith({
         actorId: 'actor-123',
         primaryTargetId: 'primary-456',
         secondaryTargetId: 'secondary-789',
@@ -931,7 +955,9 @@ describe('ChanceCalculationService', () => {
       });
 
       // Should resolve to primaryTargetId internally
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           primaryTargetId: 'legacy-target-456',
         })
@@ -955,7 +981,9 @@ describe('ChanceCalculationService', () => {
         actionDef,
       });
 
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           primaryTargetId: 'new-primary-target',
         })
@@ -973,7 +1001,9 @@ describe('ChanceCalculationService', () => {
         actionDef,
       });
 
-      expect(mocks.modifierCollectorService.collectModifiers).toHaveBeenCalledWith(
+      expect(
+        mocks.modifierCollectorService.collectModifiers
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           primaryTargetId: 'primary-456',
           secondaryTargetId: 'secondary-789',

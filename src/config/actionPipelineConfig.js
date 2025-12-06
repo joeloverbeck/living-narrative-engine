@@ -164,7 +164,10 @@ export function getActionPipelineConfig() {
  */
 export function isTargetValidationEnabled() {
   const config = getActionPipelineConfig();
-  return config.targetValidation.enabled && config.targetValidation.strictness !== 'off';
+  return (
+    config.targetValidation.enabled &&
+    config.targetValidation.strictness !== 'off'
+  );
 }
 
 /**
@@ -214,7 +217,10 @@ export function shouldSkipValidation(action) {
   }
 
   // Check if action type is in skip list
-  if (action.type && config.targetValidation.skipForActionTypes.includes(action.type)) {
+  if (
+    action.type &&
+    config.targetValidation.skipForActionTypes.includes(action.type)
+  ) {
     return true;
   }
 
@@ -244,7 +250,11 @@ function deepMerge(target, source) {
   const result = { ...target };
 
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+    if (
+      source[key] &&
+      typeof source[key] === 'object' &&
+      !Array.isArray(source[key])
+    ) {
       result[key] = deepMerge(result[key] || {}, source[key]);
     } else {
       result[key] = source[key];
@@ -255,7 +265,8 @@ function deepMerge(target, source) {
 }
 
 // Export individual config sections for convenience
-export const targetValidationConfig = () => getActionPipelineConfig().targetValidation;
+export const targetValidationConfig = () =>
+  getActionPipelineConfig().targetValidation;
 export const performanceConfig = () => getActionPipelineConfig().performance;
 export const diagnosticsConfig = () => getActionPipelineConfig().diagnostics;
 export const stagesConfig = () => getActionPipelineConfig().stages;

@@ -24,7 +24,12 @@ describe('ActionFormattingStage - Template Immutability', () => {
     safeEventDispatcher: { dispatch: jest.fn() },
     getEntityDisplayNameFn: jest.fn(),
     errorContextBuilder: { buildErrorContext: jest.fn() },
-    logger: { warn: jest.fn(), debug: jest.fn(), info: jest.fn(), error: jest.fn() },
+    logger: {
+      warn: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      error: jest.fn(),
+    },
     chanceCalculationService: {
       calculateForDisplay: jest.fn().mockReturnValue({
         chance: 75,
@@ -118,7 +123,9 @@ describe('ActionFormattingStage - Template Immutability', () => {
       expect(actionWithTarget.formattedTemplate).toBeDefined();
       expect(actionWithTarget.formattedTemplate).toContain('75');
       expect(actionWithTarget.formattedTemplate).not.toContain('{chance}');
-      expect(actionWithTarget.formattedTemplate).toBe('Try to charm (75% success)');
+      expect(actionWithTarget.formattedTemplate).toBe(
+        'Try to charm (75% success)'
+      );
     });
 
     it('should produce consistent results for multiple actors with same cached actionDef', async () => {
@@ -184,8 +191,12 @@ describe('ActionFormattingStage - Template Immutability', () => {
       await stage2.executeInternal(context2);
 
       // Assert: Each actor should have their own calculated chance
-      expect(actionWithTarget1.formattedTemplate).toBe('Intimidate (75% effectiveness)');
-      expect(actionWithTarget2.formattedTemplate).toBe('Intimidate (25% effectiveness)');
+      expect(actionWithTarget1.formattedTemplate).toBe(
+        'Intimidate (75% effectiveness)'
+      );
+      expect(actionWithTarget2.formattedTemplate).toBe(
+        'Intimidate (25% effectiveness)'
+      );
 
       // Assert: The original cached template is NEVER mutated
       expect(sharedCachedActionDef.template).toBe(originalTemplate);

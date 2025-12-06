@@ -41,7 +41,9 @@ describe('RecipeValidationContext', () => {
 
       expect(context.dataRegistry).toBe(mockDeps.dataRegistry);
       expect(context.schemaValidator).toBe(mockDeps.schemaValidator);
-      expect(context.anatomyBlueprintRepository).toBe(mockDeps.anatomyBlueprintRepository);
+      expect(context.anatomyBlueprintRepository).toBe(
+        mockDeps.anatomyBlueprintRepository
+      );
       expect(context.slotGenerator).toBe(mockDeps.slotGenerator);
       expect(context.logger).toBe(mockDeps.logger);
     });
@@ -161,7 +163,9 @@ describe('RecipeValidationContext', () => {
     });
 
     it('should return anatomyBlueprintRepository via getter', () => {
-      expect(context.anatomyBlueprintRepository).toBe(mockDeps.anatomyBlueprintRepository);
+      expect(context.anatomyBlueprintRepository).toBe(
+        mockDeps.anatomyBlueprintRepository
+      );
     });
 
     it('should return slotGenerator via getter', () => {
@@ -306,7 +310,9 @@ describe('RecipeValidationContext', () => {
       const derivedContext = originalContext.withConfig({ strictMode: true });
 
       expect(derivedContext.dataRegistry).toBe(originalContext.dataRegistry);
-      expect(derivedContext.schemaValidator).toBe(originalContext.schemaValidator);
+      expect(derivedContext.schemaValidator).toBe(
+        originalContext.schemaValidator
+      );
       expect(derivedContext.anatomyBlueprintRepository).toBe(
         originalContext.anatomyBlueprintRepository
       );
@@ -332,7 +338,9 @@ describe('RecipeValidationContext', () => {
     });
 
     it('should allow adding new config properties via withConfig', () => {
-      const derivedContext = originalContext.withConfig({ newProperty: 'newValue' });
+      const derivedContext = originalContext.withConfig({
+        newProperty: 'newValue',
+      });
 
       expect(derivedContext.config).toEqual({
         strictMode: false,
@@ -372,7 +380,9 @@ describe('RecipeValidationContext', () => {
 
       // Another validator can check cached results
       expect(context.hasMetadata('validatedComponents')).toBe(true);
-      expect(context.getMetadata('validatedComponents')).toBe(validatedComponents);
+      expect(context.getMetadata('validatedComponents')).toBe(
+        validatedComponents
+      );
     });
 
     it('should support configuration-based validation strategies', () => {

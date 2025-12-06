@@ -45,13 +45,24 @@ class PoisonTickSystem extends BaseService {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
    */
-  constructor({ logger, entityManager, safeEventDispatcher, validatedEventDispatcher }) {
+  constructor({
+    logger,
+    entityManager,
+    safeEventDispatcher,
+    validatedEventDispatcher,
+  }) {
     super();
 
     this.#logger = this._init('PoisonTickSystem', logger, {
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent', 'hasComponent', 'getEntitiesWithComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+          'hasComponent',
+          'getEntitiesWithComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -97,7 +108,9 @@ class PoisonTickSystem extends BaseService {
    * Applies tick damage, decrements duration, and handles expiration.
    */
   async processTick() {
-    const poisonedTargets = this.#entityManager.getEntitiesWithComponent(POISONED_COMPONENT_ID);
+    const poisonedTargets = this.#entityManager.getEntitiesWithComponent(
+      POISONED_COMPONENT_ID
+    );
 
     if (!poisonedTargets || poisonedTargets.length === 0) {
       return;
@@ -121,7 +134,10 @@ class PoisonTickSystem extends BaseService {
    */
   async #processPoisonedTarget(targetId) {
     // Get poisoned component data
-    const poisonData = this.#entityManager.getComponentData(targetId, POISONED_COMPONENT_ID);
+    const poisonData = this.#entityManager.getComponentData(
+      targetId,
+      POISONED_COMPONENT_ID
+    );
     if (!poisonData) {
       return;
     }
@@ -129,17 +145,27 @@ class PoisonTickSystem extends BaseService {
     const { remainingTurns, tickDamage } = poisonData;
 
     // Determine scope by checking which health component exists
-    const isEntityScope = this.#entityManager.hasComponent(targetId, ENTITY_HEALTH_COMPONENT_ID);
+    const isEntityScope = this.#entityManager.hasComponent(
+      targetId,
+      ENTITY_HEALTH_COMPONENT_ID
+    );
     const scope = isEntityScope ? 'entity' : 'part';
 
     // Get target health
-    const healthComponentId = isEntityScope ? ENTITY_HEALTH_COMPONENT_ID : PART_HEALTH_COMPONENT_ID;
-    const targetHealth = this.#entityManager.hasComponent(targetId, healthComponentId)
+    const healthComponentId = isEntityScope
+      ? ENTITY_HEALTH_COMPONENT_ID
+      : PART_HEALTH_COMPONENT_ID;
+    const targetHealth = this.#entityManager.hasComponent(
+      targetId,
+      healthComponentId
+    )
       ? this.#entityManager.getComponentData(targetId, healthComponentId)
       : null;
 
-    const targetDestroyed = !targetHealth ||
-      (targetHealth.currentHealth !== undefined && targetHealth.currentHealth <= 0);
+    const targetDestroyed =
+      !targetHealth ||
+      (targetHealth.currentHealth !== undefined &&
+        targetHealth.currentHealth <= 0);
 
     // If target is destroyed, remove poison and emit stopped event
     if (targetDestroyed) {
@@ -149,7 +175,10 @@ class PoisonTickSystem extends BaseService {
 
     // Apply tick damage to target health
     if (tickDamage > 0 && targetHealth) {
-      const newHealth = Math.max(0, (targetHealth.currentHealth ?? 0) - tickDamage);
+      const newHealth = Math.max(
+        0,
+        (targetHealth.currentHealth ?? 0) - tickDamage
+      );
       await this.#entityManager.addComponent(targetId, healthComponentId, {
         ...targetHealth,
         currentHealth: newHealth,

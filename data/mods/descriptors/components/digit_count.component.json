@@ -8,13 +8,7 @@
       "count": {
         "type": "string",
         "description": "The digit count",
-        "enum": [
-          "3",
-          "4",
-          "5",
-          "6+",
-          "abnormal"
-        ],
+        "enum": ["3", "4", "5", "6+", "abnormal"],
         "default": "5"
       }
     },

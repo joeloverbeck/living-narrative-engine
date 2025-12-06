@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it, jest, afterEach } from '@jest/globals';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import { PromptPreviewModal } from '../../../src/domUI/PromptPreviewModal.js';
 
 // Mock methods for BaseModalRenderer
@@ -12,26 +19,31 @@ const mockAddDomListener = jest.fn();
 jest.mock('../../../src/domUI/baseModalRenderer.js', () => {
   return {
     BaseModalRenderer: class MockBaseModalRenderer {
-      constructor({ logger, documentContext, validatedEventDispatcher, elementsConfig }) {
+      constructor({
+        logger,
+        documentContext,
+        validatedEventDispatcher,
+        elementsConfig,
+      }) {
         this.logger = logger;
         this.documentContext = documentContext;
         this.validatedEventDispatcher = validatedEventDispatcher;
         this.elementsConfig = elementsConfig;
         this.elements = {};
-        
+
         // Simulate element lookup logic
-        Object.keys(elementsConfig).forEach(key => {
-            const config = elementsConfig[key];
-            let selector = null;
-            if (typeof config === 'string') {
-                selector = config;
-            } else if (config && typeof config.selector === 'string') {
-                selector = config.selector;
-            }
-            
-            if (selector) {
-                this.elements[key] = documentContext.query(selector);
-            }
+        Object.keys(elementsConfig).forEach((key) => {
+          const config = elementsConfig[key];
+          let selector = null;
+          if (typeof config === 'string') {
+            selector = config;
+          } else if (config && typeof config.selector === 'string') {
+            selector = config.selector;
+          }
+
+          if (selector) {
+            this.elements[key] = documentContext.query(selector);
+          }
         });
 
         this._logPrefix = '[PromptPreviewModal]';
@@ -39,12 +51,22 @@ jest.mock('../../../src/domUI/baseModalRenderer.js', () => {
       }
 
       // Define methods on prototype so super.method() works
-      show() { mockShow(); }
-      hide() { mockHide(); }
-      _displayStatusMessage(msg, type) { mockDisplayStatusMessage(msg, type); }
-      _clearStatusMessage() { mockClearStatusMessage(); }
-      _addDomListener(el, type, fn) { mockAddDomListener(el, type, fn); }
-    }
+      show() {
+        mockShow();
+      }
+      hide() {
+        mockHide();
+      }
+      _displayStatusMessage(msg, type) {
+        mockDisplayStatusMessage(msg, type);
+      }
+      _clearStatusMessage() {
+        mockClearStatusMessage();
+      }
+      _addDomListener(el, type, fn) {
+        mockAddDomListener(el, type, fn);
+      }
+    },
   };
 });
 
@@ -71,7 +93,10 @@ describe('PromptPreviewModal', () => {
       '#llm-prompt-debug-close-button': { id: 'close-btn' },
       '#llm-prompt-debug-status': { id: 'status', textContent: '' },
       '#llm-prompt-debug-content': { id: 'content', textContent: '' },
-      '#llm-prompt-copy-button': { id: 'copy-btn', addEventListener: jest.fn() },
+      '#llm-prompt-copy-button': {
+        id: 'copy-btn',
+        addEventListener: jest.fn(),
+      },
       '#llm-prompt-meta-actor': { id: 'meta-actor', textContent: '' },
       '#llm-prompt-meta-llm': { id: 'meta-llm', textContent: '' },
       '#llm-prompt-meta-actions': { id: 'meta-actions', textContent: '' },
@@ -90,9 +115,9 @@ describe('PromptPreviewModal', () => {
 
     // Mock navigator.clipboard
     Object.assign(navigator, {
-        clipboard: {
-            writeText: jest.fn().mockResolvedValue(undefined),
-        },
+      clipboard: {
+        writeText: jest.fn().mockResolvedValue(undefined),
+      },
     });
 
     modal = new PromptPreviewModal({
@@ -104,12 +129,14 @@ describe('PromptPreviewModal', () => {
   });
 
   afterEach(() => {
-      jest.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('Constructor', () => {
     it('should initialize and bind copy button', () => {
-      expect(mockDocumentContext.query).toHaveBeenCalledWith('#llm-prompt-copy-button');
+      expect(mockDocumentContext.query).toHaveBeenCalledWith(
+        '#llm-prompt-copy-button'
+      );
       expect(mockAddDomListener).toHaveBeenCalledWith(
         mockElements['#llm-prompt-copy-button'],
         'click',
@@ -118,23 +145,27 @@ describe('PromptPreviewModal', () => {
     });
 
     it('should warn if copy button is missing', () => {
-        const localMockDocContext = {
-             query: jest.fn(selector => {
-                 if (selector === '#llm-prompt-copy-button') return null;
-                 return mockElements[selector] || {}; 
-             })
-        };
-        
-        mockLogger.warn.mockClear();
+      const localMockDocContext = {
+        query: jest.fn((selector) => {
+          if (selector === '#llm-prompt-copy-button') return null;
+          return mockElements[selector] || {};
+        }),
+      };
 
-        new PromptPreviewModal({
-            logger: mockLogger,
-            documentContext: localMockDocContext,
-            validatedEventDispatcher: mockValidatedEventDispatcher,
-            domElementFactory: mockDomElementFactory,
-        });
+      mockLogger.warn.mockClear();
 
-        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Copy button (#llm-prompt-copy-button) not found'));
+      new PromptPreviewModal({
+        logger: mockLogger,
+        documentContext: localMockDocContext,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+        domElementFactory: mockDomElementFactory,
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Copy button (#llm-prompt-copy-button) not found'
+        )
+      );
     });
   });
 
@@ -150,7 +181,9 @@ describe('PromptPreviewModal', () => {
       modal.show(payload);
 
       expect(mockShow).toHaveBeenCalled();
-      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('This is a test prompt.');
+      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe(
+        'This is a test prompt.'
+      );
       expect(mockElements['#llm-prompt-meta-actor'].textContent).toBe('Hero');
       expect(mockElements['#llm-prompt-meta-llm'].textContent).toBe('gpt-4');
       expect(mockElements['#llm-prompt-meta-actions'].textContent).toBe('5');
@@ -160,7 +193,10 @@ describe('PromptPreviewModal', () => {
     it('should handle missing payload gracefully', () => {
       modal.show(null);
       expect(mockShow).toHaveBeenCalled();
-      expect(mockDisplayStatusMessage).toHaveBeenCalledWith('No data received.', 'error');
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'No data received.',
+        'error'
+      );
       expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
     });
 
@@ -169,83 +205,114 @@ describe('PromptPreviewModal', () => {
         errors: ['Error 1', 'Error 2'],
       };
       modal.show(payload);
-      expect(mockDisplayStatusMessage).toHaveBeenCalledWith('Errors: Error 1; Error 2', 'error');
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'Errors: Error 1; Error 2',
+        'error'
+      );
       expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
     });
 
     it('should display partial prompt with errors', () => {
-        const payload = {
-            prompt: 'Partial prompt',
-            errors: ['Something went wrong'],
-        };
-        modal.show(payload);
-        expect(mockDisplayStatusMessage).toHaveBeenCalledWith('Errors: Something went wrong', 'error');
-        expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('Partial prompt');
+      const payload = {
+        prompt: 'Partial prompt',
+        errors: ['Something went wrong'],
+      };
+      modal.show(payload);
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'Errors: Something went wrong',
+        'error'
+      );
+      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe(
+        'Partial prompt'
+      );
     });
 
     it('should handle missing metadata fields', () => {
-       const payload = { prompt: 'Prompt' };
-       modal.show(payload);
-       expect(mockElements['#llm-prompt-meta-actor'].textContent).toBe('Unknown'); 
-       expect(mockElements['#llm-prompt-meta-llm'].textContent).toBe('N/A'); 
-       expect(mockElements['#llm-prompt-meta-actions'].textContent).toBe('-'); 
+      const payload = { prompt: 'Prompt' };
+      modal.show(payload);
+      expect(mockElements['#llm-prompt-meta-actor'].textContent).toBe(
+        'Unknown'
+      );
+      expect(mockElements['#llm-prompt-meta-llm'].textContent).toBe('N/A');
+      expect(mockElements['#llm-prompt-meta-actions'].textContent).toBe('-');
     });
   });
 
   describe('setLoading()', () => {
-      it('should display loading message when true', () => {
-          modal.setLoading(true);
-          expect(mockDisplayStatusMessage).toHaveBeenCalledWith('Generating prompt...', 'info');
-          // content is cleared via _clearContent implicitly? No, explicit call in setLoading
-          expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
-          expect(mockShow).toHaveBeenCalled(); 
-      });
+    it('should display loading message when true', () => {
+      modal.setLoading(true);
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'Generating prompt...',
+        'info'
+      );
+      // content is cleared via _clearContent implicitly? No, explicit call in setLoading
+      expect(mockElements['#llm-prompt-debug-content'].textContent).toBe('');
+      expect(mockShow).toHaveBeenCalled();
+    });
 
-      it('should clear loading message when false', () => {
-        mockElements['#llm-prompt-debug-status'].textContent = 'Generating prompt...';
-        modal.setLoading(false);
-        expect(mockClearStatusMessage).toHaveBeenCalled();
-      });
+    it('should clear loading message when false', () => {
+      mockElements['#llm-prompt-debug-status'].textContent =
+        'Generating prompt...';
+      modal.setLoading(false);
+      expect(mockClearStatusMessage).toHaveBeenCalled();
+    });
   });
 
   describe('Copy Functionality', () => {
-      it('should copy text to clipboard on button click', async () => {
-          mockElements['#llm-prompt-debug-content'].textContent = 'Text to copy';
-          
-          const calls = mockAddDomListener.mock.calls;
-          const copyCall = calls.find(c => c[0] === mockElements['#llm-prompt-copy-button']);
-          const clickHandler = copyCall[2];
+    it('should copy text to clipboard on button click', async () => {
+      mockElements['#llm-prompt-debug-content'].textContent = 'Text to copy';
 
-          await clickHandler();
+      const calls = mockAddDomListener.mock.calls;
+      const copyCall = calls.find(
+        (c) => c[0] === mockElements['#llm-prompt-copy-button']
+      );
+      const clickHandler = copyCall[2];
 
-          expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Text to copy');
-          expect(mockDisplayStatusMessage).toHaveBeenCalledWith('Copied!', 'success');
-      });
+      await clickHandler();
 
-      it('should handle copy errors', async () => {
-        mockElements['#llm-prompt-debug-content'].textContent = 'Text to copy';
-        navigator.clipboard.writeText.mockRejectedValue(new Error('Copy failed'));
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'Text to copy'
+      );
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'Copied!',
+        'success'
+      );
+    });
 
-        const calls = mockAddDomListener.mock.calls;
-        const copyCall = calls.find(c => c[0] === mockElements['#llm-prompt-copy-button']);
-        const clickHandler = copyCall[2];
+    it('should handle copy errors', async () => {
+      mockElements['#llm-prompt-debug-content'].textContent = 'Text to copy';
+      navigator.clipboard.writeText.mockRejectedValue(new Error('Copy failed'));
 
-        await clickHandler();
+      const calls = mockAddDomListener.mock.calls;
+      const copyCall = calls.find(
+        (c) => c[0] === mockElements['#llm-prompt-copy-button']
+      );
+      const clickHandler = copyCall[2];
 
-        expect(mockLogger.error).toHaveBeenCalled();
-        expect(mockDisplayStatusMessage).toHaveBeenCalledWith('Failed to copy.', 'error');
-      });
-      
-      it('should warn if nothing to copy', async () => {
-        mockElements['#llm-prompt-debug-content'].textContent = '';
-        const calls = mockAddDomListener.mock.calls;
-        const copyCall = calls.find(c => c[0] === mockElements['#llm-prompt-copy-button']);
-        const clickHandler = copyCall[2];
+      await clickHandler();
 
-        await clickHandler();
-        
-        expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
-        expect(mockDisplayStatusMessage).toHaveBeenCalledWith('Nothing to copy.', 'warning');
-      });
+      expect(mockLogger.error).toHaveBeenCalled();
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'Failed to copy.',
+        'error'
+      );
+    });
+
+    it('should warn if nothing to copy', async () => {
+      mockElements['#llm-prompt-debug-content'].textContent = '';
+      const calls = mockAddDomListener.mock.calls;
+      const copyCall = calls.find(
+        (c) => c[0] === mockElements['#llm-prompt-copy-button']
+      );
+      const clickHandler = copyCall[2];
+
+      await clickHandler();
+
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+      expect(mockDisplayStatusMessage).toHaveBeenCalledWith(
+        'Nothing to copy.',
+        'warning'
+      );
+    });
   });
 });

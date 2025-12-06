@@ -17,8 +17,8 @@ Modify `ModTestFixture.forAction()` to validate rule and condition files against
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                  | Change Type                                   |
+| ------------------------------------- | --------------------------------------------- |
 | `tests/common/mods/ModTestFixture.js` | Add schema validation in `forAction()` method |
 
 ### Files to Create
@@ -27,12 +27,12 @@ None
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `src/validation/ajvSchemaValidator.js` | Understand validation API |
-| `src/loaders/schemaLoader.js` | Understand schema loading patterns |
-| `data/schemas/rule.schema.json` | Rule schema to validate against |
-| `data/schemas/condition.schema.json` | Condition schema to validate against |
+| File                                   | Purpose                              |
+| -------------------------------------- | ------------------------------------ |
+| `src/validation/ajvSchemaValidator.js` | Understand validation API            |
+| `src/loaders/schemaLoader.js`          | Understand schema loading patterns   |
+| `data/schemas/rule.schema.json`        | Rule schema to validate against      |
+| `data/schemas/condition.schema.json`   | Condition schema to validate against |
 
 ---
 
@@ -358,20 +358,21 @@ Schema validation failed for rule file
 4. **JSDoc updated** to document the new `skipValidation` option
 
 **Deviation from Ticket**:
+
 - Ticket line number references were incorrect (stated ~154-244, actual was ~343-444)
 - Ticket referenced non-existent methods `_resolveRulePath`/`_resolveConditionPath`; actual code uses `loadModFiles()`, `loadRuleFile()`, `loadConditionFile()`
 - Ticket was corrected before implementation
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                  | Change                                                 |
+| ------------------------------------- | ------------------------------------------------------ |
 | `tests/common/mods/ModTestFixture.js` | Added schema validation infrastructure and integration |
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                       | Purpose                                         |
+| ---------------------------------------------------------- | ----------------------------------------------- |
 | `tests/unit/common/mods/ModTestFixture.validation.test.js` | 22 unit tests covering validation functionality |
 
 ### Tests Created

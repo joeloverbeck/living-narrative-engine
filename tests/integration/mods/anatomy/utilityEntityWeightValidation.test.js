@@ -58,17 +58,29 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
       { file: 'humanoid_arm.entity.json', desc: 'Base humanoid arm' },
       { file: 'humanoid_arm_athletic.entity.json', desc: 'Athletic arm' },
       { file: 'humanoid_arm_hulking.entity.json', desc: 'Hulking arm' },
-      { file: 'humanoid_arm_hulking_hairy.entity.json', desc: 'Hulking hairy arm' },
-      { file: 'humanoid_arm_hulking_scarred.entity.json', desc: 'Hulking scarred arm' },
+      {
+        file: 'humanoid_arm_hulking_hairy.entity.json',
+        desc: 'Hulking hairy arm',
+      },
+      {
+        file: 'humanoid_arm_hulking_scarred.entity.json',
+        desc: 'Hulking scarred arm',
+      },
       { file: 'humanoid_arm_lean.entity.json', desc: 'Lean arm' },
       { file: 'humanoid_arm_muscular.entity.json', desc: 'Muscular arm' },
-      { file: 'humanoid_arm_muscular_hairy.entity.json', desc: 'Muscular hairy arm' },
+      {
+        file: 'humanoid_arm_muscular_hairy.entity.json',
+        desc: 'Muscular hairy arm',
+      },
       { file: 'humanoid_arm_scarred.entity.json', desc: 'Scarred arm' },
       { file: 'humanoid_arm_slim.entity.json', desc: 'Slim arm' },
       { file: 'humanoid_arm_soft.entity.json', desc: 'Soft arm' },
       { file: 'humanoid_arm_soft_lissom.entity.json', desc: 'Soft lissom arm' },
       { file: 'humanoid_arm_thick_hairy.entity.json', desc: 'Thick hairy arm' },
-      { file: 'humanoid_arm_weathered_tannery_stained.entity.json', desc: 'Weathered arm' },
+      {
+        file: 'humanoid_arm_weathered_tannery_stained.entity.json',
+        desc: 'Weathered arm',
+      },
     ];
 
     it.each(HUMANOID_ARM_PARTS)(
@@ -95,7 +107,10 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
       { file: 'humanoid_head_hideous.entity.json', desc: 'Hideous head' },
       { file: 'humanoid_head_moustached.entity.json', desc: 'Moustached head' },
       { file: 'humanoid_head_plain.entity.json', desc: 'Plain head' },
-      { file: 'humanoid_head_plain_weary.entity.json', desc: 'Plain weary head' },
+      {
+        file: 'humanoid_head_plain_weary.entity.json',
+        desc: 'Plain weary head',
+      },
       { file: 'humanoid_head_scarred.entity.json', desc: 'Scarred head' },
       { file: 'humanoid_head_stubble.entity.json', desc: 'Stubble head' },
     ];
@@ -116,8 +131,14 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
 
   describe('Humanoid Hands (4 files)', () => {
     const HUMANOID_HAND_PARTS = [
-      { file: 'humanoid_hand_craftsman_scarred.entity.json', desc: 'Craftsman scarred hand' },
-      { file: 'humanoid_hand_craftsman_stained.entity.json', desc: 'Craftsman stained hand' },
+      {
+        file: 'humanoid_hand_craftsman_scarred.entity.json',
+        desc: 'Craftsman scarred hand',
+      },
+      {
+        file: 'humanoid_hand_craftsman_stained.entity.json',
+        desc: 'Craftsman stained hand',
+      },
       { file: 'humanoid_hand_rough.entity.json', desc: 'Rough hand' },
       { file: 'humanoid_hand_scarred.entity.json', desc: 'Scarred hand' },
     ];
@@ -138,13 +159,48 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
 
   describe('Humanoid Small Parts', () => {
     const HUMANOID_SMALL_PARTS = [
-      { file: 'humanoid_face_bearded_full_trimmed.entity.json', minWeight: 0.2, maxWeight: 0.4, desc: 'Face' },
-      { file: 'humanoid_ear.entity.json', minWeight: 0.005, maxWeight: 0.02, desc: 'Ear' },
-      { file: 'humanoid_mouth.entity.json', minWeight: 0.03, maxWeight: 0.1, desc: 'Mouth' },
-      { file: 'humanoid_nose.entity.json', minWeight: 0.02, maxWeight: 0.05, desc: 'Nose' },
-      { file: 'humanoid_nose_scarred.entity.json', minWeight: 0.02, maxWeight: 0.05, desc: 'Scarred nose' },
-      { file: 'humanoid_nose_small.entity.json', minWeight: 0.02, maxWeight: 0.05, desc: 'Small nose' },
-      { file: 'humanoid_teeth.entity.json', minWeight: 0.03, maxWeight: 0.1, desc: 'Teeth' },
+      {
+        file: 'humanoid_face_bearded_full_trimmed.entity.json',
+        minWeight: 0.2,
+        maxWeight: 0.4,
+        desc: 'Face',
+      },
+      {
+        file: 'humanoid_ear.entity.json',
+        minWeight: 0.005,
+        maxWeight: 0.02,
+        desc: 'Ear',
+      },
+      {
+        file: 'humanoid_mouth.entity.json',
+        minWeight: 0.03,
+        maxWeight: 0.1,
+        desc: 'Mouth',
+      },
+      {
+        file: 'humanoid_nose.entity.json',
+        minWeight: 0.02,
+        maxWeight: 0.05,
+        desc: 'Nose',
+      },
+      {
+        file: 'humanoid_nose_scarred.entity.json',
+        minWeight: 0.02,
+        maxWeight: 0.05,
+        desc: 'Scarred nose',
+      },
+      {
+        file: 'humanoid_nose_small.entity.json',
+        minWeight: 0.02,
+        maxWeight: 0.05,
+        desc: 'Small nose',
+      },
+      {
+        file: 'humanoid_teeth.entity.json',
+        minWeight: 0.03,
+        maxWeight: 0.1,
+        desc: 'Teeth',
+      },
     ];
 
     it.each(HUMANOID_SMALL_PARTS)(
@@ -163,15 +219,60 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
 
   describe('Cephalopod Parts (9 files)', () => {
     const CEPHALOPOD_PARTS = [
-      { file: 'beak.entity.json', minWeight: 3, maxWeight: 7, desc: 'Kraken beak' },
-      { file: 'ink_reservoir.entity.json', minWeight: 1, maxWeight: 3, desc: 'Ink reservoir' },
-      { file: 'kraken_head.entity.json', minWeight: 40, maxWeight: 60, desc: 'Kraken head' },
-      { file: 'kraken_mantle.entity.json', minWeight: 150, maxWeight: 250, desc: 'Kraken mantle' },
-      { file: 'kraken_tentacle.entity.json', minWeight: 80, maxWeight: 120, desc: 'Kraken tentacle' },
-      { file: 'octopus_mantle.entity.json', minWeight: 10, maxWeight: 20, desc: 'Octopus mantle' },
-      { file: 'octopus_tentacle.entity.json', minWeight: 2, maxWeight: 5, desc: 'Octopus tentacle' },
-      { file: 'squid_mantle.entity.json', minWeight: 8, maxWeight: 15, desc: 'Squid mantle' },
-      { file: 'squid_tentacle.entity.json', minWeight: 1, maxWeight: 4, desc: 'Squid tentacle' },
+      {
+        file: 'beak.entity.json',
+        minWeight: 3,
+        maxWeight: 7,
+        desc: 'Kraken beak',
+      },
+      {
+        file: 'ink_reservoir.entity.json',
+        minWeight: 1,
+        maxWeight: 3,
+        desc: 'Ink reservoir',
+      },
+      {
+        file: 'kraken_head.entity.json',
+        minWeight: 40,
+        maxWeight: 60,
+        desc: 'Kraken head',
+      },
+      {
+        file: 'kraken_mantle.entity.json',
+        minWeight: 150,
+        maxWeight: 250,
+        desc: 'Kraken mantle',
+      },
+      {
+        file: 'kraken_tentacle.entity.json',
+        minWeight: 80,
+        maxWeight: 120,
+        desc: 'Kraken tentacle',
+      },
+      {
+        file: 'octopus_mantle.entity.json',
+        minWeight: 10,
+        maxWeight: 20,
+        desc: 'Octopus mantle',
+      },
+      {
+        file: 'octopus_tentacle.entity.json',
+        minWeight: 2,
+        maxWeight: 5,
+        desc: 'Octopus tentacle',
+      },
+      {
+        file: 'squid_mantle.entity.json',
+        minWeight: 8,
+        maxWeight: 15,
+        desc: 'Squid mantle',
+      },
+      {
+        file: 'squid_tentacle.entity.json',
+        minWeight: 1,
+        maxWeight: 4,
+        desc: 'Squid tentacle',
+      },
     ];
 
     it.each(CEPHALOPOD_PARTS)(
@@ -190,11 +291,36 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
 
   describe('Spider Parts (5 files)', () => {
     const SPIDER_PARTS = [
-      { file: 'spider_abdomen.entity.json', minWeight: 0.01, maxWeight: 0.05, desc: 'Spider abdomen' },
-      { file: 'spider_cephalothorax.entity.json', minWeight: 0.008, maxWeight: 0.03, desc: 'Spider cephalothorax' },
-      { file: 'spider_leg.entity.json', minWeight: 0.001, maxWeight: 0.005, desc: 'Spider leg' },
-      { file: 'spider_pedipalp.entity.json', minWeight: 0.0005, maxWeight: 0.003, desc: 'Spider pedipalp' },
-      { file: 'spider_spinneret.entity.json', minWeight: 0.002, maxWeight: 0.01, desc: 'Spider spinneret' },
+      {
+        file: 'spider_abdomen.entity.json',
+        minWeight: 0.01,
+        maxWeight: 0.05,
+        desc: 'Spider abdomen',
+      },
+      {
+        file: 'spider_cephalothorax.entity.json',
+        minWeight: 0.008,
+        maxWeight: 0.03,
+        desc: 'Spider cephalothorax',
+      },
+      {
+        file: 'spider_leg.entity.json',
+        minWeight: 0.001,
+        maxWeight: 0.005,
+        desc: 'Spider leg',
+      },
+      {
+        file: 'spider_pedipalp.entity.json',
+        minWeight: 0.0005,
+        maxWeight: 0.003,
+        desc: 'Spider pedipalp',
+      },
+      {
+        file: 'spider_spinneret.entity.json',
+        minWeight: 0.002,
+        maxWeight: 0.01,
+        desc: 'Spider spinneret',
+      },
     ];
 
     it.each(SPIDER_PARTS)(
@@ -213,17 +339,72 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
 
   describe('Tortoise Parts (11 files)', () => {
     const TORTOISE_PARTS = [
-      { file: 'tortoise_arm.entity.json', minWeight: 1, maxWeight: 2, desc: 'Tortoise arm' },
-      { file: 'tortoise_hand.entity.json', minWeight: 0.2, maxWeight: 0.5, desc: 'Tortoise hand' },
-      { file: 'tortoise_leg.entity.json', minWeight: 1.5, maxWeight: 3, desc: 'Tortoise leg' },
-      { file: 'tortoise_foot.entity.json', minWeight: 0.3, maxWeight: 0.6, desc: 'Tortoise foot' },
-      { file: 'tortoise_head.entity.json', minWeight: 0.5, maxWeight: 1.2, desc: 'Tortoise head' },
-      { file: 'tortoise_beak.entity.json', minWeight: 0.03, maxWeight: 0.1, desc: 'Tortoise beak' },
-      { file: 'tortoise_eye.entity.json', minWeight: 0.01, maxWeight: 0.05, desc: 'Tortoise eye' },
-      { file: 'tortoise_torso_with_shell.entity.json', minWeight: 12, maxWeight: 20, desc: 'Tortoise body with shell' },
-      { file: 'tortoise_carapace.entity.json', minWeight: 4, maxWeight: 7, desc: 'Tortoise carapace' },
-      { file: 'tortoise_plastron.entity.json', minWeight: 2, maxWeight: 4, desc: 'Tortoise plastron' },
-      { file: 'tortoise_tail.entity.json', minWeight: 0.1, maxWeight: 0.4, desc: 'Tortoise tail' },
+      {
+        file: 'tortoise_arm.entity.json',
+        minWeight: 1,
+        maxWeight: 2,
+        desc: 'Tortoise arm',
+      },
+      {
+        file: 'tortoise_hand.entity.json',
+        minWeight: 0.2,
+        maxWeight: 0.5,
+        desc: 'Tortoise hand',
+      },
+      {
+        file: 'tortoise_leg.entity.json',
+        minWeight: 1.5,
+        maxWeight: 3,
+        desc: 'Tortoise leg',
+      },
+      {
+        file: 'tortoise_foot.entity.json',
+        minWeight: 0.3,
+        maxWeight: 0.6,
+        desc: 'Tortoise foot',
+      },
+      {
+        file: 'tortoise_head.entity.json',
+        minWeight: 0.5,
+        maxWeight: 1.2,
+        desc: 'Tortoise head',
+      },
+      {
+        file: 'tortoise_beak.entity.json',
+        minWeight: 0.03,
+        maxWeight: 0.1,
+        desc: 'Tortoise beak',
+      },
+      {
+        file: 'tortoise_eye.entity.json',
+        minWeight: 0.01,
+        maxWeight: 0.05,
+        desc: 'Tortoise eye',
+      },
+      {
+        file: 'tortoise_torso_with_shell.entity.json',
+        minWeight: 12,
+        maxWeight: 20,
+        desc: 'Tortoise body with shell',
+      },
+      {
+        file: 'tortoise_carapace.entity.json',
+        minWeight: 4,
+        maxWeight: 7,
+        desc: 'Tortoise carapace',
+      },
+      {
+        file: 'tortoise_plastron.entity.json',
+        minWeight: 2,
+        maxWeight: 4,
+        desc: 'Tortoise plastron',
+      },
+      {
+        file: 'tortoise_tail.entity.json',
+        minWeight: 0.1,
+        maxWeight: 0.4,
+        desc: 'Tortoise tail',
+      },
     ];
 
     it.each(TORTOISE_PARTS)(
@@ -263,9 +444,14 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
   describe('Coverage Completeness', () => {
     it('should have all utility body parts with weight (62 files total)', () => {
       // Get all files NOT matching human_, chicken_, centaur_, dragon_, eldritch_, cat_, feline_, horse_
-      const allFiles = fs.readdirSync(DEFINITIONS_PATH).filter((f) => f.endsWith('.entity.json'));
+      const allFiles = fs
+        .readdirSync(DEFINITIONS_PATH)
+        .filter((f) => f.endsWith('.entity.json'));
       const utilityFiles = allFiles.filter(
-        (f) => !/^(human_|chicken_|centaur_|dragon_|eldritch_|cat_|feline_|horse_)/.test(f)
+        (f) =>
+          !/^(human_|chicken_|centaur_|dragon_|eldritch_|cat_|feline_|horse_)/.test(
+            f
+          )
       );
 
       // Count body parts (files with anatomy:part)
@@ -285,9 +471,14 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
     });
 
     it('should have all weights as positive numbers', () => {
-      const allFiles = fs.readdirSync(DEFINITIONS_PATH).filter((f) => f.endsWith('.entity.json'));
+      const allFiles = fs
+        .readdirSync(DEFINITIONS_PATH)
+        .filter((f) => f.endsWith('.entity.json'));
       const utilityFiles = allFiles.filter(
-        (f) => !/^(human_|chicken_|centaur_|dragon_|eldritch_|cat_|feline_|horse_)/.test(f)
+        (f) =>
+          !/^(human_|chicken_|centaur_|dragon_|eldritch_|cat_|feline_|horse_)/.test(
+            f
+          )
       );
 
       const bodyPartsWithInvalidWeight = utilityFiles.filter((f) => {

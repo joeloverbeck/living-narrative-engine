@@ -76,7 +76,10 @@ describe('music actions forbidden when actor is in closeness', () => {
 
   describe('Action discovery when NOT in closeness', () => {
     it('music actions should be available when actor is not in closeness', () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Lyra')
@@ -114,7 +117,10 @@ describe('music actions forbidden when actor is in closeness', () => {
 
   describe('Action discovery when in closeness', () => {
     it('play_phrase_on_instrument is NOT available when actor is in closeness', () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const partner = new ModEntityBuilder('partner1')
         .withName('Emma')

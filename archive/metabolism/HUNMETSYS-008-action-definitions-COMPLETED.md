@@ -14,11 +14,13 @@ Create action definition files for eat, drink, and rest actions that players and
 ## Files to Touch
 
 ### New Files (3)
+
 - `data/mods/metabolism/actions/eat.action.json`
 - `data/mods/metabolism/actions/drink.action.json`
 - `data/mods/metabolism/actions/rest.action.json`
 
 ### Modified Files (1)
+
 - `data/mods/metabolism/mod-manifest.json` (add to content.actions array)
 
 ## Out of Scope
@@ -45,13 +47,16 @@ These placeholders allow actions to be defined now and will function correctly o
 **Purpose:** Consume food item to restore energy via digestion buffer
 
 **Required Components:**
+
 - Actor: metabolism:fuel_converter, metabolism:metabolic_store
 
 **Forbidden Components:**
+
 - Actor: metabolism:overfull (prevents eating when too full)
   - **Note:** This component does not exist yet - acts as placeholder reference for future implementation
 
 **Prerequisites:**
+
 - Buffer has room for item (uses can_consume condition - placeholder for now)
 
 **Target:** Primary target from scope metabolism:consumable_items
@@ -61,9 +66,11 @@ These placeholders allow actions to be defined now and will function correctly o
 **Purpose:** Consume liquid item (similar to eat but for drinks)
 
 **Required Components:**
+
 - Actor: metabolism:fuel_converter, metabolism:metabolic_store
 
 **Prerequisites:**
+
 - Item has "liquid" fuel tag
 - Buffer has room
 
@@ -74,6 +81,7 @@ These placeholders allow actions to be defined now and will function correctly o
 **Purpose:** Recover energy through rest without consuming food
 
 **Required Components:**
+
 - Actor: metabolism:metabolic_store
 
 **No Prerequisites:** Can always rest
@@ -81,12 +89,14 @@ These placeholders allow actions to be defined now and will function correctly o
 **No Targets:** Self-directed action
 
 **Special Mechanics:**
+
 - Adds fixed energy amount (bypasses digestion)
 - Increases digestion speed temporarily (1.5x multiplier)
 
 ## Acceptance Criteria
 
 ### Action Files
+
 - [x] All 3 action files created with valid JSON
 - [x] Actions validate against action.schema.json
 - [x] Action IDs follow format: metabolism:action_name
@@ -95,6 +105,7 @@ These placeholders allow actions to be defined now and will function correctly o
 - [x] Visual properties include backgroundColor, textColor, and hover variants
 
 ### Action Logic
+
 - [x] Eat action requires fuel_converter and metabolic_store
 - [x] Drink action similar to eat with liquid fuel tag requirement
 - [x] Rest action only requires metabolic_store
@@ -102,10 +113,12 @@ These placeholders allow actions to be defined now and will function correctly o
 - [x] Prerequisites reference conditions (placeholders acceptable)
 
 ### Mod Manifest
+
 - [x] All 3 actions added to content.actions array
 - [x] Manifest validates after update
 
 ### Validation
+
 ```bash
 npm run validate           # Actions validate
 ```
@@ -113,6 +126,7 @@ npm run validate           # Actions validate
 ## Example Action Definitions
 
 ### Eat Action
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
@@ -148,6 +162,7 @@ npm run validate           # Actions validate
 ```
 
 ### Rest Action
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
@@ -172,12 +187,14 @@ npm run validate           # Actions validate
 ## Invariants
 
 ### Must Remain True
+
 - Action IDs must be namespaced with "metabolism:"
 - Required components must exist for actions to execute
 - Prerequisites must fail gracefully with clear messages
 - Template strings must match target placeholder names
 
 ### System Invariants
+
 - Action discovery continues functioning
 - Action validation works correctly
 - GOAP can evaluate action availability
@@ -228,11 +245,13 @@ npm run validate           # Actions validate
 ### Deviations from Plan
 
 **Simplified Implementation:**
+
 - Originally planned to use "category" and "icon" fields for visual properties
 - Discovered schema requires backgroundColor, textColor, and hover variants instead
 - Updated ticket and implementation to match actual schema requirements
 
 **Component Discovery:**
+
 - Found that `metabolism:overfull` component doesn't exist yet
 - Documented as placeholder for future implementation
 - Action still validates correctly with missing component reference

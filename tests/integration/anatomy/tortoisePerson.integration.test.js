@@ -41,13 +41,18 @@ describe('Tortoise Person Anatomy Integration', () => {
       });
 
       // Generate anatomy
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(tortoise.id);
+      const result = await anatomyGenerationService.generateAnatomyIfNeeded(
+        tortoise.id
+      );
 
       // Verify anatomy was successfully generated
       expect(result).toBe(true);
 
       // Verify tortoise has anatomy:body component
-      const bodyComponent = testBed.entityManager.getComponentData(tortoise.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        tortoise.id,
+        'anatomy:body'
+      );
       expect(bodyComponent).toBeDefined();
       expect(bodyComponent.body).toBeDefined();
       expect(bodyComponent.body.parts).toBeDefined();
@@ -62,7 +67,7 @@ describe('Tortoise Person Anatomy Integration', () => {
 
       // Helper to check if a part with specific subType exists
       const hasPartWithSubType = (subType) => {
-        return partsList.some(partId => {
+        return partsList.some((partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === subType;
@@ -71,7 +76,7 @@ describe('Tortoise Person Anatomy Integration', () => {
 
       // Helper to count parts with specific subType
       const countPartsWithSubType = (subType) => {
-        return partsList.filter(partId => {
+        return partsList.filter((partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === subType;
@@ -115,7 +120,10 @@ describe('Tortoise Person Anatomy Integration', () => {
       await anatomyGenerationService.generateAnatomyIfNeeded(tortoise.id);
 
       // Get body component
-      const bodyComponent = testBed.entityManager.getComponentData(tortoise.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        tortoise.id,
+        'anatomy:body'
+      );
       expect(bodyComponent).toBeDefined();
 
       // Verify body descriptors match recipe
@@ -137,11 +145,14 @@ describe('Tortoise Person Anatomy Integration', () => {
       await anatomyGenerationService.generateAnatomyIfNeeded(tortoise.id);
 
       // Get body component
-      const bodyComponent = testBed.entityManager.getComponentData(tortoise.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        tortoise.id,
+        'anatomy:body'
+      );
       const parts = bodyComponent.body.parts;
 
       // Find carapace
-      const carapaceId = Object.values(parts).find(partId => {
+      const carapaceId = Object.values(parts).find((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         const partComponent = partEntity.getComponentData('anatomy:part');
         return partComponent && partComponent.subType === 'shell_carapace';
@@ -154,16 +165,20 @@ describe('Tortoise Person Anatomy Integration', () => {
       expect(carapaceTexture).toBeDefined();
       expect(carapaceTexture.texture).toBe('scaled');
 
-      const carapaceShape = carapace.getComponentData('descriptors:shape_general');
+      const carapaceShape = carapace.getComponentData(
+        'descriptors:shape_general'
+      );
       expect(carapaceShape).toBeDefined();
       expect(carapaceShape.shape).toBe('domed');
 
-      const carapaceColor = carapace.getComponentData('descriptors:color_extended');
+      const carapaceColor = carapace.getComponentData(
+        'descriptors:color_extended'
+      );
       expect(carapaceColor).toBeDefined();
       expect(carapaceColor.color).toBe('bronze');
 
       // Find plastron
-      const plastronId = Object.values(parts).find(partId => {
+      const plastronId = Object.values(parts).find((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         const partComponent = partEntity.getComponentData('anatomy:part');
         return partComponent && partComponent.subType === 'shell_plastron';
@@ -176,11 +191,15 @@ describe('Tortoise Person Anatomy Integration', () => {
       expect(plastronTexture).toBeDefined();
       expect(plastronTexture.texture).toBe('smooth');
 
-      const plastronShape = plastron.getComponentData('descriptors:shape_general');
+      const plastronShape = plastron.getComponentData(
+        'descriptors:shape_general'
+      );
       expect(plastronShape).toBeDefined();
       expect(plastronShape.shape).toBe('flat');
 
-      const plastronColor = plastron.getComponentData('descriptors:color_extended');
+      const plastronColor = plastron.getComponentData(
+        'descriptors:color_extended'
+      );
       expect(plastronColor).toBeDefined();
       expect(plastronColor.color).toBe('cream');
     });
@@ -195,17 +214,20 @@ describe('Tortoise Person Anatomy Integration', () => {
       await anatomyGenerationService.generateAnatomyIfNeeded(tortoise.id);
 
       // Get body component
-      const bodyComponent = testBed.entityManager.getComponentData(tortoise.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        tortoise.id,
+        'anatomy:body'
+      );
       const parts = bodyComponent.body.parts;
 
       // Find all hands and feet
-      const hands = Object.values(parts).filter(partId => {
+      const hands = Object.values(parts).filter((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         const partComponent = partEntity.getComponentData('anatomy:part');
         return partComponent && partComponent.subType === 'tortoise_hand';
       });
 
-      const feet = Object.values(parts).filter(partId => {
+      const feet = Object.values(parts).filter((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         const partComponent = partEntity.getComponentData('anatomy:part');
         return partComponent && partComponent.subType === 'tortoise_foot';
@@ -215,7 +237,7 @@ describe('Tortoise Person Anatomy Integration', () => {
       expect(hands.length).toBeGreaterThanOrEqual(1);
 
       // Verify each hand has claws and 3 digits
-      hands.forEach(handId => {
+      hands.forEach((handId) => {
         const hand = testBed.entityManager.getEntityInstance(handId);
 
         const projection = hand.getComponentData('descriptors:projection');
@@ -231,7 +253,7 @@ describe('Tortoise Person Anatomy Integration', () => {
       expect(feet.length).toBeGreaterThanOrEqual(1);
 
       // Verify each foot has claws and 3 digits
-      feet.forEach(footId => {
+      feet.forEach((footId) => {
         const foot = testBed.entityManager.getEntityInstance(footId);
 
         const projection = foot.getComponentData('descriptors:projection');
@@ -254,11 +276,14 @@ describe('Tortoise Person Anatomy Integration', () => {
       await anatomyGenerationService.generateAnatomyIfNeeded(tortoise.id);
 
       // Get body component
-      const bodyComponent = testBed.entityManager.getComponentData(tortoise.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        tortoise.id,
+        'anatomy:body'
+      );
       const parts = bodyComponent.body.parts;
 
       // Find head
-      const headId = Object.values(parts).find(partId => {
+      const headId = Object.values(parts).find((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         const partComponent = partEntity.getComponentData('anatomy:part');
         return partComponent && partComponent.subType === 'tortoise_head';
@@ -267,7 +292,7 @@ describe('Tortoise Person Anatomy Integration', () => {
       expect(headId).toBeDefined();
 
       // Find beak
-      const beakId = Object.values(parts).find(partId => {
+      const beakId = Object.values(parts).find((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         const partComponent = partEntity.getComponentData('anatomy:part');
         return partComponent && partComponent.subType === 'tortoise_beak';
@@ -302,7 +327,10 @@ describe('Tortoise Person Anatomy Integration', () => {
       const actorEntity = testBed.entityManager.getEntityInstance(tortoise.id);
 
       // Generate all descriptions
-      const { bodyDescription } = await testBed.anatomyDescriptionService.generateAllDescriptions(actorEntity);
+      const { bodyDescription } =
+        await testBed.anatomyDescriptionService.generateAllDescriptions(
+          actorEntity
+        );
 
       expect(bodyDescription).toBeDefined();
       expect(typeof bodyDescription).toBe('string');

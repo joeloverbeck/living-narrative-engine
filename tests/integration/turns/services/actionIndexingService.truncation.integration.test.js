@@ -75,13 +75,18 @@ describe('ActionIndexingService overflow handling integration', () => {
 
   it('truncates extreme action lists and reports overflow gracefully', () => {
     const overflowCount = MAX_AVAILABLE_ACTIONS_PER_TURN + 10;
-    const actionDefinitions = Array.from({ length: overflowCount }, (_, index) => ({
-      id: `overflow:action-${index}`,
-      name: `Overflow Action ${index}`,
-    }));
+    const actionDefinitions = Array.from(
+      { length: overflowCount },
+      (_, index) => ({
+        id: `overflow:action-${index}`,
+        name: `Overflow Action ${index}`,
+      })
+    );
 
     actionIndex.buildIndex(actionDefinitions);
-    entityManager.setComponents(actor.id, { 'core:actor': { name: 'Overflow Actor' } });
+    entityManager.setComponents(actor.id, {
+      'core:actor': { name: 'Overflow Actor' },
+    });
 
     const discovered = actionIndex
       .getCandidateActions(actor)
@@ -93,8 +98,10 @@ describe('ActionIndexingService overflow handling integration', () => {
 
     expect(composites).toHaveLength(MAX_AVAILABLE_ACTIONS_PER_TURN);
     expect(
-      logger.warnLogs.some((entry) =>
-        entry.message.includes('truncated') && entry.message.includes(actor.id)
+      logger.warnLogs.some(
+        (entry) =>
+          entry.message.includes('truncated') &&
+          entry.message.includes(actor.id)
       )
     ).toBe(true);
 

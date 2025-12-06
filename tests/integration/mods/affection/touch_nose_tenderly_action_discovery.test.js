@@ -81,9 +81,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
 
       return childIds.some((childId) => {
         const part = entityManager.getComponent(childId, 'anatomy:part');
-        return (
-          part?.subType && part.subType.toLowerCase().includes('nose')
-        );
+        return part?.subType && part.subType.toLowerCase().includes('nose');
       });
     };
 
@@ -107,9 +105,11 @@ describe('affection:touch_nose_tenderly action discovery', () => {
           ? entityManager.getEntityInstance.bind(entityManager)
           : entityManager.getEntity.bind(entityManager);
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from ?? [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from ?? [];
         const actorKneelingBefore =
-          actorEntity.components?.['positioning:kneeling_before']?.entityId ?? null;
+          actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+          null;
 
         const validTargets = closeness.reduce((acc, partnerId) => {
           const partner = getEntity(partnerId);
@@ -118,9 +118,11 @@ describe('affection:touch_nose_tenderly action discovery', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from ?? [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ??
+            [];
           const partnerKneelingBefore =
-            partner.components?.['positioning:kneeling_before']?.entityId ?? null;
+            partner.components?.['positioning:kneeling_before']?.entityId ??
+            null;
 
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
@@ -132,7 +134,9 @@ describe('affection:touch_nose_tenderly action discovery', () => {
           const partnerKneeling = partnerKneelingBefore === actorEntity.id;
 
           const isValidTarget =
-            ((facingEachOther || actorBehind) && !actorKneeling && !partnerKneeling) ||
+            ((facingEachOther || actorBehind) &&
+              !actorKneeling &&
+              !partnerKneeling) ||
             partnerKneeling;
 
           if (isValidTarget && entityHasNose(partnerId)) {
@@ -148,7 +152,7 @@ describe('affection:touch_nose_tenderly action discovery', () => {
 
         return ActionResult.success(contexts);
       }
-      );
+    );
   });
 
   afterEach(async () => {
@@ -172,7 +176,9 @@ describe('affection:touch_nose_tenderly action discovery', () => {
       );
       expect(touchNoseTenderlyAction.visual.backgroundColor).toBe('#6a1b9a');
       expect(touchNoseTenderlyAction.visual.textColor).toBe('#f3e5f5');
-      expect(touchNoseTenderlyAction.visual.hoverBackgroundColor).toBe('#8e24aa');
+      expect(touchNoseTenderlyAction.visual.hoverBackgroundColor).toBe(
+        '#8e24aa'
+      );
       expect(touchNoseTenderlyAction.visual.hoverTextColor).toBe('#ffffff');
     });
   });

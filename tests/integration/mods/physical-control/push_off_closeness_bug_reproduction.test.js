@@ -175,12 +175,11 @@ describe('Push Off Closeness Bug Reproduction', () => {
         partner.id
       );
       expect(partnerAfter.components['positioning:closeness']).toBeDefined();
-      expect(
-        partnerAfter.components['positioning:closeness'].partners
-      ).toEqual([actor.id]);
+      expect(partnerAfter.components['positioning:closeness'].partners).toEqual(
+        [actor.id]
+      );
 
       // This test should PASS - it documents correct behavior that must be preserved
     });
   });
-
 });

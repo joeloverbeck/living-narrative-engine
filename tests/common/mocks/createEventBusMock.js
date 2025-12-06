@@ -12,7 +12,10 @@ const LEGACY_SIGNATURE_ERROR =
  * @param root0.captureLegacyCalls
  * @param root0.maxEvents
  */
-export function createEventBusMock({ captureLegacyCalls = false, maxEvents = 500 } = {}) {
+export function createEventBusMock({
+  captureLegacyCalls = false,
+  maxEvents = 500,
+} = {}) {
   const listeners = new Map();
   const wildcardKey = '*';
   const globalListeners = new Set();

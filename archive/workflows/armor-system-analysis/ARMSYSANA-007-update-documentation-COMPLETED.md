@@ -21,6 +21,7 @@ Update all relevant documentation files to include information about the armor l
 #### Assumption Corrections Made (Before Implementation)
 
 The original ticket contained an incorrect assumption:
+
 - **Planned**: `accessories: 350` as a coverage priority value
 - **Actual**: Accessories do NOT have a dedicated coverage priority - they fall back to `direct: 400` at runtime
 
@@ -28,17 +29,18 @@ This was corrected in the ticket before applying documentation changes.
 
 #### Documentation Files Updated
 
-| File | Planned | Actual |
-|------|---------|--------|
-| `docs/modding/clothing-items.md` | Add armor layer section | ✅ Added armor layer section with layer hierarchy, coverage priority, examples |
+| File                                          | Planned                                  | Actual                                                                           |
+| --------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------- |
+| `docs/modding/clothing-items.md`              | Add armor layer section                  | ✅ Added armor layer section with layer hierarchy, coverage priority, examples   |
 | `docs/developers/clothing-coverage-system.md` | Update priority table, add armor section | ✅ Updated priority system, added armor coverage priority section with scenarios |
-| `docs/anatomy/anatomy-system-guide.md` | Add armor support note | ✅ Added comprehensive "Armor Support" section |
-| `docs/anatomy/clothing-coverage-mapping.md` | Add armor examples | ✅ Added coverage priority values, armor coverage examples (3 JSON examples) |
-| `CLAUDE.md` | Update clothing layer architecture | ✅ Added "Clothing Layer Architecture" section with 5-layer model |
+| `docs/anatomy/anatomy-system-guide.md`        | Add armor support note                   | ✅ Added comprehensive "Armor Support" section                                   |
+| `docs/anatomy/clothing-coverage-mapping.md`   | Add armor examples                       | ✅ Added coverage priority values, armor coverage examples (3 JSON examples)     |
+| `CLAUDE.md`                                   | Update clothing layer architecture       | ✅ Added "Clothing Layer Architecture" section with 5-layer model                |
 
 #### Key Content Added
 
 **Coverage Priority Values** (documented consistently across all files):
+
 - `outer`: 100 (highest visibility)
 - `armor`: 150 (protective equipment)
 - `base`: 200 (regular clothing)
@@ -46,6 +48,7 @@ This was corrected in the ticket before applying documentation changes.
 - `direct`: 400 (fallback, including accessories)
 
 **Layer Hierarchy** (innermost to outermost):
+
 1. underwear
 2. base
 3. armor
@@ -53,11 +56,13 @@ This was corrected in the ticket before applying documentation changes.
 5. accessories
 
 **Example Scenarios Added**:
+
 - Warrior with cloak over armor (cloak visible)
 - Warrior without cloak (chainmail visible)
 - Civilian with coat (leather jacket visible)
 
 **JSON Examples Added**:
+
 - Steel Cuirass (single-slot armor)
 - Chainmail Hauberk (multi-slot armor)
 - Leather Leg Armor
@@ -65,6 +70,7 @@ This was corrected in the ticket before applying documentation changes.
 ### Tests Verified
 
 All existing tests pass after documentation changes:
+
 - Priority and validation tests: 197 passed
 - Armor-related coverage tests: 115 passed
 

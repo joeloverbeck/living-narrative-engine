@@ -104,10 +104,11 @@ export class DescriptionPersistenceService {
     }
 
     // Use optimized batch addition to avoid recursion warnings
-    const { results, errors } = await this.#entityManager.batchAddComponentsOptimized(
-      componentSpecs,
-      true // Emit single batch event instead of individual events
-    );
+    const { results, errors } =
+      await this.#entityManager.batchAddComponentsOptimized(
+        componentSpecs,
+        true // Emit single batch event instead of individual events
+      );
 
     const successful = results.length;
     // Combine non-existent entities with batch operation failures

@@ -12,7 +12,9 @@ describe('Wield Threateningly Rule - Validation', () => {
 
   beforeEach(async () => {
     // Load the rule file directly
-    const rulePath = resolve('data/mods/weapons/rules/handle_wield_threateningly.rule.json');
+    const rulePath = resolve(
+      'data/mods/weapons/rules/handle_wield_threateningly.rule.json'
+    );
     const content = await fs.readFile(rulePath, 'utf8');
     ruleFile = JSON.parse(content);
   });
@@ -38,26 +40,42 @@ describe('Wield Threateningly Rule - Validation', () => {
 
     // Assert: Third operation queries grabbing requirements (added for LOCK_GRABBING)
     expect(ruleFile.actions[2].type).toBe('QUERY_COMPONENT');
-    expect(ruleFile.actions[2].parameters.component_type).toBe('anatomy:requires_grabbing');
-    expect(ruleFile.actions[2].parameters.result_variable).toBe('targetGrabbingReqs');
-    expect(ruleFile.actions[2].parameters.missing_value).toEqual({ handsRequired: 1 });
+    expect(ruleFile.actions[2].parameters.component_type).toBe(
+      'anatomy:requires_grabbing'
+    );
+    expect(ruleFile.actions[2].parameters.result_variable).toBe(
+      'targetGrabbingReqs'
+    );
+    expect(ruleFile.actions[2].parameters.missing_value).toEqual({
+      handsRequired: 1,
+    });
 
     // Assert: Fourth operation locks grabbing appendages
     expect(ruleFile.actions[3].type).toBe('LOCK_GRABBING');
-    expect(ruleFile.actions[3].parameters.actor_id).toBe('{event.payload.actorId}');
-    expect(ruleFile.actions[3].parameters.count).toBe('{context.targetGrabbingReqs.handsRequired}');
-    expect(ruleFile.actions[3].parameters.item_id).toBe('{event.payload.targetId}');
+    expect(ruleFile.actions[3].parameters.actor_id).toBe(
+      '{event.payload.actorId}'
+    );
+    expect(ruleFile.actions[3].parameters.count).toBe(
+      '{context.targetGrabbingReqs.handsRequired}'
+    );
+    expect(ruleFile.actions[3].parameters.item_id).toBe(
+      '{event.payload.targetId}'
+    );
 
     // Assert: Fifth operation queries position for locationId
     expect(ruleFile.actions[4].type).toBe('QUERY_COMPONENT');
     expect(ruleFile.actions[4].parameters.component_type).toBe('core:position');
-    expect(ruleFile.actions[4].parameters.result_variable).toBe('actorPosition');
+    expect(ruleFile.actions[4].parameters.result_variable).toBe(
+      'actorPosition'
+    );
   });
 
   it('should set required context variables for logSuccessAndEndTurn macro', () => {
     // Assert: logMessage is set
     const logMessageAction = ruleFile.actions.find(
-      (action) => action.type === 'SET_VARIABLE' && action.parameters.variable_name === 'logMessage'
+      (action) =>
+        action.type === 'SET_VARIABLE' &&
+        action.parameters.variable_name === 'logMessage'
     );
     expect(logMessageAction).toBeDefined();
     expect(logMessageAction.parameters.value).toContain('{context.actorName}');
@@ -66,21 +84,28 @@ describe('Wield Threateningly Rule - Validation', () => {
     // Assert: perceptionType is set
     const perceptionTypeAction = ruleFile.actions.find(
       (action) =>
-        action.type === 'SET_VARIABLE' && action.parameters.variable_name === 'perceptionType'
+        action.type === 'SET_VARIABLE' &&
+        action.parameters.variable_name === 'perceptionType'
     );
     expect(perceptionTypeAction).toBeDefined();
     expect(perceptionTypeAction.parameters.value).toBe('action_target_general');
 
     // Assert: locationId is set
     const locationIdAction = ruleFile.actions.find(
-      (action) => action.type === 'SET_VARIABLE' && action.parameters.variable_name === 'locationId'
+      (action) =>
+        action.type === 'SET_VARIABLE' &&
+        action.parameters.variable_name === 'locationId'
     );
     expect(locationIdAction).toBeDefined();
-    expect(locationIdAction.parameters.value).toBe('{context.actorPosition.locationId}');
+    expect(locationIdAction.parameters.value).toBe(
+      '{context.actorPosition.locationId}'
+    );
 
     // Assert: targetId is set
     const targetIdAction = ruleFile.actions.find(
-      (action) => action.type === 'SET_VARIABLE' && action.parameters.variable_name === 'targetId'
+      (action) =>
+        action.type === 'SET_VARIABLE' &&
+        action.parameters.variable_name === 'targetId'
     );
     expect(targetIdAction).toBeDefined();
     expect(targetIdAction.parameters.value).toBe('{event.payload.targetId}');

@@ -6,11 +6,11 @@ Add physical_condition XML section to character data for LLM context.
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/prompting/characterDataXmlBuilder.js` | MODIFY - add #buildPhysicalConditionSection |
-| `tests/unit/prompting/characterDataXmlBuilder.test.js` | MODIFY - add physical condition tests |
-| `tests/common/prompting/characterDataFixtures.js` | MODIFY - add health state fixtures |
+| File                                                   | Action                                      |
+| ------------------------------------------------------ | ------------------------------------------- |
+| `src/prompting/characterDataXmlBuilder.js`             | MODIFY - add #buildPhysicalConditionSection |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | MODIFY - add physical condition tests       |
+| `tests/common/prompting/characterDataFixtures.js`      | MODIFY - add health state fixtures          |
 
 ## Out of Scope
 
@@ -72,6 +72,7 @@ See `specs/injury-reporting-and-user-interface.md` section 8.3 for XML structure
 **Status**: COMPLETED
 
 **Implementation Summary**:
+
 1. Added `#buildPhysicalConditionSection(healthState)` method to CharacterDataXmlBuilder (lines 601-673)
 2. Added `#getOverallStatusText(status)` helper method with spec-compliant status mappings (lines 681-692)
 3. Modified `#buildCurrentStateSection(data)` to call physical condition builder first for prominence (lines 478-482)
@@ -99,6 +100,7 @@ See `specs/injury-reporting-and-user-interface.md` section 8.3 for XML structure
 | `tests/common/prompting/characterDataFixtures.js` | Added 6 health state fixtures | Provide reusable test data for health-related scenarios |
 
 **Verification**:
+
 - All 109 tests pass in `characterDataXmlBuilder.test.js`
 - ESLint passes with only pre-existing warnings (JSDoc description style)
 - No breaking changes to public API

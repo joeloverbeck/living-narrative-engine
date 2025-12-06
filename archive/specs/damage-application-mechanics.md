@@ -134,13 +134,7 @@ Events Dispatched (anatomy:damage_applied, anatomy:part_health_changed, etc.)
       },
       "state": {
         "type": "string",
-        "enum": [
-          "healthy",
-          "bruised",
-          "wounded",
-          "badly_damaged",
-          "destroyed"
-        ],
+        "enum": ["healthy", "bruised", "wounded", "badly_damaged", "destroyed"],
         "description": "Narrative health state based on percentage thresholds."
       },
       "turnsInState": {
@@ -150,11 +144,7 @@ Events Dispatched (anatomy:damage_applied, anatomy:part_health_changed, etc.)
         "description": "Consecutive turns the part has been in the current state."
       }
     },
-    "required": [
-      "currentHealth",
-      "maxHealth",
-      "state"
-    ],
+    "required": ["currentHealth", "maxHealth", "state"],
     "additionalProperties": false
   }
 }
@@ -171,6 +161,7 @@ Events Dispatched (anatomy:damage_applied, anatomy:part_health_changed, etc.)
 **Operation Schema:** `data/schemas/operations/resolveHitLocation.schema.json`
 
 **Logic:**
+
 1. Collect all direct child parts of the root entity (or exposed parts).
 2. Sum their `hit_probability_weight`.
 3. Generate a random number between 0 and sum.
@@ -184,12 +175,14 @@ Events Dispatched (anatomy:damage_applied, anatomy:part_health_changed, etc.)
 **Operation Schema:** `data/schemas/operations/applyDamage.schema.json`
 
 **Parameters:**
+
 - `entity_ref`: Target entity.
 - `part_ref`: Specific part ID (optional, if null, calls `RESOLVE_HIT_LOCATION`).
 - `amount`: Damage amount.
 - `damage_type`: String (cutting, blunt, piercing, etc.).
 
 **Logic:**
+
 1. **Targeting**: If `part_ref` is null, call `RESOLVE_HIT_LOCATION` to find target.
 2. **Direct Damage**: Subtract `amount` from target part's `currentHealth`.
 3. **Update State**: Check thresholds (healthy -> bruised -> etc.) and set state to `destroyed` if health <= 0.
@@ -209,6 +202,7 @@ Events Dispatched (anatomy:damage_applied, anatomy:part_health_changed, etc.)
 
 For untargeted attacks, the system uses a weighted random distribution.
 Example weights:
+
 - Torso: 30
 - Arm (L/R): 15 each
 - Leg (L/R): 15 each
@@ -220,18 +214,20 @@ Total = 100. A roll of 85 might hit the Head.
 
 Simulates penetration.
 **Example:**
+
 - **Part:** Torso
 - **Child:** Heart
 - **Rule:** 30% chance on "piercing" damage.
 - **Action:** Arrow hits Torso (Piercing, 20 dmg).
 - **Process:**
-    1. Torso takes 20 dmg.
-    2. Roll for Heart (0.30). Success.
-    3. Heart takes 10 dmg (0.5 fraction).
+  1. Torso takes 20 dmg.
+  2. Roll for Heart (0.30). Success.
+  3. Heart takes 10 dmg (0.5 fraction).
 
 ### Thresholds & Narrative Labels
 
 Health percentage maps to labels:
+
 - **100-75%**: healthy
 - **75-50%**: bruised
 - **50-25%**: wounded
@@ -319,3 +315,45 @@ Emitted when a part reaches 0 health.
 - Execute a generic "Attack" action.
 - Verify damage is distributed and events are fired correctly.
 - Verify Narrative Engine receives correct injury report (via mock or event inspection).
+
+---
+
+## Tracing and Debugging
+
+### Enabling Detailed Traces
+
+To debug complex damage interactions (including mitigation, effect triggers, and propagation paths), you can enable structured tracing for any specific action or rule execution.
+
+**Mechanism:**
+Set `enableTrace: true` in the `executionContext` passed to the operation handler.
+
+**Example (Rule/Macro context):**
+If you are invoking a rule manually or via a test harness that allows setting context variables:
+
+```javascript
+const context = {
+  enableTrace: true, // Enables detailed tracing in DamageResolutionService
+  // ... other context
+};
+await executeAction(action, context);
+```
+
+**Output:**
+The trace log is attached to `executionContext.trace` (an array of objects). Each entry contains:
+
+- `timestamp`: Unix timestamp.
+- `phase`: Execution phase (e.g., 'init', 'health_update', 'effects_applied', 'propagation_start').
+- `message`: Human-readable description.
+- `data`: Contextual data object.
+- `context`: Entity and part IDs.
+
+**Trace Phases:**
+
+- `init`: Resolution start.
+- `skip`: Early exit (e.g., non-positive damage).
+- `health_update`: Health component modification.
+- `effects_applied`: Special effects (bleed, etc.) processing result.
+- `propagation_start` / `propagation_complete`: Internal propagation lifecycle.
+- `death_check`: Death condition evaluation.
+- `finalization`: Session finalization and event dispatch.
+- `error`: Exceptions or critical failures.

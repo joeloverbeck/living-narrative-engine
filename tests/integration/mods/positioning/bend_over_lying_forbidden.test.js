@@ -25,7 +25,10 @@ describe('positioning:bend_over - lying_down forbidden component', () => {
   });
 
   it('should NOT discover action when actor is lying down', () => {
-    const scenario = testFixture.createStandardActorTarget(['Alice', 'Surface']);
+    const scenario = testFixture.createStandardActorTarget([
+      'Alice',
+      'Surface',
+    ]);
 
     // Add lying_down component to actor
     scenario.actor.components['positioning:lying_down'] = {

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import TurnCycle from '../../../src/turns/turnCycle.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
@@ -247,10 +254,7 @@ describe('Turn Order - Participation Integration', () => {
       const actor2 = await createTestActor('actor2', 'Beta', true);
       const actor3 = await createTestActor('actor3', 'Gamma', true);
 
-      turnOrderService.startNewRound(
-        [actor1, actor2, actor3],
-        'round-robin'
-      );
+      turnOrderService.startNewRound([actor1, actor2, actor3], 'round-robin');
 
       // Verify FIFO order maintained
       const first = await turnCycle.nextActor();

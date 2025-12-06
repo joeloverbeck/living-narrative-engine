@@ -87,22 +87,24 @@ describe('Metrics middleware edge case integration', () => {
 
   it('respects disabled middleware and validates dependency requirements', async () => {
     const app = express();
-    app.use(createMetricsMiddleware({
-      metricsService,
-      logger,
-      enabled: false,
-    }));
+    app.use(
+      createMetricsMiddleware({
+        metricsService,
+        logger,
+        enabled: false,
+      })
+    );
     app.get('/ping', (_req, res) => res.status(204).end());
 
     await request(app).get('/ping').expect(204);
     expect(metricsService.httpRequests).toHaveLength(0);
 
-    expect(() =>
-      createMetricsMiddleware({ logger })
-    ).toThrow('metricsService is required for metrics middleware');
-    expect(() =>
-      createLlmMetricsMiddleware({ logger })
-    ).toThrow('metricsService is required for LLM metrics middleware');
+    expect(() => createMetricsMiddleware({ logger })).toThrow(
+      'metricsService is required for metrics middleware'
+    );
+    expect(() => createLlmMetricsMiddleware({ logger })).toThrow(
+      'metricsService is required for LLM metrics middleware'
+    );
     expect(() =>
       createCacheMetricsRecorder({ cacheType: 'missing-service' })
     ).toThrow('metricsService is required for cache metrics recorder');
@@ -113,7 +115,8 @@ describe('Metrics middleware edge case integration', () => {
 
     app.use(express.json({ limit: '10kb', strict: false }));
     app.use((req, _res, next) => {
-      req.correlationId = req.get('x-correlation-id') || 'edge-case-correlation';
+      req.correlationId =
+        req.get('x-correlation-id') || 'edge-case-correlation';
       next();
     });
     app.use((req, _res, next) => {
@@ -235,7 +238,10 @@ describe('Metrics middleware edge case integration', () => {
     );
 
     await request(app).post('/circular').send({});
-    await request(app).post('/api/status').set('Content-Length', '8').send('"ping"');
+    await request(app)
+      .post('/api/status')
+      .set('Content-Length', '8')
+      .send('"ping"');
     await request(app).post('/timeout').send();
     await request(app).post('/ratelimit').send({});
     await request(app).post('/server-error').send({});
@@ -288,10 +294,10 @@ describe('Metrics middleware edge case integration', () => {
       ])
     );
 
-    const errorSeverities = metricsService.errors.map((entry) => entry.severity);
-    expect(errorSeverities).toEqual(
-      expect.arrayContaining(['medium', 'high'])
+    const errorSeverities = metricsService.errors.map(
+      (entry) => entry.severity
     );
+    expect(errorSeverities).toEqual(expect.arrayContaining(['medium', 'high']));
 
     expect(metricsService.cacheOperations).toEqual(
       expect.arrayContaining([
@@ -310,7 +316,8 @@ describe('Metrics middleware edge case integration', () => {
       ])
     );
 
-    const [firstLlm, secondLlm, thirdLlm, fourthLlm] = metricsService.llmRequests;
+    const [firstLlm, secondLlm, thirdLlm, fourthLlm] =
+      metricsService.llmRequests;
     expect(firstLlm).toMatchObject({
       provider: 'openai',
       model: 'gpt-4o',

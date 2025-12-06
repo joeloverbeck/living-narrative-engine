@@ -4,7 +4,7 @@
   "description": "Meditative mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "music:set_meditative_mood_on_instrument"
     ]
   }

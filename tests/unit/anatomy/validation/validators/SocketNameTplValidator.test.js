@@ -30,7 +30,9 @@ describe('SocketNameTplValidator', () => {
     });
 
     it('throws when logger is missing', () => {
-      expect(() => new SocketNameTplValidator({ dataRegistry: mockDataRegistry })).toThrow();
+      expect(
+        () => new SocketNameTplValidator({ dataRegistry: mockDataRegistry })
+      ).toThrow();
     });
 
     it('throws when dataRegistry is missing', () => {
@@ -187,8 +189,16 @@ describe('SocketNameTplValidator', () => {
         const entityDef = {
           id: 'anatomy:test_entity',
           sockets: [
-            { id: 'socket_1', nameTpl: '{{orientation}} tentacle', allowedTypes: ['tentacle'] },
-            { id: 'socket_2', nameTpl: '{{orientation}} tentacle', allowedTypes: ['tentacle'] },
+            {
+              id: 'socket_1',
+              nameTpl: '{{orientation}} tentacle',
+              allowedTypes: ['tentacle'],
+            },
+            {
+              id: 'socket_2',
+              nameTpl: '{{orientation}} tentacle',
+              allowedTypes: ['tentacle'],
+            },
           ],
         };
         mockDataRegistry.getEntityDefinition.mockReturnValue(entityDef);
@@ -212,8 +222,16 @@ describe('SocketNameTplValidator', () => {
         const entityDef = {
           id: 'anatomy:test_entity',
           sockets: [
-            { id: 'socket_1', nameTpl: '{{effective_orientation}} tentacle', allowedTypes: ['tentacle'] },
-            { id: 'socket_2', nameTpl: '{{effective_orientation}} tentacle', allowedTypes: ['tentacle'] },
+            {
+              id: 'socket_1',
+              nameTpl: '{{effective_orientation}} tentacle',
+              allowedTypes: ['tentacle'],
+            },
+            {
+              id: 'socket_2',
+              nameTpl: '{{effective_orientation}} tentacle',
+              allowedTypes: ['tentacle'],
+            },
           ],
         };
         mockDataRegistry.getEntityDefinition.mockReturnValue(entityDef);
@@ -348,7 +366,9 @@ describe('SocketNameTplValidator', () => {
         // Assert
         const result = builder.build();
         expect(result.isValid).toBe(false);
-        expect(result.errors.some(e => e.message.includes('child_1'))).toBe(true);
+        expect(result.errors.some((e) => e.message.includes('child_1'))).toBe(
+          true
+        );
       });
     });
 

@@ -33,19 +33,11 @@
       "length": "short"
     },
     "descriptors:professional_markers": {
-      "markers": [
-        "tannery-staining",
-        "tool-calluses",
-        "chemical-staining"
-      ],
+      "markers": ["tannery-staining", "tool-calluses", "chemical-staining"],
       "profession": "leatherworker"
     },
     "descriptors:skin_condition": {
-      "conditions": [
-        "weathered",
-        "chemically-stained",
-        "callused"
-      ]
+      "conditions": ["weathered", "chemically-stained", "callused"]
     },
     "descriptors:texture": {
       "texture": "rough"

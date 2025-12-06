@@ -21,7 +21,9 @@ describe('MinHeap - Basic Operations', () => {
   it('should require comparison function in constructor', () => {
     expect(() => new MinHeap()).toThrow('compareFn must be a function');
     expect(() => new MinHeap(null)).toThrow('compareFn must be a function');
-    expect(() => new MinHeap('not a function')).toThrow('compareFn must be a function');
+    expect(() => new MinHeap('not a function')).toThrow(
+      'compareFn must be a function'
+    );
     expect(() => new MinHeap(42)).toThrow('compareFn must be a function');
   });
 

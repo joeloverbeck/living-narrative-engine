@@ -5,9 +5,7 @@
   "description": "Swing laterally through a hand-supported inversion to land facing the opposite direction",
   "targets": "none",
   "required_components": {
-    "actor": [
-      "gymnastics:is_gymnast"
-    ]
+    "actor": ["gymnastics:is_gymnast"]
   },
   "forbidden_components": {
     "actor": [

@@ -11,6 +11,7 @@
 ## Problem Statement
 
 Create the main orchestrator class that transforms `ActorPromptDataDTO` into a complete XML string with:
+
 - 6 semantic sections (identity, core_self, psychology, traits, speech_patterns, current_state)
 - LLM-optimized section ordering (primacy/recency effects)
 - Decorated comments for attention priming
@@ -23,17 +24,18 @@ This class uses `XmlElementBuilder` (from CHADATXMLREW-001) for low-level XML op
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/prompting/characterDataXmlBuilder.js` | Main implementation |
-| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Unit tests |
-| `tests/common/prompting/characterDataFixtures.js` | Shared test fixtures |
+| File                                                   | Purpose              |
+| ------------------------------------------------------ | -------------------- |
+| `src/prompting/characterDataXmlBuilder.js`             | Main implementation  |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Unit tests           |
+| `tests/common/prompting/characterDataFixtures.js`      | Shared test fixtures |
 
 ---
 
 ## Out of Scope
 
 **DO NOT modify:**
+
 - `CharacterDataFormatter.js` - handled in CHADATXMLREW-007
 - `AIPromptContentProvider.js` - handled in CHADATXMLREW-004
 - DI tokens or registrations - handled in CHADATXMLREW-003
@@ -108,28 +110,28 @@ The XML must follow this exact ordering (for LLM attention optimization):
 
 ### Component Mapping
 
-| DTO Field | XML Path | Data Source |
-|-----------|----------|-------------|
-| `name` | `<identity><name>` | ActorPromptDataDTO |
-| `apparentAge` | `<identity><apparent_age>` | ActorPromptDataDTO (object: `{minAge, maxAge, bestGuess?}`) |
-| `description` | `<identity><description>` | ActorPromptDataDTO |
-| `profile` | `<core_self><profile>` | ActorPromptDataDTO |
-| `personality` | `<core_self><personality>` | ActorPromptDataDTO |
-| `motivations` | `<psychology><core_motivations>` | ActorPromptDataDTO |
-| `internalTensions` | `<psychology><internal_tensions>` | ActorPromptDataDTO |
-| `coreDilemmas` | `<psychology><dilemmas>` | ActorPromptDataDTO |
-| `strengths` | `<traits><strengths>` | ActorPromptDataDTO |
-| `weaknesses` | `<traits><weaknesses>` | ActorPromptDataDTO |
-| `likes` | `<traits><likes>` | ActorPromptDataDTO |
-| `dislikes` | `<traits><dislikes>` | ActorPromptDataDTO |
-| `fears` | `<traits><fears>` | ActorPromptDataDTO |
-| `secrets` | `<traits><secrets>` | ActorPromptDataDTO |
-| `speechPatterns` | `<speech_patterns>` | ActorPromptDataDTO (string[] or object[]) |
-| `goals` | `<current_state><goals>` | Extended data* (array of `{text, timestamp?}`) |
-| `notes` | `<current_state><notes>` | Extended data* (array of `{text, subject?, subjectType?}`) |
-| `shortTermMemory` | `<current_state><recent_thoughts>` | Extended data* (object with `thoughts` array) |
+| DTO Field          | XML Path                           | Data Source                                                 |
+| ------------------ | ---------------------------------- | ----------------------------------------------------------- |
+| `name`             | `<identity><name>`                 | ActorPromptDataDTO                                          |
+| `apparentAge`      | `<identity><apparent_age>`         | ActorPromptDataDTO (object: `{minAge, maxAge, bestGuess?}`) |
+| `description`      | `<identity><description>`          | ActorPromptDataDTO                                          |
+| `profile`          | `<core_self><profile>`             | ActorPromptDataDTO                                          |
+| `personality`      | `<core_self><personality>`         | ActorPromptDataDTO                                          |
+| `motivations`      | `<psychology><core_motivations>`   | ActorPromptDataDTO                                          |
+| `internalTensions` | `<psychology><internal_tensions>`  | ActorPromptDataDTO                                          |
+| `coreDilemmas`     | `<psychology><dilemmas>`           | ActorPromptDataDTO                                          |
+| `strengths`        | `<traits><strengths>`              | ActorPromptDataDTO                                          |
+| `weaknesses`       | `<traits><weaknesses>`             | ActorPromptDataDTO                                          |
+| `likes`            | `<traits><likes>`                  | ActorPromptDataDTO                                          |
+| `dislikes`         | `<traits><dislikes>`               | ActorPromptDataDTO                                          |
+| `fears`            | `<traits><fears>`                  | ActorPromptDataDTO                                          |
+| `secrets`          | `<traits><secrets>`                | ActorPromptDataDTO                                          |
+| `speechPatterns`   | `<speech_patterns>`                | ActorPromptDataDTO (string[] or object[])                   |
+| `goals`            | `<current_state><goals>`           | Extended data\* (array of `{text, timestamp?}`)             |
+| `notes`            | `<current_state><notes>`           | Extended data\* (array of `{text, subject?, subjectType?}`) |
+| `shortTermMemory`  | `<current_state><recent_thoughts>` | Extended data\* (object with `thoughts` array)              |
 
-*Extended data fields are passed by the caller (e.g., AIPromptContentProvider in CHADATXMLREW-004) - they are NOT part of the base ActorPromptDataDTO.
+\*Extended data fields are passed by the caller (e.g., AIPromptContentProvider in CHADATXMLREW-004) - they are NOT part of the base ActorPromptDataDTO.
 
 ### Private Methods (Suggested)
 
@@ -171,70 +173,76 @@ Create `tests/common/prompting/characterDataFixtures.js`:
 **IMPORTANT ASSUMPTION CLARIFICATION (validated 2025-11-25):**
 
 The actual `ActorPromptDataDTO` typedef (in `src/turns/dtos/AIGameStateDTO.js`) shows:
+
 - `apparentAge` - The `ActorDataExtractor` extracts this as an **object** `{ minAge, maxAge, bestGuess? }` when present
 - `speechPatterns` - Extracted as **string array** by `ActorDataExtractor` (not structured objects)
 - `goals`, `notes`, `shortTermMemory` - These are **NOT part of ActorPromptDataDTO** - they are extracted separately by `AIPromptContentProvider._extractMemoryComponents()` from component data
 
 For this ticket, `CharacterDataXmlBuilder.buildCharacterDataXml()` will accept a **combined character data object** that MAY include goals/notes/shortTermMemory if passed by the caller. The builder should handle both:
+
 1. Basic `ActorPromptDataDTO` (without current_state data) - `<current_state>` section omitted
 2. Extended data with goals/notes/shortTermMemory - `<current_state>` section included
 
 ```javascript
 export const MINIMAL_CHARACTER_DATA = {
-  name: 'Test Character'
+  name: 'Test Character',
 };
 
 export const COMPLETE_CHARACTER_DATA = {
   name: 'Vespera Nightwhisper',
   apparentAge: { minAge: 25, maxAge: 27, bestGuess: 26 },
   description: "5'6\" dancer's build with lean muscle...",
-  personality: "A cat-girl bard, ruthlessly ambitious...",
-  profile: "I grew up in the back alleys...",
-  motivations: "I need to create something that matters...",
-  internalTensions: "The performer vs the person...",
-  coreDilemmas: "Is authenticity possible when performance is survival?",
-  strengths: "Combat composure that unsettles my allies...",
-  weaknesses: "Impatient with incompetence...",
-  likes: "Classical music, fine wine, witty banter",
-  dislikes: "Dishonesty, rudeness, small talk",
-  fears: "Genuine emotional intimacy",
+  personality: 'A cat-girl bard, ruthlessly ambitious...',
+  profile: 'I grew up in the back alleys...',
+  motivations: 'I need to create something that matters...',
+  internalTensions: 'The performer vs the person...',
+  coreDilemmas: 'Is authenticity possible when performance is survival?',
+  strengths: 'Combat composure that unsettles my allies...',
+  weaknesses: 'Impatient with incompetence...',
+  likes: 'Classical music, fine wine, witty banter',
+  dislikes: 'Dishonesty, rudeness, small talk',
+  fears: 'Genuine emotional intimacy',
   secrets: "I write poetry I've never shown anyone",
   // NOTE: ActorDataExtractor produces string arrays, but structured objects
   // can also be passed if the caller provides them
   speechPatterns: [
     {
-      type: "Feline Verbal Tics",
-      contexts: ["casual", "manipulative"],
-      examples: ["Oh meow-y goodness..."]
-    }
+      type: 'Feline Verbal Tics',
+      contexts: ['casual', 'manipulative'],
+      examples: ['Oh meow-y goodness...'],
+    },
   ],
   // NOTE: These are NOT part of base ActorPromptDataDTO but may be passed
   // by the integration layer (AIPromptContentProvider) in CHADATXMLREW-004
   goals: [
-    { text: "Compose three pieces", timestamp: "2024-01-15T08:00:00Z" },
-    { text: "Find emotional depth" }
+    { text: 'Compose three pieces', timestamp: '2024-01-15T08:00:00Z' },
+    { text: 'Find emotional depth' },
   ],
   notes: [
-    { text: "The lute is my only genuine relationship", subject: "instrument", subjectType: "entity" }
+    {
+      text: 'The lute is my only genuine relationship',
+      subject: 'instrument',
+      subjectType: 'entity',
+    },
   ],
   shortTermMemory: {
     thoughts: [
-      { text: "That look she gave me...", timestamp: "2024-01-15T10:30:00Z" }
-    ]
-  }
+      { text: 'That look she gave me...', timestamp: '2024-01-15T10:30:00Z' },
+    ],
+  },
 };
 
 export const CHARACTER_WITH_SPECIAL_CHARS = {
   name: 'Test <Character> & "Friends"',
-  description: "Quote's here with <brackets> & ampersands"
+  description: "Quote's here with <brackets> & ampersands",
 };
 
 export const CHARACTER_WITH_LEGACY_SPEECH = {
   name: 'Legacy Character',
   speechPatterns: [
-    "(when happy) Big smile and wave",
-    "(when sad) Quiet and withdrawn"
-  ]
+    '(when happy) Big smile and wave',
+    '(when sad) Quiet and withdrawn',
+  ],
 };
 
 export const CHARACTER_WITH_EMPTY_SECTIONS = {
@@ -245,14 +253,14 @@ export const CHARACTER_WITH_EMPTY_SECTIONS = {
   internalTensions: null,
   coreDilemmas: undefined,
   // Some traits present
-  strengths: 'Good listener'
+  strengths: 'Good listener',
 };
 
 // Character data WITHOUT current_state fields (basic ActorPromptDataDTO)
 export const CHARACTER_WITHOUT_CURRENT_STATE = {
   name: 'Static Character',
   description: 'A simple character without mutable state',
-  personality: 'Stoic and reserved'
+  personality: 'Stoic and reserved',
   // No goals, notes, or shortTermMemory
 };
 ```
@@ -359,11 +367,11 @@ npx eslint src/prompting/characterDataXmlBuilder.js tests/common/prompting/chara
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
-| `src/prompting/characterDataXmlBuilder.js` | Main implementation (595 lines) |
-| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Unit tests (71 tests) |
-| `tests/common/prompting/characterDataFixtures.js` | Shared test fixtures (273 lines) |
+| File                                                   | Purpose                          |
+| ------------------------------------------------------ | -------------------------------- |
+| `src/prompting/characterDataXmlBuilder.js`             | Main implementation (595 lines)  |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Unit tests (71 tests)            |
+| `tests/common/prompting/characterDataFixtures.js`      | Shared test fixtures (273 lines) |
 
 ### Implementation Summary
 
@@ -379,12 +387,12 @@ The `CharacterDataXmlBuilder` class was implemented as specified with the follow
 
 ### Coverage Results
 
-| Metric | Result | Requirement |
-|--------|--------|-------------|
-| Statements | 96.07% | N/A |
-| Branches | 88.2% | ≥80% ✅ |
-| Functions | 100% | ≥90% ✅ |
-| Lines | 95.93% | ≥90% ✅ |
+| Metric     | Result | Requirement |
+| ---------- | ------ | ----------- |
+| Statements | 96.07% | N/A         |
+| Branches   | 88.2%  | ≥80% ✅     |
+| Functions  | 100%   | ≥90% ✅     |
+| Lines      | 95.93% | ≥90% ✅     |
 
 ### Deviations from Original Plan
 

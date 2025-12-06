@@ -78,7 +78,9 @@ describe('validate-recipe CLI performance tests', () => {
 
       // Calculate variance between the two runs
       const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
-      const variance = durations.reduce((sum, d) => sum + Math.pow(d - avg, 2), 0) / durations.length;
+      const variance =
+        durations.reduce((sum, d) => sum + Math.pow(d - avg, 2), 0) /
+        durations.length;
       const stdDev = Math.sqrt(variance);
 
       // Standard deviation should be reasonable (less than 50% of average)

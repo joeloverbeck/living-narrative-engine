@@ -6,7 +6,14 @@
  * @see tickets/DAMTYPANDSPEEFF-005-testing-and-performance-coverage.md
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import BleedingTickSystem from '../../../src/anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../../src/anatomy/services/burningTickSystem.js';
 import PoisonTickSystem from '../../../src/anatomy/services/poisonTickSystem.js';
@@ -60,7 +67,10 @@ function createMockEntityManager() {
       const result = [];
       for (const key of components.keys()) {
         if (key.endsWith(`:${componentId}`)) {
-          const entityId = key.substring(0, key.length - componentId.length - 1);
+          const entityId = key.substring(
+            0,
+            key.length - componentId.length - 1
+          );
           if (!result.includes(entityId)) {
             result.push(entityId);
           }
@@ -289,7 +299,9 @@ describe('Damage Effects - Performance Tests', () => {
       const totalTime = endTime - startTime;
 
       // Assert - combined should still be within reasonable budget
-      expect(totalTime).toBeLessThan(PERFORMANCE_THRESHOLDS.LARGE_ANATOMY_TICK * 2);
+      expect(totalTime).toBeLessThan(
+        PERFORMANCE_THRESHOLDS.LARGE_ANATOMY_TICK * 2
+      );
       console.log(`All three systems on 100 parts: ${totalTime.toFixed(2)}ms`);
     });
   });
@@ -384,8 +396,8 @@ describe('Damage Effects - Performance Tests', () => {
       expect(poisonEvents).toHaveLength(5);
 
       // Total events should be 15 (5 parts * 3 effect types)
-      const totalStoppedEvents = dispatcher.dispatch.mock.calls.filter(([eventId]) =>
-        eventId.endsWith('_stopped')
+      const totalStoppedEvents = dispatcher.dispatch.mock.calls.filter(
+        ([eventId]) => eventId.endsWith('_stopped')
       );
       expect(totalStoppedEvents).toHaveLength(15);
     });
@@ -413,7 +425,9 @@ describe('Damage Effects - Performance Tests', () => {
 
       // Assert - cleanup within budget
       expect(cleanupTime).toBeLessThan(PERFORMANCE_THRESHOLDS.CLEANUP_BUDGET);
-      console.log(`Bleeding cleanup 10 destroyed parts: ${cleanupTime.toFixed(2)}ms`);
+      console.log(
+        `Bleeding cleanup 10 destroyed parts: ${cleanupTime.toFixed(2)}ms`
+      );
 
       // All bleeding components should be removed
       expect(entityManager.removeComponent).toHaveBeenCalledTimes(10);
@@ -540,7 +554,9 @@ describe('Damage Effects - Performance Tests', () => {
         times.push(tickTime);
       }
 
-      console.log(`Scaling test - sizes: ${sizes.join(', ')}, times: ${times.map((t) => t.toFixed(2)).join(', ')}ms`);
+      console.log(
+        `Scaling test - sizes: ${sizes.join(', ')}, times: ${times.map((t) => t.toFixed(2)).join(', ')}ms`
+      );
 
       // Time should scale roughly linearly (with some overhead)
       // The ratio between sizes should roughly match ratio between times

@@ -158,7 +158,9 @@ describe('CharacterConceptsManagerController - Constructor and Dependencies', ()
           characterBuilderService: testBase.mocks.characterBuilderService,
           eventBus: undefined,
         });
-        throw new Error('Expected constructor to throw due to missing event bus');
+        throw new Error(
+          'Expected constructor to throw due to missing event bus'
+        );
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
         expect(error.name).toBe('Error');

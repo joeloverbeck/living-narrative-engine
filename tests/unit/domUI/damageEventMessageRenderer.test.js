@@ -147,8 +147,12 @@ describe('DamageEventMessageRenderer', () => {
 
       expect(mockDomElementFactory.li).toHaveBeenCalled();
       expect(mockLiElement.textContent).toBe('You take 15 damage to your arm.');
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--moderate');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message'
+      );
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--moderate'
+      );
       expect(mockMessageList.appendChild).toHaveBeenCalledWith(mockLiElement);
     });
 
@@ -211,8 +215,12 @@ describe('DamageEventMessageRenderer', () => {
       await Promise.resolve();
 
       expect(mockLiElement.textContent).toBe('Goblin is dying!');
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--dying');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message'
+      );
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--dying'
+      );
       expect(mockMessageList.appendChild).toHaveBeenCalled();
     });
 
@@ -258,9 +266,15 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.textContent).toBe('Orc falls dead from their injuries.');
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message');
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--death');
+      expect(mockLiElement.textContent).toBe(
+        'Orc falls dead from their injuries.'
+      );
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message'
+      );
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--death'
+      );
       expect(mockMessageList.appendChild).toHaveBeenCalled();
     });
 
@@ -284,7 +298,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.textContent).toBe('Orc dies from massive head trauma.');
+      expect(mockLiElement.textContent).toBe(
+        'Orc dies from massive head trauma.'
+      );
     });
 
     it('should use fallback text when entityName is missing', async () => {
@@ -305,7 +321,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.textContent).toBe('An entity falls dead from their injuries.');
+      expect(mockLiElement.textContent).toBe(
+        'An entity falls dead from their injuries.'
+      );
     });
   });
 
@@ -330,7 +348,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--minor');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--minor'
+      );
     });
 
     it('should apply moderate class for damage 10-25', async () => {
@@ -353,7 +373,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--moderate');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--moderate'
+      );
     });
 
     it('should apply severe class for damage 26-50', async () => {
@@ -376,7 +398,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--severe');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--severe'
+      );
     });
 
     it('should apply critical class for damage > 50', async () => {
@@ -399,7 +423,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--critical');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--critical'
+      );
     });
 
     it('should default to minor class when totalDamage is undefined', async () => {
@@ -421,7 +447,9 @@ describe('DamageEventMessageRenderer', () => {
 
       await Promise.resolve();
 
-      expect(mockLiElement.classList.add).toHaveBeenCalledWith('damage-message--minor');
+      expect(mockLiElement.classList.add).toHaveBeenCalledWith(
+        'damage-message--minor'
+      );
     });
   });
 
@@ -482,7 +510,9 @@ describe('DamageEventMessageRenderer', () => {
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('DomElementFactory.li() returned null'),
+          message: expect.stringContaining(
+            'DomElementFactory.li() returned null'
+          ),
         })
       );
     });
@@ -492,7 +522,9 @@ describe('DamageEventMessageRenderer', () => {
     it('should not subscribe to irrelevant events', () => {
       createRenderer();
       const subscribedEventNames =
-        mockValidatedEventDispatcher.subscribe.mock.calls.map((call) => call[0]);
+        mockValidatedEventDispatcher.subscribe.mock.calls.map(
+          (call) => call[0]
+        );
       expect(subscribedEventNames).not.toContain('core:display_message');
       expect(subscribedEventNames).not.toContain('some:other_event');
       expect(subscribedEventNames.length).toBe(3);

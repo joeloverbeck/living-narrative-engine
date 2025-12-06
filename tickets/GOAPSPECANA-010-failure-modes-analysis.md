@@ -26,6 +26,7 @@ Document complete failure mode analysis with detection, response, fallback, retr
 ## Failure Categories
 
 ### 1. Planning Failures
+
 ```
 FM-P1: No Valid Plan Found
 - Detection: GOAP search exhausted, no path to goal
@@ -51,6 +52,7 @@ FM-P3: Planning Exception
 ```
 
 ### 2. Refinement Failures
+
 ```
 FM-R1: No Valid Target
 - Detection: Scope resolution returns empty set
@@ -90,6 +92,7 @@ FM-R5: Refinement Logic Error
 ```
 
 ### 3. Execution Failures (Plan Invalidation)
+
 ```
 FM-E1: Precondition Failed
 - Detection: Precondition check before action execution fails
@@ -121,6 +124,7 @@ FM-E4: Action Execution Failed
 ```
 
 ### 4. Resource Conflicts
+
 ```
 FM-C1: Unique Resource Contention
 - Detection: Multiple actors want same unique item
@@ -140,6 +144,7 @@ FM-C2: Deadlock Risk
 ```
 
 ### 5. System Errors
+
 ```
 FM-S1: State Isolation Failure
 - Detection: Planning mutates real world (sanity check)

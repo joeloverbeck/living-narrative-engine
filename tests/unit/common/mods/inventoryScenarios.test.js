@@ -49,7 +49,12 @@ describe('ModEntityScenarios inventory helpers', () => {
 
   it('creates container scenarios with contents and optional key items', () => {
     const scenario = ModEntityScenarios.createContainerWithContents({
-      container: { id: 'vault', name: 'Vault', isOpen: false, requiresKey: true },
+      container: {
+        id: 'vault',
+        name: 'Vault',
+        isOpen: false,
+        requiresKey: true,
+      },
       contents: [{ id: 'gemstone', name: 'Gemstone', weight: 2 }],
     });
 
@@ -71,7 +76,10 @@ describe('ModEntityScenarios inventory helpers', () => {
     });
 
     const giverInventory = getComponent(scenario.giver, 'items:inventory');
-    const receiverInventory = getComponent(scenario.receiver, 'items:inventory');
+    const receiverInventory = getComponent(
+      scenario.receiver,
+      'items:inventory'
+    );
 
     expect(giverInventory.items).toContain('artifact');
     expect(receiverInventory.items).toEqual(['wallet']);
@@ -110,7 +118,10 @@ describe('ModEntityScenarios inventory helpers', () => {
 
   it('creates open container scenarios with actor context', () => {
     const scenario = ModEntityScenarios.createOpenContainerScenario({
-      actor: { id: 'container_actor', inventoryItems: [{ id: 'note', weight: 0.1 }] },
+      actor: {
+        id: 'container_actor',
+        inventoryItems: [{ id: 'note', weight: 0.1 }],
+      },
       container: { id: 'crate', isOpen: false },
       contents: [{ id: 'stored', weight: 1 }],
       locked: true,

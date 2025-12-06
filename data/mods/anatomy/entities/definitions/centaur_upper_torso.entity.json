@@ -28,23 +28,13 @@
         {
           "id": "arm_left",
           "orientation": "left",
-          "allowedTypes": [
-            "arm",
-            "humanoid_arm",
-            "centaur_arm",
-            "human_arm"
-          ],
+          "allowedTypes": ["arm", "humanoid_arm", "centaur_arm", "human_arm"],
           "nameTpl": "{{orientation}} {{type}}"
         },
         {
           "id": "arm_right",
           "orientation": "right",
-          "allowedTypes": [
-            "arm",
-            "humanoid_arm",
-            "centaur_arm",
-            "human_arm"
-          ],
+          "allowedTypes": ["arm", "humanoid_arm", "centaur_arm", "human_arm"],
           "nameTpl": "{{orientation}} {{type}}"
         }
       ]

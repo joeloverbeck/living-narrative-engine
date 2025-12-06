@@ -93,7 +93,9 @@ describe('createSpeechPatternsPrompt', () => {
   });
 
   it('honors a custom pattern count when provided', () => {
-    const prompt = createSpeechPatternsPrompt(baseCharacter, { patternCount: 12 });
+    const prompt = createSpeechPatternsPrompt(baseCharacter, {
+      patternCount: 12,
+    });
 
     expect(prompt).toContain('approximately 12 total examples');
     expect(prompt).toContain('targeting ~12');
@@ -136,20 +138,20 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const response = {
       characterName: 'Lyra',
       speechPatterns: [
-        { 
-          type: 'Measured cadence', 
-          examples: ["It's wonderful to see you", "How delightful"], 
-          contexts: ['around allies'] 
+        {
+          type: 'Measured cadence',
+          examples: ["It's wonderful to see you", 'How delightful'],
+          contexts: ['around allies'],
         },
-        { 
-          type: 'Sharp sarcasm', 
+        {
+          type: 'Sharp sarcasm',
           examples: ['Oh, brilliant plan.', 'What could go wrong?'],
-          contexts: undefined 
+          contexts: undefined,
         },
-        { 
-          type: 'Rapid tangents', 
+        {
+          type: 'Rapid tangents',
           examples: ['And then we could—no, wait—', 'But what if—'],
-          contexts: [] 
+          contexts: [],
         },
       ],
     };
@@ -157,10 +159,13 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const result = validateSpeechPatternsGenerationResponse(response, logger);
 
     expect(result).toEqual({ isValid: true, errors: [] });
-    expect(logger.debug).toHaveBeenCalledWith('Speech patterns response validation passed', {
-      patternCount: 3,
-      characterName: 'Lyra',
-    });
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Speech patterns response validation passed',
+      {
+        patternCount: 3,
+        characterName: 'Lyra',
+      }
+    );
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
@@ -168,9 +173,7 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const logger = { debug: jest.fn(), warn: jest.fn() };
     const response = {
       characterName: '',
-      speechPatterns: [
-        { type: 'shrt', examples: ['hi'], contexts: 42 },
-      ],
+      speechPatterns: [{ type: 'shrt', examples: ['hi'], contexts: 42 }],
     };
 
     const result = validateSpeechPatternsGenerationResponse(response, logger);
@@ -185,11 +188,12 @@ describe('validateSpeechPatternsGenerationResponse', () => {
         'characterName is required and must be a string',
       ])
     );
-    expect(logger.warn).toHaveBeenCalledWith('Speech patterns response validation failed', {
-      errors: expect.arrayContaining([
-        expect.stringContaining('Pattern 1'),
-      ]),
-    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Speech patterns response validation failed',
+      {
+        errors: expect.arrayContaining([expect.stringContaining('Pattern 1')]),
+      }
+    );
     expect(logger.debug).not.toHaveBeenCalled();
   });
 
@@ -276,7 +280,11 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const result = validateSpeechPatternsGenerationResponse({
       characterName: 'Test',
       speechPatterns: [
-        { type: 'Pattern A', examples: ['ex1', 'ex2'], contexts: ['valid', 123, 'also valid'] },
+        {
+          type: 'Pattern A',
+          examples: ['ex1', 'ex2'],
+          contexts: ['valid', 123, 'also valid'],
+        },
         { type: 'Pattern B', examples: ['ex1', 'ex2'] },
         { type: 'Pattern C', examples: ['ex1', 'ex2'] },
       ],
@@ -284,9 +292,7 @@ describe('validateSpeechPatternsGenerationResponse', () => {
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual(
-      expect.arrayContaining([
-        'Pattern 1, context 2: must be a string',
-      ])
+      expect.arrayContaining(['Pattern 1, context 2: must be a string'])
     );
   });
 
@@ -294,7 +300,11 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const result = validateSpeechPatternsGenerationResponse({
       characterName: 'Test',
       speechPatterns: [
-        { type: 'Pattern A', examples: ['ex1', 'ex2'], contexts: ['valid', '', 'also valid'] },
+        {
+          type: 'Pattern A',
+          examples: ['ex1', 'ex2'],
+          contexts: ['valid', '', 'also valid'],
+        },
         { type: 'Pattern B', examples: ['ex1', 'ex2'] },
         { type: 'Pattern C', examples: ['ex1', 'ex2'] },
       ],
@@ -320,9 +330,7 @@ describe('validateSpeechPatternsGenerationResponse', () => {
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual(
-      expect.arrayContaining([
-        'Pattern 1, example 2: must be a string',
-      ])
+      expect.arrayContaining(['Pattern 1, example 2: must be a string'])
     );
   });
 
@@ -348,7 +356,10 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     const result = validateSpeechPatternsGenerationResponse({
       characterName: 'Test',
       speechPatterns: [
-        { type: 'Pattern A', examples: ['ex1', 'ex2', 'ex3', 'ex4', 'ex5', 'ex6'] },
+        {
+          type: 'Pattern A',
+          examples: ['ex1', 'ex2', 'ex3', 'ex4', 'ex5', 'ex6'],
+        },
         { type: 'Pattern B', examples: ['ex1', 'ex2'] },
         { type: 'Pattern C', examples: ['ex1', 'ex2'] },
       ],
@@ -357,7 +368,7 @@ describe('validateSpeechPatternsGenerationResponse', () => {
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual(
       expect.arrayContaining([
-        'Pattern 1: \'examples\' must have at most 5 items',
+        "Pattern 1: 'examples' must have at most 5 items",
       ])
     );
   });

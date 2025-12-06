@@ -70,10 +70,12 @@ describe('ValidateContainerCapacityHandler', () => {
         })
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-      expect(executionContext.evaluationContext.context.capacityResult).toEqual({
-        valid: false,
-        reason: 'validation_failed',
-      });
+      expect(executionContext.evaluationContext.context.capacityResult).toEqual(
+        {
+          valid: false,
+          reason: 'validation_failed',
+        }
+      );
     });
 
     it('reports validation failure when itemEntity is blank', async () => {
@@ -93,10 +95,12 @@ describe('ValidateContainerCapacityHandler', () => {
         })
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-      expect(executionContext.evaluationContext.context.capacityResult).toEqual({
-        valid: false,
-        reason: 'validation_failed',
-      });
+      expect(executionContext.evaluationContext.context.capacityResult).toEqual(
+        {
+          valid: false,
+          reason: 'validation_failed',
+        }
+      );
     });
 
     it('should validate successfully when capacity is available', async () => {
@@ -118,9 +122,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: true,
       });
     });
@@ -143,9 +145,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'max_items_exceeded',
       });
@@ -171,9 +171,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'max_weight_exceeded',
       });
@@ -200,9 +198,7 @@ describe('ValidateContainerCapacityHandler', () => {
       await handler.execute(params, executionContext);
 
       // Should still validate successfully
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: true,
       });
     });
@@ -224,9 +220,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'container_closed',
       });
@@ -248,9 +242,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'no_capacity_defined',
       });
@@ -273,9 +265,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'no_weight',
       });
@@ -298,9 +288,9 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({ valid: true });
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
+        valid: true,
+      });
     });
 
     it('logs and reports errors from the entity manager', async () => {
@@ -324,9 +314,7 @@ describe('ValidateContainerCapacityHandler', () => {
           itemEntity: 'item1',
         })
       );
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'entity manager failure',
       });
@@ -364,9 +352,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: false,
         reason: 'no_container',
       });
@@ -390,9 +376,7 @@ describe('ValidateContainerCapacityHandler', () => {
 
       await handler.execute(params, executionContext);
 
-      expect(
-        executionContext.evaluationContext.context.capacityCheck
-      ).toEqual({
+      expect(executionContext.evaluationContext.context.capacityCheck).toEqual({
         valid: true,
       });
     });

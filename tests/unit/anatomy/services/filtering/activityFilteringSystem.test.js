@@ -51,39 +51,51 @@ describe('ActivityFilteringSystem', () => {
 
   describe('Constructor', () => {
     it('should accept null logger and create fallback', () => {
-      expect(() => new ActivityFilteringSystem({
-        logger: null,
-        conditionValidator: mockConditionValidator,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-        entityManager: mockEntityManager,
-      })).not.toThrow();
+      expect(
+        () =>
+          new ActivityFilteringSystem({
+            logger: null,
+            conditionValidator: mockConditionValidator,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            entityManager: mockEntityManager,
+          })
+      ).not.toThrow();
     });
 
     it('should validate conditionValidator dependency', () => {
-      expect(() => new ActivityFilteringSystem({
-        logger: mockLogger,
-        conditionValidator: null,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-        entityManager: mockEntityManager,
-      })).toThrow(/IActivityConditionValidator/);
+      expect(
+        () =>
+          new ActivityFilteringSystem({
+            logger: mockLogger,
+            conditionValidator: null,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            entityManager: mockEntityManager,
+          })
+      ).toThrow(/IActivityConditionValidator/);
     });
 
     it('should validate jsonLogicEvaluationService dependency', () => {
-      expect(() => new ActivityFilteringSystem({
-        logger: mockLogger,
-        conditionValidator: mockConditionValidator,
-        jsonLogicEvaluationService: null,
-        entityManager: mockEntityManager,
-      })).toThrow(/IJsonLogicEvaluationService/);
+      expect(
+        () =>
+          new ActivityFilteringSystem({
+            logger: mockLogger,
+            conditionValidator: mockConditionValidator,
+            jsonLogicEvaluationService: null,
+            entityManager: mockEntityManager,
+          })
+      ).toThrow(/IJsonLogicEvaluationService/);
     });
 
     it('should validate entityManager dependency', () => {
-      expect(() => new ActivityFilteringSystem({
-        logger: mockLogger,
-        conditionValidator: mockConditionValidator,
-        jsonLogicEvaluationService: mockJsonLogicEvaluationService,
-        entityManager: null,
-      })).toThrow(/IEntityManager/);
+      expect(
+        () =>
+          new ActivityFilteringSystem({
+            logger: mockLogger,
+            conditionValidator: mockConditionValidator,
+            jsonLogicEvaluationService: mockJsonLogicEvaluationService,
+            entityManager: null,
+          })
+      ).toThrow(/IEntityManager/);
     });
   });
 
@@ -106,14 +118,12 @@ describe('ActivityFilteringSystem', () => {
       ];
       const result = filteringSystem.filterByConditions(activities, {});
       expect(result).toHaveLength(2);
-      expect(result.map(a => a.id)).toEqual(['1', '3']);
+      expect(result.map((a) => a.id)).toEqual(['1', '3']);
     });
 
     it('should handle function-based conditions', () => {
       const mockCondition = jest.fn((entity) => entity.id === 'entity_1');
-      const activities = [
-        { id: '1', condition: mockCondition },
-      ];
+      const activities = [{ id: '1', condition: mockCondition }];
       const entity = { id: 'entity_1' };
 
       const result = filteringSystem.filterByConditions(activities, entity);
@@ -123,9 +133,7 @@ describe('ActivityFilteringSystem', () => {
     });
 
     it('should filter out activities when function condition returns false', () => {
-      const activities = [
-        { id: '1', condition: () => false },
-      ];
+      const activities = [{ id: '1', condition: () => false }];
       const result = filteringSystem.filterByConditions(activities, {});
       expect(result).toHaveLength(0);
     });
@@ -133,9 +141,7 @@ describe('ActivityFilteringSystem', () => {
     it('should handle activities with empty conditions object', () => {
       mockConditionValidator.isEmptyConditionsObject.mockReturnValue(true);
 
-      const activities = [
-        { id: '1', conditions: {} },
-      ];
+      const activities = [{ id: '1', conditions: {} }];
       const result = filteringSystem.filterByConditions(activities, {});
 
       expect(result).toHaveLength(1);
@@ -148,7 +154,7 @@ describe('ActivityFilteringSystem', () => {
         {
           id: '1',
           metadata: { shouldDescribeInActivity: false },
-          conditions: {}
+          conditions: {},
         },
       ];
       const result = filteringSystem.filterByConditions(activities, {});
@@ -162,12 +168,14 @@ describe('ActivityFilteringSystem', () => {
       const activities = [
         {
           id: '1',
-          conditions: { showOnlyIfProperty: 'someProperty' }
+          conditions: { showOnlyIfProperty: 'someProperty' },
         },
       ];
       const result = filteringSystem.filterByConditions(activities, {});
 
-      expect(mockConditionValidator.matchesPropertyCondition).toHaveBeenCalled();
+      expect(
+        mockConditionValidator.matchesPropertyCondition
+      ).toHaveBeenCalled();
       expect(result).toHaveLength(0);
     });
 
@@ -177,7 +185,7 @@ describe('ActivityFilteringSystem', () => {
       const activities = [
         {
           id: '1',
-          conditions: { requiredComponents: ['positioning:sitting'] }
+          conditions: { requiredComponents: ['positioning:sitting'] },
         },
       ];
       const entity = { id: 'entity_1' };
@@ -196,16 +204,15 @@ describe('ActivityFilteringSystem', () => {
       const activities = [
         {
           id: '1',
-          conditions: { forbiddenComponents: ['positioning:kneeling'] }
+          conditions: { forbiddenComponents: ['positioning:kneeling'] },
         },
       ];
       const entity = { id: 'entity_1' };
       const result = filteringSystem.filterByConditions(activities, entity);
 
-      expect(mockConditionValidator.hasForbiddenComponents).toHaveBeenCalledWith(
-        entity,
-        ['positioning:kneeling']
-      );
+      expect(
+        mockConditionValidator.hasForbiddenComponents
+      ).toHaveBeenCalledWith(entity, ['positioning:kneeling']);
       expect(result).toHaveLength(0);
     });
 
@@ -216,8 +223,8 @@ describe('ActivityFilteringSystem', () => {
         {
           id: '1',
           conditions: {
-            customLogic: { '==': [{ var: 'entity.id' }, 'entity_1'] }
-          }
+            customLogic: { '==': [{ var: 'entity.id' }, 'entity_1'] },
+          },
         },
       ];
       const entity = { id: 'entity_1' };
@@ -234,8 +241,8 @@ describe('ActivityFilteringSystem', () => {
         {
           id: '1',
           conditions: {
-            customLogic: { '==': [{ var: 'entity.id' }, 'entity_2'] }
-          }
+            customLogic: { '==': [{ var: 'entity.id' }, 'entity_2'] },
+          },
         },
       ];
       const entity = { id: 'entity_1' };
@@ -253,8 +260,8 @@ describe('ActivityFilteringSystem', () => {
         {
           id: '1',
           conditions: {
-            customLogic: { invalid: 'logic' }
-          }
+            customLogic: { invalid: 'logic' },
+          },
         },
       ];
       const result = filteringSystem.filterByConditions(activities, {});
@@ -270,7 +277,9 @@ describe('ActivityFilteringSystem', () => {
       const activities = [
         {
           id: '1',
-          condition: () => { throw new Error('Condition error'); }
+          condition: () => {
+            throw new Error('Condition error');
+          },
         },
       ];
       const result = filteringSystem.filterByConditions(activities, {});
@@ -294,14 +303,16 @@ describe('ActivityFilteringSystem', () => {
           id: '1',
           targetEntityId: 'target_1',
           conditions: {
-            customLogic: { '==': [{ var: 'target.id' }, 'target_1'] }
-          }
+            customLogic: { '==': [{ var: 'target.id' }, 'target_1'] },
+          },
         },
       ];
       const entity = { id: 'entity_1' };
       const result = filteringSystem.filterByConditions(activities, entity);
 
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('target_1');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'target_1'
+      );
       expect(result).toHaveLength(1);
     });
 
@@ -316,8 +327,8 @@ describe('ActivityFilteringSystem', () => {
           id: '1',
           targetEntityId: 'nonexistent',
           conditions: {
-            customLogic: { '!=': [{ var: 'target' }, null] }
-          }
+            customLogic: { '!=': [{ var: 'target' }, null] },
+          },
         },
       ];
       const entity = { id: 'entity_1' };
@@ -358,7 +369,7 @@ describe('ActivityFilteringSystem', () => {
       const activity = {
         id: '1',
         targetEntityId: 'target_1',
-        sourceData: { type: 'test' }
+        sourceData: { type: 'test' },
       };
       const entity = { id: 'entity_1', componentTypeIds: [] };
 
@@ -374,7 +385,7 @@ describe('ActivityFilteringSystem', () => {
     it('should create real condition validator when not provided in tests', () => {
       // This tests the pattern used in ActivityDescriptionService fallback
       const realValidator = new ActivityConditionValidator({
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       const system = new ActivityFilteringSystem({
@@ -398,7 +409,7 @@ describe('ActivityFilteringSystem', () => {
           id: '1',
           metadata: { shouldDescribeInActivity: true },
           activityMetadata: { shouldDescribeInActivity: false },
-          conditions: {}
+          conditions: {},
         },
       ];
 
@@ -422,8 +433,8 @@ describe('ActivityFilteringSystem', () => {
             showOnlyIfProperty: 'prop',
             requiredComponents: ['comp1'],
             forbiddenComponents: ['comp2'],
-            customLogic: { '==': [1, 1] }
-          }
+            customLogic: { '==': [1, 1] },
+          },
         },
       ];
       const entity = { id: 'entity_1' };
@@ -441,14 +452,16 @@ describe('ActivityFilteringSystem', () => {
           conditions: {
             showOnlyIfProperty: 'missing',
             requiredComponents: ['comp1'],
-            customLogic: { '==': [1, 1] }
-          }
+            customLogic: { '==': [1, 1] },
+          },
         },
       ];
       const result = filteringSystem.filterByConditions(activities, {});
 
       // Should stop at showOnlyIfProperty, not check other conditions
-      expect(mockConditionValidator.hasRequiredComponents).not.toHaveBeenCalled();
+      expect(
+        mockConditionValidator.hasRequiredComponents
+      ).not.toHaveBeenCalled();
       expect(mockJsonLogicEvaluationService.evaluate).not.toHaveBeenCalled();
       expect(result).toHaveLength(0);
     });

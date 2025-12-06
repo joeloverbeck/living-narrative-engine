@@ -16,8 +16,12 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
-    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
+    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
 
     heuristic = new RelaxedPlanningGraphHeuristic({
       planningEffectsSimulator: mockSimulator,
@@ -35,7 +39,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return 0 when goal is already satisfied', () => {
       const state = { 'entity-1:core:satiated': {} };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:satiated'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:satiated'] } },
+        ],
       };
       const tasks = [];
 
@@ -59,7 +65,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should short-circuit when goal already satisfied even if tasks exist', () => {
       const state = { 'entity-1:core:satiated': {} };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:satiated'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:satiated'] } },
+        ],
       };
       const tasks = [
         {
@@ -69,7 +77,10 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'REMOVE_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:satiated' },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:satiated',
+              },
             },
           ],
         },
@@ -88,7 +99,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return 1 when goal satisfied after one layer', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { '!': { has_component: ['entity-1', 'core:hungry'] } } }],
+        conditions: [
+          {
+            condition: { '!': { has_component: ['entity-1', 'core:hungry'] } },
+          },
+        ],
       };
       const tasks = [
         {
@@ -127,7 +142,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return layer count for multi-step plans', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -138,7 +155,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:resources', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:resources',
+                data: {},
+              },
             },
           ],
         },
@@ -150,7 +171,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:shelter',
+                data: {},
+              },
             },
           ],
         },
@@ -198,7 +223,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return Infinity when no tasks applicable', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -209,7 +236,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:shelter',
+                data: {},
+              },
             },
           ],
         },
@@ -227,7 +258,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return Infinity when max layers reached', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:impossible'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:impossible'] } },
+        ],
       };
       const tasks = [
         {
@@ -236,7 +269,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:useless', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:useless',
+                data: {},
+              },
             },
           ],
         },
@@ -261,7 +298,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return Infinity when no progress made', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -285,7 +324,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should return Infinity for empty task library with unsatisfied goal', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [];
 
@@ -301,7 +342,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should handle tasks without preconditions (always applicable)', () => {
       const state = {};
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -309,7 +352,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:shelter',
+                data: {},
+              },
             },
           ],
         },
@@ -332,7 +379,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should handle tasks without effects', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -355,7 +404,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should treat preconditions missing condition as not applicable', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -363,7 +414,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:shelter',
+                data: {},
+              },
             },
           ],
         },
@@ -380,7 +435,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should handle effect simulation failures gracefully', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -408,7 +465,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should warn and continue when effect simulation throws', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
@@ -416,7 +475,10 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
             { condition: { has_component: ['entity-1', 'core:hungry'] } },
           ],
           planningEffects: [
-            { type: 'ADD_COMPONENT', parameters: { entityId: 'entity-1', componentId: 'core:shelter' } },
+            {
+              type: 'ADD_COMPONENT',
+              parameters: { entityId: 'entity-1', componentId: 'core:shelter' },
+            },
           ],
         },
       ];
@@ -433,22 +495,32 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
 
       expect(result).toBe(Infinity);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('RelaxedPlanningGraphHeuristic: Failed to apply effects for task, skipping')
+        expect.stringContaining(
+          'RelaxedPlanningGraphHeuristic: Failed to apply effects for task, skipping'
+        )
       );
     });
 
     it('should handle evaluation errors in preconditions', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
       };
       const tasks = [
         {
-          planningPreconditions: [{ condition: { invalid_operator: ['entity-1'] } }],
+          planningPreconditions: [
+            { condition: { invalid_operator: ['entity-1'] } },
+          ],
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:shelter',
+                data: {},
+              },
             },
           ],
         },
@@ -508,12 +580,18 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
 
       expect(heuristic.calculate(state, null, tasks)).toBe(Infinity);
       expect(heuristic.calculate(state, {}, tasks)).toBe(Infinity);
-      expect(heuristic.calculate(state, { conditions: 'not-array' }, tasks)).toBe(Infinity);
+      expect(
+        heuristic.calculate(state, { conditions: 'not-array' }, tasks)
+      ).toBe(Infinity);
     });
 
     it('should return Infinity for invalid tasks', () => {
       const state = {};
-      const goal = { conditions: [{ condition: { has_component: ['entity-1', 'core:shelter'] } }] };
+      const goal = {
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:shelter'] } },
+        ],
+      };
 
       mockEvaluator.evaluate.mockReturnValue(false);
 
@@ -524,7 +602,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
     it('should detect progress when state values change without adding keys', () => {
       const state = { 'entity-1:core:status': { level: 1 } };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:status'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:status'] } },
+        ],
       };
       const tasks = [
         {
@@ -534,7 +614,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'MODIFY_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:status', data: { level: 2 } },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:status',
+                data: { level: 2 },
+              },
             },
           ],
         },
@@ -563,7 +647,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
         conditions: [
-          { condition: { '!': { has_component: ['entity-1', 'core:hungry'] } } },
+          {
+            condition: { '!': { has_component: ['entity-1', 'core:hungry'] } },
+          },
           { condition: { has_component: ['entity-1', 'core:shelter'] } },
         ],
       };
@@ -584,7 +670,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:shelter', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:shelter',
+                data: {},
+              },
             },
           ],
         },
@@ -634,7 +724,9 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
 
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:impossible'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:impossible'] } },
+        ],
       };
       const tasks = [
         {
@@ -642,7 +734,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
           planningEffects: [
             {
               type: 'ADD_COMPONENT',
-              parameters: { entityId: 'entity-1', componentId: 'core:useless', data: {} },
+              parameters: {
+                entityId: 'entity-1',
+                componentId: 'core:useless',
+                data: {},
+              },
             },
           ],
         },
@@ -672,7 +768,11 @@ describe('RelaxedPlanningGraphHeuristic - Basic Calculation', () => {
       process.env.GOAP_STATE_ASSERT = '1';
       const state = { 'actor-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { '!': { has_component: ['actor-1', 'core:satiated'] } } }],
+        conditions: [
+          {
+            condition: { '!': { has_component: ['actor-1', 'core:satiated'] } },
+          },
+        ],
       };
       const tasks = [
         {
@@ -704,7 +804,9 @@ describe('RelaxedPlanningGraphHeuristic - Construction', () => {
 
   it('should validate planningEffectsSimulator dependency', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
 
     expect(() => {
       new RelaxedPlanningGraphHeuristic({
@@ -725,7 +827,9 @@ describe('RelaxedPlanningGraphHeuristic - Construction', () => {
 
   it('should validate jsonLogicEvaluator dependency', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
+    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
 
     expect(() => {
       new RelaxedPlanningGraphHeuristic({
@@ -745,8 +849,12 @@ describe('RelaxedPlanningGraphHeuristic - Construction', () => {
   });
 
   it('should use fallback logger if invalid logger provided', () => {
-    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
 
     // ensureValidLogger creates a fallback instead of throwing
     const heuristic = new RelaxedPlanningGraphHeuristic({
@@ -759,8 +867,12 @@ describe('RelaxedPlanningGraphHeuristic - Construction', () => {
 
   it('should construct successfully with valid dependencies', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
 
     expect(() => {
       new RelaxedPlanningGraphHeuristic({
@@ -773,8 +885,12 @@ describe('RelaxedPlanningGraphHeuristic - Construction', () => {
 
   it('should use default maxLayers if not provided', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
 
     const heuristic = new RelaxedPlanningGraphHeuristic({
       planningEffectsSimulator: mockSimulator,

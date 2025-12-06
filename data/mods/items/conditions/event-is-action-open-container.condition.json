@@ -3,9 +3,6 @@
   "id": "items:event-is-action-open-container",
   "description": "Checks if event is the open_container action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:open_container"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "items:open_container"]
   }
 }

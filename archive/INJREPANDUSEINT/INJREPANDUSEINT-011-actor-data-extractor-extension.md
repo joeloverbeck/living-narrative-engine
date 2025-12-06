@@ -6,11 +6,11 @@ Add health state data to ActorPromptDataDTO and extend ActorDataExtractor.
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/turns/dtos/AIGameStateDTO.js` | MODIFY - add ActorHealthStateDTO, ActorInjuryDTO typedefs |
-| `src/turns/services/actorDataExtractor.js` | MODIFY - add #extractHealthData method |
-| `tests/unit/turns/services/actorDataExtractor.test.js` | MODIFY - add health extraction tests |
+| File                                                   | Action                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------- |
+| `src/turns/dtos/AIGameStateDTO.js`                     | MODIFY - add ActorHealthStateDTO, ActorInjuryDTO typedefs |
+| `src/turns/services/actorDataExtractor.js`             | MODIFY - add #extractHealthData method                    |
+| `tests/unit/turns/services/actorDataExtractor.test.js` | MODIFY - add health extraction tests                      |
 
 ## Out of Scope
 

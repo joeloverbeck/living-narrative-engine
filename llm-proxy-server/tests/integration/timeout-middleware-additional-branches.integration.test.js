@@ -66,7 +66,9 @@ describe('timeout middleware integration coverage for overlooked branches', () =
       call[0].includes('Timeout cannot commit response')
     );
     expect(timeoutWarning).toBeDefined();
-    expect(timeoutWarning?.[1]).toMatchObject({ existingCommitment: 'unknown' });
+    expect(timeoutWarning?.[1]).toMatchObject({
+      existingCommitment: 'unknown',
+    });
   });
 
   it('enforces fractional kilobyte limits without rounding up the configured ceiling', async () => {

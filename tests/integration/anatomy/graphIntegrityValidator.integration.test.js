@@ -37,7 +37,8 @@ class IntegrationEntityManager {
 }
 
 describe('GraphIntegrityValidator integration', () => {
-  const buildEntityMap = (entries) => new Map(entries.map(([id, components]) => [id, components]));
+  const buildEntityMap = (entries) =>
+    new Map(entries.map(([id, components]) => [id, components]));
 
   it('validates a well-formed anatomy graph without issues', async () => {
     const entities = buildEntityMap([
@@ -94,12 +95,20 @@ describe('GraphIntegrityValidator integration', () => {
       logger,
     });
 
-    const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+    const result = await validator.validateGraph(
+      entityIds,
+      recipe,
+      socketOccupancy
+    );
 
     expect(result).toEqual({ valid: true, errors: [], warnings: [] });
     expect(logger.errorMessages).toHaveLength(0);
     expect(logger.warnMessages).toHaveLength(0);
-    expect(logger.debugMessages.some(({ message }) => message.includes('Validation passed without issues'))).toBe(true);
+    expect(
+      logger.debugMessages.some(({ message }) =>
+        message.includes('Validation passed without issues')
+      )
+    ).toBe(true);
   });
 
   it('detects structural and constraint violations across validation rules', async () => {
@@ -108,9 +117,7 @@ describe('GraphIntegrityValidator integration', () => {
         'body',
         {
           'anatomy:sockets': {
-            sockets: [
-              { id: 'left-arm', allowedTypes: ['limb'] },
-            ],
+            sockets: [{ id: 'left-arm', allowedTypes: ['limb'] }],
           },
           'anatomy:part': { subType: 'torso' },
           'core:name': { text: 'Problematic Body' },
@@ -129,7 +136,10 @@ describe('GraphIntegrityValidator integration', () => {
       [
         'orphan',
         {
-          'anatomy:joint': { parentId: 'ghost-parent', socketId: 'missing-socket' },
+          'anatomy:joint': {
+            parentId: 'ghost-parent',
+            socketId: 'missing-socket',
+          },
           'anatomy:part': { subType: 'limb' },
         },
       ],
@@ -137,7 +147,9 @@ describe('GraphIntegrityValidator integration', () => {
         'cycleA',
         {
           'anatomy:joint': { parentId: 'cycleB', socketId: 'loop' },
-          'anatomy:sockets': { sockets: [{ id: 'loop', allowedTypes: ['limb'] }] },
+          'anatomy:sockets': {
+            sockets: [{ id: 'loop', allowedTypes: ['limb'] }],
+          },
           'anatomy:part': { subType: 'limb' },
         },
       ],
@@ -145,7 +157,9 @@ describe('GraphIntegrityValidator integration', () => {
         'cycleB',
         {
           'anatomy:joint': { parentId: 'cycleA', socketId: 'loop' },
-          'anatomy:sockets': { sockets: [{ id: 'loop', allowedTypes: ['limb'] }] },
+          'anatomy:sockets': {
+            sockets: [{ id: 'loop', allowedTypes: ['limb'] }],
+          },
           'anatomy:part': { subType: 'limb' },
         },
       ],
@@ -158,7 +172,14 @@ describe('GraphIntegrityValidator integration', () => {
       ],
     ]);
 
-    const entityIds = ['body', 'wing', 'orphan', 'cycleA', 'cycleB', 'extraRoot'];
+    const entityIds = [
+      'body',
+      'wing',
+      'orphan',
+      'cycleA',
+      'cycleB',
+      'extraRoot',
+    ];
     const socketOccupancy = new Set(['body:left-arm', 'body:ghost-socket']);
     const recipe = {
       constraints: {
@@ -185,19 +206,33 @@ describe('GraphIntegrityValidator integration', () => {
       logger,
     });
 
-    const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+    const result = await validator.validateGraph(
+      entityIds,
+      recipe,
+      socketOccupancy
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errors).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("Socket 'ghost-socket' not found on entity 'body'"),
+        expect.stringContaining(
+          "Socket 'ghost-socket' not found on entity 'body'"
+        ),
         expect.stringContaining('Required constraint not satisfied'),
         expect.stringContaining('Exclusion constraint violated'),
-        expect.stringContaining("Slot 'limbs': expected exactly 1 parts of type 'limb'"),
+        expect.stringContaining(
+          "Slot 'limbs': expected exactly 1 parts of type 'limb'"
+        ),
         expect.stringContaining('Cycle detected in anatomy graph'),
-        expect.stringContaining("Entity 'orphan' has joint referencing non-existent parent 'ghost-parent'"),
-        expect.stringContaining("Orphaned part 'orphan' has parent 'ghost-parent' not in graph"),
-        expect.stringContaining("Part type 'wing' not allowed in socket 'left-arm'"),
+        expect.stringContaining(
+          "Entity 'orphan' has joint referencing non-existent parent 'ghost-parent'"
+        ),
+        expect.stringContaining(
+          "Orphaned part 'orphan' has parent 'ghost-parent' not in graph"
+        ),
+        expect.stringContaining(
+          "Part type 'wing' not allowed in socket 'left-arm'"
+        ),
       ])
     );
     expect(result.warnings).toEqual(
@@ -205,7 +240,11 @@ describe('GraphIntegrityValidator integration', () => {
         expect.stringContaining('Multiple root entities found'),
       ])
     );
-    expect(logger.errorMessages.some(({ message }) => message.includes('Validation failed'))).toBe(true);
+    expect(
+      logger.errorMessages.some(({ message }) =>
+        message.includes('Validation failed')
+      )
+    ).toBe(true);
     expect(logger.warnMessages).toHaveLength(0);
   });
 });

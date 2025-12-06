@@ -161,19 +161,21 @@ describe('BodyGraphService blueprint and cache fallback integration', () => {
   });
 
   it('enforces required dependencies even with real dispatcher wiring', () => {
-    expect(() =>
-      new BodyGraphService({
-        logger: env.logger,
-        eventDispatcher: env.safeEventDispatcher,
-        queryCache: env.queryCache,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          logger: env.logger,
+          eventDispatcher: env.safeEventDispatcher,
+          queryCache: env.queryCache,
+        })
     ).toThrow('entityManager is required');
 
-    expect(() =>
-      new BodyGraphService({
-        entityManager: env.entityManager,
-        logger: env.logger,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          entityManager: env.entityManager,
+          logger: env.logger,
+        })
     ).toThrow('eventDispatcher is required');
   });
 
@@ -202,7 +204,9 @@ describe('BodyGraphService blueprint and cache fallback integration', () => {
       )
     ).toBe(true);
     expect(
-      env.logger.infoEntries.some(({ message }) => message.includes('Using blueprint root'))
+      env.logger.debugEntries.some(({ message }) =>
+        message.includes('Using blueprint root')
+      )
     ).toBe(true);
   });
 
@@ -235,7 +239,10 @@ describe('BodyGraphService blueprint and cache fallback integration', () => {
       ])
     );
 
-    const cachedActorParts = env.service.getAllParts(bodyComponent, env.actorId);
+    const cachedActorParts = env.service.getAllParts(
+      bodyComponent,
+      env.actorId
+    );
     expect(cachedActorParts).toBe(actorParts);
 
     const arms = env.service.findPartsByType(env.actorId, 'arm');

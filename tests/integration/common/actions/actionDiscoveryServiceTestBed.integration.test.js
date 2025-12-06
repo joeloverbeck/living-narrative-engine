@@ -91,8 +91,12 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       expect(scenario2.target.id).toBe('diane');
 
       // Verify they're in different locations
-      expect(scenario1.actor.components['core:position'].locationId).toBe('room1');
-      expect(scenario2.actor.components['core:position'].locationId).toBe('room2');
+      expect(scenario1.actor.components['core:position'].locationId).toBe(
+        'room1'
+      );
+      expect(scenario2.actor.components['core:position'].locationId).toBe(
+        'room2'
+      );
     });
 
     it('should handle complex positioning scenarios', () => {
@@ -114,8 +118,12 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       expect(target.components['positioning:standing']).toEqual({});
 
       // Verify closeness established
-      expect(actor.components['positioning:closeness'].partners).toContain('target1');
-      expect(target.components['positioning:closeness'].partners).toContain('actor1');
+      expect(actor.components['positioning:closeness'].partners).toContain(
+        'target1'
+      );
+      expect(target.components['positioning:closeness'].partners).toContain(
+        'actor1'
+      );
     });
   });
 
@@ -194,8 +202,12 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       });
 
       // Both new and existing entities should be in entity manager
-      expect(testBed.mocks.entityManager.getEntityInstance('existing')).toBeDefined();
-      expect(testBed.mocks.entityManager.getEntityInstance('new-actor')).toBeDefined();
+      expect(
+        testBed.mocks.entityManager.getEntityInstance('existing')
+      ).toBeDefined();
+      expect(
+        testBed.mocks.entityManager.getEntityInstance('new-actor')
+      ).toBeDefined();
     });
   });
 
@@ -266,9 +278,12 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers (Real Usage)', () 
       });
 
       // Discover actions with diagnostics
-      const result = await testBed.discoverActionsWithDiagnostics(scenario1.actor, {
-        includeDiagnostics: true,
-      });
+      const result = await testBed.discoverActionsWithDiagnostics(
+        scenario1.actor,
+        {
+          includeDiagnostics: true,
+        }
+      );
 
       const summary = testBed.formatDiagnosticSummary(result.diagnostics);
 

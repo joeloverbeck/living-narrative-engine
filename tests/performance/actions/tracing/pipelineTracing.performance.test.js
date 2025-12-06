@@ -186,8 +186,7 @@ describe('Pipeline Tracing Performance', () => {
       baselineTimes.sort((a, b) => a - b);
       const baselineMedian = baselineTimes[Math.floor(baselineRuns / 2)];
       const baselineAvg =
-        baselineTimes.reduce((total, value) => total + value, 0) /
-        baselineRuns;
+        baselineTimes.reduce((total, value) => total + value, 0) / baselineRuns;
 
       // Test with verbose tracing
       const verboseService = testBed.createDiscoveryServiceWithTracing({
@@ -217,8 +216,7 @@ describe('Pipeline Tracing Performance', () => {
 
       const overheadMedian =
         ((verboseMedian - baselineMedian) / baselineMedian) * 100;
-      const overheadAvg =
-        ((verboseAvg - baselineAvg) / baselineAvg) * 100;
+      const overheadAvg = ((verboseAvg - baselineAvg) / baselineAvg) * 100;
       const absoluteMedianOverhead = verboseMedian - baselineMedian;
 
       if (overheadMedian > 600 || overheadAvg > 600) {

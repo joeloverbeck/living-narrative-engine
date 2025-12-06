@@ -1,9 +1,4 @@
-import {
-  describe,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, test, expect, jest } from '@jest/globals';
 
 import EventBus from '../../../../src/events/eventBus.js';
 import ValidatedEventDispatcher from '../../../../src/events/validatedEventDispatcher.js';
@@ -57,12 +52,9 @@ const createIntegrationHarness = (entityManager) => {
 
   const recordedErrors = [];
   const unsubscribeErrors =
-    safeEventDispatcher.subscribe(
-      SYSTEM_ERROR_OCCURRED_ID,
-      (event) => {
-        recordedErrors.push(event);
-      }
-    ) || (() => {});
+    safeEventDispatcher.subscribe(SYSTEM_ERROR_OCCURRED_ID, (event) => {
+      recordedErrors.push(event);
+    }) || (() => {});
 
   const handler = new AddPerceptionLogEntryHandler({
     logger,
@@ -143,14 +135,15 @@ describe('AddPerceptionLogEntryHandler integration', () => {
           componentSpecs,
           emitBatchEvent
         );
-        const errors = componentSpecs.length > 1
-          ? [
-              {
-                spec: componentSpecs[1],
-                error: new Error('write failed'),
-              },
-            ]
-          : [];
+        const errors =
+          componentSpecs.length > 1
+            ? [
+                {
+                  spec: componentSpecs[1],
+                  error: new Error('write failed'),
+                },
+              ]
+            : [];
         return { ...result, errors };
       }
     }
@@ -228,7 +221,9 @@ describe('AddPerceptionLogEntryHandler integration', () => {
 
       expect(
         env.recordedErrors.some((event) =>
-          event.payload.message.includes('failed to update perceiver-2: write failed')
+          event.payload.message.includes(
+            'failed to update perceiver-2: write failed'
+          )
         )
       ).toBe(true);
     } finally {
@@ -372,7 +367,9 @@ describe('AddPerceptionLogEntryHandler integration', () => {
 
       expect(
         env.recordedErrors.some((event) =>
-          event.payload.message.includes('failed to update observer-2: write fail')
+          event.payload.message.includes(
+            'failed to update observer-2: write fail'
+          )
         )
       ).toBe(true);
 

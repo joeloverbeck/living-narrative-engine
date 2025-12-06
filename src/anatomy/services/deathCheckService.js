@@ -203,7 +203,7 @@ class DeathCheckService extends BaseService {
         isDying: false,
         shouldFinalize: false,
         finalizationParams: null,
-        deathInfo: null
+        deathInfo: null,
       };
     }
 
@@ -214,7 +214,7 @@ class DeathCheckService extends BaseService {
         `Entity ${entityId} will die from vital organ destruction: ${vitalOrganInfo.organType}`
       );
       return {
-        isDead: false,  // Not yet dead, will be after finalization
+        isDead: false, // Not yet dead, will be after finalization
         isDying: false,
         shouldFinalize: true,
         finalizationParams: {
@@ -253,7 +253,7 @@ class DeathCheckService extends BaseService {
         isDying: true,
         shouldFinalize: false,
         finalizationParams: null,
-        deathInfo: null
+        deathInfo: null,
       };
     }
 
@@ -263,7 +263,7 @@ class DeathCheckService extends BaseService {
       isDying: false,
       shouldFinalize: false,
       finalizationParams: null,
-      deathInfo: null
+      deathInfo: null,
     };
   }
 
@@ -277,17 +277,25 @@ class DeathCheckService extends BaseService {
    */
   finalizeDeathFromEvaluation(evaluation) {
     if (!evaluation || !evaluation.shouldFinalize) {
-      this.#logger.warn('finalizeDeathFromEvaluation called with invalid or non-finalizable evaluation');
+      this.#logger.warn(
+        'finalizeDeathFromEvaluation called with invalid or non-finalizable evaluation'
+      );
       return;
     }
 
-    const { entityId, causeOfDeath, damageCauserId, vitalOrganDestroyed } = evaluation.finalizationParams;
+    const { entityId, causeOfDeath, damageCauserId, vitalOrganDestroyed } =
+      evaluation.finalizationParams;
 
     this.#logger.info(
       `Finalizing death for entity ${entityId}: ${causeOfDeath}${vitalOrganDestroyed ? ` (${vitalOrganDestroyed})` : ''}`
     );
 
-    this.#finalizeDeath(entityId, causeOfDeath, damageCauserId, vitalOrganDestroyed);
+    this.#finalizeDeath(
+      entityId,
+      causeOfDeath,
+      damageCauserId,
+      vitalOrganDestroyed
+    );
   }
 
   /**
@@ -372,7 +380,9 @@ class DeathCheckService extends BaseService {
       // Check each destroyed part for vital organ component
       for (const partInfo of summary.destroyedParts) {
         // Check the destroyed part itself
-        const directResult = this.#checkPartForVitalOrgan(partInfo.partEntityId);
+        const directResult = this.#checkPartForVitalOrgan(
+          partInfo.partEntityId
+        );
         if (directResult) {
           return directResult;
         }
@@ -422,7 +432,9 @@ class DeathCheckService extends BaseService {
    * @private
    */
   #checkPartForVitalOrgan(partEntityId) {
-    if (!this.#entityManager.hasComponent(partEntityId, VITAL_ORGAN_COMPONENT_ID)) {
+    if (
+      !this.#entityManager.hasComponent(partEntityId, VITAL_ORGAN_COMPONENT_ID)
+    ) {
       return null;
     }
 
@@ -431,7 +443,10 @@ class DeathCheckService extends BaseService {
       VITAL_ORGAN_COMPONENT_ID
     );
 
-    if (vitalOrganData && IMMEDIATE_DEATH_ORGANS.includes(vitalOrganData.organType)) {
+    if (
+      vitalOrganData &&
+      IMMEDIATE_DEATH_ORGANS.includes(vitalOrganData.organType)
+    ) {
       return {
         organType: vitalOrganData.organType,
         partEntityId,

@@ -40,11 +40,15 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
 
   describe('Component Requirements', () => {
     it('should require positioning:sitting_on component', () => {
-      expect(action.required_components.actor).toContain('positioning:sitting_on');
+      expect(action.required_components.actor).toContain(
+        'positioning:sitting_on'
+      );
     });
 
     it('should forbid positioning:hugging component', () => {
-      expect(action.forbidden_components.actor).toContain('positioning:hugging');
+      expect(action.forbidden_components.actor).toContain(
+        'positioning:hugging'
+      );
     });
 
     it('should forbid positioning:doing_complex_performance component', () => {
@@ -75,17 +79,18 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
       const actor = sittingScenario.entities.find((e) => e.id === 'actor1');
       actor.components['core:body'] = {
         structure: {
-          parts: [{ type: 'leg', name: 'Left Leg' }, { type: 'leg', name: 'Right Leg' }]
-        }
+          parts: [
+            { type: 'leg', name: 'Left Leg' },
+            { type: 'leg', name: 'Right Leg' },
+          ],
+        },
       };
 
       testFixture.reset(sittingScenario.entities);
 
       await testFixture.executeAction(actor.id, null);
 
-      testFixture.assertActionSuccess(
-        'Ava crosses their legs alluringly.'
-      );
+      testFixture.assertActionSuccess('Ava crosses their legs alluringly.');
     });
 
     it('rejects execution when the actor is currently hugging someone', async () => {
@@ -107,16 +112,19 @@ describe('seduction:cross_legs_alluringly - Action Discovery', () => {
       // Add leg anatomy (prerequisite for action)
       actor.components['core:body'] = {
         structure: {
-          parts: [{ type: 'leg', name: 'Left Leg' }, { type: 'leg', name: 'Right Leg' }]
-        }
+          parts: [
+            { type: 'leg', name: 'Left Leg' },
+            { type: 'leg', name: 'Right Leg' },
+          ],
+        },
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, ...sittingScenario.entities]);
 
-      await expect(
-        testFixture.executeAction(actor.id, null)
-      ).rejects.toThrow(/forbidden component/i);
+      await expect(testFixture.executeAction(actor.id, null)).rejects.toThrow(
+        /forbidden component/i
+      );
 
       const actorInstance = testFixture.entityManager.getEntityInstance(
         actor.id

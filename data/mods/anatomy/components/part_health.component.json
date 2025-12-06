@@ -34,11 +34,7 @@
         "description": "Consecutive turns the part has been in the current state. Resets to 0 when state changes."
       }
     },
-    "required": [
-      "currentHealth",
-      "maxHealth",
-      "state"
-    ],
+    "required": ["currentHealth", "maxHealth", "state"],
     "additionalProperties": false
   },
   "validationRules": {

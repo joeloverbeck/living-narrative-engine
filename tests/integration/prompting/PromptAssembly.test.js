@@ -40,7 +40,9 @@ describe('Prompt Assembly with template-based system', () => {
     logger = mockLogger();
 
     const characterDataXmlBuilder = {
-      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+      buildCharacterDataXml: jest.fn(
+        () => '<character_data>Mock XML</character_data>'
+      ),
     };
 
     const modActionMetadataProvider = {
@@ -144,9 +146,7 @@ describe('Prompt Assembly with template-based system', () => {
     const prompt = await buildPrompt(['OnlyThought']);
 
     // Should include the thoughts section with the thought and enhanced guidance text
-    expect(prompt).toContain(
-      buildThoughtsSection('- OnlyThought')
-    );
+    expect(prompt).toContain(buildThoughtsSection('- OnlyThought'));
     expect(prompt).toContain('OnlyThought');
   });
 

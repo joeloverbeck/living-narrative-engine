@@ -18,9 +18,7 @@
         "default": "normal"
       }
     },
-    "required": [
-      "capability"
-    ],
+    "required": ["capability"],
     "additionalProperties": false
   },
   "validationRules": {

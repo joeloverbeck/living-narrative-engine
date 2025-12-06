@@ -109,9 +109,11 @@ describe('EstablishLyingClosenessHandler', () => {
       },
     };
 
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-      return components[entityId]?.[componentName] ?? null;
-    });
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentName) => {
+        return components[entityId]?.[componentName] ?? null;
+      }
+    );
   };
 
   it('establishes bidirectional closeness for all lying actors and dispatches success', async () => {
@@ -149,18 +151,24 @@ describe('EstablishLyingClosenessHandler', () => {
     const result = await handler.execute(parameters, executionContext);
 
     expect(result).toEqual({ success: true, otherLyingActors: ['actor2'] });
-    expect(validatorInstances[0].validateClosenessComponent).toHaveBeenCalledWith(
+    expect(
+      validatorInstances[0].validateClosenessComponent
+    ).toHaveBeenCalledWith(
       'actor1',
       expect.objectContaining({ partners: ['actor3'] }),
       'establish lying closeness'
     );
-    expect(validatorInstances[1].validateBidirectionalCloseness).toHaveBeenCalledWith(
-      mockEntityManager,
+    expect(
+      validatorInstances[1].validateBidirectionalCloseness
+    ).toHaveBeenCalledWith(mockEntityManager, 'actor1', 'actor2');
+    expect(closenessCircleService.repair).toHaveBeenCalledWith([
+      'actor3',
+      'actor2',
+    ]);
+    expect(closenessCircleService.repair).toHaveBeenCalledWith([
+      'actor3',
       'actor1',
-      'actor2'
-    );
-    expect(closenessCircleService.repair).toHaveBeenCalledWith(['actor3', 'actor2']);
-    expect(closenessCircleService.repair).toHaveBeenCalledWith(['actor3', 'actor1']);
+    ]);
     expect(mockEntityManager.addComponent).toHaveBeenNthCalledWith(
       1,
       'actor1',
@@ -173,8 +181,16 @@ describe('EstablishLyingClosenessHandler', () => {
       'positioning:closeness',
       { partners: ['actor1', 'actor3'] }
     );
-    expect(updateMovementLock).toHaveBeenCalledWith(mockEntityManager, 'actor1', true);
-    expect(updateMovementLock).toHaveBeenCalledWith(mockEntityManager, 'actor2', true);
+    expect(updateMovementLock).toHaveBeenCalledWith(
+      mockEntityManager,
+      'actor1',
+      true
+    );
+    expect(updateMovementLock).toHaveBeenCalledWith(
+      mockEntityManager,
+      'actor2',
+      true
+    );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       'positioning:lying_closeness_established',
       expect.objectContaining({
@@ -207,9 +223,11 @@ describe('EstablishLyingClosenessHandler', () => {
       },
     };
 
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-      return components[entityId]?.[componentName] ?? null;
-    });
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentName) => {
+        return components[entityId]?.[componentName] ?? null;
+      }
+    );
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue([
       { id: 'actor1' },
@@ -251,9 +269,11 @@ describe('EstablishLyingClosenessHandler', () => {
       },
     };
 
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-      return components[entityId]?.[componentName] ?? null;
-    });
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentName) => {
+        return components[entityId]?.[componentName] ?? null;
+      }
+    );
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue([
       { id: 'actor1' },
@@ -282,23 +302,36 @@ describe('EstablishLyingClosenessHandler', () => {
   });
 
   it('logs info and returns success when no other lying actors are found', async () => {
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-      if (entityId === 'furniture:1' && componentName === 'positioning:allows_lying_on') {
-        return {};
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentName) => {
+        if (
+          entityId === 'furniture:1' &&
+          componentName === 'positioning:allows_lying_on'
+        ) {
+          return {};
+        }
+
+        if (
+          entityId === 'actor1' &&
+          componentName === 'positioning:lying_down'
+        ) {
+          return { furniture_id: 'furniture:1' };
+        }
+
+        if (
+          entityId === 'actor1' &&
+          componentName === 'positioning:closeness'
+        ) {
+          return { partners: [] };
+        }
+
+        return null;
       }
+    );
 
-      if (entityId === 'actor1' && componentName === 'positioning:lying_down') {
-        return { furniture_id: 'furniture:1' };
-      }
-
-      if (entityId === 'actor1' && componentName === 'positioning:closeness') {
-        return { partners: [] };
-      }
-
-      return null;
-    });
-
-    mockEntityManager.getEntitiesWithComponent.mockReturnValue([{ id: 'actor1' }]);
+    mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+      { id: 'actor1' },
+    ]);
 
     const parameters = {
       furniture_id: 'furniture:1',
@@ -310,7 +343,9 @@ describe('EstablishLyingClosenessHandler', () => {
 
     expect(result).toEqual({ success: true, otherLyingActors: [] });
     expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('No other lying actors found, closeness establishment skipped'),
+      expect.stringContaining(
+        'No other lying actors found, closeness establishment skipped'
+      ),
       expect.objectContaining({ actorId: 'actor1', furnitureId: 'furniture:1' })
     );
     expect(tryWriteContextVariable).toHaveBeenCalledWith(
@@ -324,23 +359,36 @@ describe('EstablishLyingClosenessHandler', () => {
   });
 
   it('returns success without storing results when result_variable is omitted', async () => {
-    mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-      if (entityId === 'furniture:1' && componentName === 'positioning:allows_lying_on') {
-        return {};
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, componentName) => {
+        if (
+          entityId === 'furniture:1' &&
+          componentName === 'positioning:allows_lying_on'
+        ) {
+          return {};
+        }
+
+        if (
+          entityId === 'actor1' &&
+          componentName === 'positioning:lying_down'
+        ) {
+          return { furniture_id: 'furniture:1' };
+        }
+
+        if (
+          entityId === 'actor1' &&
+          componentName === 'positioning:closeness'
+        ) {
+          return { partners: [] };
+        }
+
+        return null;
       }
+    );
 
-      if (entityId === 'actor1' && componentName === 'positioning:lying_down') {
-        return { furniture_id: 'furniture:1' };
-      }
-
-      if (entityId === 'actor1' && componentName === 'positioning:closeness') {
-        return { partners: [] };
-      }
-
-      return null;
-    });
-
-    mockEntityManager.getEntitiesWithComponent.mockReturnValue([{ id: 'actor1' }]);
+    mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+      { id: 'actor1' },
+    ]);
 
     const parameters = {
       furniture_id: 'furniture:1',
@@ -367,7 +415,9 @@ describe('EstablishLyingClosenessHandler', () => {
     const result = await handler.execute(parameters, executionContext);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Parameter validation failed for establish lying closeness');
+    expect(result.error).toContain(
+      'Parameter validation failed for establish lying closeness'
+    );
     expect(tryWriteContextVariable).toHaveBeenCalledWith(
       'validationResult',
       false,
@@ -394,7 +444,9 @@ describe('EstablishLyingClosenessHandler', () => {
     const result = await handler.execute(parameters, executionContext);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Furniture furniture:missing missing allows_lying_on component');
+    expect(result.error).toContain(
+      'Furniture furniture:missing missing allows_lying_on component'
+    );
     expect(safeDispatchError).toHaveBeenCalled();
   });
 

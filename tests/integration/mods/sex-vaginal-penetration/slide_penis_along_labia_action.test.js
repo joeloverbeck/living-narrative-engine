@@ -99,10 +99,14 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action integration', (
   it('performs slide penis along labia action successfully', async () => {
     await testFixture.executeAction('alice', 'beth');
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
   });
 
   it('creates correct perceptible event with proper message format', async () => {

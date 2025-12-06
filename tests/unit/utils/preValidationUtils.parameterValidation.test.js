@@ -3,11 +3,7 @@
  * @description Tests for enhanced parameter validation in pre-validation utils
  */
 
-import {
-  describe,
-  it,
-  expect,
-} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 import {
   validateOperationStructure,
@@ -22,8 +18,8 @@ describe('preValidationUtils - Parameter Validation', () => {
         type: 'GET_NAME',
         parameters: {
           entity_id: '{context.someVariable}', // Wrong field name
-          result_variable: 'name'
-        }
+          result_variable: 'name',
+        },
       };
 
       const result = validateOperationStructure(operation);
@@ -31,7 +27,7 @@ describe('preValidationUtils - Parameter Validation', () => {
       expect(result.error).toContain('Invalid parameter "entity_id"');
       expect(result.suggestions).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('Use "entity_ref" instead of "entity_id"')
+          expect.stringContaining('Use "entity_ref" instead of "entity_id"'),
         ])
       );
     });
@@ -41,8 +37,8 @@ describe('preValidationUtils - Parameter Validation', () => {
         type: 'GET_NAME',
         parameters: {
           entity_ref: 'actor',
-          result_variable: 'name'
-        }
+          result_variable: 'name',
+        },
       };
 
       const result = validateOperationStructure(operation);
@@ -56,8 +52,8 @@ describe('preValidationUtils - Parameter Validation', () => {
         parameters: {
           entity_id: 'actor', // Wrong field name
           component_type: 'core:position',
-          result_variable: 'position'
-        }
+          result_variable: 'position',
+        },
       };
 
       const result = validateOperationStructure(operation);
@@ -65,7 +61,9 @@ describe('preValidationUtils - Parameter Validation', () => {
       expect(result.error).toContain('Invalid parameter "entity_id"');
       expect(result.suggestions).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('QUERY_COMPONENT expects: entity_ref, component_type, result_variable')
+          expect.stringContaining(
+            'QUERY_COMPONENT expects: entity_ref, component_type, result_variable'
+          ),
         ])
       );
     });
@@ -76,8 +74,8 @@ describe('preValidationUtils - Parameter Validation', () => {
         parameters: {
           entity_id: 'actor', // Wrong field name
           component_type: 'positioning:bending_over',
-          value: { surface_id: 'table' }
-        }
+          value: { surface_id: 'table' },
+        },
       };
 
       const result = validateOperationStructure(operation);
@@ -90,8 +88,8 @@ describe('preValidationUtils - Parameter Validation', () => {
         type: 'REMOVE_COMPONENT',
         parameters: {
           entity_id: 'actor', // Wrong field name
-          component_type: 'positioning:bending_over'
-        }
+          component_type: 'positioning:bending_over',
+        },
       };
 
       const result = validateOperationStructure(operation);
@@ -104,15 +102,17 @@ describe('preValidationUtils - Parameter Validation', () => {
         type: 'GET_NAME',
         parameters: {
           entity_id: '{context.bendingOverInfo.surface_id}',
-          result_variable: 'surfaceName'
-        }
+          result_variable: 'surfaceName',
+        },
       };
 
       const result = validateOperationStructure(operation);
       expect(result.isValid).toBe(false);
       expect(result.suggestions).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('Change to: "entity_ref": "{context.bendingOverInfo.surface_id}"')
+          expect.stringContaining(
+            'Change to: "entity_ref": "{context.bendingOverInfo.surface_id}"'
+          ),
         ])
       );
     });
@@ -120,10 +120,13 @@ describe('preValidationUtils - Parameter Validation', () => {
     it('should flag missing parameters object for GET_NAME operation', () => {
       const operation = {
         type: 'GET_NAME',
-        parameters: null
+        parameters: null,
       };
 
-      const result = validateOperationStructure(operation, 'root.operations[0]');
+      const result = validateOperationStructure(
+        operation,
+        'root.operations[0]'
+      );
 
       expect(result.isValid).toBe(false);
       expect(result.path).toBe('root.operations[0]');
@@ -131,14 +134,14 @@ describe('preValidationUtils - Parameter Validation', () => {
         'Missing "parameters" field for operation type "GET_NAME"'
       );
       expect(result.suggestions).toEqual([
-        'Add a "parameters" object with the required fields for this operation type'
+        'Add a "parameters" object with the required fields for this operation type',
       ]);
     });
 
     it('should reject non-object parameters for QUERY_COMPONENT operation', () => {
       const operation = {
         type: 'QUERY_COMPONENT',
-        parameters: 'not-an-object'
+        parameters: 'not-an-object',
       };
 
       const result = validateOperationStructure(operation, 'root.op');
@@ -149,7 +152,7 @@ describe('preValidationUtils - Parameter Validation', () => {
         'Operation type "QUERY_COMPONENT" requires a parameters object'
       );
       expect(result.suggestions).toEqual([
-        'Required parameters: entity_ref, component_type, result_variable'
+        'Required parameters: entity_ref, component_type, result_variable',
       ]);
     });
   });
@@ -164,17 +167,17 @@ describe('preValidationUtils - Parameter Validation', () => {
             type: 'GET_NAME',
             parameters: {
               entity_ref: 'actor',
-              result_variable: 'actorName'
-            }
+              result_variable: 'actorName',
+            },
           },
           {
             type: 'GET_NAME',
             parameters: {
               entity_id: '{context.someId}', // Error here
-              result_variable: 'targetName'
-            }
-          }
-        ]
+              result_variable: 'targetName',
+            },
+          },
+        ],
       };
 
       const result = validateRuleStructure(rule);
@@ -192,26 +195,26 @@ describe('preValidationUtils - Parameter Validation', () => {
             type: 'GET_NAME',
             parameters: {
               entity_ref: 'actor',
-              result_variable: 'actorName'
-            }
+              result_variable: 'actorName',
+            },
           },
           {
             type: 'QUERY_COMPONENT',
             parameters: {
               entity_ref: 'actor',
               component_type: 'core:position',
-              result_variable: 'position'
-            }
+              result_variable: 'position',
+            },
           },
           {
             type: 'REMOVE_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_type: 'positioning:bending_over'
-            }
+              component_type: 'positioning:bending_over',
+            },
           },
-          { macro: 'core:logSuccessAndEndTurn' }
-        ]
+          { macro: 'core:logSuccessAndEndTurn' },
+        ],
       };
 
       const result = validateRuleStructure(rule);
@@ -225,16 +228,18 @@ describe('preValidationUtils - Parameter Validation', () => {
       const ruleData = {
         rule_id: 'handle_straighten_up',
         event_type: 'core:attempt_action',
-        condition: { condition_ref: 'positioning:event-is-action-straighten-up' },
+        condition: {
+          condition_ref: 'positioning:event-is-action-straighten-up',
+        },
         actions: [
           {
             type: 'GET_NAME',
             parameters: {
               entity_id: '{context.bendingOverInfo.surface_id}', // The actual error from the file
-              result_variable: 'surfaceName'
-            }
-          }
-        ]
+              result_variable: 'surfaceName',
+            },
+          },
+        ],
       };
 
       const result = performPreValidation(
@@ -247,7 +252,7 @@ describe('preValidationUtils - Parameter Validation', () => {
       expect(result.error).toContain('Invalid parameter "entity_id"');
       expect(result.suggestions).toEqual(
         expect.arrayContaining([
-          expect.stringContaining('Use "entity_ref" instead of "entity_id"')
+          expect.stringContaining('Use "entity_ref" instead of "entity_id"'),
         ])
       );
     });

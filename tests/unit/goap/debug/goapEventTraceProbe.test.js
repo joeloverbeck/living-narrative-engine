@@ -563,7 +563,11 @@ describe('goapEventTraceProbe', () => {
 
     it('should clone events (not return references)', () => {
       probe.startCapture('actor1');
-      probe.record({ type: 'EVENT1', actorId: 'actor1', payload: { key: 'value' } });
+      probe.record({
+        type: 'EVENT1',
+        actorId: 'actor1',
+        payload: { key: 'value' },
+      });
 
       const events1 = probe.getEvents('actor1');
       const events2 = probe.getEvents('actor1');

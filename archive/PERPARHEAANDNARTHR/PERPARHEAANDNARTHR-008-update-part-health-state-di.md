@@ -4,6 +4,7 @@
 **Priority:** Critical (Phase 3)
 **Estimated Effort:** 0.5 days
 **Dependencies:**
+
 - PERPARHEAANDNARTHR-006 (UPDATE_PART_HEALTH_STATE Schema)
 - PERPARHEAANDNARTHR-007 (UPDATE_PART_HEALTH_STATE Handler)
 
@@ -18,9 +19,11 @@ Complete the DI registration for the `UPDATE_PART_HEALTH_STATE` operation follow
 ## Files to Touch
 
 ### New Files
+
 - None
 
 ### Modified Files
+
 - `src/dependencyInjection/tokens/tokens-core.js` (add token)
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` (add factory)
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` (add mapping)
@@ -31,6 +34,7 @@ Complete the DI registration for the `UPDATE_PART_HEALTH_STATE` operation follow
 ## Out of Scope
 
 **DO NOT modify:**
+
 - The handler implementation (covered in PERPARHEAANDNARTHR-007)
 - The schema (covered in PERPARHEAANDNARTHR-006)
 - Any other operation registrations
@@ -56,11 +60,13 @@ UpdatePartHealthStateHandler: 'UpdatePartHealthStateHandler',
 In `src/dependencyInjection/registrations/operationHandlerRegistrations.js`:
 
 **Add import** at the top with other handler imports:
+
 ```javascript
 import UpdatePartHealthStateHandler from '../../logic/operationHandlers/updatePartHealthStateHandler.js';
 ```
 
 **Add factory** to the `handlerFactories` array (maintain alphabetical order):
+
 ```javascript
 [
   tokens.UpdatePartHealthStateHandler,
@@ -81,8 +87,12 @@ import UpdatePartHealthStateHandler from '../../logic/operationHandlers/updatePa
 In `src/dependencyInjection/registrations/interpreterRegistrations.js`:
 
 **Add mapping** in the operation registry section (maintain alphabetical order):
+
 ```javascript
-registry.register('UPDATE_PART_HEALTH_STATE', bind(tokens.UpdatePartHealthStateHandler));
+registry.register(
+  'UPDATE_PART_HEALTH_STATE',
+  bind(tokens.UpdatePartHealthStateHandler)
+);
 ```
 
 ### 4. Pre-Validation Whitelist
@@ -90,6 +100,7 @@ registry.register('UPDATE_PART_HEALTH_STATE', bind(tokens.UpdatePartHealthStateH
 In `src/utils/preValidationUtils.js`:
 
 **Add to `KNOWN_OPERATION_TYPES` array** (maintain alphabetical order):
+
 ```javascript
 'UPDATE_PART_HEALTH_STATE',
 ```
@@ -101,16 +112,19 @@ In `src/utils/preValidationUtils.js`:
 ### Tests That Must Pass
 
 1. **Type checking:**
+
    ```bash
    npm run typecheck
    ```
 
 2. **Full validation (including pre-validation):**
+
    ```bash
    npm run validate
    ```
 
 3. **Unit tests (DI should resolve correctly):**
+
    ```bash
    npm run test:unit
    ```
@@ -182,17 +196,20 @@ Per CLAUDE.md "Adding New Operations" section:
 ### Changes vs. Original Plan
 
 **Corrections Made to Ticket:**
+
 - The original ticket incorrectly specified handler dependencies as `entityManager`, `eventDispatcher`, `jsonLogicService`, and `logger`
 - Actual handler constructor (verified at `updatePartHealthStateHandler.js:54`) requires only: `logger`, `entityManager`, `safeEventDispatcher`
 - Ticket was corrected before implementation to reflect accurate dependencies
 
 **Files Modified (as planned):**
+
 1. `src/dependencyInjection/tokens/tokens-core.js` - Added `UpdatePartHealthStateHandler` token
 2. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Added import and factory registration
 3. `src/dependencyInjection/registrations/interpreterRegistrations.js` - Added operation mapping
 4. `src/utils/preValidationUtils.js` - Added `'UPDATE_PART_HEALTH_STATE'` to KNOWN_OPERATION_TYPES
 
 **Verification Results:**
+
 - `npm run typecheck` - Passed (pre-existing errors in cli/ unrelated to changes)
 - `npm run validate` - Passed (0 violations, 44 mods validated)
 - Unit tests for preValidationUtils - 153 tests passed
@@ -200,5 +217,6 @@ Per CLAUDE.md "Adding New Operations" section:
 - Lint on modified files - Passed (pre-existing warnings unrelated to changes)
 
 **No New Tests Required:**
+
 - Existing test coverage in `tests/unit/logic/operationHandlers/updatePartHealthStateHandler.test.js` (34 tests) already covers the handler
 - DI registration is validated implicitly through `npm run validate` and type checking

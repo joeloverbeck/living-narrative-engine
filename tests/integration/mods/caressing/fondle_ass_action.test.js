@@ -71,10 +71,9 @@ describe('caressing:fondle_ass action integration', () => {
             }
 
             // Check if partner has ass cheeks
-            const hasAssAnatomy =
-              partner.components?.['anatomy:body_part_graph']?.parts?.some(
-                (part) => part.type === 'ass_cheek'
-              );
+            const hasAssAnatomy = partner.components?.[
+              'anatomy:body_part_graph'
+            ]?.parts?.some((part) => part.type === 'ass_cheek');
             if (!hasAssAnatomy) {
               return acc;
             }

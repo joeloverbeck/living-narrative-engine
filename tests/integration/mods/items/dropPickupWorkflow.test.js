@@ -76,32 +76,50 @@ describe('Items - Drop and Pick Up Workflow', () => {
       .withComponent('core:weight', { weight: 0.05 })
       .build();
 
-    dropFixture.reset([room, actor1, ...actor1Hands, actor2, ...actor2Hands, item]);
+    dropFixture.reset([
+      room,
+      actor1,
+      ...actor1Hands,
+      actor2,
+      ...actor2Hands,
+      item,
+    ]);
 
     // Actor 1 drops item
     await dropFixture.executeAction('test:actor1', 'letter-1');
 
-    let actor1After = dropFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actor1After.components['items:inventory'].items).not.toContain('letter-1');
+    let actor1After =
+      dropFixture.entityManager.getEntityInstance('test:actor1');
+    expect(actor1After.components['items:inventory'].items).not.toContain(
+      'letter-1'
+    );
 
     // Verify item is at location
     let itemAfterDrop = dropFixture.entityManager.getEntityInstance('letter-1');
     expect(itemAfterDrop.components['core:position']).toBeDefined();
-    expect(itemAfterDrop.components['core:position'].locationId).toBe('saloon1');
+    expect(itemAfterDrop.components['core:position'].locationId).toBe(
+      'saloon1'
+    );
 
     // Actor 2 picks up item (switch to pickup fixture)
-    const currentActor1 = dropFixture.entityManager.getEntityInstance('test:actor1');
-    const currentActor2 = dropFixture.entityManager.getEntityInstance('test:actor2');
+    const currentActor1 =
+      dropFixture.entityManager.getEntityInstance('test:actor1');
+    const currentActor2 =
+      dropFixture.entityManager.getEntityInstance('test:actor2');
     const currentItem = dropFixture.entityManager.getEntityInstance('letter-1');
     pickupFixture.reset([room, currentActor1, currentActor2, currentItem]);
 
     await pickupFixture.executeAction('test:actor2', 'letter-1');
 
-    let actor2After = pickupFixture.entityManager.getEntityInstance('test:actor2');
-    expect(actor2After.components['items:inventory'].items).toContain('letter-1');
+    let actor2After =
+      pickupFixture.entityManager.getEntityInstance('test:actor2');
+    expect(actor2After.components['items:inventory'].items).toContain(
+      'letter-1'
+    );
 
     // Verify item no longer has position
-    let itemAfterPickup = pickupFixture.entityManager.getEntityInstance('letter-1');
+    let itemAfterPickup =
+      pickupFixture.entityManager.getEntityInstance('letter-1');
     expect(itemAfterPickup.components['core:position']).toBeUndefined();
   });
 
@@ -150,7 +168,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
     expect(gunPos.components['core:position'].locationId).toBe('saloon1');
 
     // Verify third item still in inventory
-    const actorAfter = dropFixture.entityManager.getEntityInstance('test:actor1');
+    const actorAfter =
+      dropFixture.entityManager.getEntityInstance('test:actor1');
     expect(actorAfter.components['items:inventory'].items).toContain('key-1');
     expect(actorAfter.components['items:inventory'].items).toHaveLength(1);
   });
@@ -190,7 +209,8 @@ describe('Items - Drop and Pick Up Workflow', () => {
     expect(dropEvent.payload.locationId).toBe('saloon1');
 
     // Pick up item (switch to pickup fixture)
-    const currentActor = dropFixture.entityManager.getEntityInstance('test:actor1');
+    const currentActor =
+      dropFixture.entityManager.getEntityInstance('test:actor1');
     const currentItem = dropFixture.entityManager.getEntityInstance('letter-1');
     pickupFixture.reset([room, currentActor, currentItem]);
 

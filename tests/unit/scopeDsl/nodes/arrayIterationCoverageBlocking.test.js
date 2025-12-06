@@ -64,19 +64,21 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
 
       // Service should apply coverage blocking internally and return only accessible items
       mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
-        'asudem:trousers' // Only returns trousers, boxer brief is blocked by service
+        'asudem:trousers', // Only returns trousers, boxer brief is blocked by service
       ]);
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolver.resolve(node, ctx);
 
-      expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+      expect(
+        mockClothingAccessibilityService.getAccessibleItems
+      ).toHaveBeenCalledWith(
         'layla-agirre',
         expect.objectContaining({
           mode: 'topmost',
           context: 'removal',
-          sortByPriority: true
+          sortByPriority: true,
         })
       );
 
@@ -86,7 +88,9 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
 
     it('should handle service not available gracefully', () => {
       // Create resolver without service
-      const resolverWithoutService = createArrayIterationResolver({ errorHandler });
+      const resolverWithoutService = createArrayIterationResolver({
+        errorHandler,
+      });
 
       const node = {
         type: 'ArrayIterationStep',
@@ -114,7 +118,7 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
         expect.objectContaining({
           context: 'processClothingAccess',
           entityId: 'test-actor',
-          mode: 'topmost'
+          mode: 'topmost',
         }),
         'ArrayIterationResolver',
         expect.any(String)
@@ -122,9 +126,11 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
     });
 
     it('should handle service errors gracefully', () => {
-      mockClothingAccessibilityService.getAccessibleItems.mockImplementation(() => {
-        throw new Error('Coverage analysis failed');
-      });
+      mockClothingAccessibilityService.getAccessibleItems.mockImplementation(
+        () => {
+          throw new Error('Coverage analysis failed');
+        }
+      );
 
       const node = {
         type: 'ArrayIterationStep',
@@ -149,12 +155,12 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
       expect(result).toEqual(new Set());
       expect(errorHandler.handleError).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Coverage analysis failed'
+          message: 'Coverage analysis failed',
         }),
         expect.objectContaining({
           context: 'processClothingAccess',
           entityId: 'test-actor',
-          mode: 'topmost'
+          mode: 'topmost',
         }),
         'ArrayIterationResolver',
         expect.any(String)
@@ -179,7 +185,9 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
 
       // Service returns all items as they don't overlap
       mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
-        'jacket', 'pants', 'underwear'
+        'jacket',
+        'pants',
+        'underwear',
       ]);
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
@@ -208,25 +216,32 @@ describe('ArrayIterationResolver - Coverage Blocking Integration', () => {
         mode: 'all',
       };
 
-      // Service returns all items for 'all' mode 
+      // Service returns all items for 'all' mode
       mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
-        'jacket', 'shirt', 'pants', 'underwear'
+        'jacket',
+        'shirt',
+        'pants',
+        'underwear',
       ]);
 
       dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
       const result = resolver.resolve(node, ctx);
 
-      expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+      expect(
+        mockClothingAccessibilityService.getAccessibleItems
+      ).toHaveBeenCalledWith(
         'test-actor',
         expect.objectContaining({
           mode: 'all',
           context: 'removal',
-          sortByPriority: true
+          sortByPriority: true,
         })
       );
 
-      expect(result).toEqual(new Set(['jacket', 'shirt', 'pants', 'underwear']));
+      expect(result).toEqual(
+        new Set(['jacket', 'shirt', 'pants', 'underwear'])
+      );
     });
   });
 });

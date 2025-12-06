@@ -3,9 +3,6 @@
   "id": "vampirism:event-is-action-bare_fangs",
   "description": "Checks if the event is an attempt to perform the bare_fangs action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "vampirism:bare_fangs"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "vampirism:bare_fangs"]
   }
 }

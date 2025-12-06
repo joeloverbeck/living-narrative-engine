@@ -19,7 +19,11 @@ describe('BaseError - Foundation Class', () => {
 
   describe('Constructor', () => {
     it('should create error with required parameters', () => {
-      const error = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC, { field: 'test' });
+      const error = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        { field: 'test' }
+      );
 
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(BaseError);
@@ -62,13 +66,24 @@ describe('BaseError - Foundation Class', () => {
     });
 
     it('should accept null or undefined context defaulting to empty object', () => {
-      const error1 = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC, null);
+      const error1 = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        null
+      );
       expect(error1.context).toEqual({});
 
-      const error2 = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC, undefined);
+      const error2 = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        undefined
+      );
       expect(error2.context).toEqual({});
 
-      const error3 = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC);
+      const error3 = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
       expect(error3.context).toEqual({});
     });
 
@@ -88,7 +103,8 @@ describe('BaseError - Foundation Class', () => {
       const correlationId = error.correlationId;
 
       // Check UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       expect(correlationId).toMatch(uuidRegex);
     });
 
@@ -105,8 +121,16 @@ describe('BaseError - Foundation Class', () => {
     });
 
     it('should create different correlation IDs for different errors', () => {
-      const error1 = new BaseError('Test 1', ErrorCodes.INVALID_DATA_GENERIC, {});
-      const error2 = new BaseError('Test 2', ErrorCodes.INVALID_DATA_GENERIC, {});
+      const error1 = new BaseError(
+        'Test 1',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {}
+      );
+      const error2 = new BaseError(
+        'Test 2',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {}
+      );
 
       expect(error1.correlationId).not.toBe(error2.correlationId);
     });
@@ -129,7 +153,11 @@ describe('BaseError - Foundation Class', () => {
   describe('Serialization (ModValidationError pattern)', () => {
     it('should serialize to JSON correctly with all properties', () => {
       const context = { field: 'username', value: 'test' };
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC, context);
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        context
+      );
       const json = error.toJSON();
 
       expect(json).toHaveProperty('name', 'BaseError');
@@ -154,7 +182,9 @@ describe('BaseError - Foundation Class', () => {
       );
       const str = error.toString();
 
-      expect(str).toBe('BaseError[SCOPE_2000]: Test error (severity: error, recoverable: false)');
+      expect(str).toBe(
+        'BaseError[SCOPE_2000]: Test error (severity: error, recoverable: false)'
+      );
     });
 
     it('should include correlation ID in serialization', () => {
@@ -184,7 +214,11 @@ describe('BaseError - Foundation Class', () => {
 
     it('should return defensive copy of context', () => {
       const originalContext = { field: 'test' };
-      const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC, originalContext);
+      const error = new BaseError(
+        'Test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        originalContext
+      );
 
       const context1 = error.context;
       const context2 = error.context;
@@ -211,7 +245,7 @@ describe('BaseError - Foundation Class', () => {
       expect(error.context).toEqual({
         step1: 'value1',
         step2: 'value2',
-        step3: 'value3'
+        step3: 'value3',
       });
     });
 
@@ -226,7 +260,7 @@ describe('BaseError - Foundation Class', () => {
     it('should get specific context value', () => {
       const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC, {
         field: 'username',
-        action: 'validate'
+        action: 'validate',
       });
 
       expect(error.getContext('field')).toBe('username');
@@ -236,7 +270,11 @@ describe('BaseError - Foundation Class', () => {
 
     it('should get entire context when key is null', () => {
       const originalContext = { field: 'username', action: 'validate' };
-      const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC, originalContext);
+      const error = new BaseError(
+        'Test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        originalContext
+      );
 
       const context = error.getContext();
       expect(context).toEqual(originalContext);
@@ -256,7 +294,11 @@ describe('BaseError - Foundation Class', () => {
         }
       }
 
-      const error = new CustomError('Test', ErrorCodes.INVALID_DATA_GENERIC, {});
+      const error = new CustomError(
+        'Test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {}
+      );
       expect(error.severity).toBe('warning');
     });
 
@@ -267,7 +309,11 @@ describe('BaseError - Foundation Class', () => {
         }
       }
 
-      const error = new RecoverableError('Test', ErrorCodes.INVALID_DATA_GENERIC, {});
+      const error = new RecoverableError(
+        'Test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {}
+      );
       expect(error.recoverable).toBe(true);
     });
 
@@ -300,13 +346,21 @@ describe('BaseError - Foundation Class', () => {
     it('should work with existing ErrorCodes', () => {
       // Test various error code categories
       const errors = [
-        new BaseError('Context missing', ErrorCodes.MISSING_CONTEXT_GENERIC, {}),
+        new BaseError(
+          'Context missing',
+          ErrorCodes.MISSING_CONTEXT_GENERIC,
+          {}
+        ),
         new BaseError('Invalid data', ErrorCodes.INVALID_DATA_GENERIC, {}),
-        new BaseError('Resolution failed', ErrorCodes.RESOLUTION_FAILED_GENERIC, {}),
+        new BaseError(
+          'Resolution failed',
+          ErrorCodes.RESOLUTION_FAILED_GENERIC,
+          {}
+        ),
         new BaseError('Cycle detected', ErrorCodes.CYCLE_DETECTED, {}),
         new BaseError('Parse error', ErrorCodes.PARSE_ERROR_GENERIC, {}),
         new BaseError('Config error', ErrorCodes.CONFIGURATION_GENERIC, {}),
-        new BaseError('Unknown error', ErrorCodes.UNKNOWN_GENERIC, {})
+        new BaseError('Unknown error', ErrorCodes.UNKNOWN_GENERIC, {}),
       ];
 
       expect(errors[0].code).toBe('SCOPE_1000');
@@ -323,7 +377,9 @@ describe('BaseError - Foundation Class', () => {
       const timestamp = error.timestamp;
 
       // Verify ISO format
-      expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
 
       // Verify it's a valid date
       const date = new Date(timestamp);
@@ -363,7 +419,8 @@ describe('BaseError - Foundation Class', () => {
       expect(error1.correlationId).not.toBe(error2.correlationId);
 
       // Both should be valid UUIDs
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       expect(error1.correlationId).toMatch(uuidRegex);
       expect(error2.correlationId).toMatch(uuidRegex);
     });
@@ -373,8 +430,12 @@ describe('BaseError - Foundation Class', () => {
       const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC);
       const afterTime = new Date().toISOString();
 
-      expect(new Date(error.timestamp).getTime()).toBeGreaterThanOrEqual(new Date(beforeTime).getTime());
-      expect(new Date(error.timestamp).getTime()).toBeLessThanOrEqual(new Date(afterTime).getTime());
+      expect(new Date(error.timestamp).getTime()).toBeGreaterThanOrEqual(
+        new Date(beforeTime).getTime()
+      );
+      expect(new Date(error.timestamp).getTime()).toBeLessThanOrEqual(
+        new Date(afterTime).getTime()
+      );
     });
 
     it('should set default severity and recoverability', () => {
@@ -385,7 +446,10 @@ describe('BaseError - Foundation Class', () => {
     });
 
     it('should capture stack trace in V8 environments with proper filtering', () => {
-      const error = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       if (Error.captureStackTrace) {
         expect(error.stack).toBeDefined();
@@ -398,17 +462,21 @@ describe('BaseError - Foundation Class', () => {
       const complexContext = {
         nested: {
           deep: {
-            value: 'test'
-          }
+            value: 'test',
+          },
         },
         array: [1, 2, 3],
         nullValue: null,
         undefinedValue: undefined,
         boolValue: false,
-        numberValue: 0
+        numberValue: 0,
       };
 
-      const error = new BaseError('Test', ErrorCodes.INVALID_DATA_GENERIC, complexContext);
+      const error = new BaseError(
+        'Test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        complexContext
+      );
       expect(error.context).toEqual(complexContext);
 
       // Verify defensive copy works for nested objects
@@ -432,11 +500,15 @@ describe('BaseError - Foundation Class', () => {
     it('should handle concurrent error creation', () => {
       const errors = [];
       for (let i = 0; i < 100; i++) {
-        errors.push(new BaseError(`Error ${i}`, ErrorCodes.INVALID_DATA_GENERIC, { index: i }));
+        errors.push(
+          new BaseError(`Error ${i}`, ErrorCodes.INVALID_DATA_GENERIC, {
+            index: i,
+          })
+        );
       }
 
       // All errors should have unique correlation IDs
-      const correlationIds = errors.map(e => e.correlationId);
+      const correlationIds = errors.map((e) => e.correlationId);
       const uniqueIds = new Set(correlationIds);
       expect(uniqueIds.size).toBe(100);
 
@@ -463,8 +535,12 @@ describe('BaseError - Foundation Class', () => {
           super(message, 'CUSTOM_ERROR');
           this.name = 'CustomError';
         }
-        getSeverity() { return 'warning'; }
-        isRecoverable() { return true; }
+        getSeverity() {
+          return 'warning';
+        }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const error = new CustomError('Custom message');
@@ -479,15 +555,25 @@ describe('BaseError - Foundation Class', () => {
 
     it('should allow severity override in subclass', () => {
       class CriticalError extends BaseError {
-        getSeverity() { return 'critical'; }
+        getSeverity() {
+          return 'critical';
+        }
       }
 
       class WarningError extends BaseError {
-        getSeverity() { return 'warning'; }
+        getSeverity() {
+          return 'warning';
+        }
       }
 
-      const critical = new CriticalError('Critical', ErrorCodes.INVALID_DATA_GENERIC);
-      const warning = new WarningError('Warning', ErrorCodes.INVALID_DATA_GENERIC);
+      const critical = new CriticalError(
+        'Critical',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
+      const warning = new WarningError(
+        'Warning',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       expect(critical.severity).toBe('critical');
       expect(warning.severity).toBe('warning');
@@ -495,15 +581,25 @@ describe('BaseError - Foundation Class', () => {
 
     it('should allow recoverability override in subclass', () => {
       class RecoverableError extends BaseError {
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       class NonRecoverableError extends BaseError {
-        isRecoverable() { return false; }
+        isRecoverable() {
+          return false;
+        }
       }
 
-      const recoverable = new RecoverableError('Recoverable', ErrorCodes.INVALID_DATA_GENERIC);
-      const nonRecoverable = new NonRecoverableError('NonRecoverable', ErrorCodes.INVALID_DATA_GENERIC);
+      const recoverable = new RecoverableError(
+        'Recoverable',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
+      const nonRecoverable = new NonRecoverableError(
+        'NonRecoverable',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       expect(recoverable.recoverable).toBe(true);
       expect(nonRecoverable.recoverable).toBe(false);

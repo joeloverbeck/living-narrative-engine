@@ -14,9 +14,15 @@ describe('core:round_started Event Validation', () => {
     ajv = new Ajv({ allErrors: true, strict: false });
 
     // Load common schema for referenced definitions
-    const commonSchemaPath = path.join(process.cwd(), 'data/schemas/common.schema.json');
+    const commonSchemaPath = path.join(
+      process.cwd(),
+      'data/schemas/common.schema.json'
+    );
     const commonSchema = JSON.parse(fs.readFileSync(commonSchemaPath, 'utf8'));
-    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+    ajv.addSchema(
+      commonSchema,
+      'schema://living-narrative-engine/common.schema.json'
+    );
 
     // Load event schema directly
     const eventDir = path.join(process.cwd(), 'data/mods/core/events');

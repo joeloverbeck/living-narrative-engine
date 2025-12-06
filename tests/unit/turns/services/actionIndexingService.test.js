@@ -143,9 +143,7 @@ describe('ActionIndexingService', () => {
     const [composite] = service.indexActions('actor-date', rawActions);
 
     expect(composite.params.scheduledAt).toBeInstanceOf(Date);
-    expect(composite.params.scheduledAt.getTime()).toBe(
-      timestamp.getTime()
-    );
+    expect(composite.params.scheduledAt.getTime()).toBe(timestamp.getTime());
     expect(Object.isFrozen(composite.params.scheduledAt)).toBe(true);
     expect(composite.params.scheduledAt).not.toBe(timestamp);
   });

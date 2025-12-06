@@ -34,7 +34,7 @@ describe('Items Mod - Aiming Event Schemas', () => {
         'actorEntity',
         'itemEntity',
         'targetEntity',
-        'timestamp'
+        'timestamp',
       ]);
     });
 
@@ -57,7 +57,9 @@ describe('Items Mod - Aiming Event Schemas', () => {
     });
 
     it('should use number type for timestamp', () => {
-      expect(eventSchema.payloadSchema.properties.timestamp.type).toBe('number');
+      expect(eventSchema.payloadSchema.properties.timestamp.type).toBe(
+        'number'
+      );
     });
 
     it('should disallow additional properties', () => {
@@ -95,7 +97,7 @@ describe('Items Mod - Aiming Event Schemas', () => {
       expect(eventSchema.payloadSchema.required).toEqual([
         'actorEntity',
         'itemEntity',
-        'timestamp'
+        'timestamp',
       ]);
     });
 
@@ -118,7 +120,9 @@ describe('Items Mod - Aiming Event Schemas', () => {
     });
 
     it('should use number type for timestamp', () => {
-      expect(eventSchema.payloadSchema.properties.timestamp.type).toBe('number');
+      expect(eventSchema.payloadSchema.properties.timestamp.type).toBe(
+        'number'
+      );
     });
 
     it('should disallow additional properties', () => {

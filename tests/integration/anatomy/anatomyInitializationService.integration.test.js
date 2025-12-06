@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
@@ -94,7 +101,7 @@ describe('AnatomyInitializationService integration', () => {
           eventDispatcher: null,
           logger,
           anatomyGenerationService: generationService,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(
@@ -103,7 +110,7 @@ describe('AnatomyInitializationService integration', () => {
           eventDispatcher: eventBus,
           logger: null,
           anatomyGenerationService: generationService,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(
@@ -112,7 +119,7 @@ describe('AnatomyInitializationService integration', () => {
           eventDispatcher: eventBus,
           logger,
           anatomyGenerationService: null,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
   });
 
@@ -155,7 +162,7 @@ describe('AnatomyInitializationService integration', () => {
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
     expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining("Generated anatomy for entity 'entity-1'"),
+      expect.stringContaining("Generated anatomy for entity 'entity-1'")
     );
   });
 
@@ -175,7 +182,7 @@ describe('AnatomyInitializationService integration', () => {
 
     expect(generationService.calls).toHaveLength(0);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('missing instanceId'),
+      expect.stringContaining('missing instanceId')
     );
   });
 
@@ -198,7 +205,10 @@ describe('AnatomyInitializationService integration', () => {
     await expect(failingWait).rejects.toThrow('boom');
     await flushMicrotasks();
 
-    const succeedingWait = service.waitForEntityGeneration('entity-success', 500);
+    const succeedingWait = service.waitForEntityGeneration(
+      'entity-success',
+      500
+    );
     generationService.resolve('entity-success', true);
     await expect(succeedingWait).resolves.toBe(true);
 
@@ -206,7 +216,7 @@ describe('AnatomyInitializationService integration', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to generate anatomy for entity'),
-      expect.objectContaining({ error: failure }),
+      expect.objectContaining({ error: failure })
     );
   });
 
@@ -220,12 +230,16 @@ describe('AnatomyInitializationService integration', () => {
     jest.useFakeTimers();
     service.initialize();
 
-    await eventBus.dispatch(ENTITY_CREATED_ID, { instanceId: 'stalled-entity' });
+    await eventBus.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'stalled-entity',
+    });
     await flushMicrotasks();
 
     const waitPromise = service.waitForEntityGeneration('stalled-entity', 20);
     jest.advanceTimersByTime(25);
-    await expect(waitPromise).rejects.toThrow('Timeout waiting for anatomy generation for entity');
+    await expect(waitPromise).rejects.toThrow(
+      'Timeout waiting for anatomy generation for entity'
+    );
   });
 
   it('waitForAllGenerationsToComplete rejects when pending work never clears', async () => {
@@ -239,7 +253,9 @@ describe('AnatomyInitializationService integration', () => {
     const waitPromise = service.waitForAllGenerationsToComplete(30);
 
     jest.advanceTimersByTime(35);
-    await expect(waitPromise).rejects.toThrow('Timeout waiting for anatomy generation to complete');
+    await expect(waitPromise).rejects.toThrow(
+      'Timeout waiting for anatomy generation to complete'
+    );
   });
 
   it('generateAnatomy delegates to generation service and logs outcomes', async () => {
@@ -248,17 +264,21 @@ describe('AnatomyInitializationService integration', () => {
     const success = await service.generateAnatomy('actor-1', 'blueprint-1');
     expect(success).toBe(true);
     expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining("Successfully generated anatomy for entity 'actor-1'"),
+      expect.stringContaining(
+        "Successfully generated anatomy for entity 'actor-1'"
+      )
     );
 
     const failure = new Error('generation failed');
     generationService.queueImmediateError(failure);
-    await expect(service.generateAnatomy('actor-2', 'blueprint-2')).rejects.toThrow(
-      'generation failed',
-    );
+    await expect(
+      service.generateAnatomy('actor-2', 'blueprint-2')
+    ).rejects.toThrow('generation failed');
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to generate anatomy for entity 'actor-2'"),
-      expect.objectContaining({ error: failure }),
+      expect.stringContaining(
+        "Failed to generate anatomy for entity 'actor-2'"
+      ),
+      expect.objectContaining({ error: failure })
     );
   });
 
@@ -286,7 +306,7 @@ describe('AnatomyInitializationService integration', () => {
     service.initialize();
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Already initialized',
+      'AnatomyInitializationService: Already initialized'
     );
   });
 

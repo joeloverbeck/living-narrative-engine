@@ -105,7 +105,10 @@ class RecordingLoader {
  * @param {{definitions?: string[], instances?: string[]}} [options] - Optional overrides for manifest content arrays.
  * @returns {{id: string, content: {entities: {definitions: string[], instances: string[]}}}} Manifest description for tests.
  */
-function createManifest(id, { definitions = ['entry.json'], instances = ['instance.json'] } = {}) {
+function createManifest(
+  id,
+  { definitions = ['entry.json'], instances = ['instance.json'] } = {}
+) {
   return {
     id,
     content: {
@@ -209,12 +212,13 @@ describe('Integration: ContentLoadManager deep coverage', () => {
       ['alpha', { throw: 'instance processing exploded' }],
     ]);
 
-    const { manager, logger, dispatcher, contentLoadersConfig, loaders } = buildManager({
-      definitionPlan,
-      instancePlan,
-      definitionFinalizeThrows: true,
-      instanceFinalizeThrows: false,
-    });
+    const { manager, logger, dispatcher, contentLoadersConfig, loaders } =
+      buildManager({
+        definitionPlan,
+        instancePlan,
+        definitionFinalizeThrows: true,
+        instanceFinalizeThrows: false,
+      });
 
     const finalModOrder = ['alpha'];
     const manifests = new Map([
@@ -230,7 +234,11 @@ describe('Integration: ContentLoadManager deep coverage', () => {
       entityDefinitions: { count: 1, overrides: 0, errors: 0 },
     };
 
-    const result = await manager.loadContent(finalModOrder, manifests, initialTotals);
+    const result = await manager.loadContent(
+      finalModOrder,
+      manifests,
+      initialTotals
+    );
 
     expect(result.results).toEqual({
       alpha: ContentLoadStatus.FAILED,
@@ -250,11 +258,15 @@ describe('Integration: ContentLoadManager deep coverage', () => {
     expect(loaders.definitionLoader.finalizeCalls).toBe(1);
 
     const failureEvent = dispatcher.events.find(
-      (event) => event.eventName === 'initialization:world_loader:content_load_failed'
+      (event) =>
+        event.eventName === 'initialization:world_loader:content_load_failed'
     );
     expect(failureEvent).toBeDefined();
     expect(failureEvent.payload).toEqual(
-      expect.objectContaining({ modId: 'alpha', registryKey: 'entityInstances' })
+      expect.objectContaining({
+        modId: 'alpha',
+        registryKey: 'entityInstances',
+      })
     );
 
     expect(
@@ -265,7 +277,10 @@ describe('Integration: ContentLoadManager deep coverage', () => {
   });
 
   it('returns skipped results when no loaders are configured for a phase', async () => {
-    const { manager } = buildManager({ includeDefinitions: false, includeInstances: false });
+    const { manager } = buildManager({
+      includeDefinitions: false,
+      includeInstances: false,
+    });
     const finalOrder = ['alpha', 'beta'];
     const manifests = new Map([
       ['alpha', createManifest('alpha')],
@@ -313,7 +328,8 @@ describe('Integration: ContentLoadManager deep coverage', () => {
     expect(result.updatedTotals).not.toBe(totals);
 
     const modFailureEvent = dispatcher.events.find(
-      (event) => event.eventName === 'initialization:world_loader:mod_load_failed'
+      (event) =>
+        event.eventName === 'initialization:world_loader:mod_load_failed'
     );
     expect(modFailureEvent).toBeDefined();
     expect(modFailureEvent.payload).toEqual(
@@ -334,11 +350,17 @@ describe('Integration: ContentLoadManager deep coverage', () => {
     const manifests = new Map([
       [
         'alpha',
-        createManifest('alpha', { definitions: ['alpha.def.json'], instances: [] }),
+        createManifest('alpha', {
+          definitions: ['alpha.def.json'],
+          instances: [],
+        }),
       ],
       [
         'beta',
-        createManifest('beta', { definitions: ['beta.def.json'], instances: [] }),
+        createManifest('beta', {
+          definitions: ['beta.def.json'],
+          instances: [],
+        }),
       ],
     ]);
 

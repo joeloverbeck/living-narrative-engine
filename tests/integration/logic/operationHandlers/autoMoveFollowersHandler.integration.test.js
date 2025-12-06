@@ -72,7 +72,11 @@ class PassThroughDispatcher {
 
   dispatch(eventName, payload, options = {}) {
     try {
-      return this.#validatedEventDispatcher.dispatch(eventName, payload, options);
+      return this.#validatedEventDispatcher.dispatch(
+        eventName,
+        payload,
+        options
+      );
     } catch (error) {
       this.#logger.error(
         `PassThroughDispatcher: Exception caught while dispatching event '${eventName}'. Error: ${error.message}`,
@@ -169,7 +173,9 @@ describe('AutoMoveFollowersHandler integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Aria' },
           [POSITION_COMPONENT_ID]: { locationId: 'loc-atrium' },
-          [LEADING_COMPONENT_ID]: { followers: ['follower-bryn', 'follower-cyra'] },
+          [LEADING_COMPONENT_ID]: {
+            followers: ['follower-bryn', 'follower-cyra'],
+          },
         },
       },
       {
@@ -206,10 +212,11 @@ describe('AutoMoveFollowersHandler integration', () => {
       entities,
       dispatcherSetup(dispatcher) {
         dispatcher.setBehavior('core:perceptible_event', () => true);
-        dispatcher.setBehavior('core:entity_moved', () => Promise.resolve(true));
-        dispatcher.setBehavior(
-          'core:display_successful_action_result',
-          () => Promise.resolve(true)
+        dispatcher.setBehavior('core:entity_moved', () =>
+          Promise.resolve(true)
+        );
+        dispatcher.setBehavior('core:display_successful_action_result', () =>
+          Promise.resolve(true)
         );
       },
     });
@@ -248,9 +255,9 @@ describe('AutoMoveFollowersHandler integration', () => {
       )
     ).toBe(false);
 
-    expect(logger.debugLogs.some(([message]) => message.includes('moved 2'))).toBe(
-      true
-    );
+    expect(
+      logger.debugLogs.some(([message]) => message.includes('moved 2'))
+    ).toBe(true);
   });
 
   it('handles move failures, dispatcher rejections, and skips out-of-position followers', async () => {
@@ -300,38 +307,36 @@ describe('AutoMoveFollowersHandler integration', () => {
       },
     ];
 
-    const {
-      handler,
-      entityManager,
-      validatedDispatcher,
-      executionContext,
-    } = createEnvironment({
-      entities,
-      failingMoveIds: ['follower-fails'],
-      dispatcherFactory: ({ validatedDispatcher, logger }) =>
-        new PassThroughDispatcher({
-          validatedEventDispatcher: validatedDispatcher,
-          logger,
-        }),
-      dispatcherSetup(dispatcher) {
-        dispatcher.setBehavior('core:entity_moved', () => Promise.resolve(true));
-        dispatcher.setBehavior('core:perceptible_event', (payload) => {
-          if (payload.actorId === 'follower-perceptible') {
-            return Promise.reject(new Error('perceptible dispatch failed'));
-          }
-          return Promise.resolve(true);
-        });
-        dispatcher.setBehavior(
-          'core:display_successful_action_result',
-          (payload) => {
-            if (payload.message.includes('Perceptible Follower')) {
-              return Promise.reject(new Error('ui dispatch failed'));
+    const { handler, entityManager, validatedDispatcher, executionContext } =
+      createEnvironment({
+        entities,
+        failingMoveIds: ['follower-fails'],
+        dispatcherFactory: ({ validatedDispatcher, logger }) =>
+          new PassThroughDispatcher({
+            validatedEventDispatcher: validatedDispatcher,
+            logger,
+          }),
+        dispatcherSetup(dispatcher) {
+          dispatcher.setBehavior('core:entity_moved', () =>
+            Promise.resolve(true)
+          );
+          dispatcher.setBehavior('core:perceptible_event', (payload) => {
+            if (payload.actorId === 'follower-perceptible') {
+              return Promise.reject(new Error('perceptible dispatch failed'));
             }
             return Promise.resolve(true);
-          }
-        );
-      },
-    });
+          });
+          dispatcher.setBehavior(
+            'core:display_successful_action_result',
+            (payload) => {
+              if (payload.message.includes('Perceptible Follower')) {
+                return Promise.reject(new Error('ui dispatch failed'));
+              }
+              return Promise.resolve(true);
+            }
+          );
+        },
+      });
 
     executionContext.event.payload.previousLocationId = 'loc-start';
 
@@ -341,8 +346,10 @@ describe('AutoMoveFollowersHandler integration', () => {
     );
 
     expect(
-      entityManager.getComponentData('follower-perceptible', POSITION_COMPONENT_ID)
-        .locationId
+      entityManager.getComponentData(
+        'follower-perceptible',
+        POSITION_COMPONENT_ID
+      ).locationId
     ).toBe('loc-target');
     expect(
       entityManager.getComponentData('follower-skip', POSITION_COMPONENT_ID)
@@ -417,10 +424,14 @@ describe('AutoMoveFollowersHandler integration', () => {
       errorMessages.some((msg) => msg.includes('Invalid "leader_id" parameter'))
     ).toBe(true);
     expect(
-      errorMessages.some((msg) => msg.includes('Invalid "destination_id" parameter'))
+      errorMessages.some((msg) =>
+        msg.includes('Invalid "destination_id" parameter')
+      )
     ).toBe(true);
     expect(
-      logger.warnLogs.some(([message]) => message.includes('params missing or invalid'))
+      logger.warnLogs.some(([message]) =>
+        message.includes('params missing or invalid')
+      )
     ).toBe(true);
   });
 });

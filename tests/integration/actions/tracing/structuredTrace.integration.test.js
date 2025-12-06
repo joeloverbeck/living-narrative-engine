@@ -52,8 +52,7 @@ describe('StructuredTrace integration behavior', () => {
     const timeline = [0, 10, 10, 20, 25, 30, 35, 40, 45, 0];
     let callIndex = 0;
     performance.now = () => {
-      const value =
-        timeline[callIndex] ?? timeline[timeline.length - 1];
+      const value = timeline[callIndex] ?? timeline[timeline.length - 1];
       callIndex += 1;
       return value;
     };
@@ -61,12 +60,17 @@ describe('StructuredTrace integration behavior', () => {
     let result;
     try {
       result = trace.withSpan('root-operation', () => {
-        const manualSpan = trace.startSpan('manual-child', { origin: 'manual' });
+        const manualSpan = trace.startSpan('manual-child', {
+          origin: 'manual',
+        });
         expect(manualSpan).toBeInstanceOf(Span);
         expect(trace.getActiveSpan()).toBe(manualSpan);
         trace.endSpan(manualSpan);
 
-        const childResult = trace.withSpan('child-success', () => 'child-complete');
+        const childResult = trace.withSpan(
+          'child-success',
+          () => 'child-complete'
+        );
         expect(childResult).toBe('child-complete');
 
         const duplicate = trace.startSpan('child-success');
@@ -144,7 +148,9 @@ describe('StructuredTrace integration behavior', () => {
     ).rejects.toThrow('async boom');
 
     const spans = trace.getSpans();
-    const successSpan = spans.find((span) => span.operation === 'async-success');
+    const successSpan = spans.find(
+      (span) => span.operation === 'async-success'
+    );
     expect(successSpan.status).toBe('success');
 
     const errorSpan = spans.find((span) => span.operation === 'async-error');
@@ -160,12 +166,16 @@ describe('StructuredTrace integration behavior', () => {
   it('validates span termination order and parameters', () => {
     const trace = new StructuredTrace();
 
-    expect(() => trace.endSpan(null)).toThrow('endSpan requires a valid Span instance');
+    expect(() => trace.endSpan(null)).toThrow(
+      'endSpan requires a valid Span instance'
+    );
 
     const rootSpan = trace.startSpan('root');
     const childSpan = trace.startSpan('child');
 
-    expect(() => trace.endSpan(rootSpan)).toThrow('it is not the currently active span');
+    expect(() => trace.endSpan(rootSpan)).toThrow(
+      'it is not the currently active span'
+    );
 
     trace.endSpan(childSpan);
     trace.endSpan(rootSpan);
@@ -231,17 +241,20 @@ describe('StructuredTrace integration behavior', () => {
       traceAnalysisEnabled: true,
       performanceMonitoring: { enabled: false },
     });
-    await expect(monitoringDisabled.getPerformanceMonitor()).resolves.toBeNull();
+    await expect(
+      monitoringDisabled.getPerformanceMonitor()
+    ).resolves.toBeNull();
 
     const monitoringNoSampling = new StructuredTrace(null, {
       traceAnalysisEnabled: true,
       performanceMonitoring: { enabled: true },
     });
-    const monitorWithoutSampling = await monitoringNoSampling.getPerformanceMonitor();
+    const monitorWithoutSampling =
+      await monitoringNoSampling.getPerformanceMonitor();
     expect(monitorWithoutSampling).toBeTruthy();
-    expect(
-      await monitoringNoSampling.getPerformanceMonitor()
-    ).toBe(monitorWithoutSampling);
+    expect(await monitoringNoSampling.getPerformanceMonitor()).toBe(
+      monitorWithoutSampling
+    );
 
     trace.setTraceConfiguration({ traceAnalysisEnabled: false });
     expect(trace.isTraceAnalysisEnabled()).toBe(false);

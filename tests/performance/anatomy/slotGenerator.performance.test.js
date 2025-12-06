@@ -84,7 +84,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000 for faster tests
 
       // Warmup phase to ensure JIT compilation
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -112,7 +113,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -139,7 +141,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -186,7 +189,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -213,7 +217,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup phase
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -242,7 +247,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -266,7 +272,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -290,7 +297,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -314,7 +322,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -340,7 +349,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -364,7 +374,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -415,7 +426,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const iterations = 1000; // Reduced from 10000
 
       // Warmup
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -442,7 +454,8 @@ describe('SlotGenerator - Performance Tests', () => {
       const times = [];
 
       // Warmup phase
-      for (let i = 0; i < 100; i++) { // Reduced from 1000
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000
         slotGenerator.generateBlueprintSlots(template);
       }
 
@@ -493,7 +506,8 @@ describe('SlotGenerator - Performance Tests', () => {
 
       for (const template of templates) {
         // Warmup
-        for (let i = 0; i < 50; i++) { // Reduced from 100
+        for (let i = 0; i < 50; i++) {
+          // Reduced from 100
           slotGenerator.generateBlueprintSlots(template);
         }
 
@@ -544,11 +558,31 @@ describe('SlotGenerator - Performance Tests', () => {
   describe('Performance Summary', () => {
     it('should demonstrate that slot generation is performant across all scales', () => {
       const testCases = [
-        { name: '1 slot', template: createStructureTemplate(1, 1), target: 0.01 },
-        { name: '10 slots', template: createStructureTemplate(1, 10), target: 0.1 },
-        { name: '20 slots', template: createStructureTemplate(1, 20), target: 0.2 },
-        { name: '50 slots', template: createStructureTemplate(1, 50), target: 0.5 },
-        { name: '100 slots', template: createStructureTemplate(1, 100), target: 1 },
+        {
+          name: '1 slot',
+          template: createStructureTemplate(1, 1),
+          target: 0.01,
+        },
+        {
+          name: '10 slots',
+          template: createStructureTemplate(1, 10),
+          target: 0.1,
+        },
+        {
+          name: '20 slots',
+          template: createStructureTemplate(1, 20),
+          target: 0.2,
+        },
+        {
+          name: '50 slots',
+          template: createStructureTemplate(1, 50),
+          target: 0.5,
+        },
+        {
+          name: '100 slots',
+          template: createStructureTemplate(1, 100),
+          target: 1,
+        },
       ];
 
       console.log('\n=== Slot Generation Performance Summary ===');
@@ -559,7 +593,8 @@ describe('SlotGenerator - Performance Tests', () => {
         const iterations = 500; // Reduced from 1000 for summary test
 
         // Warmup
-        for (let i = 0; i < 50; i++) { // Reduced from 100
+        for (let i = 0; i < 50; i++) {
+          // Reduced from 100
           slotGenerator.generateBlueprintSlots(testCase.template);
         }
 

@@ -17,10 +17,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:straddling_waist"
-    ]
+    "actor": ["positioning:closeness", "positioning:straddling_waist"]
   },
   "template": "rub your pussy sensually against {primary}'s penis through the {secondary}",
   "prerequisites": [],

@@ -7,6 +7,11 @@ import { emitGoapEvent } from '../../../src/goap/events/goapEventFactory.js';
  * @param payload
  * @param context
  */
-export function dispatchGoapEventForTest(eventBus, eventType, payload = {}, context = {}) {
+export function dispatchGoapEventForTest(
+  eventBus,
+  eventType,
+  payload = {},
+  context = {}
+) {
   return emitGoapEvent(eventBus, eventType, payload, context);
 }

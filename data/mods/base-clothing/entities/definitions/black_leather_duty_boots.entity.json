@@ -8,17 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "breathable",
-        "waterproof"
-      ]
+      "properties": ["breathable", "waterproof"]
     },
     "core:name": {
       "text": "duty boots"
@@ -33,9 +27,7 @@
       "texture": "matte"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

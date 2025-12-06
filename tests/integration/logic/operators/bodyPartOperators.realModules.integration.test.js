@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { BodyGraphService } from '../../../../src/anatomy/bodyGraphService.js';
 import { HasPartOfTypeOperator } from '../../../../src/logic/operators/hasPartOfTypeOperator.js';
 import { HasPartWithComponentValueOperator } from '../../../../src/logic/operators/hasPartWithComponentValueOperator.js';
@@ -79,7 +86,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -161,7 +169,9 @@ describe('Body part JSON Logic operators with real BodyGraphService', () => {
       primary: 'blue',
     });
 
-    entityManager.addComponent(visorId, 'anatomy:part', { subType: 'headgear' });
+    entityManager.addComponent(visorId, 'anatomy:part', {
+      subType: 'headgear',
+    });
     entityManager.addComponent(visorId, 'anatomy:joint', {
       parentId: torsoId,
       socketId: 'head-slot',
@@ -171,7 +181,9 @@ describe('Body part JSON Logic operators with real BodyGraphService', () => {
     });
 
     observerId = 'observer-entity';
-    entityManager.addComponent(observerId, 'core:description', { text: 'observer' });
+    entityManager.addComponent(observerId, 'core:description', {
+      text: 'observer',
+    });
 
     rootlessActorId = 'rootless-actor';
     entityManager.addComponent(rootlessActorId, 'anatomy:body', {
@@ -320,7 +332,13 @@ describe('Body part JSON Logic operators with real BodyGraphService', () => {
 
   it('handles property paths that require deep traversal', () => {
     const match = hasPartOfTypeWithComponentValue.evaluate(
-      ['actor', 'headgear', 'equipment:details', 'opacity.level', 'transparent'],
+      [
+        'actor',
+        'headgear',
+        'equipment:details',
+        'opacity.level',
+        'transparent',
+      ],
       context
     );
     expect(match).toBe(true);

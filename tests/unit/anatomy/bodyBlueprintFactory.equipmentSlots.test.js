@@ -96,7 +96,7 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
       recipePatternResolver: {
-        resolveRecipePatterns: jest.fn(recipe => recipe),
+        resolveRecipePatterns: jest.fn((recipe) => recipe),
       },
       blueprintProcessorService: {
         processBlueprint: jest.fn((blueprint) => blueprint),
@@ -136,12 +136,15 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
     const result = await factory.createAnatomyGraph(blueprintId, recipeId);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'SlotResolutionOrchestrator: Skipping equipment slot \'weaponHand\' (socket: grip)',
+      "SlotResolutionOrchestrator: Skipping equipment slot 'weaponHand' (socket: grip)"
     );
     expect(mockRecipeProcessor.mergeSlotRequirements).not.toHaveBeenCalled();
     expect(mockPartSelectionService.selectPart).not.toHaveBeenCalled();
     expect(mockEntityGraphBuilder.createAndAttachPart).not.toHaveBeenCalled();
-    expect(result).toEqual({ rootId: 'root-entity', entities: ['root-entity'] });
+    expect(result).toEqual({
+      rootId: 'root-entity',
+      entities: ['root-entity'],
+    });
   });
 
   it('treats slots with equipment-focused requirements as equipment', async () => {
@@ -155,17 +158,24 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
 
     mockSocketManager.validateSocketAvailability.mockReturnValue({
       valid: true,
-      socket: { id: 'arm_mount', allowedTypes: ['attachment'], orientation: null },
+      socket: {
+        id: 'arm_mount',
+        allowedTypes: ['attachment'],
+        orientation: null,
+      },
     });
 
     const result = await factory.createAnatomyGraph(blueprintId, recipeId);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      'SlotResolutionOrchestrator: Skipping equipment slot \'accessorySlot\' (socket: arm_mount)',
+      "SlotResolutionOrchestrator: Skipping equipment slot 'accessorySlot' (socket: arm_mount)"
     );
     expect(mockRecipeProcessor.mergeSlotRequirements).not.toHaveBeenCalled();
     expect(mockPartSelectionService.selectPart).not.toHaveBeenCalled();
     expect(mockEntityGraphBuilder.createAndAttachPart).not.toHaveBeenCalled();
-    expect(result).toEqual({ rootId: 'root-entity', entities: ['root-entity'] });
+    expect(result).toEqual({
+      rootId: 'root-entity',
+      entities: ['root-entity'],
+    });
   });
 });

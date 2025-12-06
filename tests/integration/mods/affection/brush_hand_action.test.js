@@ -78,18 +78,13 @@ describe('affection:brush_hand action integration', () => {
 
   it('handles multiple close actors correctly', async () => {
     const location = 'room1';
-    const actor = createActorWithHandAnatomy(
-      'actor1',
-      'Alice',
-      location,
-      ['target1', 'observer1']
-    );
-    const target = createActorWithHandAnatomy(
+    const actor = createActorWithHandAnatomy('actor1', 'Alice', location, [
       'target1',
-      'Bob',
-      location,
-      ['actor1']
-    );
+      'observer1',
+    ]);
+    const target = createActorWithHandAnatomy('target1', 'Bob', location, [
+      'actor1',
+    ]);
     const observer = createActorWithHandAnatomy(
       'observer1',
       'Charlie',
@@ -166,12 +161,9 @@ describe('affection:brush_hand action integration', () => {
       hugging_entity_id: 'target1',
     };
 
-    const targetData = createActorWithHandAnatomy(
-      'target1',
-      'Bob',
-      'room1',
-      ['actor1']
-    );
+    const targetData = createActorWithHandAnatomy('target1', 'Bob', 'room1', [
+      'actor1',
+    ]);
 
     testFixture.reset([
       room,
@@ -189,24 +181,18 @@ describe('affection:brush_hand action integration', () => {
   it('rejects the action when the actor is currently hugging someone', async () => {
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
-    const actorData = createActorWithHandAnatomy(
-      'actor1',
-      'Alice',
-      'room1',
-      ['target1']
-    );
+    const actorData = createActorWithHandAnatomy('actor1', 'Alice', 'room1', [
+      'target1',
+    ]);
     actorData.entity.components['positioning:hugging'] = {
       embraced_entity_id: 'target1',
       initiated: true,
       consented: true,
     };
 
-    const targetData = createActorWithHandAnatomy(
-      'target1',
-      'Bob',
-      'room1',
-      ['actor1']
-    );
+    const targetData = createActorWithHandAnatomy('target1', 'Bob', 'room1', [
+      'actor1',
+    ]);
     targetData.entity.components['positioning:being_hugged'] = {
       hugging_entity_id: 'actor1',
       consented: true,

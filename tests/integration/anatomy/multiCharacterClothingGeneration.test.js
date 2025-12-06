@@ -46,8 +46,16 @@ describe('Multi-Character Clothing Generation', () => {
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg_shapely' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg_shapely',
+          },
         ],
         clothingEntities: [
           { entityId: 'test:item1', equip: true },
@@ -67,8 +75,16 @@ describe('Multi-Character Clothing Generation', () => {
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg_shapely' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg_shapely',
+          },
         ],
         clothingEntities: [
           { entityId: 'test:item1', equip: true },
@@ -84,8 +100,16 @@ describe('Multi-Character Clothing Generation', () => {
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg_shapely' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg_shapely',
+          },
         ],
         clothingEntities: [
           { entityId: 'test:item1', equip: true },
@@ -256,7 +280,11 @@ describe('Multi-Character Clothing Generation', () => {
     // Additional assertion: No clothing validation errors
     const clothingWarnings = warnCalls
       .map((call) => call[0])
-      .filter((message) => typeof message === 'string' && message.includes('ClothingInstantiationService'));
+      .filter(
+        (message) =>
+          typeof message === 'string' &&
+          message.includes('ClothingInstantiationService')
+      );
 
     // Allow clothing validation warnings (test bed uses simplified definitions)
     // but ensure no unexpected warnings slipped through.
@@ -268,7 +296,10 @@ describe('Multi-Character Clothing Generation', () => {
     );
 
     if (clothingWarnings.length > 0) {
-      console.log('Clothing warnings detected (allowed for this test):', clothingWarnings);
+      console.log(
+        'Clothing warnings detected (allowed for this test):',
+        clothingWarnings
+      );
     }
 
     expect(unexpectedWarnings).toHaveLength(0);

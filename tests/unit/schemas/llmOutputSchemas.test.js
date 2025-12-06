@@ -230,14 +230,17 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
 
       // Should reject because 'character' is not in the new enum
       const enumError = validate.errors.find(
-        (err) => err.keyword === 'enum' && err.instancePath === '/notes/0/subjectType'
+        (err) =>
+          err.keyword === 'enum' && err.instancePath === '/notes/0/subjectType'
       );
       expect(enumError).toBeTruthy();
     });
 
     test('subjectType enum should match SUBJECT_TYPE_ENUM_VALUES constant', () => {
       // Extract the enum from the schema
-      const schemaEnum = LLM_TURN_ACTION_RESPONSE_SCHEMA.properties.notes.items.properties.subjectType.enum;
+      const schemaEnum =
+        LLM_TURN_ACTION_RESPONSE_SCHEMA.properties.notes.items.properties
+          .subjectType.enum;
 
       // Verify the schema enum matches the constants
       expect(schemaEnum.sort()).toEqual([...SUBJECT_TYPE_ENUM_VALUES].sort());

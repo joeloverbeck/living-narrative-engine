@@ -2,7 +2,10 @@ import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 import NotesService from '../../../src/ai/notesService.js';
 import ComponentAccessService from '../../../src/entities/componentAccessService.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  SUBJECT_TYPES,
+} from '../../../src/constants/subjectTypes.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 describe('notesPersistenceHook with real services', () => {
@@ -54,7 +57,8 @@ describe('notesPersistenceHook with real services', () => {
   });
 
   it('skips processing when the action does not expose a notes field', () => {
-    const { logger, dispatcher, notesService, componentAccess } = createServices();
+    const { logger, dispatcher, notesService, componentAccess } =
+      createServices();
     const actor = createActor();
 
     persistNotes(
@@ -73,7 +77,8 @@ describe('notesPersistenceHook with real services', () => {
   });
 
   it('dispatches a structured error when the notes field is not an array', () => {
-    const { logger, dispatcher, notesService, componentAccess } = createServices();
+    const { logger, dispatcher, notesService, componentAccess } =
+      createServices();
     const actor = createActor('actor-non-array');
 
     persistNotes(
@@ -91,7 +96,8 @@ describe('notesPersistenceHook with real services', () => {
     expect(dispatcher.events[0]).toEqual({
       eventId: SYSTEM_ERROR_OCCURRED_ID,
       payload: {
-        message: "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
+        message:
+          "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
         details: { actorId: actor.id },
       },
     });
@@ -99,7 +105,8 @@ describe('notesPersistenceHook with real services', () => {
   });
 
   it('reports invalid entries without mutating components when every note is rejected', () => {
-    const { logger, dispatcher, notesService, componentAccess } = createServices();
+    const { logger, dispatcher, notesService, componentAccess } =
+      createServices();
     const actor = createActor('actor-all-invalid');
 
     persistNotes(
@@ -131,12 +138,15 @@ describe('notesPersistenceHook with real services', () => {
     expect(dispatcher.events[1].payload.details).toMatchObject({
       reason: 'Missing or blank subject field',
     });
-    expect(dispatcher.events[2].payload.details).toEqual({ note: 'unsupported-entry' });
+    expect(dispatcher.events[2].payload.details).toEqual({
+      note: 'unsupported-entry',
+    });
     expect(logger.debugMessages).toHaveLength(0);
   });
 
   it('persists valid notes, defaults subject types, and dispatches errors for invalid metadata', () => {
-    const { logger, dispatcher, notesService, componentAccess } = createServices();
+    const { logger, dispatcher, notesService, componentAccess } =
+      createServices();
     const actor = createActor('actor-valid', {});
     const timestamp = new Date('2025-01-04T09:15:00.000Z');
 
@@ -144,8 +154,16 @@ describe('notesPersistenceHook with real services', () => {
       {
         notes: [
           { text: 'Remember the watchword', subject: 'Security' },
-          { text: 'Scout the ridge', subject: 'Recon', subjectType: 'INVALID_TYPE' },
-          { text: 'Maintain supply lines', subject: 'Logistics', subjectType: SUBJECT_TYPES.ENTITY },
+          {
+            text: 'Scout the ridge',
+            subject: 'Recon',
+            subjectType: 'INVALID_TYPE',
+          },
+          {
+            text: 'Maintain supply lines',
+            subject: 'Logistics',
+            subjectType: SUBJECT_TYPES.ENTITY,
+          },
           { text: '  ', subject: 'Whitespace' },
           'text-only-note',
         ],
@@ -162,7 +180,8 @@ describe('notesPersistenceHook with real services', () => {
     expect(Array.isArray(storedComponent.notes)).toBe(true);
     expect(storedComponent.notes).toHaveLength(3);
 
-    const [defaultedNote, correctedTypeNote, explicitTypeNote] = storedComponent.notes;
+    const [defaultedNote, correctedTypeNote, explicitTypeNote] =
+      storedComponent.notes;
     expect(defaultedNote).toMatchObject({
       subject: 'Security',
       subjectType: DEFAULT_SUBJECT_TYPE,
@@ -192,7 +211,9 @@ describe('notesPersistenceHook with real services', () => {
     );
 
     // Dispatcher received errors for invalid metadata and invalid note structures
-    const eventMessages = dispatcher.events.map((event) => event.payload.message);
+    const eventMessages = dispatcher.events.map(
+      (event) => event.payload.message
+    );
     expect(eventMessages).toEqual(
       expect.arrayContaining([
         'NotesPersistenceHook: Invalid subjectType, using default',
@@ -200,7 +221,9 @@ describe('notesPersistenceHook with real services', () => {
       ])
     );
     const invalidTypeEvent = dispatcher.events.find(
-      (event) => event.payload.message === 'NotesPersistenceHook: Invalid subjectType, using default'
+      (event) =>
+        event.payload.message ===
+        'NotesPersistenceHook: Invalid subjectType, using default'
     );
     expect(invalidTypeEvent.payload.details).toMatchObject({
       invalidSubjectType: 'INVALID_TYPE',
@@ -210,7 +233,8 @@ describe('notesPersistenceHook with real services', () => {
   });
 
   it('avoids applying component updates when the notes service reports no modifications', () => {
-    const { logger, dispatcher, notesService, componentAccess } = createServices();
+    const { logger, dispatcher, notesService, componentAccess } =
+      createServices();
     const existingNote = {
       text: 'Archive the treaty',
       subject: 'Diplomacy',
@@ -224,9 +248,7 @@ describe('notesPersistenceHook with real services', () => {
 
     persistNotes(
       {
-        notes: [
-          { text: 'Archive the treaty', subject: 'Diplomacy' },
-        ],
+        notes: [{ text: 'Archive the treaty', subject: 'Diplomacy' }],
       },
       actor,
       logger,
@@ -237,7 +259,9 @@ describe('notesPersistenceHook with real services', () => {
     );
 
     expect(actor.components[NOTES_COMPONENT_ID].notes).toHaveLength(1);
-    expect(logger.debugMessages.some(({ message }) => message.includes('Added note'))).toBe(false);
+    expect(
+      logger.debugMessages.some(({ message }) => message.includes('Added note'))
+    ).toBe(false);
     expect(dispatcher.events).toHaveLength(0);
   });
 });

@@ -62,8 +62,8 @@ describe('CoverageAnalyzer', () => {
       };
 
       // Mock coverage mapping data
-      mockEntitiesGateway.getComponentData
-        .mockImplementation((itemId, componentId) => {
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (itemId, componentId) => {
           if (componentId === 'clothing:coverage_mapping') {
             if (itemId === 'clothing:cotton_twill_trousers') {
               return {
@@ -79,13 +79,18 @@ describe('CoverageAnalyzer', () => {
             }
           }
           return null;
-        });
+        }
+      );
 
       const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
 
       // Trousers should be accessible
       expect(
-        result.isAccessible('clothing:cotton_twill_trousers', 'torso_lower', 'base')
+        result.isAccessible(
+          'clothing:cotton_twill_trousers',
+          'torso_lower',
+          'base'
+        )
       ).toBe(true);
 
       // Boxer brief should NOT be accessible (blocked by trousers)
@@ -109,8 +114,8 @@ describe('CoverageAnalyzer', () => {
         },
       };
 
-      mockEntitiesGateway.getComponentData
-        .mockImplementation((itemId, componentId) => {
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (itemId, componentId) => {
           if (componentId === 'clothing:coverage_mapping') {
             if (itemId === 'clothing:leather_pants') {
               return {
@@ -132,7 +137,8 @@ describe('CoverageAnalyzer', () => {
             }
           }
           return null;
-        });
+        }
+      );
 
       const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
 
@@ -146,7 +152,9 @@ describe('CoverageAnalyzer', () => {
       expect(result.isAccessible('clothing:boxer_brief')).toBe(false);
 
       // Verify blocking chains
-      const boxerBriefBlockers = result.getBlockingItems('clothing:boxer_brief');
+      const boxerBriefBlockers = result.getBlockingItems(
+        'clothing:boxer_brief'
+      );
       expect(boxerBriefBlockers).toHaveLength(2);
       expect(boxerBriefBlockers).toContain('clothing:leather_pants');
       expect(boxerBriefBlockers).toContain('clothing:cotton_twill_trousers');
@@ -344,8 +352,8 @@ describe('CoverageAnalyzer', () => {
         },
       };
 
-      mockEntitiesGateway.getComponentData
-        .mockImplementation((itemId, componentId) => {
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (itemId, componentId) => {
           if (componentId === 'clothing:coverage_mapping') {
             if (itemId === 'clothing:shirt') {
               return {
@@ -361,7 +369,8 @@ describe('CoverageAnalyzer', () => {
             }
           }
           return null;
-        });
+        }
+      );
 
       const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
 
@@ -379,8 +388,8 @@ describe('CoverageAnalyzer', () => {
         },
       };
 
-      mockEntitiesGateway.getComponentData
-        .mockImplementation((itemId, componentId) => {
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (itemId, componentId) => {
           if (componentId === 'clothing:coverage_mapping') {
             // Both have same coverage priority
             return {
@@ -389,7 +398,8 @@ describe('CoverageAnalyzer', () => {
             };
           }
           return null;
-        });
+        }
+      );
 
       const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
 
@@ -408,8 +418,8 @@ describe('CoverageAnalyzer', () => {
         },
       };
 
-      mockEntitiesGateway.getComponentData
-        .mockImplementation((itemId, componentId) => {
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (itemId, componentId) => {
           if (componentId === 'clothing:coverage_mapping') {
             if (itemId === 'clothing:shirt') {
               return {
@@ -425,7 +435,8 @@ describe('CoverageAnalyzer', () => {
             }
           }
           return null;
-        });
+        }
+      );
 
       const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
 
@@ -440,7 +451,14 @@ describe('CoverageAnalyzer', () => {
   describe('Performance considerations', () => {
     it('should handle large equipment sets efficiently', () => {
       const equipped = {};
-      const slots = ['torso_upper', 'torso_lower', 'legs', 'feet', 'hands', 'head_gear'];
+      const slots = [
+        'torso_upper',
+        'torso_lower',
+        'legs',
+        'feet',
+        'hands',
+        'head_gear',
+      ];
       const layers = ['outer', 'base', 'underwear', 'accessories'];
 
       // Create a large equipment set
@@ -468,7 +486,10 @@ describe('CoverageAnalyzer', () => {
 
       try {
         const startTime = performance.now();
-        const result = analyzer.analyzeCoverageBlocking(equipped, 'test-entity');
+        const result = analyzer.analyzeCoverageBlocking(
+          equipped,
+          'test-entity'
+        );
         const endTime = performance.now();
 
         // Should complete quickly (under 10ms for typical sets)
@@ -505,10 +526,14 @@ describe('CoverageAnalyzer', () => {
       // Test with all parameter variations
       expect(result.isAccessible('clothing:shirt')).toBe(true);
       expect(result.isAccessible('clothing:shirt', 'torso_upper')).toBe(true);
-      expect(result.isAccessible('clothing:shirt', 'torso_upper', 'base')).toBe(true);
+      expect(result.isAccessible('clothing:shirt', 'torso_upper', 'base')).toBe(
+        true
+      );
 
       expect(Array.isArray(result.getBlockedItems())).toBe(true);
-      expect(Array.isArray(result.getBlockingItems('clothing:shirt'))).toBe(true);
+      expect(Array.isArray(result.getBlockingItems('clothing:shirt'))).toBe(
+        true
+      );
     });
   });
 });

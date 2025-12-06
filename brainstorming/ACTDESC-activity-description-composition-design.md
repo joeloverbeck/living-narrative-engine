@@ -29,12 +29,12 @@ The activity description system will integrate into the existing body descriptio
 
 Based on user requirements and system analysis:
 
-| Decision Area | Choice | Rationale |
-|---------------|--------|-----------|
-| **Metadata Richness** | Rich metadata with priority and conditionals | Maximum flexibility for complex scenarios, future-proof |
-| **Multi-Activity Handling** | Smart natural language composition | Best user experience, avoids repetitive "X is doing A. X is doing B." |
-| **Discovery Pattern** | Hybrid (inline + dedicated components) | Simple cases use inline metadata, complex use dedicated components |
-| **Entity Name Resolution** | Configurable with fallback to names | Supports future pronoun resolution while maintaining clarity |
+| Decision Area               | Choice                                       | Rationale                                                             |
+| --------------------------- | -------------------------------------------- | --------------------------------------------------------------------- |
+| **Metadata Richness**       | Rich metadata with priority and conditionals | Maximum flexibility for complex scenarios, future-proof               |
+| **Multi-Activity Handling** | Smart natural language composition           | Best user experience, avoids repetitive "X is doing A. X is doing B." |
+| **Discovery Pattern**       | Hybrid (inline + dedicated components)       | Simple cases use inline metadata, complex use dedicated components    |
+| **Entity Name Resolution**  | Configurable with fallback to names          | Supports future pronoun resolution while maintaining clarity          |
 
 ---
 
@@ -45,6 +45,7 @@ Based on user requirements and system analysis:
 Following LNE's modding-first philosophy, all activity descriptions are driven by **component metadata**, not hardcoded logic.
 
 **Anti-Pattern (What We Must Avoid):**
+
 ```javascript
 // ❌ WRONG: Hardcoded component checks
 if (entity.hasComponent('kissing:kissing')) {
@@ -57,6 +58,7 @@ if (entity.hasComponent('positioning:hugging')) {
 ```
 
 **Correct Pattern (What We Will Implement):**
+
 ```javascript
 // ✅ CORRECT: Metadata-driven discovery
 const components = entity.getAllComponents();
@@ -75,6 +77,7 @@ Activity components declare their descriptive properties through **metadata**, w
 **Two Metadata Approaches:**
 
 1. **Inline Metadata** (Simple cases):
+
 ```json
 {
   "companionship:following": {
@@ -88,6 +91,7 @@ Activity components declare their descriptive properties through **metadata**, w
 ```
 
 2. **Dedicated Metadata Component** (Complex cases):
+
 ```json
 {
   "kissing:kissing": {
@@ -111,16 +115,19 @@ Activity components declare their descriptive properties through **metadata**, w
 The system must avoid robotic repetition and generate grammatically coherent sentences.
 
 **Bad Output (Simple Concatenation):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western.
 ```
 
 **Good Output (Smart Composition):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her.
 ```
 
 **Composition Rules:**
+
 - Detect common subject (entity name)
 - Group activities targeting the same entity
 - Use pronouns to avoid repetition
@@ -168,6 +175,7 @@ for (const partType of descriptionOrder) {
 **Challenge**: Finding activity-describing components without iterating all components on every description generation.
 
 **Solutions**:
+
 1. **Component Index** (Phase 1): Maintain index of components with activity metadata
 2. **Event-Driven Updates** (Phase 2): Update index when components are added/removed
 3. **Lazy Caching** (Phase 3): Cache generated descriptions with invalidation on component changes
@@ -183,6 +191,7 @@ Components include activity description metadata directly in their schema.
 #### Schema Extension Pattern
 
 **Original Component Schema:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -199,6 +208,7 @@ Components include activity description metadata directly in their schema.
 ```
 
 **Extended with Inline Metadata:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -278,6 +288,7 @@ Components include activity description metadata directly in their schema.
 #### Use Cases
 
 Best for:
+
 - Simple positioning states (kneeling, standing, lying)
 - Straightforward interactions (following, leading)
 - Stable, well-defined activities unlikely to need complex customization
@@ -390,6 +401,7 @@ Create separate `activity:description_metadata` components that reference the so
 #### Component Data Example
 
 **Simple Template-Based Description:**
+
 ```json
 {
   "positioning:kneeling_before": {
@@ -406,6 +418,7 @@ Create separate `activity:description_metadata` components that reference the so
 ```
 
 **Verb-Based Description with Conditions:**
+
 ```json
 {
   "kissing:kissing": {
@@ -429,6 +442,7 @@ Create separate `activity:description_metadata` components that reference the so
 ```
 
 **Complex Conditional with Grouping:**
+
 ```json
 {
   "positioning:hugging": {
@@ -472,6 +486,7 @@ Create separate `activity:description_metadata` components that reference the so
 #### Use Cases
 
 Best for:
+
 - Complex interactions with conditional descriptions (kissing only if initiator)
 - Activities requiring rich metadata (priority, grouping, conditions)
 - Scenarios needing description overrides without modifying source data
@@ -485,18 +500,19 @@ Use **inline metadata for simple cases**, **dedicated components for complex cas
 
 #### Decision Matrix
 
-| Activity Complexity | Recommended Approach | Example |
-|---------------------|---------------------|---------|
-| **Simple state** | Inline metadata | Following, leading, sitting |
-| **Binary interaction** | Inline metadata | Holding hands, facing |
-| **Conditional visibility** | Dedicated component | Kissing (only if initiator) |
-| **Multiple description modes** | Dedicated component | Hugging (tight vs. casual) |
-| **Groupable activities** | Dedicated component | Physical contact activities |
-| **Context-dependent** | Dedicated component | Kneeling (before vs. general) |
+| Activity Complexity            | Recommended Approach | Example                       |
+| ------------------------------ | -------------------- | ----------------------------- |
+| **Simple state**               | Inline metadata      | Following, leading, sitting   |
+| **Binary interaction**         | Inline metadata      | Holding hands, facing         |
+| **Conditional visibility**     | Dedicated component  | Kissing (only if initiator)   |
+| **Multiple description modes** | Dedicated component  | Hugging (tight vs. casual)    |
+| **Groupable activities**       | Dedicated component  | Physical contact activities   |
+| **Context-dependent**          | Dedicated component  | Kneeling (before vs. general) |
 
 #### Hybrid Detection Pattern
 
 **Service Discovery Logic:**
+
 ```javascript
 #collectActivityDescriptions(entityId) {
   const activities = [];
@@ -530,16 +546,19 @@ Use **inline metadata for simple cases**, **dedicated components for complex cas
 #### Migration Path
 
 **Phase 1: Start Simple**
+
 - Implement inline metadata for existing components
 - Get basic activity descriptions working
 - Gather real-world usage patterns
 
 **Phase 2: Add Dedicated for Complex Cases**
+
 - Implement dedicated metadata component support
 - Migrate complex scenarios to dedicated metadata
 - Keep simple cases as inline
 
 **Phase 3: Optimize**
+
 - Build index of components with activity metadata
 - Cache description generation
 - Implement smart composition algorithms
@@ -547,6 +566,7 @@ Use **inline metadata for simple cases**, **dedicated components for complex cas
 #### Example: Simple vs. Complex
 
 **Simple Case (Inline):**
+
 ```json
 {
   "companionship:following": {
@@ -560,9 +580,11 @@ Use **inline metadata for simple cases**, **dedicated components for complex cas
   }
 }
 ```
+
 **Output**: "Jon Ureña is following Alicia Western"
 
 **Complex Case (Dedicated):**
+
 ```json
 {
   "kissing:kissing": {
@@ -590,6 +612,7 @@ Use **inline metadata for simple cases**, **dedicated components for complex cas
   }
 }
 ```
+
 **Output (if initiator)**: "Jon Ureña is kissing Alicia Western passionately"
 **Output (if not initiator)**: "" (hidden by condition)
 
@@ -673,8 +696,10 @@ class ActivityComponentIndex {
   }
 
   #isActivityComponent(componentId, componentData) {
-    return componentId === 'activity:description_metadata' ||
-           componentData?.activityMetadata?.shouldDescribeInActivity === true;
+    return (
+      componentId === 'activity:description_metadata' ||
+      componentData?.activityMetadata?.shouldDescribeInActivity === true
+    );
   }
 
   #addToIndex(entityId, componentId) {
@@ -724,7 +749,7 @@ class ActivityDescriptionService {
     // Cache result
     this.#descriptionCache.set(entityId, {
       description,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return description;
@@ -901,6 +926,7 @@ Output: "Jon Ureña is kneeling before Alicia Western and holding hands with her
 #### Complete Algorithm Example
 
 **Input Components:**
+
 ```json
 [
   {
@@ -925,6 +951,7 @@ Output: "Jon Ureña is kneeling before Alicia Western and holding hands with her
 ```
 
 **Processing:**
+
 ```
 1. Group by target:
    alicia: [kneeling_before(75), holding_hand(60)]
@@ -946,6 +973,7 @@ Output: "Jon Ureña is kneeling before Alicia Western and holding hands with her
 ```
 
 **Final Output:**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her. Jon Ureña is following Bob Smith.
 ```
@@ -1048,11 +1076,12 @@ Some activities should only appear under certain conditions.
 **Scenario**: Only show "kissing" in activity if the entity initiated the kiss.
 
 **Metadata:**
+
 ```json
 {
   "kissing:kissing": {
     "partner": "alicia",
-    "initiator": false  // ← Not the initiator
+    "initiator": false // ← Not the initiator
   },
   "activity:description_metadata": {
     "sourceComponent": "kissing:kissing",
@@ -1072,6 +1101,7 @@ Some activities should only appear under certain conditions.
 **Result**: Activity description will NOT include kissing because `initiator = false`.
 
 **If initiator was true:**
+
 ```
 Activity: Jon Ureña is kissing Alicia Western.
 ```
@@ -1114,9 +1144,11 @@ Activity: Jon Ureña is kissing Alicia Western.
    - [ ] Null safety tests
 
 **Example Output (Phase 1):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western, holding hands with Alicia Western
 ```
+
 _Note: Repetitive, but functional._
 
 ### Phase 2: Natural Language Composition (Week 3-4)
@@ -1148,9 +1180,11 @@ _Note: Repetitive, but functional._
    - [ ] Test configuration override
 
 **Example Output (Phase 2):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her.
 ```
+
 _Note: Grammatically improved with pronoun usage._
 
 ### Phase 3: Advanced Features (Week 5-6)
@@ -1184,9 +1218,11 @@ _Note: Grammatically improved with pronoun usage._
    - [ ] Performance benchmarks
 
 **Example Output (Phase 3):**
+
 ```
 Activity: Jon Ureña is kissing Alicia Western passionately and holding her close.
 ```
+
 _Note: Rich metadata with adverbs and grouping._
 
 ### Phase 4: Polish and Edge Cases (Week 7-8)
@@ -1248,14 +1284,23 @@ class ActivityDescriptionService {
    * @param {object} dependencies.anatomyFormattingService - Configuration service
    * @param {object} [dependencies.activityIndex] - Optional index for performance
    */
-  constructor({ logger, entityManager, anatomyFormattingService, activityIndex = null }) {
+  constructor({
+    logger,
+    entityManager,
+    anatomyFormattingService,
+    activityIndex = null,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'warn', 'error', 'debug']
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntityInstance']
+      requiredMethods: ['getEntityInstance'],
     });
-    validateDependency(anatomyFormattingService, 'AnatomyFormattingService', logger);
+    validateDependency(
+      anatomyFormattingService,
+      'AnatomyFormattingService',
+      logger
+    );
 
     this.#logger = ensureValidLogger(logger, 'ActivityDescriptionService');
     this.#entityManager = entityManager;
@@ -1275,7 +1320,9 @@ class ActivityDescriptionService {
    */
   async generateActivityDescription(entityId) {
     try {
-      this.#logger.debug(`Generating activity description for entity: ${entityId}`);
+      this.#logger.debug(
+        `Generating activity description for entity: ${entityId}`
+      );
 
       // Phase 1: Collect activity metadata
       const activities = this.#collectActivityMetadata(entityId);
@@ -1285,14 +1332,18 @@ class ActivityDescriptionService {
         return '';
       }
 
-      this.#logger.debug(`Found ${activities.length} activities for entity: ${entityId}`);
+      this.#logger.debug(
+        `Found ${activities.length} activities for entity: ${entityId}`
+      );
 
       // Phase 2: Filter by conditions (if supported)
       const entity = this.#entityManager.getEntityInstance(entityId);
       const visibleActivities = this.#filterByConditions(activities, entity);
 
       if (visibleActivities.length === 0) {
-        this.#logger.debug(`All activities filtered out by conditions for entity: ${entityId}`);
+        this.#logger.debug(
+          `All activities filtered out by conditions for entity: ${entityId}`
+        );
         return '';
       }
 
@@ -1300,11 +1351,13 @@ class ActivityDescriptionService {
       const sortedActivities = this.#sortByPriority(visibleActivities);
 
       // Phase 4: Generate formatted description
-      const description = this.#formatActivityDescription(sortedActivities, entity);
+      const description = this.#formatActivityDescription(
+        sortedActivities,
+        entity
+      );
 
       this.#logger.debug(`Generated activity description: "${description}"`);
       return description;
-
     } catch (error) {
       this.#logger.error(
         `Failed to generate activity description for entity ${entityId}`,
@@ -1358,7 +1411,8 @@ class ActivityDescriptionService {
     }
 
     // Get all metadata components (there could be multiple)
-    const metadataComponents = entity.getAllComponentsOfType?.('activity:description_metadata') || [];
+    const metadataComponents =
+      entity.getAllComponentsOfType?.('activity:description_metadata') || [];
 
     for (const metadata of metadataComponents) {
       try {
@@ -1383,7 +1437,12 @@ class ActivityDescriptionService {
    * @private
    */
   #parseDedicatedMetadata(metadata, entity) {
-    const { sourceComponent, descriptionType, targetRole, priority = 50 } = metadata;
+    const {
+      sourceComponent,
+      descriptionType,
+      targetRole,
+      priority = 50,
+    } = metadata;
 
     if (!sourceComponent) {
       this.#logger.warn('Dedicated metadata missing sourceComponent');
@@ -1412,7 +1471,7 @@ class ActivityDescriptionService {
       template: metadata.template,
       adverb: metadata.adverb,
       conditions: metadata.conditions,
-      grouping: metadata.grouping
+      grouping: metadata.grouping,
     };
   }
 
@@ -1468,7 +1527,11 @@ class ActivityDescriptionService {
    * @private
    */
   #parseInlineMetadata(componentId, componentData, activityMetadata) {
-    const { template, targetRole = 'entityId', priority = 50 } = activityMetadata;
+    const {
+      template,
+      targetRole = 'entityId',
+      priority = 50,
+    } = activityMetadata;
 
     if (!template) {
       this.#logger.warn(`Inline metadata missing template for ${componentId}`);
@@ -1484,7 +1547,7 @@ class ActivityDescriptionService {
       sourceData: componentData,
       targetEntityId,
       priority,
-      template
+      template,
     };
   }
 
@@ -1497,7 +1560,7 @@ class ActivityDescriptionService {
    * @private
    */
   #filterByConditions(activities, entity) {
-    return activities.filter(activity => {
+    return activities.filter((activity) => {
       if (!activity.conditions) return true; // No conditions = always visible
 
       // Evaluate conditions (Phase 3 implementation)
@@ -1531,7 +1594,9 @@ class ActivityDescriptionService {
 
     // Check target component condition
     if (conditions.hideIfTargetHasComponent && activity.targetEntityId) {
-      const targetEntity = this.#entityManager.getEntityInstance(activity.targetEntityId);
+      const targetEntity = this.#entityManager.getEntityInstance(
+        activity.targetEntityId
+      );
       if (targetEntity?.hasComponent(conditions.hideIfTargetHasComponent)) {
         this.#logger.debug(
           `Activity filtered: target has ${conditions.hideIfTargetHasComponent}`
@@ -1578,14 +1643,15 @@ class ActivityDescriptionService {
    * @private
    */
   #formatActivityDescription(activities, entity) {
-    const config = this.#anatomyFormattingService.getActivityIntegrationConfig();
+    const config =
+      this.#anatomyFormattingService.getActivityIntegrationConfig();
 
     // Get actor name
     const actorName = this.#resolveEntityName(entity.id);
 
     // Phase 1 implementation: Simple concatenation
     // Phase 2 will implement: Smart composition with grouping
-    const descriptions = activities.map(activity =>
+    const descriptions = activities.map((activity) =>
       this.#generateActivityPhrase(actorName, activity)
     );
 
@@ -1758,32 +1824,24 @@ getActivityIntegrationConfig() {
 // In src/dependencyInjection/registrations/worldAndEntityRegistrations.js
 
 // Register ActivityDescriptionService
-container.register(
-  'ActivityDescriptionService',
-  ActivityDescriptionService,
-  {
-    logger: tokens.ILogger,
-    entityManager: tokens.IEntityManager,
-    anatomyFormattingService: 'AnatomyFormattingService',
-    // activityIndex will be added in Phase 3
-  }
-);
+container.register('ActivityDescriptionService', ActivityDescriptionService, {
+  logger: tokens.ILogger,
+  entityManager: tokens.IEntityManager,
+  anatomyFormattingService: 'AnatomyFormattingService',
+  // activityIndex will be added in Phase 3
+});
 
 // Update BodyDescriptionComposer registration
-container.register(
-  'BodyDescriptionComposer',
-  BodyDescriptionComposer,
-  {
-    bodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
-    bodyGraphService: 'BodyGraphService',
-    entityFinder: tokens.IEntityFinder,
-    anatomyFormattingService: 'AnatomyFormattingService',
-    partDescriptionGenerator: 'PartDescriptionGenerator',
-    equipmentDescriptionService: 'EquipmentDescriptionService',
-    activityDescriptionService: 'ActivityDescriptionService', // ← ADD
-    logger: tokens.ILogger,
-  }
-);
+container.register('BodyDescriptionComposer', BodyDescriptionComposer, {
+  bodyPartDescriptionBuilder: 'BodyPartDescriptionBuilder',
+  bodyGraphService: 'BodyGraphService',
+  entityFinder: tokens.IEntityFinder,
+  anatomyFormattingService: 'AnatomyFormattingService',
+  partDescriptionGenerator: 'PartDescriptionGenerator',
+  equipmentDescriptionService: 'EquipmentDescriptionService',
+  activityDescriptionService: 'ActivityDescriptionService', // ← ADD
+  logger: tokens.ILogger,
+});
 ```
 
 ### Description Configuration Update
@@ -1802,7 +1860,7 @@ this._defaultDescriptionOrder = [
   'face',
   // ... more parts
   'equipment',
-  'activity',  // ← ADD THIS LINE
+  'activity', // ← ADD THIS LINE
 ];
 ```
 
@@ -1813,6 +1871,7 @@ this._defaultDescriptionOrder = [
 ### Example 1: Following (Simple Inline)
 
 **Component Schema**: `companionship:following.component.json`
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -1829,7 +1888,10 @@ this._defaultDescriptionOrder = [
         "type": "object",
         "properties": {
           "shouldDescribeInActivity": { "type": "boolean", "default": true },
-          "template": { "type": "string", "default": "{actor} is following {target}" },
+          "template": {
+            "type": "string",
+            "default": "{actor} is following {target}"
+          },
           "targetRole": { "type": "string", "default": "leaderId" },
           "priority": { "type": "integer", "default": 40 }
         }
@@ -1840,6 +1902,7 @@ this._defaultDescriptionOrder = [
 ```
 
 **Entity Data**:
+
 ```json
 {
   "companionship:following": {
@@ -1855,6 +1918,7 @@ this._defaultDescriptionOrder = [
 ```
 
 **Generated Output**:
+
 ```
 Activity: Jon Ureña is following Alicia Western.
 ```
@@ -1862,6 +1926,7 @@ Activity: Jon Ureña is following Alicia Western.
 ### Example 2: Kissing (Dedicated with Conditions)
 
 **Component Schema**: `kissing:kissing.component.json` (unchanged)
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -1881,6 +1946,7 @@ Activity: Jon Ureña is following Alicia Western.
 ```
 
 **Entity Data**:
+
 ```json
 {
   "kissing:kissing": {
@@ -1904,11 +1970,13 @@ Activity: Jon Ureña is following Alicia Western.
 ```
 
 **Generated Output (initiator=true)**:
+
 ```
 Activity: Jon Ureña is kissing Alicia Western.
 ```
 
 **Generated Output (initiator=false)**:
+
 ```
 (No output - filtered by condition)
 ```
@@ -1916,6 +1984,7 @@ Activity: Jon Ureña is kissing Alicia Western.
 ### Example 3: Kneeling Before (Simple Inline)
 
 **Component Schema**: `positioning:kneeling_before.component.json`
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -1930,7 +1999,10 @@ Activity: Jon Ureña is kissing Alicia Western.
         "type": "object",
         "properties": {
           "shouldDescribeInActivity": { "type": "boolean", "default": true },
-          "template": { "type": "string", "default": "{actor} is kneeling before {target}" },
+          "template": {
+            "type": "string",
+            "default": "{actor} is kneeling before {target}"
+          },
           "targetRole": { "type": "string", "default": "entityId" },
           "priority": { "type": "integer", "default": 75 }
         }
@@ -1941,6 +2013,7 @@ Activity: Jon Ureña is kissing Alicia Western.
 ```
 
 **Entity Data**:
+
 ```json
 {
   "positioning:kneeling_before": {
@@ -1956,6 +2029,7 @@ Activity: Jon Ureña is kissing Alicia Western.
 ```
 
 **Generated Output**:
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western.
 ```
@@ -1963,6 +2037,7 @@ Activity: Jon Ureña is kneeling before Alicia Western.
 ### Example 4: Hugging (Dedicated with Adverb)
 
 **Component Schema**: `positioning:hugging.component.json` (unchanged)
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -1981,6 +2056,7 @@ Activity: Jon Ureña is kneeling before Alicia Western.
 ```
 
 **Entity Data**:
+
 ```json
 {
   "positioning:hugging": {
@@ -2000,6 +2076,7 @@ Activity: Jon Ureña is kneeling before Alicia Western.
 ```
 
 **Generated Output**:
+
 ```
 Activity: Jon Ureña is hugging Alicia Western tightly.
 ```
@@ -2007,6 +2084,7 @@ Activity: Jon Ureña is hugging Alicia Western tightly.
 ### Example 5: Multiple Activities (Phase 2 Smart Composition)
 
 **Entity Data**:
+
 ```json
 {
   "positioning:kneeling_before": {
@@ -2031,11 +2109,13 @@ Activity: Jon Ureña is hugging Alicia Western tightly.
 ```
 
 **Phase 1 Output (Simple Concatenation)**:
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western.
 ```
 
 **Phase 2 Output (Smart Composition)**:
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her.
 ```
@@ -2043,6 +2123,7 @@ Activity: Jon Ureña is kneeling before Alicia Western and holding hands with he
 ### Example 6: Multi-Target Scenario
 
 **Entity Data**:
+
 ```json
 {
   "positioning:kneeling_before": {
@@ -2076,6 +2157,7 @@ Activity: Jon Ureña is kneeling before Alicia Western and holding hands with he
 ```
 
 **Phase 2 Output (Smart Grouping)**:
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her. Jon Ureña is following Bob Smith.
 ```
@@ -2087,26 +2169,31 @@ Activity: Jon Ureña is kneeling before Alicia Western and holding hands with he
 ### Single Activity Scenarios
 
 **Kneeling:**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western.
 ```
 
 **Following:**
+
 ```
 Activity: Alicia Western is following Jon Ureña.
 ```
 
 **Kissing (as initiator):**
+
 ```
 Activity: Jon Ureña is kissing Alicia Western.
 ```
 
 **Hugging:**
+
 ```
 Activity: Jon Ureña is hugging Alicia Western tightly.
 ```
 
 **Holding Hands:**
+
 ```
 Activity: Jon Ureña is holding hands with Alicia Western.
 ```
@@ -2114,16 +2201,19 @@ Activity: Jon Ureña is holding hands with Alicia Western.
 ### Multiple Activity Scenarios (Same Target)
 
 **Phase 1 (Simple Concatenation):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is holding hands with Alicia Western.
 ```
 
 **Phase 2 (Smart Composition):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her.
 ```
 
 **Three Activities (Same Target):**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western, holding hands with her, and gazing into her eyes.
 ```
@@ -2131,11 +2221,13 @@ Activity: Jon Ureña is kneeling before Alicia Western, holding hands with her, 
 ### Multiple Activity Scenarios (Different Targets)
 
 **Two Targets:**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and holding hands with her. Jon Ureña is following Bob Smith.
 ```
 
 **Three Targets:**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is following Bob Smith. Jon Ureña is waving at Charlie Brown.
 ```
@@ -2143,6 +2235,7 @@ Activity: Jon Ureña is kneeling before Alicia Western. Jon Ureña is following 
 ### Complex Scenarios (Phase 3)
 
 **Conditional Visibility (Kissing):**
+
 ```json
 // Initiator
 Activity: Jon Ureña is kissing Alicia Western passionately.
@@ -2152,6 +2245,7 @@ Activity: Jon Ureña is holding hands with Alicia Western.
 ```
 
 **Priority-Based Filtering (Many Activities):**
+
 ```json
 // All activities (10):
 // - kissing (priority 95)
@@ -2166,11 +2260,13 @@ Activity: Jon Ureña is kissing Alicia Western, kneeling before her, and holding
 ```
 
 **Adverb Modifiers:**
+
 ```
 Activity: Jon Ureña is kissing Alicia Western passionately and holding her close.
 ```
 
 **Pronoun Resolution:**
+
 ```
 Activity: Jon Ureña is kneeling before Alicia Western and gazing into her eyes.
 ```
@@ -2178,16 +2274,19 @@ Activity: Jon Ureña is kneeling before Alicia Western and gazing into her eyes.
 ### Edge Case Examples
 
 **No Activities:**
+
 ```
 (No Activity line in description)
 ```
 
 **Single Activity (No Target):**
+
 ```
 Activity: Jon Ureña is meditating.
 ```
 
 **Circular Reference (A following B, B following A):**
+
 ```
 // Detect and handle gracefully
 Activity: Jon Ureña is following Alicia Western.
@@ -2195,6 +2294,7 @@ Activity: Alicia Western is following Jon Ureña.
 ```
 
 **Missing Target Entity:**
+
 ```
 // Fallback to entity ID if name not found
 Activity: Jon Ureña is following unknown_entity_123.
@@ -2226,23 +2326,23 @@ describe('ActivityDescriptionService', () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
     mockEntityManager = testBed.createMock('entityManager', [
-      'getEntityInstance'
+      'getEntityInstance',
     ]);
     mockFormattingService = testBed.createMock('formattingService', [
-      'getActivityIntegrationConfig'
+      'getActivityIntegrationConfig',
     ]);
 
     // Default config
     mockFormattingService.getActivityIntegrationConfig.mockReturnValue({
       prefix: 'Activity: ',
       suffix: '',
-      separator: '. '
+      separator: '. ',
     });
 
     service = new ActivityDescriptionService({
       logger: mockLogger,
       entityManager: mockEntityManager,
-      anatomyFormattingService: mockFormattingService
+      anatomyFormattingService: mockFormattingService,
     });
   });
 
@@ -2251,7 +2351,7 @@ describe('ActivityDescriptionService', () => {
       const mockEntity = testBed.createMock('entity', [
         'getComponentIds',
         'getComponentData',
-        'hasComponent'
+        'hasComponent',
       ]);
       mockEntity.id = 'entity_1';
       mockEntity.getComponentIds.mockReturnValue([]);
@@ -2267,10 +2367,12 @@ describe('ActivityDescriptionService', () => {
       const mockEntity = testBed.createMock('entity', [
         'getComponentIds',
         'getComponentData',
-        'hasComponent'
+        'hasComponent',
       ]);
       mockEntity.id = 'jon';
-      mockEntity.getComponentIds.mockReturnValue(['positioning:kneeling_before']);
+      mockEntity.getComponentIds.mockReturnValue([
+        'positioning:kneeling_before',
+      ]);
       mockEntity.hasComponent.mockReturnValue(false); // No dedicated metadata
       mockEntity.getComponentData.mockImplementation((id) => {
         if (id === 'positioning:kneeling_before') {
@@ -2280,8 +2382,8 @@ describe('ActivityDescriptionService', () => {
               shouldDescribeInActivity: true,
               template: '{actor} is kneeling before {target}',
               targetRole: 'entityId',
-              priority: 75
-            }
+              priority: 75,
+            },
           };
         }
         if (id === 'core:name') {
@@ -2302,19 +2404,21 @@ describe('ActivityDescriptionService', () => {
 
       const result = await service.generateActivityDescription('jon');
 
-      expect(result).toBe('Activity: Jon Ureña is kneeling before Alicia Western');
+      expect(result).toBe(
+        'Activity: Jon Ureña is kneeling before Alicia Western'
+      );
     });
 
     it('should format multiple activities (simple concatenation)', async () => {
       const mockEntity = testBed.createMock('entity', [
         'getComponentIds',
         'getComponentData',
-        'hasComponent'
+        'hasComponent',
       ]);
       mockEntity.id = 'jon';
       mockEntity.getComponentIds.mockReturnValue([
         'positioning:kneeling_before',
-        'intimacy:holding_hand'
+        'intimacy:holding_hand',
       ]);
       mockEntity.hasComponent.mockReturnValue(false);
       mockEntity.getComponentData.mockImplementation((id) => {
@@ -2325,8 +2429,8 @@ describe('ActivityDescriptionService', () => {
               shouldDescribeInActivity: true,
               template: '{actor} is kneeling before {target}',
               targetRole: 'entityId',
-              priority: 75
-            }
+              priority: 75,
+            },
           };
         }
         if (id === 'intimacy:holding_hand') {
@@ -2336,8 +2440,8 @@ describe('ActivityDescriptionService', () => {
               shouldDescribeInActivity: true,
               template: '{actor} is holding hands with {target}',
               targetRole: 'partner',
-              priority: 60
-            }
+              priority: 60,
+            },
           };
         }
         if (id === 'core:name') {
@@ -2361,7 +2465,7 @@ describe('ActivityDescriptionService', () => {
       // Phase 1: Simple concatenation
       expect(result).toBe(
         'Activity: Jon Ureña is kneeling before Alicia Western. ' +
-        'Jon Ureña is holding hands with Alicia Western'
+          'Jon Ureña is holding hands with Alicia Western'
       );
     });
 
@@ -2369,7 +2473,7 @@ describe('ActivityDescriptionService', () => {
       const mockEntity = testBed.createMock('entity', [
         'getComponentIds',
         'getComponentData',
-        'hasComponent'
+        'hasComponent',
       ]);
       mockEntity.id = 'jon';
       mockEntity.getComponentIds.mockReturnValue(['companionship:following']);
@@ -2382,8 +2486,8 @@ describe('ActivityDescriptionService', () => {
               shouldDescribeInActivity: true,
               template: '{actor} is following {target}',
               targetRole: 'leaderId',
-              priority: 40
-            }
+              priority: 40,
+            },
           };
         }
         if (id === 'core:name') {
@@ -2408,12 +2512,12 @@ describe('ActivityDescriptionService', () => {
       const mockEntity = testBed.createMock('entity', [
         'getComponentIds',
         'getComponentData',
-        'hasComponent'
+        'hasComponent',
       ]);
       mockEntity.id = 'jon';
       mockEntity.getComponentIds.mockReturnValue([
         'low_priority_activity',
-        'high_priority_activity'
+        'high_priority_activity',
       ]);
       mockEntity.hasComponent.mockReturnValue(false);
       mockEntity.getComponentData.mockImplementation((id) => {
@@ -2424,8 +2528,8 @@ describe('ActivityDescriptionService', () => {
               shouldDescribeInActivity: true,
               template: '{actor} is waving at {target}',
               targetRole: 'entityId',
-              priority: 20
-            }
+              priority: 20,
+            },
           };
         }
         if (id === 'high_priority_activity') {
@@ -2435,8 +2539,8 @@ describe('ActivityDescriptionService', () => {
               shouldDescribeInActivity: true,
               template: '{actor} is kissing {target}',
               targetRole: 'entityId',
-              priority: 90
-            }
+              priority: 90,
+            },
           };
         }
         if (id === 'core:name') {
@@ -2479,11 +2583,11 @@ describe('ActivityDescriptionService', () => {
         'getComponentIds',
         'getComponentData',
         'hasComponent',
-        'getAllComponentsOfType'
+        'getAllComponentsOfType',
       ]);
       mockEntity.id = 'jon';
-      mockEntity.hasComponent.mockImplementation((id) =>
-        id === 'activity:description_metadata'
+      mockEntity.hasComponent.mockImplementation(
+        (id) => id === 'activity:description_metadata'
       );
       mockEntity.getAllComponentsOfType.mockReturnValue([
         {
@@ -2495,16 +2599,16 @@ describe('ActivityDescriptionService', () => {
           conditions: {
             showOnlyIfProperty: {
               property: 'initiator',
-              equals: true
-            }
-          }
-        }
+              equals: true,
+            },
+          },
+        },
       ]);
       mockEntity.getComponentData.mockImplementation((id) => {
         if (id === 'kissing:kissing') {
           return {
             partner: 'alicia',
-            initiator: false // Not initiator
+            initiator: false, // Not initiator
           };
         }
         if (id === 'core:name') {
@@ -2547,31 +2651,36 @@ describe('Activity Description Integration', () => {
       id: 'jon',
       name: 'Jon Ureña',
       components: {
-        'anatomy:body': { /* body data */ },
+        'anatomy:body': {
+          /* body data */
+        },
         'positioning:kneeling_before': {
           entityId: 'alicia',
           activityMetadata: {
             shouldDescribeInActivity: true,
             template: '{actor} is kneeling before {target}',
             targetRole: 'entityId',
-            priority: 75
-          }
-        }
-      }
+            priority: 75,
+          },
+        },
+      },
     });
 
     // Create target entity
     testBed.createEntity({
       id: 'alicia',
-      name: 'Alicia Western'
+      name: 'Alicia Western',
     });
 
     // Generate full description
     const orchestrator = testBed.getService('BodyDescriptionOrchestrator');
-    const { bodyDescription } = await orchestrator.generateAllDescriptions(entity);
+    const { bodyDescription } =
+      await orchestrator.generateAllDescriptions(entity);
 
     // Should include activity line
-    expect(bodyDescription).toContain('Activity: Jon Ureña is kneeling before Alicia Western');
+    expect(bodyDescription).toContain(
+      'Activity: Jon Ureña is kneeling before Alicia Western'
+    );
   });
 
   it('should handle multiple simultaneous activities', async () => {
@@ -2579,15 +2688,17 @@ describe('Activity Description Integration', () => {
       id: 'jon',
       name: 'Jon Ureña',
       components: {
-        'anatomy:body': { /* body data */ },
+        'anatomy:body': {
+          /* body data */
+        },
         'positioning:kneeling_before': {
           entityId: 'alicia',
           activityMetadata: {
             shouldDescribeInActivity: true,
             template: '{actor} is kneeling before {target}',
             targetRole: 'entityId',
-            priority: 75
-          }
+            priority: 75,
+          },
         },
         'intimacy:holding_hand': {
           partner: 'alicia',
@@ -2595,19 +2706,20 @@ describe('Activity Description Integration', () => {
             shouldDescribeInActivity: true,
             template: '{actor} is holding hands with {target}',
             targetRole: 'partner',
-            priority: 60
-          }
-        }
-      }
+            priority: 60,
+          },
+        },
+      },
     });
 
     testBed.createEntity({
       id: 'alicia',
-      name: 'Alicia Western'
+      name: 'Alicia Western',
     });
 
     const orchestrator = testBed.getService('BodyDescriptionOrchestrator');
-    const { bodyDescription } = await orchestrator.generateAllDescriptions(entity);
+    const { bodyDescription } =
+      await orchestrator.generateAllDescriptions(entity);
 
     // Should include both activities
     expect(bodyDescription).toContain('kneeling before Alicia Western');
@@ -2617,21 +2729,26 @@ describe('Activity Description Integration', () => {
   it('should work without activity service (backward compatibility)', async () => {
     // Create container without ActivityDescriptionService
     const containerWithoutActivity = testBed.createContainer({
-      excludeServices: ['ActivityDescriptionService']
+      excludeServices: ['ActivityDescriptionService'],
     });
 
     const entity = testBed.createEntity({
       id: 'jon',
       components: {
-        'anatomy:body': { /* body data */ },
+        'anatomy:body': {
+          /* body data */
+        },
         'positioning:kneeling_before': {
-          entityId: 'alicia'
-        }
-      }
+          entityId: 'alicia',
+        },
+      },
     });
 
-    const orchestrator = containerWithoutActivity.resolve('BodyDescriptionOrchestrator');
-    const { bodyDescription } = await orchestrator.generateAllDescriptions(entity);
+    const orchestrator = containerWithoutActivity.resolve(
+      'BodyDescriptionOrchestrator'
+    );
+    const { bodyDescription } =
+      await orchestrator.generateAllDescriptions(entity);
 
     // Should not crash, just no Activity line
     expect(bodyDescription).not.toContain('Activity:');
@@ -2654,10 +2771,10 @@ describe('Activity Description Edge Cases', () => {
             shouldDescribeInActivity: true,
             template: '{actor} is following {target}',
             targetRole: 'leaderId',
-            priority: 40
-          }
-        }
-      }
+            priority: 40,
+          },
+        },
+      },
     });
 
     const alicia = testBed.createEntity({
@@ -2670,16 +2787,17 @@ describe('Activity Description Edge Cases', () => {
             shouldDescribeInActivity: true,
             template: '{actor} is following {target}',
             targetRole: 'leaderId',
-            priority: 40
-          }
-        }
-      }
+            priority: 40,
+          },
+        },
+      },
     });
 
     const service = testBed.getService('ActivityDescriptionService');
 
     const jonDescription = await service.generateActivityDescription('jon');
-    const aliciaDescription = await service.generateActivityDescription('alicia');
+    const aliciaDescription =
+      await service.generateActivityDescription('alicia');
 
     // Should describe each entity's activity without infinite loop
     expect(jonDescription).toBe('Activity: Jon is following Alicia');
@@ -2703,11 +2821,11 @@ describe('Activity Description Edge Cases', () => {
             activityMetadata: {
               shouldDescribeInActivity: true,
               template: `{actor} is doing activity ${index}`,
-              priority: index
-            }
-          }
+              priority: index,
+            },
+          },
         ])
-      )
+      ),
     });
 
     const service = testBed.getService('ActivityDescriptionService');
@@ -2721,13 +2839,13 @@ describe('Activity Description Edge Cases', () => {
     const entity = testBed.createEntity({
       id: 'jon',
       components: {
-        'bad_component': {
+        bad_component: {
           activityMetadata: {
-            shouldDescribeInActivity: true
+            shouldDescribeInActivity: true,
             // Missing required fields like template
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     const service = testBed.getService('ActivityDescriptionService');
@@ -2748,6 +2866,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: Should we optimize for performance with indexing from day one, or start simple and optimize later?
 
 **Trade-offs**:
+
 - **Start Simple (Recommended)**:
   - ✅ Faster initial implementation
   - ✅ Easier to test and debug
@@ -2765,6 +2884,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: How sophisticated should the natural language composition be?
 
 **Trade-offs**:
+
 - **Simple Concatenation**:
   - ✅ Easy to implement and debug
   - ✅ Predictable output
@@ -2783,6 +2903,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: What should be the default recommendation for mod developers?
 
 **Trade-offs**:
+
 - **Default to Inline**:
   - ✅ Simpler for mod developers
   - ✅ Less component proliferation
@@ -2800,6 +2921,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: How intelligent should pronoun resolution be?
 
 **Trade-offs**:
+
 - **Always Use Names**:
   - ✅ Always clear and unambiguous
   - ❌ Verbose and repetitive
@@ -2821,6 +2943,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: What should be cached, and for how long?
 
 **Trade-offs**:
+
 - **No Caching**:
   - ✅ Always fresh data
   - ✅ No invalidation logic needed
@@ -2843,6 +2966,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: How complex should conditional visibility rules be?
 
 **Trade-offs**:
+
 - **Simple Boolean Conditions**:
   - ✅ Easy to understand and debug
   - ✅ Sufficient for most use cases
@@ -2863,6 +2987,7 @@ describe('Activity Description Edge Cases', () => {
 **Example**: "kneeling before X" + "gazing at X" → "kneeling before X and gazing into her eyes"
 
 **Trade-offs**:
+
 - **No Combining**:
   - ✅ Simple, predictable
   - ❌ Potentially repetitive
@@ -2882,6 +3007,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: Should the system support non-English descriptions?
 
 **Trade-offs**:
+
 - **English Only**:
   - ✅ Simpler implementation
   - ❌ Limits international adoption
@@ -2897,6 +3023,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: How comprehensive should testing be for initial release?
 
 **Trade-offs**:
+
 - **Minimal Testing**:
   - ✅ Faster initial release
   - ❌ Higher risk of bugs in production
@@ -2912,6 +3039,7 @@ describe('Activity Description Edge Cases', () => {
 **Question**: How much documentation is needed for mod developers?
 
 **Trade-offs**:
+
 - **Minimal Docs (Code Comments Only)**:
   - ✅ Less documentation burden
   - ❌ Harder for mod developers to understand

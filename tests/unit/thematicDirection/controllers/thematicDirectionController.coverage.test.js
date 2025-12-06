@@ -15,7 +15,6 @@ describe('ThematicDirectionController - Coverage Enhancement', () => {
 
     // Mock scrollIntoView which doesn't exist in jsdom
     Element.prototype.scrollIntoView = jest.fn();
-
   });
 
   afterEach(async () => {

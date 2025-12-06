@@ -364,10 +364,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
         'positioning:lying_down'
       );
 
-      if (
-        lyingComponent &&
-        lyingComponent.furniture_id === furnitureId
-      ) {
+      if (lyingComponent && lyingComponent.furniture_id === furnitureId) {
         lyingActors.push(entityId);
       }
     }
@@ -404,8 +401,7 @@ class RemoveLyingClosenessHandler extends BaseOperationHandler {
     ) {
       // Remove former lying actors from departing actor's list (these are lying-based)
       let updatedPartners = departingActorCloseness.partners.filter(
-        (partner) =>
-          !this.#isLyingBasedRelationship(partner, formerLyingActors)
+        (partner) => !this.#isLyingBasedRelationship(partner, formerLyingActors)
       );
 
       // Use closeness circle service to deduplicate and sort the partners array

@@ -23,7 +23,10 @@ const ROOM_ID = 'room1';
  * @param {string} secondaryId - Secondary target entity ID.
  * @returns {object} Multi-target payload structure.
  */
-function createMultiTargetPayload(primaryId = TARGET_ID, secondaryId = FURNITURE_ID) {
+function createMultiTargetPayload(
+  primaryId = TARGET_ID,
+  secondaryId = FURNITURE_ID
+) {
   return {
     targets: {
       primary: { entityId: primaryId },

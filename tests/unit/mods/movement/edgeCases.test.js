@@ -8,7 +8,7 @@ describe('Movement Error Handling', () => {
     it('should handle missing scope file gracefully', () => {
       const scopePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/scopes/clear_directions.scope',
+        'data/mods/movement/scopes/clear_directions.scope'
       );
 
       // Verify scope file exists
@@ -37,13 +37,21 @@ describe('Movement Error Handling', () => {
       const modPath = path.resolve(process.cwd(), 'data/mods/movement');
 
       // Check that directories are actually directories
-      expect(fs.statSync(path.join(modPath, 'actions')).isDirectory()).toBe(true);
-      expect(fs.statSync(path.join(modPath, 'conditions')).isDirectory()).toBe(true);
-      expect(fs.statSync(path.join(modPath, 'scopes')).isDirectory()).toBe(true);
+      expect(fs.statSync(path.join(modPath, 'actions')).isDirectory()).toBe(
+        true
+      );
+      expect(fs.statSync(path.join(modPath, 'conditions')).isDirectory()).toBe(
+        true
+      );
+      expect(fs.statSync(path.join(modPath, 'scopes')).isDirectory()).toBe(
+        true
+      );
       expect(fs.statSync(path.join(modPath, 'rules')).isDirectory()).toBe(true);
 
       // Check that manifest is a file
-      expect(fs.statSync(path.join(modPath, 'mod-manifest.json')).isFile()).toBe(true);
+      expect(
+        fs.statSync(path.join(modPath, 'mod-manifest.json')).isFile()
+      ).toBe(true);
     });
   });
 
@@ -52,7 +60,7 @@ describe('Movement Error Handling', () => {
       // Load a condition and verify structure
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/exit-is-unblocked.condition.json',
+        'data/mods/movement/conditions/exit-is-unblocked.condition.json'
       );
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 
@@ -64,7 +72,7 @@ describe('Movement Error Handling', () => {
     it('should handle null context in conditions', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 
@@ -80,7 +88,7 @@ describe('Movement Error Handling', () => {
     it('should handle deeply nested undefined properties', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/event-is-action-go.condition.json',
+        'data/mods/movement/conditions/event-is-action-go.condition.json'
       );
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 
@@ -96,7 +104,10 @@ describe('Movement Error Handling', () => {
 
   describe('JSON Parsing Error Handling', () => {
     it('should have valid JSON in all action files', () => {
-      const actionsDir = path.resolve(process.cwd(), 'data/mods/movement/actions');
+      const actionsDir = path.resolve(
+        process.cwd(),
+        'data/mods/movement/actions'
+      );
       const actionFiles = fs
         .readdirSync(actionsDir)
         .filter((file) => file.endsWith('.action.json'));
@@ -112,7 +123,10 @@ describe('Movement Error Handling', () => {
     });
 
     it('should have valid JSON in all condition files', () => {
-      const conditionsDir = path.resolve(process.cwd(), 'data/mods/movement/conditions');
+      const conditionsDir = path.resolve(
+        process.cwd(),
+        'data/mods/movement/conditions'
+      );
       const conditionFiles = fs
         .readdirSync(conditionsDir)
         .filter((file) => file.endsWith('.condition.json'));
@@ -153,9 +167,11 @@ describe('Movement Error Handling', () => {
       fs.readdirSync(actionsDir)
         .filter((file) => file.endsWith('.json'))
         .forEach((file) => {
-          const content = JSON.parse(fs.readFileSync(path.join(actionsDir, file), 'utf8'));
+          const content = JSON.parse(
+            fs.readFileSync(path.join(actionsDir, file), 'utf8')
+          );
           expect(content.$schema).toBe(
-            'schema://living-narrative-engine/action.schema.json',
+            'schema://living-narrative-engine/action.schema.json'
           );
         });
 
@@ -165,10 +181,10 @@ describe('Movement Error Handling', () => {
         .filter((file) => file.endsWith('.json'))
         .forEach((file) => {
           const content = JSON.parse(
-            fs.readFileSync(path.join(conditionsDir, file), 'utf8'),
+            fs.readFileSync(path.join(conditionsDir, file), 'utf8')
           );
           expect(content.$schema).toBe(
-            'schema://living-narrative-engine/condition.schema.json',
+            'schema://living-narrative-engine/condition.schema.json'
           );
         });
 
@@ -177,9 +193,11 @@ describe('Movement Error Handling', () => {
       fs.readdirSync(rulesDir)
         .filter((file) => file.endsWith('.json'))
         .forEach((file) => {
-          const content = JSON.parse(fs.readFileSync(path.join(rulesDir, file), 'utf8'));
+          const content = JSON.parse(
+            fs.readFileSync(path.join(rulesDir, file), 'utf8')
+          );
           expect(content.$schema).toBe(
-            'schema://living-narrative-engine/rule.schema.json',
+            'schema://living-narrative-engine/rule.schema.json'
           );
         });
     });
@@ -195,7 +213,7 @@ describe('Movement Error Handling', () => {
 
         files.forEach((file) => {
           const content = JSON.parse(
-            fs.readFileSync(path.join(modPath, dir, file), 'utf8'),
+            fs.readFileSync(path.join(modPath, dir, file), 'utf8')
           );
           if (idField === 'id') {
             expect(content[idField]).toMatch(/^movement:/);
@@ -211,7 +229,7 @@ describe('Movement Error Handling', () => {
         .filter((file) => file.endsWith('.rule.json'))
         .forEach((file) => {
           const content = JSON.parse(
-            fs.readFileSync(path.join(rulesDir, file), 'utf8'),
+            fs.readFileSync(path.join(rulesDir, file), 'utf8')
           );
           // Rule should reference movement conditions
           if (content.condition?.condition_ref) {
@@ -227,8 +245,8 @@ describe('Movement Error Handling', () => {
       const movementManifest = JSON.parse(
         fs.readFileSync(
           path.resolve(process.cwd(), 'data/mods/movement/mod-manifest.json'),
-          'utf8',
-        ),
+          'utf8'
+        )
       );
 
       // Movement should not depend on positioning
@@ -237,13 +255,18 @@ describe('Movement Error Handling', () => {
 
     it('should handle missing referenced conditions', () => {
       // Load all actions and check their condition references
-      const actionsDir = path.resolve(process.cwd(), 'data/mods/movement/actions');
+      const actionsDir = path.resolve(
+        process.cwd(),
+        'data/mods/movement/actions'
+      );
       const actionFiles = fs
         .readdirSync(actionsDir)
         .filter((file) => file.endsWith('.json'));
 
       actionFiles.forEach((file) => {
-        const action = JSON.parse(fs.readFileSync(path.join(actionsDir, file), 'utf8'));
+        const action = JSON.parse(
+          fs.readFileSync(path.join(actionsDir, file), 'utf8')
+        );
 
         if (action.prerequisites) {
           action.prerequisites.forEach((prereq) => {
@@ -255,11 +278,11 @@ describe('Movement Error Handling', () => {
                 const conditionId = conditionRef.split(':')[1];
                 const conditionPath = path.resolve(
                   process.cwd(),
-                  `data/mods/movement/conditions/${conditionId}.condition.json`,
+                  `data/mods/movement/conditions/${conditionId}.condition.json`
                 );
                 expect(fs.existsSync(conditionPath)).toBe(
                   true,
-                  `Missing condition: ${conditionRef}`,
+                  `Missing condition: ${conditionRef}`
                 );
               }
             }
@@ -283,7 +306,7 @@ describe('Movement Error Handling', () => {
               const content = fs.readFileSync(filePath, 'utf8');
               expect(content.trim().length).toBeGreaterThan(
                 0,
-                `Empty file: ${filePath}`,
+                `Empty file: ${filePath}`
               );
             }
           });

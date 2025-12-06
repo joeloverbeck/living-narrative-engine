@@ -79,7 +79,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -134,25 +135,33 @@ function buildEnvironment() {
   });
   entityManager.addComponent(actorAlpha, 'core:name', { text: 'Alpha' });
 
-  entityManager.addComponent(partsAlpha.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(partsAlpha.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(partsAlpha.torso, 'anatomy:joint', {
     parentId: actorAlpha,
     socketId: 'core',
   });
 
-  entityManager.addComponent(partsAlpha.head, 'anatomy:part', { subType: 'head' });
+  entityManager.addComponent(partsAlpha.head, 'anatomy:part', {
+    subType: 'head',
+  });
   entityManager.addComponent(partsAlpha.head, 'anatomy:joint', {
     parentId: partsAlpha.torso,
     socketId: 'neck',
   });
 
-  entityManager.addComponent(partsAlpha.leftArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partsAlpha.leftArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partsAlpha.leftArm, 'anatomy:joint', {
     parentId: partsAlpha.torso,
     socketId: 'left-shoulder',
   });
 
-  entityManager.addComponent(partsAlpha.leftHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(partsAlpha.leftHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(partsAlpha.leftHand, 'anatomy:joint', {
     parentId: partsAlpha.leftArm,
     socketId: 'left-wrist',
@@ -165,20 +174,26 @@ function buildEnvironment() {
     posture: { state: 'raised' },
   });
 
-  entityManager.addComponent(partsAlpha.rightArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partsAlpha.rightArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partsAlpha.rightArm, 'anatomy:joint', {
     parentId: partsAlpha.torso,
     socketId: 'right-shoulder',
   });
   entityManager.addComponent(partsAlpha.rightArm, 'equipment:grip', {});
 
-  entityManager.addComponent(partsAlpha.rightHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(partsAlpha.rightHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(partsAlpha.rightHand, 'anatomy:joint', {
     parentId: partsAlpha.rightArm,
     socketId: 'right-wrist',
   });
 
-  entityManager.addComponent(partsAlpha.heart, 'anatomy:part', { subType: 'organ' });
+  entityManager.addComponent(partsAlpha.heart, 'anatomy:part', {
+    subType: 'organ',
+  });
   entityManager.addComponent(partsAlpha.heart, 'anatomy:joint', {
     parentId: partsAlpha.torso,
     socketId: 'heart-socket',
@@ -192,32 +207,42 @@ function buildEnvironment() {
   });
   entityManager.addComponent(actorBeta, 'core:name', { text: 'Beta' });
 
-  entityManager.addComponent(partsBeta.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(partsBeta.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(partsBeta.torso, 'anatomy:joint', {
     parentId: actorBeta,
     socketId: 'core',
   });
 
-  entityManager.addComponent(partsBeta.head, 'anatomy:part', { subType: 'head' });
+  entityManager.addComponent(partsBeta.head, 'anatomy:part', {
+    subType: 'head',
+  });
   entityManager.addComponent(partsBeta.head, 'anatomy:joint', {
     parentId: partsBeta.torso,
     socketId: 'neck',
   });
 
-  entityManager.addComponent(partsBeta.leftLeg, 'anatomy:part', { subType: 'leg' });
+  entityManager.addComponent(partsBeta.leftLeg, 'anatomy:part', {
+    subType: 'leg',
+  });
   entityManager.addComponent(partsBeta.leftLeg, 'anatomy:joint', {
     parentId: partsBeta.torso,
     socketId: 'left-hip',
   });
 
-  entityManager.addComponent(partsBeta.rightLeg, 'anatomy:part', { subType: 'leg' });
+  entityManager.addComponent(partsBeta.rightLeg, 'anatomy:part', {
+    subType: 'leg',
+  });
   entityManager.addComponent(partsBeta.rightLeg, 'anatomy:joint', {
     parentId: partsBeta.torso,
     socketId: 'right-hip',
   });
 
   const floatingPart = 'floating-part';
-  entityManager.addComponent(floatingPart, 'anatomy:part', { subType: 'detached' });
+  entityManager.addComponent(floatingPart, 'anatomy:part', {
+    subType: 'detached',
+  });
 
   return {
     service,
@@ -292,20 +317,14 @@ describe('BodyGraphService multi-root integration', () => {
     const secondArms = env.service.findPartsByType(env.actorAlpha, 'arm');
     expect(secondArms).toBe(firstArms);
     expect(firstArms).toEqual(
-      expect.arrayContaining([
-        env.partsAlpha.leftArm,
-        env.partsAlpha.rightArm,
-      ])
+      expect.arrayContaining([env.partsAlpha.leftArm, env.partsAlpha.rightArm])
     );
     expect(findSpy).toHaveBeenCalledTimes(1);
     findSpy.mockRestore();
 
     const betaLegs = env.service.findPartsByType(env.actorBeta, 'leg');
     expect(betaLegs).toEqual(
-      expect.arrayContaining([
-        env.partsBeta.leftLeg,
-        env.partsBeta.rightLeg,
-      ])
+      expect.arrayContaining([env.partsBeta.leftLeg, env.partsBeta.rightLeg])
     );
   });
 
@@ -358,10 +377,10 @@ describe('BodyGraphService multi-root integration', () => {
     expect(handsAfterCascade).not.toEqual(handsBefore);
     expect(handsAfterCascade).not.toContain(env.partsAlpha.leftHand);
 
-    const singleResult = await env.service.detachPart(
-      env.partsAlpha.rightArm,
-      { cascade: false, reason: 'testing' }
-    );
+    const singleResult = await env.service.detachPart(env.partsAlpha.rightArm, {
+      cascade: false,
+      reason: 'testing',
+    });
     expect(singleResult).toEqual({
       detached: [env.partsAlpha.rightArm],
       parentId: env.partsAlpha.torso,
@@ -482,12 +501,12 @@ describe('BodyGraphService multi-root integration', () => {
       env.service.getAnatomyData('actor-beta-ghost')
     ).resolves.toBeNull();
 
-    expect(
-      env.service.hasPartWithComponent(alphaBody, 'equipment:grip')
-    ).toBe(true);
-    expect(
-      env.service.hasPartWithComponent(alphaBody, 'custom:metadata')
-    ).toBe(false);
+    expect(env.service.hasPartWithComponent(alphaBody, 'equipment:grip')).toBe(
+      true
+    );
+    expect(env.service.hasPartWithComponent(alphaBody, 'custom:metadata')).toBe(
+      false
+    );
 
     expect(
       env.service.hasPartWithComponentValue(
@@ -514,7 +533,10 @@ describe('BodyGraphService multi-root integration', () => {
     expect(env.service.hasCache('unknown-actor')).toBe(false);
 
     const serviceFactory = () =>
-      new BodyGraphService({ logger: env.logger, eventDispatcher: env.eventDispatcher });
+      new BodyGraphService({
+        logger: env.logger,
+        eventDispatcher: env.eventDispatcher,
+      });
     expect(serviceFactory).toThrow(InvalidArgumentError);
     expect(
       () =>

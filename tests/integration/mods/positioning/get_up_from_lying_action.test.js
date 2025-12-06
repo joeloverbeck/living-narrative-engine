@@ -27,7 +27,7 @@ function setupActorLyingOnFurniture(
     .atLocation(locationId)
     .asActor()
     .withComponent('positioning:lying_down', {
-      furniture_id: 'test:bed1'
+      furniture_id: 'test:bed1',
     })
     .build();
 
@@ -63,14 +63,16 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       testFixture.reset([scenario.room, scenario.actor, scenario.furniture]);
 
       // Verify precondition
-      const actorBefore = testFixture.entityManager.getEntityInstance('test:actor1');
+      const actorBefore =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorBefore.components['positioning:lying_down']).toBeDefined();
 
       // Act: Get up
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Component removed
-      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorAfter.components['positioning:lying_down']).toBeUndefined();
     });
 
@@ -92,7 +94,11 @@ describe('positioning:get_up_from_lying action rule execution', () => {
 
     it('should dispatch perceptible event with correct message', async () => {
       // Arrange
-      const scenario = setupActorLyingOnFurniture('Alice', 'Queen Bed', 'bedroom');
+      const scenario = setupActorLyingOnFurniture(
+        'Alice',
+        'Queen Bed',
+        'bedroom'
+      );
       testFixture.reset([scenario.room, scenario.actor, scenario.furniture]);
 
       // Act: Get up
@@ -105,7 +111,9 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       expect(perceptibleEvents.length).toBeGreaterThan(0);
 
       const event = perceptibleEvents[0];
-      expect(event.payload.descriptionText).toBe('Alice gets up from Queen Bed.');
+      expect(event.payload.descriptionText).toBe(
+        'Alice gets up from Queen Bed.'
+      );
       expect(event.payload.locationId).toBe('bedroom');
       expect(event.payload.actorId).toBe('test:actor1');
       expect(event.payload.targetId).toBe('test:bed1');
@@ -114,14 +122,16 @@ describe('positioning:get_up_from_lying action rule execution', () => {
 
   describe('Getting up from different furniture', () => {
     it('should work when getting up from couch', async () => {
-      const room = new ModEntityBuilder('living_room').asRoom('Living Room').build();
+      const room = new ModEntityBuilder('living_room')
+        .asRoom('Living Room')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Bob')
         .atLocation('living_room')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:couch1'
+          furniture_id: 'test:couch1',
         })
         .build();
 
@@ -137,7 +147,8 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       await testFixture.executeAction('test:actor1', 'test:couch1');
 
       // Assert
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:lying_down']).toBeUndefined();
     });
 
@@ -150,7 +161,7 @@ describe('positioning:get_up_from_lying action rule execution', () => {
         .atLocation('garden')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:hammock1'
+          furniture_id: 'test:hammock1',
         })
         .build();
 
@@ -166,7 +177,8 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       await testFixture.executeAction('test:actor1', 'test:hammock1');
 
       // Assert
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:lying_down']).toBeUndefined();
     });
   });
@@ -210,7 +222,7 @@ describe('positioning:get_up_from_lying action rule execution', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:nonexistent_bed' // References deleted furniture
+          furniture_id: 'test:nonexistent_bed', // References deleted furniture
         })
         .build();
 
@@ -224,7 +236,8 @@ describe('positioning:get_up_from_lying action rule execution', () => {
 
       // Assert: Should handle gracefully (implementation-dependent)
       // At minimum, should not crash the game
-      const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorAfter).toBeDefined(); // Actor still exists
     });
   });
@@ -236,14 +249,16 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       testFixture.reset([scenario.room, scenario.actor, scenario.furniture]);
 
       // Get initial state (already lying in this setup)
-      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const initialActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(initialActor.components['positioning:lying_down']).toBeDefined();
 
       // Act: Get up
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Actor should be in "normal" state
-      const finalActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const finalActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(finalActor.components['positioning:lying_down']).toBeUndefined();
 
       // Should be able to do other actions now
@@ -263,7 +278,9 @@ describe('positioning:get_up_from_lying action rule execution', () => {
     it('should have correct condition file', () => {
       // The condition file should be loaded
       expect(testFixture.conditionFile).toBeDefined();
-      expect(testFixture.conditionFile.id).toMatch(/get[-_]up[-_]from[-_]lying/);
+      expect(testFixture.conditionFile.id).toMatch(
+        /get[-_]up[-_]from[-_]lying/
+      );
     });
 
     it('should have valid rule actions', () => {
@@ -286,7 +303,8 @@ describe('positioning:get_up_from_lying action rule execution', () => {
       expect(removeComponentActions.length).toBeGreaterThan(0);
 
       const lyingDownComponentAction = removeComponentActions.find(
-        (action) => action.parameters.component_type === 'positioning:lying_down'
+        (action) =>
+          action.parameters.component_type === 'positioning:lying_down'
       );
       expect(lyingDownComponentAction).toBeDefined();
     });

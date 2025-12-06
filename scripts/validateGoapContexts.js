@@ -30,7 +30,9 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-console.log(`🔍 Scanning ${files.length} GOAP goal/task definition(s) for deprecated actor.core paths...`);
+console.log(
+  `🔍 Scanning ${files.length} GOAP goal/task definition(s) for deprecated actor.core paths...`
+);
 
 const violations = [];
 
@@ -65,5 +67,7 @@ violations.forEach((violation, index) => {
   );
 });
 
-console.error('\nPlease update these files to use PlanningStateView-friendly actor.components paths.');
+console.error(
+  '\nPlease update these files to use PlanningStateView-friendly actor.components paths.'
+);
 process.exit(1);

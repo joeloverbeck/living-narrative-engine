@@ -15,16 +15,16 @@ Create the `hasFreeGrabbingAppendages` custom JSON Logic operator that checks if
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Operator implementation |
-| `tests/unit/logic/operators/hasFreeGrabbingAppendagesOperator.test.js` | Unit tests |
+| File                                                                   | Purpose                 |
+| ---------------------------------------------------------------------- | ----------------------- |
+| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`             | Operator implementation |
+| `tests/unit/logic/operators/hasFreeGrabbingAppendagesOperator.test.js` | Unit tests              |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/logic/jsonLogicCustomOperators.js` | Import and register the new operator |
+| File                                      | Change                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| `src/logic/jsonLogicCustomOperators.js`   | Import and register the new operator                              |
 | `src/logic/jsonLogicEvaluationService.js` | Add `hasFreeGrabbingAppendages` to `#allowedOperations` whitelist |
 
 ## Out of Scope
@@ -41,6 +41,7 @@ Create the `hasFreeGrabbingAppendages` custom JSON Logic operator that checks if
 
 **Note**: This operator follows the pattern established by `IsHungryOperator` and `HasComponentOperator`.
 It does NOT extend a base class (there is no `BaseOperator`). Instead, it uses:
+
 - `resolveEntityPath` and `hasValidEntityId` from `../utils/entityPathResolver.js`
 - `jsonLogic` from `json-logic-js` for evaluating JSON Logic expressions in entityPath
 - `countFreeGrabbingAppendages` from `../../utils/grabbingUtils.js`
@@ -52,7 +53,10 @@ It does NOT extend a base class (there is no `BaseOperator`). Instead, it uses:
  * @description Checks if an entity has at least N free (unlocked) grabbing appendages
  */
 
-import { resolveEntityPath, hasValidEntityId } from '../utils/entityPathResolver.js';
+import {
+  resolveEntityPath,
+  hasValidEntityId,
+} from '../utils/entityPathResolver.js';
 import jsonLogic from 'json-logic-js';
 import { countFreeGrabbingAppendages } from '../../utils/grabbingUtils.js';
 
@@ -84,7 +88,9 @@ export class HasFreeGrabbingAppendagesOperator {
    */
   constructor({ entityManager, logger }) {
     if (!entityManager || !logger) {
-      throw new Error('HasFreeGrabbingAppendagesOperator: Missing required dependencies');
+      throw new Error(
+        'HasFreeGrabbingAppendagesOperator: Missing required dependencies'
+      );
     }
 
     this.#entityManager = entityManager;
@@ -108,11 +114,13 @@ export class HasFreeGrabbingAppendagesOperator {
 ### Registration in jsonLogicCustomOperators.js
 
 Add import at the top of the file (with other operator imports):
+
 ```javascript
 import { HasFreeGrabbingAppendagesOperator } from './operators/hasFreeGrabbingAppendagesOperator.js';
 ```
 
 In the `registerOperators` method, add operator instantiation (with other operator instantiations):
+
 ```javascript
 const hasFreeGrabbingAppendagesOp = new HasFreeGrabbingAppendagesOperator({
   entityManager: this.#entityManager,
@@ -121,13 +129,17 @@ const hasFreeGrabbingAppendagesOp = new HasFreeGrabbingAppendagesOperator({
 ```
 
 Add operator registration (with other registrations):
+
 ```javascript
 // Register hasFreeGrabbingAppendages operator
 this.#registerOperator(
   'hasFreeGrabbingAppendages',
   function (entityPath, requiredCount) {
     // 'this' is the evaluation context
-    return hasFreeGrabbingAppendagesOp.evaluate([entityPath, requiredCount], this);
+    return hasFreeGrabbingAppendagesOp.evaluate(
+      [entityPath, requiredCount],
+      this
+    );
   },
   jsonLogicEvaluationService
 );
@@ -136,6 +148,7 @@ this.#registerOperator(
 ### Whitelist in jsonLogicEvaluationService.js
 
 Add the operator name to the `#allowedOperations` Set in the constructor:
+
 ```javascript
 // In the #allowedOperations initialization, add:
 'hasFreeGrabbingAppendages',
@@ -189,7 +202,7 @@ import { HasFreeGrabbingAppendagesOperator } from '../../../../src/logic/operato
 
 // Mock the grabbingUtils module
 jest.unstable_mockModule('../../../../src/utils/grabbingUtils.js', () => ({
-  countFreeGrabbingAppendages: jest.fn()
+  countFreeGrabbingAppendages: jest.fn(),
 }));
 
 describe('HasFreeGrabbingAppendagesOperator', () => {
@@ -203,20 +216,22 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
     mockEntityManager = {
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
 
     // Get the mock function
-    const grabbingUtils = await import('../../../../src/utils/grabbingUtils.js');
+    const grabbingUtils = await import(
+      '../../../../src/utils/grabbingUtils.js'
+    );
     mockCountFreeGrabbingAppendages = grabbingUtils.countFreeGrabbingAppendages;
     mockCountFreeGrabbingAppendages.mockReset();
 
     operator = new HasFreeGrabbingAppendagesOperator({
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -253,7 +268,7 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
     });
 
     it('should return false when entity cannot be resolved', () => {
-      const context = {};  // No actor in context
+      const context = {}; // No actor in context
 
       const result = operator.evaluate(['actor', 1], context);
 
@@ -298,18 +313,20 @@ npx eslint src/logic/operators/hasFreeGrabbingAppendagesOperator.js src/logic/js
 **Completed Date**: 2025-01-25
 
 #### Files Created
-| File | Lines | Description |
-|------|-------|-------------|
-| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | 225 | Full operator implementation following `IsHungryOperator` pattern |
-| `tests/unit/logic/operators/hasFreeGrabbingAppendagesOperator.test.js` | 448 | Comprehensive unit tests (36 test cases) |
+
+| File                                                                   | Lines | Description                                                       |
+| ---------------------------------------------------------------------- | ----- | ----------------------------------------------------------------- |
+| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`             | 225   | Full operator implementation following `IsHungryOperator` pattern |
+| `tests/unit/logic/operators/hasFreeGrabbingAppendagesOperator.test.js` | 448   | Comprehensive unit tests (36 test cases)                          |
 
 #### Files Modified
-| File | Change |
-|------|--------|
-| `src/logic/jsonLogicCustomOperators.js` | Added import, instantiation, and registration |
-| `src/logic/jsonLogicEvaluationService.js` | Added `'hasFreeGrabbingAppendages'` to whitelist |
-| `tests/unit/logic/jsonLogicOperatorRegistration.test.js` | Updated expected operator count (16→17) and added to expected operators list |
-| `tests/unit/logic/jsonLogicCustomOperators.whitelistValidation.test.js` | Added `'hasFreeGrabbingAppendages'` to expected operators list |
+
+| File                                                                    | Change                                                                       |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `src/logic/jsonLogicCustomOperators.js`                                 | Added import, instantiation, and registration                                |
+| `src/logic/jsonLogicEvaluationService.js`                               | Added `'hasFreeGrabbingAppendages'` to whitelist                             |
+| `tests/unit/logic/jsonLogicOperatorRegistration.test.js`                | Updated expected operator count (16→17) and added to expected operators list |
+| `tests/unit/logic/jsonLogicCustomOperators.whitelistValidation.test.js` | Added `'hasFreeGrabbingAppendages'` to expected operators list               |
 
 ### Ticket Corrections Made
 
@@ -329,17 +346,17 @@ Original ticket assumptions that were corrected before implementation:
 
 The test suite covers:
 
-| Category | Tests | Description |
-|----------|-------|-------------|
-| Constructor | 4 | Dependency validation |
-| Sufficient Appendages | 3 | Return true when entity has enough |
-| Insufficient Appendages | 3 | Return false when entity has fewer |
-| Default RequiredCount | 3 | Defaults to 1, handles non-numeric |
-| Entity Resolution | 6 | Context paths, self, objects, nested paths |
-| Error Handling | 9 | Invalid params, null, undefined, empty strings |
-| Edge Cases | 4 | Zero count, large count, fractional, negative |
-| Logging | 2 | Debug messages for success/failure |
-| Integration Patterns | 2 | Typical action context patterns |
+| Category                | Tests | Description                                    |
+| ----------------------- | ----- | ---------------------------------------------- |
+| Constructor             | 4     | Dependency validation                          |
+| Sufficient Appendages   | 3     | Return true when entity has enough             |
+| Insufficient Appendages | 3     | Return false when entity has fewer             |
+| Default RequiredCount   | 3     | Defaults to 1, handles non-numeric             |
+| Entity Resolution       | 6     | Context paths, self, objects, nested paths     |
+| Error Handling          | 9     | Invalid params, null, undefined, empty strings |
+| Edge Cases              | 4     | Zero count, large count, fractional, negative  |
+| Logging                 | 2     | Debug messages for success/failure             |
+| Integration Patterns    | 2     | Typical action context patterns                |
 
 ### Invariants Verified
 

@@ -32,7 +32,8 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
         scopeResolver.__extractSpiritualCorruptionOriginalResolve ||
         scopeResolver.resolveSync.bind(scopeResolver);
 
-      scopeResolver.__extractSpiritualCorruptionOriginalResolve = originalResolve;
+      scopeResolver.__extractSpiritualCorruptionOriginalResolve =
+        originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (scopeName === 'warding:corrupted_actors') {
           const actorId = context?.actor?.id;
@@ -323,7 +324,9 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
   describe('Modifiers and metadata', () => {
     it('includes all extraction modifiers with correct tags/values', () => {
       const modifiers = extractAction.chanceBased.modifiers;
-      const unrestrained = modifiers.find((m) => m.tag === 'target unrestrained');
+      const unrestrained = modifiers.find(
+        (m) => m.tag === 'target unrestrained'
+      );
       const restrained = modifiers.find((m) => m.tag === 'target restrained');
       const warded = modifiers.find((m) => m.tag === 'target warded');
       const downed = modifiers.find((m) => m.tag === 'target downed');
@@ -341,8 +344,12 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
     it('caps chance between 5 and 95 with 5/95 critical thresholds', () => {
       expect(extractAction.chanceBased.bounds.min).toBe(5);
       expect(extractAction.chanceBased.bounds.max).toBe(95);
-      expect(extractAction.chanceBased.outcomes.criticalSuccessThreshold).toBe(5);
-      expect(extractAction.chanceBased.outcomes.criticalFailureThreshold).toBe(95);
+      expect(extractAction.chanceBased.outcomes.criticalSuccessThreshold).toBe(
+        5
+      );
+      expect(extractAction.chanceBased.outcomes.criticalFailureThreshold).toBe(
+        95
+      );
     });
   });
 });

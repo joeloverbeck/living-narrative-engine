@@ -38,7 +38,9 @@
           {
             "type": "REGENERATE_DESCRIPTION",
             "parameters": {
-              "entity_ref": { "entityId": "{context.oldFollowingData.leaderId}" }
+              "entity_ref": {
+                "entityId": "{context.oldFollowingData.leaderId}"
+              }
             }
           },
           {

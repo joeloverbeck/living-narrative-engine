@@ -123,13 +123,10 @@ describe('StaticErrorDispatcher integration', () => {
       logger
     );
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'Async meltdown',
-        details: { stage: 'async' },
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Async meltdown',
+      details: { stage: 'async' },
+    });
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to dispatch system error event: Async meltdown',
       expect.objectContaining({
@@ -157,13 +154,10 @@ describe('StaticErrorDispatcher integration', () => {
       error: 'Validation failed',
       details: { field: 'name' },
     });
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'Validation failed',
-        details: { field: 'name' },
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Validation failed',
+      details: { field: 'name' },
+    });
   });
 
   it('dispatchValidationError throws when dispatcher is invalid', () => {
@@ -184,13 +178,10 @@ describe('StaticErrorDispatcher integration', () => {
 
     safeDispatchError(dispatcher, 'Legacy bridge');
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'Legacy bridge',
-        details: {},
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Legacy bridge',
+      details: {},
+    });
   });
 
   it('dispatchSystemErrorEvent resolves even when the dispatcher returns synchronously', async () => {
@@ -207,13 +198,10 @@ describe('StaticErrorDispatcher integration', () => {
       )
     ).resolves.toBeUndefined();
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'Async pathway',
-        details: { attempt: 1 },
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Async pathway',
+      details: { attempt: 1 },
+    });
   });
 
   it('dispatchError uses an empty details object when none is provided', () => {
@@ -229,13 +217,10 @@ describe('StaticErrorDispatcher integration', () => {
       logger
     );
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'Default details branch',
-        details: {},
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Default details branch',
+      details: {},
+    });
   });
 
   it('dispatchValidationError wrapper omits details when not provided', () => {
@@ -246,12 +231,9 @@ describe('StaticErrorDispatcher integration', () => {
     const result = dispatchValidationErrorFn(dispatcher, 'Missing details');
 
     expect(result).toEqual({ ok: false, error: 'Missing details' });
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'Missing details',
-        details: {},
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Missing details',
+      details: {},
+    });
   });
 });

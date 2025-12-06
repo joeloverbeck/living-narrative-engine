@@ -64,17 +64,17 @@ describe('hand-holding:squeeze_hand_reassuringly action discovery', () => {
             }
 
             const actorHoldingPartner =
-              actorEntity.components?.['hand-holding:holding_hand']?.held_entity_id ===
-              partnerId;
+              actorEntity.components?.['hand-holding:holding_hand']
+                ?.held_entity_id === partnerId;
             const actorHandHeldByPartner =
-              actorEntity.components?.['hand-holding:hand_held']?.holding_entity_id ===
-              partnerId;
+              actorEntity.components?.['hand-holding:hand_held']
+                ?.holding_entity_id === partnerId;
             const partnerHoldingActor =
-              partner.components?.['hand-holding:holding_hand']?.held_entity_id ===
-              actorId;
+              partner.components?.['hand-holding:holding_hand']
+                ?.held_entity_id === actorId;
             const partnerHandHeldByActor =
-              partner.components?.['hand-holding:hand_held']?.holding_entity_id ===
-              actorId;
+              partner.components?.['hand-holding:hand_held']
+                ?.holding_entity_id === actorId;
 
             if (
               !actorHoldingPartner &&

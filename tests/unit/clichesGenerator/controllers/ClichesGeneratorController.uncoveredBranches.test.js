@@ -32,12 +32,12 @@ describe('ClichesGeneratorController uncovered logic', () => {
     testBed = new ClichesGeneratorControllerTestBed();
 
     const direction = testBed.createMockDirection('dir-missing');
-    testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
-      { direction, concept: null },
-    ]);
-    testBed.mockCharacterBuilderService.getAllThematicDirections.mockResolvedValue([
-      direction,
-    ]);
+    testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      [{ direction, concept: null }]
+    );
+    testBed.mockCharacterBuilderService.getAllThematicDirections.mockResolvedValue(
+      [direction]
+    );
     testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
       null
     );
@@ -48,18 +48,20 @@ describe('ClichesGeneratorController uncovered logic', () => {
       testBed.mockCharacterBuilderService.getCharacterConcept
     ).toHaveBeenCalledWith(direction.conceptId);
 
-    const optgroup = testBed
-      .getDirectionSelector()
-      .querySelector('optgroup');
+    const optgroup = testBed.getDirectionSelector().querySelector('optgroup');
     expect(optgroup).not.toBeNull();
     expect(optgroup.label).toBe('Untitled Concept');
     expect(optgroup.querySelector('option').value).toBe(direction.id);
 
     expect(testBed.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Concept concept-1 not found - using fallback placeholder')
+      expect.stringContaining(
+        'Concept concept-1 not found - using fallback placeholder'
+      )
     );
     expect(testBed.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Concept concept-1 is missing text - displaying as Untitled Concept')
+      expect.stringContaining(
+        'Concept concept-1 is missing text - displaying as Untitled Concept'
+      )
     );
   });
 
@@ -69,16 +71,18 @@ describe('ClichesGeneratorController uncovered logic', () => {
     const direction = testBed.createMockDirection('dir-fetch');
     const fetchedConcept = testBed.createMockConcept(direction.conceptId);
 
-    testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue([
-      { direction, concept: null },
-    ]);
-    testBed.mockCharacterBuilderService.getAllThematicDirections.mockResolvedValue([
-      direction,
-    ]);
+    testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      [{ direction, concept: null }]
+    );
+    testBed.mockCharacterBuilderService.getAllThematicDirections.mockResolvedValue(
+      [direction]
+    );
     testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
       fetchedConcept
     );
-    testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+    testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+      false
+    );
 
     await testBed.setup();
 
@@ -249,7 +253,9 @@ describe('ClichesGeneratorController uncovered logic', () => {
     const backBtn = document.getElementById('back-btn');
     backBtn.click();
 
-    expect(testBed.controller._testGetLastNavigationTarget()).toBe('index.html');
+    expect(testBed.controller._testGetLastNavigationTarget()).toBe(
+      'index.html'
+    );
   });
 });
 
@@ -335,4 +341,3 @@ describe('ClichesGeneratorController error handler initialization failures', () 
     );
   });
 });
-

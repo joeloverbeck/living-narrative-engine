@@ -146,7 +146,7 @@ describe('TargetValidationReporter', () => {
       [LEGACY_TARGET_ROLE]: [],
       [ACTOR_ROLE]: [],
       [ALL_MULTI_TARGET_ROLES[0]]: [{ id: 'primary-1' }],
-      [ALL_MULTI_TARGET_ROLES[1]]: [{ }],
+      [ALL_MULTI_TARGET_ROLES[1]]: [{}],
     };
 
     await reporter.reportValidationAnalysis({

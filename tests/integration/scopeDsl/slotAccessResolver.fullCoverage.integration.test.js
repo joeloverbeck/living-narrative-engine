@@ -107,9 +107,21 @@ describe('SlotAccessResolver integration – comprehensive coverage scenarios', 
     });
 
     const variableNode = { type: 'Variable', name: 'target' };
-    const topmostNode = { type: 'Step', field: 'topmost_clothing', parent: variableNode };
-    const allNode = { type: 'Step', field: 'all_clothing', parent: variableNode };
-    const baseNode = { type: 'Step', field: 'base_clothing', parent: variableNode };
+    const topmostNode = {
+      type: 'Step',
+      field: 'topmost_clothing',
+      parent: variableNode,
+    };
+    const allNode = {
+      type: 'Step',
+      field: 'all_clothing',
+      parent: variableNode,
+    };
+    const baseNode = {
+      type: 'Step',
+      field: 'base_clothing',
+      parent: variableNode,
+    };
 
     const baseDispatcher = {
       resolve: (node) => {

@@ -112,9 +112,15 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
     const entityManager = createEntityManager({ name: 'Inspector' });
     const options = createOptions();
 
-    const result = formatter.format(action, targetContext, entityManager, options, {
-      formatterMap: targetFormatterMap,
-    });
+    const result = formatter.format(
+      action,
+      targetContext,
+      entityManager,
+      options,
+      {
+        formatterMap: targetFormatterMap,
+      }
+    );
 
     expect(result).toEqual({ ok: true, value: 'inspect Default Entity Name' });
     expect(mockGetEntityDisplayName).toHaveBeenCalledTimes(1);
@@ -142,9 +148,15 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
     const options = createOptions();
     const customDisplayName = jest.fn(() => 'Custom Display');
 
-    const result = formatter.format(action, targetContext, entityManager, options, {
-      displayNameFn: customDisplayName,
-    });
+    const result = formatter.format(
+      action,
+      targetContext,
+      entityManager,
+      options,
+      {
+        displayNameFn: customDisplayName,
+      }
+    );
 
     expect(result).toEqual({ ok: true, value: 'observe Custom Display' });
     expect(customDisplayName).toHaveBeenCalledWith(
@@ -194,7 +206,10 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
 
   it('continues formatting when dependency validation throws an unexpected error', () => {
     const formatter = new ActionCommandFormatter();
-    const action = createAction({ id: 'core:resilient', template: 'use {target}' });
+    const action = createAction({
+      id: 'core:resilient',
+      template: 'use {target}',
+    });
     const targetContext = createTargetContext({ type: 'custom' });
     const entityManager = createEntityManager({ label: 'Fallback Target' });
     const options = createOptions();
@@ -203,7 +218,11 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
       .fn()
       .mockImplementation((command, context, deps) => {
         const entity = entityManager.getEntityInstance(context.entityId);
-        const resolvedName = deps.displayNameFn(entity, context.entityId, options.logger);
+        const resolvedName = deps.displayNameFn(
+          entity,
+          context.entityId,
+          options.logger
+        );
         return { ok: true, value: command.replace('{target}', resolvedName) };
       });
 
@@ -216,7 +235,10 @@ describe('ActionCommandFormatter default dependency fallbacks', () => {
       targetContext,
       entityManager,
       { ...options },
-      { displayNameFn: customDisplayName, formatterMap: { custom: customFormatter } }
+      {
+        displayNameFn: customDisplayName,
+        formatterMap: { custom: customFormatter },
+      }
     );
 
     expect(result).toEqual({ ok: true, value: 'use Fallback Target' });

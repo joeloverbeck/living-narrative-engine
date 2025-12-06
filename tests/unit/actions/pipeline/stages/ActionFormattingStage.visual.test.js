@@ -81,7 +81,10 @@ describe('ActionFormattingStage - Visual Handling', () => {
       backgroundColor: '#ff0000',
       textColor: '#00ff00',
     };
-    const result = capturedOptions.validateVisualProperties(visual, 'action:visual');
+    const result = capturedOptions.validateVisualProperties(
+      visual,
+      'action:visual'
+    );
     expect(result).toBe(true);
   });
 });

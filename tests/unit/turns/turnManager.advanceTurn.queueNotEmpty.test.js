@@ -110,7 +110,8 @@ describeRunningTurnManagerSuite(
             expect.objectContaining({
               message: expect.any(String),
               details: expect.objectContaining({
-                error: 'No successful turns completed in the previous round. Stopping TurnManager.',
+                error:
+                  'No successful turns completed in the previous round. Stopping TurnManager.',
               }),
             }),
           ],

@@ -98,7 +98,12 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
   });
 
   it('returns early when task is missing', async () => {
-    await strategy.format({ task: null, instrumentation, accumulator, createError });
+    await strategy.format({
+      task: null,
+      instrumentation,
+      accumulator,
+      createError,
+    });
 
     expect(commandFormatter.formatMultiTarget).not.toHaveBeenCalled();
     expect(targetNormalizationService.normalize).not.toHaveBeenCalled();
@@ -107,14 +112,26 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
   });
 
   it('records normalization failures before formatting begins', async () => {
-    const normalizationError = { code: 'NO_TARGETS', message: 'Unable to extract primary target' };
+    const normalizationError = {
+      code: 'NO_TARGETS',
+      message: 'Unable to extract primary target',
+    };
     targetNormalizationService.normalize.mockReturnValue(
-      createNormalization({ error: normalizationError, primaryTargetContext: { entityId: 'missing-target' } })
+      createNormalization({
+        error: normalizationError,
+        primaryTargetContext: { entityId: 'missing-target' },
+      })
     );
 
     const task = buildTask();
 
-    await strategy.format({ task, instrumentation, accumulator, createError, trace: { id: 'trace-1' } });
+    await strategy.format({
+      task,
+      instrumentation,
+      accumulator,
+      createError,
+      trace: { id: 'trace-1' },
+    });
 
     expect(createError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -128,7 +145,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
   it('merges default formatter options when overrides are missing', async () => {
     targetNormalizationService.normalize.mockReturnValue(createNormalization());
-    commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: 'final-command' });
+    commandFormatter.formatMultiTarget.mockReturnValue({
+      ok: true,
+      value: 'final-command',
+    });
 
     const task = buildTask({ formatterOptions: undefined });
 
@@ -146,7 +166,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
   it('records partial failures when command-level normalization fails', async () => {
     const normalization = createNormalization();
-    const commandNormalizationError = { code: 'BAD_TARGET', message: 'Failed to normalise command targets' };
+    const commandNormalizationError = {
+      code: 'BAD_TARGET',
+      message: 'Failed to normalise command targets',
+    };
 
     targetNormalizationService.normalize
       .mockReturnValueOnce(normalization)
@@ -160,7 +183,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     commandFormatter.formatMultiTarget.mockReturnValue({
       ok: true,
       value: [
-        { command: 'object-command', targets: { primary: [{ id: 'target-2' }] } },
+        {
+          command: 'object-command',
+          targets: { primary: [{ id: 'target-2' }] },
+        },
         'simple-command',
       ],
     });
@@ -170,31 +196,58 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     await strategy.format({ task, instrumentation, accumulator, createError });
 
     expect(createError).toHaveBeenCalledWith(
-      expect.objectContaining({ errorOrResult: commandNormalizationError, targetId: null })
+      expect.objectContaining({
+        errorOrResult: commandNormalizationError,
+        targetId: null,
+      })
     );
     expect(accumulator.getErrors()).toHaveLength(1);
     expect(accumulator.getFormattedActions()).toHaveLength(1);
-    expect(accumulator.getActionSummary(task.actionDef.id)).toMatchObject({ successes: 1, failures: 1 });
+    expect(accumulator.getActionSummary(task.actionDef.id)).toMatchObject({
+      successes: 1,
+      failures: 1,
+    });
     expect(instrumentation.actionFailed).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ commandCount: 2, successCount: 1, failureCount: 1 }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          commandCount: 2,
+          successCount: 1,
+          failureCount: 1,
+        }),
+      })
     );
   });
 
   it('captures legacy formatting failures with target metadata', async () => {
-    const task = buildTask({ isMultiTarget: false, resolvedTargets: null, targetDefinitions: null });
+    const task = buildTask({
+      isMultiTarget: false,
+      resolvedTargets: null,
+      targetDefinitions: null,
+    });
     const successResult = { ok: true, value: 'legacy-success' };
     const failureResult = { ok: false, error: 'legacy-failure' };
 
-    commandFormatter.format.mockReturnValueOnce(successResult).mockReturnValueOnce(failureResult);
+    commandFormatter.format
+      .mockReturnValueOnce(successResult)
+      .mockReturnValueOnce(failureResult);
     targetNormalizationService.normalize.mockReturnValueOnce({
       params: { targetId: 'target-1' },
       primaryTargetContext: { entityId: 'target-1' },
     });
 
-    await strategy.format({ task, instrumentation, accumulator, createError, trace: { id: 'trace-legacy' } });
+    await strategy.format({
+      task,
+      instrumentation,
+      accumulator,
+      createError,
+      trace: { id: 'trace-legacy' },
+    });
 
     expect(createError).toHaveBeenCalledWith(
-      expect.objectContaining({ errorOrResult: failureResult, targetId: 'target-2' })
+      expect.objectContaining({
+        errorOrResult: failureResult,
+        targetId: 'target-2',
+      })
     );
     expect(accumulator.getFormattedActions()).toHaveLength(1);
     expect(accumulator.getErrors()).toHaveLength(1);
@@ -206,7 +259,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
       params: {},
       primaryTargetContext: { entityId: 'target-1' },
     });
-    commandFormatter.format.mockReturnValue({ ok: true, value: 'legacy-basic' });
+    commandFormatter.format.mockReturnValue({
+      ok: true,
+      value: 'legacy-basic',
+    });
 
     const task = buildTask({
       isMultiTarget: false,
@@ -231,16 +287,23 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
   it('uses fallback when multi-target formatter is unavailable', async () => {
     targetNormalizationService.normalize.mockReturnValue(createNormalization());
     delete commandFormatter.formatMultiTarget;
-    fallbackFormatter.formatWithFallback.mockResolvedValue({ ok: true, value: 'fallback-command' });
+    fallbackFormatter.formatWithFallback.mockResolvedValue({
+      ok: true,
+      value: 'fallback-command',
+    });
 
     const task = buildTask();
 
     await strategy.format({ task, instrumentation, accumulator, createError });
 
     expect(fallbackFormatter.prepareFallback).toHaveBeenCalled();
-    expect(accumulator.getFormattedActions()[0]).toMatchObject({ command: 'fallback-command' });
+    expect(accumulator.getFormattedActions()[0]).toMatchObject({
+      command: 'fallback-command',
+    });
     expect(instrumentation.actionCompleted).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ fallbackUsed: true }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({ fallbackUsed: true }),
+      })
     );
   });
 
@@ -249,14 +312,21 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
       createNormalization({ primaryTargetContext: undefined })
     );
     delete commandFormatter.formatMultiTarget;
-    fallbackFormatter.formatWithFallback.mockResolvedValue({ ok: false, error: 'fallback-unavailable' });
+    fallbackFormatter.formatWithFallback.mockResolvedValue({
+      ok: false,
+      error: 'fallback-unavailable',
+    });
 
     const task = buildTask();
 
     await strategy.format({ task, instrumentation, accumulator, createError });
 
     expect(createError).toHaveBeenCalledWith(
-      expect.objectContaining({ errorOrResult: expect.objectContaining({ error: 'fallback-unavailable' }) })
+      expect.objectContaining({
+        errorOrResult: expect.objectContaining({
+          error: 'fallback-unavailable',
+        }),
+      })
     );
     expect(accumulator.getErrors()).toHaveLength(1);
     expect(instrumentation.actionFailed).toHaveBeenCalled();
@@ -264,7 +334,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
   it('normalizes commands provided as objects without target overrides', async () => {
     targetNormalizationService.normalize.mockReturnValue(createNormalization());
-    commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: [{ command: 'object-command' }] });
+    commandFormatter.formatMultiTarget.mockReturnValue({
+      ok: true,
+      value: [{ command: 'object-command' }],
+    });
 
     const task = buildTask();
 
@@ -292,17 +365,24 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     await strategy.format({ task, instrumentation, accumulator, createError });
 
     expect(instrumentation.actionStarted).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ targetContextCount: 0 }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({ targetContextCount: 0 }),
+      })
     );
     expect(accumulator.getFormattedActions()).toHaveLength(0);
     expect(instrumentation.actionCompleted).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ successCount: 0, failureCount: 0 }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({ successCount: 0, failureCount: 0 }),
+      })
     );
   });
 
   it('emits failure statistics when every command normalization fails', async () => {
     const normalization = createNormalization();
-    const commandNormalizationError = { code: 'ALL_BAD', message: 'No commands succeeded' };
+    const commandNormalizationError = {
+      code: 'ALL_BAD',
+      message: 'No commands succeeded',
+    };
 
     targetNormalizationService.normalize
       .mockReturnValueOnce(normalization)
@@ -315,7 +395,12 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
     commandFormatter.formatMultiTarget.mockReturnValue({
       ok: true,
-      value: [{ command: 'failed-command', targets: { primary: [{ id: 'target-2' }] } }],
+      value: [
+        {
+          command: 'failed-command',
+          targets: { primary: [{ id: 'target-2' }] },
+        },
+      ],
     });
 
     const task = buildTask({ targetContexts: [{ entityId: 'target-1' }] });
@@ -324,16 +409,31 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
     expect(accumulator.getFormattedActions()).toHaveLength(0);
     expect(accumulator.getErrors()).toHaveLength(1);
-    expect(accumulator.getActionSummary(task.actionDef.id)).toMatchObject({ successes: 0, failures: 1 });
+    expect(accumulator.getActionSummary(task.actionDef.id)).toMatchObject({
+      successes: 0,
+      failures: 1,
+    });
     expect(instrumentation.actionFailed).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ commandCount: 1, successCount: 0, failureCount: 1 }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          commandCount: 1,
+          successCount: 0,
+          failureCount: 1,
+        }),
+      })
     );
   });
 
   it('defaults targetId to null when normalization lacks primary context', async () => {
-    const normalizationError = { code: 'MISSING', message: 'No primary target' };
+    const normalizationError = {
+      code: 'MISSING',
+      message: 'No primary target',
+    };
     targetNormalizationService.normalize.mockReturnValue(
-      createNormalization({ error: normalizationError, primaryTargetContext: undefined })
+      createNormalization({
+        error: normalizationError,
+        primaryTargetContext: undefined,
+      })
     );
 
     const task = buildTask();
@@ -341,7 +441,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     await strategy.format({ task, instrumentation, accumulator, createError });
 
     expect(createError).toHaveBeenCalledWith(
-      expect.objectContaining({ errorOrResult: normalizationError, targetId: null })
+      expect.objectContaining({
+        errorOrResult: normalizationError,
+        targetId: null,
+      })
     );
   });
 
@@ -358,7 +461,9 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
     expect(createError).toHaveBeenCalledWith(
       expect.objectContaining({
-        errorOrResult: expect.objectContaining({ error: 'Multi-target formatter returned no result' }),
+        errorOrResult: expect.objectContaining({
+          error: 'Multi-target formatter returned no result',
+        }),
       })
     );
   });
@@ -366,7 +471,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
   it('falls back to empty params, description, and visual metadata when unavailable', async () => {
     const normalization = createNormalization({ params: undefined });
     targetNormalizationService.normalize.mockReturnValue(normalization);
-    commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: 'bare-command' });
+    commandFormatter.formatMultiTarget.mockReturnValue({
+      ok: true,
+      value: 'bare-command',
+    });
 
     const task = buildTask({
       actionDef: {
@@ -381,12 +489,20 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
 
     const formatted = accumulator.getFormattedActions();
     expect(formatted).toHaveLength(1);
-    expect(formatted[0]).toMatchObject({ command: 'bare-command', description: '', visual: null, params: {} });
+    expect(formatted[0]).toMatchObject({
+      command: 'bare-command',
+      description: '',
+      visual: null,
+      params: {},
+    });
   });
 
   it('propagates null target identifiers when legacy formatting lacks context', async () => {
     targetNormalizationService.normalize.mockReturnValue(createNormalization());
-    commandFormatter.format.mockReturnValue({ ok: false, error: 'legacy-error' });
+    commandFormatter.format.mockReturnValue({
+      ok: false,
+      error: 'legacy-error',
+    });
 
     const task = buildTask({
       isMultiTarget: false,
@@ -398,7 +514,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     await strategy.format({ task, instrumentation, accumulator, createError });
 
     expect(createError).toHaveBeenCalledWith(
-      expect.objectContaining({ errorOrResult: expect.objectContaining({ error: 'legacy-error' }), targetId: null })
+      expect.objectContaining({
+        errorOrResult: expect.objectContaining({ error: 'legacy-error' }),
+        targetId: null,
+      })
     );
   });
 
@@ -411,11 +530,20 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     commandFormatter.formatMultiTarget.mockImplementation(() => {
       throw thrownError;
     });
-    fallbackFormatter.formatWithFallback.mockResolvedValue({ ok: false, error: fallbackError });
+    fallbackFormatter.formatWithFallback.mockResolvedValue({
+      ok: false,
+      error: fallbackError,
+    });
 
     const task = buildTask();
 
-    await strategy.format({ task, instrumentation, accumulator, createError, trace: { id: 'trace-multi' } });
+    await strategy.format({
+      task,
+      instrumentation,
+      accumulator,
+      createError,
+      trace: { id: 'trace-multi' },
+    });
 
     expect(logger.error).toHaveBeenCalledWith(
       "PerActionMetadataStrategy: formatMultiTarget threw for action 'action-42'",
@@ -431,7 +559,12 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
       })
     );
     expect(instrumentation.actionFailed).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ fallbackUsed: true, error: fallbackError }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          fallbackUsed: true,
+          error: fallbackError,
+        }),
+      })
     );
   });
 
@@ -443,7 +576,10 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
     commandFormatter.formatMultiTarget.mockImplementation(() => {
       throw thrownError;
     });
-    fallbackFormatter.formatWithFallback.mockResolvedValue({ ok: false, error: thrownError });
+    fallbackFormatter.formatWithFallback.mockResolvedValue({
+      ok: false,
+      error: thrownError,
+    });
 
     const task = buildTask();
 
@@ -453,7 +589,12 @@ describe('PerActionMetadataStrategy - additional coverage', () => {
       expect.objectContaining({ errorOrResult: thrownError })
     );
     expect(instrumentation.actionFailed).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ fallbackUsed: true, error: thrownError }) })
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          fallbackUsed: true,
+          error: thrownError,
+        }),
+      })
     );
   });
 });

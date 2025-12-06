@@ -188,8 +188,7 @@ describe('handle_peck_target rule definition', () => {
   describe('Context Variables Setup', () => {
     it('should query actor name', () => {
       const getNameOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'GET_NAME' && op.parameters.entity_ref === 'actor'
+        (op) => op.type === 'GET_NAME' && op.parameters.entity_ref === 'actor'
       );
       expect(getNameOp).toBeDefined();
       expect(getNameOp.parameters.result_variable).toBe('actorName');
@@ -206,8 +205,7 @@ describe('handle_peck_target rule definition', () => {
 
     it('should query weapon name from primary entity (beak)', () => {
       const getNameOp = handlePeckTarget.actions.find(
-        (op) =>
-          op.type === 'GET_NAME' && op.parameters.entity_ref === 'primary'
+        (op) => op.type === 'GET_NAME' && op.parameters.entity_ref === 'primary'
       );
       expect(getNameOp).toBeDefined();
       expect(getNameOp.parameters.result_variable).toBe('weaponName');

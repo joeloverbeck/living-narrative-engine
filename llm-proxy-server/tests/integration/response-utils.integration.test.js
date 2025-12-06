@@ -108,7 +108,9 @@ describe('sendProxyError integration behaviours', () => {
     expect(logger.error).toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('headers were already sent'),
-      expect.objectContaining({ errorDetailsNotSentDueToHeaders: { retryable: false } })
+      expect.objectContaining({
+        errorDetailsNotSentDueToHeaders: { retryable: false },
+      })
     );
   });
 
@@ -146,7 +148,9 @@ describe('sendProxyError integration behaviours', () => {
     // Two error logs should have been emitted: initial send + catch block.
     expect(logger.error).toHaveBeenCalledTimes(2);
     const secondErrorCall = logger.error.mock.calls[1];
-    expect(secondErrorCall[0]).toContain('Failed to send original error response');
+    expect(secondErrorCall[0]).toContain(
+      'Failed to send original error response'
+    );
     expect(secondErrorCall[1]).toMatchObject({
       originalErrorIntendedForClient: expect.objectContaining({
         message: 'Failed to prepare JSON payload',
@@ -267,7 +271,9 @@ describe('sendProxyError integration behaviours', () => {
 
     expect(logger.error).toHaveBeenCalledTimes(3);
     const criticalLog = logger.error.mock.calls.find((call) =>
-      call[0].includes('CRITICAL - Failed even to send last-ditch plain text error')
+      call[0].includes(
+        'CRITICAL - Failed even to send last-ditch plain text error'
+      )
     );
     expect(criticalLog).toBeDefined();
     expect(criticalLog[1]).toMatchObject({

@@ -11,7 +11,8 @@ import { ModEntityBuilder } from '../ModEntityBuilder.js';
  *
  * @type {string}
  */
-export const RUB_PENIS_AGAINST_PENIS_ACTION_ID = 'sex-dry-intimacy:rub_penis_against_penis';
+export const RUB_PENIS_AGAINST_PENIS_ACTION_ID =
+  'sex-dry-intimacy:rub_penis_against_penis';
 
 /**
  * Default actor identifier used in the penis rubbing scenarios.

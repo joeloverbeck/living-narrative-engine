@@ -53,14 +53,19 @@ describe('GameEngine adapters proxy behaviour', () => {
     });
 
     it('surface engine errors directly to the caller', async () => {
-      const failure = Object.assign(new Error('save failed'), { code: 'EFAIL' });
+      const failure = Object.assign(new Error('save failed'), {
+        code: 'EFAIL',
+      });
       const engine = {
         triggerManualSave: jest.fn().mockRejectedValue(failure),
       };
       const adapter = new GameEngineSaveAdapter(engine);
 
       await expect(adapter.save('slot-99', 'Fallback')).rejects.toBe(failure);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Fallback', 'slot-99');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Fallback',
+        'slot-99'
+      );
     });
   });
 });

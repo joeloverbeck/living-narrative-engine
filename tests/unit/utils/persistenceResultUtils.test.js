@@ -73,7 +73,9 @@ describe('persistenceResultUtils', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(PersistenceError);
     expect(result.error.code).toBe(PersistenceErrorCodes.WRITE_ERROR);
-    expect(result.error.message).toBe('Failed to persist game state: Disk full');
+    expect(result.error.message).toBe(
+      'Failed to persist game state: Disk full'
+    );
     expect(result.data).toBeNull();
   });
 
@@ -206,7 +208,11 @@ describe('persistenceResultUtils', () => {
       expect(result.error.cause).toBeUndefined();
     } finally {
       if (originalDescriptor) {
-        Object.defineProperty(PersistenceError.prototype, 'cause', originalDescriptor);
+        Object.defineProperty(
+          PersistenceError.prototype,
+          'cause',
+          originalDescriptor
+        );
       } else {
         delete PersistenceError.prototype.cause;
       }

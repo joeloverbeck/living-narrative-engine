@@ -8,12 +8,12 @@ Register the `UnwieldItemHandler` in the dependency injection container. This in
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/dependencyInjection/tokens/tokens-core.js` | Add `UnwieldItemHandler` token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add factory registration |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Add operation type mapping |
-| `src/utils/preValidationUtils.js` | Add `UNWIELD_ITEM` to whitelist |
+| File                                                                     | Change                          |
+| ------------------------------------------------------------------------ | ------------------------------- |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add `UnwieldItemHandler` token  |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add factory registration        |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Add operation type mapping      |
+| `src/utils/preValidationUtils.js`                                        | Add `UNWIELD_ITEM` to whitelist |
 
 ## Implementation Details
 
@@ -130,11 +130,11 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/unlockGrabbingHandler.js` | Similar handler pattern |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Registration pattern |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Mapping pattern |
+| File                                                                     | Purpose                 |
+| ------------------------------------------------------------------------ | ----------------------- |
+| `src/logic/operationHandlers/unlockGrabbingHandler.js`                   | Similar handler pattern |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Registration pattern    |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Mapping pattern         |
 
 ## Common Pitfalls
 
@@ -152,21 +152,25 @@ npm run test:ci
 ### What Was Actually Changed vs Originally Planned
 
 **Ticket Corrections Made Before Implementation:**
+
 - Original ticket stated to insert `'UNWIELD_ITEM'` "after 'UNLOCK_GRABBING' and before 'VALIDATE_INVENTORY_CAPACITY'" in the whitelist
 - Corrected to "after 'UNLOCK_MOVEMENT' and before 'UPDATE_HUNGER_STATE'" (correct alphabetical position)
 
 **Code Changes (as planned):**
+
 1. `src/dependencyInjection/tokens/tokens-core.js` - Added `UnwieldItemHandler` token
 2. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Added import and factory registration
 3. `src/dependencyInjection/registrations/interpreterRegistrations.js` - Added operation type mapping
 4. `src/utils/preValidationUtils.js` - Added `'UNWIELD_ITEM'` to `KNOWN_OPERATION_TYPES`
 
 **Additional Changes Required (not in original ticket):**
+
 - `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` - Updated test file to include UnwieldItemHandler in:
   - Handler imports array
   - Handler expectations array with correct dependencies (logger, entityManager, safeEventDispatcher)
 
 **Verification:**
+
 - All 37,423 tests pass across 2,251 test suites
 - TypeScript type checking passes (pre-existing CLI validation errors unrelated to this ticket)
 - Alphabetical ordering maintained in all files

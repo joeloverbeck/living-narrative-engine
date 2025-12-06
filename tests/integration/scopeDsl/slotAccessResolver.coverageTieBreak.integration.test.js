@@ -193,7 +193,9 @@ describe('slotAccessResolver integration – coverage and tie-breaking', () => {
     expect(candidateCollectionSpan?.attributes?.candidateCount).toBe(6);
 
     const candidateEvents = candidateCollectionSpan?.attributes?.events ?? [];
-    const candidateIds = candidateEvents.map((event) => event.attributes?.itemId);
+    const candidateIds = candidateEvents.map(
+      (event) => event.attributes?.itemId
+    );
     expect(candidateIds).toEqual(
       expect.arrayContaining([
         'item:ceremonial-skirt',
@@ -205,7 +207,9 @@ describe('slotAccessResolver integration – coverage and tie-breaking', () => {
       ])
     );
 
-    expect(finalSelectionSpan?.attributes?.selectedItem).toBe('item:ceremonial-skirt');
+    expect(finalSelectionSpan?.attributes?.selectedItem).toBe(
+      'item:ceremonial-skirt'
+    );
     expect(finalSelectionSpan?.attributes?.tieBreakingUsed).toBe(true);
   });
 
@@ -236,7 +240,9 @@ describe('slotAccessResolver integration – coverage and tie-breaking', () => {
     expect(candidateCollectionSpan?.attributes?.candidateCount).toBe(5);
 
     const candidateEvents = candidateCollectionSpan?.attributes?.events ?? [];
-    const candidateIds = candidateEvents.map((event) => event.attributes?.itemId);
+    const candidateIds = candidateEvents.map(
+      (event) => event.attributes?.itemId
+    );
     expect(candidateIds).toEqual(
       expect.arrayContaining([
         'item:ceremonial-skirt',

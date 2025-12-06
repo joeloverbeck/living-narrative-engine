@@ -4,7 +4,14 @@
  * logging warnings, ensuring it treats unresolved paths as raw entity identifiers.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { JsonLogicCustomOperators } from '../../../src/logic/jsonLogicCustomOperators.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -123,9 +130,10 @@ describe('has_component Operator - Missing Entity Warning', () => {
 
       // Debug message should indicate path resolution failed and entity ID was used
       const debugCalls = logger.debug.mock.calls;
-      const hasPathResolutionDebug = debugCalls.some((call) =>
-        call[0].includes('Could not resolve') &&
-        call[0].includes('treating as entity ID')
+      const hasPathResolutionDebug = debugCalls.some(
+        (call) =>
+          call[0].includes('Could not resolve') &&
+          call[0].includes('treating as entity ID')
       );
       expect(hasPathResolutionDebug).toBe(true);
     });
@@ -320,8 +328,10 @@ describe('has_component Operator - Missing Entity Warning', () => {
 
       // Debug log should indicate the fallback to treating the string as an entity ID
       const firstDebugCalls = logger.debug.mock.calls;
-      const hasEntityIdFallbackDebug = firstDebugCalls.some((call) =>
-        call[0].includes('Could not resolve') && call[0].includes('treating as entity ID')
+      const hasEntityIdFallbackDebug = firstDebugCalls.some(
+        (call) =>
+          call[0].includes('Could not resolve') &&
+          call[0].includes('treating as entity ID')
       );
       expect(hasEntityIdFallbackDebug).toBe(true);
 

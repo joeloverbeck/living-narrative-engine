@@ -1,4 +1,7 @@
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
+import {
+  BodyGraphService,
+  LIMB_DETACHED_EVENT_ID,
+} from '../../../src/anatomy/bodyGraphService.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 
 /**
@@ -7,9 +10,11 @@ import { SimpleEntityManager } from '../../common/entities/index.js';
  */
 function createRecordingLogger() {
   const entries = [];
-  const record = (level) => (message, ...details) => {
-    entries.push({ level, message, details });
-  };
+  const record =
+    (level) =>
+    (message, ...details) => {
+      entries.push({ level, message, details });
+    };
 
   return {
     entries,
@@ -53,37 +58,62 @@ describe('BodyGraphService integration', () => {
    * @returns {Promise<void>}
    */
   const seedAnatomy = async () => {
-    await entityManager.addComponent(actorId, 'core:name', { text: 'Integration Actor' });
+    await entityManager.addComponent(actorId, 'core:name', {
+      text: 'Integration Actor',
+    });
 
-    await entityManager.addComponent(torsoId, 'anatomy:part', { partType: 'torso', subType: 'torso' });
-    await entityManager.addComponent(torsoId, 'core:description', { text: 'central torso' });
+    await entityManager.addComponent(torsoId, 'anatomy:part', {
+      partType: 'torso',
+      subType: 'torso',
+    });
+    await entityManager.addComponent(torsoId, 'core:description', {
+      text: 'central torso',
+    });
 
-    await entityManager.addComponent(leftArmId, 'anatomy:part', { partType: 'limb', subType: 'arm' });
+    await entityManager.addComponent(leftArmId, 'anatomy:part', {
+      partType: 'limb',
+      subType: 'arm',
+    });
     await entityManager.addComponent(leftArmId, 'anatomy:joint', {
       parentId: torsoId,
       socketId: 'left_shoulder',
     });
-    await entityManager.addComponent(leftArmId, 'core:description', { text: 'left arm' });
+    await entityManager.addComponent(leftArmId, 'core:description', {
+      text: 'left arm',
+    });
 
-    await entityManager.addComponent(rightArmId, 'anatomy:part', { partType: 'limb', subType: 'arm' });
+    await entityManager.addComponent(rightArmId, 'anatomy:part', {
+      partType: 'limb',
+      subType: 'arm',
+    });
     await entityManager.addComponent(rightArmId, 'anatomy:joint', {
       parentId: torsoId,
       socketId: 'right_shoulder',
     });
 
-    await entityManager.addComponent(leftHandId, 'anatomy:part', { partType: 'extremity', subType: 'hand' });
+    await entityManager.addComponent(leftHandId, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'hand',
+    });
     await entityManager.addComponent(leftHandId, 'anatomy:joint', {
       parentId: leftArmId,
       socketId: 'left_wrist',
     });
-    await entityManager.addComponent(leftHandId, 'core:description', { text: 'left hand' });
+    await entityManager.addComponent(leftHandId, 'core:description', {
+      text: 'left hand',
+    });
 
-    await entityManager.addComponent(heartId, 'anatomy:part', { partType: 'organ', subType: 'heart' });
+    await entityManager.addComponent(heartId, 'anatomy:part', {
+      partType: 'organ',
+      subType: 'heart',
+    });
     await entityManager.addComponent(heartId, 'anatomy:joint', {
       parentId: torsoId,
       socketId: 'chest_cavity',
     });
-    await entityManager.addComponent(heartId, 'core:description', { text: 'vital heart' });
+    await entityManager.addComponent(heartId, 'core:description', {
+      text: 'vital heart',
+    });
     await entityManager.addComponent(heartId, 'custom:status', {
       vitals: { pulse: 72, rhythm: 'steady' },
     });
@@ -121,10 +151,15 @@ describe('BodyGraphService integration', () => {
     expect(bodyGraphService.hasCache(torsoId)).toBe(true);
 
     const children = bodyGraphService.getChildren(torsoId);
-    expect(children).toEqual(expect.arrayContaining([leftArmId, rightArmId, heartId]));
+    expect(children).toEqual(
+      expect.arrayContaining([leftArmId, rightArmId, heartId])
+    );
 
     expect(bodyGraphService.getParent(leftArmId)).toBe(torsoId);
-    expect(bodyGraphService.getAncestors(leftHandId)).toEqual([leftArmId, torsoId]);
+    expect(bodyGraphService.getAncestors(leftHandId)).toEqual([
+      leftArmId,
+      torsoId,
+    ]);
     expect(bodyGraphService.getAllDescendants(torsoId)).toEqual(
       expect.arrayContaining([leftArmId, rightArmId, leftHandId, heartId])
     );
@@ -140,22 +175,46 @@ describe('BodyGraphService integration', () => {
     expect(path).toEqual([leftHandId, leftArmId, torsoId, rightArmId]);
 
     const bodyComponent = await bodyGraphService.getAnatomyData(actorId);
-    expect(bodyComponent).toEqual({ recipeId: 'integration_recipe', rootEntityId: actorId });
+    expect(bodyComponent).toEqual({
+      recipeId: 'integration_recipe',
+      rootEntityId: actorId,
+    });
 
-    const actorBodyComponent = entityManager.getComponentData(actorId, 'anatomy:body');
+    const actorBodyComponent = entityManager.getComponentData(
+      actorId,
+      'anatomy:body'
+    );
     const partsFirst = bodyGraphService.getAllParts(actorBodyComponent);
     expect(partsFirst).toEqual(
-      expect.arrayContaining([torsoId, leftArmId, rightArmId, leftHandId, heartId])
+      expect.arrayContaining([
+        torsoId,
+        leftArmId,
+        rightArmId,
+        leftHandId,
+        heartId,
+      ])
     );
     const partsSecond = bodyGraphService.getAllParts(actorBodyComponent);
     expect(partsSecond).toBe(partsFirst);
 
-    const directStructureParts = bodyGraphService.getAllParts(actorBodyComponent.body);
+    const directStructureParts = bodyGraphService.getAllParts(
+      actorBodyComponent.body
+    );
     expect(directStructureParts).toEqual(partsFirst);
     expect(bodyGraphService.getAllParts({})).toEqual([]);
 
-    expect(bodyGraphService.hasPartWithComponent(actorBodyComponent, 'core:description')).toBe(true);
-    expect(bodyGraphService.hasPartWithComponent(actorBodyComponent, 'missing:component')).toBe(false);
+    expect(
+      bodyGraphService.hasPartWithComponent(
+        actorBodyComponent,
+        'core:description'
+      )
+    ).toBe(true);
+    expect(
+      bodyGraphService.hasPartWithComponent(
+        actorBodyComponent,
+        'missing:component'
+      )
+    ).toBe(false);
 
     expect(
       bodyGraphService.hasPartWithComponentValue(
@@ -184,7 +243,10 @@ describe('BodyGraphService integration', () => {
 
     await bodyGraphService.buildAdjacencyCache(actorId);
     expect(bodyGraphService.hasCache(actorId)).toBe(true);
-    const actorScopedParts = bodyGraphService.getAllParts(actorBodyComponent, actorId);
+    const actorScopedParts = bodyGraphService.getAllParts(
+      actorBodyComponent,
+      actorId
+    );
     expect(actorScopedParts).toEqual(
       expect.arrayContaining([...partsFirst, actorId])
     );
@@ -209,8 +271,12 @@ describe('BodyGraphService integration', () => {
 
     expect(result.parentId).toBe(torsoId);
     expect(result.socketId).toBe('left_shoulder');
-    expect(result.detached).toEqual(expect.arrayContaining([leftArmId, leftHandId]));
-    expect(entityManager.getComponentData(leftArmId, 'anatomy:joint')).toBeNull();
+    expect(result.detached).toEqual(
+      expect.arrayContaining([leftArmId, leftHandId])
+    );
+    expect(
+      entityManager.getComponentData(leftArmId, 'anatomy:joint')
+    ).toBeNull();
 
     expect(eventDispatcher.events).toContainEqual({
       eventId: LIMB_DETACHED_EVENT_ID,
@@ -227,7 +293,10 @@ describe('BodyGraphService integration', () => {
     expect(bodyGraphService.getChildren(torsoId)).not.toContain(leftArmId);
 
     await expect(
-      bodyGraphService.detachPart(heartId, { cascade: false, reason: 'single-detach' })
+      bodyGraphService.detachPart(heartId, {
+        cascade: false,
+        reason: 'single-detach',
+      })
     ).resolves.toEqual(
       expect.objectContaining({
         parentId: torsoId,
@@ -248,7 +317,9 @@ describe('BodyGraphService integration', () => {
     await expect(bodyGraphService.getAnatomyData(42)).rejects.toThrow(
       'Entity ID is required and must be a string'
     );
-    await expect(bodyGraphService.getAnatomyData(leftArmId)).resolves.toBeNull();
+    await expect(
+      bodyGraphService.getAnatomyData(leftArmId)
+    ).resolves.toBeNull();
 
     await expect(bodyGraphService.detachPart(torsoId)).rejects.toThrow(
       'has no joint component'

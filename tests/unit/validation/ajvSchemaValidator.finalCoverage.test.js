@@ -68,7 +68,10 @@ describe('AjvSchemaValidator - Final Coverage Tests', () => {
         getSchema: jest.fn().mockImplementation((id) => {
           if (id.includes('fragment')) {
             // Throw a non-Error object
-            throw { code: 'SCHEMA_ACCESS_ERROR', detail: 'Cannot access schema' };
+            throw {
+              code: 'SCHEMA_ACCESS_ERROR',
+              detail: 'Cannot access schema',
+            };
           }
           return null;
         }),
@@ -93,9 +96,7 @@ describe('AjvSchemaValidator - Final Coverage Tests', () => {
       new AjvSchemaValidator({ logger: mockLogger });
 
       // Try to load with fragment which triggers error
-      await expect(
-        capturedLoader('./test.json#fragment')
-      ).rejects.toThrow();
+      await expect(capturedLoader('./test.json#fragment')).rejects.toThrow();
 
       // Check that debug was called with String(error) for non-Error object
       expect(mockLogger.debug).toHaveBeenCalledWith(

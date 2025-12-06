@@ -87,9 +87,9 @@ describe('locks:lock_connection rule (integration)', () => {
       },
     });
     env.validateAction = () => true;
-     
+
     console.log('lock rule count', env.dataRegistry.getAllSystemRules().length);
-     
+
     console.log('listeners', env.eventBus.listenerCount('*'));
   });
 
@@ -107,12 +107,14 @@ describe('locks:lock_connection rule (integration)', () => {
       actionId: 'locks:lock_connection',
       targetId: scenario.blockerId,
       secondaryId: scenario.requiredKeyId,
-      targets: { primary: scenario.blockerId, secondary: scenario.requiredKeyId },
+      targets: {
+        primary: scenario.blockerId,
+        secondary: scenario.requiredKeyId,
+      },
       originalInput: 'lock',
     });
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-     
     console.log('lock events', env.events);
 
     const blocker = env.entityManager.getComponentData(
@@ -143,7 +145,10 @@ describe('locks:lock_connection rule (integration)', () => {
       actionId: 'locks:lock_connection',
       targetId: scenario.blockerId,
       secondaryId: scenario.requiredKeyId,
-      targets: { primary: scenario.blockerId, secondary: scenario.requiredKeyId },
+      targets: {
+        primary: scenario.blockerId,
+        secondary: scenario.requiredKeyId,
+      },
       originalInput: 'lock',
     });
     await new Promise((resolve) => setTimeout(resolve, 20));

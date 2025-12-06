@@ -195,9 +195,13 @@ describe('AnatomySocketIndex', () => {
       const failure = new Error('Graph unavailable');
       mockBodyGraphService.getBodyGraph.mockRejectedValue(failure);
 
-      await expect(service.buildIndex('root1')).rejects.toThrow('Graph unavailable');
+      await expect(service.buildIndex('root1')).rejects.toThrow(
+        'Graph unavailable'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to build socket index for root entity root1'),
+        expect.stringContaining(
+          'Failed to build socket index for root entity root1'
+        ),
         failure
       );
     });

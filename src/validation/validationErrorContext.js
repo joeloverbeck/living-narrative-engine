@@ -29,7 +29,8 @@ export function extractLineNumber(jsonContent, jsonPath) {
   // If it's an array index, we need to track array elements
   if (/^\d+$/.test(lastPart)) {
     const targetIndex = parseInt(lastPart, 10);
-    const parentPart = pathParts.length > 1 ? pathParts[pathParts.length - 2] : null;
+    const parentPart =
+      pathParts.length > 1 ? pathParts[pathParts.length - 2] : null;
 
     let elementCount = -1;
     let inArray = false;

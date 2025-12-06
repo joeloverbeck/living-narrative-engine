@@ -37,7 +37,9 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
         location: 'room1',
       });
 
-      expect(actor.components['core:position']).toEqual({ locationId: 'room1' });
+      expect(actor.components['core:position']).toEqual({
+        locationId: 'room1',
+      });
       expect(actor.components['core:location']).toEqual({ location: 'room1' });
     });
 
@@ -75,8 +77,12 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
       const actor = testBed.mocks.entityManager.getEntityInstance('actor1');
       const target = testBed.mocks.entityManager.getEntityInstance('target1');
 
-      expect(actor.components['positioning:closeness'].partners).toContain('target1');
-      expect(target.components['positioning:closeness'].partners).toContain('actor1');
+      expect(actor.components['positioning:closeness'].partners).toContain(
+        'target1'
+      );
+      expect(target.components['positioning:closeness'].partners).toContain(
+        'actor1'
+      );
     });
 
     it('should throw error when actor not found', () => {
@@ -98,8 +104,11 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
       // Test with entity objects
       testBed.establishClosenessWithValidation(actor, target);
 
-      const updatedActor = testBed.mocks.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:closeness'].partners).toContain('target1');
+      const updatedActor =
+        testBed.mocks.entityManager.getEntityInstance('actor1');
+      expect(
+        updatedActor.components['positioning:closeness'].partners
+      ).toContain('target1');
     });
 
     it('should not duplicate partners in closeness array', () => {
@@ -195,8 +204,12 @@ describe('ActionDiscoveryServiceTestBed - Integration Helpers', () => {
         closeProximity: true,
       });
 
-      expect(actor.components['positioning:closeness'].partners).toContain(target.id);
-      expect(target.components['positioning:closeness'].partners).toContain(actor.id);
+      expect(actor.components['positioning:closeness'].partners).toContain(
+        target.id
+      );
+      expect(target.components['positioning:closeness'].partners).toContain(
+        actor.id
+      );
     });
 
     it('should not establish closeness when closeProximity is false', () => {

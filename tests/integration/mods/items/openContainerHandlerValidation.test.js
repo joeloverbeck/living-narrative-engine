@@ -4,7 +4,14 @@
  * batchAddComponentsOptimized and dispatcher.dispatch
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import OpenContainerHandler from '../../../../src/logic/operationHandlers/openContainerHandler.js';
 
@@ -36,18 +43,20 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
         }
         return null;
       }),
-      batchAddComponentsOptimized: jest.fn(async (componentSpecs, emitEvent) => {
-        batchAddCalls.push({
-          specs: componentSpecs,
-          emitEvent,
-          firstSpec: componentSpecs[0],
-        });
-        return {
-          results: [],
-          errors: [],
-          updateCount: componentSpecs.length,
-        };
-      }),
+      batchAddComponentsOptimized: jest.fn(
+        async (componentSpecs, emitEvent) => {
+          batchAddCalls.push({
+            specs: componentSpecs,
+            emitEvent,
+            firstSpec: componentSpecs[0],
+          });
+          return {
+            results: [],
+            errors: [],
+            updateCount: componentSpecs.length,
+          };
+        }
+      ),
     };
 
     // Create mock dispatcher that captures calls

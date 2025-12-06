@@ -52,7 +52,10 @@ describe('AUTO_MOVE_CLOSENESS_PARTNERS Operation Registration', () => {
     // Register required dependencies
     registrar.instance(tokens.ILogger, mockLogger);
     registrar.instance(tokens.IEntityManager, mockEntityManager);
-    registrar.instance(tokens.SystemMoveEntityHandler, mockSystemMoveEntityHandler);
+    registrar.instance(
+      tokens.SystemMoveEntityHandler,
+      mockSystemMoveEntityHandler
+    );
     registrar.instance(tokens.ISafeEventDispatcher, mockSafeEventDispatcher);
     registrar.instance(
       tokens.IValidatedEventDispatcher,
@@ -75,7 +78,9 @@ describe('AUTO_MOVE_CLOSENESS_PARTNERS Operation Registration', () => {
       const operationRegistry = container.resolve(tokens.OperationRegistry);
 
       // Act
-      const handler = operationRegistry.getHandler('AUTO_MOVE_CLOSENESS_PARTNERS');
+      const handler = operationRegistry.getHandler(
+        'AUTO_MOVE_CLOSENESS_PARTNERS'
+      );
 
       // Assert
       expect(handler).toBeDefined();
@@ -84,7 +89,9 @@ describe('AUTO_MOVE_CLOSENESS_PARTNERS Operation Registration', () => {
 
     it('should resolve AutoMoveClosenessPartnersHandler from DI container', () => {
       // Arrange & Act
-      const handler = container.resolve(tokens.AutoMoveClosenessPartnersHandler);
+      const handler = container.resolve(
+        tokens.AutoMoveClosenessPartnersHandler
+      );
 
       // Assert
       expect(handler).toBeDefined();
@@ -102,7 +109,9 @@ describe('AUTO_MOVE_CLOSENESS_PARTNERS Operation Registration', () => {
       // Setup mock data - actor has no closeness component
       mockEntityManager.getComponentData.mockReturnValue(null);
 
-      const handler = container.resolve(tokens.AutoMoveClosenessPartnersHandler);
+      const handler = container.resolve(
+        tokens.AutoMoveClosenessPartnersHandler
+      );
 
       const parameters = {
         actor_id: actorId,
@@ -137,7 +146,9 @@ describe('AUTO_MOVE_CLOSENESS_PARTNERS Operation Registration', () => {
       const operationRegistry = container.resolve(tokens.OperationRegistry);
 
       // Act
-      const handler = operationRegistry.getHandler('AUTO_MOVE_CLOSENESS_PARTNERS');
+      const handler = operationRegistry.getHandler(
+        'AUTO_MOVE_CLOSENESS_PARTNERS'
+      );
 
       // Assert - The operation type should be registered
       expect(handler).toBeDefined();

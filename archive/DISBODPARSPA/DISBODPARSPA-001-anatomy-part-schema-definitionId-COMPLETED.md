@@ -20,14 +20,15 @@ When dismemberment occurs, the system needs to know which entity definition to i
 
 ### What Was Actually Changed
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `data/mods/anatomy/components/part.component.json` | Modified | Added optional `definitionId` string property to dataSchema |
-| `tests/unit/schemas/core-and-anatomy.allComponents.schema.test.js` | Modified | Added 5 new tests for `definitionId` field validation |
+| File                                                               | Change Type | Description                                                 |
+| ------------------------------------------------------------------ | ----------- | ----------------------------------------------------------- |
+| `data/mods/anatomy/components/part.component.json`                 | Modified    | Added optional `definitionId` string property to dataSchema |
+| `tests/unit/schemas/core-and-anatomy.allComponents.schema.test.js` | Modified    | Added 5 new tests for `definitionId` field validation       |
 
 ### Versus Originally Planned
 
 The implementation matched the original plan exactly:
+
 - ✅ Added `definitionId` property as optional string field
 - ✅ Maintained backward compatibility (existing payloads without `definitionId` still valid)
 - ✅ Schema ID unchanged (`anatomy:part`)
@@ -36,13 +37,13 @@ The implementation matched the original plan exactly:
 
 ### Tests Added
 
-| Test | Rationale |
-|------|-----------|
-| `✓ valid with definitionId` | Validates basic usage of new field |
-| `✓ valid with orientation and definitionId` | Validates combination with existing optional fields |
-| `✓ valid with all optional fields` | Validates full schema with all fields populated |
-| `✗ invalid - definitionId must be string` | Type enforcement for `definitionId` |
-| `✓ backward compatibility - valid without definitionId` | Explicit backward compatibility guarantee |
+| Test                                                    | Rationale                                           |
+| ------------------------------------------------------- | --------------------------------------------------- |
+| `✓ valid with definitionId`                             | Validates basic usage of new field                  |
+| `✓ valid with orientation and definitionId`             | Validates combination with existing optional fields |
+| `✓ valid with all optional fields`                      | Validates full schema with all fields populated     |
+| `✗ invalid - definitionId must be string`               | Type enforcement for `definitionId`                 |
+| `✓ backward compatibility - valid without definitionId` | Explicit backward compatibility guarantee           |
 
 ### Verification Results
 
@@ -56,9 +57,9 @@ The implementation matched the original plan exactly:
 
 ## Files to Touch
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `data/mods/anatomy/components/part.component.json` | Modify | Add `definitionId` property to schema |
+| File                                               | Change Type | Description                           |
+| -------------------------------------------------- | ----------- | ------------------------------------- |
+| `data/mods/anatomy/components/part.component.json` | Modify      | Add `definitionId` property to schema |
 
 ---
 

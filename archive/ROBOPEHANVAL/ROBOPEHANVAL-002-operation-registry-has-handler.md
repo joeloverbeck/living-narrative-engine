@@ -14,9 +14,9 @@ The spec requires a way to check handler existence without retrieving the handle
 
 ### Modify
 
-| File | Change |
-|------|--------|
-| `src/logic/operationRegistry.js` | Add `hasHandler(operationType)` method |
+| File                                         | Change                                         |
+| -------------------------------------------- | ---------------------------------------------- |
+| `src/logic/operationRegistry.js`             | Add `hasHandler(operationType)` method         |
 | `tests/unit/logic/operationRegistry.test.js` | Add `hasHandler()` tests to existing test file |
 
 ### Note

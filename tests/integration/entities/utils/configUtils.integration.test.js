@@ -76,7 +76,9 @@ describe('configUtils integration', () => {
     const performance = getPerformanceSettings();
     expect(performance.ENABLE_OPERATION_TRACING).toBe(false);
     expect(getSlowOperationThreshold()).toBe(155);
-    expect(getMemoryWarningThreshold()).toBe(performance.MEMORY_WARNING_THRESHOLD);
+    expect(getMemoryWarningThreshold()).toBe(
+      performance.MEMORY_WARNING_THRESHOLD
+    );
 
     const cache = getCacheSettings();
     const validation = getValidationSettings();

@@ -318,9 +318,9 @@ describe('MonitoringCoordinator', () => {
             performance: 0,
             circuitBreakers: 0,
             memory: 'normal',
-            errorRate: 0
-          }
-        }
+            errorRate: 0,
+          },
+        },
       });
     });
   });

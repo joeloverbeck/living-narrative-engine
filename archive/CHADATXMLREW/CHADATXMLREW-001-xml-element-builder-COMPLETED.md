@@ -12,10 +12,12 @@
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create `src/prompting/xmlElementBuilder.js` with methods: `escape()`, `wrap()`, `wrapIfPresent()`, `comment()`, `decoratedComment()`
 - Create `tests/unit/prompting/xmlElementBuilder.test.js` with 100% coverage
 
 **Actually Implemented:**
+
 - Created `src/prompting/xmlElementBuilder.js` - exactly as planned
 - Created `tests/unit/prompting/xmlElementBuilder.test.js` with 46 tests covering:
   - All escape scenarios (11 tests)
@@ -28,6 +30,7 @@
 **Coverage Achieved:** 100% statements, 100% branches, 100% functions, 100% lines
 
 **Assumptions Validated:**
+
 - `src/prompting/` directory exists ✅
 - `tests/unit/prompting/` directory exists ✅
 - Project uses camelCase naming ✅
@@ -41,6 +44,7 @@
 ## Problem Statement
 
 Create a stateless XML element building utility class that handles:
+
 - XML character escaping (`&`, `<`, `>`, `"`, `'`)
 - Tag wrapping with indentation
 - Conditional wrapping (only if content present)
@@ -52,9 +56,9 @@ This is a low-level foundation class with no dependencies on character data or b
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
-| `src/prompting/xmlElementBuilder.js` | Main implementation |
+| File                                             | Purpose               |
+| ------------------------------------------------ | --------------------- |
+| `src/prompting/xmlElementBuilder.js`             | Main implementation   |
 | `tests/unit/prompting/xmlElementBuilder.test.js` | Unit tests (46 tests) |
 
 ---
@@ -62,6 +66,7 @@ This is a low-level foundation class with no dependencies on character data or b
 ## Out of Scope
 
 **DO NOT modify:**
+
 - `CharacterDataFormatter.js` - handled in CHADATXMLREW-007
 - `AIPromptContentProvider.js` - handled in CHADATXMLREW-004
 - DI tokens or registrations - handled in CHADATXMLREW-003
@@ -128,16 +133,17 @@ export default XmlElementBuilder;
 ### Escaping Rules
 
 | Character | Escape Sequence |
-|-----------|-----------------|
-| `&` | `&amp;` |
-| `<` | `&lt;` |
-| `>` | `&gt;` |
-| `"` | `&quot;` |
-| `'` | `&apos;` |
+| --------- | --------------- |
+| `&`       | `&amp;`         |
+| `<`       | `&lt;`          |
+| `>`       | `&gt;`          |
+| `"`       | `&quot;`        |
+| `'`       | `&apos;`        |
 
 ### Decorated Comment Styles
 
 **Primary style** (for identity priming):
+
 ```xml
 <!-- ═══════════════════════════════════════════════════════════════════════════
      Line 1
@@ -146,6 +152,7 @@ export default XmlElementBuilder;
 ```
 
 **Secondary style** (for section headers):
+
 ```xml
 <!-- ─────────────────────────────────────────────────────────────────────────
      Line 1

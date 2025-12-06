@@ -74,7 +74,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -120,7 +121,9 @@ async function createAnatomyFixture() {
   });
   entityManager.addComponent(actorId, 'core:name', { text: 'Test Actor' });
 
-  entityManager.addComponent(partIds.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(partIds.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(partIds.torso, 'anatomy:joint', {
     parentId: actorId,
     socketId: 'core',
@@ -133,7 +136,9 @@ async function createAnatomyFixture() {
     socketId: 'neck',
   });
 
-  entityManager.addComponent(partIds.leftArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partIds.leftArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partIds.leftArm, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'left-shoulder',
@@ -142,7 +147,9 @@ async function createAnatomyFixture() {
     posture: { state: 'raised' },
   });
 
-  entityManager.addComponent(partIds.leftHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(partIds.leftHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(partIds.leftHand, 'anatomy:joint', {
     parentId: partIds.leftArm,
     socketId: 'left-wrist',
@@ -152,14 +159,18 @@ async function createAnatomyFixture() {
     quality: 'legendary',
   });
 
-  entityManager.addComponent(partIds.rightArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partIds.rightArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partIds.rightArm, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'right-shoulder',
   });
   entityManager.addComponent(partIds.rightArm, 'equipment:grip', {});
 
-  entityManager.addComponent(partIds.heart, 'anatomy:part', { subType: 'heart' });
+  entityManager.addComponent(partIds.heart, 'anatomy:part', {
+    subType: 'heart',
+  });
   entityManager.addComponent(partIds.heart, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'chest',
@@ -212,16 +223,16 @@ describe('BodyGraphService integration full coverage', () => {
     expect(noComponentResult).toEqual([]);
     expect(
       logger.debug.mock.calls.some((call) =>
-        call[0]?.includes('No bodyComponent provided'),
-      ),
+        call[0]?.includes('No bodyComponent provided')
+      )
     ).toBe(true);
 
     const missingRootResult = service.getAllParts({ body: {} });
     expect(missingRootResult).toEqual([]);
     expect(
       logger.debug.mock.calls.some((call) =>
-        call[0]?.includes('No root ID found'),
-      ),
+        call[0]?.includes('No root ID found')
+      )
     ).toBe(true);
 
     const allPartsUsingActor = service.getAllParts(bodyComponent, actorId);
@@ -234,7 +245,7 @@ describe('BodyGraphService integration full coverage', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     const allPartsFromBlueprint = service.getAllParts(bodyComponent);
@@ -246,25 +257,25 @@ describe('BodyGraphService integration full coverage', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     const fallbackParts = service.getAllParts(bodyComponent, 'ghost-actor');
     expect(fallbackParts).toEqual(allPartsFromBlueprint);
     expect(
-      logger.info.mock.calls.some((call) =>
+      logger.debug.mock.calls.some((call) =>
         call[0]?.includes(
-          `BodyGraphService.getAllParts: Actor 'ghost-actor' -> Using blueprint root '${partIds.torso}' as cache root`,
-        ),
-      ),
+          `BodyGraphService.getAllParts: Actor 'ghost-actor' -> Using blueprint root '${partIds.torso}' as cache root`
+        )
+      )
     ).toBe(true);
 
     const cachedParts = service.getAllParts(bodyComponent, actorId);
     expect(cachedParts).toBe(allPartsUsingActor);
     expect(
-      logger.info.mock.calls.some((call) =>
-        call[0]?.includes('CACHE HIT for cache root'),
-      ),
+      logger.debug.mock.calls.some((call) =>
+        call[0]?.includes('CACHE HIT for cache root')
+      )
     ).toBe(true);
 
     const path = service.getPath(partIds.leftHand, partIds.rightArm);
@@ -283,7 +294,7 @@ describe('BodyGraphService integration full coverage', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
     expect(service.getChildren('unknown-node')).toEqual([]);
     expect(service.getParent(partIds.leftHand)).toBe(partIds.leftArm);
@@ -304,21 +315,21 @@ describe('BodyGraphService integration full coverage', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'equipment:grip'),
-    ).toBe(true);
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'custom:metadata'),
-    ).toBe(false);
+    expect(service.hasPartWithComponent(bodyComponent, 'equipment:grip')).toBe(
+      true
+    );
+    expect(service.hasPartWithComponent(bodyComponent, 'custom:metadata')).toBe(
+      false
+    );
 
     const nestedMatch = service.hasPartWithComponentValue(
       bodyComponent,
       'anatomy:status',
       'posture.state',
-      'raised',
+      'raised'
     );
     expect(nestedMatch).toEqual({ found: true, partId: partIds.leftArm });
 
@@ -326,7 +337,7 @@ describe('BodyGraphService integration full coverage', () => {
       bodyComponent,
       'anatomy:status',
       'posture.state',
-      'lowered',
+      'lowered'
     );
     expect(nestedMiss).toEqual({ found: false });
 
@@ -338,7 +349,7 @@ describe('BodyGraphService integration full coverage', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     const validation = service.validateCache();
@@ -361,13 +372,13 @@ describe('BodyGraphService integration full coverage', () => {
         parentEntityId: partIds.torso,
         detachedCount: 2,
         reason: 'manual',
-      }),
+      })
     );
     expect(service.hasCache(actorId)).toBe(false);
 
     await service.buildAdjacencyCache(actorId);
     expect(service.getAllParts(bodyComponent, actorId)).not.toContain(
-      partIds.leftArm,
+      partIds.leftArm
     );
 
     await service.detachPart(partIds.rightArm, {
@@ -381,48 +392,48 @@ describe('BodyGraphService integration full coverage', () => {
         detachedEntityId: partIds.rightArm,
         detachedCount: 1,
         reason: 'surgery',
-      }),
+      })
     );
 
     expect(
       logger.info.mock.calls.some((call) =>
-        call[0]?.includes('Detached 2 entities'),
-      ),
+        call[0]?.includes('Detached 2 entities')
+      )
     ).toBe(true);
   });
 
   it('guards against invalid usage scenarios', async () => {
-    expect(() =>
-      new BodyGraphService({ logger, eventDispatcher }),
+    expect(() => new BodyGraphService({ logger, eventDispatcher })).toThrow(
+      InvalidArgumentError
+    );
+    expect(
+      () => new BodyGraphService({ entityManager, eventDispatcher })
     ).toThrow(InvalidArgumentError);
-    expect(() =>
-      new BodyGraphService({ entityManager, eventDispatcher }),
-    ).toThrow(InvalidArgumentError);
-    expect(() =>
-      new BodyGraphService({ entityManager, logger }),
-    ).toThrow(InvalidArgumentError);
+    expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
+      InvalidArgumentError
+    );
 
-    await expect(
-      service.detachPart('missing-part'),
-    ).rejects.toThrow(InvalidArgumentError);
+    await expect(service.detachPart('missing-part')).rejects.toThrow(
+      InvalidArgumentError
+    );
 
     entityManager.addComponent('npc-1', 'core:name', { text: 'NPC' });
 
     await expect(service.getBodyGraph(null)).rejects.toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
     await expect(service.getBodyGraph('npc-1')).rejects.toThrow(
-      'has no anatomy:body component',
+      'has no anatomy:body component'
     );
 
     await expect(service.getAnatomyData(null)).rejects.toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
     await expect(service.getAnatomyData('npc-1')).resolves.toBeNull();
     expect(
       logger.debug.mock.calls.some((call) =>
-        call[0]?.includes('has no anatomy:body component'),
-      ),
+        call[0]?.includes('has no anatomy:body component')
+      )
     ).toBe(true);
   });
 
@@ -446,9 +457,8 @@ describe('BodyGraphService integration full coverage', () => {
     expect(result).toEqual(['cached-arm']);
     expect(customCache.getCachedFindPartsByType).toHaveBeenCalledWith(
       actorId,
-      'arm',
+      'arm'
     );
     expect(customCache.cacheFindPartsByType).not.toHaveBeenCalled();
   });
 });
-

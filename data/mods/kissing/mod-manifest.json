@@ -41,9 +41,7 @@
       "suck_on_neck_to_leave_hickey.action.json",
       "suck_on_tongue.action.json"
     ],
-    "components": [
-      "kissing.component.json"
-    ],
+    "components": ["kissing.component.json"],
     "conditions": [
       "actor-is-kiss-receiver.condition.json",
       "event-is-action-accept-kiss-passively.condition.json",

@@ -16,7 +16,10 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import RefinementError from '../errors/refinementError.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
-import { createGoapEventDispatcher, validateEventBusContract } from '../debug/goapEventDispatcher.js';
+import {
+  createGoapEventDispatcher,
+  validateEventBusContract,
+} from '../debug/goapEventDispatcher.js';
 import { emitGoapEvent } from '../events/goapEventFactory.js';
 
 /**
@@ -188,12 +191,9 @@ class RefinementEngine {
 
       // Select applicable refinement method
       const { selectedMethod, diagnostics } =
-        this.#methodSelectionService.selectMethod(
-          taskId,
-          actorId,
-          taskParams,
-          { enableDiagnostics: true }
-        );
+        this.#methodSelectionService.selectMethod(taskId, actorId, taskParams, {
+          enableDiagnostics: true,
+        });
 
       // Handle no applicable method
       if (!selectedMethod) {
@@ -201,11 +201,7 @@ class RefinementEngine {
           taskId,
           diagnostics,
         });
-        return this.#handleNoApplicableMethod(
-          task,
-          actorId,
-          diagnostics
-        );
+        return this.#handleNoApplicableMethod(task, actorId, diagnostics);
       }
 
       this.#logger.info('Method selected for refinement', {
@@ -458,19 +454,21 @@ class RefinementEngine {
         });
 
         // Assemble step context with current state snapshot
-        const stepContext = await this.#contextAssemblyService.assembleRefinementContext(
-          actorId,
-          {
-            id: task.id,
-            params: taskParams,
-          },
-          refinementStateManager.getSnapshot()
-        );
+        const stepContext =
+          await this.#contextAssemblyService.assembleRefinementContext(
+            actorId,
+            {
+              id: task.id,
+              params: taskParams,
+            },
+            refinementStateManager.getSnapshot()
+          );
 
         // Capture old value BEFORE execution if step will store result
-        const oldValue = step.storeResultAs && refinementStateManager.has(step.storeResultAs)
-          ? refinementStateManager.get(step.storeResultAs)
-          : undefined;
+        const oldValue =
+          step.storeResultAs && refinementStateManager.has(step.storeResultAs)
+            ? refinementStateManager.get(step.storeResultAs)
+            : undefined;
 
         // Execute step based on type
         let result;

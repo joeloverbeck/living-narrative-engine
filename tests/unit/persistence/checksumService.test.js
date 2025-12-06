@@ -2,12 +2,7 @@
  * @file Unit tests for the ChecksumService class.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import ChecksumService from '../../../src/persistence/checksumService.js';
 import {
   PersistenceError,

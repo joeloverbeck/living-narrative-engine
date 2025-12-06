@@ -74,9 +74,7 @@ describe('RetryStrategy integration', () => {
     const stats = retryStrategy.getRetryStatistics('load-anatomy');
     expect(stats.attempts).toBe(0);
     expect(stats.failures).toBe(0);
-    expect(stats.circuitBreakerState).toBe(
-      RetryStrategy.CIRCUIT_STATES.CLOSED
-    );
+    expect(stats.circuitBreakerState).toBe(RetryStrategy.CIRCUIT_STATES.CLOSED);
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('succeeded on attempt 2')
     );
@@ -121,12 +119,9 @@ describe('RetryStrategy integration', () => {
       retryStrategy.execute('circuit-op', failingOperation, config)
     ).rejects.toThrow('temporary outage');
 
-    const statusAfterFailures = retryStrategy.getCircuitBreakerStatus(
-      'circuit-op'
-    );
-    expect(statusAfterFailures.state).toBe(
-      RetryStrategy.CIRCUIT_STATES.OPEN
-    );
+    const statusAfterFailures =
+      retryStrategy.getCircuitBreakerStatus('circuit-op');
+    expect(statusAfterFailures.state).toBe(RetryStrategy.CIRCUIT_STATES.OPEN);
 
     await expect(
       retryStrategy.execute('circuit-op', failingOperation, config)
@@ -142,12 +137,9 @@ describe('RetryStrategy integration', () => {
     );
 
     expect(result).toBe('recovered');
-    const statusAfterRecovery = retryStrategy.getCircuitBreakerStatus(
-      'circuit-op'
-    );
-    expect(statusAfterRecovery.state).toBe(
-      RetryStrategy.CIRCUIT_STATES.CLOSED
-    );
+    const statusAfterRecovery =
+      retryStrategy.getCircuitBreakerStatus('circuit-op');
+    expect(statusAfterRecovery.state).toBe(RetryStrategy.CIRCUIT_STATES.CLOSED);
     expect(statusAfterRecovery.failures).toBe(0);
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('moved to CLOSED state after success')
@@ -177,14 +169,15 @@ describe('RetryStrategy integration', () => {
       retryStrategy.execute('flaky-op', failingOperation, config)
     ).rejects.toThrow('temporary outage');
 
-    const statusAfterHalfOpenFailure = retryStrategy.getCircuitBreakerStatus(
-      'flaky-op'
-    );
+    const statusAfterHalfOpenFailure =
+      retryStrategy.getCircuitBreakerStatus('flaky-op');
     expect(statusAfterHalfOpenFailure.state).toBe(
       RetryStrategy.CIRCUIT_STATES.OPEN
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('moved back to OPEN state after HALF_OPEN failure')
+      expect.stringContaining(
+        'moved back to OPEN state after HALF_OPEN failure'
+      )
     );
   });
 
@@ -260,7 +253,9 @@ describe('RetryStrategy integration', () => {
 
   it('falls back to default delay calculations when strategy is unknown', async () => {
     jest.useFakeTimers({ now: Date.now() });
-    const retryableError = new Error('Network timeout retrieving fallback data');
+    const retryableError = new Error(
+      'Network timeout retrieving fallback data'
+    );
     const operation = jest
       .fn()
       .mockRejectedValueOnce(retryableError)
@@ -342,8 +337,8 @@ describe('RetryStrategy integration', () => {
   });
 
   it('validates operations are callable', async () => {
-    await expect(
-      retryStrategy.execute('invalid', null)
-    ).rejects.toThrow('Operation must be a function');
+    await expect(retryStrategy.execute('invalid', null)).rejects.toThrow(
+      'Operation must be a function'
+    );
   });
 });

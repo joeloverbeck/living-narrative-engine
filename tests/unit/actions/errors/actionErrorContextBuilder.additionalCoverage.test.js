@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import {
   EVALUATION_STEP_TYPES,
@@ -52,18 +59,20 @@ describe('ActionErrorContextBuilder additional coverage', () => {
       'core:undefined',
       'core:items',
     ]);
-    entityManager.getComponentData.mockImplementation((actorId, componentType) => {
-      switch (componentType) {
-        case 'core:location':
-          return { value: null };
-        case 'core:undefined':
-          return undefined;
-        case 'core:items':
-          return ['alpha', 'beta', 'gamma'];
-        default:
-          return {};
+    entityManager.getComponentData.mockImplementation(
+      (actorId, componentType) => {
+        switch (componentType) {
+          case 'core:location':
+            return { value: null };
+          case 'core:undefined':
+            return undefined;
+          case 'core:items':
+            return ['alpha', 'beta', 'gamma'];
+          default:
+            return {};
+        }
       }
-    });
+    );
 
     const error = new Error('Component snapshot test');
     const actionDef = { id: 'action:test' };
@@ -114,7 +123,9 @@ describe('ActionErrorContextBuilder additional coverage', () => {
     entityManager.getAllComponentTypesForEntity.mockReturnValue([
       'core:location',
     ]);
-    entityManager.getComponentData.mockImplementation(() => ({ value: 'harbor' }));
+    entityManager.getComponentData.mockImplementation(() => ({
+      value: 'harbor',
+    }));
 
     const trace = {
       logs: [

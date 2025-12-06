@@ -31,6 +31,7 @@ Operation handlers currently contain hardcoded component IDs (e.g., `positioning
 **File:** `docs/architecture/component-type-registry-design.md`
 
 **Contents:**
+
 - System overview and objectives
 - API specification
 - Category definitions
@@ -44,6 +45,7 @@ Operation handlers currently contain hardcoded component IDs (e.g., `positioning
 **File:** `docs/modding/component-type-registry-guide.md`
 
 **Contents:**
+
 - How to register component types
 - How to use categories in handlers
 - Category naming conventions
@@ -62,7 +64,7 @@ class ComponentTypeRegistry {
    * @param {string} componentId - Full component ID (e.g., 'positioning:sitting')
    * @param {boolean} isDefault - Whether this is the default for the category
    */
-  register(category, componentId, isDefault = false) { }
+  register(category, componentId, isDefault = false) {}
 
   /**
    * Get component ID for a category, with optional type preference
@@ -70,7 +72,7 @@ class ComponentTypeRegistry {
    * @param {string} preferredType - Optional specific component ID to prefer
    * @returns {string|null} Component ID or null if not found
    */
-  getComponentId(category, preferredType = null) { }
+  getComponentId(category, preferredType = null) {}
 
   /**
    * Check if entity has any component of the given category
@@ -79,7 +81,7 @@ class ComponentTypeRegistry {
    * @param {string} category - Category to check for
    * @returns {boolean} True if entity has component in category
    */
-  hasComponentOfCategory(entityManager, entityId, category) { }
+  hasComponentOfCategory(entityManager, entityId, category) {}
 
   /**
    * Get component data for an entity in a category
@@ -90,14 +92,19 @@ class ComponentTypeRegistry {
    * @returns {Object} Component data
    * @throws {Error} If no component found in category
    */
-  getComponentOfCategory(entityManager, entityId, category, preferredType = null) { }
+  getComponentOfCategory(
+    entityManager,
+    entityId,
+    category,
+    preferredType = null
+  ) {}
 
   /**
    * Get all registered component IDs for a category
    * @param {string} category - Category to query
    * @returns {string[]} Array of component IDs
    */
-  getAllComponentsInCategory(category) { }
+  getAllComponentsInCategory(category) {}
 
   /**
    * Check if a specific component ID is registered in a category
@@ -105,7 +112,7 @@ class ComponentTypeRegistry {
    * @param {string} componentId - Component ID to check for
    * @returns {boolean} True if registered
    */
-  isRegisteredInCategory(category, componentId) { }
+  isRegisteredInCategory(category, componentId) {}
 }
 ```
 
@@ -114,6 +121,7 @@ class ComponentTypeRegistry {
 Define standard categories that cover current hardcoded references:
 
 #### Positioning Categories
+
 - `sitting` - Components representing sitting state
 - `kneeling` - Components representing kneeling state
 - `lying_down` - Components representing lying down state
@@ -122,6 +130,7 @@ Define standard categories that cover current hardcoded references:
 - `facing` - Components representing facing direction
 
 #### Items Categories
+
 - `container` - Components that enable container functionality
 - `locked` - Components representing locked state
 - `inventory` - Components providing inventory storage
@@ -130,16 +139,19 @@ Define standard categories that cover current hardcoded references:
 - `equippable` - Components for equippable items
 
 #### Social Categories
+
 - `relationship` - Components tracking relationships
 - `affection` - Components tracking affection scores
 - `reputation` - Components tracking reputation
 
 #### Combat/Violence Categories
+
 - `health` - Components tracking health/damage
 - `armor` - Components providing protection
 - `weapon` - Components defining weapons
 
 #### Appearance Categories
+
 - `clothing` - Components representing worn clothing
 - `visible` - Components affecting visibility
 - `body_part` - Components defining body parts
@@ -172,6 +184,7 @@ Update mod manifest schema to support component type declarations:
 ### Operation Handler Migration Pattern
 
 Before (hardcoded):
+
 ```javascript
 class EstablishSittingClosenessHandler extends BaseOperationHandler {
   execute(context) {
@@ -192,6 +205,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
 ```
 
 After (registry-based):
+
 ```javascript
 class EstablishSittingClosenessHandler extends BaseOperationHandler {
   #componentTypeRegistry;
@@ -213,11 +227,13 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
     );
 
     // ✅ USES REGISTRY
-    if (!this.#componentTypeRegistry.hasComponentOfCategory(
-      this.#entityManager,
-      targetId,
-      'sitting'
-    )) {
+    if (
+      !this.#componentTypeRegistry.hasComponentOfCategory(
+        this.#entityManager,
+        targetId,
+        'sitting'
+      )
+    ) {
       throw new Error('Target must have sitting component');
     }
   }
@@ -227,6 +243,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
 ### DI Integration Strategy
 
 **Token Definition:**
+
 ```javascript
 // src/dependencyInjection/tokens/tokens-core.js
 export const tokens = {
@@ -236,6 +253,7 @@ export const tokens = {
 ```
 
 **Registration:**
+
 ```javascript
 // src/dependencyInjection/registrations/entityRegistrations.js
 import { ComponentTypeRegistry } from '../../entities/registries/componentTypeRegistry.js';
@@ -244,15 +262,14 @@ import { tokens } from '../tokens/tokens-core.js';
 export function registerEntityServices(container) {
   // ... existing registrations ...
 
-  container.register(
-    tokens.IComponentTypeRegistry,
-    ComponentTypeRegistry,
-    { lifecycle: 'singleton' }
-  );
+  container.register(tokens.IComponentTypeRegistry, ComponentTypeRegistry, {
+    lifecycle: 'singleton',
+  });
 }
 ```
 
 **ModLoader Integration:**
+
 ```javascript
 // src/loaders/modLoader.js
 class ModLoader {
@@ -284,6 +301,7 @@ class ModLoader {
 ### Error Handling
 
 **When no component found in category:**
+
 ```javascript
 getComponentOfCategory(entityManager, entityId, category, preferredType) {
   const componentId = this.getComponentId(category, preferredType);
@@ -310,15 +328,15 @@ When multiple mods register components in the same category:
 
 ```javascript
 // Registry stores all, but marks default
-register('sitting', 'positioning:sitting', true);  // Default
-register('sitting', 'advanced_positioning:sitting', false);  // Alternative
+register('sitting', 'positioning:sitting', true); // Default
+register('sitting', 'advanced_positioning:sitting', false); // Alternative
 
 // Handler can explicitly request alternative
 getComponentOfCategory(
   entityManager,
   entityId,
   'sitting',
-  'advanced_positioning:sitting'  // Override default
+  'advanced_positioning:sitting' // Override default
 );
 ```
 
@@ -426,9 +444,11 @@ class LegacyComponentAccessor {
 ## Dependencies
 
 **Required Before Implementation:**
+
 - HARMODREF-003 - Audit must identify all category needs
 
 **Blocks:**
+
 - HARMODREF-011 - Cannot implement without approved design
 - HARMODREF-012 - Cannot update manifests without schema design
 

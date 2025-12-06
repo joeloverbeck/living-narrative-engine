@@ -103,7 +103,7 @@ export function validatePatternPrecedence(patterns, blueprint, deps) {
       const keys2 = resolvePatternToKeys(pattern2, blueprint, deps);
 
       // Check for overlap
-      const overlap = keys1.filter(k => keys2.includes(k));
+      const overlap = keys1.filter((k) => keys2.includes(k));
 
       if (overlap.length > 0) {
         const spec1 = getPatternSpecificity(pattern1);

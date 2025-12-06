@@ -4,7 +4,11 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency, assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { getMemoryUsage } from '../../utils/environmentUtils.js';
 
@@ -118,7 +122,10 @@ export default class MemoryProfiler extends BaseService {
     if (this.#config.trackPeakMemory) {
       profile.intervalHandle = setInterval(() => {
         const currentMemory = this.#getMemoryUsage();
-        profile.peakMemory = Math.max(profile.peakMemory, currentMemory.heapUsed);
+        profile.peakMemory = Math.max(
+          profile.peakMemory,
+          currentMemory.heapUsed
+        );
       }, this.#config.snapshotInterval);
     }
 
@@ -245,10 +252,10 @@ export default class MemoryProfiler extends BaseService {
       totalDelta,
       heapGrowthRate: timeDelta > 0 ? (heapDelta / timeDelta) * 1000 : 0, // Bytes per second
       analysis: {
-        trend: heapDelta > 0 ? 'growing' : heapDelta < 0 ? 'shrinking' : 'stable',
-        percentChange: snapshot1.heapUsed > 0
-          ? ((heapDelta / snapshot1.heapUsed) * 100)
-          : 0,
+        trend:
+          heapDelta > 0 ? 'growing' : heapDelta < 0 ? 'shrinking' : 'stable',
+        percentChange:
+          snapshot1.heapUsed > 0 ? (heapDelta / snapshot1.heapUsed) * 100 : 0,
       },
     };
 
@@ -297,7 +304,8 @@ export default class MemoryProfiler extends BaseService {
       if (stats.executionCount >= minExecutions) {
         hotspots.push({
           operation: stats.operation,
-          averageMemoryIncrease: stats.totalMemoryIncrease / stats.executionCount,
+          averageMemoryIncrease:
+            stats.totalMemoryIncrease / stats.executionCount,
           totalMemoryIncrease: stats.totalMemoryIncrease,
           executionCount: stats.executionCount,
           averageDuration: stats.totalDuration / stats.executionCount,
@@ -355,15 +363,14 @@ export default class MemoryProfiler extends BaseService {
       (sum, op) => sum + Math.max(0, op.memoryDelta),
       0
     );
-    const averageMemoryIncrease = totalOperations > 0
-      ? totalMemoryIncrease / totalOperations
-      : 0;
+    const averageMemoryIncrease =
+      totalOperations > 0 ? totalMemoryIncrease / totalOperations : 0;
 
     // Find worst operations
     const worstOperations = [...operations]
       .sort((a, b) => b.memoryDelta - a.memoryDelta)
       .slice(0, 10)
-      .map(op => ({
+      .map((op) => ({
         id: op.id,
         label: op.label,
         memoryDelta: op.memoryDelta,

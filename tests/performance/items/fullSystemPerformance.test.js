@@ -231,7 +231,14 @@ describe('Items System - Performance', () => {
         .withComponent('core:weight', { weight: 1.0 })
         .build();
 
-      const entities = [location, actor, recipient, workerItem1, workerItem2, ...workerHands];
+      const entities = [
+        location,
+        actor,
+        recipient,
+        workerItem1,
+        workerItem2,
+        ...workerHands,
+      ];
 
       // Create 20 containers with 10 items each (environmental complexity)
       for (let i = 0; i < 20; i++) {
@@ -335,9 +342,7 @@ describe('Items System - Performance', () => {
 
   describe('stress tests', () => {
     it('should handle maximum realistic entity counts', () => {
-      const location = new ModEntityBuilder('bazaar')
-        .asRoom('Bazaar')
-        .build();
+      const location = new ModEntityBuilder('bazaar').asRoom('Bazaar').build();
 
       const entities = [location];
 

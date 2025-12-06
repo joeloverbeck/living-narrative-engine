@@ -286,10 +286,7 @@ describe('StorageRotationManager - Rotation Policies', () => {
         data: { payload: 'y'.repeat(2500) },
       };
 
-      mockStorageAdapter.getItem.mockResolvedValue([
-        recentTrace,
-        olderTrace,
-      ]);
+      mockStorageAdapter.getItem.mockResolvedValue([recentTrace, olderTrace]);
 
       manager.updateConfig({
         maxStorageSize: 500,
@@ -376,7 +373,9 @@ describe('StorageRotationManager - Rotation Policies', () => {
 
       expect(result.deleted).toBeGreaterThan(0);
       const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
-      expect(savedTraces.find((trace) => trace.id === 'oversized_trace')).toBeUndefined();
+      expect(
+        savedTraces.find((trace) => trace.id === 'oversized_trace')
+      ).toBeUndefined();
     });
   });
 

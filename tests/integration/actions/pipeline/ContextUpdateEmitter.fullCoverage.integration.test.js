@@ -114,7 +114,9 @@ describe('ContextUpdateEmitter integration with TargetValidationIOAdapter', () =
       },
     });
     expect(keptEntry.resolvedTargets.enemy.entity).toBe(enemy);
-    expect(keptEntry.targetContexts).toEqual([{ entity: enemy, relation: 'hostile' }]);
+    expect(keptEntry.targetContexts).toEqual([
+      { entity: enemy, relation: 'hostile' },
+    ]);
 
     expect(emptyEntry.actionDef.id).toBe('action:empty-targets');
     expect(emptyEntry.resolvedTargets).toEqual({
@@ -248,10 +250,9 @@ describe('ContextUpdateEmitter integration with TargetValidationIOAdapter', () =
     });
 
     expect(pipelineContext.candidateActions).toHaveLength(2);
-    expect(pipelineContext.candidateActions.map((action) => action.id)).toEqual([
-      'candidate:kept',
-      'candidate:null-targets',
-    ]);
+    expect(pipelineContext.candidateActions.map((action) => action.id)).toEqual(
+      ['candidate:kept', 'candidate:null-targets']
+    );
 
     const keptAction = pipelineContext.candidateActions[0];
     expect(keptAction.resolvedTargets).toEqual({
@@ -288,7 +289,12 @@ describe('ContextUpdateEmitter integration with TargetValidationIOAdapter', () =
     });
 
     expect(results).toHaveLength(3);
-    expect(results.map((result) => ({ actionId: result.actionId, kept: result.kept }))).toEqual([
+    expect(
+      results.map((result) => ({
+        actionId: result.actionId,
+        kept: result.kept,
+      }))
+    ).toEqual([
       { actionId: 'candidate:kept', kept: true },
       { actionId: 'candidate:null-targets', kept: true },
       { actionId: 'candidate:dropped', kept: false },

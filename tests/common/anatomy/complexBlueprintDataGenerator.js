@@ -31,32 +31,33 @@ export default class ComplexBlueprintDataGenerator {
               socket: 'left_shoulder',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             right_arm: {
               socket: 'right_shoulder',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             head: {
               socket: 'neck',
               requirements: {
                 partType: 'head',
-                components: ['anatomy:part']
-              }
-            }
-          }
-        }
+                components: ['anatomy:part'],
+              },
+            },
+          },
+        },
       },
 
       // Entity definitions for blueprint parts
       entityDefinitions: {
         'test:simple_torso_root': {
           id: 'test:simple_torso_root',
-          description: 'Simple torso root entity for realistic blueprint testing',
+          description:
+            'Simple torso root entity for realistic blueprint testing',
           components: {
             'anatomy:part': {
               subType: 'torso',
@@ -70,7 +71,7 @@ export default class ComplexBlueprintDataGenerator {
                   allowedTypes: ['arm'],
                 },
                 {
-                  id: 'right_shoulder', 
+                  id: 'right_shoulder',
                   max: 1,
                   nameTpl: 'Right Shoulder',
                   allowedTypes: ['arm'],
@@ -81,7 +82,7 @@ export default class ComplexBlueprintDataGenerator {
                   nameTpl: 'Neck',
                   allowedTypes: ['head'],
                 },
-              ]
+              ],
             },
             'core:name': {
               text: 'Simple Torso',
@@ -96,7 +97,7 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'arm',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
               text: 'Simple Arm',
@@ -111,20 +112,20 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'head',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
               text: 'Simple Head',
             },
           },
-        }
+        },
       },
 
       // Recipe for triggering the realistic blueprint
       recipe: {
         id: 'test:simple_humanoid_recipe',
-        blueprintId: 'test:simple_humanoid'
-      }
+        blueprintId: 'test:simple_humanoid',
+      },
     };
 
     this.generatedData.set('multiLevel', data);
@@ -132,7 +133,7 @@ export default class ComplexBlueprintDataGenerator {
   }
 
   /**
-   * Generates blueprint with basic slot requirements  
+   * Generates blueprint with basic slot requirements
    * Tests simple anatomy part creation without conflicts (since conflict resolution isn't implemented)
    *
    * @returns {object} Simple blueprint test data
@@ -149,18 +150,18 @@ export default class ComplexBlueprintDataGenerator {
               socket: 'left_socket',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             right_arm: {
               socket: 'right_socket',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
-            }
-          }
-        }
+                components: ['anatomy:part'],
+              },
+            },
+          },
+        },
       },
 
       entityDefinitions: {
@@ -185,7 +186,7 @@ export default class ComplexBlueprintDataGenerator {
                   nameTpl: 'Right Socket',
                   allowedTypes: ['arm'],
                 },
-              ]
+              ],
             },
             'core:name': {
               text: 'Simple Root',
@@ -200,19 +201,19 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'arm',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
               text: 'Simple Arm Part',
             },
           },
-        }
+        },
       },
 
       recipe: {
         id: 'test:simple_recipe',
-        blueprintId: 'test:simple_blueprint'
-      }
+        blueprintId: 'test:simple_blueprint',
+      },
     };
 
     this.generatedData.set('conflicting', data);
@@ -237,27 +238,27 @@ export default class ComplexBlueprintDataGenerator {
               socket: 'shoulder',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             // Equipment slot - should NOT create anatomy part (uses 'grip' socket which production detects as equipment)
             weapon_holder: {
               socket: 'grip',
               requirements: {
                 partType: 'weapon',
-                components: ['equipment:weapon']
-              }
+                components: ['equipment:weapon'],
+              },
             },
             // Another anatomy slot
             body_leg: {
               socket: 'hip',
               requirements: {
                 partType: 'leg',
-                components: ['anatomy:part']
-              }
-            }
-          }
-        }
+                components: ['anatomy:part'],
+              },
+            },
+          },
+        },
       },
 
       entityDefinitions: {
@@ -288,7 +289,7 @@ export default class ComplexBlueprintDataGenerator {
                   nameTpl: 'Hip',
                   allowedTypes: ['leg'],
                 },
-              ]
+              ],
             },
             'core:name': {
               text: 'Equipment Detection Root',
@@ -303,7 +304,7 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'arm',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
               text: 'Simple Arm',
@@ -318,19 +319,19 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'leg',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
               text: 'Simple Leg',
             },
           },
-        }
+        },
       },
 
       recipe: {
         id: 'test:equipment_detection_recipe',
-        blueprintId: 'test:equipment_detection_blueprint'
-      }
+        blueprintId: 'test:equipment_detection_blueprint',
+      },
     };
 
     this.generatedData.set('mixedSlots', data);
@@ -354,33 +355,33 @@ export default class ComplexBlueprintDataGenerator {
               socket: 'shoulder',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
+                components: ['anatomy:part'],
               },
               constraints: [
                 {
                   type: 'conditional',
-                  condition: { 'has_component': ['anatomy:muscle'] },
-                  description: 'Arm requires muscle component'
-                }
-              ]
+                  condition: { has_component: ['anatomy:muscle'] },
+                  description: 'Arm requires muscle component',
+                },
+              ],
             },
             dependent_hand: {
               socket: 'wrist',
               parent: 'conditional_arm',
               requirements: {
                 partType: 'hand',
-                components: ['anatomy:part']
+                components: ['anatomy:part'],
               },
               constraints: [
                 {
                   type: 'dependency',
                   dependsOn: 'conditional_arm',
-                  description: 'Hand depends on arm existence'
-                }
-              ]
-            }
-          }
-        }
+                  description: 'Hand depends on arm existence',
+                },
+              ],
+            },
+          },
+        },
       },
 
       entityDefinitions: {
@@ -405,13 +406,13 @@ export default class ComplexBlueprintDataGenerator {
                   nameTpl: 'Wrist',
                   allowedTypes: ['hand'],
                 },
-              ]
+              ],
             },
             'core:name': {
               text: 'Constrained Torso',
             },
           },
-        }
+        },
       },
 
       recipe: {
@@ -421,10 +422,10 @@ export default class ComplexBlueprintDataGenerator {
           {
             type: 'propagation',
             description: 'Constraints propagate through dependency chain',
-            rule: 'dependent_parts_inherit_parent_constraints'
-          }
-        ]
-      }
+            rule: 'dependent_parts_inherit_parent_constraints',
+          },
+        ],
+      },
     };
 
     this.generatedData.set('constraintPropagation', data);
@@ -444,7 +445,7 @@ export default class ComplexBlueprintDataGenerator {
     const {
       includeSlotMetadata = true,
       includeClothingItems = true,
-      complexityLevel = 'basic'
+      complexityLevel = 'basic',
     } = options;
 
     const data = {
@@ -458,39 +459,39 @@ export default class ComplexBlueprintDataGenerator {
               socket: 'left_shoulder',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             right_arm: {
               socket: 'right_shoulder',
               requirements: {
                 partType: 'arm',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             left_leg: {
               socket: 'left_hip',
               requirements: {
                 partType: 'leg',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             right_leg: {
               socket: 'right_hip',
               requirements: {
                 partType: 'leg',
-                components: ['anatomy:part']
-              }
+                components: ['anatomy:part'],
+              },
             },
             head: {
               socket: 'neck',
               requirements: {
                 partType: 'head',
-                components: ['anatomy:part']
-              }
-            }
-          }
-        }
+                components: ['anatomy:part'],
+              },
+            },
+          },
+        },
       },
 
       // Entity definitions with clothing-compatible sockets
@@ -509,42 +510,42 @@ export default class ComplexBlueprintDataGenerator {
                   max: 1,
                   nameTpl: 'Left Shoulder',
                   allowedTypes: ['arm'],
-                  clothingSlot: 'torso_upper'
+                  clothingSlot: 'torso_upper',
                 },
                 {
                   id: 'right_shoulder',
                   max: 1,
-                  nameTpl: 'Right Shoulder', 
+                  nameTpl: 'Right Shoulder',
                   allowedTypes: ['arm'],
-                  clothingSlot: 'torso_upper'
+                  clothingSlot: 'torso_upper',
                 },
                 {
                   id: 'left_hip',
                   max: 1,
                   nameTpl: 'Left Hip',
                   allowedTypes: ['leg'],
-                  clothingSlot: 'torso_lower'
+                  clothingSlot: 'torso_lower',
                 },
                 {
                   id: 'right_hip',
                   max: 1,
                   nameTpl: 'Right Hip',
                   allowedTypes: ['leg'],
-                  clothingSlot: 'torso_lower'
+                  clothingSlot: 'torso_lower',
                 },
                 {
                   id: 'neck',
                   max: 1,
                   nameTpl: 'Neck',
                   allowedTypes: ['head'],
-                  clothingSlot: 'neck'
-                }
-              ]
+                  clothingSlot: 'neck',
+                },
+              ],
             },
             'core:name': {
-              text: 'Torso with Clothing Slots'
-            }
-          }
+              text: 'Torso with Clothing Slots',
+            },
+          },
         },
         'test:clothing_arm': {
           id: 'test:clothing_arm',
@@ -560,17 +561,17 @@ export default class ComplexBlueprintDataGenerator {
                   max: 1,
                   nameTpl: 'Wrist',
                   allowedTypes: ['hand'],
-                  clothingSlot: 'wrist'
-                }
-              ]
+                  clothingSlot: 'wrist',
+                },
+              ],
             },
             'core:name': {
-              text: 'Clothing-Compatible Arm'
-            }
-          }
+              text: 'Clothing-Compatible Arm',
+            },
+          },
         },
         'test:clothing_leg': {
-          id: 'test:clothing_leg', 
+          id: 'test:clothing_leg',
           description: 'Leg with clothing socket compatibility',
           components: {
             'anatomy:part': {
@@ -583,14 +584,14 @@ export default class ComplexBlueprintDataGenerator {
                   max: 1,
                   nameTpl: 'Ankle',
                   allowedTypes: ['foot'],
-                  clothingSlot: 'foot'
-                }
-              ]
+                  clothingSlot: 'foot',
+                },
+              ],
             },
             'core:name': {
-              text: 'Clothing-Compatible Leg'
-            }
-          }
+              text: 'Clothing-Compatible Leg',
+            },
+          },
         },
         'test:clothing_head': {
           id: 'test:clothing_head',
@@ -600,13 +601,13 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'head',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
-              text: 'Clothing-Compatible Head'
-            }
-          }
-        }
+              text: 'Clothing-Compatible Head',
+            },
+          },
+        },
       },
 
       // Recipe for anatomy generation with clothing support
@@ -618,10 +619,10 @@ export default class ComplexBlueprintDataGenerator {
           { slotId: 'right_arm', definitionId: 'test:clothing_arm' },
           { slotId: 'left_leg', definitionId: 'test:clothing_leg' },
           { slotId: 'right_leg', definitionId: 'test:clothing_leg' },
-          { slotId: 'head', definitionId: 'test:clothing_head' }
+          { slotId: 'head', definitionId: 'test:clothing_head' },
         ],
-        enableClothingSlots: includeSlotMetadata
-      }
+        enableClothingSlots: includeSlotMetadata,
+      },
     };
 
     // Add clothing items if requested
@@ -632,32 +633,32 @@ export default class ComplexBlueprintDataGenerator {
           name: 'Test Shirt',
           description: 'A test shirt for integration testing',
           targetSlot: 'torso_upper',
-          layer: 'base'
+          layer: 'base',
         },
         {
           id: 'test:pants',
           name: 'Test Pants',
           description: 'Test pants for integration testing',
           targetSlot: 'torso_lower',
-          layer: 'base'
-        }
+          layer: 'base',
+        },
       ];
 
       if (complexityLevel === 'complex') {
         data.clothingItems.push(
           {
             id: 'test:jacket',
-            name: 'Test Jacket', 
+            name: 'Test Jacket',
             description: 'A test jacket for layering',
             targetSlot: 'torso_upper',
-            layer: 'outer'
+            layer: 'outer',
           },
           {
             id: 'test:shoes',
             name: 'Test Shoes',
             description: 'Test shoes for foot slot',
             targetSlot: 'foot',
-            layer: 'base'
+            layer: 'base',
           }
         );
       }
@@ -668,18 +669,18 @@ export default class ComplexBlueprintDataGenerator {
       {
         id: 'torso_upper',
         socketIds: ['left_shoulder', 'right_shoulder'],
-        allowedLayers: ['base', 'outer']
+        allowedLayers: ['base', 'outer'],
       },
       {
         id: 'torso_lower',
-        socketIds: ['left_hip', 'right_hip'], 
-        allowedLayers: ['base', 'outer']
+        socketIds: ['left_hip', 'right_hip'],
+        allowedLayers: ['base', 'outer'],
       },
       {
         id: 'foot',
         socketIds: ['ankle'],
-        allowedLayers: ['base']
-      }
+        allowedLayers: ['base'],
+      },
     ];
 
     this.generatedData.set('clothingIntegration', data);
@@ -695,13 +696,14 @@ export default class ComplexBlueprintDataGenerator {
    * @returns {object} Layer conflict test data
    */
   async generateLayerConflictScenario(options = {}) {
-    const { conflictType = 'same_layer_same_slot', complexityLevel = 'basic' } = options;
+    const { conflictType = 'same_layer_same_slot', complexityLevel = 'basic' } =
+      options;
 
     // Get base integration data
     const baseData = await this.generateClothingIntegrationScenario({
       includeSlotMetadata: true,
       includeClothingItems: false,
-      complexityLevel
+      complexityLevel,
     });
 
     const data = {
@@ -711,16 +713,17 @@ export default class ComplexBlueprintDataGenerator {
           id: 'test:conflicting_shirt_1',
           name: 'First Test Shirt',
           targetSlot: 'torso_upper',
-          layer: 'base'
+          layer: 'base',
         },
         {
           id: 'test:conflicting_shirt_2',
           name: 'Second Test Shirt',
           targetSlot: 'torso_upper',
-          layer: 'base'
-        }
+          layer: 'base',
+        },
       ],
-      expectedBehavior: conflictType === 'same_layer_same_slot' ? 'reject' : 'replace'
+      expectedBehavior:
+        conflictType === 'same_layer_same_slot' ? 'reject' : 'replace',
     };
 
     this.generatedData.set('layerConflict', data);
@@ -737,13 +740,13 @@ export default class ComplexBlueprintDataGenerator {
     const {
       slotComplexity = 'multi_socket',
       includeOrientationSpecific = true,
-      includeLayerVariations = true
+      includeLayerVariations = true,
     } = options;
 
     const data = await this.generateClothingIntegrationScenario({
       includeSlotMetadata: true,
       includeClothingItems: false,
-      complexityLevel: 'complex'
+      complexityLevel: 'complex',
     });
 
     // Add complex slot mappings
@@ -753,19 +756,19 @@ export default class ComplexBlueprintDataGenerator {
           id: 'arm_left',
           socketIds: ['left_shoulder', 'wrist_left'],
           allowedLayers: ['base', 'outer'],
-          orientation: 'left'
+          orientation: 'left',
         },
         {
           id: 'arm_right',
           socketIds: ['right_shoulder', 'wrist_right'],
           allowedLayers: ['base', 'outer'],
-          orientation: 'right'
+          orientation: 'right',
         }
       );
     }
 
     if (includeLayerVariations) {
-      data.expectedSlots.forEach(slot => {
+      data.expectedSlots.forEach((slot) => {
         if (slot.id === 'torso_upper') {
           slot.allowedLayers = ['base', 'mid', 'outer', 'accessory'];
         }
@@ -783,25 +786,26 @@ export default class ComplexBlueprintDataGenerator {
    * @returns {object} Slot compatibility test data
    */
   async generateSlotCompatibilityScenario(options = {}) {
-    const { includeIncompatibleItems = true, includeEdgeCases = true } = options;
+    const { includeIncompatibleItems = true, includeEdgeCases = true } =
+      options;
 
     const data = await this.generateClothingIntegrationScenario({
       includeSlotMetadata: true,
       includeClothingItems: false,
-      complexityLevel: 'basic'
+      complexityLevel: 'basic',
     });
 
     data.compatibilityTests = [
       {
         itemId: 'test:compatible_shirt',
         targetSlot: 'torso_upper',
-        expectedResult: 'success'
+        expectedResult: 'success',
       },
       {
         itemId: 'test:compatible_pants',
         targetSlot: 'torso_lower',
-        expectedResult: 'success'
-      }
+        expectedResult: 'success',
+      },
     ];
 
     if (includeIncompatibleItems) {
@@ -809,24 +813,22 @@ export default class ComplexBlueprintDataGenerator {
         {
           itemId: 'test:incompatible_helmet',
           targetSlot: 'torso_upper', // Wrong slot for helmet
-          expectedResult: 'incompatible'
+          expectedResult: 'incompatible',
         },
         {
           itemId: 'test:oversized_item',
           targetSlot: 'foot', // Item too large for slot
-          expectedResult: 'incompatible'
+          expectedResult: 'incompatible',
         }
       );
     }
 
     if (includeEdgeCases) {
-      data.compatibilityTests.push(
-        {
-          itemId: 'test:edge_case_item',
-          targetSlot: 'nonexistent_slot',
-          expectedResult: 'incompatible'
-        }
-      );
+      data.compatibilityTests.push({
+        itemId: 'test:edge_case_item',
+        targetSlot: 'nonexistent_slot',
+        expectedResult: 'incompatible',
+      });
     }
 
     this.generatedData.set('slotCompatibility', data);
@@ -840,12 +842,13 @@ export default class ComplexBlueprintDataGenerator {
    * @returns {object} Orientation socket test data
    */
   async generateOrientationSocketScenario(options = {}) {
-    const { includeSymmetricLimbs = true, includeAsymmetricItems = true } = options;
+    const { includeSymmetricLimbs = true, includeAsymmetricItems = true } =
+      options;
 
     const data = await this.generateClothingIntegrationScenario({
       includeSlotMetadata: true,
       includeClothingItems: false,
-      complexityLevel: 'complex'
+      complexityLevel: 'complex',
     });
 
     if (includeSymmetricLimbs) {
@@ -854,14 +857,14 @@ export default class ComplexBlueprintDataGenerator {
           id: 'test:left_glove',
           name: 'Left Test Glove',
           targetSlot: 'hand',
-          orientation: 'left'
+          orientation: 'left',
         },
         {
           id: 'test:right_glove',
           name: 'Right Test Glove',
           targetSlot: 'hand',
-          orientation: 'right'
-        }
+          orientation: 'right',
+        },
       ];
     }
 
@@ -871,7 +874,7 @@ export default class ComplexBlueprintDataGenerator {
         name: 'Asymmetric Shoulder Pad',
         targetSlot: 'torso_upper',
         orientation: 'left',
-        asymmetric: true
+        asymmetric: true,
       });
     }
 
@@ -889,13 +892,13 @@ export default class ComplexBlueprintDataGenerator {
     const {
       includeMultipleClothingLayers = true,
       includeComplexAnatomy = true,
-      includeDescriptionUpdates = true
+      includeDescriptionUpdates = true,
     } = options;
 
     const data = await this.generateClothingIntegrationScenario({
       includeSlotMetadata: true,
       includeClothingItems: true,
-      complexityLevel: 'complex'
+      complexityLevel: 'complex',
     });
 
     if (includeMultipleClothingLayers) {
@@ -905,29 +908,29 @@ export default class ComplexBlueprintDataGenerator {
           id: 'test:base_layer',
           name: 'Base Layer',
           targetSlot: 'torso_upper',
-          layer: 'base'
+          layer: 'base',
         },
         {
           id: 'test:mid_layer',
           name: 'Mid Layer',
           targetSlot: 'torso_upper',
-          layer: 'mid'
+          layer: 'mid',
         },
         {
           id: 'test:outer_layer',
           name: 'Outer Layer',
           targetSlot: 'torso_upper',
-          layer: 'outer'
-        }
+          layer: 'outer',
+        },
       ];
     }
 
     if (includeDescriptionUpdates) {
       data.itemDescriptions = {};
-      data.clothingItems.forEach(item => {
+      data.clothingItems.forEach((item) => {
         data.itemDescriptions[item.id] = {
           shouldAppearInDescription: true,
-          expectedText: item.name.toLowerCase()
+          expectedText: item.name.toLowerCase(),
         };
       });
     }
@@ -951,8 +954,8 @@ export default class ComplexBlueprintDataGenerator {
         [blueprintId]: {
           id: blueprintId,
           root: rootId,
-          slots: {}
-        }
+          slots: {},
+        },
       },
       entityDefinitions: {
         [rootId]: {
@@ -963,30 +966,34 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'torso',
             },
             'anatomy:sockets': {
-              sockets: []
+              sockets: [],
             },
             'core:name': {
               text: `Large Root ${partCount}`,
             },
           },
-        }
-      }
+        },
+      },
     };
 
     // Generate sockets and parts to achieve the requested part count
     // We'll create a tree structure: root -> primary parts -> secondary parts
     const primaryPartCount = Math.min(Math.ceil(partCount / 3), 10); // Reasonable number of primary parts
-    const secondaryPerPrimary = Math.ceil((partCount - primaryPartCount) / primaryPartCount);
-    
+    const secondaryPerPrimary = Math.ceil(
+      (partCount - primaryPartCount) / primaryPartCount
+    );
+
     // Add sockets to root for primary parts
     for (let i = 0; i < primaryPartCount; i++) {
       const socketId = `primary_socket_${i}`;
-      data.entityDefinitions[rootId].components['anatomy:sockets'].sockets.push({
-        id: socketId,
-        max: 1,
-        nameTpl: `Primary Socket ${i}`,
-        allowedTypes: ['primary_part'],
-      });
+      data.entityDefinitions[rootId].components['anatomy:sockets'].sockets.push(
+        {
+          id: socketId,
+          max: 1,
+          nameTpl: `Primary Socket ${i}`,
+          allowedTypes: ['primary_part'],
+        }
+      );
 
       // Add slot to blueprint for this socket
       const slotId = `primary_slot_${i}`;
@@ -994,10 +1001,10 @@ export default class ComplexBlueprintDataGenerator {
         socket: socketId,
         requirements: {
           partType: 'primary_part',
-          components: ['anatomy:part']
-        }
+          components: ['anatomy:part'],
+        },
       };
-      
+
       // Create the primary part entity definition
       const primaryPartId = `test:primary_part_${i}`;
       data.entityDefinitions[primaryPartId] = {
@@ -1008,24 +1015,31 @@ export default class ComplexBlueprintDataGenerator {
             subType: 'primary_part',
           },
           'anatomy:sockets': {
-            sockets: [] // Will add sockets for secondary parts
+            sockets: [], // Will add sockets for secondary parts
           },
           'core:name': {
             text: `Primary Part ${i}`,
           },
         },
       };
-      
+
       // Add sockets to primary part for secondary parts
-      for (let j = 0; j < secondaryPerPrimary && (i * secondaryPerPrimary + j + primaryPartCount) < partCount; j++) {
+      for (
+        let j = 0;
+        j < secondaryPerPrimary &&
+        i * secondaryPerPrimary + j + primaryPartCount < partCount;
+        j++
+      ) {
         const secondarySocketId = `secondary_socket_${i}_${j}`;
-        data.entityDefinitions[primaryPartId].components['anatomy:sockets'].sockets.push({
+        data.entityDefinitions[primaryPartId].components[
+          'anatomy:sockets'
+        ].sockets.push({
           id: secondarySocketId,
           max: 1,
           nameTpl: `Secondary Socket ${i}-${j}`,
           allowedTypes: ['secondary_part'],
         });
-        
+
         // Create secondary part entity definition
         const secondaryPartId = `test:secondary_part_${i}_${j}`;
         data.entityDefinitions[secondaryPartId] = {
@@ -1036,7 +1050,7 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'secondary_part',
             },
             'anatomy:sockets': {
-              sockets: [] // Terminal parts, no more sockets
+              sockets: [], // Terminal parts, no more sockets
             },
             'core:name': {
               text: `Secondary Part ${i}-${j}`,
@@ -1051,14 +1065,14 @@ export default class ComplexBlueprintDataGenerator {
     for (let i = 0; i < primaryPartCount; i++) {
       recipeParts.push({
         slotId: `primary_slot_${i}`,
-        definitionId: `test:primary_part_${i}`
+        definitionId: `test:primary_part_${i}`,
       });
     }
-    
+
     data.recipe = {
       id: `test:large_anatomy_${partCount}`,
       blueprintId: blueprintId,
-      parts: recipeParts
+      parts: recipeParts,
     };
 
     this.generatedData.set(`largeAnatomy_${partCount}`, data);
@@ -1080,15 +1094,15 @@ export default class ComplexBlueprintDataGenerator {
         [blueprintId]: {
           id: blueprintId,
           root: rootId,
-          slots: {}
-        }
+          slots: {},
+        },
       },
-      entityDefinitions: {}
+      entityDefinitions: {},
     };
 
     // Create a true linear chain of parts to achieve the target depth
     // Root -> Level 1 -> Level 2 -> ... -> Level N
-    
+
     // Create root entity with one socket for the chain
     data.entityDefinitions[rootId] = {
       id: rootId,
@@ -1098,12 +1112,17 @@ export default class ComplexBlueprintDataGenerator {
           subType: 'torso', // Root should be torso for proper hierarchy
         },
         'anatomy:sockets': {
-          sockets: depth > 0 ? [{
-            id: 'chain_socket_0',
-            max: 1,
-            nameTpl: 'Chain Socket 0',
-            allowedTypes: ['chain_part'],
-          }] : []
+          sockets:
+            depth > 0
+              ? [
+                  {
+                    id: 'chain_socket_0',
+                    max: 1,
+                    nameTpl: 'Chain Socket 0',
+                    allowedTypes: ['chain_part'],
+                  },
+                ]
+              : [],
         },
         'core:name': {
           text: `Deep Root (Depth: ${depth})`,
@@ -1117,8 +1136,8 @@ export default class ComplexBlueprintDataGenerator {
         socket: 'chain_socket_0',
         requirements: {
           partType: 'chain_part',
-          components: ['anatomy:part']
-        }
+          components: ['anatomy:part'],
+        },
       };
     }
 
@@ -1126,11 +1145,11 @@ export default class ComplexBlueprintDataGenerator {
     // For simplicity and to work with the blueprint system, we'll create
     // a chain where each level has a blueprint that references the next level
     const recipeParts = [];
-    
+
     // For the first level attached to root
     if (depth > 0) {
       const firstLevelEntityId = `test:chain_part_level_1`;
-      
+
       // Create first level entity with socket for next level
       data.entityDefinitions[firstLevelEntityId] = {
         id: firstLevelEntityId,
@@ -1140,46 +1159,53 @@ export default class ComplexBlueprintDataGenerator {
             subType: 'chain_part',
           },
           'anatomy:sockets': {
-            sockets: depth > 1 ? [{
-              id: 'chain_socket_1',
-              max: 1,
-              nameTpl: 'Chain Socket Level 1',
-              allowedTypes: ['chain_part'],
-            }] : []
+            sockets:
+              depth > 1
+                ? [
+                    {
+                      id: 'chain_socket_1',
+                      max: 1,
+                      nameTpl: 'Chain Socket Level 1',
+                      allowedTypes: ['chain_part'],
+                    },
+                  ]
+                : [],
           },
           'core:name': {
             text: `Chain Part Level 1`,
           },
         },
       };
-      
+
       // Add recipe part for first level
       recipeParts.push({
         slotId: 'chain_slot_0',
-        definitionId: firstLevelEntityId
+        definitionId: firstLevelEntityId,
       });
-      
+
       // Create remaining levels as nested blueprints
       for (let level = 2; level <= depth; level++) {
         const entityId = `test:chain_part_level_${level}`;
         const hasNext = level < depth;
-        
+
         // Create sub-blueprint for this level
         const subBlueprintId = `test:sub_blueprint_level_${level}`;
         data.blueprints[subBlueprintId] = {
           id: subBlueprintId,
           root: entityId,
-          slots: hasNext ? {
-            [`chain_slot_${level}`]: {
-              socket: `chain_socket_${level}`,
-              requirements: {
-                partType: 'chain_part',
-                components: ['anatomy:part']
+          slots: hasNext
+            ? {
+                [`chain_slot_${level}`]: {
+                  socket: `chain_socket_${level}`,
+                  requirements: {
+                    partType: 'chain_part',
+                    components: ['anatomy:part'],
+                  },
+                },
               }
-            }
-          } : {}
+            : {},
         };
-        
+
         // Create entity definition for this level
         data.entityDefinitions[entityId] = {
           id: entityId,
@@ -1189,12 +1215,16 @@ export default class ComplexBlueprintDataGenerator {
               subType: 'chain_part',
             },
             'anatomy:sockets': {
-              sockets: hasNext ? [{
-                id: `chain_socket_${level}`,
-                max: 1,
-                nameTpl: `Chain Socket Level ${level}`,
-                allowedTypes: ['chain_part'],
-              }] : []
+              sockets: hasNext
+                ? [
+                    {
+                      id: `chain_socket_${level}`,
+                      max: 1,
+                      nameTpl: `Chain Socket Level ${level}`,
+                      allowedTypes: ['chain_part'],
+                    },
+                  ]
+                : [],
             },
             'core:name': {
               text: `Chain Part Level ${level}`,
@@ -1208,7 +1238,7 @@ export default class ComplexBlueprintDataGenerator {
     data.recipe = {
       id: `test:deep_hierarchy_${depth}`,
       blueprintId: blueprintId,
-      parts: recipeParts
+      parts: recipeParts,
     };
 
     this.generatedData.set(`deepHierarchy_${depth}`, data);

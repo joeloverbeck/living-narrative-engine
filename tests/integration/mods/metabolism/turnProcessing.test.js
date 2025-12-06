@@ -4,7 +4,14 @@
  * rules correctly trigger on core:turn_started events and update entity state.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 import { TURN_STARTED_ID } from '../../../../src/constants/eventIds.js';
 
@@ -79,7 +86,7 @@ describe('metabolism turn processing integration', () => {
       efficiency = 1.0,
       hungerState = 'neutral',
       energyPercentage = 50,
-      turnsInState = 0
+      turnsInState = 0,
     } = config;
 
     return {
@@ -93,22 +100,22 @@ describe('metabolism turn processing integration', () => {
           max_energy: maxEnergy,
           base_burn_rate: baseBurnRate,
           buffer_storage: bufferStorage,
-          buffer_capacity: bufferCapacity
+          buffer_capacity: bufferCapacity,
         },
         'metabolism:fuel_converter': {
           capacity: bufferCapacity,
           conversion_rate: conversionRate,
           efficiency: efficiency,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         },
         'metabolism:hunger_state': {
           state: hungerState,
           energyPercentage,
           turnsInState,
-          starvationDamage: 0
-        }
-      }
+          starvationDamage: 0,
+        },
+      },
     };
   };
 
@@ -120,7 +127,7 @@ describe('metabolism turn processing integration', () => {
   const dispatchTurnStarted = async (entityId) => {
     await testEnv.eventBus.dispatch(TURN_STARTED_ID, {
       entityId,
-      entityType: 'ai'
+      entityType: 'ai',
     });
     // Wait for async rule processing
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -133,7 +140,7 @@ describe('metabolism turn processing integration', () => {
       rules: [
         turn1EnergyBurnRule,
         turn2DigestionRule,
-        turn3UpdateHungerStateRule
+        turn3UpdateHungerStateRule,
       ],
     });
   });
@@ -148,26 +155,29 @@ describe('metabolism turn processing integration', () => {
     it('reduces current_energy each turn based on base_burn_rate', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'TestActor', {
         currentEnergy: 100,
         maxEnergy: 100,
-        baseBurnRate: 10
+        baseBurnRate: 10,
       });
 
       testEnv.reset([room, actor]);
 
-      const initialEnergy = testEnv.entityManager
-        .getEntityInstance('test:actor1')
-        .components['metabolism:metabolic_store'].current_energy;
+      const initialEnergy =
+        testEnv.entityManager.getEntityInstance('test:actor1').components[
+          'metabolism:metabolic_store'
+        ].current_energy;
 
       expect(initialEnergy).toBe(100);
 
       await dispatchTurnStarted('test:actor1');
 
-      const updatedEntity = testEnv.entityManager.getEntityInstance('test:actor1');
-      const newEnergy = updatedEntity.components['metabolism:metabolic_store'].current_energy;
+      const updatedEntity =
+        testEnv.entityManager.getEntityInstance('test:actor1');
+      const newEnergy =
+        updatedEntity.components['metabolism:metabolic_store'].current_energy;
 
       // Energy should decrease by base_burn_rate (10) per turn
       expect(newEnergy).toBe(90);
@@ -176,20 +186,22 @@ describe('metabolism turn processing integration', () => {
     it('clamps energy at minimum 0 when burning', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'HungryActor', {
         currentEnergy: 5,
         maxEnergy: 100,
-        baseBurnRate: 10
+        baseBurnRate: 10,
       });
 
       testEnv.reset([room, actor]);
 
       await dispatchTurnStarted('test:actor1');
 
-      const updatedEntity = testEnv.entityManager.getEntityInstance('test:actor1');
-      const newEnergy = updatedEntity.components['metabolism:metabolic_store'].current_energy;
+      const updatedEntity =
+        testEnv.entityManager.getEntityInstance('test:actor1');
+      const newEnergy =
+        updatedEntity.components['metabolism:metabolic_store'].current_energy;
 
       // Energy should not go below 0
       expect(newEnergy).toBe(0);
@@ -198,11 +210,11 @@ describe('metabolism turn processing integration', () => {
     it('dispatches metabolism:energy_burned event', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'TestActor', {
         currentEnergy: 50,
-        baseBurnRate: 5
+        baseBurnRate: 5,
       });
 
       testEnv.reset([room, actor]);
@@ -216,7 +228,7 @@ describe('metabolism turn processing integration', () => {
       expect(burnEvent.payload).toMatchObject({
         entityId: 'test:actor1',
         energyBurned: 5,
-        newEnergy: 45
+        newEnergy: 45,
       });
     });
   });
@@ -225,17 +237,15 @@ describe('metabolism turn processing integration', () => {
     it('converts buffer_storage to energy each turn', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'DigestingActor', {
         currentEnergy: 30,
         maxEnergy: 100,
         baseBurnRate: 0, // Set to 0 to isolate digestion effect
-        bufferStorage: [
-          { bulk: 2, energy_content: 20 }
-        ],
+        bufferStorage: [{ bulk: 2, energy_content: 20 }],
         conversionRate: 10,
-        efficiency: 1.0
+        efficiency: 1.0,
       });
 
       testEnv.reset([room, actor]);
@@ -251,12 +261,12 @@ describe('metabolism turn processing integration', () => {
     it('does not dispatch digestion event when buffer is empty', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'EmptyBufferActor', {
         currentEnergy: 50,
         baseBurnRate: 5,
-        bufferStorage: [] // Empty buffer
+        bufferStorage: [], // Empty buffer
       });
 
       testEnv.reset([room, actor]);
@@ -275,20 +285,21 @@ describe('metabolism turn processing integration', () => {
     it('updates hunger state based on energy percentage', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'StateUpdateActor', {
         currentEnergy: 80,
         maxEnergy: 100,
         baseBurnRate: 0, // Prevent energy change
-        hungerState: 'neutral' // Start at neutral
+        hungerState: 'neutral', // Start at neutral
       });
 
       testEnv.reset([room, actor]);
 
       await dispatchTurnStarted('test:actor1');
 
-      const updatedEntity = testEnv.entityManager.getEntityInstance('test:actor1');
+      const updatedEntity =
+        testEnv.entityManager.getEntityInstance('test:actor1');
       const hungerState = updatedEntity.components['metabolism:hunger_state'];
 
       // 80/100 = 80% energy, should be 'satiated' (75-100%)
@@ -299,13 +310,13 @@ describe('metabolism turn processing integration', () => {
     it('dispatches hunger_state_changed event when state changes', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'StateChangeActor', {
         currentEnergy: 20,
         maxEnergy: 100,
         baseBurnRate: 0,
-        hungerState: 'neutral' // Will change to 'hungry' (10-30%)
+        hungerState: 'neutral', // Will change to 'hungry' (10-30%)
       });
 
       testEnv.reset([room, actor]);
@@ -319,28 +330,29 @@ describe('metabolism turn processing integration', () => {
       expect(stateChangeEvents.length).toBeGreaterThan(0);
       expect(stateChangeEvents[0].payload).toMatchObject({
         entityId: 'test:actor1',
-        newState: 'hungry'
+        newState: 'hungry',
       });
     });
 
     it('increments turnsInState when state remains the same', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'StableActor', {
         currentEnergy: 50, // 50% = neutral state
         maxEnergy: 100,
         baseBurnRate: 0,
         hungerState: 'neutral',
-        turnsInState: 2
+        turnsInState: 2,
       });
 
       testEnv.reset([room, actor]);
 
       await dispatchTurnStarted('test:actor1');
 
-      const updatedEntity = testEnv.entityManager.getEntityInstance('test:actor1');
+      const updatedEntity =
+        testEnv.entityManager.getEntityInstance('test:actor1');
       const hungerState = updatedEntity.components['metabolism:hunger_state'];
 
       // State should remain neutral, turnsInState should increment
@@ -353,14 +365,14 @@ describe('metabolism turn processing integration', () => {
     it('processes operations in order: burn → digest → update state', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'OrderTestActor', {
         currentEnergy: 50,
         maxEnergy: 100,
         baseBurnRate: 5,
         bufferStorage: [{ bulk: 1, energy_content: 10 }],
-        hungerState: 'neutral'
+        hungerState: 'neutral',
       });
 
       testEnv.reset([room, actor]);
@@ -393,7 +405,7 @@ describe('metabolism turn processing integration', () => {
     it('executes all three turn rules in sequence', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'FullProcessActor', {
         currentEnergy: 60,
@@ -401,7 +413,7 @@ describe('metabolism turn processing integration', () => {
         baseBurnRate: 5,
         bufferStorage: [{ bulk: 1, energy_content: 15 }],
         conversionRate: 10,
-        hungerState: 'neutral'
+        hungerState: 'neutral',
       });
 
       testEnv.reset([room, actor]);
@@ -421,7 +433,8 @@ describe('metabolism turn processing integration', () => {
       expect(digestEvent).toBeDefined();
 
       // State update should have occurred (may or may not dispatch changed event)
-      const updatedEntity = testEnv.entityManager.getEntityInstance('test:actor1');
+      const updatedEntity =
+        testEnv.entityManager.getEntityInstance('test:actor1');
       expect(updatedEntity.components['metabolism:hunger_state']).toBeDefined();
     });
   });
@@ -430,15 +443,15 @@ describe('metabolism turn processing integration', () => {
     it('handles entity without metabolism components gracefully', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const nonMetabolismActor = {
         id: 'test:actor1',
         components: {
           'core:actor': {},
           'core:name': { value: 'BasicActor' },
-          'core:position': { locationId: 'test:room1' }
-        }
+          'core:position': { locationId: 'test:room1' },
+        },
       };
 
       testEnv.reset([room, nonMetabolismActor]);
@@ -456,7 +469,7 @@ describe('metabolism turn processing integration', () => {
     it('handles entity with partial metabolism components', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const partialActor = {
         id: 'test:actor1',
@@ -469,10 +482,10 @@ describe('metabolism turn processing integration', () => {
             max_energy: 100,
             base_burn_rate: 5,
             buffer_storage: [],
-            buffer_capacity: 10
-          }
+            buffer_capacity: 10,
+          },
           // Missing fuel_converter component
-        }
+        },
       };
 
       testEnv.reset([room, partialActor]);

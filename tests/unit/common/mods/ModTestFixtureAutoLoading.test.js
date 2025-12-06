@@ -336,14 +336,16 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       expect(fixture.conditionFile).toEqual(providedCondition);
 
       const readPaths = fs.readFile.mock.calls.map(([path]) =>
-        path.replace(/\\/g, '/'),
+        path.replace(/\\/g, '/')
       );
 
       expect(
-        readPaths.some((path) => path.includes('/data/mods/kissing/rules/')),
+        readPaths.some((path) => path.includes('/data/mods/kissing/rules/'))
       ).toBe(false);
       expect(
-        readPaths.some((path) => path.includes('/data/mods/kissing/conditions/')),
+        readPaths.some((path) =>
+          path.includes('/data/mods/kissing/conditions/')
+        )
       ).toBe(false);
     });
 
@@ -462,33 +464,33 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       // First call for 'kiss_cheek' (simple format)
       fs.readFile
         .mockImplementationOnce(() =>
-          Promise.resolve(JSON.stringify(mockRuleFile)),
+          Promise.resolve(JSON.stringify(mockRuleFile))
         )
         .mockImplementationOnce(() =>
-          Promise.resolve(JSON.stringify(mockConditionFile)),
+          Promise.resolve(JSON.stringify(mockConditionFile))
         )
         .mockImplementationOnce(() =>
           Promise.resolve(
             JSON.stringify({
               id: 'kissing:kiss_cheek',
               prerequisites: [],
-            }),
-          ),
+            })
+          )
         )
         // Second call for 'kissing:kiss_cheek' (namespaced format)
         .mockImplementationOnce(() =>
-          Promise.resolve(JSON.stringify(mockRuleFile)),
+          Promise.resolve(JSON.stringify(mockRuleFile))
         )
         .mockImplementationOnce(() =>
-          Promise.resolve(JSON.stringify(mockConditionFile)),
+          Promise.resolve(JSON.stringify(mockConditionFile))
         )
         .mockImplementationOnce(() =>
           Promise.resolve(
             JSON.stringify({
               id: 'kissing:kiss_cheek',
               prerequisites: [],
-            }),
-          ),
+            })
+          )
         );
 
       // Should work with simple format

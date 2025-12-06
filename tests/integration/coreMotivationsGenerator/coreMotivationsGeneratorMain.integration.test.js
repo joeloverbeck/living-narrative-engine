@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const MODULE_PATH = '../../../src/core-motivations-generator-main.js';
 
@@ -21,7 +28,10 @@ describe('core-motivations-generator-main entrypoint integration', () => {
     delete window.__coreMotivationsController;
 
     readyStateValue = 'complete';
-    originalReadyDescriptor = Object.getOwnPropertyDescriptor(document, 'readyState');
+    originalReadyDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      'readyState'
+    );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
       get: () => readyStateValue,
@@ -46,7 +56,9 @@ describe('core-motivations-generator-main entrypoint integration', () => {
 
     const addDocumentListenerSpy = jest.spyOn(document, 'addEventListener');
     const addWindowListenerSpy = jest.spyOn(window, 'addEventListener');
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
 
     const controller = { cleanup: jest.fn().mockResolvedValue(undefined) };
     let capturedConfig;
@@ -70,9 +82,15 @@ describe('core-motivations-generator-main entrypoint integration', () => {
         .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
         .mockImplementation(async (config) => {
           capturedConfig = config;
-          expect(config.controllerClass).toBe(CoreMotivationsGeneratorController);
-          expect(config.services?.displayEnhancer).toBe(CoreMotivationsDisplayEnhancer);
-          expect(config.services?.coreMotivationsGenerator).toBe(CoreMotivationsGenerator);
+          expect(config.controllerClass).toBe(
+            CoreMotivationsGeneratorController
+          );
+          expect(config.services?.displayEnhancer).toBe(
+            CoreMotivationsDisplayEnhancer
+          );
+          expect(config.services?.coreMotivationsGenerator).toBe(
+            CoreMotivationsGenerator
+          );
           if (config.hooks?.postInit) {
             await config.hooks.postInit(controller);
           }
@@ -137,7 +155,9 @@ describe('core-motivations-generator-main entrypoint integration', () => {
 
     const addDocumentListenerSpy = jest.spyOn(document, 'addEventListener');
     const addWindowListenerSpy = jest.spyOn(window, 'addEventListener');
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
 
     const controller = { cleanup: jest.fn().mockResolvedValue(undefined) };
     let bootstrapSpy;
@@ -159,9 +179,15 @@ describe('core-motivations-generator-main entrypoint integration', () => {
       bootstrapSpy = jest
         .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
         .mockImplementation(async (config) => {
-          expect(config.controllerClass).toBe(CoreMotivationsGeneratorController);
-          expect(config.services?.displayEnhancer).toBe(CoreMotivationsDisplayEnhancer);
-          expect(config.services?.coreMotivationsGenerator).toBe(CoreMotivationsGenerator);
+          expect(config.controllerClass).toBe(
+            CoreMotivationsGeneratorController
+          );
+          expect(config.services?.displayEnhancer).toBe(
+            CoreMotivationsDisplayEnhancer
+          );
+          expect(config.services?.coreMotivationsGenerator).toBe(
+            CoreMotivationsGenerator
+          );
           if (config.hooks?.postInit) {
             await config.hooks.postInit(controller);
           }
@@ -202,7 +228,9 @@ describe('core-motivations-generator-main entrypoint integration', () => {
 
     const addDocumentListenerSpy = jest.spyOn(document, 'addEventListener');
     const addWindowListenerSpy = jest.spyOn(window, 'addEventListener');
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
 
     await jest.isolateModulesAsync(async () => {
       const { CharacterBuilderBootstrap } = await import(
@@ -236,7 +264,9 @@ describe('core-motivations-generator-main entrypoint integration', () => {
     process.env.NODE_ENV = 'test';
 
     const addDocumentListenerSpy = jest.spyOn(document, 'addEventListener');
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const failure = new Error('bootstrap failed');
     let bootstrapSpy;
@@ -263,7 +293,9 @@ describe('core-motivations-generator-main entrypoint integration', () => {
     );
 
     const container = document.getElementById('core-motivations-container');
-    expect(container.innerHTML).toContain('Unable to Load Core Motivations Generator');
+    expect(container.innerHTML).toContain(
+      'Unable to Load Core Motivations Generator'
+    );
     expect(container.innerHTML).toContain('bootstrap failed');
 
     // Cover the branch where the container is missing

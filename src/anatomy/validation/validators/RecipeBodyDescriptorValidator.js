@@ -104,10 +104,14 @@ export class RecipeBodyDescriptorValidator extends BaseValidator {
       }
     } catch (error) {
       this.#logValidatorError(error);
-      builder.addError('VALIDATION_ERROR', 'Failed to validate body descriptors', {
-        check: 'body_descriptors',
-        error: error.message,
-      });
+      builder.addError(
+        'VALIDATION_ERROR',
+        'Failed to validate body descriptors',
+        {
+          check: 'body_descriptors',
+          error: error.message,
+        }
+      );
     }
   }
 

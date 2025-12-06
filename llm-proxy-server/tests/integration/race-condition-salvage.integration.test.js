@@ -23,7 +23,8 @@ import { createSalvageRoutes } from '../../src/routes/salvageRoutes.js';
 const REQUEST_TIMEOUT_MS = 50;
 const GRACE_PERIOD_MS = 20;
 const LATE_RESPONSE_DELAY_MS = REQUEST_TIMEOUT_MS + GRACE_PERIOD_MS + 10;
-const GRACE_PERIOD_RESPONSE_DELAY_MS = REQUEST_TIMEOUT_MS + Math.floor(GRACE_PERIOD_MS / 2);
+const GRACE_PERIOD_RESPONSE_DELAY_MS =
+  REQUEST_TIMEOUT_MS + Math.floor(GRACE_PERIOD_MS / 2);
 
 describe('Race Condition and Response Salvage Integration Tests', () => {
   let app;
@@ -87,7 +88,10 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
       salvageService
     );
 
-    salvageController = new SalvageRequestController(mockLogger, salvageService);
+    salvageController = new SalvageRequestController(
+      mockLogger,
+      salvageService
+    );
 
     // Create Express app
     app = express();
@@ -184,7 +188,8 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
       let requestId = null;
 
       // Intercept request tracking to get request ID
-      const originalHandler = llmController.handleLlmRequest.bind(llmController);
+      const originalHandler =
+        llmController.handleLlmRequest.bind(llmController);
       llmController.handleLlmRequest = async function (req, res) {
         requestId = req.requestId;
         return originalHandler(req, res);
@@ -259,7 +264,9 @@ describe('Race Condition and Response Salvage Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.content).toBe('Test response');
-      expect(response.body._salvageMetadata.originalRequestId).toBe(testRequestId);
+      expect(response.body._salvageMetadata.originalRequestId).toBe(
+        testRequestId
+      );
       expect(response.body._salvageMetadata.llmId).toBe(testLlmId);
       expect(response.body._salvageMetadata.recovered).toBe(true);
     });

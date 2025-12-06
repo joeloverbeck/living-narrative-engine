@@ -110,7 +110,9 @@ describe('Duplicate Event Registration - Integration Test', () => {
 
       // Payload schemas should use debug logging, not warnings
       expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining(`Schema '${schemaId}' already loaded from previous session`)
+        expect.stringContaining(
+          `Schema '${schemaId}' already loaded from previous session`
+        )
       );
       // Should NOT have produced a warning
       expect(warnSpy).not.toHaveBeenCalled();

@@ -393,9 +393,8 @@ describe('Template Processor Pipeline Integration', () => {
         },
       };
 
-      const generatedSlots = slotGenerator.generateBlueprintSlots(
-        structureTemplate
-      );
+      const generatedSlots =
+        slotGenerator.generateBlueprintSlots(structureTemplate);
 
       // Additional slots defined in blueprint
       const additionalSlots = {
@@ -794,9 +793,9 @@ describe('Template Processor Pipeline Integration', () => {
       };
 
       // Should detect duplicate IDs or handle appropriately
-      expect(() =>
-        socketGenerator.generateSockets(malformedTemplate)
-      ).toThrow('Duplicate socket IDs detected');
+      expect(() => socketGenerator.generateSockets(malformedTemplate)).toThrow(
+        'Duplicate socket IDs detected'
+      );
     });
 
     it('handles count/orientationScheme mismatch with duplicate detection', () => {
@@ -820,9 +819,9 @@ describe('Template Processor Pipeline Integration', () => {
 
       // Bilateral scheme cycles through left/right, creating duplicates with count=5
       // SocketGenerator should detect duplicate IDs and throw
-      expect(() => socketGenerator.generateSockets(inconsistentTemplate)).toThrow(
-        'Duplicate socket IDs detected'
-      );
+      expect(() =>
+        socketGenerator.generateSockets(inconsistentTemplate)
+      ).toThrow('Duplicate socket IDs detected');
     });
 
     it('handles count exceeding positions array with fallback indices', () => {

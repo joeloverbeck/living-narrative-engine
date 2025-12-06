@@ -13,9 +13,11 @@ Modify the `EntityGraphBuilder` to populate the `definitionId` field in the `ana
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Add logic to store `definitionId` in `anatomy:part` component when body parts are created
 
 **Actually Implemented:**
+
 - Modified `src/anatomy/entityGraphBuilder.js`:
   - `createRootEntity()`: Added block (lines 174-194) to update `anatomy:part` with `definitionId` after root entity creation
   - `createAndAttachPart()`: Extended existing orientation update logic to always include `definitionId`, even when no orientation is provided
@@ -25,15 +27,16 @@ The ticket pseudocode suggested using `componentMutationService`, but the actual
 
 ### Tests Modified/Added
 
-| Test File | Change | Rationale |
-|-----------|--------|-----------|
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Renamed "propagates orientation from socket to child anatomy:part" | Now tests both `definitionId` AND orientation |
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "stores definitionId in anatomy:part even without orientation" | Verifies `definitionId` is stored when no orientation exists |
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "does not update anatomy:part when component is missing" | Edge case coverage |
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "stores definitionId in anatomy:part for root entity" | Covers `createRootEntity()` path |
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "stores actualRootDefinitionId in anatomy:part when torso override used" | Verifies correct ID when recipe override is applied |
+| Test File                                       | Change                                                                         | Rationale                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | Renamed "propagates orientation from socket to child anatomy:part"             | Now tests both `definitionId` AND orientation                |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "stores definitionId in anatomy:part even without orientation"           | Verifies `definitionId` is stored when no orientation exists |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "does not update anatomy:part when component is missing"                 | Edge case coverage                                           |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "stores definitionId in anatomy:part for root entity"                    | Covers `createRootEntity()` path                             |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | Added "stores actualRootDefinitionId in anatomy:part when torso override used" | Verifies correct ID when recipe override is applied          |
 
 ### Test Results
+
 - All 27 unit tests pass
 - All 17 integration tests pass
 - ESLint: No new errors (only pre-existing warnings)
@@ -54,9 +57,9 @@ The ticket pseudocode suggested using `componentMutationService`, but the actual
 
 ## Files to Touch
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `src/anatomy/entityGraphBuilder.js` | Modify | Add logic to store definitionId in anatomy:part component |
+| File                                | Change Type | Description                                               |
+| ----------------------------------- | ----------- | --------------------------------------------------------- |
+| `src/anatomy/entityGraphBuilder.js` | Modify      | Add logic to store definitionId in anatomy:part component |
 
 ---
 
@@ -84,6 +87,7 @@ The `EntityGraphBuilder` creates body part entities from entity definitions but 
 When the EntityGraphBuilder creates a body part entity from an entity definition, it should store the definition ID in the `anatomy:part` component:
 
 **Pseudocode:**
+
 ```javascript
 // When creating a body part entity
 const bodyPartEntity = this.#entityFactory.createFromDefinition(definitionId, ...);
@@ -155,6 +159,7 @@ npm run typecheck
 ### Manual Verification
 
 After implementation, verify:
+
 1. Create a new character with anatomy
 2. Inspect a body part entity's `anatomy:part` component
 3. Confirm `definitionId` field is present and correct

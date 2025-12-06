@@ -1,4 +1,11 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import DocumentContext from '../../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../../src/domUI/domElementFactory.js';
@@ -85,7 +92,7 @@ function setupDomContainer({ includePortraitImage = true } = {}) {
     portraitVisuals,
     descriptionDisplay,
     exitsDisplay,
-    charactersDisplay,
+    charactersDisplay
   );
 
   document.body.appendChild(container);
@@ -149,17 +156,15 @@ function createRenderer({
       altText: 'Default Location portrait',
     }),
     getEntityLocationId: jest.fn().mockReturnValue('location:default'),
-    getCharacterDisplayInfo: jest
-      .fn()
-      .mockImplementation((id) =>
-        id === 'npc:ally'
-          ? {
-              id,
-              name: 'Helpful Ally',
-              description: 'Offers advice.',
-            }
-          : null,
-      ),
+    getCharacterDisplayInfo: jest.fn().mockImplementation((id) =>
+      id === 'npc:ally'
+        ? {
+            id,
+            name: 'Helpful Ally',
+            description: 'Offers advice.',
+          }
+        : null
+    ),
     ...entityDisplayOverrides,
   };
 
@@ -206,15 +211,18 @@ describe('LocationRenderer integration', () => {
       entityType: 'player',
     });
 
-    const nameMessage = domElements.nameDisplay.querySelector('p.error-message');
+    const nameMessage =
+      domElements.nameDisplay.querySelector('p.error-message');
     expect(nameMessage?.textContent).toBe(`(${DEFAULT_LOCATION_NAME})`);
 
-    const descriptionMessage = domElements.descriptionDisplay.querySelector(
-      'p.error-message',
+    const descriptionMessage =
+      domElements.descriptionDisplay.querySelector('p.error-message');
+    expect(descriptionMessage?.textContent).toBe(
+      'No entity specified for turn.'
     );
-    expect(descriptionMessage?.textContent).toBe('No entity specified for turn.');
 
-    const exitsMessage = domElements.exitsDisplay.querySelector('p.error-message');
+    const exitsMessage =
+      domElements.exitsDisplay.querySelector('p.error-message');
     expect(exitsMessage?.textContent).toBe('(Exits Unavailable)');
 
     const charactersMessage =
@@ -226,7 +234,7 @@ describe('LocationRenderer integration', () => {
     expect(domElements.portraitImage?.getAttribute('src')).toBe('');
 
     const errorEvents = safeEventDispatcher.dispatch.mock.calls.filter(
-      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID,
+      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(errorEvents).toHaveLength(0);
   });
@@ -245,17 +253,18 @@ describe('LocationRenderer integration', () => {
     });
 
     const errorEvents = safeEventDispatcher.dispatch.mock.calls.filter(
-      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID,
+      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(errorEvents).toHaveLength(1);
     const [, payload] = errorEvents[0];
-    expect(payload.message).toContain("Entity 'entity:hero' has no valid position");
-
-    const descriptionMessage = domElements.descriptionDisplay.querySelector(
-      'p.error-message',
+    expect(payload.message).toContain(
+      "Entity 'entity:hero' has no valid position"
     );
+
+    const descriptionMessage =
+      domElements.descriptionDisplay.querySelector('p.error-message');
     expect(descriptionMessage?.textContent).toBe(
-      'Location for entity:hero is unknown.',
+      'Location for entity:hero is unknown.'
     );
 
     expect(domElements.portraitVisuals.style.display).toBe('none');
@@ -269,11 +278,9 @@ describe('LocationRenderer integration', () => {
       testBed,
       entityDisplayOverrides: {
         getEntityLocationId: jest.fn().mockReturnValue(missingLocationId),
-        getLocationDetails: jest
-          .fn()
-          .mockImplementation(() => {
-            throw new LocationNotFoundError(missingLocationId);
-          }),
+        getLocationDetails: jest.fn().mockImplementation(() => {
+          throw new LocationNotFoundError(missingLocationId);
+        }),
       },
       entityManagerOverrides: {
         getEntitiesInLocation: jest.fn().mockReturnValue(['entity:hero']),
@@ -286,19 +293,18 @@ describe('LocationRenderer integration', () => {
     });
 
     const errorEvents = safeEventDispatcher.dispatch.mock.calls.filter(
-      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID,
+      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(errorEvents).toHaveLength(1);
     const [, payload] = errorEvents[0];
     expect(payload.message).toContain(
-      `Location details for ID '${missingLocationId}' not found.`,
+      `Location details for ID '${missingLocationId}' not found.`
     );
 
-    const descriptionMessage = domElements.descriptionDisplay.querySelector(
-      'p.error-message',
-    );
+    const descriptionMessage =
+      domElements.descriptionDisplay.querySelector('p.error-message');
     expect(descriptionMessage?.textContent).toBe(
-      `Location data for '${missingLocationId}' missing.`,
+      `Location data for '${missingLocationId}' missing.`
     );
   });
 
@@ -318,7 +324,7 @@ describe('LocationRenderer integration', () => {
     const portraitSetupError = safeEventDispatcher.dispatch.mock.calls.find(
       ([eventName, payload]) =>
         eventName === SYSTEM_ERROR_OCCURRED_ID &&
-        payload.message.includes('Location portrait DOM elements not bound'),
+        payload.message.includes('Location portrait DOM elements not bound')
     );
     expect(portraitSetupError).toBeDefined();
 
@@ -326,8 +332,8 @@ describe('LocationRenderer integration', () => {
       ([eventName, payload]) =>
         eventName === SYSTEM_ERROR_OCCURRED_ID &&
         payload.message.includes(
-          "Cannot render, required DOM element 'locationPortraitImageElement' is missing.",
-        ),
+          "Cannot render, required DOM element 'locationPortraitImageElement' is missing."
+        )
     );
     expect(renderAbortError).toBeDefined();
   });
@@ -339,17 +345,18 @@ describe('LocationRenderer integration', () => {
 
     renderer.render(null);
 
-    const nameMessage = domElements.nameDisplay.querySelector('p.error-message');
+    const nameMessage =
+      domElements.nameDisplay.querySelector('p.error-message');
     expect(nameMessage?.textContent).toBe(`(${DEFAULT_LOCATION_NAME})`);
 
-    const descriptionMessage = domElements.descriptionDisplay.querySelector(
-      'p.error-message',
-    );
+    const descriptionMessage =
+      domElements.descriptionDisplay.querySelector('p.error-message');
     expect(descriptionMessage?.textContent).toBe(
-      '(No location data to display)',
+      '(No location data to display)'
     );
 
-    const exitsMessage = domElements.exitsDisplay.querySelector('p.error-message');
+    const exitsMessage =
+      domElements.exitsDisplay.querySelector('p.error-message');
     expect(exitsMessage?.textContent).toBe('(Exits Unavailable)');
 
     const charactersMessage =
@@ -360,7 +367,7 @@ describe('LocationRenderer integration', () => {
     expect(domElements.portraitImage?.style.display).toBe('none');
 
     const errorEvents = safeEventDispatcher.dispatch.mock.calls.filter(
-      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID,
+      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(errorEvents).toHaveLength(0);
   });

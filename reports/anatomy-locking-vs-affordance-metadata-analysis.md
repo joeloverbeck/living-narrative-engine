@@ -39,6 +39,7 @@ The current system implements resource locks at the anatomy entity level, follow
 ```
 
 **Files Analyzed**:
+
 - `data/mods/core/components/mouth_engagement.component.json`
 - `data/mods/core/components/movement.component.json`
 - `data/mods/anatomy/entities/definitions/humanoid_mouth.entity.json`
@@ -47,12 +48,14 @@ The current system implements resource locks at the anatomy entity level, follow
 #### Handler Implementation
 
 **Handlers**:
+
 - `src/logic/operationHandlers/lockMouthEngagementHandler.js`
 - `src/logic/operationHandlers/unlockMouthEngagementHandler.js`
 - `src/logic/operationHandlers/lockMovementHandler.js`
 - `src/logic/operationHandlers/unlockMovementHandler.js`
 
 **Utilities**:
+
 - `src/utils/mouthEngagementUtils.js` - Handles both anatomy-based and legacy entities
 - `src/utils/movementUtils.js` - Handles both anatomy-based and legacy entities
 
@@ -66,6 +69,7 @@ The current system implements resource locks at the anatomy entity level, follow
 #### Current Usage Pattern
 
 **Lock Operation** (from `lean_in_for_deep_kiss.rule.json`):
+
 ```json
 {
   "type": "LOCK_MOUTH_ENGAGEMENT",
@@ -76,6 +80,7 @@ The current system implements resource locks at the anatomy entity level, follow
 ```
 
 **Unlock Operation** (from `break_kiss_gently.rule.json`):
+
 ```json
 {
   "type": "UNLOCK_MOUTH_ENGAGEMENT",
@@ -86,6 +91,7 @@ The current system implements resource locks at the anatomy entity level, follow
 ```
 
 **Condition Check** (from `actor-mouth-available.condition.json`):
+
 ```json
 {
   "logic": {
@@ -112,14 +118,17 @@ The current system implements resource locks at the anatomy entity level, follow
 ### Current Usage Scope
 
 **Extensive Usage**:
+
 - Movement locking: 61 references across rules, tests, and handlers
 - Mouth engagement locking: 26 references across rules, tests, and handlers
 
 **Primary Use Cases**:
+
 1. **Movement locks**: Sitting, lying down, kneeling, straddling, bending over
 2. **Mouth locks**: Kissing actions (lean in, break kiss, pull back)
 
 **Mods Using System**:
+
 - `positioning` - Uses movement locks extensively
 - `kissing` - Uses mouth engagement locks
 - `physical-control` - Uses movement locks for forced positioning
@@ -235,6 +244,7 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 ### Proposed Usage Pattern
 
 **Lock Operation**:
+
 ```json
 {
   "type": "LOCK_AFFORDANCE",
@@ -247,6 +257,7 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 ```
 
 **Condition Check**:
+
 ```json
 {
   "logic": {
@@ -267,6 +278,7 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 #### Current System (Anatomy-Based Locking) ✅
 
 **Pros**:
+
 - **Perfect ECS Alignment**: Each entity (anatomy part) has its own state, following pure ECS principles
 - **Composition Over Aggregation**: Body parts are independent entities that can be queried, modified, or extended separately
 - **Modular Design**: Lock components can be added to any entity type (hands, mouth, legs, tentacles) without changing the actor
@@ -274,6 +286,7 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 - **System-Agnostic**: Parts don't need to know about actors; actors don't aggregate part states
 
 **Cons**:
+
 - **Indirection**: Requires traversing anatomy structure to find relevant parts
 - **Complex Queries**: Conditions must use `hasPartOfTypeWithComponentValue` instead of direct checks
 - **Distributed State**: Lock state is spread across multiple entities
@@ -281,12 +294,14 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 #### Proposed System (Affordance Metadata) ⚠️
 
 **Pros**:
+
 - **Direct Access**: All affordance data is in one place on the actor
 - **Simple Queries**: Conditions can check a single component with straightforward paths
 - **Centralized State**: Easier to debug and inspect all affordances at once
 - **Performance**: Potentially faster lookups (one component read vs. traversing anatomy)
 
 **Cons**:
+
 - **Anti-Pattern for ECS**: Aggregates state from other entities, violating "composition over inheritance"
 - **Tight Coupling**: Actor component must know about all possible body part types
 - **Poor Scalability**: Adding new body part types requires updating the central affordance schema
@@ -299,12 +314,14 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 #### Current System ✅
 
 **Pros**:
+
 - **Mod Independence**: New mods can add lock components to any anatomy part without modifying core
 - **Dynamic Support**: Non-humanoid anatomy (tentacles, wings, tails) automatically supported if they have the right components
 - **Component Composability**: Any entity can gain lock capability by adding the component
 - **No Schema Changes**: Adding support for new lockable parts requires no core changes
 
 **Example**: A tentacle mod can add `core:grabbing_engaged` to tentacles without touching the actor entity:
+
 ```json
 {
   "id": "kraken:tentacle",
@@ -316,16 +333,19 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 ```
 
 **Cons**:
+
 - **Discovery Challenge**: Modders must understand anatomy traversal patterns
 - **Documentation Need**: More complex to document and teach
 
 #### Proposed System ⚠️
 
 **Pros**:
+
 - **Obvious API**: Single component to update, clear documentation surface
 - **Easier Onboarding**: Simpler mental model for new mod developers
 
 **Cons**:
+
 - **Core Modification Required**: Every new affordance type requires updating core schema
 - **Schema Rigidity**: Can't support unusual body part types without core changes
 - **Mod Conflicts**: Multiple mods trying to add affordance types would conflict
@@ -333,6 +353,7 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 - **Breaking Changes**: Schema updates would break existing mods
 
 **Example Problem**: A tentacle mod would need to either:
+
 1. Update the core `body_affordances` schema (breaking modularity)
 2. Create a separate tentacle-specific affordance component (defeating the purpose)
 3. Shoehorn tentacles into "grabbing" (losing semantic meaning)
@@ -342,6 +363,7 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 #### Current System
 
 **Implementation LOC** (Lines of Code):
+
 - `lockMouthEngagementHandler.js`: 130 lines
 - `unlockMouthEngagementHandler.js`: 143 lines
 - `mouthEngagementUtils.js`: 280 lines
@@ -351,12 +373,14 @@ async lockAffordance(actorId, affordanceType, partId, occupiedBy = null) {
 - **Total**: ~835 lines
 
 **Key Complexity Points**:
+
 1. Anatomy traversal logic
 2. Dual path support (anatomy-based + legacy)
 3. Part type detection
 4. Error handling for missing parts
 
 **Code Example** (from `mouthEngagementUtils.js:76-127`):
+
 ```javascript
 async function updateAnatomyBasedMouthEngagement(
   entityManager,
@@ -368,9 +392,14 @@ async function updateAnatomyBasedMouthEngagement(
 
   // Look for mouth parts in the body.parts map
   if (bodyComponent.body.parts) {
-    for (const [_partType, partId] of Object.entries(bodyComponent.body.parts)) {
+    for (const [_partType, partId] of Object.entries(
+      bodyComponent.body.parts
+    )) {
       // Check if this part is a mouth
-      const partComponent = entityManager.getComponentData(partId, 'anatomy:part');
+      const partComponent = entityManager.getComponentData(
+        partId,
+        'anatomy:part'
+      );
 
       if (partComponent && partComponent.subType === 'mouth') {
         let mouthEngagement = entityManager.getComponentData(
@@ -406,21 +435,33 @@ async function updateAnatomyBasedMouthEngagement(
 #### Proposed System
 
 **Estimated Implementation LOC**:
+
 - `lockAffordanceHandler.js`: ~120 lines
 - `unlockAffordanceHandler.js`: ~120 lines
 - `affordanceUtils.js`: ~200 lines
 - **Total**: ~440 lines (48% reduction)
 
 **Key Complexity Points**:
+
 1. Affordance type enum/validation
 2. Count management (increment/decrement)
 3. Occupied entity tracking
 4. Synchronization with anatomy changes
 
 **Estimated Code Example**:
+
 ```javascript
-async function lockAffordance(entityManager, actorId, affordanceType, partId, occupiedBy) {
-  let affordances = entityManager.getComponentData(actorId, 'core:body_affordances');
+async function lockAffordance(
+  entityManager,
+  actorId,
+  affordanceType,
+  partId,
+  occupiedBy
+) {
+  let affordances = entityManager.getComponentData(
+    actorId,
+    'core:body_affordances'
+  );
 
   if (!affordances) {
     affordances = initializeAffordances(actorId, entityManager);
@@ -459,6 +500,7 @@ async function lockAffordance(entityManager, actorId, affordanceType, partId, oc
 ```
 
 **Complexity Assessment**:
+
 - **Simpler**: ~50% less code, clearer control flow, direct component access
 - **Trade-off**: Complexity moved from traversal to synchronization and validation
 
@@ -467,28 +509,33 @@ async function lockAffordance(entityManager, actorId, affordanceType, partId, oc
 #### Current System ✅
 
 **Pros**:
+
 - **Single Source of Truth**: Lock state lives on the part itself
 - **No Synchronization Needed**: Part state is authoritative
 - **Transactional**: Lock/unlock operations are atomic per part
 - **No Duplication**: Lock state exists in exactly one place
 
 **Consistency Model**:
+
 ```
 Lock mouth → Update mouth entity's lock component → Done
 Query mouth → Check mouth entity's lock component → Done
 ```
 
 **Cons**:
+
 - **Multiple Queries**: Checking all parts requires multiple component lookups
 - **Race Conditions**: Possible if multiple systems lock different parts simultaneously (though rare)
 
 #### Proposed System ⚠️
 
 **Pros**:
+
 - **Fast Queries**: Single component read to check all affordances
 - **Aggregate View**: Easy to see all occupied resources at once
 
 **Cons**:
+
 - **Dual Truth**: Affordance component AND anatomy structure both represent body state
 - **Synchronization Required**: Must update affordances when anatomy changes (e.g., adding/removing parts)
 - **Staleness Risk**: Affordances can become out of sync with actual anatomy
@@ -496,6 +543,7 @@ Query mouth → Check mouth entity's lock component → Done
 - **Event Listening**: Requires listening to anatomy mutation events to keep affordances updated
 
 **Consistency Challenges**:
+
 ```
 Scenario: Add a hand anatomy part
 Current System: Hand has its own lock component → Works automatically
@@ -503,6 +551,7 @@ Proposed System: Must also update body_affordances.grabbing.total and .available
 ```
 
 **Synchronization Example**:
+
 ```javascript
 // When anatomy changes, affordances must be recalculated
 eventBus.on('COMPONENT_ADDED', async (event) => {
@@ -510,10 +559,17 @@ eventBus.on('COMPONENT_ADDED', async (event) => {
     const part = event.componentData;
     if (part.subType === 'hand') {
       // Must update affordances
-      const affordances = entityManager.getComponentData(event.entityId, 'core:body_affordances');
+      const affordances = entityManager.getComponentData(
+        event.entityId,
+        'core:body_affordances'
+      );
       affordances.grabbing.total += 1;
       affordances.grabbing.available += 1;
-      await entityManager.addComponent(event.entityId, 'core:body_affordances', affordances);
+      await entityManager.addComponent(
+        event.entityId,
+        'core:body_affordances',
+        affordances
+      );
     }
   }
 });
@@ -524,43 +580,51 @@ eventBus.on('COMPONENT_ADDED', async (event) => {
 #### Current System
 
 **Lock/Unlock Performance**:
+
 - Traverse anatomy structure: O(P) where P = number of parts
 - Filter by part type: O(P)
 - Update components: O(M) where M = matching parts
 - **Total**: O(P + M) per operation
 
 **Query Performance**:
+
 - Use condition helper `hasPartOfTypeWithComponentValue`
 - Traverse parts: O(P)
 - Check component value: O(1) per part
 - **Total**: O(P) per query
 
 **Typical Performance** (humanoid with ~30 body parts):
+
 - Lock mouth: ~30 part checks, 1 update → ~0.1ms
 - Check mouth availability: ~30 part checks → ~0.05ms
 
 **Caching Opportunities**:
+
 - Part type indices could reduce O(P) to O(1)
 - Component access is already cached in EntityManager
 
 #### Proposed System
 
 **Lock/Unlock Performance**:
+
 - Read actor component: O(1)
 - Update affordance field: O(1)
 - Write component: O(1)
 - **Total**: O(1) per operation
 
 **Query Performance**:
+
 - Read actor component: O(1)
 - Check field value: O(1)
 - **Total**: O(1) per query
 
 **Typical Performance**:
+
 - Lock mouth: Single component read/write → ~0.02ms
 - Check mouth availability: Single component read → ~0.01ms
 
 **Performance Comparison**:
+
 ```
 Operation               | Current System | Proposed System | Improvement
 ------------------------|----------------|-----------------|-------------
@@ -573,6 +637,7 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 **Analysis**: Proposed system is significantly faster, but in absolute terms the difference is negligible for gameplay (microseconds vs. milliseconds). The current system's performance is already acceptable.
 
 **Bottleneck Consideration**:
+
 - Lock operations typically happen on discrete action events (start kissing, sit down), not in tight loops
 - The 5x speedup provides no meaningful gameplay benefit
 - Performance is NOT a compelling reason to change architectures
@@ -582,11 +647,13 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 #### Current System
 
 **Debugging Complexity**:
+
 - **Distributed State**: Must inspect multiple entities to see full lock state
 - **Tool Support**: Requires entity inspector to navigate anatomy hierarchy
 - **Log Verbosity**: Lock operations log part IDs, which are opaque without context
 
 **Example Debug Session**:
+
 ```
 1. Check actor's anatomy:body component
 2. Find body.parts map
@@ -596,26 +663,31 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 ```
 
 **Developer Experience**:
+
 - **Learning Curve**: Must understand anatomy system, entity relationships, and component traversal
 - **Condition Complexity**: `hasPartOfTypeWithComponentValue` is verbose and complex
 - **Error Messages**: Can be cryptic ("No mouth found to lock for entity: actor1")
 
 **Pros**:
+
 - **Explicit**: State is exactly where you expect it (on the part)
 - **Traceable**: Clear ownership of lock state
 
 **Cons**:
+
 - **Harder to Inspect**: Requires navigating entity graph
 - **More Complex Conditions**: Verbose JSON logic
 
 #### Proposed System
 
 **Debugging Complexity**:
+
 - **Centralized State**: Single component shows all affordances
 - **Tool Support**: Actor inspector shows all locks in one view
 - **Clear Logging**: Simple field paths (e.g., "mouth.available = false")
 
 **Example Debug Session**:
+
 ```
 1. Inspect actor entity
 2. View core:body_affordances component
@@ -624,16 +696,19 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 ```
 
 **Developer Experience**:
+
 - **Learning Curve**: Simpler mental model (one component to understand)
 - **Condition Simplicity**: `hasComponentValue(actor, 'core:body_affordances', 'mouth.available', true)`
 - **Error Messages**: Clear and contextual ("Mouth affordance already occupied by entity: target1")
 
 **Pros**:
+
 - **Easy to Inspect**: Everything in one place
 - **Simpler Conditions**: Direct field access
 - **Better Tooling**: Easier to build UI tools for affordance visualization
 
 **Cons**:
+
 - **Obscures Source**: Doesn't show which specific anatomy part is locked
 - **Loss of Detail**: Can't distinguish between multiple mouths (if such anatomy exists)
 
@@ -642,6 +717,7 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 #### Current System
 
 **Test Coverage Required**:
+
 - Unit tests for handlers (4 handlers × ~8 test cases each = 32 tests)
 - Unit tests for utilities (anatomy traversal, legacy support, error cases = ~20 tests)
 - Integration tests for mod interactions (kissing, positioning, multi-actor = ~15 tests)
@@ -650,6 +726,7 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 - **Total**: ~80 test cases
 
 **Existing Test Files**:
+
 - `tests/unit/logic/operationHandlers/lockMouthEngagementHandler.test.js`
 - `tests/unit/logic/operationHandlers/unlockMouthEngagementHandler.test.js`
 - `tests/integration/anatomy/mouthEngagementIntegration.test.js`
@@ -657,26 +734,33 @@ Lock multiple parts     | 0.10ms × N    | 0.02ms × N     | 5x faster
 - `tests/memory/mouthEngagementMemory.test.js`
 
 **Test Complexity**:
+
 - **Setup**: Must create anatomy structures, body components, part entities
 - **Assertions**: Must traverse anatomy to verify lock state
 - **Teardown**: Must clean up multiple entities
 
 **Example Test** (simplified):
+
 ```javascript
 it('should lock mouth on anatomy-based entity', async () => {
   // Setup anatomy structure
   const actorId = 'actor1';
   const mouthId = 'actor1_mouth';
   await entityManager.addComponent(actorId, 'anatomy:body', {
-    body: { parts: { mouth: mouthId } }
+    body: { parts: { mouth: mouthId } },
   });
-  await entityManager.addComponent(mouthId, 'anatomy:part', { subType: 'mouth' });
+  await entityManager.addComponent(mouthId, 'anatomy:part', {
+    subType: 'mouth',
+  });
 
   // Execute lock
   await handler.execute({ actor_id: actorId }, executionContext);
 
   // Verify lock on mouth entity
-  const engagement = entityManager.getComponentData(mouthId, 'core:mouth_engagement');
+  const engagement = entityManager.getComponentData(
+    mouthId,
+    'core:mouth_engagement'
+  );
   expect(engagement.locked).toBe(true);
 });
 ```
@@ -684,6 +768,7 @@ it('should lock mouth on anatomy-based entity', async () => {
 #### Proposed System
 
 **Test Coverage Required**:
+
 - Unit tests for handlers (2 handlers × ~8 test cases each = 16 tests)
 - Unit tests for utilities (affordance updates, validation = ~12 tests)
 - Integration tests for mod interactions (same scenarios = ~15 tests)
@@ -693,34 +778,43 @@ it('should lock mouth on anatomy-based entity', async () => {
 - **Total**: ~64 test cases
 
 **Test Complexity**:
+
 - **Setup**: Create single affordance component
 - **Assertions**: Direct component value checks
 - **Teardown**: Clean up single entity
 
 **Example Test** (simplified):
+
 ```javascript
 it('should lock mouth affordance', async () => {
   // Setup affordances
   const actorId = 'actor1';
   await entityManager.addComponent(actorId, 'core:body_affordances', {
-    mouth: { available: true, occupiedBy: null }
+    mouth: { available: true, occupiedBy: null },
   });
 
   // Execute lock
-  await handler.execute({
-    actor_id: actorId,
-    affordance_type: 'mouth',
-    occupied_by: 'target1'
-  }, executionContext);
+  await handler.execute(
+    {
+      actor_id: actorId,
+      affordance_type: 'mouth',
+      occupied_by: 'target1',
+    },
+    executionContext
+  );
 
   // Verify lock
-  const affordances = entityManager.getComponentData(actorId, 'core:body_affordances');
+  const affordances = entityManager.getComponentData(
+    actorId,
+    'core:body_affordances'
+  );
   expect(affordances.mouth.available).toBe(false);
   expect(affordances.mouth.occupiedBy).toBe('target1');
 });
 ```
 
 **Testing Assessment**:
+
 - **Proposed System**: ~20% fewer tests, simpler setup/assertions
 - **Current System**: More comprehensive testing of anatomy integration
 - **Trade-off**: Simpler tests vs. better coverage of edge cases
@@ -732,6 +826,7 @@ it('should lock mouth affordance', async () => {
 **Current System → Proposed System Migration**:
 
 **Impact Scope**:
+
 - **Handlers**: Replace 4 handlers (lock/unlock mouth, lock/unlock movement) with 2 (lock/unlock affordance)
 - **Utilities**: Replace 2 utility files (mouthEngagementUtils, movementUtils) with 1 (affordanceUtils)
 - **Components**: Add 1 new component (body_affordances), deprecate 2 (mouth_engagement, movement)
@@ -780,6 +875,7 @@ it('should lock mouth affordance', async () => {
 **Total Estimated Time**: 4-6 weeks
 
 **Risk Factors**:
+
 - **Breaking Changes**: All existing mods using lock operations would break
 - **Mod Compatibility**: Third-party mods would need updates
 - **Data Migration**: Existing save games with lock state would need conversion
@@ -790,12 +886,14 @@ it('should lock mouth affordance', async () => {
 **Impact Scope**: None (no migration needed)
 
 **Benefits**:
+
 - Zero migration cost
 - Zero risk of regression
 - No mod compatibility issues
 - No save game migration needed
 
 **Potential Enhancements** (without changing architecture):
+
 - Add part type indices for O(1) part lookups
 - Improve error messages and logging
 - Add debug visualization tools for anatomy locks
@@ -810,11 +908,13 @@ it('should lock mouth affordance', async () => {
 **Semantic Model**: "A lock is placed on the body part itself"
 
 **Advantages**:
+
 - **Intuitive**: Locks are physically on the thing being locked
 - **Clear Ownership**: Each part owns its own lock state
 - **Explicit**: Code clearly shows "lock the mouth" vs. "lock the leg"
 
 **Disadvantages**:
+
 - **Verbose**: Requires anatomy traversal to express simple concepts
 
 #### Proposed System ⚠️
@@ -822,10 +922,12 @@ it('should lock mouth affordance', async () => {
 **Semantic Model**: "The actor has a ledger of what's available"
 
 **Advantages**:
+
 - **Efficient**: Direct access to availability information
 - **Aggregate**: Easy to see total resource availability
 
 **Disadvantages**:
+
 - **Abstraction Gap**: Affordances are a meta-concept, not a physical thing
 - **Indirection**: "Lock mouth affordance" is less intuitive than "lock mouth"
 - **Bookkeeping**: Actor must maintain a summary of distributed state
@@ -857,6 +959,7 @@ it('should lock mouth affordance', async () => {
    - No synchronization issues
 
 **Example: Adding Tentacles**:
+
 ```json
 {
   "id": "kraken:tentacle",
@@ -869,9 +972,15 @@ it('should lock mouth affordance', async () => {
 ```
 
 Conditions automatically work:
+
 ```json
 {
-  "hasPartWithComponentValue": ["actor", "core:grabbing_engaged", "locked", false]
+  "hasPartWithComponentValue": [
+    "actor",
+    "core:grabbing_engaged",
+    "locked",
+    false
+  ]
 }
 ```
 
@@ -900,6 +1009,7 @@ Conditions automatically work:
    - Requires event listeners and state reconciliation
 
 **Example: Adding Tentacles**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -929,24 +1039,28 @@ Conditions automatically work:
 #### Analysis of Current Usage
 
 **From `data/mods/kissing/rules/`**:
+
 - All kissing rules lock BOTH actor and target mouths
 - Unlock operations always paired with lock operations
 - No cases of partial mouth engagement
 - No cases of mouth locked for non-interactive reasons
 
 **From `data/mods/positioning/rules/`**:
+
 - Movement locks used for: sitting, lying, kneeling, straddling, bending over
 - Locks prevent movement actions but not other positioning (e.g., can't walk while sitting, but can stand up)
 - Unlock always happens when returning to standing position
 - Movement lock is binary (locked or not), no partial states
 
 **Pattern Observations**:
+
 1. Locks are **always action-scoped** (locked at start of action, unlocked at end)
 2. Locks are **binary** (no partial engagement currently used)
 3. **Multiple actors** often locked simultaneously (both partners in kissing)
 4. **No ownership tracking** needed beyond binary lock state
 
 **Proposed System Analysis**:
+
 - **occupiedBy field**: Would be useful for debugging ("Who is actor1 kissing?")
 - **Count tracking**: Not currently needed (no actions require "2+ hands")
 - **Affordance abstraction**: Adds complexity without clear benefit for current use cases
@@ -954,21 +1068,25 @@ Conditions automatically work:
 #### Hypothetical Future Use Cases
 
 **Use Case 1: Holding Items**:
+
 - **Current System**: Add `core:holding_item` component to hand parts, lock hands when item picked up
 - **Proposed System**: Decrement `affordances.grabbing.available`, add to `occupied` array
 - **Assessment**: Both work, proposed system has slight ergonomic advantage
 
 **Use Case 2: Playing Instrument (Requires Both Hands)**:
+
 - **Current System**: Lock both hand parts in sequence
 - **Proposed System**: Check `affordances.grabbing.available >= 2`, then decrement by 2
 - **Assessment**: Proposed system is cleaner for multi-part requirements
 
 **Use Case 3: Partial Engagement (Eating While Speaking)**:
+
 - **Current System**: Add `engagementLevel` field to mouth_engagement component
 - **Proposed System**: Add `engagementLevel` field to affordances.mouth
 - **Assessment**: Both work equally well
 
 **Use Case 4: Tentacle Creature with 8 Grabbing Appendages**:
+
 - **Current System**: 8 tentacle parts, each with `core:grabbing_engaged` component
 - **Proposed System**: `affordances.grabbing.total = 8`, decrement as tentacles used
 - **Assessment**: Proposed system is much cleaner for high counts
@@ -982,6 +1100,7 @@ Conditions automatically work:
 **Idea**: Use affordances for **count-based resources** (hands, legs) and anatomy-based locks for **unique resources** (mouth, eyes).
 
 **Design**:
+
 ```json
 {
   "core:body_affordances": {
@@ -992,6 +1111,7 @@ Conditions automatically work:
 ```
 
 Plus:
+
 ```json
 {
   "anatomy:humanoid_mouth": {
@@ -1003,11 +1123,13 @@ Plus:
 ```
 
 **Advantages**:
+
 - Best of both worlds
 - Affordances for ergonomic count tracking
 - Anatomy locks for semantic clarity on unique parts
 
 **Disadvantages**:
+
 - **Inconsistent**: Two different patterns for similar concepts
 - **Confusing**: Developers must learn both systems
 - **More Code**: Maintains complexity of both approaches
@@ -1017,49 +1139,50 @@ Plus:
 
 ## Comparative Summary Table
 
-| Criterion                  | Current System (Anatomy Locks) | Proposed System (Affordances) | Winner     |
-|----------------------------|-------------------------------|-------------------------------|------------|
-| **Architecture**           |                               |                               |            |
-| ECS Alignment              | ✅ Pure ECS, composition      | ⚠️ Aggregation anti-pattern  | Current    |
-| Separation of Concerns     | ✅ State on parts             | ⚠️ State on actor            | Current    |
-| Modularity                 | ✅ Parts independent          | ⚠️ Centralized schema        | Current    |
-| **Extensibility**          |                               |                               |            |
-| New Body Part Types        | ✅ No core changes            | ❌ Requires schema update     | Current    |
-| Mod Independence           | ✅ Mods add components        | ❌ Must modify core schema    | Current    |
-| Non-Humanoid Support       | ✅ Automatic                  | ⚠️ Requires planning         | Current    |
-| **Implementation**         |                               |                               |            |
-| Code Complexity            | ⚠️ ~835 LOC                  | ✅ ~440 LOC (47% less)       | Proposed   |
-| Traversal Logic            | ⚠️ O(P) anatomy traversal    | ✅ O(1) direct access        | Proposed   |
-| Learning Curve             | ⚠️ Moderate                  | ✅ Simple                    | Proposed   |
-| **Data Management**        |                               |                               |            |
-| Single Source of Truth     | ✅ Part owns lock state       | ⚠️ Dual truth               | Current    |
-| Synchronization            | ✅ Not needed                 | ⚠️ Required                  | Current    |
-| Data Consistency           | ✅ Always consistent          | ⚠️ Can become stale         | Current    |
-| **Performance**            |                               |                               |            |
-| Lock/Unlock Speed          | ⚠️ ~0.10ms (O(P))            | ✅ ~0.02ms (O(1))            | Proposed   |
-| Query Speed                | ⚠️ ~0.05ms (O(P))            | ✅ ~0.01ms (O(1))            | Proposed   |
-| Real-World Impact          | ✅ Fast enough                | ✅ Faster (negligible gain)  | Tie        |
-| **Developer Experience**   |                               |                               |            |
-| Debugging                  | ⚠️ Navigate anatomy graph    | ✅ Single component          | Proposed   |
-| Condition Complexity       | ⚠️ hasPartOfTypeWithCompValue| ✅ hasComponentValue         | Proposed   |
-| Error Messages             | ⚠️ Opaque part IDs           | ✅ Clear paths               | Proposed   |
-| **Testing**                |                               |                               |            |
-| Test Case Count            | ⚠️ ~80 tests                 | ✅ ~64 tests (20% less)      | Proposed   |
-| Test Complexity            | ⚠️ Complex setup             | ✅ Simple setup              | Proposed   |
-| Edge Case Coverage         | ✅ Comprehensive              | ⚠️ Fewer edge cases         | Current    |
-| **Migration**              |                               |                               |            |
-| Migration Required         | ✅ No migration               | ❌ 4-6 week migration        | Current    |
-| Breaking Changes           | ✅ None                       | ❌ All mods affected         | Current    |
-| Risk Level                 | ✅ Zero risk                  | ⚠️ High risk                 | Current    |
-| **Future-Proofing**        |                               |                               |            |
-| Dynamic Anatomy            | ✅ Automatic                  | ⚠️ Needs synchronization     | Current    |
-| Partial Locks              | ✅ Add field to component     | ✅ Add field to affordance   | Tie        |
-| Count-Based Affordances    | ⚠️ Requires tracking         | ✅ Built-in counts           | Proposed   |
-| **Semantic Clarity**       |                               |                               |            |
-| Intuitive Model            | ✅ "Lock the mouth"           | ⚠️ "Lock mouth affordance"  | Current    |
-| Explicit State             | ✅ Lock on part               | ⚠️ Meta-state on actor      | Current    |
+| Criterion                | Current System (Anatomy Locks) | Proposed System (Affordances) | Winner   |
+| ------------------------ | ------------------------------ | ----------------------------- | -------- |
+| **Architecture**         |                                |                               |          |
+| ECS Alignment            | ✅ Pure ECS, composition       | ⚠️ Aggregation anti-pattern   | Current  |
+| Separation of Concerns   | ✅ State on parts              | ⚠️ State on actor             | Current  |
+| Modularity               | ✅ Parts independent           | ⚠️ Centralized schema         | Current  |
+| **Extensibility**        |                                |                               |          |
+| New Body Part Types      | ✅ No core changes             | ❌ Requires schema update     | Current  |
+| Mod Independence         | ✅ Mods add components         | ❌ Must modify core schema    | Current  |
+| Non-Humanoid Support     | ✅ Automatic                   | ⚠️ Requires planning          | Current  |
+| **Implementation**       |                                |                               |          |
+| Code Complexity          | ⚠️ ~835 LOC                    | ✅ ~440 LOC (47% less)        | Proposed |
+| Traversal Logic          | ⚠️ O(P) anatomy traversal      | ✅ O(1) direct access         | Proposed |
+| Learning Curve           | ⚠️ Moderate                    | ✅ Simple                     | Proposed |
+| **Data Management**      |                                |                               |          |
+| Single Source of Truth   | ✅ Part owns lock state        | ⚠️ Dual truth                 | Current  |
+| Synchronization          | ✅ Not needed                  | ⚠️ Required                   | Current  |
+| Data Consistency         | ✅ Always consistent           | ⚠️ Can become stale           | Current  |
+| **Performance**          |                                |                               |          |
+| Lock/Unlock Speed        | ⚠️ ~0.10ms (O(P))              | ✅ ~0.02ms (O(1))             | Proposed |
+| Query Speed              | ⚠️ ~0.05ms (O(P))              | ✅ ~0.01ms (O(1))             | Proposed |
+| Real-World Impact        | ✅ Fast enough                 | ✅ Faster (negligible gain)   | Tie      |
+| **Developer Experience** |                                |                               |          |
+| Debugging                | ⚠️ Navigate anatomy graph      | ✅ Single component           | Proposed |
+| Condition Complexity     | ⚠️ hasPartOfTypeWithCompValue  | ✅ hasComponentValue          | Proposed |
+| Error Messages           | ⚠️ Opaque part IDs             | ✅ Clear paths                | Proposed |
+| **Testing**              |                                |                               |          |
+| Test Case Count          | ⚠️ ~80 tests                   | ✅ ~64 tests (20% less)       | Proposed |
+| Test Complexity          | ⚠️ Complex setup               | ✅ Simple setup               | Proposed |
+| Edge Case Coverage       | ✅ Comprehensive               | ⚠️ Fewer edge cases           | Current  |
+| **Migration**            |                                |                               |          |
+| Migration Required       | ✅ No migration                | ❌ 4-6 week migration         | Current  |
+| Breaking Changes         | ✅ None                        | ❌ All mods affected          | Current  |
+| Risk Level               | ✅ Zero risk                   | ⚠️ High risk                  | Current  |
+| **Future-Proofing**      |                                |                               |          |
+| Dynamic Anatomy          | ✅ Automatic                   | ⚠️ Needs synchronization      | Current  |
+| Partial Locks            | ✅ Add field to component      | ✅ Add field to affordance    | Tie      |
+| Count-Based Affordances  | ⚠️ Requires tracking           | ✅ Built-in counts            | Proposed |
+| **Semantic Clarity**     |                                |                               |          |
+| Intuitive Model          | ✅ "Lock the mouth"            | ⚠️ "Lock mouth affordance"    | Current  |
+| Explicit State           | ✅ Lock on part                | ⚠️ Meta-state on actor        | Current  |
 
 **Score**:
+
 - **Current System**: 17 wins
 - **Proposed System**: 10 wins
 - **Tie**: 2
@@ -1089,6 +1212,7 @@ If count-based affordances become a major need (e.g., creatures with many grabbi
 3. **Document** both patterns clearly with usage guidance
 
 **Implementation**:
+
 ```json
 {
   "core:body_affordances": {
@@ -1098,6 +1222,7 @@ If count-based affordances become a major need (e.g., creatures with many grabbi
 ```
 
 Plus existing:
+
 ```json
 {
   "anatomy:humanoid_mouth": {
@@ -1133,6 +1258,7 @@ Rather than replacing the system, invest in improvements:
    - Hide complexity of `hasPartOfTypeWithComponentValue` behind semantic names
 
 **Example Helper** (`src/utils/anatomyLockHelpers.js`):
+
 ```javascript
 /**
  * Check if actor's mouth is available (not engaged)
@@ -1151,12 +1277,15 @@ export async function lockMouth(entityManager, actorId, occupiedBy = null) {
     throw new Error(`Cannot lock mouth for ${actorId}: No mouth found`);
   }
   // Log in friendly format
-  console.debug(`🔒 Mouth locked for ${actorId}${occupiedBy ? ` (by ${occupiedBy})` : ''}`);
+  console.debug(
+    `🔒 Mouth locked for ${actorId}${occupiedBy ? ` (by ${occupiedBy})` : ''}`
+  );
   return result;
 }
 ```
 
 **Example Macro Condition** (`data/mods/core/conditions/mouth_available.condition.json`):
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -1169,6 +1298,7 @@ export async function lockMouth(entityManager, actorId, occupiedBy = null) {
 ```
 
 Usage in actions:
+
 ```json
 {
   "prerequisites": [
@@ -1185,6 +1315,7 @@ Usage in actions:
 The **current anatomy-based locking system** is the superior architectural choice despite requiring more code and having slightly worse performance. The benefits of ECS alignment, extensibility, modularity, and zero migration cost far outweigh the convenience of a centralized affordance metadata approach.
 
 The proposed affordance system would provide marginal improvements in developer ergonomics and performance while introducing significant architectural compromises, particularly:
+
 - Violating ECS principles (aggregation over composition)
 - Requiring core schema changes for new anatomy types (breaking modularity)
 - Creating synchronization challenges (dual source of truth)
@@ -1197,6 +1328,7 @@ The current system has proven itself with 61 movement lock references and 26 mou
 ---
 
 **Verification**: This analysis is based on actual codebase inspection conducted on 2025-11-06, including review of:
+
 - Component definitions in `data/mods/core/components/` and `data/mods/anatomy/entities/definitions/`
 - Handler implementations in `src/logic/operationHandlers/`
 - Utility functions in `src/utils/`

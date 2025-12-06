@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -13,9 +20,7 @@ import anatomyBlueprintPartSchema from '../../../data/schemas/anatomy.blueprint-
 import anatomyBlueprintSchema from '../../../data/schemas/anatomy.blueprint.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import modManifestSchema from '../../../data/schemas/mod-manifest.schema.json';
-import {
-  createMockValidatedEventDispatcherForIntegration,
-} from '../../common/mockFactories/index.js';
+import { createMockValidatedEventDispatcherForIntegration } from '../../common/mockFactories/index.js';
 
 class TestLogger {
   constructor() {
@@ -80,7 +85,10 @@ class FileSystemDataFetcher {
 function writeJsonFile(baseDir, segments, filename, data) {
   const targetDir = path.join(baseDir, ...segments);
   fs.mkdirSync(targetDir, { recursive: true });
-  fs.writeFileSync(path.join(targetDir, filename), JSON.stringify(data, null, 2));
+  fs.writeFileSync(
+    path.join(targetDir, filename),
+    JSON.stringify(data, null, 2)
+  );
 }
 
 /**
@@ -110,7 +118,10 @@ async function createTestEnvironment(baseDir) {
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const schemaEntries = [
     [commonSchema, 'schema://living-narrative-engine/common.schema.json'],
-    [modManifestSchema, 'schema://living-narrative-engine/mod-manifest.schema.json'],
+    [
+      modManifestSchema,
+      'schema://living-narrative-engine/mod-manifest.schema.json',
+    ],
     [
       anatomySlotLibrarySchema,
       'schema://living-narrative-engine/anatomy.slot-library.schema.json',
@@ -148,7 +159,9 @@ describe('AnatomyBlueprintLoader integration coverage', () => {
   let tempDir;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'anatomy-blueprint-loader-'));
+    tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'anatomy-blueprint-loader-')
+    );
     fs.mkdirSync(path.join(tempDir, 'mods'), { recursive: true });
   });
 
@@ -170,7 +183,8 @@ describe('AnatomyBlueprintLoader integration coverage', () => {
     };
 
     const library = {
-      $schema: 'schema://living-narrative-engine/anatomy.slot-library.schema.json',
+      $schema:
+        'schema://living-narrative-engine/anatomy.slot-library.schema.json',
       id: `${modId}:library`,
       slotDefinitions: {
         head_base: {
@@ -201,7 +215,8 @@ describe('AnatomyBlueprintLoader integration coverage', () => {
     };
 
     const commonPart = {
-      $schema: 'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
+      $schema:
+        'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
       id: `${modId}:common_part`,
       slots: {
         torso: {
@@ -221,7 +236,8 @@ describe('AnatomyBlueprintLoader integration coverage', () => {
     };
 
     const advancedPart = {
-      $schema: 'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
+      $schema:
+        'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
       id: `${modId}:advanced_part`,
       library: `${modId}:library`,
       slots: {
@@ -253,9 +269,24 @@ describe('AnatomyBlueprintLoader integration coverage', () => {
       ],
     };
 
-    writeJsonFile(tempDir, ['mods', modId, 'libraries'], 'library.json', library);
-    writeJsonFile(tempDir, ['mods', modId, 'parts'], 'common.part.json', commonPart);
-    writeJsonFile(tempDir, ['mods', modId, 'parts'], 'advanced.part.json', advancedPart);
+    writeJsonFile(
+      tempDir,
+      ['mods', modId, 'libraries'],
+      'library.json',
+      library
+    );
+    writeJsonFile(
+      tempDir,
+      ['mods', modId, 'parts'],
+      'common.part.json',
+      commonPart
+    );
+    writeJsonFile(
+      tempDir,
+      ['mods', modId, 'parts'],
+      'advanced.part.json',
+      advancedPart
+    );
     writeJsonFile(
       tempDir,
       ['mods', modId, 'blueprints'],
@@ -388,7 +419,8 @@ describe('AnatomyBlueprintLoader integration coverage', () => {
     };
 
     const part = {
-      $schema: 'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
+      $schema:
+        'schema://living-narrative-engine/anatomy.blueprint-part.schema.json',
       id: `${modId}:dependent_part`,
       library: `${modId}:undefined_library`,
       slots: {

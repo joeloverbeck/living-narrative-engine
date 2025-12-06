@@ -116,7 +116,12 @@ class TrackingExceptionHandler extends ProcessingExceptionHandler {
     this.calls = [];
   }
 
-  async handle(turnCtx, error, actorIdContext = 'UnknownActor', shouldEndTurn = true) {
+  async handle(
+    turnCtx,
+    error,
+    actorIdContext = 'UnknownActor',
+    shouldEndTurn = true
+  ) {
     this.calls.push({ turnCtx, error, actorIdContext, shouldEndTurn });
     return super.handle(turnCtx, error, actorIdContext, shouldEndTurn);
   }
@@ -155,7 +160,11 @@ describe('ServiceLookupHelper integration', () => {
       logger,
       services: {
         safeEventDispatcher: dispatcher,
-        turnEndPort: { async endTurn(error) { endTurnCalls.push(error ?? null); } },
+        turnEndPort: {
+          async endTurn(error) {
+            endTurnCalls.push(error ?? null);
+          },
+        },
         entityManager,
       },
       strategy,
@@ -198,7 +207,9 @@ describe('ServiceLookupHelper integration', () => {
       )
     ).rejects.toThrow(ServiceLookupError);
 
-    expect(logger.entries.error[0][0]).toContain('Invalid turnCtx in _getServiceFromContext');
+    expect(logger.entries.error[0][0]).toContain(
+      'Invalid turnCtx in _getServiceFromContext'
+    );
     expect(dispatcher.events).toHaveLength(1);
     expect(dispatcher.events[0].eventId).toBe(SYSTEM_ERROR_OCCURRED_ID);
     expect(dispatcher.events[0].payload.details.service).toBe(serviceLabel);
@@ -225,7 +236,11 @@ describe('ServiceLookupHelper integration', () => {
       logger,
       services: {
         safeEventDispatcher: dispatcher,
-        turnEndPort: { async endTurn(error) { endTurnCalls.push(error ?? null); } },
+        turnEndPort: {
+          async endTurn(error) {
+            endTurnCalls.push(error ?? null);
+          },
+        },
         entityManager,
       },
       strategy,
@@ -252,11 +267,15 @@ describe('ServiceLookupHelper integration', () => {
     expect(failureLogEntry[1]).toBeInstanceOf(Error);
     expect(failureLogEntry[1].name).toBe('ServiceLookupError');
     expect(failureLogEntry[1].cause).toBeInstanceOf(Error);
-    expect(failureLogEntry[1].cause.message).toContain('returned null or undefined');
+    expect(failureLogEntry[1].cause.message).toContain(
+      'returned null or undefined'
+    );
     expect(exceptionHandler.calls).toHaveLength(1);
     expect(exceptionHandler.calls[0].actorIdContext).toBe(actor.id);
     expect(
-      dispatcher.events.filter((event) => event.eventId === SYSTEM_ERROR_OCCURRED_ID)
+      dispatcher.events.filter(
+        (event) => event.eventId === SYSTEM_ERROR_OCCURRED_ID
+      )
     ).toHaveLength(2);
     expect(state.finishCount).toBe(1);
     expect(endTurnCalls.length).toBeGreaterThan(0);

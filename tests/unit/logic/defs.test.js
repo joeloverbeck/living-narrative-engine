@@ -18,11 +18,15 @@ describe('Logic Defs - Type Re-export Verification', () => {
 
   describe('Re-export Implementation', () => {
     it('should have re-export statement for executionTypes', () => {
-      expect(defsContent).toContain("export * from './types/executionTypes.js'");
+      expect(defsContent).toContain(
+        "export * from './types/executionTypes.js'"
+      );
     });
 
     it('should have explanatory file header comment', () => {
-      expect(defsContent).toContain('ExecutionContext and related types have been extracted');
+      expect(defsContent).toContain(
+        'ExecutionContext and related types have been extracted'
+      );
       expect(defsContent).toContain('src/logic/types/executionTypes.js');
       expect(defsContent).toContain('backward compatibility');
     });
@@ -31,7 +35,9 @@ describe('Logic Defs - Type Re-export Verification', () => {
   describe('Duplicate Type Definition Removal', () => {
     it('should not have duplicate ExecutionContext typedef definition', () => {
       // Count occurrences of @typedef {object} ExecutionContext
-      const matches = defsContent.match(/@typedef\s+\{object\}\s+ExecutionContext/g);
+      const matches = defsContent.match(
+        /@typedef\s+\{object\}\s+ExecutionContext/g
+      );
 
       // Should not have any direct definitions (only re-export)
       expect(matches).toBeNull();
@@ -39,7 +45,9 @@ describe('Logic Defs - Type Re-export Verification', () => {
 
     it('should not have duplicate JsonLogicEvaluationContext typedef definition', () => {
       // Count occurrences of @typedef {object} JsonLogicEvaluationContext
-      const matches = defsContent.match(/@typedef\s+\{object\}\s+JsonLogicEvaluationContext/g);
+      const matches = defsContent.match(
+        /@typedef\s+\{object\}\s+JsonLogicEvaluationContext/g
+      );
 
       // Should not have any direct definitions (only re-export)
       expect(matches).toBeNull();
@@ -47,7 +55,9 @@ describe('Logic Defs - Type Re-export Verification', () => {
 
     it('should not have duplicate JsonLogicEntityContext typedef definition', () => {
       // Count occurrences of @typedef {object} JsonLogicEntityContext
-      const matches = defsContent.match(/@typedef\s+\{object\}\s+JsonLogicEntityContext/g);
+      const matches = defsContent.match(
+        /@typedef\s+\{object\}\s+JsonLogicEntityContext/g
+      );
 
       // Should not have any direct definitions (only re-export)
       expect(matches).toBeNull();
@@ -123,7 +133,9 @@ describe('Logic Defs - Type Re-export Verification', () => {
 
   describe('File Structure', () => {
     it('should have re-export statement before type definitions', () => {
-      const reExportIndex = defsContent.indexOf("export * from './types/executionTypes.js'");
+      const reExportIndex = defsContent.indexOf(
+        "export * from './types/executionTypes.js'"
+      );
       const firstTypedefIndex = defsContent.indexOf('@typedef');
 
       expect(reExportIndex).toBeGreaterThan(0);
@@ -132,7 +144,9 @@ describe('Logic Defs - Type Re-export Verification', () => {
     });
 
     it('should have file header comment at the start', () => {
-      const headerIndex = defsContent.indexOf('@file Operation handler type definitions');
+      const headerIndex = defsContent.indexOf(
+        '@file Operation handler type definitions'
+      );
       expect(headerIndex).toBeGreaterThan(0);
       expect(headerIndex).toBeLessThan(100); // Should be near the start
     });

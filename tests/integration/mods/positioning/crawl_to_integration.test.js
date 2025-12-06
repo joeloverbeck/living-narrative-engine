@@ -63,7 +63,8 @@ describe('deference:crawl_to - Integration Tests', () => {
         'test:bob'
       );
 
-      const aliceAfterKneel = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceAfterKneel =
+        testFixture.entityManager.getEntityInstance('test:alice');
       expect(
         aliceAfterKneel.components['positioning:kneeling_before']
       ).toBeDefined();
@@ -78,8 +79,10 @@ describe('deference:crawl_to - Integration Tests', () => {
       // Step 2: Alice crawls to Bob
       await testFixture.executeAction('test:alice', 'test:bob');
 
-      const aliceAfterCrawl = testFixture.entityManager.getEntityInstance('test:alice');
-      const bobAfterCrawl = testFixture.entityManager.getEntityInstance('test:bob');
+      const aliceAfterCrawl =
+        testFixture.entityManager.getEntityInstance('test:alice');
+      const bobAfterCrawl =
+        testFixture.entityManager.getEntityInstance('test:bob');
 
       // Both kneeling and closeness components present
       expect(
@@ -90,9 +93,9 @@ describe('deference:crawl_to - Integration Tests', () => {
         aliceAfterCrawl.components['positioning:closeness'].partners
       ).toContain('test:bob');
       expect(bobAfterCrawl.components['positioning:closeness']).toBeDefined();
-      expect(bobAfterCrawl.components['positioning:closeness'].partners).toContain(
-        'test:alice'
-      );
+      expect(
+        bobAfterCrawl.components['positioning:closeness'].partners
+      ).toContain('test:alice');
     });
   });
 
@@ -121,7 +124,8 @@ describe('deference:crawl_to - Integration Tests', () => {
         'test:bob'
       );
 
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       expect(aliceEntity.components['positioning:closeness']).toBeDefined();
@@ -160,7 +164,8 @@ describe('deference:crawl_to - Integration Tests', () => {
         'test:bob'
       );
 
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
 
       expect(
         aliceEntity.components['positioning:kneeling_before']
@@ -169,9 +174,7 @@ describe('deference:crawl_to - Integration Tests', () => {
         aliceEntity.components['positioning:kneeling_before'].entityId
       ).toBe('test:bob');
       // Closeness removed by kneel_before
-      expect(
-        aliceEntity.components['positioning:closeness']
-      ).toBeUndefined();
+      expect(aliceEntity.components['positioning:closeness']).toBeUndefined();
     });
   });
 
@@ -221,15 +224,18 @@ describe('deference:crawl_to - Integration Tests', () => {
       await testFixture.executeAction('test:alice', 'test:bob');
 
       // Verify Alice and Bob are now close
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       expect(aliceEntity.components['positioning:closeness']).toBeDefined();
       expect(bobEntity.components['positioning:closeness']).toBeDefined();
 
       // Verify Carol and Dave are NOT affected
-      const carolEntity = testFixture.entityManager.getEntityInstance('test:carol');
-      const daveEntity = testFixture.entityManager.getEntityInstance('test:dave');
+      const carolEntity =
+        testFixture.entityManager.getEntityInstance('test:carol');
+      const daveEntity =
+        testFixture.entityManager.getEntityInstance('test:dave');
 
       expect(carolEntity.components['positioning:closeness']).toBeUndefined();
       expect(daveEntity.components['positioning:closeness']).toBeUndefined();

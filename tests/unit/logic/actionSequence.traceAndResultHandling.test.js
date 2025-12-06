@@ -43,7 +43,12 @@ describe('executeActionSequence trace and result handling', () => {
     const actions = [{ type: 'MOVE' }];
     interpreter.execute.mockResolvedValue({ success: true });
 
-    await executeActionSequence(actions, buildBaseContext(), logger, interpreter);
+    await executeActionSequence(
+      actions,
+      buildBaseContext(),
+      logger,
+      interpreter
+    );
 
     const successLogExists = logger.debug.mock.calls.some(([message]) =>
       message.includes('Operation MOVE completed successfully')
@@ -56,10 +61,17 @@ describe('executeActionSequence trace and result handling', () => {
     const actions = [{ type: 'MOVE', parameters: { foo: 'bar' } }];
     interpreter.execute.mockResolvedValue(failure);
 
-    await executeActionSequence(actions, buildBaseContext(), logger, interpreter);
+    await executeActionSequence(
+      actions,
+      buildBaseContext(),
+      logger,
+      interpreter
+    );
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Operation MOVE reported failure but rule continues'),
+      expect.stringContaining(
+        'Operation MOVE reported failure but rule continues'
+      ),
       expect.objectContaining({
         operationType: 'MOVE',
         operationIndex: 1,
@@ -73,7 +85,12 @@ describe('executeActionSequence trace and result handling', () => {
     const actions = [{ type: 'MOVE' }];
     interpreter.execute.mockResolvedValue({});
 
-    await executeActionSequence(actions, buildBaseContext(), logger, interpreter);
+    await executeActionSequence(
+      actions,
+      buildBaseContext(),
+      logger,
+      interpreter
+    );
 
     const genericLogExists = logger.debug.mock.calls.some(([message]) =>
       message.includes('Finished executing operation of type: MOVE')

@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-005: Create Slot Key Uniqueness Validator
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-005
 - **Priority**: MEDIUM
 - **Severity**: P5
@@ -15,14 +16,14 @@
 
 This ticket's original assumptions about the codebase were incorrect. The following corrections were made before implementation:
 
-| Original Assumption | Actual State | Correction Applied |
-|---------------------|--------------|-------------------|
-| `BaseRecipeValidator` class exists | Does NOT exist | Use `BaseValidator` |
-| `createResult(isValid, errors, warnings)` method | Does NOT exist | Use `builder.addError()`, `builder.addWarning()`, `builder.addPassed()` pattern |
-| Static getters `validatorName`, `priority` | Not the pattern | Pass via constructor `super({name, priority, failFast, logger})` |
-| `_generatedSlots` tracking exists | Does NOT exist | Added to `blueprintLoader.js` |
-| Validator registration: `[..., SlotKeyUniquenessValidator]` | Uses instances | Use `new SlotKeyUniquenessValidator({...})` |
-| Recipe validation context has `blueprint` property | Incorrect | Validators receive `recipe`, must fetch blueprint via repository |
+| Original Assumption                                         | Actual State    | Correction Applied                                                              |
+| ----------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------- |
+| `BaseRecipeValidator` class exists                          | Does NOT exist  | Use `BaseValidator`                                                             |
+| `createResult(isValid, errors, warnings)` method            | Does NOT exist  | Use `builder.addError()`, `builder.addWarning()`, `builder.addPassed()` pattern |
+| Static getters `validatorName`, `priority`                  | Not the pattern | Pass via constructor `super({name, priority, failFast, logger})`                |
+| `_generatedSlots` tracking exists                           | Does NOT exist  | Added to `blueprintLoader.js`                                                   |
+| Validator registration: `[..., SlotKeyUniquenessValidator]` | Uses instances  | Use `new SlotKeyUniquenessValidator({...})`                                     |
+| Recipe validation context has `blueprint` property          | Incorrect       | Validators receive `recipe`, must fetch blueprint via repository                |
 
 ---
 
@@ -55,11 +56,11 @@ export function sortSlotsByDependency(slots) {
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
-| `src/anatomy/validation/validators/SlotKeyUniquenessValidator.js` | New file | Create new validator |
-| `src/anatomy/validation/RecipeValidationRunner.js` | ~250-265 | Register new validator |
-| `src/anatomy/bodyBlueprintFactory/blueprintLoader.js` | 156 | Add `_generatedSlots` tracking |
+| File                                                              | Line(s)  | Change Type                    |
+| ----------------------------------------------------------------- | -------- | ------------------------------ |
+| `src/anatomy/validation/validators/SlotKeyUniquenessValidator.js` | New file | Create new validator           |
+| `src/anatomy/validation/RecipeValidationRunner.js`                | ~250-265 | Register new validator         |
+| `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`             | 156      | Add `_generatedSlots` tracking |
 
 ---
 
@@ -91,7 +92,12 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
   #dataRegistry;
   #logger;
 
-  constructor({ logger, anatomyBlueprintRepository, slotGenerator, dataRegistry }) {
+  constructor({
+    logger,
+    anatomyBlueprintRepository,
+    slotGenerator,
+    dataRegistry,
+  }) {
     super({
       name: 'slot-key-uniqueness',
       priority: 15, // After BlueprintExistenceValidator (10), before socket validators
@@ -99,9 +105,14 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       logger,
     });
 
-    validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', logger, {
-      requiredMethods: ['getBlueprint'],
-    });
+    validateDependency(
+      anatomyBlueprintRepository,
+      'IAnatomyBlueprintRepository',
+      logger,
+      {
+        requiredMethods: ['getBlueprint'],
+      }
+    );
     validateDependency(slotGenerator, 'ISlotGenerator', logger, {
       requiredMethods: ['generateBlueprintSlots'],
     });
@@ -121,32 +132,44 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       return; // No blueprint to validate
     }
 
-    const blueprint = this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
+    const blueprint =
+      this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
     if (!blueprint) {
       return; // Blueprint doesn't exist (handled by BlueprintExistenceValidator)
     }
 
     // Only validate V2 blueprints with structure templates
     if (blueprint.schemaVersion !== '2.0' || !blueprint.structureTemplate) {
-      builder.addPassed('V1 blueprint or no structure template - slot key uniqueness not applicable', {
-        check: 'SLOT_KEY_UNIQUENESS_SKIP',
-      });
+      builder.addPassed(
+        'V1 blueprint or no structure template - slot key uniqueness not applicable',
+        {
+          check: 'SLOT_KEY_UNIQUENESS_SKIP',
+        }
+      );
       return;
     }
 
     // Generate slots from template
-    const template = this.#dataRegistry.get('anatomyStructureTemplates', blueprint.structureTemplate);
+    const template = this.#dataRegistry.get(
+      'anatomyStructureTemplates',
+      blueprint.structureTemplate
+    );
     if (!template) {
-      this.#logger.debug(`SlotKeyUniquenessValidator: Template '${blueprint.structureTemplate}' not found`);
+      this.#logger.debug(
+        `SlotKeyUniquenessValidator: Template '${blueprint.structureTemplate}' not found`
+      );
       return;
     }
 
-    const generatedSlots = this.#slotGenerator.generateBlueprintSlots(template) || {};
+    const generatedSlots =
+      this.#slotGenerator.generateBlueprintSlots(template) || {};
     const additionalSlots = blueprint.additionalSlots || {};
 
     // Find conflicting keys
     const generatedSlotKeys = new Set(Object.keys(generatedSlots));
-    const collisions = Object.keys(additionalSlots).filter(key => generatedSlotKeys.has(key));
+    const collisions = Object.keys(additionalSlots).filter((key) =>
+      generatedSlotKeys.has(key)
+    );
 
     if (collisions.length === 0) {
       builder.addPassed('No slot key collisions detected', {
@@ -162,13 +185,16 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       const generatedSlot = generatedSlots[key];
       const additionalSlot = additionalSlots[key];
 
-      const isIntentional = this.#isIntentionalOverride(generatedSlot, additionalSlot);
+      const isIntentional = this.#isIntentionalOverride(
+        generatedSlot,
+        additionalSlot
+      );
 
       if (isIntentional) {
         builder.addWarning(
           'INTENTIONAL_SLOT_OVERRIDE',
           `Slot '${key}' from additionalSlots overrides generated slot with different parent. ` +
-          `This appears intentional.`,
+            `This appears intentional.`,
           {
             slotKey: key,
             generatedParent: generatedSlot?.parent,
@@ -179,8 +205,8 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
         builder.addError(
           'UNINTENTIONAL_SLOT_DUPLICATE',
           `Slot key '${key}' appears in both generated slots and additionalSlots with same parent. ` +
-          `The additionalSlots version will overwrite the generated one. ` +
-          `If intentional, specify a different parent to clarify intent.`,
+            `The additionalSlots version will overwrite the generated one. ` +
+            `If intentional, specify a different parent to clarify intent.`,
           {
             slotKey: key,
             parent: generatedSlot?.parent || additionalSlot?.parent,
@@ -190,7 +216,11 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
     }
 
     // Check for duplicate parent:socket combinations
-    this.#checkForDuplicateParentReferences(generatedSlots, additionalSlots, builder);
+    this.#checkForDuplicateParentReferences(
+      generatedSlots,
+      additionalSlots,
+      builder
+    );
   }
 
   #isIntentionalOverride(generatedSlot, additionalSlot) {
@@ -214,8 +244,8 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
         builder.addWarning(
           'DUPLICATE_PARENT_SOCKET',
           `Slots '${parentSocketCombos.get(combo)}' and '${key}' both attach to ` +
-          `parent '${slot.parent}' via socket '${slot.socket}'. ` +
-          `Only one child can occupy each socket.`,
+            `parent '${slot.parent}' via socket '${slot.socket}'. ` +
+            `Only one child can occupy each socket.`,
           {
             slotKeys: [parentSocketCombos.get(combo), key],
             parent: slot.parent,
@@ -260,7 +290,7 @@ return {
   ...blueprint,
   slots: { ...generatedSlots, ...additionalSlots },
   _generatedSockets: generatedSockets,
-  _generatedSlots: generatedSlots,  // NEW: Track for validation/debugging
+  _generatedSlots: generatedSlots, // NEW: Track for validation/debugging
 };
 ```
 
@@ -323,20 +353,22 @@ Create tests in `tests/unit/anatomy/validation/validators/SlotKeyUniquenessValid
 
 ### What Was Actually Changed vs Originally Planned
 
-| Planned | Actual | Notes |
-|---------|--------|-------|
-| Create `SlotKeyUniquenessValidator` class | ✅ Created | Follows `BaseValidator` pattern (ticket corrected) |
-| Register in `RecipeValidationRunner` | ✅ Registered | Lines 22, 234-240 |
-| Add `_generatedSlots` tracking to `blueprintLoader.js` | ✅ Added | Line 157 |
-| Create unit tests | ✅ Created | 24 tests in `SlotKeyUniquenessValidator.test.js` |
+| Planned                                                | Actual        | Notes                                              |
+| ------------------------------------------------------ | ------------- | -------------------------------------------------- |
+| Create `SlotKeyUniquenessValidator` class              | ✅ Created    | Follows `BaseValidator` pattern (ticket corrected) |
+| Register in `RecipeValidationRunner`                   | ✅ Registered | Lines 22, 234-240                                  |
+| Add `_generatedSlots` tracking to `blueprintLoader.js` | ✅ Added      | Line 157                                           |
+| Create unit tests                                      | ✅ Created    | 24 tests in `SlotKeyUniquenessValidator.test.js`   |
 
 ### Implementation Details
 
 **Files Created:**
+
 - `src/anatomy/validation/validators/SlotKeyUniquenessValidator.js` (203 lines)
 - `tests/unit/anatomy/validation/validators/SlotKeyUniquenessValidator.test.js` (557 lines)
 
 **Files Modified:**
+
 - `src/anatomy/validation/RecipeValidationRunner.js` (+8 lines: import and registration)
 - `src/anatomy/bodyBlueprintFactory/blueprintLoader.js` (+1 line: `_generatedSlots` tracking)
 

@@ -22,10 +22,7 @@ describe('sex-breastplay:pinch_milk_out_of_nipple action discovery', () => {
   let restoreValidateAction;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'sex-breastplay',
-      ACTION_ID
-    );
+    testFixture = await ModTestFixture.forAction('sex-breastplay', ACTION_ID);
 
     testFixture.suppressHints();
 
@@ -35,7 +32,8 @@ describe('sex-breastplay:pinch_milk_out_of_nipple action discovery', () => {
     // prerequisite service so discovery mirrors engine behavior.
     testFixture.testEnv.validateAction = (actorId, actionId) => {
       if (actionId === ACTION_ID) {
-        const actorInstance = testFixture.entityManager.getEntityInstance(actorId);
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance(actorId);
 
         if (!actorInstance) {
           return false;
@@ -88,7 +86,9 @@ describe('sex-breastplay:pinch_milk_out_of_nipple action discovery', () => {
       includeLactation = true,
     } = options;
 
-    const room = new ModEntityBuilder(ROOM_ID).asRoom('Lactation Lounge').build();
+    const room = new ModEntityBuilder(ROOM_ID)
+      .asRoom('Lactation Lounge')
+      .build();
 
     const actorBuilder = new ModEntityBuilder(ACTOR_ID)
       .withName('Mira')
@@ -143,7 +143,9 @@ describe('sex-breastplay:pinch_milk_out_of_nipple action discovery', () => {
     }
 
     if (coverBreasts) {
-      entities.push(new ModEntityBuilder(COVERING_ITEM_ID).withName('Silk Wrap').build());
+      entities.push(
+        new ModEntityBuilder(COVERING_ITEM_ID).withName('Silk Wrap').build()
+      );
     }
 
     return { entities, actorId: ACTOR_ID };

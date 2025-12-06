@@ -74,7 +74,12 @@ describe('PartSelectionService kraken diagnostics', () => {
     const service = createService(definitions);
 
     await expect(
-      service.selectPart({ partType: 'tentacle' }, ['tentacle'], undefined, () => 0)
+      service.selectPart(
+        { partType: 'tentacle' },
+        ['tentacle'],
+        undefined,
+        () => 0
+      )
     ).rejects.toThrow(ValidationError);
 
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -177,7 +182,9 @@ describe('PartSelectionService kraken diagnostics', () => {
       ).rejects.toThrow(ValidationError);
 
       expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('anatomy:tentacle FAILED - missing required tags')
+        expect.stringContaining(
+          'anatomy:tentacle FAILED - missing required tags'
+        )
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining(

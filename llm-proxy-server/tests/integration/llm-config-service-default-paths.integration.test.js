@@ -83,9 +83,10 @@ describe('LlmConfigService default path integration coverage', () => {
 
     const debugMessages = logger.debug.mock.calls.map(([message]) => message);
     expect(
-      debugMessages.some((message) =>
-        typeof message === 'string' &&
-        message.includes('Attempting to load LLM configurations from:')
+      debugMessages.some(
+        (message) =>
+          typeof message === 'string' &&
+          message.includes('Attempting to load LLM configurations from:')
       )
     ).toBe(true);
   });
@@ -109,7 +110,11 @@ describe('LlmConfigService default path integration coverage', () => {
         },
       },
     };
-    await writeFile(configPath, JSON.stringify(configContents, null, 2), 'utf-8');
+    await writeFile(
+      configPath,
+      JSON.stringify(configContents, null, 2),
+      'utf-8'
+    );
 
     process.env.LLM_CONFIG_PATH = configPath;
     const appConfig = getAppConfigService(logger);

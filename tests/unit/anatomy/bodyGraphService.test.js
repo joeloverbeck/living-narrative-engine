@@ -1,4 +1,7 @@
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
+import {
+  BodyGraphService,
+  LIMB_DETACHED_EVENT_ID,
+} from '../../../src/anatomy/bodyGraphService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 import { AnatomyGraphAlgorithms } from '../../../src/anatomy/anatomyGraphAlgorithms.js';
@@ -158,10 +161,7 @@ describe('BodyGraphService', () => {
   describe('detachPart', () => {
     beforeEach(() => {
       AnatomyGraphAlgorithms.getAnatomyRoot.mockReturnValue('root-entity');
-      AnatomyGraphAlgorithms.getSubgraph.mockReturnValue([
-        'part-1',
-        'part-2',
-      ]);
+      AnatomyGraphAlgorithms.getSubgraph.mockReturnValue(['part-1', 'part-2']);
     });
 
     it('throws when joint component is missing', async () => {
@@ -177,9 +177,7 @@ describe('BodyGraphService', () => {
     });
 
     it('detaches part with cascade and invalidates caches', async () => {
-      mockEntityManager.getComponentData.mockReturnValue(
-        createComponentData()
-      );
+      mockEntityManager.getComponentData.mockReturnValue(createComponentData());
 
       const service = createService();
       const result = await service.detachPart('part-id');
@@ -210,9 +208,7 @@ describe('BodyGraphService', () => {
     });
 
     it('supports non-cascading detachment', async () => {
-      mockEntityManager.getComponentData.mockReturnValue(
-        createComponentData()
-      );
+      mockEntityManager.getComponentData.mockReturnValue(createComponentData());
 
       const service = createService();
       const result = await service.detachPart('part-id', {
@@ -229,9 +225,7 @@ describe('BodyGraphService', () => {
     });
 
     it('skips cache invalidation when anatomy root cannot be resolved', async () => {
-      mockEntityManager.getComponentData.mockReturnValue(
-        createComponentData()
-      );
+      mockEntityManager.getComponentData.mockReturnValue(createComponentData());
       AnatomyGraphAlgorithms.getAnatomyRoot.mockReturnValue(null);
       AnatomyGraphAlgorithms.getSubgraph.mockReturnValue(['part-id']);
 
@@ -383,7 +377,7 @@ describe('BodyGraphService', () => {
       const result = service.getAllParts({ root: 'bp-root' }, 'actor-1');
 
       expect(result).toEqual(largeResult);
-      const summaryLog = mockLogger.info.mock.calls
+      const summaryLog = mockLogger.debug.mock.calls
         .map((call) => call[0])
         .find((message) =>
           message?.startsWith(
@@ -397,9 +391,7 @@ describe('BodyGraphService', () => {
   describe('component queries', () => {
     it('detects parts with specific component', () => {
       const service = createService();
-      jest
-        .spyOn(service, 'getAllParts')
-        .mockReturnValue(['part-1', 'part-2']);
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce({ some: 'data' })
@@ -423,9 +415,7 @@ describe('BodyGraphService', () => {
 
     it('finds component by nested value', () => {
       const service = createService();
-      jest
-        .spyOn(service, 'getAllParts')
-        .mockReturnValue(['part-1', 'part-2']);
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce({ stats: { hp: 10 } })

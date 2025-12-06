@@ -2,7 +2,12 @@ import { describe, expect, it, jest } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 
 describe('BodyDescriptionComposer - Health Line', () => {
-  const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   function createComposer({
     injurySummary,
@@ -14,7 +19,8 @@ describe('BodyDescriptionComposer - Health Line', () => {
       getEntityInstance: jest.fn((id) => {
         if (id === 'item-1') {
           return {
-            hasComponent: (componentId) => componentId === 'core:conspicuous' || componentId === 'core:name',
+            hasComponent: (componentId) =>
+              componentId === 'core:conspicuous' || componentId === 'core:name',
             getComponentData: (componentId) =>
               componentId === 'core:name' ? { text: 'Coin' } : null,
           };
@@ -24,7 +30,9 @@ describe('BodyDescriptionComposer - Health Line', () => {
     };
 
     const injuryAggregationService = {
-      aggregateInjuries: jest.fn().mockReturnValue(injurySummary ?? { injuredParts: [] }),
+      aggregateInjuries: jest
+        .fn()
+        .mockReturnValue(injurySummary ?? { injuredParts: [] }),
     };
 
     const injuryNarrativeFormatterService = {

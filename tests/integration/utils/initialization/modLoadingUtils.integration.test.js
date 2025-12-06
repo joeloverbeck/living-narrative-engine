@@ -205,9 +205,7 @@ describe('integration: loadModsFromGameConfig', () => {
 
     await expect(
       loadModsFromGameConfig(modsLoader, logger, 'crashWorld')
-    ).rejects.toThrow(
-      'Failed to load game configuration: 500 Server Error'
-    );
+    ).rejects.toThrow('Failed to load game configuration: 500 Server Error');
 
     expect(session.runCalls).toHaveLength(0);
     expect(logger.error.mock.calls[0][0]).toBe(

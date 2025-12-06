@@ -4,7 +4,10 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./MemoryMonitor.js').default} MemoryMonitor */
@@ -60,7 +63,10 @@ export default class MemoryReporter extends BaseService {
    * @param {MemoryPressureManager} deps.pressureManager - Pressure manager
    * @param {object} [config] - Reporter configuration
    */
-  constructor({ logger, monitor, analyzer, profiler, pressureManager }, config = {}) {
+  constructor(
+    { logger, monitor, analyzer, profiler, pressureManager },
+    config = {}
+  ) {
     super();
 
     validateDependency(logger, 'ILogger', console, {
@@ -111,9 +117,13 @@ export default class MemoryReporter extends BaseService {
    */
   generateReport(options = {}) {
     const verbosity = options.verbosity || this.#config.verbosity;
-    const includeRecommendations = options.includeRecommendations ?? this.#config.includeRecommendations;
+    const includeRecommendations =
+      options.includeRecommendations ?? this.#config.includeRecommendations;
 
-    this.#logger.debug('Generating memory report', { verbosity, includeRecommendations });
+    this.#logger.debug('Generating memory report', {
+      verbosity,
+      includeRecommendations,
+    });
 
     // Gather current state
     const currentUsage = this.#monitor.getCurrentUsage();
@@ -121,8 +131,10 @@ export default class MemoryReporter extends BaseService {
     const pressureLevel = this.#pressureManager.getCurrentPressureLevel();
 
     // Perform analyses
-    const trend = history.length > 0 ? this.#analyzer.analyzeTrend(history) : null;
-    const patterns = history.length > 0 ? this.#analyzer.detectPatterns(history) : [];
+    const trend =
+      history.length > 0 ? this.#analyzer.analyzeTrend(history) : null;
+    const patterns =
+      history.length > 0 ? this.#analyzer.detectPatterns(history) : [];
     const leakDetection = this.#monitor.detectMemoryLeak();
     const hotspots = this.#profiler.findMemoryHotspots();
     const profilerReport = this.#profiler.generateReport();
@@ -130,7 +142,11 @@ export default class MemoryReporter extends BaseService {
 
     // Build report
     const report = {
-      summary: this.#generateSummary(currentUsage, pressureLevel, leakDetection),
+      summary: this.#generateSummary(
+        currentUsage,
+        pressureLevel,
+        leakDetection
+      ),
       currentState: this.#generateCurrentState(currentUsage, pressureLevel),
       trends: trend,
       patterns: patterns,
@@ -141,12 +157,14 @@ export default class MemoryReporter extends BaseService {
         level: pressureLevel,
         statistics: verbosity !== 'minimal' ? pressureStats : null,
       },
-      recommendations: includeRecommendations ? this.#generateRecommendations(
-        leakDetection,
-        trend,
-        patterns,
-        pressureLevel
-      ) : null,
+      recommendations: includeRecommendations
+        ? this.#generateRecommendations(
+            leakDetection,
+            trend,
+            patterns,
+            pressureLevel
+          )
+        : null,
       metadata: {
         timestamp: Date.now(),
         verbosity,
@@ -227,7 +245,8 @@ export default class MemoryReporter extends BaseService {
       recommendations.push({
         priority: 'high',
         category: 'leak',
-        message: 'Memory leak detected. Investigate and fix memory retention issues.',
+        message:
+          'Memory leak detected. Investigate and fix memory retention issues.',
         action: 'profile_and_fix_leaks',
       });
 
@@ -254,7 +273,7 @@ export default class MemoryReporter extends BaseService {
     }
 
     // Pattern-based recommendations
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       if (pattern.type === 'exponential') {
         recommendations.push({
           priority: 'critical',
@@ -262,7 +281,10 @@ export default class MemoryReporter extends BaseService {
           message: 'Exponential memory growth detected',
           action: 'immediate_intervention',
         });
-      } else if (pattern.type === 'sawtooth' && pattern.characteristics.amplitude > 100 * 1048576) {
+      } else if (
+        pattern.type === 'sawtooth' &&
+        pattern.characteristics.amplitude > 100 * 1048576
+      ) {
         recommendations.push({
           priority: 'medium',
           category: 'pattern',
@@ -291,7 +313,9 @@ export default class MemoryReporter extends BaseService {
 
     // Sort by priority
     const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    recommendations.sort(
+      (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+    );
 
     return recommendations;
   }
@@ -323,17 +347,25 @@ export default class MemoryReporter extends BaseService {
     const lines = [];
 
     lines.push('=== MEMORY REPORT ===');
-    lines.push(`Timestamp: ${new Date(report.metadata.timestamp).toISOString()}`);
+    lines.push(
+      `Timestamp: ${new Date(report.metadata.timestamp).toISOString()}`
+    );
     lines.push(`Status: ${report.summary.status.toUpperCase()}`);
     lines.push('');
 
     // Summary
     lines.push('SUMMARY:');
-    lines.push(`  Heap Used: ${(report.summary.heapUsed / 1048576).toFixed(2)} MB`);
-    lines.push(`  Heap Total: ${(report.summary.heapTotal / 1048576).toFixed(2)} MB`);
+    lines.push(
+      `  Heap Used: ${(report.summary.heapUsed / 1048576).toFixed(2)} MB`
+    );
+    lines.push(
+      `  Heap Total: ${(report.summary.heapTotal / 1048576).toFixed(2)} MB`
+    );
     lines.push(`  Usage: ${(report.summary.usagePercent * 100).toFixed(1)}%`);
     lines.push(`  Pressure Level: ${report.summary.pressureLevel}`);
-    lines.push(`  Leak Detected: ${report.summary.leakDetected ? 'YES' : 'NO'}`);
+    lines.push(
+      `  Leak Detected: ${report.summary.leakDetected ? 'YES' : 'NO'}`
+    );
     lines.push('');
 
     // Trends
@@ -341,14 +373,16 @@ export default class MemoryReporter extends BaseService {
       lines.push('TRENDS:');
       lines.push(`  Pattern: ${report.trends.trend}`);
       lines.push(`  Growth Rate: ${report.trends.slope.toFixed(2)} MB/min`);
-      lines.push(`  Confidence: ${(report.trends.confidence * 100).toFixed(1)}%`);
+      lines.push(
+        `  Confidence: ${(report.trends.confidence * 100).toFixed(1)}%`
+      );
       lines.push('');
     }
 
     // Patterns
     if (report.patterns && report.patterns.length > 0) {
       lines.push('PATTERNS DETECTED:');
-      report.patterns.forEach(pattern => {
+      report.patterns.forEach((pattern) => {
         lines.push(`  - ${pattern.type}: ${pattern.description}`);
       });
       lines.push('');
@@ -357,8 +391,10 @@ export default class MemoryReporter extends BaseService {
     // Hotspots
     if (report.hotspots && report.hotspots.length > 0) {
       lines.push('MEMORY HOTSPOTS:');
-      report.hotspots.slice(0, 5).forEach(hotspot => {
-        lines.push(`  - ${hotspot.operation}: ${(hotspot.averageMemoryIncrease / 1048576).toFixed(2)} MB avg`);
+      report.hotspots.slice(0, 5).forEach((hotspot) => {
+        lines.push(
+          `  - ${hotspot.operation}: ${(hotspot.averageMemoryIncrease / 1048576).toFixed(2)} MB avg`
+        );
       });
       lines.push('');
     }
@@ -366,7 +402,7 @@ export default class MemoryReporter extends BaseService {
     // Recommendations
     if (report.recommendations && report.recommendations.length > 0) {
       lines.push('RECOMMENDATIONS:');
-      report.recommendations.forEach(rec => {
+      report.recommendations.forEach((rec) => {
         lines.push(`  [${rec.priority.toUpperCase()}] ${rec.message}`);
       });
       lines.push('');
@@ -387,7 +423,9 @@ export default class MemoryReporter extends BaseService {
     const lines = [];
 
     lines.push('# Memory Report');
-    lines.push(`**Generated**: ${new Date(report.metadata.timestamp).toISOString()}`);
+    lines.push(
+      `**Generated**: ${new Date(report.metadata.timestamp).toISOString()}`
+    );
     lines.push(`**Status**: ${report.summary.status.toUpperCase()}`);
     lines.push('');
 
@@ -395,11 +433,19 @@ export default class MemoryReporter extends BaseService {
     lines.push('## Summary');
     lines.push('| Metric | Value |');
     lines.push('|--------|-------|');
-    lines.push(`| Heap Used | ${(report.summary.heapUsed / 1048576).toFixed(2)} MB |`);
-    lines.push(`| Heap Total | ${(report.summary.heapTotal / 1048576).toFixed(2)} MB |`);
-    lines.push(`| Usage | ${(report.summary.usagePercent * 100).toFixed(1)}% |`);
+    lines.push(
+      `| Heap Used | ${(report.summary.heapUsed / 1048576).toFixed(2)} MB |`
+    );
+    lines.push(
+      `| Heap Total | ${(report.summary.heapTotal / 1048576).toFixed(2)} MB |`
+    );
+    lines.push(
+      `| Usage | ${(report.summary.usagePercent * 100).toFixed(1)}% |`
+    );
     lines.push(`| Pressure Level | ${report.summary.pressureLevel} |`);
-    lines.push(`| Leak Detected | ${report.summary.leakDetected ? '⚠️ YES' : '✅ NO'} |`);
+    lines.push(
+      `| Leak Detected | ${report.summary.leakDetected ? '⚠️ YES' : '✅ NO'} |`
+    );
     lines.push('');
 
     // Trends
@@ -407,18 +453,27 @@ export default class MemoryReporter extends BaseService {
       lines.push('## Memory Trends');
       lines.push(`- **Pattern**: ${report.trends.trend}`);
       lines.push(`- **Growth Rate**: ${report.trends.slope.toFixed(2)} MB/min`);
-      lines.push(`- **Confidence**: ${(report.trends.confidence * 100).toFixed(1)}%`);
+      lines.push(
+        `- **Confidence**: ${(report.trends.confidence * 100).toFixed(1)}%`
+      );
       lines.push('');
     }
 
     // Recommendations
     if (report.recommendations && report.recommendations.length > 0) {
       lines.push('## Recommendations');
-      report.recommendations.forEach(rec => {
-        const icon = rec.priority === 'critical' ? '🚨' :
-                     rec.priority === 'high' ? '⚠️' :
-                     rec.priority === 'medium' ? '📊' : 'ℹ️';
-        lines.push(`- ${icon} **[${rec.priority.toUpperCase()}]** ${rec.message}`);
+      report.recommendations.forEach((rec) => {
+        const icon =
+          rec.priority === 'critical'
+            ? '🚨'
+            : rec.priority === 'high'
+              ? '⚠️'
+              : rec.priority === 'medium'
+                ? '📊'
+                : 'ℹ️';
+        lines.push(
+          `- ${icon} **[${rec.priority.toUpperCase()}]** ${rec.message}`
+        );
       });
       lines.push('');
     }
@@ -465,8 +520,12 @@ export default class MemoryReporter extends BaseService {
    * @private
    */
   #formatAsHtml(report) {
-    const statusClass = report.summary.status === 'critical' ? 'critical' :
-                       report.summary.status === 'warning' ? 'warning' : 'healthy';
+    const statusClass =
+      report.summary.status === 'critical'
+        ? 'critical'
+        : report.summary.status === 'warning'
+          ? 'warning'
+          : 'healthy';
 
     const html = `
 <!DOCTYPE html>
@@ -501,16 +560,23 @@ export default class MemoryReporter extends BaseService {
     </table>
   </div>
 
-  ${report.recommendations && report.recommendations.length > 0 ? `
+  ${
+    report.recommendations && report.recommendations.length > 0
+      ? `
   <div class="section">
     <h2>Recommendations</h2>
     <ul>
-      ${report.recommendations.map(rec =>
-        `<li><strong>[${rec.priority.toUpperCase()}]</strong> ${rec.message}</li>`
-      ).join('')}
+      ${report.recommendations
+        .map(
+          (rec) =>
+            `<li><strong>[${rec.priority.toUpperCase()}]</strong> ${rec.message}</li>`
+        )
+        .join('')}
     </ul>
   </div>
-  ` : ''}
+  `
+      : ''
+  }
 </body>
 </html>`;
 
@@ -527,7 +593,9 @@ export default class MemoryReporter extends BaseService {
     this.#reportHistory.push({
       timestamp: report.metadata.timestamp,
       summary: report.summary,
-      recommendations: report.recommendations ? report.recommendations.length : 0,
+      recommendations: report.recommendations
+        ? report.recommendations.length
+        : 0,
     });
 
     // Maintain history size limit
@@ -546,11 +614,16 @@ export default class MemoryReporter extends BaseService {
       const report = this.generateReport();
 
       if (report.summary.status === 'critical') {
-        this.#logger.warn('Auto-report: Critical memory status', report.summary);
+        this.#logger.warn(
+          'Auto-report: Critical memory status',
+          report.summary
+        );
       }
     }, this.#config.autoReportInterval);
 
-    this.#logger.info(`Auto-reporting started: every ${this.#config.autoReportInterval}ms`);
+    this.#logger.info(
+      `Auto-reporting started: every ${this.#config.autoReportInterval}ms`
+    );
   }
 
   /**

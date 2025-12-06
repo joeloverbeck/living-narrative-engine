@@ -202,13 +202,15 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
         }
         await this.initialize();
       }),
-      resetInitializationState: jest.fn().mockImplementation(function (callback) {
-        this.isInitialized = false;
-        this.isInitializing = false;
-        if (typeof callback === 'function') {
-          callback();
-        }
-      }),
+      resetInitializationState: jest
+        .fn()
+        .mockImplementation(function (callback) {
+          this.isInitialized = false;
+          this.isInitializing = false;
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }),
     };
 
     // Create element cache for mockDOMElementManager
@@ -216,7 +218,9 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
 
     this.mockDOMElementManager = {
       getElement: jest.fn((id) => elementCache[id] || null),
-      setElement: jest.fn((id, element) => { elementCache[id] = element; }),
+      setElement: jest.fn((id, element) => {
+        elementCache[id] = element;
+      }),
       hideElement: jest.fn(),
       showElement: jest.fn(),
       enableElement: jest.fn(),
@@ -228,14 +232,17 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
         }
       }),
       clearCache: jest.fn(() => {
-        Object.keys(elementCache).forEach(key => delete elementCache[key]);
+        Object.keys(elementCache).forEach((key) => delete elementCache[key]);
       }),
       getElementsSnapshot: jest.fn(() => elementCache),
       validateElementCache: jest.fn(() => ({ valid: true, missing: [] })),
       cacheElementsFromMap: jest.fn((map) => {
         Object.entries(map).forEach(([id, selectorConfig]) => {
           // Handle both string selectors and config objects
-          const selector = typeof selectorConfig === 'string' ? selectorConfig : selectorConfig?.selector;
+          const selector =
+            typeof selectorConfig === 'string'
+              ? selectorConfig
+              : selectorConfig?.selector;
           if (typeof selector === 'string') {
             const element = document.querySelector(selector);
             if (element) {
@@ -246,7 +253,9 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
         return elementCache;
       }),
       normalizeElementConfig: jest.fn((config) =>
-        typeof config === 'string' ? { selector: config, required: true } : config
+        typeof config === 'string'
+          ? { selector: config, required: true }
+          : config
       ),
       validateElement: jest.fn(),
       setElementEnabled: jest.fn(),
@@ -314,7 +323,9 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       })),
       handleServiceError: jest.fn((error, operation, userMessage) => {
         // Rethrow the error with operation context for testing
-        const contextualError = new Error(`${operation} failed: ${error.message}`);
+        const contextualError = new Error(
+          `${operation} failed: ${error.message}`
+        );
         throw contextualError;
       }),
       logError: jest.fn(),
@@ -330,7 +341,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       validateData: jest.fn((data, schemaId) => ({
         isValid: true,
         errors: null,
-        errorMessage: null
+        errorMessage: null,
       })),
       configure: jest.fn(),
     };

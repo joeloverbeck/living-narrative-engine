@@ -191,7 +191,8 @@ class PersistenceCoordinator {
    */
   #buildFailureMessage(rawMessage) {
     const basePrefix = 'Failed to save game';
-    const trimmedMessage = typeof rawMessage === 'string' ? rawMessage.trim() : '';
+    const trimmedMessage =
+      typeof rawMessage === 'string' ? rawMessage.trim() : '';
 
     if (!trimmedMessage) {
       return `${basePrefix}: Unknown error.`;

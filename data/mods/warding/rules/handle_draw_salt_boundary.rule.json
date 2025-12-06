@@ -43,7 +43,10 @@
     },
     {
       "type": "SET_VARIABLE",
-      "parameters": { "variable_name": "perceptionType", "value": "action_target_general" }
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
     },
     {
       "type": "SET_VARIABLE",
@@ -57,10 +60,7 @@
       "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.wardingResult.outcome" },
-            "CRITICAL_SUCCESS"
-          ]
+          "==": [{ "var": "context.wardingResult.outcome" }, "CRITICAL_SUCCESS"]
         },
         "then_actions": [
           {
@@ -97,10 +97,7 @@
       "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.wardingResult.outcome" },
-            "SUCCESS"
-          ]
+          "==": [{ "var": "context.wardingResult.outcome" }, "SUCCESS"]
         },
         "then_actions": [
           {
@@ -137,10 +134,7 @@
       "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.wardingResult.outcome" },
-            "FAILURE"
-          ]
+          "==": [{ "var": "context.wardingResult.outcome" }, "FAILURE"]
         },
         "then_actions": [
           {
@@ -169,10 +163,7 @@
       "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.wardingResult.outcome" },
-            "FUMBLE"
-          ]
+          "==": [{ "var": "context.wardingResult.outcome" }, "FUMBLE"]
         },
         "then_actions": [
           {
@@ -183,7 +174,10 @@
               "value": {}
             }
           },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {

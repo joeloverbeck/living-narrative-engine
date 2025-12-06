@@ -60,7 +60,8 @@ describe('physical-control:force_to_knees action discovery', () => {
             actorEntity?.components?.['positioning:facing_away']
               ?.facing_away_from ||
             entityManager.getComponentData(actorId, 'positioning:facing_away')
-              ?.facing_away_from || [];
+              ?.facing_away_from ||
+            [];
 
           const validTargets = closeness.reduce((acc, partnerId) => {
             const partner = entityManager.getEntityInstance(partnerId);
@@ -74,7 +75,8 @@ describe('physical-control:force_to_knees action discovery', () => {
               entityManager.getComponentData(
                 partnerId,
                 'positioning:facing_away'
-              )?.facing_away_from || [];
+              )?.facing_away_from ||
+              [];
 
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
@@ -189,8 +191,12 @@ describe('physical-control:force_to_knees action discovery', () => {
       const targetEntity = testFixture.entityManager.getEntityInstance(
         scenario.target.id
       );
-      expect(actorEntity?.components?.['positioning:closeness']).toBeUndefined();
-      expect(targetEntity?.components?.['positioning:closeness']).toBeUndefined();
+      expect(
+        actorEntity?.components?.['positioning:closeness']
+      ).toBeUndefined();
+      expect(
+        targetEntity?.components?.['positioning:closeness']
+      ).toBeUndefined();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
@@ -322,9 +328,7 @@ describe('physical-control:force_to_knees action discovery', () => {
         scenario.target.id,
         'positioning:facing_away'
       );
-      expect(targetFacingAway?.facing_away_from).toEqual([
-        scenario.actor.id,
-      ]);
+      expect(targetFacingAway?.facing_away_from).toEqual([scenario.actor.id]);
 
       configureActionDiscovery();
 

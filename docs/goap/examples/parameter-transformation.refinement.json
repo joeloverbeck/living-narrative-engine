@@ -13,8 +13,8 @@
       },
       "condition": {
         "!=": [
-          {"var": "actor.position.room"},
-          {"var": "task.params.item.location"}
+          { "var": "actor.position.room" },
+          { "var": "task.params.item.location" }
         ]
       }
     },
@@ -23,8 +23,13 @@
       "stepType": "conditional",
       "condition": {
         "and": [
-          {"!=": [{"var": "task.params.item.owner"}, null]},
-          {"!=": [{"var": "task.params.item.owner.id"}, {"var": "actor.id"}]}
+          { "!=": [{ "var": "task.params.item.owner" }, null] },
+          {
+            "!=": [
+              { "var": "task.params.item.owner.id" },
+              { "var": "actor.id" }
+            ]
+          }
         ]
       },
       "trueBranch": [
@@ -61,7 +66,7 @@
       "description": "Use the item according to its type",
       "stepType": "conditional",
       "condition": {
-        "==": [{"var": "task.params.item.itemType"}, "consumable"]
+        "==": [{ "var": "task.params.item.itemType" }, "consumable"]
       },
       "trueBranch": [
         {

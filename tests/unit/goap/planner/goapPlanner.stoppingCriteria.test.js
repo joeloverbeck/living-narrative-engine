@@ -35,7 +35,8 @@ describe('GoapPlanner - Stopping Criteria', () => {
           continue;
         }
         const [entityId, ...componentParts] = key.split(':');
-        const normalizedEntity = entityId === 'actor' ? TEST_ACTOR_ID : entityId;
+        const normalizedEntity =
+          entityId === 'actor' ? TEST_ACTOR_ID : entityId;
         if (normalizedEntity !== TEST_ACTOR_ID) {
           continue;
         }
@@ -69,9 +70,7 @@ describe('GoapPlanner - Stopping Criteria', () => {
       maxCost: maxCost ?? expect.any(Number),
       maxActions: maxActions ?? expect.any(Number),
       failureStats:
-        failureStats === undefined
-          ? expect.objectContaining({})
-          : failureStats,
+        failureStats === undefined ? expect.objectContaining({}) : failureStats,
       ...restMatcher,
     });
 
@@ -85,7 +84,9 @@ describe('GoapPlanner - Stopping Criteria', () => {
       'evaluateCondition',
     ]);
     mockRepository = testBed.createMock('repository', ['get']);
-    mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
+    mockEntityManager = testBed.createMock('entityManager', [
+      'getEntityInstance',
+    ]);
     mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
     mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
     mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
@@ -144,10 +145,12 @@ describe('GoapPlanner - Stopping Criteria', () => {
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
       // Heuristic: scales with hunger so cost-limit check passes but guard stays active
-      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
-        const hunger = state['actor:hunger'];
-        return typeof hunger === 'number' ? hunger / 10 : 0;
-      });
+      mockHeuristicRegistry.calculate.mockImplementation(
+        (_heuristic, state) => {
+          const hunger = state['actor:hunger'];
+          return typeof hunger === 'number' ? hunger / 10 : 0;
+        }
+      );
 
       mockEffectsSimulator.simulateEffects.mockImplementation((state) => {
         const current = state['actor:hunger'] ?? 0;
@@ -201,9 +204,11 @@ describe('GoapPlanner - Stopping Criteria', () => {
         .mockReturnValueOnce(false) // Initial
         .mockReturnValueOnce(true); // After task
 
-      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
-        return state['actor:hunger'] === 0 ? 0 : 10;
-      });
+      mockHeuristicRegistry.calculate.mockImplementation(
+        (_heuristic, state) => {
+          return state['actor:hunger'] === 0 ? 0 : 10;
+        }
+      );
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
@@ -286,16 +291,20 @@ describe('GoapPlanner - Stopping Criteria', () => {
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
       // Distance mirrors hunger so tasks reduce numeric goal distance
-      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
-        const hunger = state['actor:hunger'];
-        return typeof hunger === 'number' ? hunger : 0;
-      });
+      mockHeuristicRegistry.calculate.mockImplementation(
+        (_heuristic, state) => {
+          const hunger = state['actor:hunger'];
+          return typeof hunger === 'number' ? hunger : 0;
+        }
+      );
 
       mockEffectsSimulator.simulateEffects.mockImplementation((state) => {
         const current = state['actor:hunger'] ?? 0;
         return {
           success: true,
-          state: applyStatePatch(state, { 'actor:hunger': Math.max(current - 1, 0) }),
+          state: applyStatePatch(state, {
+            'actor:hunger': Math.max(current - 1, 0),
+          }),
         };
       });
 
@@ -341,16 +350,20 @@ describe('GoapPlanner - Stopping Criteria', () => {
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
       // Distance mirrors hunger progression to keep guard active
-      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
-        const hunger = state['actor:hunger'];
-        return typeof hunger === 'number' ? hunger : 0;
-      });
+      mockHeuristicRegistry.calculate.mockImplementation(
+        (_heuristic, state) => {
+          const hunger = state['actor:hunger'];
+          return typeof hunger === 'number' ? hunger : 0;
+        }
+      );
 
       mockEffectsSimulator.simulateEffects.mockImplementation((state) => {
         const current = state['actor:hunger'] ?? 0;
         return {
           success: true,
-          state: applyStatePatch(state, { 'actor:hunger': Math.max(current - 1, 0) }),
+          state: applyStatePatch(state, {
+            'actor:hunger': Math.max(current - 1, 0),
+          }),
         };
       });
 
@@ -435,16 +448,18 @@ describe('GoapPlanner - Stopping Criteria', () => {
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
       // Distance increases (wrong direction)
-      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
-        const hunger = state['actor:hunger'];
-        if (hunger >= 150) {
-          return 140;
+      mockHeuristicRegistry.calculate.mockImplementation(
+        (_heuristic, state) => {
+          const hunger = state['actor:hunger'];
+          if (hunger >= 150) {
+            return 140;
+          }
+          if (hunger <= 10) {
+            return 0;
+          }
+          return 90;
         }
-        if (hunger <= 10) {
-          return 0;
-        }
-        return 90;
-      });
+      );
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,
@@ -493,9 +508,11 @@ describe('GoapPlanner - Stopping Criteria', () => {
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
 
-      mockHeuristicRegistry.calculate.mockImplementation((_heuristic, state) => {
-        return state['actor:hunger'] === 0 ? 0 : 1;
-      });
+      mockHeuristicRegistry.calculate.mockImplementation(
+        (_heuristic, state) => {
+          return state['actor:hunger'] === 0 ? 0 : 1;
+        }
+      );
 
       mockEffectsSimulator.simulateEffects.mockReturnValue({
         success: true,

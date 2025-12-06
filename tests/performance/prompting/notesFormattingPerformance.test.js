@@ -137,10 +137,9 @@ describe('Notes Formatting Performance', () => {
         expect(note).not.toHaveProperty('tags');
       });
 
-      const primaryCategory =
-        promptDataFormatter.getSubjectTypeDisplayInfo(
-          Object.values(SUBJECT_TYPES)[0]
-        ).displayCategory;
+      const primaryCategory = promptDataFormatter.getSubjectTypeDisplayInfo(
+        Object.values(SUBJECT_TYPES)[0]
+      ).displayCategory;
 
       expect(groupedContent).toContain(`## ${primaryCategory}`);
       expect(groupedContent).toContain('### Subject 1');
@@ -264,7 +263,9 @@ describe('Notes Formatting Performance', () => {
 
       // Add minimum time threshold to avoid measuring noise on very fast operations
       const MINIMUM_MEASURABLE_TIME = 0.1; // 0.1ms minimum
-      const hasSignificantTime = timings.some(t => t.time > MINIMUM_MEASURABLE_TIME);
+      const hasSignificantTime = timings.some(
+        (t) => t.time > MINIMUM_MEASURABLE_TIME
+      );
 
       if (hasSignificantTime) {
         ratios.forEach((ratio, index) => {
@@ -280,7 +281,7 @@ describe('Notes Formatting Performance', () => {
       } else {
         // If operations are too fast to measure reliably, just verify completion
         expect(timings.length).toBe(testSizes.length);
-        timings.forEach(timing => {
+        timings.forEach((timing) => {
           expect(timing.time).toBeGreaterThanOrEqual(0);
         });
       }

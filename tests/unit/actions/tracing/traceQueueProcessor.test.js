@@ -212,7 +212,10 @@ describe('TraceQueueProcessor', () => {
         expect(performance.memory).toEqual(performanceMemoryStub);
 
         const initialDropped = testBed.getMetrics().totalDropped;
-        const result = testBed.processor.enqueue(largeTrace, TracePriority.HIGH);
+        const result = testBed.processor.enqueue(
+          largeTrace,
+          TracePriority.HIGH
+        );
         const afterDropped = testBed.getMetrics().totalDropped;
 
         expect(afterDropped).toBeGreaterThan(initialDropped);
@@ -360,7 +363,9 @@ describe('TraceQueueProcessor', () => {
         return undefined;
       });
 
-      const normalTrace = testBed.createMockTrace({ actionId: 'delayed-trace' });
+      const normalTrace = testBed.createMockTrace({
+        actionId: 'delayed-trace',
+      });
       testBed.processor.enqueue(normalTrace, TracePriority.NORMAL);
 
       await testBed.advanceTimersAndFlush(50);
@@ -370,7 +375,6 @@ describe('TraceQueueProcessor', () => {
         expect.any(Error)
       );
     });
-
   });
 
   describe('Resource Management and Memory Tracking', () => {
@@ -419,7 +423,8 @@ describe('TraceQueueProcessor', () => {
       expect(result).toBe(true);
 
       const warnCall = testBed.mockLogger.warn.mock.calls.find(
-        ([message]) => message === 'TraceQueueProcessor: Failed to estimate trace size'
+        ([message]) =>
+          message === 'TraceQueueProcessor: Failed to estimate trace size'
       );
       expect(warnCall).toBeDefined();
 
@@ -554,7 +559,9 @@ describe('TraceQueueProcessor', () => {
       try {
         testBed.simulateStorageFailure(new Error('force breaker open'));
 
-        const failingTrace = testBed.createMockTrace({ actionId: 'breaker-open' });
+        const failingTrace = testBed.createMockTrace({
+          actionId: 'breaker-open',
+        });
         testBed.processor.enqueue(failingTrace);
 
         await testBed.advanceTimersAndFlush(200);
@@ -704,7 +711,8 @@ describe('TraceQueueProcessor', () => {
 
         const duplicateLogs = testBed.mockLogger.debug.mock.calls.filter(
           ([message]) =>
-            message === 'TraceQueueProcessor: Item already processed or processing'
+            message ===
+            'TraceQueueProcessor: Item already processed or processing'
         );
 
         expect(duplicateLogs.length).toBeGreaterThanOrEqual(1);
@@ -792,7 +800,9 @@ describe('TraceQueueProcessor', () => {
 
       try {
         testBed.simulateStorageFailure(new Error('manual reset failure'));
-        const failingTrace = testBed.createMockTrace({ actionId: 'manual-reset' });
+        const failingTrace = testBed.createMockTrace({
+          actionId: 'manual-reset',
+        });
         testBed.processor.enqueue(failingTrace);
 
         await testBed.advanceTimersAndFlush(200);
@@ -803,7 +813,8 @@ describe('TraceQueueProcessor', () => {
         expect(resetResult).toBe(true);
 
         const infoLog = testBed.mockLogger.info.mock.calls.find(
-          ([message]) => message === 'TraceQueueProcessor: Circuit breaker closed'
+          ([message]) =>
+            message === 'TraceQueueProcessor: Circuit breaker closed'
         );
         expect(infoLog).toBeDefined();
 
@@ -881,7 +892,9 @@ describe('TraceQueueProcessor', () => {
           return originalSetTimeout(callback, delay);
         });
 
-      const trace = testBed.createMockTrace({ actionId: 'retry-during-shutdown' });
+      const trace = testBed.createMockTrace({
+        actionId: 'retry-during-shutdown',
+      });
       testBed.processor.enqueue(trace);
 
       await testBed.timerService.advanceTime(0);
@@ -1076,7 +1089,8 @@ describe('TraceQueueProcessor', () => {
       await Promise.resolve();
 
       const retryLog = testBed.mockLogger.debug.mock.calls.find(
-        ([message]) => message === 'TraceQueueProcessor: Item scheduled for retry'
+        ([message]) =>
+          message === 'TraceQueueProcessor: Item scheduled for retry'
       );
       expect(retryLog).toBeDefined();
 

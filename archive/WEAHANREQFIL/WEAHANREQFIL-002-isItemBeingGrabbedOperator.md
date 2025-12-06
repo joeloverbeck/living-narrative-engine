@@ -12,10 +12,10 @@ When filtering weapons for the `wield_threateningly` action, items already being
 
 ## Files to Touch
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/logic/operators/isItemBeingGrabbedOperator.js` | CREATE | New operator implementation |
-| `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` | CREATE | Unit test suite |
+| File                                                            | Action | Purpose                     |
+| --------------------------------------------------------------- | ------ | --------------------------- |
+| `src/logic/operators/isItemBeingGrabbedOperator.js`             | CREATE | New operator implementation |
+| `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` | CREATE | Unit test suite             |
 
 ## Out of Scope
 
@@ -29,19 +29,23 @@ When filtering weapons for the `wield_threateningly` action, items already being
 ## Implementation Details
 
 ### Operator Signature
+
 ```javascript
 // Usage in JSON Logic: { "isItemBeingGrabbed": ["actor", "entity"] }
 // Returns: boolean - true if item is currently held by actor
 ```
 
 ### Key Logic
+
 1. Resolve actor entity ID from first parameter (supports JSON Logic expressions, paths, entity objects)
 2. Resolve item entity ID from second parameter
 3. Get held items via `getHeldItems(entityManager, actorId)` - returns `[{ partId, itemId }]`
 4. Return `heldItems.some(held => held.itemId === itemId)`
 
 ### Pattern Reference
+
 Follow the pattern established in `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`:
+
 - Use `#entityManager` and `#logger` private fields
 - Use `resolveEntityPath()` from `src/logic/utils/entityPathResolver.js`
 - Use `hasValidEntityId()` from same file
@@ -50,6 +54,7 @@ Follow the pattern established in `src/logic/operators/hasFreeGrabbingAppendages
 - Handle all edge cases with appropriate logging
 
 ### Edge Cases to Handle
+
 1. Actor without any grabbing appendages → `getHeldItems` returns `[]` → return false
 2. Item not held → return false
 3. Invalid parameters → log warning, return false
@@ -59,6 +64,7 @@ Follow the pattern established in `src/logic/operators/hasFreeGrabbingAppendages
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 Create `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` with:
 
 1. **Basic Functionality**
@@ -84,6 +90,7 @@ Create `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` with:
    - `should log debug message with evaluation result`
 
 ### Invariants That Must Remain True
+
 1. Operator does not modify any entity state
 2. Operator always returns a boolean (never throws to caller)
 3. Existing operators remain unchanged
@@ -108,13 +115,16 @@ Create `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` with:
 ### What Was Actually Changed vs Originally Planned
 
 **Ticket Corrections Made:**
+
 - Fixed incorrect path in ticket: `src/logic/operators/utils/entityPathResolver.js` → `src/logic/utils/entityPathResolver.js`
 
 **Implementation Delivered:**
+
 - Created `src/logic/operators/isItemBeingGrabbedOperator.js` (~215 lines) - slightly larger than estimated due to comprehensive parameter resolution logic
 - Created `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` (~380 lines) - significantly more tests than estimated (35 tests vs ~15 estimated)
 
 **Additional Tests Beyond Requirements:**
+
 - Added tests for multiple held items scenario
 - Added state immutability verification test
 - Added tests for null/undefined entity IDs
@@ -122,6 +132,7 @@ Create `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js` with:
 - Added error handling tests
 
 **All Invariants Verified:**
+
 - ✅ Operator does not modify entity state (tested)
 - ✅ Operator always returns boolean (never throws)
 - ✅ All 564 existing operator tests pass

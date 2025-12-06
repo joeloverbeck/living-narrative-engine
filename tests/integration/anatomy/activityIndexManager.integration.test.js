@@ -113,9 +113,7 @@ describe('ActivityIndexManager Integration', () => {
 
     it('should delegate getActivityIndex through test hooks', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
 
       const result = hooks.getActivityIndex(activities, 'test-cache-key');
 
@@ -127,9 +125,7 @@ describe('ActivityIndexManager Integration', () => {
   describe('Cache Integration', () => {
     it('should cache index results when cacheKey is provided', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
       const cacheKey = 'test-cache-integration';
 
       // First call should build and cache
@@ -164,9 +160,7 @@ describe('ActivityIndexManager Integration', () => {
 
     it('should not cache when cacheKey is not provided', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
 
       // Call without cacheKey
       const result1 = hooks.getActivityIndex(activities);
@@ -253,9 +247,7 @@ describe('ActivityIndexManager Integration', () => {
   describe('ActivityCacheManager Integration', () => {
     it('should use ActivityCacheManager for caching', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
       const cacheKey = 'test-cache-manager-integration';
 
       // Build and cache index
@@ -269,9 +261,7 @@ describe('ActivityIndexManager Integration', () => {
 
     it('should handle cache invalidation through service methods', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
       const cacheKey = 'test-cache-manager-invalidation';
 
       // Build and cache index
@@ -290,9 +280,7 @@ describe('ActivityIndexManager Integration', () => {
 
     it('should handle clearAllCaches correctly', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
       const cacheKey = 'test-clear-all-caches';
 
       // Build and cache index
@@ -337,9 +325,7 @@ describe('ActivityIndexManager Integration', () => {
 
     it('should handle activities with null/undefined values', () => {
       const hooks = service.getTestHooks();
-      const activities = [
-        { targetId: null, priority: undefined, type: null },
-      ];
+      const activities = [{ targetId: null, priority: undefined, type: null }];
 
       const result = hooks.getActivityIndex(activities);
 

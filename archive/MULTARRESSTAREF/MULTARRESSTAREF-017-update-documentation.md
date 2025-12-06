@@ -12,16 +12,19 @@
 All documentation has been successfully created and updated to reflect the refactored architecture:
 
 **Files Created:**
+
 - `docs/architecture/target-resolution-services.md` - Service responsibilities and patterns
 - `docs/architecture/diagrams/multi-target-resolution-architecture.md` - Visual architecture diagrams
 - `docs/architecture/multi-target-resolution-migration-guide.md` - Migration guide with patterns
 - `docs/testing/integration-test-patterns.md` - Testing patterns for target resolution services
 
 **Files Updated:**
+
 - `src/actions/pipeline/stages/MultiTargetResolutionStage.js` - Enhanced JSDoc with architecture overview
 - `CLAUDE.md` - Added Target Resolution Service Pattern section
 
 **Deviations from Plan:**
+
 - No changes to existing `docs/testing/integration-test-patterns.md` - file did not exist, so created new comprehensive file
 - All assumptions corrected based on actual code analysis (line counts, service sizes)
 
@@ -36,21 +39,25 @@ The refactoring introduces 3 new services and significantly changes the MultiTar
 ## Corrected Assumptions (Based on Actual Code)
 
 **Before Refactoring:**
+
 - Line count: ~1,085 lines (not 1,220 as originally estimated)
 - Git ref: Before commit `22c282154` (result builder integration)
 
 **After Refactoring:**
+
 - Current line count: 556 lines (not 150-200 as originally estimated)
 - Git ref: After commit `ba0aaffa8` (MULTARRESSTAREF-015 completion)
 - Still contains legacy resolution logic in `#resolveLegacyTarget` method (~118 lines)
 - Reduction: ~49% from original (529 lines removed)
 
 **Service Line Counts (Actual):**
+
 - `TargetResolutionTracingOrchestrator.js`: ~200 lines
 - `TargetResolutionResultBuilder.js`: ~150 lines
 - `TargetResolutionCoordinator.js`: ~180 lines
 
 **Current JSDoc Status:**
+
 - Basic class-level JSDoc exists but lacks orchestration details
 - Constructor JSDoc lists dependencies but not service roles
 - No usage examples provided
@@ -61,9 +68,11 @@ The refactoring introduces 3 new services and significantly changes the MultiTar
 ### Documentation Files to Update/Create
 
 #### 1. Update Stage JSDoc
+
 **File:** `src/actions/pipeline/stages/MultiTargetResolutionStage.js`
 
 **Current JSDoc:**
+
 ```javascript
 /**
  * Pipeline stage that orchestrates target resolution using specialized services
@@ -72,11 +81,12 @@ The refactoring introduces 3 new services and significantly changes the MultiTar
 ```
 
 **Enhanced JSDoc (to replace current):**
+
 ```javascript
 /**
  * @class MultiTargetResolutionStage
  * @extends PipelineStage
- * 
+ *
  * Pipeline stage responsible for resolving targets for candidate actions.
  *
  * This stage acts as a pure orchestrator, delegating all concerns to specialized services:
@@ -85,7 +95,7 @@ The refactoring introduces 3 new services and significantly changes the MultiTar
  * - **TargetResolutionCoordinator**: Handles target resolution coordination and dependencies
  *
  * ## Architecture
- * 
+ *
  * The stage follows a service-oriented design with clear separation of concerns:
  * 1. **Legacy Detection** - Identifies legacy single-target vs. multi-target actions
  * 2. **Target Resolution** - Coordinates dependency-aware resolution via coordinator
@@ -93,7 +103,7 @@ The refactoring introduces 3 new services and significantly changes the MultiTar
  * 4. **Result Building** - Assembles consistent results via result builder
  *
  * ## Refactoring History
- * 
+ *
  * - **Before**: ~1,085 lines with mixed concerns
  * - **After**: 556 lines focused on orchestration (~49% reduction)
  * - **Extracted**: 3 specialized services (~530 lines total)
@@ -124,21 +134,26 @@ The refactoring introduces 3 new services and significantly changes the MultiTar
 ```
 
 #### 2. Document Service Responsibilities
+
 **File:** `docs/architecture/target-resolution-services.md` (NEW)
 
 **Contents:**
+
 ```markdown
 # Target Resolution Services
 
 ## Overview
+
 The target resolution pipeline uses specialized services to handle different concerns, following the Single Responsibility Principle. This document describes the three core services extracted during the MULTARRESSTAREF refactoring.
 
 ## Service Responsibilities
 
 ### TargetResolutionTracingOrchestrator
+
 **Purpose:** Centralize all tracing instrumentation
 
 **Responsibilities:**
+
 - Detect trace capabilities (action-aware vs. standard)
 - Capture legacy detection and conversion events
 - Capture scope evaluation events
@@ -150,6 +165,7 @@ The target resolution pipeline uses specialized services to handle different con
 **Line Count:** ~200 lines
 
 **Key Methods:**
+
 - `isActionAwareTrace(trace)` - Detect trace capabilities
 - `captureLegacyDetection(trace, actionId, data)` - Legacy action detection
 - `captureScopeEvaluation(trace, scopeId, data)` - Scope resolution
@@ -157,9 +173,11 @@ The target resolution pipeline uses specialized services to handle different con
 - `captureError(trace, error, context)` - Error conditions
 
 ### TargetResolutionResultBuilder
+
 **Purpose:** Centralize result assembly and backward compatibility
 
 **Responsibilities:**
+
 - Build legacy action results
 - Build multi-target action results
 - Build final pipeline results
@@ -171,14 +189,17 @@ The target resolution pipeline uses specialized services to handle different con
 **Line Count:** ~150 lines
 
 **Key Methods:**
+
 - `buildLegacyResult(context, targets, targetContexts, conversion, actionDef)` - Legacy path
 - `buildMultiTargetResult(context, resolutionResults, actionDef)` - Multi-target path
 - `buildFinalResult(context, actions, targetContexts)` - Pipeline result
 
 ### TargetResolutionCoordinator
+
 **Purpose:** Coordinate target resolution with dependency handling
 
 **Responsibilities:**
+
 - Determine resolution order based on dependencies
 - Resolve independent (primary) targets
 - Resolve dependent (contextFrom) targets
@@ -190,31 +211,33 @@ The target resolution pipeline uses specialized services to handle different con
 **Line Count:** ~180 lines
 
 **Key Methods:**
+
 - `resolveTargets(context, actionDef, trace)` - Main coordination entry point
 - Internal: Dependency order resolution, primary/dependent target handling
 
 ## Service Interaction Flow
+```
 
-```
 ┌─────────────────────────────────────────┐
-│   MultiTargetResolutionStage            │
-│   (Pure Orchestration - 556 lines)      │
+│ MultiTargetResolutionStage │
+│ (Pure Orchestration - 556 lines) │
 └──┬──────────────┬──────────────┬────────┘
-   │              │              │
-   │ 1. Trace     │ 2. Resolve   │ 3. Build
-   │              │              │
-   ▼              ▼              ▼
-┌─────────┐  ┌──────────┐  ┌──────────┐
-│ Tracing │  │Resolution│  │ Result   │
-│Orchestr.│  │Coordina. │  │ Builder  │
-│200 lines│  │180 lines │  │150 lines │
-└─────────┘  └──────────┘  └──────────┘
-   │              │              │
-   └──────────────┴──────────────┘
-                  │
-                  ▼
-            Pipeline Result
-```
+│ │ │
+│ 1. Trace │ 2. Resolve │ 3. Build
+│ │ │
+▼ ▼ ▼
+┌─────────┐ ┌──────────┐ ┌──────────┐
+│ Tracing │ │Resolution│ │ Result │
+│Orchestr.│ │Coordina. │ │ Builder │
+│200 lines│ │180 lines │ │150 lines │
+└─────────┘ └──────────┘ └──────────┘
+│ │ │
+└──────────────┴──────────────┘
+│
+▼
+Pipeline Result
+
+````
 
 ## Extension Patterns
 
@@ -243,16 +266,19 @@ class TargetResolutionTracingOrchestrator {
 
 // 3. Call from stage
 this.#tracingOrchestrator.captureNewEvent(trace, data);
-```
+````
 
 ### Modifying Result Format
+
 To change result structure:
+
 1. Update `TargetResolutionResultBuilder` methods
 2. Update tests to verify new format
 3. Verify downstream stage compatibility
 4. **No changes needed** to stage orchestration or coordinator
 
 **Example:**
+
 ```javascript
 // Only modify result builder
 buildMultiTargetResult(context, results, actionDef) {
@@ -267,7 +293,9 @@ buildMultiTargetResult(context, results, actionDef) {
 ```
 
 ### Adding Resolution Strategies
+
 To add new resolution approach:
+
 1. Update `ITargetResolutionCoordinator` if needed
 2. Implement in `TargetResolutionCoordinator`
 3. Call from stage if new strategy needed
@@ -276,40 +304,50 @@ To add new resolution approach:
 ## Testing Patterns
 
 ### Testing Tracing Orchestrator
+
 ```javascript
 describe('TargetResolutionTracingOrchestrator', () => {
   it('should detect action-aware trace capabilities', () => {
     const trace = { captureActionData: jest.fn() };
     expect(orchestrator.isActionAwareTrace(trace)).toBe(true);
   });
-  
+
   it('should handle missing trace methods gracefully', () => {
     const trace = {};
-    expect(() => orchestrator.captureLegacyDetection(trace, 'id', {}))
-      .not.toThrow();
+    expect(() =>
+      orchestrator.captureLegacyDetection(trace, 'id', {})
+    ).not.toThrow();
   });
 });
 ```
 
 ### Testing Result Builder
+
 ```javascript
 describe('TargetResolutionResultBuilder', () => {
   it('should build results with backward compatibility', () => {
-    const result = builder.buildLegacyResult(context, targets, contexts, conversion, action);
+    const result = builder.buildLegacyResult(
+      context,
+      targets,
+      contexts,
+      conversion,
+      action
+    );
     expect(result.data.targetContexts).toBeDefined(); // Compat field
   });
 });
 ```
 
 ### Testing Resolution Coordinator
+
 ```javascript
 describe('TargetResolutionCoordinator', () => {
   it('should resolve targets in dependency order', async () => {
     const action = {
       targets: [
         { placeholder: 'primary', scope: 'scope1' },
-        { placeholder: 'dependent', scope: 'scope2', contextFrom: 'primary' }
-      ]
+        { placeholder: 'dependent', scope: 'scope2', contextFrom: 'primary' },
+      ],
     };
     const result = await coordinator.resolveTargets(context, action, trace);
     expect(result.primary).toBeDefined();
@@ -321,18 +359,21 @@ describe('TargetResolutionCoordinator', () => {
 ## Common Pitfalls
 
 ### ❌ Don't: Bypass services
+
 ```javascript
 // Wrong: Direct trace call from stage
 trace.captureActionData('event', data);
 ```
 
 ### ✅ Do: Use orchestrator
+
 ```javascript
 // Right: Delegate to service
 this.#tracingOrchestrator.captureLegacyDetection(trace, actionId, data);
 ```
 
 ### ❌ Don't: Mix concerns
+
 ```javascript
 // Wrong: Build result in coordinator
 class TargetResolutionCoordinator {
@@ -344,6 +385,7 @@ class TargetResolutionCoordinator {
 ```
 
 ### ✅ Do: Single responsibility
+
 ```javascript
 // Right: Coordinator returns raw data
 class TargetResolutionCoordinator {
@@ -357,7 +399,8 @@ class TargetResolutionCoordinator {
 const rawResults = await coordinator.resolveTargets(...);
 const result = resultBuilder.buildMultiTargetResult(context, rawResults, action);
 ```
-```
+
+````
 
 #### 3. Create Architecture Diagram
 **File:** `docs/architecture/diagrams/multi-target-resolution-architecture.md` (NEW)
@@ -368,99 +411,103 @@ const result = resultBuilder.buildMultiTargetResult(context, rawResults, action)
 
 ## Before Refactoring (~1,085 lines)
 
-```
+````
+
 ┌─────────────────────────────────────────────┐
-│      MultiTargetResolutionStage             │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ Orchestration (~300 lines)          │   │
-│  │ - Candidate iteration               │   │
-│  │ - Legacy/multi-target routing       │   │
-│  │ - Service coordination              │   │
-│  └─────────────────────────────────────┘   │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ Tracing Logic (~200 lines)          │   │
-│  │ - Capability detection              │   │
-│  │ - 5 helper methods                  │   │
-│  │ - 27 trace call sites               │   │
-│  │ - 10 conditionals                   │   │
-│  └─────────────────────────────────────┘   │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ Result Assembly (~150 lines)        │   │
-│  │ - 3 assembly locations              │   │
-│  │ - Backward compat logic             │   │
-│  │ - Metadata attachment               │   │
-│  └─────────────────────────────────────┘   │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ Resolution Coordination (~180 lines)│   │
-│  │ - Dependency order                  │   │
-│  │ - contextFrom handling              │   │
-│  │ - Primary/dependent resolution      │   │
-│  └─────────────────────────────────────┘   │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ Helper Methods & Utilities          │   │
-│  │ (~255 lines)                        │   │
-│  └─────────────────────────────────────┘   │
+│ MultiTargetResolutionStage │
+│ │
+│ ┌─────────────────────────────────────┐ │
+│ │ Orchestration (~300 lines) │ │
+│ │ - Candidate iteration │ │
+│ │ - Legacy/multi-target routing │ │
+│ │ - Service coordination │ │
+│ └─────────────────────────────────────┘ │
+│ │
+│ ┌─────────────────────────────────────┐ │
+│ │ Tracing Logic (~200 lines) │ │
+│ │ - Capability detection │ │
+│ │ - 5 helper methods │ │
+│ │ - 27 trace call sites │ │
+│ │ - 10 conditionals │ │
+│ └─────────────────────────────────────┘ │
+│ │
+│ ┌─────────────────────────────────────┐ │
+│ │ Result Assembly (~150 lines) │ │
+│ │ - 3 assembly locations │ │
+│ │ - Backward compat logic │ │
+│ │ - Metadata attachment │ │
+│ └─────────────────────────────────────┘ │
+│ │
+│ ┌─────────────────────────────────────┐ │
+│ │ Resolution Coordination (~180 lines)│ │
+│ │ - Dependency order │ │
+│ │ - contextFrom handling │ │
+│ │ - Primary/dependent resolution │ │
+│ └─────────────────────────────────────┘ │
+│ │
+│ ┌─────────────────────────────────────┐ │
+│ │ Helper Methods & Utilities │ │
+│ │ (~255 lines) │ │
+│ └─────────────────────────────────────┘ │
 └─────────────────────────────────────────────┘
 
 Problems:
+
 - Mixed concerns (orchestration + tracing + results)
 - High cognitive load (>1000 lines in one file)
 - Difficult to test individual concerns
 - Changes ripple across entire file
+
 ```
 
 ## After Refactoring (556 lines + 3 services)
 
 ```
+
 ┌─────────────────────────────────────────────────────────────┐
-│          MultiTargetResolutionStage (Orchestrator)          │
-│                         556 lines                           │
-│                                                             │
-│  executeInternal(context) {                                 │
-│    const { candidateActions, trace } = context.data;       │
-│    const resolvedActions = [];                             │
-│    const allTargetContexts = [];                           │
-│                                                             │
-│    for (const action of candidateActions) {                │
-│      const result = await this.#resolveActionTargets(      │
-│        context, action, trace                              │
-│      );                                                     │
-│      resolvedActions.push(result.action);                  │
-│      allTargetContexts.push(...result.contexts);           │
-│    }                                                        │
-│                                                             │
-│    return this.#resultBuilder.buildFinalResult(            │
-│      context, resolvedActions, allTargetContexts           │
-│    );                                                       │
-│  }                                                          │
-│                                                             │
-│  #resolveActionTargets(context, action, trace) {           │
-│    // 1. Detect legacy vs multi-target                     │
-│    // 2. Route to appropriate path                         │
-│    // 3. Coordinate services                               │
-│    // 4. Return combined results                           │
-│  }                                                          │
+│ MultiTargetResolutionStage (Orchestrator) │
+│ 556 lines │
+│ │
+│ executeInternal(context) { │
+│ const { candidateActions, trace } = context.data; │
+│ const resolvedActions = []; │
+│ const allTargetContexts = []; │
+│ │
+│ for (const action of candidateActions) { │
+│ const result = await this.#resolveActionTargets( │
+│ context, action, trace │
+│ ); │
+│ resolvedActions.push(result.action); │
+│ allTargetContexts.push(...result.contexts); │
+│ } │
+│ │
+│ return this.#resultBuilder.buildFinalResult( │
+│ context, resolvedActions, allTargetContexts │
+│ ); │
+│ } │
+│ │
+│ #resolveActionTargets(context, action, trace) { │
+│ // 1. Detect legacy vs multi-target │
+│ // 2. Route to appropriate path │
+│ // 3. Coordinate services │
+│ // 4. Return combined results │
+│ } │
 └─────────────────┬───────────────┬───────────────┬───────────┘
-                  │               │               │
-         ┌────────▼──────┐ ┌─────▼──────┐ ┌─────▼─────────┐
-         │   Tracing     │ │  Result    │ │  Resolution   │
-         │ Orchestrator  │ │  Builder   │ │ Coordinator   │
-         │               │ │            │ │               │
-         │ ~200 lines    │ │ ~150 lines │ │  ~180 lines   │
-         │               │ │            │ │               │
-         │ - Capability  │ │ - Legacy   │ │ - Dependency  │
-         │   detection   │ │   results  │ │   order       │
-         │ - Event       │ │ - Multi-   │ │ - Primary     │
-         │   capture     │ │   target   │ │   resolution  │
-         │ - Telemetry   │ │   results  │ │ - Dependent   │
-         │               │ │ - Final    │ │   resolution  │
-         │               │ │   assembly │ │               │
-         └───────────────┘ └────────────┘ └───────────────┘
+│ │ │
+┌────────▼──────┐ ┌─────▼──────┐ ┌─────▼─────────┐
+│ Tracing │ │ Result │ │ Resolution │
+│ Orchestrator │ │ Builder │ │ Coordinator │
+│ │ │ │ │ │
+│ ~200 lines │ │ ~150 lines │ │ ~180 lines │
+│ │ │ │ │ │
+│ - Capability │ │ - Legacy │ │ - Dependency │
+│ detection │ │ results │ │ order │
+│ - Event │ │ - Multi- │ │ - Primary │
+│ capture │ │ target │ │ resolution │
+│ - Telemetry │ │ results │ │ - Dependent │
+│ │ │ - Final │ │ resolution │
+│ │ │ assembly │ │ │
+└───────────────┘ └────────────┘ └───────────────┘
 
 Benefits:
 ✓ Clear separation of concerns
@@ -468,92 +515,99 @@ Benefits:
 ✓ Easier to modify individual aspects
 ✓ Better code organization
 ✓ 49% reduction in main file size
+
 ```
 
 ## Service Interaction Flow
 
 ### Legacy Action Path
 ```
+
 User Request (Legacy Action)
-     │
-     ▼
+│
+▼
 ┌─────────────────────────────────────────┐
-│   MultiTargetResolutionStage            │
-│   1. Detect legacy action               │
-│   2. Convert to multi-target format     │
+│ MultiTargetResolutionStage │
+│ 1. Detect legacy action │
+│ 2. Convert to multi-target format │
 └──┬──────────────────────────────────────┘
-   │
-   ├──→ #tracingOrchestrator.captureLegacyDetection()
-   │
-   ├──→ #legacyLayer.convertToMultiTarget()
-   │
-   ├──→ #resolveLegacyTarget() [internal method]
-   │    ├─→ #unifiedScopeResolver.resolve()
-   │    └─→ #nameResolver.resolveDisplayName()
-   │
-   └──→ #resultBuilder.buildLegacyResult()
-        └─→ PipelineResult with backward compat
+│
+├──→ #tracingOrchestrator.captureLegacyDetection()
+│
+├──→ #legacyLayer.convertToMultiTarget()
+│
+├──→ #resolveLegacyTarget() [internal method]
+│ ├─→ #unifiedScopeResolver.resolve()
+│ └─→ #nameResolver.resolveDisplayName()
+│
+└──→ #resultBuilder.buildLegacyResult()
+└─→ PipelineResult with backward compat
+
 ```
 
 ### Multi-Target Action Path
 ```
+
 User Request (Multi-Target Action)
-     │
-     ▼
+│
+▼
 ┌─────────────────────────────────────────┐
-│   MultiTargetResolutionStage            │
-│   1. Detect multi-target action         │
-│   2. Coordinate resolution              │
+│ MultiTargetResolutionStage │
+│ 1. Detect multi-target action │
+│ 2. Coordinate resolution │
 └──┬──────────────────────────────────────┘
-   │
-   ├──→ #resolutionCoordinator.resolveTargets()
-   │    ├─→ Determine dependency order
-   │    ├─→ Resolve primary targets
-   │    │   ├─→ #contextBuilder.buildScopeContext()
-   │    │   └─→ #unifiedScopeResolver.resolve()
-   │    └─→ Resolve dependent targets (contextFrom)
-   │        ├─→ #contextBuilder.buildScopeContextForSpecificPrimary()
-   │        └─→ #unifiedScopeResolver.resolve()
-   │
-   ├──→ #tracingOrchestrator.captureScopeEvaluation()
-   │
-   └──→ #resultBuilder.buildMultiTargetResult()
-        └─→ PipelineResult with resolvedTargets
+│
+├──→ #resolutionCoordinator.resolveTargets()
+│ ├─→ Determine dependency order
+│ ├─→ Resolve primary targets
+│ │ ├─→ #contextBuilder.buildScopeContext()
+│ │ └─→ #unifiedScopeResolver.resolve()
+│ └─→ Resolve dependent targets (contextFrom)
+│ ├─→ #contextBuilder.buildScopeContextForSpecificPrimary()
+│ └─→ #unifiedScopeResolver.resolve()
+│
+├──→ #tracingOrchestrator.captureScopeEvaluation()
+│
+└──→ #resultBuilder.buildMultiTargetResult()
+└─→ PipelineResult with resolvedTargets
+
 ```
 
 ### Complete Flow Diagram
 ```
+
 ┌──────────────┐
-│ Pipeline     │
-│ Context      │
+│ Pipeline │
+│ Context │
 └──────┬───────┘
-       │
-       ▼
+│
+▼
 ┌──────────────────────────────────────┐
-│ MultiTargetResolutionStage           │
+│ MultiTargetResolutionStage │
 │ ┌──────────────────────────────────┐ │
-│ │ executeInternal()                │ │
-│ │ - Iterate candidate actions      │ │
-│ │ - Resolve each action's targets  │ │
-│ │ - Aggregate results              │ │
+│ │ executeInternal() │ │
+│ │ - Iterate candidate actions │ │
+│ │ - Resolve each action's targets │ │
+│ │ - Aggregate results │ │
 │ └──────────────────────────────────┘ │
 └──┬───────────────┬──────────────┬────┘
-   │               │              │
-   │ Legacy?       │ Multi?       │ Build
-   ▼               ▼              ▼
-┌────────┐    ┌──────────┐   ┌──────────┐
-│ Legacy │    │Resolution│   │ Result   │
-│ Layer  │    │Coordina. │   │ Builder  │
-└────┬───┘    └─────┬────┘   └─────┬────┘
-     │              │              │
-     │ Trace ◄──────┼──────────────┤
-     ▼              ▼              ▼
+│ │ │
+│ Legacy? │ Multi? │ Build
+▼ ▼ ▼
+┌────────┐ ┌──────────┐ ┌──────────┐
+│ Legacy │ │Resolution│ │ Result │
+│ Layer │ │Coordina. │ │ Builder │
+└────┬───┘ └─────┬────┘ └─────┬────┘
+│ │ │
+│ Trace ◄──────┼──────────────┤
+▼ ▼ ▼
 ┌─────────────────────────────────────┐
 │ TargetResolutionTracingOrchestrator │
-│ - captureLegacyDetection()          │
-│ - captureScopeEvaluation()          │
-│ - captureResolutionData()           │
+│ - captureLegacyDetection() │
+│ - captureScopeEvaluation() │
+│ - captureResolutionData() │
 └─────────────────────────────────────┘
+
 ```
 
 ## Metrics Summary
@@ -571,18 +625,22 @@ User Request (Multi-Target Action)
 ```
 
 #### 4. Update Integration Test Documentation
+
 **File:** `docs/testing/integration-test-patterns.md`
 
 **Check if file exists, then add section:**
-```markdown
+
+````markdown
 ## Testing Target Resolution Services
 
 ### Overview
+
 The target resolution stage uses three specialized services. Each service should be tested independently in unit tests, with integration tests verifying their coordination.
 
 ### Testing Tracing Orchestrator
 
 **Unit Test Patterns:**
+
 ```javascript
 describe('TargetResolutionTracingOrchestrator', () => {
   let orchestrator;
@@ -590,7 +648,9 @@ describe('TargetResolutionTracingOrchestrator', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    orchestrator = new TargetResolutionTracingOrchestrator({ logger: mockLogger });
+    orchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockLogger,
+    });
   });
 
   describe('Capability Detection', () => {
@@ -615,16 +675,18 @@ describe('TargetResolutionTracingOrchestrator', () => {
   });
 });
 ```
+````
 
 **Integration Test Patterns:**
+
 ```javascript
 describe('Tracing Integration', () => {
   it('should capture trace data during resolution', async () => {
     const trace = createActionAwareTrace();
     const stage = createStageWithServices({ trace });
-    
+
     await stage.execute(context);
-    
+
     expect(trace.captureActionData).toHaveBeenCalledWith(
       'legacy_action_detected',
       expect.objectContaining({ actionId: expect.any(String) })
@@ -636,6 +698,7 @@ describe('Tracing Integration', () => {
 ### Testing Result Builder
 
 **Unit Test Patterns:**
+
 ```javascript
 describe('TargetResolutionResultBuilder', () => {
   let builder;
@@ -647,7 +710,7 @@ describe('TargetResolutionResultBuilder', () => {
     mockLogger = createMockLogger();
     builder = new TargetResolutionResultBuilder({
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -660,18 +723,18 @@ describe('TargetResolutionResultBuilder', () => {
         conversionResult,
         actionDef
       );
-      
+
       expect(result.data.targetContexts).toBeDefined();
       expect(result.data.targetContexts).toEqual(targetContexts);
     });
 
     it('should format legacy results consistently', () => {
       const result = builder.buildLegacyResult(/* ... */);
-      
+
       expect(result.data.candidateActions).toHaveLength(1);
       expect(result.data.candidateActions[0]).toMatchObject({
         ...actionDef,
-        resolvedTargets: expect.any(Object)
+        resolvedTargets: expect.any(Object),
       });
     });
   });
@@ -680,17 +743,18 @@ describe('TargetResolutionResultBuilder', () => {
     it('should build results with all resolved targets', () => {
       const resolutionResults = {
         primary: [{ id: 'entity1', displayName: 'Entity 1' }],
-        secondary: [{ id: 'entity2', displayName: 'Entity 2' }]
+        secondary: [{ id: 'entity2', displayName: 'Entity 2' }],
       };
-      
+
       const result = builder.buildMultiTargetResult(
         context,
         resolutionResults,
         actionDef
       );
-      
-      expect(result.data.candidateActions[0].resolvedTargets)
-        .toEqual(resolutionResults);
+
+      expect(result.data.candidateActions[0].resolvedTargets).toEqual(
+        resolutionResults
+      );
     });
   });
 });
@@ -699,6 +763,7 @@ describe('TargetResolutionResultBuilder', () => {
 ### Testing Resolution Coordinator
 
 **Unit Test Patterns:**
+
 ```javascript
 describe('TargetResolutionCoordinator', () => {
   let coordinator;
@@ -714,12 +779,16 @@ describe('TargetResolutionCoordinator', () => {
       const action = {
         targets: [
           { placeholder: 'primary', scope: 'scope:primary' },
-          { placeholder: 'dependent', scope: 'scope:dependent', contextFrom: 'primary' }
-        ]
+          {
+            placeholder: 'dependent',
+            scope: 'scope:dependent',
+            contextFrom: 'primary',
+          },
+        ],
       };
-      
+
       const result = await coordinator.resolveTargets(context, action, trace);
-      
+
       // Verify primary resolved before dependent
       expect(result.primary).toBeDefined();
       expect(result.dependent).toBeDefined();
@@ -729,12 +798,13 @@ describe('TargetResolutionCoordinator', () => {
       const action = {
         targets: [
           { placeholder: 'a', scope: 'scope:a', contextFrom: 'b' },
-          { placeholder: 'b', scope: 'scope:b', contextFrom: 'a' }
-        ]
+          { placeholder: 'b', scope: 'scope:b', contextFrom: 'a' },
+        ],
       };
-      
-      await expect(coordinator.resolveTargets(context, action, trace))
-        .rejects.toThrow('circular dependency');
+
+      await expect(
+        coordinator.resolveTargets(context, action, trace)
+      ).rejects.toThrow('circular dependency');
     });
   });
 
@@ -743,36 +813,45 @@ describe('TargetResolutionCoordinator', () => {
       const action = {
         targets: [
           { placeholder: 'actor', scope: 'scope:actor' },
-          { placeholder: 'nearby', scope: 'scope:nearby', contextFrom: 'actor' }
-        ]
+          {
+            placeholder: 'nearby',
+            scope: 'scope:nearby',
+            contextFrom: 'actor',
+          },
+        ],
       };
-      
+
       await coordinator.resolveTargets(context, action, trace);
-      
-      expect(mockServices.contextBuilder.buildScopeContextForSpecificPrimary)
-        .toHaveBeenCalledWith(
-          expect.any(Object),
-          'actor',
-          expect.objectContaining({ id: expect.any(String) })
-        );
+
+      expect(
+        mockServices.contextBuilder.buildScopeContextForSpecificPrimary
+      ).toHaveBeenCalledWith(
+        expect.any(Object),
+        'actor',
+        expect.objectContaining({ id: expect.any(String) })
+      );
     });
   });
 });
 ```
 
 **Integration Test Patterns:**
+
 ```javascript
 describe('Resolution Coordinator Integration', () => {
   it('should coordinate full multi-target resolution', async () => {
-    const fixture = await ModTestFixture.forAction('test-mod', 'test-mod:multi_target_action');
+    const fixture = await ModTestFixture.forAction(
+      'test-mod',
+      'test-mod:multi_target_action'
+    );
     const scenario = fixture.createStandardActorTarget();
-    
+
     await fixture.executeAction(scenario.actor.id, scenario.target.id);
-    
+
     const actions = fixture.getAvailableActions();
     expect(actions[0].resolvedTargets).toMatchObject({
       actor: [{ id: scenario.actor.id }],
-      target: [{ id: scenario.target.id }]
+      target: [{ id: scenario.target.id }],
     });
   });
 });
@@ -781,6 +860,7 @@ describe('Resolution Coordinator Integration', () => {
 ### Common Test Utilities
 
 **Service Mocking:**
+
 ```javascript
 // tests/common/mocks/targetResolutionMocks.js
 export function createMockTracingOrchestrator() {
@@ -789,15 +869,17 @@ export function createMockTracingOrchestrator() {
     captureLegacyDetection: jest.fn(),
     captureScopeEvaluation: jest.fn(),
     captureResolutionData: jest.fn(),
-    captureError: jest.fn()
+    captureError: jest.fn(),
   };
 }
 
 export function createMockResultBuilder() {
   return {
     buildLegacyResult: jest.fn().mockReturnValue(PipelineResult.success({})),
-    buildMultiTargetResult: jest.fn().mockReturnValue(PipelineResult.success({})),
-    buildFinalResult: jest.fn().mockReturnValue(PipelineResult.success({}))
+    buildMultiTargetResult: jest
+      .fn()
+      .mockReturnValue(PipelineResult.success({})),
+    buildFinalResult: jest.fn().mockReturnValue(PipelineResult.success({})),
   };
 }
 
@@ -805,12 +887,13 @@ export function createMockResolutionCoordinator() {
   return {
     resolveTargets: jest.fn().mockResolvedValue({
       primary: [],
-      secondary: []
-    })
+      secondary: [],
+    }),
   };
 }
 ```
-```
+
+````
 
 #### 5. Update CLAUDE.md
 **File:** `CLAUDE.md` (project root)
@@ -849,19 +932,21 @@ resultBuilder.buildWithNewFormat(data);
 
 // New resolution strategy - only modify coordinator
 coordinator.resolveWithNewStrategy(targets);
-```
+````
 
 **Testing Pattern:**
+
 - Unit test each service independently
 - Integration test service coordination
 - Mock services when testing stage orchestration
 
 **Documentation:**
+
 - Architecture: `docs/architecture/target-resolution-services.md`
 - Diagrams: `docs/architecture/diagrams/multi-target-resolution-architecture.md`
 - Migration: `docs/architecture/multi-target-resolution-migration-guide.md`
 
-```
+````
 
 #### 6. Create Migration Guide
 **File:** `docs/architecture/multi-target-resolution-migration-guide.md` (NEW)
@@ -901,9 +986,10 @@ if (trace && typeof trace.captureActionData === 'function') {
   });
 }
 // ... 26 more trace calls with similar conditionals
-```
+````
 
 **After:**
+
 ```javascript
 // TargetResolutionTracingOrchestrator.js
 captureLegacyDetection(trace, actionId, data) {
@@ -917,30 +1003,36 @@ this.#tracingOrchestrator.captureLegacyDetection(trace, actionId, data);
 ```
 
 **Benefits:**
+
 - Centralized trace capability detection
 - Consistent trace call patterns
 - Easier to add new trace events
 - Testable in isolation
 
 ### 2. TargetResolutionResultBuilder (~150 lines)
+
 **Extracted from:** Result assembly logic in 3 locations
 
 **Before:**
+
 ```javascript
 // MultiTargetResolutionStage.js - result assembly scattered
 const legacyResult = PipelineResult.success({
-  candidateActions: [{
-    ...actionDef,
-    resolvedTargets: { ...resolvedTargets },
-    // ... metadata attachment logic
-  }],
-  targetContexts: [...targetContexts] // Backward compat
+  candidateActions: [
+    {
+      ...actionDef,
+      resolvedTargets: { ...resolvedTargets },
+      // ... metadata attachment logic
+    },
+  ],
+  targetContexts: [...targetContexts], // Backward compat
 });
 
 // ... similar logic in 2 other places
 ```
 
 **After:**
+
 ```javascript
 // TargetResolutionResultBuilder.js
 buildLegacyResult(context, targets, targetContexts, conversion, actionDef) {
@@ -961,15 +1053,18 @@ const result = this.#resultBuilder.buildLegacyResult(
 ```
 
 **Benefits:**
+
 - Single source of truth for result format
 - Consistent metadata attachment
 - Backward compatibility in one place
 - Easy to modify result structure
 
 ### 3. TargetResolutionCoordinator (~180 lines)
+
 **Extracted from:** Multi-target resolution and dependency handling
 
 **Before:**
+
 ```javascript
 // MultiTargetResolutionStage.js - dependency resolution inline
 const dependencyOrder = this.#dependencyResolver.getResolutionOrder(targets);
@@ -988,18 +1083,19 @@ for (const targetDef of dependencyOrder) {
 ```
 
 **After:**
+
 ```javascript
 // TargetResolutionCoordinator.js
 async resolveTargets(context, actionDef, trace) {
   const order = this.#dependencyResolver.getResolutionOrder(actionDef.targets);
   const results = {};
-  
+
   for (const target of order) {
     results[target.placeholder] = target.contextFrom
       ? await this.#resolveDependent(context, target, results, trace)
       : await this.#resolvePrimary(context, target, trace);
   }
-  
+
   return results;
 }
 
@@ -1010,6 +1106,7 @@ const results = await this.#resolutionCoordinator.resolveTargets(
 ```
 
 **Benefits:**
+
 - Clear separation of resolution logic
 - Easier to add new resolution strategies
 - Testable dependency handling
@@ -1020,14 +1117,18 @@ const results = await this.#resolutionCoordinator.resolveTargets(
 ### Pattern 1: Adding New Trace Events
 
 **Before Refactoring:**
+
 ```javascript
 // Had to modify MultiTargetResolutionStage.js
 if (trace && typeof trace.captureActionData === 'function') {
-  trace.captureActionData('new_event', { /* data */ });
+  trace.captureActionData('new_event', {
+    /* data */
+  });
 }
 ```
 
 **After Refactoring:**
+
 ```javascript
 // 1. Add to ITargetResolutionTracingOrchestrator.js interface
 captureNewEvent(trace, eventData);
@@ -1048,14 +1149,20 @@ this.#tracingOrchestrator.captureNewEvent(trace, data);
 ### Pattern 2: Changing Result Format
 
 **Before Refactoring:**
+
 ```javascript
 // Had to find and update 3 different locations in MultiTargetResolutionStage.js
 return PipelineResult.success({
-  candidateActions: [{ /* format */ }]
+  candidateActions: [
+    {
+      /* format */
+    },
+  ],
 });
 ```
 
 **After Refactoring:**
+
 ```javascript
 // Only modify TargetResolutionResultBuilder.js
 buildMultiTargetResult(context, results, actionDef) {
@@ -1074,21 +1181,23 @@ buildMultiTargetResult(context, results, actionDef) {
 ### Pattern 3: New Resolution Strategy
 
 **Before Refactoring:**
+
 ```javascript
 // Had to modify resolution logic embedded in MultiTargetResolutionStage.js
 // Mixed with tracing and result building
 ```
 
 **After Refactoring:**
+
 ```javascript
 // Only modify TargetResolutionCoordinator.js
 async resolveWithNewStrategy(context, target, trace) {
   // Implement new strategy
   const resolved = await this.#newStrategy(context, target);
-  
+
   // Tracing handled by orchestrator (separation)
   this.#tracingOrchestrator.captureResolutionData(trace, resolved);
-  
+
   return resolved;
 }
 ```
@@ -1098,6 +1207,7 @@ async resolveWithNewStrategy(context, target, trace) {
 ## Testing Strategy Migration
 
 ### Before: Monolithic Testing
+
 ```javascript
 describe('MultiTargetResolutionStage', () => {
   it('should resolve targets and trace and build results', () => {
@@ -1109,6 +1219,7 @@ describe('MultiTargetResolutionStage', () => {
 ```
 
 ### After: Service-Based Testing
+
 ```javascript
 // Unit test each service
 describe('TargetResolutionTracingOrchestrator', () => {
@@ -1141,6 +1252,7 @@ describe('MultiTargetResolutionStage Integration', () => {
 ## Common Pitfalls
 
 ### ❌ Pitfall 1: Bypassing Services
+
 ```javascript
 // Wrong: Direct operation that should use service
 if (trace && trace.captureActionData) {
@@ -1149,12 +1261,14 @@ if (trace && trace.captureActionData) {
 ```
 
 **Fix:** Always delegate to appropriate service
+
 ```javascript
 // Right: Use service
 this.#tracingOrchestrator.captureEvent(trace, data);
 ```
 
 ### ❌ Pitfall 2: Mixing Concerns
+
 ```javascript
 // Wrong: Building results in coordinator
 class TargetResolutionCoordinator {
@@ -1166,6 +1280,7 @@ class TargetResolutionCoordinator {
 ```
 
 **Fix:** Return raw data, delegate result building
+
 ```javascript
 // Right: Coordinator returns raw data
 class TargetResolutionCoordinator {
@@ -1176,23 +1291,29 @@ class TargetResolutionCoordinator {
 
 // Stage delegates to result builder
 const rawResults = await coordinator.resolveTargets();
-const result = resultBuilder.buildMultiTargetResult(context, rawResults, action);
+const result = resultBuilder.buildMultiTargetResult(
+  context,
+  rawResults,
+  action
+);
 ```
 
 ### ❌ Pitfall 3: Modifying Multiple Services for Simple Changes
+
 ```javascript
 // Wrong: Changing result format requires coordinator change
 class TargetResolutionCoordinator {
   async resolveTargets() {
     return {
       targets: resolved,
-      newMetadata: 'data' // Adding metadata in coordinator
+      newMetadata: 'data', // Adding metadata in coordinator
     };
   }
 }
 ```
 
 **Fix:** Keep services focused on single responsibility
+
 ```javascript
 // Right: Coordinator returns targets only
 class TargetResolutionCoordinator {
@@ -1205,11 +1326,13 @@ class TargetResolutionCoordinator {
 class TargetResolutionResultBuilder {
   buildMultiTargetResult(context, targets, action) {
     return PipelineResult.success({
-      candidateActions: [{
-        ...action,
-        resolvedTargets: targets,
-        metadata: this.#buildMetadata() // Metadata in builder
-      }]
+      candidateActions: [
+        {
+          ...action,
+          resolvedTargets: targets,
+          metadata: this.#buildMetadata(), // Metadata in builder
+        },
+      ],
     });
   }
 }
@@ -1217,20 +1340,20 @@ class TargetResolutionResultBuilder {
 
 ## Metrics
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
+| Metric            | Before     | After     | Change      |
+| ----------------- | ---------- | --------- | ----------- |
 | **Lines of Code** |
-| Main file | 1,085 | 556 | -529 (-49%) |
-| Services (total) | 0 | 530 | +530 |
-| Total system | 1,085 | 1,086 | +1 (~0%) |
-| **Complexity** |
-| Concerns per file | 4-5 | 1 | -75% |
-| Max method length | ~120 lines | ~60 lines | -50% |
-| Cognitive load | High | Low | ✓ |
-| **Quality** |
-| Testability | Low | High | ✓ |
-| Maintainability | Low | High | ✓ |
-| Extensibility | Low | High | ✓ |
+| Main file         | 1,085      | 556       | -529 (-49%) |
+| Services (total)  | 0          | 530       | +530        |
+| Total system      | 1,085      | 1,086     | +1 (~0%)    |
+| **Complexity**    |
+| Concerns per file | 4-5        | 1         | -75%        |
+| Max method length | ~120 lines | ~60 lines | -50%        |
+| Cognitive load    | High       | Low       | ✓           |
+| **Quality**       |
+| Testability       | Low        | High      | ✓           |
+| Maintainability   | Low        | High      | ✓           |
+| Extensibility     | Low        | High      | ✓           |
 
 ## Key Takeaways
 
@@ -1246,6 +1369,7 @@ class TargetResolutionResultBuilder {
 - **Diagrams:** `docs/architecture/diagrams/multi-target-resolution-architecture.md`
 - **Testing:** `docs/testing/integration-test-patterns.md` (Target Resolution section)
 - **Project Guide:** `CLAUDE.md` (Target Resolution Service Pattern section)
+
 ```
 
 ## Acceptance Criteria
@@ -1297,3 +1421,4 @@ class TargetResolutionResultBuilder {
 - Keep documentation concise but comprehensive
 - Include real code examples from actual services
 - Focus on practical guidance for future developers
+```

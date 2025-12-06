@@ -102,8 +102,9 @@ describe('CacheService memory eviction behaviour with nullish keys (integration)
     );
     expect(cacheMemoryEntry?.value).toBe(secondMemory.currentBytes);
 
-    const debugMessages = loggerBundle.entries.debug
-      .map((args) => String(args[0]));
+    const debugMessages = loggerBundle.entries.debug.map((args) =>
+      String(args[0])
+    );
 
     expect(
       debugMessages.some((message) =>

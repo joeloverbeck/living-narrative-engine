@@ -25,7 +25,14 @@ describe('ValidateMods CLI', () => {
     });
 
     it('should parse multiple mod arguments', () => {
-      const args = ['--mod', 'positioning', '--mod', 'intimacy', '--mod', 'core'];
+      const args = [
+        '--mod',
+        'positioning',
+        '--mod',
+        'intimacy',
+        '--mod',
+        'core',
+      ];
       const config = parseArguments(args);
 
       expect(config.mods).toEqual(['positioning', 'intimacy', 'core']);
@@ -105,8 +112,10 @@ describe('ValidateMods CLI', () => {
 
     it('should parse filter options', () => {
       const config = parseArguments([
-        '--severity', 'critical',
-        '--mod-filter', '^core.*'
+        '--severity',
+        'critical',
+        '--mod-filter',
+        '^core.*',
       ]);
 
       expect(config.severity).toBe('critical');
@@ -119,7 +128,7 @@ describe('ValidateMods CLI', () => {
       const config = parseArguments([
         '--no-dependencies',
         '--no-cross-references',
-        '--check-load-order'
+        '--check-load-order',
       ]);
 
       expect(config.dependencies).toBe(false);
@@ -183,9 +192,7 @@ describe('ValidateMods CLI', () => {
     it('should prioritize errors over violations', () => {
       const results = {
         dependencies: { isValid: false },
-        crossReferences: new Map([
-          ['mod1', { hasViolations: true }]
-        ])
+        crossReferences: new Map([['mod1', { hasViolations: true }]]),
       };
       const config = { strictMode: true };
 
@@ -199,7 +206,7 @@ describe('ValidateMods CLI', () => {
     beforeEach(() => {
       mockOrchestrator = {
         validateEcosystem: jest.fn(),
-        validateMod: jest.fn()
+        validateMod: jest.fn(),
       };
     });
 
@@ -212,12 +219,12 @@ describe('ValidateMods CLI', () => {
         strictMode: false,
         continueOnError: true,
         timeout: 60000,
-        quiet: true
+        quiet: true,
       };
 
       mockOrchestrator.validateEcosystem.mockResolvedValue({
         dependencies: { isValid: true },
-        crossReferences: new Map()
+        crossReferences: new Map(),
       });
 
       const results = await runValidation(mockOrchestrator, config);
@@ -228,7 +235,7 @@ describe('ValidateMods CLI', () => {
         modsToValidate: undefined,
         strictMode: false,
         continueOnError: true,
-        timeout: 60000
+        timeout: 60000,
       });
       expect(results).toHaveProperty('dependencies');
     });
@@ -238,11 +245,11 @@ describe('ValidateMods CLI', () => {
         ecosystem: false,
         mods: ['positioning', 'intimacy'],
         crossReferences: true,
-        quiet: true
+        quiet: true,
       };
 
       mockOrchestrator.validateMod.mockResolvedValue({
-        crossReferences: { hasViolations: false }
+        crossReferences: { hasViolations: false },
       });
 
       const results = await runValidation(mockOrchestrator, config);
@@ -250,11 +257,11 @@ describe('ValidateMods CLI', () => {
       expect(mockOrchestrator.validateMod).toHaveBeenCalledTimes(2);
       expect(mockOrchestrator.validateMod).toHaveBeenCalledWith('positioning', {
         skipCrossReferences: false,
-        includeContext: true
+        includeContext: true,
       });
       expect(mockOrchestrator.validateMod).toHaveBeenCalledWith('intimacy', {
         skipCrossReferences: false,
-        includeContext: true
+        includeContext: true,
       });
       expect(results).toBeInstanceOf(Map);
       expect(results.size).toBe(2);
@@ -265,15 +272,16 @@ describe('ValidateMods CLI', () => {
         ecosystem: false,
         mods: ['mod1', 'mod2'],
         failFast: true,
-        quiet: true
+        quiet: true,
       };
 
       mockOrchestrator.validateMod
         .mockRejectedValueOnce(new Error('Validation failed'))
         .mockResolvedValueOnce({ crossReferences: { hasViolations: false } });
 
-      await expect(runValidation(mockOrchestrator, config))
-        .rejects.toThrow('Validation failed');
+      await expect(runValidation(mockOrchestrator, config)).rejects.toThrow(
+        'Validation failed'
+      );
 
       expect(mockOrchestrator.validateMod).toHaveBeenCalledTimes(1);
     });
@@ -283,7 +291,7 @@ describe('ValidateMods CLI', () => {
         ecosystem: false,
         mods: ['mod1', 'mod2'],
         failFast: false,
-        quiet: true
+        quiet: true,
       };
 
       mockOrchestrator.validateMod
@@ -298,7 +306,7 @@ describe('ValidateMods CLI', () => {
       expect(results.errors).toHaveLength(1);
       expect(results.errors[0]).toEqual({
         modId: 'mod1',
-        error: 'Validation failed'
+        error: 'Validation failed',
       });
     });
 
@@ -307,18 +315,18 @@ describe('ValidateMods CLI', () => {
         ecosystem: true,
         crossReferences: false,
         dependencies: true,
-        quiet: true
+        quiet: true,
       };
 
       mockOrchestrator.validateEcosystem.mockResolvedValue({
-        dependencies: { isValid: true }
+        dependencies: { isValid: true },
       });
 
       await runValidation(mockOrchestrator, config);
 
       expect(mockOrchestrator.validateEcosystem).toHaveBeenCalledWith(
         expect.objectContaining({
-          skipCrossReferences: true
+          skipCrossReferences: true,
         })
       );
     });

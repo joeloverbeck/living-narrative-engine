@@ -12,13 +12,8 @@
     }
   },
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ],
-    "primary": [
-      "items:item",
-      "items:can_apply_lipstick"
-    ]
+    "actor": ["items:inventory"],
+    "primary": ["items:item", "items:can_apply_lipstick"]
   },
   "prerequisites": [],
   "template": "coat your lips evenly with {item}",

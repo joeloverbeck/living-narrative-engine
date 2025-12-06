@@ -9,7 +9,14 @@
  * @see src/turns/states/awaitingExternalTurnEndState.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { TurnContext } from '../../../../src/turns/context/turnContext.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
@@ -74,7 +81,10 @@ describe('AwaitingExternalTurnEndState - Timeout Scenarios Integration', () => {
         validatedEventDispatcher: eventBus,
         logger,
       });
-      const handler = new TestTurnHandler({ logger, dispatcher: safeDispatcher });
+      const handler = new TestTurnHandler({
+        logger,
+        dispatcher: safeDispatcher,
+      });
       const onEndTurn = jest.fn();
 
       const context = new TurnContext({
@@ -138,7 +148,10 @@ describe('AwaitingExternalTurnEndState - Timeout Scenarios Integration', () => {
         validatedEventDispatcher: eventBus,
         logger,
       });
-      const handler = new TestTurnHandler({ logger, dispatcher: safeDispatcher });
+      const handler = new TestTurnHandler({
+        logger,
+        dispatcher: safeDispatcher,
+      });
       const onEndTurn = jest.fn();
 
       const context = new TurnContext({
@@ -200,7 +213,10 @@ describe('AwaitingExternalTurnEndState - Timeout Scenarios Integration', () => {
         validatedEventDispatcher: eventBus,
         logger,
       });
-      const handler = new TestTurnHandler({ logger, dispatcher: safeDispatcher });
+      const handler = new TestTurnHandler({
+        logger,
+        dispatcher: safeDispatcher,
+      });
       const onEndTurn = jest.fn();
 
       const context = new TurnContext({
@@ -265,103 +281,99 @@ describe('AwaitingExternalTurnEndState - Timeout Scenarios Integration', () => {
   });
 
   describe('Resource Cleanup at Scale', () => {
-    it(
-      'should clean up resources correctly across 100 state instances',
-      async () => {
-        // Arrange
-        const logger = createMockLogger();
-        const eventBus = createEventBus({ captureEvents: true });
-        const safeDispatcher = new SafeEventDispatcher({
-          validatedEventDispatcher: eventBus,
+    it('should clean up resources correctly across 100 state instances', async () => {
+      // Arrange
+      const logger = createMockLogger();
+      const eventBus = createEventBus({ captureEvents: true });
+      const safeDispatcher = new SafeEventDispatcher({
+        validatedEventDispatcher: eventBus,
+        logger,
+      });
+
+      const states = [];
+      const handlers = [];
+      const contexts = [];
+      const enterPromises = [];
+
+      // Act - Create 100 instances
+      for (let i = 0; i < 100; i++) {
+        const handler = new TestTurnHandler({
           logger,
+          dispatcher: safeDispatcher,
         });
+        const onEndTurn = jest.fn();
 
-        const states = [];
-        const handlers = [];
-        const contexts = [];
-        const enterPromises = [];
-
-        // Act - Create 100 instances
-        for (let i = 0; i < 100; i++) {
-          const handler = new TestTurnHandler({
-            logger,
-            dispatcher: safeDispatcher,
-          });
-          const onEndTurn = jest.fn();
-
-          const context = new TurnContext({
-            actor: { id: `actor-${i}` },
-            logger,
-            services: {
-              safeEventDispatcher: safeDispatcher,
-              turnEndPort: { signalTurnEnd: jest.fn() },
-              entityManager: {
-                getComponentData: jest.fn(),
-                getEntityInstance: jest.fn(),
-              },
+        const context = new TurnContext({
+          actor: { id: `actor-${i}` },
+          logger,
+          services: {
+            safeEventDispatcher: safeDispatcher,
+            turnEndPort: { signalTurnEnd: jest.fn() },
+            entityManager: {
+              getComponentData: jest.fn(),
+              getEntityInstance: jest.fn(),
             },
-            strategy: {
-              decideAction: jest.fn(),
-              getMetadata: jest.fn(() => ({})),
-              dispose: jest.fn(),
-            },
-            onEndTurnCallback: onEndTurn,
-            handlerInstance: handler,
-            onSetAwaitingExternalEventCallback: jest.fn(),
-          });
-
-          handler.setTurnContext(context);
-
-          const state = new AwaitingExternalTurnEndState(handler, {
-            timeoutMs: 1_000, // 1 second timeout
-          });
-
-          const enterPromise = state.enterState(handler, null);
-
-          states.push(state);
-          handlers.push(handler);
-          contexts.push(context);
-          enterPromises.push(enterPromise);
-        }
-
-        await flushPromises();
-
-        // Assert - 100 subscriptions created
-        expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(100);
-
-        // Verify all contexts are awaiting
-        contexts.forEach((ctx) => {
-          expect(ctx.isAwaitingExternalEvent()).toBe(true);
+          },
+          strategy: {
+            decideAction: jest.fn(),
+            getMetadata: jest.fn(() => ({})),
+            dispose: jest.fn(),
+          },
+          onEndTurnCallback: onEndTurn,
+          handlerInstance: handler,
+          onSetAwaitingExternalEventCallback: jest.fn(),
         });
 
-        // Act - Destroy all instances
-        for (let i = 0; i < 100; i++) {
-          await states[i].destroy(handlers[i]);
-        }
-        await flushPromises();
+        handler.setTurnContext(context);
 
-        // Wait for all enter promises to resolve (they should resolve after destroy aborts them)
-        await Promise.all(enterPromises);
-
-        // Assert - All subscriptions cleaned up
-        expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
-
-        // All contexts should no longer be awaiting
-        contexts.forEach((ctx) => {
-          expect(ctx.isAwaitingExternalEvent()).toBe(false);
+        const state = new AwaitingExternalTurnEndState(handler, {
+          timeoutMs: 1_000, // 1 second timeout
         });
 
-        // Advance timers past timeout - no orphan timers should fire
-        await jest.advanceTimersByTimeAsync(2_000);
-        await flushPromises();
+        const enterPromise = state.enterState(handler, null);
 
-        // No timeout callbacks should fire (all cleared by destroy)
-        const systemErrors = eventBus.events.filter(
-          (event) => event.eventType === SYSTEM_ERROR_OCCURRED_ID
-        );
-        expect(systemErrors.length).toBe(0);
-      },
-      30000
-    ); // Increased timeout for scale test
+        states.push(state);
+        handlers.push(handler);
+        contexts.push(context);
+        enterPromises.push(enterPromise);
+      }
+
+      await flushPromises();
+
+      // Assert - 100 subscriptions created
+      expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(100);
+
+      // Verify all contexts are awaiting
+      contexts.forEach((ctx) => {
+        expect(ctx.isAwaitingExternalEvent()).toBe(true);
+      });
+
+      // Act - Destroy all instances
+      for (let i = 0; i < 100; i++) {
+        await states[i].destroy(handlers[i]);
+      }
+      await flushPromises();
+
+      // Wait for all enter promises to resolve (they should resolve after destroy aborts them)
+      await Promise.all(enterPromises);
+
+      // Assert - All subscriptions cleaned up
+      expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
+
+      // All contexts should no longer be awaiting
+      contexts.forEach((ctx) => {
+        expect(ctx.isAwaitingExternalEvent()).toBe(false);
+      });
+
+      // Advance timers past timeout - no orphan timers should fire
+      await jest.advanceTimersByTimeAsync(2_000);
+      await flushPromises();
+
+      // No timeout callbacks should fire (all cleared by destroy)
+      const systemErrors = eventBus.events.filter(
+        (event) => event.eventType === SYSTEM_ERROR_OCCURRED_ID
+      );
+      expect(systemErrors.length).toBe(0);
+    }, 30000); // Increased timeout for scale test
   });
 });

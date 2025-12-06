@@ -40,15 +40,15 @@ inserted alongside torso, limb, and equipment descriptors with consistent format
 
 ## Documentation Map
 
-| Guide | Summary |
-| --- | --- |
-| [Architecture](./architecture.md) | End-to-end data flow, service responsibilities, and integration points. |
-| [Metadata Patterns](./metadata-patterns.md) | Authoring guide for inline and dedicated metadata definitions. |
-| [Integration Guide](./integration-guide.md) | How to wire the system into mods, DI registrations, and render pipelines. |
-| [API Reference](./api-reference.md) | Constructor options, public methods, and dispatched events. |
-| [Testing Guide](./testing-guide.md) | Available test suites and strategies for covering new behaviour. |
-| [Troubleshooting](./troubleshooting.md) | Common misconfigurations and how to diagnose them. |
-| Examples | Practical walkthroughs under [examples/](./examples/) for common use cases. |
+| Guide                                       | Summary                                                                     |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| [Architecture](./architecture.md)           | End-to-end data flow, service responsibilities, and integration points.     |
+| [Metadata Patterns](./metadata-patterns.md) | Authoring guide for inline and dedicated metadata definitions.              |
+| [Integration Guide](./integration-guide.md) | How to wire the system into mods, DI registrations, and render pipelines.   |
+| [API Reference](./api-reference.md)         | Constructor options, public methods, and dispatched events.                 |
+| [Testing Guide](./testing-guide.md)         | Available test suites and strategies for covering new behaviour.            |
+| [Troubleshooting](./troubleshooting.md)     | Common misconfigurations and how to diagnose them.                          |
+| Examples                                    | Practical walkthroughs under [examples/](./examples/) for common use cases. |
 
 ## Additional Resources
 

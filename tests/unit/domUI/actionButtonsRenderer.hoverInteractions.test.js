@@ -145,7 +145,9 @@ describe('ActionButtonsRenderer hover interactions and rendering coverage', () =
       shouldUseGrouping: jest.fn(() => false),
       groupActionsByNamespace: jest.fn(() => new Map()),
       getSortedNamespaces: jest.fn((namespaces) => [...namespaces]),
-      formatNamespaceDisplayName: jest.fn((namespace) => namespace.toUpperCase()),
+      formatNamespaceDisplayName: jest.fn((namespace) =>
+        namespace.toUpperCase()
+      ),
       shouldShowCounts: jest.fn(() => false),
     };
   });
@@ -283,9 +285,7 @@ describe('ActionButtonsRenderer hover interactions and rendering coverage', () =
     const renderer = createRenderer();
     const customEmpty = document.createElement('p');
     customEmpty.textContent = 'Nothing here';
-    jest
-      .spyOn(renderer, '_getEmptyListMessage')
-      .mockReturnValue(customEmpty);
+    jest.spyOn(renderer, '_getEmptyListMessage').mockReturnValue(customEmpty);
 
     renderer.availableActions = [];
     await renderer.renderList();
@@ -331,13 +331,17 @@ describe('ActionButtonsRenderer hover interactions and rendering coverage', () =
     container.appendChild(buttonA);
     container.appendChild(buttonB);
 
-    renderer.selectedAction = { index: 99, commandString: 'Old', actionId: 'core:old' };
+    renderer.selectedAction = {
+      index: 99,
+      commandString: 'Old',
+      actionId: 'core:old',
+    };
 
     renderer._onListRendered([actionA, actionB], container);
 
-    expect(container.classList.contains(ActionButtonsRenderer.FADE_IN_CLASS)).toBe(
-      true
-    );
+    expect(
+      container.classList.contains(ActionButtonsRenderer.FADE_IN_CLASS)
+    ).toBe(true);
     expect(buttonA.style.getPropertyValue('--i')).toBe('0');
     expect(buttonB.style.getPropertyValue('--i')).toBe('1');
     expect(renderer.selectedAction).toBeNull();

@@ -3,28 +3,32 @@
 **Status**: COMPLETED
 
 ## Files to Touch
+
 - `tests/unit/anatomy/validators/RecipeBodyDescriptorValidator.test.js` (New or update)
 - `tests/unit/anatomy/services/entityMatcherService.test.js` (Update)
 - `tests/integration/anatomy/RecipeValidationFlow.test.js` (New or update)
 
 ## Out of Scope
+
 - Modifying `RecipeBodyDescriptorValidator.js` or `entityMatcherService.js` logic (only tests).
 
 ## Acceptance Criteria
 
 ### Specific Tests
+
 - **Body Descriptor Validator:**
-    - Test: Invalid enumerated value (e.g., `height: "giganticish"`) fails.
-    - Test: Valid enumerated value passes.
-    - Test: Free-form descriptor (e.g., `smell`) accepts any string.
+  - Test: Invalid enumerated value (e.g., `height: "giganticish"`) fails.
+  - Test: Valid enumerated value passes.
+  - Test: Free-form descriptor (e.g., `smell`) accepts any string.
 - **Entity Matcher Service:**
-    - Test: `#matchesPropertyValues` returns `false` if entity lacks the component.
-    - Test: `#matchesPropertyValues` returns `false` if value mismatches.
-    - Test: `#matchesPropertyValues` returns `true` on exact match.
+  - Test: `#matchesPropertyValues` returns `false` if entity lacks the component.
+  - Test: `#matchesPropertyValues` returns `false` if value mismatches.
+  - Test: `#matchesPropertyValues` returns `true` on exact match.
 - **Integration:**
-    - Test: Full recipe validation fails if blueprint is unregistered (mock manifest or use real one).
+  - Test: Full recipe validation fails if blueprint is unregistered (mock manifest or use real one).
 
 ### Invariants
+
 - Tests must pass with current code (this is filling coverage gaps).
 
 ---
@@ -37,27 +41,27 @@ Upon investigation, **all requested tests already exist** in the codebase. The t
 
 ### Discrepancies Found
 
-| Ticket Claim | Reality | Resolution |
-|--------------|---------|------------|
-| `RecipeBodyDescriptorValidator.test.js` needs tests | File exists with 450 lines, all requested tests present | **No action needed** |
-| Test: Invalid enum value fails | Covered in lines 212-234 | **Already exists** |
-| Test: Valid enum value passes | Covered in lines 172-183 | **Already exists** |
-| Test: Free-form descriptor accepts any string | Covered in lines 282-299 | **Already exists** |
-| `entityMatcherService.test.js` needs `#matchesPropertyValues` tests | Method is PRIVATE (`#`), tested indirectly through public API | **Already covered** |
-| `RecipeValidationFlow.test.js` integration test | File doesn't exist, but `recipeBodyDescriptorsValidation.integration.test.js` exists | **Naming mismatch** |
-| Blueprint unregistered test | Exists in `BlueprintExistenceValidator.test.js` lines 98-114 | **Already exists** |
+| Ticket Claim                                                        | Reality                                                                              | Resolution           |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------- |
+| `RecipeBodyDescriptorValidator.test.js` needs tests                 | File exists with 450 lines, all requested tests present                              | **No action needed** |
+| Test: Invalid enum value fails                                      | Covered in lines 212-234                                                             | **Already exists**   |
+| Test: Valid enum value passes                                       | Covered in lines 172-183                                                             | **Already exists**   |
+| Test: Free-form descriptor accepts any string                       | Covered in lines 282-299                                                             | **Already exists**   |
+| `entityMatcherService.test.js` needs `#matchesPropertyValues` tests | Method is PRIVATE (`#`), tested indirectly through public API                        | **Already covered**  |
+| `RecipeValidationFlow.test.js` integration test                     | File doesn't exist, but `recipeBodyDescriptorsValidation.integration.test.js` exists | **Naming mismatch**  |
+| Blueprint unregistered test                                         | Exists in `BlueprintExistenceValidator.test.js` lines 98-114                         | **Already exists**   |
 
 ### Existing Test Coverage Locations
 
-| Requested Test | Existing Location |
-|----------------|-------------------|
-| Invalid enum value fails | `tests/unit/anatomy/validation/validators/RecipeBodyDescriptorValidator.test.js:212-234` |
-| Valid enum value passes | `tests/unit/anatomy/validation/validators/RecipeBodyDescriptorValidator.test.js:172-183` |
-| Free-form descriptor accepts string | `tests/unit/anatomy/validation/validators/RecipeBodyDescriptorValidator.test.js:282-299` |
-| Missing component returns false | `tests/unit/anatomy/services/entityMatcherService.test.js:130-140` (via `torso_missing_skin` scenario) |
-| Value mismatch returns false | `tests/unit/anatomy/services/entityMatcherService.test.js:173-193` |
-| Exact match returns true | `tests/unit/anatomy/services/entityMatcherService.test.js:91-111` |
-| Blueprint unregistered fails | `tests/unit/anatomy/validation/validators/BlueprintExistenceValidator.test.js:98-114` |
+| Requested Test                      | Existing Location                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Invalid enum value fails            | `tests/unit/anatomy/validation/validators/RecipeBodyDescriptorValidator.test.js:212-234`               |
+| Valid enum value passes             | `tests/unit/anatomy/validation/validators/RecipeBodyDescriptorValidator.test.js:172-183`               |
+| Free-form descriptor accepts string | `tests/unit/anatomy/validation/validators/RecipeBodyDescriptorValidator.test.js:282-299`               |
+| Missing component returns false     | `tests/unit/anatomy/services/entityMatcherService.test.js:130-140` (via `torso_missing_skin` scenario) |
+| Value mismatch returns false        | `tests/unit/anatomy/services/entityMatcherService.test.js:173-193`                                     |
+| Exact match returns true            | `tests/unit/anatomy/services/entityMatcherService.test.js:91-111`                                      |
+| Blueprint unregistered fails        | `tests/unit/anatomy/validation/validators/BlueprintExistenceValidator.test.js:98-114`                  |
 
 ### Notes
 
@@ -68,6 +72,7 @@ Upon investigation, **all requested tests already exist** in the codebase. The t
 3. **Integration Test Naming**: The ticket suggested `RecipeValidationFlow.test.js` but the existing integration test is named `recipeBodyDescriptorsValidation.integration.test.js`.
 
 ### Changes Made
+
 - **No source code changes** - all requested tests already exist
 - **No new test files created** - coverage is complete
 - Ticket moved to archive with this outcome documentation

@@ -20,18 +20,22 @@ The current character data formatting system (`CharacterDataFormatter.js`) gener
 4. **No Attention Optimization**: Section ordering doesn't account for primacy/recency effects
 
 **Example Current Format**:
+
 ```markdown
 YOU ARE Vespera Nightwhisper.
 This is your identity. All thoughts, actions, and words must stem from this core truth.
 
 ## Your Description
+
 **Apparent age**: around 25-27 years old
 ...
 
 ## Your Personality
+
 A cat-girl bard, ruthlessly ambitious about my art...
 
 ## Your Profile
+
 I grew up in the back alleys of the capital...
 ```
 
@@ -45,6 +49,7 @@ Convert character data formatting from Markdown to XML with:
 4. **Primacy/Recency Ordering**: Identity first, actionable state last
 
 **New XML Format**:
+
 ```xml
 <character_data>
   <!-- THIS IS YOUR IDENTITY. Every thought, action, and word stems from this. -->
@@ -202,26 +207,26 @@ Convert character data formatting from Markdown to XML with:
 
 ### Component Mapping Table
 
-| Component ID | DTO Field | XML Path | Section |
-|--------------|-----------|----------|---------|
-| `core:name` | `name` | `<identity><name>` | 1 |
-| `core:apparent_age` | `apparentAge` | `<identity><apparent_age>` | 1 |
-| `core:description` | `description` | `<identity><description>` | 1 |
-| `core:profile` | `profile` | `<core_self><profile>` | 2 |
-| `core:personality` | `personality` | `<core_self><personality>` | 2 |
-| `core:motivations` | `motivations` | `<psychology><core_motivations>` | 3 |
-| `core:internal_tensions` | `internalTensions` | `<psychology><internal_tensions>` | 3 |
-| `core:dilemmas` | `coreDilemmas` | `<psychology><dilemmas>` | 3 |
-| `core:strengths` | `strengths` | `<traits><strengths>` | 4 |
-| `core:weaknesses` | `weaknesses` | `<traits><weaknesses>` | 4 |
-| `core:likes` | `likes` | `<traits><likes>` | 4 |
-| `core:dislikes` | `dislikes` | `<traits><dislikes>` | 4 |
-| `core:fears` | `fears` | `<traits><fears>` | 4 |
-| `core:secrets` | `secrets` | `<traits><secrets>` | 4 |
-| `core:speech_patterns` | `speechPatterns` | `<speech_patterns>` | 5 |
-| `core:goals` | `goals` | `<current_state><goals>` | 6 |
-| `core:notes` | `notes` | `<current_state><notes>` | 6 |
-| `core:short_term_memory` | `shortTermMemory` | `<current_state><recent_thoughts>` | 6 |
+| Component ID             | DTO Field          | XML Path                           | Section |
+| ------------------------ | ------------------ | ---------------------------------- | ------- |
+| `core:name`              | `name`             | `<identity><name>`                 | 1       |
+| `core:apparent_age`      | `apparentAge`      | `<identity><apparent_age>`         | 1       |
+| `core:description`       | `description`      | `<identity><description>`          | 1       |
+| `core:profile`           | `profile`          | `<core_self><profile>`             | 2       |
+| `core:personality`       | `personality`      | `<core_self><personality>`         | 2       |
+| `core:motivations`       | `motivations`      | `<psychology><core_motivations>`   | 3       |
+| `core:internal_tensions` | `internalTensions` | `<psychology><internal_tensions>`  | 3       |
+| `core:dilemmas`          | `coreDilemmas`     | `<psychology><dilemmas>`           | 3       |
+| `core:strengths`         | `strengths`        | `<traits><strengths>`              | 4       |
+| `core:weaknesses`        | `weaknesses`       | `<traits><weaknesses>`             | 4       |
+| `core:likes`             | `likes`            | `<traits><likes>`                  | 4       |
+| `core:dislikes`          | `dislikes`         | `<traits><dislikes>`               | 4       |
+| `core:fears`             | `fears`            | `<traits><fears>`                  | 4       |
+| `core:secrets`           | `secrets`          | `<traits><secrets>`                | 4       |
+| `core:speech_patterns`   | `speechPatterns`   | `<speech_patterns>`                | 5       |
+| `core:goals`             | `goals`            | `<current_state><goals>`           | 6       |
+| `core:notes`             | `notes`            | `<current_state><notes>`           | 6       |
+| `core:short_term_memory` | `shortTermMemory`  | `<current_state><recent_thoughts>` | 6       |
 
 ---
 
@@ -231,28 +236,31 @@ Convert character data formatting from Markdown to XML with:
 
 The section order is designed to leverage LLM attention patterns:
 
-| Position | Section | Rationale |
-|----------|---------|-----------|
-| 1 | `<identity>` | **Primacy Effect**: First processed, highest attention weight. Name anchors "who the LLM is". |
-| 2 | `<core_self>` | Early context for interpreting all following traits |
-| 3 | `<psychology>` | Middle placement for stable attention (deep drivers) |
-| 4 | `<traits>` | Reference material, accessed as needed |
-| 5 | `<speech_patterns>` | Later position for immediate use in generation |
-| 6 | `<current_state>` | **Recency Effect**: Most recent, highest recall for action selection |
+| Position | Section             | Rationale                                                                                     |
+| -------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| 1        | `<identity>`        | **Primacy Effect**: First processed, highest attention weight. Name anchors "who the LLM is". |
+| 2        | `<core_self>`       | Early context for interpreting all following traits                                           |
+| 3        | `<psychology>`      | Middle placement for stable attention (deep drivers)                                          |
+| 4        | `<traits>`          | Reference material, accessed as needed                                                        |
+| 5        | `<speech_patterns>` | Later position for immediate use in generation                                                |
+| 6        | `<current_state>`   | **Recency Effect**: Most recent, highest recall for action selection                          |
 
 ### Comment Strategy
 
 **Identity Priming Comment** (Top):
+
 - Heavy visual borders (`═══`) draw attention
 - Second-person address ("You ARE this person")
 - Placed immediately after root tag
 
 **Section Introduction Comments**:
+
 - Format: `SECTION [N]: [NAME] ([SHORT PHRASE])`
 - Behavioral hint on second line
 - Medium visual borders (`───`)
 
 **Inline Guidance Comments**:
+
 - Brief, actionable instruction
 - Inside tag, before content
 - Only where clarification needed
@@ -267,6 +275,7 @@ The section order is designed to leverage LLM attention patterns:
 ### Hierarchy Depth
 
 **Maximum 3 levels** for attention tracking:
+
 ```
 character_data (root)
 ├── identity (L1)
@@ -304,6 +313,7 @@ ActorDataExtractor → ActorPromptDataDTO → CharacterDataXmlBuilder → XML st
 **Purpose**: Low-level stateless utility for XML element generation with proper escaping.
 
 **Interface**:
+
 ```javascript
 class XmlElementBuilder {
   /**
@@ -366,6 +376,7 @@ class XmlElementBuilder {
 **Purpose**: Main orchestrator that builds complete character XML from ActorPromptDataDTO.
 
 **Interface**:
+
 ```javascript
 class CharacterDataXmlBuilder {
   #logger;
@@ -412,6 +423,7 @@ class CharacterDataXmlBuilder {
 **File**: `src/dependencyInjection/tokens/tokens-ai.js`
 
 Add:
+
 ```javascript
 export const tokens = {
   // ... existing tokens
@@ -425,6 +437,7 @@ export const tokens = {
 **File**: `src/dependencyInjection/registrations/aiRegistrations.js`
 
 Add to `registerPromptingEngine()`:
+
 ```javascript
 // XML Character Data Building
 registrar.singletonFactory(
@@ -434,10 +447,11 @@ registrar.singletonFactory(
 
 registrar.singletonFactory(
   tokens.CharacterDataXmlBuilder,
-  (c) => new CharacterDataXmlBuilder({
-    logger: c.resolve(tokens.ILogger),
-    xmlElementBuilder: c.resolve(tokens.XmlElementBuilder)
-  })
+  (c) =>
+    new CharacterDataXmlBuilder({
+      logger: c.resolve(tokens.ILogger),
+      xmlElementBuilder: c.resolve(tokens.XmlElementBuilder),
+    })
 );
 ```
 
@@ -448,6 +462,7 @@ registrar.singletonFactory(
 **Modification**: Replace `CharacterDataFormatter` with `CharacterDataXmlBuilder`
 
 **Before**:
+
 ```javascript
 import { CharacterDataFormatter } from './CharacterDataFormatter.js';
 
@@ -459,6 +474,7 @@ return this.#characterDataFormatter.formatCharacterPersona(characterData);
 ```
 
 **After**:
+
 ```javascript
 // Inject via DI instead of direct instantiation
 constructor({ logger, characterDataXmlBuilder, ... }) {
@@ -480,6 +496,7 @@ return this.#characterDataXmlBuilder.buildCharacterDataXml(characterData);
 - **Preserve Voice**: Keep character idiom and speech patterns
 
 **Example**:
+
 ```xml
 <profile>
 I'm a cat-girl bard, ruthlessly ambitious about my art. I don't just want
@@ -498,6 +515,7 @@ getting too close emotionally and I'm gone.
 - **Thoughts**: Quoted, most recent first
 
 **Example**:
+
 ```xml
 <goals>
 - Compose three complete pieces before the next full moon
@@ -522,6 +540,7 @@ getting too close emotionally and I'm gone.
 - **Rationale**: Prose maintains character voice; lists feel clinical
 
 **Example**:
+
 ```xml
 <strengths>
 Combat composure that unsettles my allies - I don't just handle violence,
@@ -535,6 +554,7 @@ the flicker in your face, the hitch in your breath.
 Support both legacy and structured formats:
 
 **Legacy Format** (string array):
+
 ```xml
 <speech_patterns>
 <!-- Use these patterns naturally in dialogue - don't force every one. -->
@@ -545,6 +565,7 @@ Support both legacy and structured formats:
 ```
 
 **Structured Format** (object array):
+
 ```xml
 <speech_patterns>
 <!-- Use these patterns naturally in dialogue - don't force every one. -->
@@ -582,20 +603,20 @@ Large decorated cat ears with silver hoops. Long expressive tail with tufted fur
 
 ## Files to Modify/Create
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/prompting/xmlElementBuilder.js` | **CREATE** | Low-level XML utility |
-| `src/prompting/characterDataXmlBuilder.js` | **CREATE** | Main XML orchestrator |
-| `src/dependencyInjection/tokens/tokens-ai.js` | **MODIFY** | Add new tokens |
-| `src/dependencyInjection/registrations/aiRegistrations.js` | **MODIFY** | Register new services |
-| `src/prompting/AIPromptContentProvider.js` | **MODIFY** | Use new XML builder |
-| `src/prompting/CharacterDataFormatter.js` | **DEPRECATE** | Remove after validation |
-| `tests/unit/prompting/xmlElementBuilder.test.js` | **CREATE** | Unit tests |
-| `tests/unit/prompting/characterDataXmlBuilder.test.js` | **CREATE** | Unit tests |
-| `tests/unit/prompting/CharacterDataFormatter.test.js` | **MODIFY** | Update assertions |
-| `tests/unit/prompting/AIPromptContentProvider.test.js` | **MODIFY** | Update mocks |
-| `tests/integration/prompting/CharacterDataFormatter.integration.test.js` | **MODIFY** | Update expectations |
-| `tests/common/prompting/xmlMatchers.js` | **CREATE** | Custom Jest matchers |
+| File                                                                     | Action        | Description             |
+| ------------------------------------------------------------------------ | ------------- | ----------------------- |
+| `src/prompting/xmlElementBuilder.js`                                     | **CREATE**    | Low-level XML utility   |
+| `src/prompting/characterDataXmlBuilder.js`                               | **CREATE**    | Main XML orchestrator   |
+| `src/dependencyInjection/tokens/tokens-ai.js`                            | **MODIFY**    | Add new tokens          |
+| `src/dependencyInjection/registrations/aiRegistrations.js`               | **MODIFY**    | Register new services   |
+| `src/prompting/AIPromptContentProvider.js`                               | **MODIFY**    | Use new XML builder     |
+| `src/prompting/CharacterDataFormatter.js`                                | **DEPRECATE** | Remove after validation |
+| `tests/unit/prompting/xmlElementBuilder.test.js`                         | **CREATE**    | Unit tests              |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js`                   | **CREATE**    | Unit tests              |
+| `tests/unit/prompting/CharacterDataFormatter.test.js`                    | **MODIFY**    | Update assertions       |
+| `tests/unit/prompting/AIPromptContentProvider.test.js`                   | **MODIFY**    | Update mocks            |
+| `tests/integration/prompting/CharacterDataFormatter.integration.test.js` | **MODIFY**    | Update expectations     |
+| `tests/common/prompting/xmlMatchers.js`                                  | **CREATE**    | Custom Jest matchers    |
 
 ---
 
@@ -617,9 +638,10 @@ expect.extend({
 
     return {
       pass: !parseError,
-      message: () => parseError
-        ? `Expected well-formed XML but got parse error: ${parseError.textContent}`
-        : `Expected invalid XML but received well-formed XML`
+      message: () =>
+        parseError
+          ? `Expected well-formed XML but got parse error: ${parseError.textContent}`
+          : `Expected invalid XML but received well-formed XML`,
     };
   },
 
@@ -633,9 +655,10 @@ expect.extend({
 
     return {
       pass: !!element,
-      message: () => element
-        ? `Expected XML not to contain <${elementName}> but it did`
-        : `Expected XML to contain <${elementName}> but it didn't`
+      message: () =>
+        element
+          ? `Expected XML not to contain <${elementName}> but it did`
+          : `Expected XML to contain <${elementName}> but it didn't`,
     };
   },
 
@@ -652,11 +675,12 @@ expect.extend({
 
     return {
       pass,
-      message: () => pass
-        ? `Expected <${elementName}> not to contain "${expectedContent}"`
-        : `Expected <${elementName}> to contain "${expectedContent}" but got "${actualContent}"`
+      message: () =>
+        pass
+          ? `Expected <${elementName}> not to contain "${expectedContent}"`
+          : `Expected <${elementName}> to contain "${expectedContent}" but got "${actualContent}"`,
     };
-  }
+  },
 });
 ```
 
@@ -711,56 +735,60 @@ expect.extend({
 
 ```javascript
 export const MINIMAL_CHARACTER_DATA = {
-  name: 'Test Character'
+  name: 'Test Character',
 };
 
 export const COMPLETE_CHARACTER_DATA = {
   name: 'Vespera Nightwhisper',
   apparentAge: { minAge: 25, maxAge: 27, bestGuess: 26 },
   description: "5'6\" dancer's build with lean muscle...",
-  personality: "A cat-girl bard, ruthlessly ambitious about my art...",
-  profile: "I grew up in the back alleys of the capital...",
-  motivations: "I need to create something that matters...",
-  internalTensions: "The performer vs the person...",
-  coreDilemmas: "Is authenticity possible when performance is survival?",
-  strengths: "Combat composure that unsettles my allies...",
-  weaknesses: "Impatient with incompetence...",
-  likes: "Classical music, fine wine, witty banter",
-  dislikes: "Dishonesty, rudeness, small talk",
-  fears: "Genuine emotional intimacy",
+  personality: 'A cat-girl bard, ruthlessly ambitious about my art...',
+  profile: 'I grew up in the back alleys of the capital...',
+  motivations: 'I need to create something that matters...',
+  internalTensions: 'The performer vs the person...',
+  coreDilemmas: 'Is authenticity possible when performance is survival?',
+  strengths: 'Combat composure that unsettles my allies...',
+  weaknesses: 'Impatient with incompetence...',
+  likes: 'Classical music, fine wine, witty banter',
+  dislikes: 'Dishonesty, rudeness, small talk',
+  fears: 'Genuine emotional intimacy',
   secrets: "I write poetry I've never shown anyone",
   speechPatterns: [
     {
-      type: "Feline Verbal Tics",
-      contexts: ["casual", "manipulative"],
-      examples: ["Oh meow-y goodness..."]
-    }
+      type: 'Feline Verbal Tics',
+      contexts: ['casual', 'manipulative'],
+      examples: ['Oh meow-y goodness...'],
+    },
   ],
   goals: [
-    "Compose three pieces before the full moon",
-    "Find emotional depth for inspiration"
+    'Compose three pieces before the full moon',
+    'Find emotional depth for inspiration',
   ],
   notes: [
-    { text: "The hybrid lute-viol is my only genuine relationship", subject: "my instrument", subjectType: "entity" }
+    {
+      text: 'The hybrid lute-viol is my only genuine relationship',
+      subject: 'my instrument',
+      subjectType: 'entity',
+    },
   ],
   shortTermMemory: {
     thoughts: [
-      { text: "That look she gave me...", timestamp: "2024-01-15T10:30:00Z" }
-    ]
-  }
+      { text: 'That look she gave me...', timestamp: '2024-01-15T10:30:00Z' },
+    ],
+  },
 };
 
 export const CHARACTER_WITH_SPECIAL_CHARS = {
   name: 'Test <Character> & "Friends"',
-  description: "Quote's here with <brackets> & ampersands"
+  description: "Quote's here with <brackets> & ampersands",
 };
 
 export const CHARACTER_WITH_LEGACY_SPEECH = {
   name: 'Legacy Character',
   speechPatterns: [
-    "(when happy) Big smile and wave",
-    "(when sad) Quiet and withdrawn"
-  ]
+    '(when happy) Big smile and wave',
+    '(when sad) Quiet and withdrawn',
+  ],
 };
 ```
 
@@ -787,6 +815,7 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 ### Phase 1: Infrastructure (Days 1-2)
 
 **Tasks**:
+
 1. Create `XmlElementBuilder` class
 2. Create comprehensive unit tests for XmlElementBuilder
 3. Create `CharacterDataXmlBuilder` class
@@ -794,6 +823,7 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 5. Add DI tokens
 
 **Validation Gate**:
+
 - [ ] XmlElementBuilder tests pass (100% coverage)
 - [ ] CharacterDataXmlBuilder tests pass (80%+ branch coverage)
 - [ ] No changes to existing behavior
@@ -801,12 +831,14 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 ### Phase 2: Integration (Days 3-4)
 
 **Tasks**:
+
 1. Register services in DI container
 2. Modify `AIPromptContentProvider` to use new builder
 3. Update integration tests
 4. Update any direct CharacterDataFormatter usage
 
 **Validation Gate**:
+
 - [ ] Integration tests pass
 - [ ] E2E prompt generation works
 - [ ] XML output is well-formed
@@ -814,12 +846,14 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 ### Phase 3: Validation (Days 5-6)
 
 **Tasks**:
+
 1. Update all test assertions from Markdown to XML
 2. Verify all character data fields present in output
 3. Performance validation (< 20% regression)
 4. Manual LLM response testing
 
 **Validation Gate**:
+
 - [ ] All tests pass with new assertions
 - [ ] Performance within threshold
 - [ ] LLM responses acceptable quality
@@ -827,12 +861,14 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 ### Phase 4: Cleanup (Days 7-8)
 
 **Tasks**:
+
 1. Remove `CharacterDataFormatter.js`
 2. Remove unused imports/references
 3. Update documentation
 4. Final test coverage verification
 
 **Validation Gate**:
+
 - [ ] 80%+ branch coverage maintained
 - [ ] 90% function/line coverage maintained
 - [ ] No dead code remaining
@@ -842,6 +878,7 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 ## Success Criteria
 
 ### Mandatory
+
 - [ ] All 18 character components mapped to XML structure
 - [ ] XML output is well-formed (validates against parser)
 - [ ] LLM optimization features implemented (comments, ordering)
@@ -850,6 +887,7 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 - [ ] All existing tests updated and passing
 
 ### Desirable
+
 - [ ] Clean DI integration
 - [ ] Comprehensive test fixtures
 - [ ] Documentation complete
@@ -858,12 +896,12 @@ export const CHARACTER_WITH_LEGACY_SPEECH = {
 
 ## Risks and Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| LLM behavior change | High | Manual testing with sample prompts before/after |
-| Token count increase | Medium | Monitor token counts; XML overhead ~200 tokens |
-| Test assertion bulk update | Medium | Use custom matchers to simplify |
-| Performance regression | Medium | Benchmark at each phase |
+| Risk                       | Impact | Mitigation                                      |
+| -------------------------- | ------ | ----------------------------------------------- |
+| LLM behavior change        | High   | Manual testing with sample prompts before/after |
+| Token count increase       | Medium | Monitor token counts; XML overhead ~200 tokens  |
+| Test assertion bulk update | Medium | Use custom matchers to simplify                 |
+| Performance regression     | Medium | Benchmark at each phase                         |
 
 ---
 
@@ -1022,6 +1060,6 @@ wasn't an accident - I went looking for that clarity.
 
 ## Document History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | 2025-11-24 | Initial specification |
+| Version | Date       | Changes               |
+| ------- | ---------- | --------------------- |
+| 1.0.0   | 2025-11-24 | Initial specification |

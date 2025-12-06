@@ -58,8 +58,11 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedTarget = testFixture.entityManager.getEntityInstance('target1');
-      expect(updatedTarget.components['positioning:sitting_on']).toBeUndefined();
+      const updatedTarget =
+        testFixture.entityManager.getEntityInstance('target1');
+      expect(
+        updatedTarget.components['positioning:sitting_on']
+      ).toBeUndefined();
     });
 
     it('should add straddling_waist component to PRIMARY target with facing_away=true', async () => {
@@ -99,8 +102,10 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedTarget = testFixture.entityManager.getEntityInstance('target1');
-      const straddling = updatedTarget.components['positioning:straddling_waist'];
+      const updatedTarget =
+        testFixture.entityManager.getEntityInstance('target1');
+      const straddling =
+        updatedTarget.components['positioning:straddling_waist'];
 
       expect(straddling).toBeDefined();
       expect(straddling.target_id).toBe('actor1');
@@ -144,7 +149,8 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedTarget = testFixture.entityManager.getEntityInstance('target1');
+      const updatedTarget =
+        testFixture.entityManager.getEntityInstance('target1');
       const facingAway = updatedTarget.components['positioning:facing_away'];
 
       expect(facingAway).toBeDefined();
@@ -188,7 +194,8 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
       const actorSitting = updatedActor.components['positioning:sitting_on'];
 
       expect(actorSitting).toBeDefined();
@@ -236,7 +243,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const turnedBackEvent = testFixture.events.find(
-        e => e.eventType === 'positioning:actor_turned_back'
+        (e) => e.eventType === 'positioning:actor_turned_back'
       );
 
       expect(turnedBackEvent).toBeDefined();
@@ -282,7 +289,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const successEvent = testFixture.events.find(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
 
       expect(successEvent).toBeDefined();
@@ -328,7 +335,7 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const successEvent = testFixture.events.find(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
 
       expect(successEvent.payload.message).toBe(
@@ -371,9 +378,14 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedTarget = testFixture.entityManager.getEntityInstance('target1');
-      expect(updatedTarget.components['positioning:sitting_on']).toBeUndefined();
-      expect(updatedTarget.components['positioning:straddling_waist']).toBeDefined();
+      const updatedTarget =
+        testFixture.entityManager.getEntityInstance('target1');
+      expect(
+        updatedTarget.components['positioning:sitting_on']
+      ).toBeUndefined();
+      expect(
+        updatedTarget.components['positioning:straddling_waist']
+      ).toBeDefined();
       expect(updatedTarget.components['positioning:facing_away']).toBeDefined();
     });
 
@@ -414,7 +426,8 @@ describe('lift_onto_lap_facing_away - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedTarget = testFixture.entityManager.getEntityInstance('target1');
+      const updatedTarget =
+        testFixture.entityManager.getEntityInstance('target1');
 
       // Verify critical components preserved
       expect(updatedTarget.components['core:position']).toBeDefined();

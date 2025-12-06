@@ -560,16 +560,18 @@ describe('PerformanceMonitor', () => {
         .spyOn(global, 'clearInterval')
         .mockImplementation(() => {});
 
-      const metricsSpy = jest.spyOn(monitor, 'getRealtimeMetrics').mockReturnValue({
-        activeSpans: 0,
-        completedSpans: 0,
-        totalOperations: 0,
-        errorCount: 0,
-        currentConcurrency: 0,
-        currentDuration: 120,
-        recentAlerts: [],
-        memoryUsageMB: 0,
-      });
+      const metricsSpy = jest
+        .spyOn(monitor, 'getRealtimeMetrics')
+        .mockReturnValue({
+          activeSpans: 0,
+          completedSpans: 0,
+          totalOperations: 0,
+          errorCount: 0,
+          currentConcurrency: 0,
+          currentDuration: 120,
+          recentAlerts: [],
+          memoryUsageMB: 0,
+        });
       const memorySpy = jest
         .spyOn(monitor, 'getMemoryUsage')
         .mockReturnValue({ estimatedSizeMB: 0 });
@@ -676,7 +678,9 @@ describe('PerformanceMonitor', () => {
         intervalCallback();
 
         expect(monitor.getAlerts({ type: 'slow_operation' })).toHaveLength(0);
-        expect(monitor.getAlerts({ type: 'critical_operation' })).toHaveLength(0);
+        expect(monitor.getAlerts({ type: 'critical_operation' })).toHaveLength(
+          0
+        );
       } finally {
         if (stopMonitoring) {
           stopMonitoring();

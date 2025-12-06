@@ -5,9 +5,7 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "patterns"
-    ],
+    "required": ["patterns"],
     "properties": {
       "patterns": {
         "type": "array",
@@ -20,10 +18,7 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": [
-                "type",
-                "examples"
-              ],
+              "required": ["type", "examples"],
               "properties": {
                 "type": {
                   "type": "string",

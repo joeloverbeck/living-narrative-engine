@@ -26,10 +26,7 @@ Create the action definition file for the `unwield_item` action. This action all
   "description": "Stop wielding an item, freeing up your hands",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory",
-      "positioning:wielding"
-    ]
+    "actor": ["items:inventory", "positioning:wielding"]
   },
   "targets": {
     "primary": {
@@ -65,6 +62,7 @@ None
 ### Why `required_components.actor` includes `positioning:wielding`
 
 Unlike `wield_threateningly` which only requires `items:inventory`, the `unwield_item` action requires:
+
 - `items:inventory` - actor must have inventory system
 - `positioning:wielding` - actor must currently be wielding something
 
@@ -73,6 +71,7 @@ This ensures the action only appears when there are items to unwield.
 ### Why no `prerequisites`
 
 The `wield_threateningly` action has a prerequisite checking for a free grabbing appendage:
+
 ```json
 "prerequisites": [
   {
@@ -83,6 +82,7 @@ The `wield_threateningly` action has a prerequisite checking for a free grabbing
 ```
 
 The `unwield_item` action does NOT need this because:
+
 - We're releasing an appendage, not acquiring one
 - The `positioning:wielding` component requirement already ensures there's something to unwield
 
@@ -122,9 +122,11 @@ npm run test:integration -- --testPathPattern="weapons"  # Existing weapons test
 ### What was actually changed vs originally planned
 
 **Planned:**
+
 - Create action file `data/mods/weapons/actions/unwield_item.action.json`
 
 **Actual:**
+
 - Created action file exactly as specified with no deviations
 
 ### Validation Results

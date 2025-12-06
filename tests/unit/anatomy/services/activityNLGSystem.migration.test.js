@@ -157,7 +157,11 @@ describe('ActivityNLGSystem - Migrated Tests (Batch 3)', () => {
 
     it('should fallback to entity ID when name component missing', () => {
       // Source: activityDescriptionService.characterization.test.js lines 1042-1051
-      const entity = createStandardEntity({ id: 'entity1', name: null, gender: null });
+      const entity = createStandardEntity({
+        id: 'entity1',
+        name: null,
+        gender: null,
+      });
       const entityMap = new Map([['entity1', entity]]);
       mockEntityManager = createMockEntityManager(entityMap);
 
@@ -234,7 +238,8 @@ describe('ActivityNLGSystem - Migrated Tests (Batch 3)', () => {
       // Source: activityDescriptionService.characterization.test.js lines 1087-1096
       const entity = createStandardEntity({ id: 'entity1', gender: null });
       // Override getAllComponents to only have core:name
-      entity.getAllComponents = () => new Map([['core:name', { text: 'Alex' }]]);
+      entity.getAllComponents = () =>
+        new Map([['core:name', { text: 'Alex' }]]);
       const entityMap = new Map([['entity1', entity]]);
       mockEntityManager = createMockEntityManager(entityMap);
 
@@ -395,7 +400,9 @@ describe('ActivityNLGSystem - Migrated Tests (Batch 3)', () => {
       const hooks = nlgSystem.getTestHooks();
       const actorRef = 'John';
       // generateActivityPhrase needs options with actorId for target resolution
-      const phrase = hooks.generateActivityPhrase(actorRef, activity, false, { actorId: 'actor1' });
+      const phrase = hooks.generateActivityPhrase(actorRef, activity, false, {
+        actorId: 'actor1',
+      });
 
       expect(phrase).toContain('Alice');
     });

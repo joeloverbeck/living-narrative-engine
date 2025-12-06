@@ -12,17 +12,32 @@ describe('initHelpers.setupPersistenceListeners', () => {
 
     setupPersistenceListeners(dispatcher, listeners, logger);
 
-    expect(dispatcher.subscribe).toHaveBeenNthCalledWith(1, 'event:a', listeners[0].handler);
-    expect(dispatcher.subscribe).toHaveBeenNthCalledWith(2, 'event:b', listeners[1].handler);
-    expect(logger.debug).toHaveBeenCalledWith('Registered AI persistence listeners.');
+    expect(dispatcher.subscribe).toHaveBeenNthCalledWith(
+      1,
+      'event:a',
+      listeners[0].handler
+    );
+    expect(dispatcher.subscribe).toHaveBeenNthCalledWith(
+      2,
+      'event:b',
+      listeners[1].handler
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Registered AI persistence listeners.'
+    );
   });
 
   it('allows omitting the logger without throwing', () => {
     const dispatcher = { subscribe: jest.fn() };
     const listeners = [{ eventId: 'event:c', handler: jest.fn() }];
 
-    expect(() => setupPersistenceListeners(dispatcher, listeners)).not.toThrow();
-    expect(dispatcher.subscribe).toHaveBeenCalledWith('event:c', listeners[0].handler);
+    expect(() =>
+      setupPersistenceListeners(dispatcher, listeners)
+    ).not.toThrow();
+    expect(dispatcher.subscribe).toHaveBeenCalledWith(
+      'event:c',
+      listeners[0].handler
+    );
   });
 
   it('throws when the dispatcher is missing a subscribe function', () => {
@@ -30,7 +45,7 @@ describe('initHelpers.setupPersistenceListeners', () => {
     const listeners = [{ eventId: 'event:d', handler: jest.fn() }];
 
     expect(() => setupPersistenceListeners(dispatcher, listeners)).toThrow(
-      'setupPersistenceListeners: invalid dispatcher',
+      'setupPersistenceListeners: invalid dispatcher'
     );
   });
 
@@ -38,7 +53,7 @@ describe('initHelpers.setupPersistenceListeners', () => {
     const dispatcher = { subscribe: jest.fn() };
 
     expect(() => setupPersistenceListeners(dispatcher, null)).toThrow(
-      'setupPersistenceListeners: listeners must be an array',
+      'setupPersistenceListeners: listeners must be an array'
     );
   });
 
@@ -47,7 +62,7 @@ describe('initHelpers.setupPersistenceListeners', () => {
     const listeners = [{ eventId: 'event:e', handler: 'not a function' }];
 
     expect(() => setupPersistenceListeners(dispatcher, listeners)).toThrow(
-      'setupPersistenceListeners: invalid listener definition',
+      'setupPersistenceListeners: invalid listener definition'
     );
     expect(dispatcher.subscribe).not.toHaveBeenCalled();
   });
@@ -57,7 +72,7 @@ describe('initHelpers.setupPersistenceListeners', () => {
     const listeners = [{ eventId: '', handler: jest.fn() }];
 
     expect(() => setupPersistenceListeners(dispatcher, listeners)).toThrow(
-      'setupPersistenceListeners: invalid listener definition',
+      'setupPersistenceListeners: invalid listener definition'
     );
     expect(dispatcher.subscribe).not.toHaveBeenCalled();
   });

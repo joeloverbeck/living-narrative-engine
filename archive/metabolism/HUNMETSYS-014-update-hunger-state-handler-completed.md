@@ -16,6 +16,7 @@ Implement UPDATE_HUNGER_STATE operation that calculates hunger state from energy
 The hunger state system translates numerical energy values into meaningful gameplay states (satiated, hungry, starving, etc.). This operation recalculates the state based on current energy percentage and tracks time spent in each state for body composition updates.
 
 **State Thresholds:**
+
 - Gluttonous: >100% energy
 - Satiated: 75-100%
 - Neutral: 30-75%
@@ -28,11 +29,13 @@ The hunger state system translates numerical energy values into meaningful gamep
 Follow the standard operation handler checklist from CLAUDE.md:
 
 ### New Files (2)
+
 1. **`data/schemas/operations/updateHungerState.schema.json`**
 2. **`src/logic/operationHandlers/updateHungerStateHandler.js`**
 3. **`tests/unit/logic/operationHandlers/updateHungerStateHandler.test.js`**
 
 ### Modified Files (5)
+
 1. **`data/schemas/operation.schema.json`** (add $ref)
 2. **`src/dependencyInjection/tokens/tokens-core.js`** (add token)
 3. **`src/dependencyInjection/registrations/operationHandlerRegistrations.js`** (add factory)
@@ -42,6 +45,7 @@ Follow the standard operation handler checklist from CLAUDE.md:
 ## Implementation Details
 
 ### updateHungerState.schema.json
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -71,6 +75,7 @@ Follow the standard operation handler checklist from CLAUDE.md:
 ```
 
 ### updateHungerStateHandler.js (Core Logic)
+
 ```javascript
 /**
  * Calculate hunger state from energy percentage
@@ -141,6 +146,7 @@ async execute(params, executionContext) {
 ```
 
 **CORRECTED ASSUMPTIONS:**
+
 - ❌ Component properties use **camelCase** (energyPercentage, turnsInState), NOT snake_case
 - ❌ Use `getComponentData()`, NOT `getComponent()`
 - ❌ Use `batchAddComponentsOptimized()`, NOT `modifyComponent()` (doesn't exist)
@@ -151,6 +157,7 @@ async execute(params, executionContext) {
 ## Out of Scope
 
 **Not Included:**
+
 - ❌ State effects application (handled by other systems)
 - ❌ Body composition updates (HUNMETSYS-015)
 - ❌ UI/audio feedback (future work)
@@ -159,6 +166,7 @@ async execute(params, executionContext) {
 ## Acceptance Criteria
 
 **Must Have:**
+
 - ✅ Operation schema validates
 - ✅ Handler calculates energy percentage correctly
 - ✅ Handler maps percentage to correct state
@@ -219,6 +227,7 @@ async execute(params, executionContext) {
 ### Changes from Original Plan
 
 **Corrected Assumptions:**
+
 - Component properties use **camelCase** (energyPercentage, turnsInState), not snake_case as initially assumed
 - EntityManager API uses `getComponentData()`, not `getComponent()`
 - Component updates use `batchAddComponentsOptimized()`, not `modifyComponent()` (doesn't exist)

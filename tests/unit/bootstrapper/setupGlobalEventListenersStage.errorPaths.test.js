@@ -49,13 +49,13 @@ describe('setupGlobalEventListenersStage error handling', () => {
     expect(stageFailure).toHaveBeenCalledWith(
       'Global Event Listeners Setup',
       expect.stringContaining(
-        "Unexpected error during Global Event Listeners Setup for 'beforeunload': listener registration failed",
+        "Unexpected error during Global Event Listeners Setup for 'beforeunload': listener registration failed"
       ),
-      failure,
+      failure
     );
     expect(logger.error).toHaveBeenCalledWith(
       "Bootstrap Stage: Global Event Listeners Setup encountered an unexpected error during 'beforeunload' listener setup.",
-      failure,
+      failure
     );
     expect(stageSuccess).not.toHaveBeenCalled();
   });
@@ -80,16 +80,16 @@ describe('setupGlobalEventListenersStage error handling', () => {
     const result = await setupGlobalEventListenersStage(
       gameEngine,
       logger,
-      windowRef,
+      windowRef
     );
 
     expect(attachBeforeUnload).toHaveBeenCalledWith(
       windowRef,
-      expect.any(Function),
+      expect.any(Function)
     );
     expect(shouldStopEngine).toHaveBeenCalledWith(gameEngine);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('No action taken to stop.'),
+      expect.stringContaining('No action taken to stop.')
     );
     expect(gameEngine.stop).not.toHaveBeenCalled();
     expect(stageFailure).not.toHaveBeenCalled();

@@ -5,6 +5,7 @@
 This specification defines the architecture for implementing non-deterministic (chance-based) actions in the Living Narrative Engine. The system supports skill-based probability calculations, environmental modifiers, degrees of success/failure, and displays probability percentages in action templates.
 
 **Design Principles:**
+
 - Full extensible service architecture for future combat system
 - Data-driven configuration via JSON action schema extensions
 - Individual skill components following existing gate patterns
@@ -102,6 +103,7 @@ class ModifierCollectorService {
 ```
 
 **Modifier Stacking Rules:**
+
 - Flat modifiers: Sum all applicable
 - Percentage modifiers: Applied multiplicatively after flat
 - Same-source stacking: Same `stackId` uses highest value only
@@ -134,11 +136,11 @@ class ProbabilityCalculatorService {
 
 **Supported Formulas:**
 
-| Formula | Calculation | Best For |
-|---------|-------------|----------|
-| `ratio` (default) | `actor / (actor + target) * 100` | Opposed skill checks |
-| `logistic` | `100 / (1 + e^(-0.1 * diff))` | Bell-curve distribution |
-| `linear` | `50 + (actor - difficulty)` | Fixed difficulty checks |
+| Formula           | Calculation                      | Best For                |
+| ----------------- | -------------------------------- | ----------------------- |
+| `ratio` (default) | `actor / (actor + target) * 100` | Opposed skill checks    |
+| `logistic`        | `100 / (1 + e^(-0.1 * diff))`    | Bell-curve distribution |
+| `linear`          | `50 + (actor - difficulty)`      | Fixed difficulty checks |
 
 **DI Token:** `ProbabilityCalculatorService`
 
@@ -168,6 +170,7 @@ class OutcomeDeterminerService {
 ```
 
 **Outcome Thresholds:**
+
 - **CRITICAL_SUCCESS**: Roll <= criticalSuccessThreshold (default 5) AND success
 - **SUCCESS**: Roll <= finalChance
 - **FAILURE**: Roll > finalChance
@@ -231,7 +234,9 @@ Add `chanceBased` optional property:
       "actorSkill": {
         "type": "object",
         "properties": {
-          "component": { "$ref": "./common.schema.json#/definitions/namespacedId" },
+          "component": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          },
           "property": { "type": "string", "default": "value" },
           "default": { "type": "number", "default": 0 }
         },
@@ -240,7 +245,9 @@ Add `chanceBased` optional property:
       "targetSkill": {
         "type": "object",
         "properties": {
-          "component": { "$ref": "./common.schema.json#/definitions/namespacedId" },
+          "component": {
+            "$ref": "./common.schema.json#/definitions/namespacedId"
+          },
           "property": { "type": "string", "default": "value" },
           "default": { "type": "number", "default": 0 }
         },
@@ -256,8 +263,18 @@ Add `chanceBased` optional property:
       "bounds": {
         "type": "object",
         "properties": {
-          "min": { "type": "integer", "default": 5, "minimum": 0, "maximum": 100 },
-          "max": { "type": "integer", "default": 95, "minimum": 0, "maximum": 100 }
+          "min": {
+            "type": "integer",
+            "default": 5,
+            "minimum": 0,
+            "maximum": 100
+          },
+          "max": {
+            "type": "integer",
+            "default": 95,
+            "minimum": 0,
+            "maximum": 100
+          }
         }
       },
       "modifiers": {
@@ -318,7 +335,11 @@ Add to action schema `$defs`:
             "target_skill_component": { "type": "string" },
             "actor_skill_default": { "type": "integer", "default": 0 },
             "target_skill_default": { "type": "integer", "default": 0 },
-            "formula": { "type": "string", "enum": ["ratio", "logistic", "linear"], "default": "ratio" },
+            "formula": {
+              "type": "string",
+              "enum": ["ratio", "logistic", "linear"],
+              "default": "ratio"
+            },
             "difficulty_modifier": { "type": "integer", "default": 0 },
             "result_variable": { "type": "string" }
           },
@@ -348,6 +369,7 @@ data/mods/skills/
 ```
 
 **mod-manifest.json:**
+
 ```json
 {
   "id": "skills",
@@ -359,6 +381,7 @@ data/mods/skills/
 ```
 
 **melee_skill.component.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -380,6 +403,7 @@ data/mods/skills/
 ```
 
 **defense_skill.component.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -412,6 +436,7 @@ data/mods/damage-types/
 ```
 
 **can_cut.component.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -491,9 +516,21 @@ data/mods/damage-types/
   "event_type": "core:attempt_action",
   "condition": { "condition_ref": "weapons:event-is-action-swing-at-target" },
   "actions": [
-    { "type": "GET_NAME", "parameters": { "entity_ref": "actor", "result_variable": "actorName" } },
-    { "type": "GET_NAME", "parameters": { "entity_ref": "secondary", "result_variable": "targetName" } },
-    { "type": "GET_NAME", "parameters": { "entity_ref": "primary", "result_variable": "weaponName" } },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "weaponName" }
+    },
     {
       "type": "RESOLVE_OUTCOME",
       "parameters": {
@@ -508,7 +545,9 @@ data/mods/damage-types/
     {
       "type": "IF",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -526,7 +565,9 @@ data/mods/damage-types/
           {
             "type": "IF",
             "parameters": {
-              "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+              "condition": {
+                "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+              },
               "then_actions": [
                 {
                   "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -544,7 +585,12 @@ data/mods/damage-types/
                 {
                   "type": "IF",
                   "parameters": {
-                    "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+                    "condition": {
+                      "==": [
+                        { "var": "context.attackResult.outcome" },
+                        "FUMBLE"
+                      ]
+                    },
                     "then_actions": [
                       {
                         "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -591,11 +637,13 @@ data/mods/damage-types/
 **File:** `src/logic/operators/getSkillValueOperator.js`
 
 **Usage:**
+
 ```json
 { "getSkillValue": ["actor", "skills:melee_skill", "value", 0] }
 ```
 
 **Arguments:**
+
 1. Entity reference (e.g., "actor", "target")
 2. Component ID
 3. Property path within component
@@ -612,6 +660,7 @@ data/mods/damage-types/
 **File to modify:** `src/actions/pipeline/stages/ActionFormattingStage.js`
 
 **Changes:**
+
 1. Detect actions with `chanceBased.enabled: true`
 2. For each discovered action instance, call `ChanceCalculationService.calculateForDisplay()`
 3. Replace `{chance}` placeholder in template with calculated percentage
@@ -621,11 +670,13 @@ data/mods/damage-types/
 ### 7.2 Template Placeholder
 
 Actions with `chanceBased` use `{chance}` placeholder:
+
 ```
 "template": "swing {weapon} at {target} ({chance}%)"
 ```
 
 The formatter resolves this to:
+
 ```
 "swing longsword at chicken (55%)"
 ```
@@ -636,60 +687,61 @@ The formatter resolves this to:
 
 ### 8.1 New Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/SkillResolverService.js` | Skill value retrieval |
-| `src/combat/services/ModifierCollectorService.js` | Modifier aggregation |
-| `src/combat/services/ProbabilityCalculatorService.js` | Formula calculations |
-| `src/combat/services/OutcomeDeterminerService.js` | Outcome resolution |
-| `src/combat/services/ChanceCalculationService.js` | Service orchestrator |
-| `src/combat/index.js` | Combat module exports |
-| `src/logic/operationHandlers/resolveOutcomeHandler.js` | RESOLVE_OUTCOME handler |
-| `src/logic/operators/getSkillValueOperator.js` | JSON Logic operator |
-| `src/dependencyInjection/registrations/combatRegistrations.js` | DI registrations |
-| `data/schemas/operations/resolveOutcome.schema.json` | Operation schema |
-| `data/mods/skills/mod-manifest.json` | Skills mod manifest |
-| `data/mods/skills/components/melee_skill.component.json` | Melee skill |
-| `data/mods/skills/components/defense_skill.component.json` | Defense skill |
-| `data/mods/damage-types/mod-manifest.json` | Damage types manifest |
-| `data/mods/damage-types/components/can_cut.component.json` | Cutting marker |
-| `data/mods/weapons/actions/swing_at_target.action.json` | Combat action |
-| `data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json` | Action condition |
-| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | Combat rule |
-| `data/mods/weapons/scopes/wielded_cutting_weapons.scope` | Scope for cutting weapons |
+| File                                                                          | Purpose                   |
+| ----------------------------------------------------------------------------- | ------------------------- |
+| `src/combat/services/SkillResolverService.js`                                 | Skill value retrieval     |
+| `src/combat/services/ModifierCollectorService.js`                             | Modifier aggregation      |
+| `src/combat/services/ProbabilityCalculatorService.js`                         | Formula calculations      |
+| `src/combat/services/OutcomeDeterminerService.js`                             | Outcome resolution        |
+| `src/combat/services/ChanceCalculationService.js`                             | Service orchestrator      |
+| `src/combat/index.js`                                                         | Combat module exports     |
+| `src/logic/operationHandlers/resolveOutcomeHandler.js`                        | RESOLVE_OUTCOME handler   |
+| `src/logic/operators/getSkillValueOperator.js`                                | JSON Logic operator       |
+| `src/dependencyInjection/registrations/combatRegistrations.js`                | DI registrations          |
+| `data/schemas/operations/resolveOutcome.schema.json`                          | Operation schema          |
+| `data/mods/skills/mod-manifest.json`                                          | Skills mod manifest       |
+| `data/mods/skills/components/melee_skill.component.json`                      | Melee skill               |
+| `data/mods/skills/components/defense_skill.component.json`                    | Defense skill             |
+| `data/mods/damage-types/mod-manifest.json`                                    | Damage types manifest     |
+| `data/mods/damage-types/components/can_cut.component.json`                    | Cutting marker            |
+| `data/mods/weapons/actions/swing_at_target.action.json`                       | Combat action             |
+| `data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json` | Action condition          |
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json`                    | Combat rule               |
+| `data/mods/weapons/scopes/wielded_cutting_weapons.scope`                      | Scope for cutting weapons |
 
 ### 8.2 Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/schemas/action.schema.json` | Add `chanceBased` property and `chanceModifier` definition |
-| `data/schemas/operation.schema.json` | Add `$ref` to resolveOutcome.schema.json |
-| `src/utils/preValidationUtils.js` | Add `RESOLVE_OUTCOME` to `KNOWN_OPERATION_TYPES` |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add service tokens |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handler factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Map RESOLVE_OUTCOME to handler |
-| `src/logic/jsonLogicCustomOperators.js` | Register getSkillValue operator |
-| `src/actions/pipeline/stages/ActionFormattingStage.js` | Inject chance calculation |
-| `data/game.json` | Add skills and damage-types mods |
-| Weapon entity definitions | Add `damage-types:can_cut` component |
+| File                                                                     | Change                                                     |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `data/schemas/action.schema.json`                                        | Add `chanceBased` property and `chanceModifier` definition |
+| `data/schemas/operation.schema.json`                                     | Add `$ref` to resolveOutcome.schema.json                   |
+| `src/utils/preValidationUtils.js`                                        | Add `RESOLVE_OUTCOME` to `KNOWN_OPERATION_TYPES`           |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add service tokens                                         |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handler factory                                   |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Map RESOLVE_OUTCOME to handler                             |
+| `src/logic/jsonLogicCustomOperators.js`                                  | Register getSkillValue operator                            |
+| `src/actions/pipeline/stages/ActionFormattingStage.js`                   | Inject chance calculation                                  |
+| `data/game.json`                                                         | Add skills and damage-types mods                           |
+| Weapon entity definitions                                                | Add `damage-types:can_cut` component                       |
 
 ### 8.3 Test Files to Create
 
-| File | Purpose |
-|------|---------|
-| `tests/unit/combat/services/SkillResolverService.test.js` | Unit tests |
-| `tests/unit/combat/services/ProbabilityCalculatorService.test.js` | Formula tests |
-| `tests/unit/combat/services/OutcomeDeterminerService.test.js` | Outcome tests |
-| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js` | Handler tests |
-| `tests/unit/logic/operators/getSkillValueOperator.test.js` | Operator tests |
-| `tests/integration/mods/weapons/swingAtTargetChanceDisplay.test.js` | Display integration |
-| `tests/integration/mods/weapons/swingAtTargetOutcomeResolution.test.js` | Rule integration |
+| File                                                                    | Purpose             |
+| ----------------------------------------------------------------------- | ------------------- |
+| `tests/unit/combat/services/SkillResolverService.test.js`               | Unit tests          |
+| `tests/unit/combat/services/ProbabilityCalculatorService.test.js`       | Formula tests       |
+| `tests/unit/combat/services/OutcomeDeterminerService.test.js`           | Outcome tests       |
+| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js`      | Handler tests       |
+| `tests/unit/logic/operators/getSkillValueOperator.test.js`              | Operator tests      |
+| `tests/integration/mods/weapons/swingAtTargetChanceDisplay.test.js`     | Display integration |
+| `tests/integration/mods/weapons/swingAtTargetOutcomeResolution.test.js` | Rule integration    |
 
 ---
 
 ## 9. Implementation Phases
 
 ### Phase 1: Core Services (Foundation)
+
 1. Create `skills` mod with `melee_skill` and `defense_skill` components
 2. Create `damage-types` mod with `can_cut` component
 3. Implement `SkillResolverService`
@@ -698,18 +750,21 @@ The formatter resolves this to:
 6. Unit tests for all services
 
 ### Phase 2: Operation Handler
+
 1. Create `resolveOutcome.schema.json`
 2. Implement `ResolveOutcomeHandler`
 3. Register in DI and operation types
 4. Unit and integration tests
 
 ### Phase 3: Action Discovery Integration
+
 1. Extend `action.schema.json` with `chanceBased` property
 2. Create `getSkillValue` JSON Logic operator
 3. Modify `ActionFormattingStage` for chance injection
 4. Integration tests for chance display
 
 ### Phase 4: Combat Action
+
 1. Create `swing_at_target` action
 2. Create `wielded_cutting_weapons` scope
 3. Create condition and rule files
@@ -717,6 +772,7 @@ The formatter resolves this to:
 5. Full end-to-end testing
 
 ### Phase 5: Modifiers (Enhancement)
+
 1. Implement `ModifierCollectorService`
 2. Create `ChanceCalculationService` orchestrator
 3. Add environmental modifier support

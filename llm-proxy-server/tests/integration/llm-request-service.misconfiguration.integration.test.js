@@ -7,7 +7,14 @@
  *              wired end-to-end.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import HttpAgentService from '../../src/services/httpAgentService.js';
@@ -134,9 +141,9 @@ describe('LlmRequestService configuration resilience integration', () => {
           targetUrl: 'Not configured',
         })
       );
-      expect(
-        result.errorDetailsForClient.originalErrorMessage
-      ).toBe('Endpoint URL in LLM configuration is empty or invalid.');
+      expect(result.errorDetailsForClient.originalErrorMessage).toBe(
+        'Endpoint URL in LLM configuration is empty or invalid.'
+      );
     } finally {
       await cleanup();
     }

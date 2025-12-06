@@ -108,8 +108,7 @@ describe('items:read_item action integration', () => {
       ]);
 
       const successMessage = testFixture.events.find(
-        (event) =>
-          event.eventType === 'core:display_successful_action_result'
+        (event) => event.eventType === 'core:display_successful_action_result'
       );
       expect(successMessage).toBeDefined();
       expect(successMessage.payload.message).toBe(
@@ -122,9 +121,8 @@ describe('items:read_item action integration', () => {
       expect(turnEndedEvent).toBeDefined();
       expect(turnEndedEvent.payload.success).toBe(true);
 
-      const actorAfter = testFixture.entityManager.getEntityInstance(
-        'test:actor1'
-      );
+      const actorAfter =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorAfter.components['items:inventory'].items).toContain(
         'journal-entry-1'
       );
@@ -153,9 +151,8 @@ describe('items:read_item action integration', () => {
         'Bob reads notice-board: Notice: All patrols report to the captain.'
       );
 
-      const itemAfter = testFixture.entityManager.getEntityInstance(
-        'notice-board'
-      );
+      const itemAfter =
+        testFixture.entityManager.getEntityInstance('notice-board');
       expect(itemAfter.components['core:position']).toBeDefined();
       expect(itemAfter.components['core:position'].locationId).toBe('study');
     });
@@ -164,8 +161,7 @@ describe('items:read_item action integration', () => {
       const scenario = setupReadItemScenario('Clara', 'archive', [
         {
           id: 'ancient-scroll',
-          text:
-            'Line one whispers secrets. Line two warns of danger. Line three promises treasure.',
+          text: 'Line one whispers secrets. Line two warns of danger. Line three promises treasure.',
           inInventory: true,
         },
       ]);
@@ -197,7 +193,10 @@ describe('items:read_item action integration', () => {
         .withName('Onlooker')
         .atLocation('archives')
         .asActor()
-        .withComponent('core:perception_log', { maxEntries: 10, logEntries: [] })
+        .withComponent('core:perception_log', {
+          maxEntries: 10,
+          logEntries: [],
+        })
         .build();
 
       const actorWithLog = new ModEntityBuilder('test:actor1')
@@ -208,7 +207,10 @@ describe('items:read_item action integration', () => {
           items: ['sealed-letter'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
-        .withComponent('core:perception_log', { maxEntries: 10, logEntries: [] })
+        .withComponent('core:perception_log', {
+          maxEntries: 10,
+          logEntries: [],
+        })
         .build();
 
       const readableItem = new ModEntityBuilder('sealed-letter')
@@ -220,12 +222,7 @@ describe('items:read_item action integration', () => {
         })
         .build();
 
-      testFixture.reset([
-        scenario.room,
-        actorWithLog,
-        observer,
-        readableItem,
-      ]);
+      testFixture.reset([scenario.room, actorWithLog, observer, readableItem]);
 
       await testFixture.executeAction('test:actor1', 'sealed-letter');
 
@@ -259,9 +256,8 @@ describe('items:read_item action integration', () => {
         recipient_ids: perceptibleEvent.payload.contextualData?.recipientIds,
       });
 
-      const observerEntity = testFixture.entityManager.getEntityInstance(
-        'observer-1'
-      );
+      const observerEntity =
+        testFixture.entityManager.getEntityInstance('observer-1');
       const observerLog =
         observerEntity.components['core:perception_log'].logEntries;
       expect(observerLog).toHaveLength(0);

@@ -10,17 +10,20 @@
 ## Executive Summary
 
 ### Overall Assessment
+
 The LLM roleplay prompt system demonstrates **sophisticated character modeling** with deep psychological depth, but suffers from **significant architectural complexity** that may impair LLM comprehension and increase failure modes.
 
 ### Critical Findings
 
 #### Strengths ✅
+
 - **Rich Character Persona**: Exceptionally detailed psychological modeling with internal tensions, core dilemmas, and speech patterns
 - **Anti-Repetition Mechanism**: Effective system to prevent thought loops via recent thought history
 - **Structured Note System**: Well-defined subject type taxonomy with clear examples
 - **Comprehensive Context**: Detailed world state, perception logs, and available actions
 
 #### Critical Issues ❌
+
 - **Cognitive Overload**: ~8,000+ token prompt with dense nested instructions creates parsing difficulty
 - **Instruction Redundancy**: Action tag rules repeated 3+ times, note rules stated in multiple locations
 - **Hierarchical Confusion**: Instructions scattered across multiple sections (portrayal_guidelines, final_instructions, content_policy)
@@ -34,6 +37,7 @@ The LLM roleplay prompt system demonstrates **sophisticated character modeling**
 4. **Reduce Token Load** - Remove redundancy, compress examples, use references instead of repetition
 
 ### Impact Assessment
+
 - **Current Failure Risk**: MODERATE-HIGH (complexity-induced errors, instruction conflicts)
 - **Estimated Improvement**: 30-40% cognitive load reduction possible
 - **Priority Level**: HIGH (affects core roleplay quality)
@@ -65,9 +69,11 @@ The LLM roleplay prompt system demonstrates **sophisticated character modeling**
 ### Architectural Issues
 
 #### 1.1 Inverted Priority Structure
+
 **Problem**: Most critical constraints appear LAST (final_instructions), after 6,000+ tokens of context.
 
 **Evidence**:
+
 - Action tag rules (critical for output format) buried in final_instructions
 - Thought vs speech distinction rules appear after character persona
 - Note-taking system explained after existing notes shown
@@ -92,6 +98,7 @@ Proposed Order:
 **Problem**: Same rules repeated across multiple sections.
 
 **Evidence**:
+
 - Action tag rules appear in:
   - portrayal_guidelines (lines 1-15)
   - final_instructions (lines 1-50)
@@ -105,6 +112,7 @@ Proposed Order:
 **Token Waste**: ~500-800 tokens of pure redundancy
 
 **Recommendation**: **Single Source of Truth Pattern**
+
 - Define each rule ONCE in dedicated section
 - Reference rule by name elsewhere if needed
 - Use hierarchical numbering (Rule 1.1, 1.2) for cross-references
@@ -114,6 +122,7 @@ Proposed Order:
 **Problem**: Mixed tag purposes create parsing ambiguity.
 
 **Evidence**:
+
 ```xml
 <task_definition> - Instruction
 <character_persona> - Data
@@ -124,6 +133,7 @@ Proposed Order:
 ```
 
 **Recommendation**: **Semantic Tag Hierarchy**
+
 ```xml
 <system_constraints>
   <output_format/>
@@ -156,12 +166,14 @@ Proposed Order:
 ### 2.1 Persona Depth (STRENGTH ✅)
 
 **Analysis**: Exceptional psychological modeling via:
+
 - Core Motivations (existential creativity drive)
 - Internal Tensions (art vs authenticity conflict)
 - Core Dilemmas (philosophical questions about identity)
 - Multi-layered personality (performer vs predator)
 
 **Example Quality**:
+
 ```
 "My best work comes when I'm least myself—flooded with combat
 adrenaline, half-feral, barely thinking. So am I a bard who fights,
@@ -175,6 +187,7 @@ This level of complexity enables nuanced roleplay.
 **Problem**: 17 speech pattern examples create cognitive overload.
 
 **Evidence**:
+
 - Examples range from valuable ("meows vanish when vulnerable") to redundant
 - Some examples overlap in concept
 - LLM must process all before generating speech
@@ -212,12 +225,14 @@ Reduce to 5-6 core patterns with sub-examples:
 **Analysis**: Effective anti-repetition mechanism with clear guidance.
 
 **Quality Indicators**:
+
 - Shows recent thoughts to avoid
 - Emphasizes "fresh and unique"
 - Specifies "IMMEDIATELY BEFORE action" timing
 - Warns against assuming outcomes
 
 **Recommendation**: RETAIN with minor refinement:
+
 - Move to system_constraints section
 - Add examples of good vs bad thought generation
 
@@ -230,6 +245,7 @@ Reduce to 5-6 core patterns with sub-examples:
 **Problem**: Over-emphasis suggests historical confusion/errors.
 
 **Evidence**:
+
 ```
 - Mentioned in portrayal_guidelines
 - Repeated in final_instructions
@@ -241,6 +257,7 @@ Reduce to 5-6 core patterns with sub-examples:
 **Hypothesis**: This rule was frequently violated, leading to progressive emphasis escalation.
 
 **Root Cause Analysis**: Rule is actually complex with multiple sub-rules:
+
 1. Only visible actions in asterisks
 2. No internal thoughts in asterisks
 3. Third-person present tense
@@ -253,20 +270,22 @@ Reduce to 5-6 core patterns with sub-examples:
 ## OUTPUT FORMAT (CRITICAL)
 
 ### Action Tags
-**Rule**: Use *asterisks* ONLY for visible physical actions
+
+**Rule**: Use _asterisks_ ONLY for visible physical actions
 **Format**: Third-person present tense
 **Examples**:
-  ✅ *crosses arms*
-  ✅ *narrows eyes*
-  ❌ *feels anxious* (internal state)
-  ❌ *thinks about leaving* (mental action)
+✅ _crosses arms_
+✅ _narrows eyes_
+❌ _feels anxious_ (internal state)
+❌ _thinks about leaving_ (mental action)
 
 ### Dialogue Format
+
 **Rule**: Plain quoted text ONLY - no asterisks
 **Examples**:
-  ✅ "You don't understand."
-  ❌ "You don't *understand*." (no emphasis asterisks)
-  ❌ "*sighs* I'm tired." (no action tags in dialogue)
+✅ "You don't understand."
+❌ "You don't _understand_." (no emphasis asterisks)
+❌ "_sighs_ I'm tired." (no action tags in dialogue)
 ```
 
 Place this in `system_constraints` section BEFORE character data.
@@ -276,6 +295,7 @@ Place this in `system_constraints` section BEFORE character data.
 **Analysis**: Clear rule with good examples of valid/invalid patterns.
 
 **Quality**:
+
 ```
 VALID: thoughts: "This fool has no idea I'm lying."
        speech: "Of course I'll help you."
@@ -291,6 +311,7 @@ INVALID: thoughts: "I don't trust him"
 **Problem**: Excessive complexity with 16+ subject types and extensive decision trees.
 
 **Evidence**:
+
 ```
 Core Entity Types: character, location, item, creature, organization
 Temporal & Action: event, plan, timeline, quest
@@ -300,6 +321,7 @@ Other: other
 ```
 
 **Cognitive Load**:
+
 - Decision tree with 16 questions
 - 10+ detailed examples
 - Multiple "CRITICAL DISTINCTIONS" sections
@@ -338,6 +360,7 @@ Select ONE type per note:
 **Token Savings**: ~800 tokens (67% reduction)
 
 **Rationale**:
+
 - LLM can handle 6 types reliably
 - Reduces decision paralysis
 - Maintains core functionality
@@ -352,6 +375,7 @@ Select ONE type per note:
 **Analysis**: Clear, chronological, well-structured.
 
 **Quality Indicators**:
+
 - Chronological ordering
 - Speaker attribution
 - Action description
@@ -364,6 +388,7 @@ Select ONE type per note:
 **Analysis**: Highly effective mechanism.
 
 **Implementation**:
+
 ```
 <thoughts>
 Recent thoughts (avoid repeating or barely rephrasing these):
@@ -379,6 +404,7 @@ Generate a fresh, unique thought...
 **Effectiveness**: Forces LLM to build upon existing mental state without loops.
 
 **Recommendation**: RETAIN and possibly enhance with:
+
 - Show last 5 thoughts instead of 4
 - Add "thought themes covered" summary
 
@@ -387,6 +413,7 @@ Generate a fresh, unique thought...
 **Problem**: Flat list format with 81 actions creates scanning difficulty.
 
 **Evidence**:
+
 ```
 [Index: 1] Command: "wait"
 [Index: 2] Command: "get close to Registrar Copperplate"
@@ -400,30 +427,37 @@ Generate a fresh, unique thought...
 ## AVAILABLE ACTIONS
 
 ### HIGH-PRIORITY ACTIONS
+
 1. wait - Do nothing for a moment
-2-11. [Positioning actions - 10 actions]
+   2-11. [Positioning actions - 10 actions]
 
 ### INTERACTION ACTIONS
+
 12-14. [Movement & companionship - 3 actions]
 15-36. [Items - 22 actions]
 
 ### PERFORMANCE ACTIONS
+
 44-53. [Music - 10 actions]
 
 ### SOCIAL ACTIONS
+
 42-43. [Seduction - 2 actions]
 
 ### CONFLICT ACTIONS
+
 37-41. [Distress & violence - 5 actions]
 76-77. [Weapons - 2 actions]
 
 ### EQUIPMENT ACTIONS
+
 78-81. [Clothing - 4 actions]
 
 Total: 81 actions across 7 categories
 ```
 
 Add context hints:
+
 ```
 "Consider your character's current emotional state, goals, and recent events
 when selecting. Mundane actions (wait, examine) are always valid."
@@ -438,6 +472,7 @@ when selecting. Mundane actions (wait, examine) are always valid."
 **Total Prompt**: ~8,200 tokens (estimated)
 
 **Breakdown**:
+
 ```
 Character Persona:     4,000 tokens (49%)
 Notes System:          1,200 tokens (15%)
@@ -449,12 +484,14 @@ Actions/Other:           500 tokens (6%)
 ### 5.2 Information Density
 
 **High-Density Sections**:
+
 1. Speech Patterns: 17 examples with extensive descriptions
 2. Note Subject Types: 16 types with decision trees
 3. Character Persona: Multiple nested sections
 4. Final Instructions: Dense rule statements
 
 **Readability Issues**:
+
 - Long unbroken paragraphs in character persona
 - Nested bullet points 4-5 levels deep
 - Mixed formatting (bold, italic, code, quotes)
@@ -476,6 +513,7 @@ Actions/Other:           500 tokens (6%)
 **Assessment**: **HIGH**
 
 **Contributing Factors**:
+
 - Token count: 8,200+ (HIGH)
 - Information density: Dense nested structures (HIGH)
 - Rule complexity: Multiple interconnected constraints (MODERATE-HIGH)
@@ -483,6 +521,7 @@ Actions/Other:           500 tokens (6%)
 - Decision points: 81 actions + 16 note types (HIGH)
 
 **Estimated LLM Processing Burden**:
+
 - Attention span: Must maintain focus across 8K+ tokens
 - Working memory: Track multiple rule systems simultaneously
 - Decision load: Navigate complex taxonomies while staying in character
@@ -496,6 +535,7 @@ Actions/Other:           500 tokens (6%)
 ### 6.1 Ambiguous Instruction Handling
 
 **Issue 1**: Conflicting Guidance
+
 ```
 portrayal_guidelines: "Stay in character. No meta-commentary."
 vs.
@@ -507,6 +547,7 @@ Example thought: "Gods, how fucking melodramatic. Forget I said that."
 **Recommendation**: Clarify that self-aware character thoughts are different from AI meta-commentary.
 
 **Issue 2**: Note Priority Confusion
+
 ```
 HIGH PRIORITY: Character revelations
 MEDIUM PRIORITY: Observations of behavioral patterns
@@ -514,6 +555,7 @@ LOW PRIORITY: Minor emotional reactions
 ```
 
 But then:
+
 ```
 emotion: Simple feelings, mood states, emotional reactions
 vs.
@@ -529,6 +571,7 @@ psychological_state: Complex mental states
 **Problem**: Excessive detail may cause rigid adherence that harms creativity.
 
 **Examples**:
+
 - 17 speech pattern rules might make LLM too formulaic
 - Extensive note taxonomy might cause decision paralysis
 - Multiple emphasis markers might create anxiety about "doing it right"
@@ -538,6 +581,7 @@ psychological_state: Complex mental states
 **Evidence**: Action tag rules emphasized so heavily it suggests frequent historical violations.
 
 **Recommendation**:
+
 - Reduce rule count by 40%
 - Frame as "guidelines" not "strict requirements" where appropriate
 - Use positive examples more than prohibitions
@@ -547,6 +591,7 @@ psychological_state: Complex mental states
 **Problem**: Some areas lack clarity.
 
 **Example 1**: Note Conciseness
+
 ```
 "The notes must be concise, but written in Vespera Nightwhisper's own voice."
 ```
@@ -556,6 +601,7 @@ psychological_state: Complex mental states
 **Recommendation**: Provide length guideline: "1-3 sentences per note, maximum 60 words."
 
 **Example 2**: "Fresh and Unique" Thoughts
+
 ```
 "Your thoughts must be fresh and unique - do not repeat or barely rephrase
 the previous thoughts shown above."
@@ -570,6 +616,7 @@ the previous thoughts shown above."
 **Risk 1**: Subject Type Confusion
 
 With 16 types and complex decision trees, LLM might:
+
 - Spend excessive tokens deliberating classification
 - Choose wrong type due to overthinking
 - Avoid writing notes due to complexity
@@ -577,6 +624,7 @@ With 16 types and complex decision trees, LLM might:
 **Risk 2**: Action Tag Over-Application
 
 Heavy emphasis might cause LLM to:
+
 - Use asterisks excessively for every minor action
 - Become overly mechanical in description
 - Fear using any description without asterisks
@@ -584,6 +632,7 @@ Heavy emphasis might cause LLM to:
 **Risk 3**: Speech Pattern Rigidity
 
 17 examples might cause LLM to:
+
 - Cycle through patterns mechanically
 - Force cat-sounds unnaturally
 - Lose authentic character voice
@@ -597,6 +646,7 @@ Heavy emphasis might cause LLM to:
 ### 7.1 HIGH-IMPACT Changes
 
 #### Recommendation 1: Restructure Information Hierarchy ⭐⭐⭐⭐⭐
+
 **Priority**: CRITICAL
 **Impact**: 40% improvement in constraint adherence
 **Effort**: Medium
@@ -647,6 +697,7 @@ Heavy emphasis might cause LLM to:
 **Rationale**: Critical constraints must appear early in prompt due to attention decay over long contexts.
 
 #### Recommendation 2: Simplify Note Taxonomy ⭐⭐⭐⭐⭐
+
 **Priority**: CRITICAL
 **Impact**: 30% reduction in decision complexity
 **Effort**: Low
@@ -667,11 +718,13 @@ Heavy emphasis might cause LLM to:
 **Cognitive Load**: 67% reduction in classification complexity
 
 #### Recommendation 3: Consolidate Redundant Instructions ⭐⭐⭐⭐
+
 **Priority**: HIGH
 **Impact**: 20% clearer rule hierarchy
 **Effort**: Low
 
 **Actions**:
+
 1. Merge all action tag rules into single `output_format` section
 2. Remove duplicated anti-repetition statements
 3. Consolidate note-taking rules
@@ -680,11 +733,13 @@ Heavy emphasis might cause LLM to:
 **Token Savings**: ~500-800 tokens
 
 #### Recommendation 4: Compress Character Persona ⭐⭐⭐⭐
+
 **Priority**: HIGH
 **Impact**: 25% token reduction, maintained quality
 **Effort**: Medium
 
 **Targets**:
+
 - Speech Patterns: 17 → 6 core patterns (~400 tokens saved)
 - Combine overlapping sections (Personality + Profile → unified section)
 - Use bullet points instead of paragraphs where possible
@@ -695,11 +750,13 @@ Heavy emphasis might cause LLM to:
 ### 7.2 MEDIUM-IMPACT Changes
 
 #### Recommendation 5: Enhance Action Categorization ⭐⭐⭐
+
 **Priority**: MEDIUM
 **Impact**: 15% faster action selection
 **Effort**: Low
 
 Add category summaries and context hints:
+
 ```
 ### POSITIONING ACTIONS (10 actions)
 Spatial relationships and body positioning relative to others or furniture.
@@ -711,6 +768,7 @@ Consider: What objects are relevant to current goals?
 ```
 
 #### Recommendation 6: Add LLM Processing Hints ⭐⭐⭐
+
 **Priority**: MEDIUM
 **Impact**: 10% reduction in off-character responses
 **Effort**: Low
@@ -732,6 +790,7 @@ Add strategic markers for LLM attention:
 ```
 
 #### Recommendation 7: Improve Example Quality ⭐⭐⭐
+
 **Priority**: MEDIUM
 **Impact**: 15% better format adherence
 **Effort**: Low
@@ -756,6 +815,7 @@ POOR thought (repetition):
 ### 7.3 LOW-IMPACT Changes
 
 #### Recommendation 8: Standardize Formatting ⭐⭐
+
 **Priority**: LOW
 **Impact**: 5% readability improvement
 **Effort**: Low
@@ -765,6 +825,7 @@ POOR thought (repetition):
 - Uniform bullet depth (max 3 levels)
 
 #### Recommendation 9: Add Metadata Section ⭐⭐
+
 **Priority**: LOW
 **Impact**: 5% context awareness
 **Effort**: Low
@@ -781,6 +842,7 @@ POOR thought (repetition):
 Helps LLM understand context scope.
 
 #### Recommendation 10: Version Control Comments ⭐
+
 **Priority**: LOW
 **Impact**: 3% maintainability
 **Effort**: Low
@@ -1057,6 +1119,7 @@ Reduction from current: ~3,000 tokens (37%)
 ## 9. Implementation Roadmap
 
 ### Phase 1: Critical Fixes (Week 1)
+
 **Goal**: Address high-risk failure modes
 
 1. ✅ Restructure information hierarchy (constraint-first)
@@ -1065,17 +1128,20 @@ Reduction from current: ~3,000 tokens (37%)
 4. ✅ Remove redundant instructions (~800 tokens)
 
 **Deliverables**:
+
 - Updated `characterPromptTemplate.js`
 - Updated `corePromptText.json`
 - New template version: 2.0
 
 **Testing**:
+
 - Run existing E2E tests
 - Verify output format compliance
 - Check note classification accuracy
 - Measure token reduction
 
 ### Phase 2: Quality Improvements (Week 2)
+
 **Goal**: Optimize character portrayal
 
 1. ✅ Compress speech patterns (17 → 6 core patterns)
@@ -1084,16 +1150,19 @@ Reduction from current: ~3,000 tokens (37%)
 4. ✅ Add LLM processing hints
 
 **Deliverables**:
+
 - Compressed persona templates
 - Enhanced action formatting
 - Strategic attention markers
 
 **Testing**:
+
 - Roleplay quality assessment
 - Speech pattern authenticity check
 - Character voice consistency
 
 ### Phase 3: Polish & Optimization (Week 3)
+
 **Goal**: Refine user experience
 
 1. ✅ Standardize formatting across template
@@ -1102,16 +1171,19 @@ Reduction from current: ~3,000 tokens (37%)
 4. ✅ Version control system
 
 **Deliverables**:
+
 - Style guide for prompt templates
 - Example library (good vs bad outputs)
 - Version tracking system
 
 **Testing**:
+
 - Full regression test suite
 - Performance benchmarking
 - User feedback collection
 
 ### Phase 4: Monitoring & Iteration (Ongoing)
+
 **Goal**: Continuous improvement
 
 1. 📊 Track prompt performance metrics
@@ -1132,6 +1204,7 @@ Reduction from current: ~3,000 tokens (37%)
    - Community feedback integration
 
 **Tools**:
+
 - Automated compliance checking
 - Prompt version analytics
 - LLM output quality scoring
@@ -1142,39 +1215,42 @@ Reduction from current: ~3,000 tokens (37%)
 
 ### Quantitative Metrics
 
-| Metric | Current | Target | Method |
-|--------|---------|--------|--------|
-| **Token Count** | ~8,200 | ~5,200 | Template length measurement |
-| **Redundancy %** | ~10% | <3% | Duplicate content detection |
-| **Format Compliance** | Unknown | >95% | Action tag, speech format validation |
-| **Note Classification Accuracy** | Unknown | >90% | Subject type correctness check |
-| **Instruction Clarity Score** | Unknown | >8/10 | Human evaluation rubric |
+| Metric                           | Current | Target | Method                               |
+| -------------------------------- | ------- | ------ | ------------------------------------ |
+| **Token Count**                  | ~8,200  | ~5,200 | Template length measurement          |
+| **Redundancy %**                 | ~10%    | <3%    | Duplicate content detection          |
+| **Format Compliance**            | Unknown | >95%   | Action tag, speech format validation |
+| **Note Classification Accuracy** | Unknown | >90%   | Subject type correctness check       |
+| **Instruction Clarity Score**    | Unknown | >8/10  | Human evaluation rubric              |
 
 ### Qualitative Metrics
 
-| Metric | Assessment Method |
-|--------|-------------------|
-| **Character Voice Consistency** | Human review: Does output sound like the character? |
-| **Roleplay Depth** | Evaluation: Internal thoughts reflect psychological complexity? |
-| **Speech Pattern Authenticity** | Review: Natural use of feline tics, patterns? |
-| **Note Usefulness** | Assessment: Do notes capture critical information? |
-| **LLM Comprehension** | Analysis: Does LLM follow constraints correctly? |
+| Metric                          | Assessment Method                                               |
+| ------------------------------- | --------------------------------------------------------------- |
+| **Character Voice Consistency** | Human review: Does output sound like the character?             |
+| **Roleplay Depth**              | Evaluation: Internal thoughts reflect psychological complexity? |
+| **Speech Pattern Authenticity** | Review: Natural use of feline tics, patterns?                   |
+| **Note Usefulness**             | Assessment: Do notes capture critical information?              |
+| **LLM Comprehension**           | Analysis: Does LLM follow constraints correctly?                |
 
 ### Success Criteria
 
 **Minimum Viable Improvement**:
+
 - ✅ 25% token reduction (8,200 → 6,150)
 - ✅ 90% format compliance
 - ✅ Zero critical instruction conflicts
 - ✅ Maintained character voice quality
 
 **Target Improvement**:
+
 - ✅ 37% token reduction (8,200 → 5,200)
 - ✅ 95% format compliance
 - ✅ 85% note classification accuracy
 - ✅ Improved character voice consistency
 
 **Stretch Goal**:
+
 - ✅ 40% token reduction (8,200 → 5,000)
 - ✅ 98% format compliance
 - ✅ 90% note classification accuracy
@@ -1187,33 +1263,41 @@ Reduction from current: ~3,000 tokens (37%)
 ### Implementation Risks
 
 #### Risk 1: Character Voice Degradation
+
 **Probability**: MEDIUM
 **Impact**: HIGH
 **Mitigation**:
+
 - Compress persona carefully, preserve psychological depth
 - A/B test compressed vs original with human evaluators
 - Maintain 6 core speech patterns even if simplified
 
 #### Risk 2: Breaking Existing Functionality
+
 **Probability**: LOW
 **Impact**: HIGH
 **Mitigation**:
+
 - Comprehensive E2E test suite
 - Gradual rollout with version flags
 - Rollback plan if quality drops
 
 #### Risk 3: Over-Simplification
+
 **Probability**: MEDIUM
 **Impact**: MEDIUM
 **Mitigation**:
+
 - Simplify mechanics (note types, rules) NOT character depth
 - Preserve psychological complexity and internal tensions
 - User feedback loops during implementation
 
 #### Risk 4: Insufficient Token Reduction
+
 **Probability**: LOW
 **Impact**: LOW
 **Mitigation**:
+
 - Multiple compression passes
 - Ruthless elimination of redundancy
 - Semantic compression techniques
@@ -1238,12 +1322,14 @@ If post-implementation quality drops:
 The current LLM roleplay prompt system demonstrates **exceptional character modeling depth** but suffers from **architectural complexity** that creates cognitive overload and potential failure modes.
 
 **Primary Issues**:
+
 1. Inverted priority structure (constraints appear last)
 2. Excessive instruction redundancy (~800 tokens)
 3. Over-complex taxonomies (16 note types, 17 speech patterns)
 4. High total token count (~8,200 tokens)
 
 **Recommended Approach**:
+
 1. Restructure to constraint-first architecture
 2. Simplify taxonomies (16 → 6 note types)
 3. Eliminate redundancy through single source of truth
@@ -1251,6 +1337,7 @@ The current LLM roleplay prompt system demonstrates **exceptional character mode
 5. Target 37% total token reduction (8,200 → 5,200)
 
 **Expected Outcomes**:
+
 - 40% improved constraint adherence
 - 30% reduced classification complexity
 - 25% faster action selection
@@ -1290,6 +1377,7 @@ The current system is functional but sub-optimal. The proposed improvements offe
 ### Before vs After: Action Tag Rules
 
 **BEFORE** (~350 tokens, scattered):
+
 ```
 <portrayal_guidelines>
 ...
@@ -1318,6 +1406,7 @@ Action Tag Rules (CRITICAL):
 ```
 
 **AFTER** (~150 tokens, single location):
+
 ```xml
 <system_constraints>
   <output_format>
@@ -1341,6 +1430,7 @@ Action Tag Rules (CRITICAL):
 ### Before vs After: Note Subject Types
 
 **BEFORE** (~1,200 tokens):
+
 ```
 16 subject types with extensive definitions:
 - character, location, item, creature, organization
@@ -1357,6 +1447,7 @@ Plus:
 ```
 
 **AFTER** (~400 tokens):
+
 ```
 6 core types with simple criteria:
 
@@ -1380,6 +1471,7 @@ Priority:
 ### Before vs After: Speech Patterns
 
 **BEFORE** (17 examples, ~800 tokens):
+
 ```
 - (when performing or manipulating...) 'Oh meow-y goodness...'
 - (meows sneak into speech...) 'Met this merchant—boring as hell, meow...'
@@ -1402,6 +1494,7 @@ Priority:
 ```
 
 **AFTER** (6 core patterns, ~400 tokens):
+
 ```
 1. Feline Verbal Tics
    Casual: "meow", "mrow", "mmh" integrated naturally
@@ -1438,6 +1531,7 @@ Priority:
 ### Template System Architecture
 
 **Current Implementation**:
+
 ```javascript
 // src/prompting/templates/characterPromptTemplate.js
 class CharacterPromptTemplate {
@@ -1453,13 +1547,14 @@ class CharacterPromptTemplate {
       this.buildGoals(data.character.goals),
       this.buildActions(data.availableActions),
       this.buildFinalInstructions(),
-      this.buildContentPolicy()
+      this.buildContentPolicy(),
     ].join('\n\n');
   }
 }
 ```
 
 **Proposed Refactor**:
+
 ```javascript
 class CharacterPromptTemplate {
   assemble(data) {
@@ -1477,7 +1572,7 @@ class CharacterPromptTemplate {
       this.buildExecutionContext(data.actions, data.recentState),
 
       // PHASE 5: Task Prompt
-      this.buildTaskPrompt()
+      this.buildTaskPrompt(),
     ].join('\n\n');
   }
 
@@ -1517,7 +1612,7 @@ class PromptAssembler {
       constraints: this.cache.get(constraintsKey),
       persona,
       world,
-      state
+      state,
     });
   }
 
@@ -1526,7 +1621,7 @@ class PromptAssembler {
     return {
       profile: this.compactProfile(character.profile),
       psychology: this.compactPsychology(character.psychology),
-      speechPatterns: this.extractCorePatterns(character.speechPatterns)
+      speechPatterns: this.extractCorePatterns(character.speechPatterns),
     };
   }
 }
@@ -1537,7 +1632,7 @@ class PromptAssembler {
 ```javascript
 const PROMPT_VERSIONS = {
   '1.0': LegacyTemplate,
-  '2.0': OptimizedTemplate
+  '2.0': OptimizedTemplate,
 };
 
 class PromptVersionManager {
@@ -1557,7 +1652,7 @@ class PromptVersionManager {
 
 ---
 
-*Generated: 2025-11-24*
-*Analyzer: Claude Code (Sonnet 4.5)*
-*Total Analysis Time: ~45 minutes*
-*Report Length: ~14,000 words*
+_Generated: 2025-11-24_
+_Analyzer: Claude Code (Sonnet 4.5)_
+_Total Analysis Time: ~45 minutes_
+_Report Length: ~14,000 words_

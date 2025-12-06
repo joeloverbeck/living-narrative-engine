@@ -101,7 +101,13 @@ describe('registerLoaders full instantiation coverage', () => {
 
     mockClass('../../../../src/loaders/schemaLoader.js', () => {
       return class MockSchemaLoader {
-        constructor(configuration, pathResolver, dataFetcher, schemaValidator, loggerDep) {
+        constructor(
+          configuration,
+          pathResolver,
+          dataFetcher,
+          schemaValidator,
+          loggerDep
+        ) {
           created.schemaLoader = {
             configuration,
             pathResolver,
@@ -153,23 +159,29 @@ describe('registerLoaders full instantiation coverage', () => {
       },
     }));
 
-    jest.doMock('../../../../src/validation/modCrossReferenceValidator.js', () => ({
-      __esModule: true,
-      default: class MockModCrossReferenceValidator {
-        constructor(config) {
-          created.modCrossReferenceValidator = config;
-        }
-      },
-    }));
+    jest.doMock(
+      '../../../../src/validation/modCrossReferenceValidator.js',
+      () => ({
+        __esModule: true,
+        default: class MockModCrossReferenceValidator {
+          constructor(config) {
+            created.modCrossReferenceValidator = config;
+          }
+        },
+      })
+    );
 
-    jest.doMock('../../../../src/validation/modValidationOrchestrator.js', () => ({
-      __esModule: true,
-      default: class MockModValidationOrchestrator {
-        constructor(config) {
-          created.modValidationOrchestrator = config;
-        }
-      },
-    }));
+    jest.doMock(
+      '../../../../src/validation/modValidationOrchestrator.js',
+      () => ({
+        __esModule: true,
+        default: class MockModValidationOrchestrator {
+          constructor(config) {
+            created.modValidationOrchestrator = config;
+          }
+        },
+      })
+    );
 
     jest.doMock('../../../../src/validation/violationReporter.js', () => ({
       __esModule: true,
@@ -189,33 +201,48 @@ describe('registerLoaders full instantiation coverage', () => {
       },
     }));
 
-    jest.doMock('../../../../src/anatomy/recipePatternResolver/patternResolver.js', () => ({
-      __esModule: true,
-      default: class MockRecipePatternResolver {
-        constructor(config) {
-          created.recipePatternResolver = config;
-        }
-      },
-    }));
+    jest.doMock(
+      '../../../../src/anatomy/recipePatternResolver/patternResolver.js',
+      () => ({
+        __esModule: true,
+        default: class MockRecipePatternResolver {
+          constructor(config) {
+            created.recipePatternResolver = config;
+          }
+        },
+      })
+    );
 
-    jest.doMock('../../../../src/anatomy/validation/rules/blueprintRecipeValidationRule.js', () => ({
-      __esModule: true,
-      BlueprintRecipeValidationRule: class MockBlueprintRecipeValidationRule {
-        constructor(config) {
-          created.blueprintRecipeValidationRule = config;
-        }
-      },
-    }));
+    jest.doMock(
+      '../../../../src/anatomy/validation/rules/blueprintRecipeValidationRule.js',
+      () => ({
+        __esModule: true,
+        BlueprintRecipeValidationRule: class MockBlueprintRecipeValidationRule {
+          constructor(config) {
+            created.blueprintRecipeValidationRule = config;
+          }
+        },
+      })
+    );
 
-    const AppContainer = require('../../../../src/dependencyInjection/appContainer.js').default;
+    const AppContainer =
+      require('../../../../src/dependencyInjection/appContainer.js').default;
     const { tokens } = require('../../../../src/dependencyInjection/tokens.js');
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 
     const container = new AppContainer();
     container.register(tokens.ILogger, () => logger);
-    container.register(tokens.ISafeEventDispatcher, () => ({ dispatch: jest.fn() }));
-    container.register(tokens.IValidatedEventDispatcher, () => ({ dispatchValidated: jest.fn() }));
-    container.register(tokens.IPathConfiguration, () => ({ promptBasePath: '/prompt' }));
+    container.register(tokens.ISafeEventDispatcher, () => ({
+      dispatch: jest.fn(),
+    }));
+    container.register(tokens.IValidatedEventDispatcher, () => ({
+      dispatchValidated: jest.fn(),
+    }));
+    container.register(tokens.IPathConfiguration, () => ({
+      promptBasePath: '/prompt',
+    }));
     // RuleLoader requires OperationRegistry (registered in interpreterRegistrations.js)
     container.register(tokens.OperationRegistry, () => ({
       getHandlerToken: jest.fn(),

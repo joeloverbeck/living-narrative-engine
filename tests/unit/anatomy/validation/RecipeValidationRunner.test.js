@@ -5,7 +5,10 @@ import { ComponentExistenceValidationRule } from '../../../../src/anatomy/valida
 import { PropertySchemaValidationRule } from '../../../../src/anatomy/validation/rules/propertySchemaValidationRule.js';
 import ValidationPipeline from '../../../../src/anatomy/validation/core/ValidationPipeline.js';
 
-const createValidatorStub = (name, { priority = 10, failFast = false } = {}) => {
+const createValidatorStub = (
+  name,
+  { priority = 10, failFast = false } = {}
+) => {
   const validate = jest.fn(async () => ({
     errors: [],
     warnings: [],
@@ -71,9 +74,12 @@ describe('RecipeValidationRunner', () => {
       recipeBodyDescriptor: createValidatorStub('body-descriptors', {
         priority: 15,
       }),
-      socketSlotCompatibility: createValidatorStub('socket-slot-compatibility', {
-        priority: 20,
-      }),
+      socketSlotCompatibility: createValidatorStub(
+        'socket-slot-compatibility',
+        {
+          priority: 20,
+        }
+      ),
       socketNameTpl: createValidatorStub('socket-nametpl-uniqueness', {
         priority: 23,
         failFast: true,
@@ -263,7 +269,9 @@ describe('RecipeValidationRunner', () => {
       const report = await validator.validate(createRecipe());
 
       expect(report.errors).toHaveLength(1);
-      expect(validatorStubs.recipeBodyDescriptor.validate).not.toHaveBeenCalled();
+      expect(
+        validatorStubs.recipeBodyDescriptor.validate
+      ).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "ValidationPipeline: Validator 'blueprint-existence' halted execution due to failFast errors"
       );
@@ -289,7 +297,9 @@ describe('RecipeValidationRunner', () => {
       });
 
       expect(report.errors).toHaveLength(1);
-      expect(validatorStubs.recipeBodyDescriptor.validate).not.toHaveBeenCalled();
+      expect(
+        validatorStubs.recipeBodyDescriptor.validate
+      ).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "ValidationPipeline: Halting pipeline after 'blueprint-existence' due to failFast option"
       );
@@ -506,7 +516,10 @@ describe('RecipeValidationRunner', () => {
 
       expect(report.errors).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ type: 'VALIDATION_ERROR', severity: 'error' }),
+          expect.objectContaining({
+            type: 'VALIDATION_ERROR',
+            severity: 'error',
+          }),
         ])
       );
     });
@@ -557,7 +570,8 @@ describe('RecipeValidationRunner', () => {
 
     afterEach(() => {
       process.env.NODE_ENV = originalEnv.NODE_ENV;
-      process.env.VALIDATION_PIPELINE_GUARDS = originalEnv.VALIDATION_PIPELINE_GUARDS;
+      process.env.VALIDATION_PIPELINE_GUARDS =
+        originalEnv.VALIDATION_PIPELINE_GUARDS;
     });
 
     it('notifies monitoring and logs when mandatory validator assertion is downgraded', () => {
@@ -580,9 +594,9 @@ describe('RecipeValidationRunner', () => {
       });
 
       expect(registry.assertRegistered).toHaveBeenCalled();
-      expect(monitoringCoordinator.incrementValidationPipelineHealth).toHaveBeenCalledWith(
-        'registry_assertion_failure'
-      );
+      expect(
+        monitoringCoordinator.incrementValidationPipelineHealth
+      ).toHaveBeenCalledWith('registry_assertion_failure');
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'ValidatorRegistry: Mandatory validator assertion downgraded to warning in production'
       );
@@ -592,10 +606,17 @@ describe('RecipeValidationRunner', () => {
       process.env.NODE_ENV = 'test';
       process.env.VALIDATION_PIPELINE_GUARDS = 'false';
       const recipe = createRecipe();
-      const pipelineResult = { errors: [], warnings: [], suggestions: [], passed: [] };
+      const pipelineResult = {
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        passed: [],
+      };
 
       const normalizeSpy = jest.spyOn(
-        jest.requireActual('../../../../src/anatomy/validation/utils/validationResultNormalizer.js'),
+        jest.requireActual(
+          '../../../../src/anatomy/validation/utils/validationResultNormalizer.js'
+        ),
         'normalizeValidationResult'
       );
       jest
@@ -623,10 +644,17 @@ describe('RecipeValidationRunner', () => {
       process.env.NODE_ENV = 'test';
       process.env.VALIDATION_PIPELINE_GUARDS = 'maybe';
       const recipe = createRecipe();
-      const pipelineResult = { errors: [], warnings: [], suggestions: [], passed: [] };
+      const pipelineResult = {
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        passed: [],
+      };
 
       const normalizeSpy = jest.spyOn(
-        jest.requireActual('../../../../src/anatomy/validation/utils/validationResultNormalizer.js'),
+        jest.requireActual(
+          '../../../../src/anatomy/validation/utils/validationResultNormalizer.js'
+        ),
         'normalizeValidationResult'
       );
       jest
@@ -652,10 +680,17 @@ describe('RecipeValidationRunner', () => {
       process.env.NODE_ENV = 'production';
       delete process.env.VALIDATION_PIPELINE_GUARDS;
       const recipe = createRecipe();
-      const pipelineResult = { errors: [], warnings: [], suggestions: [], passed: [] };
+      const pipelineResult = {
+        errors: [],
+        warnings: [],
+        suggestions: [],
+        passed: [],
+      };
 
       const normalizeSpy = jest.spyOn(
-        jest.requireActual('../../../../src/anatomy/validation/utils/validationResultNormalizer.js'),
+        jest.requireActual(
+          '../../../../src/anatomy/validation/utils/validationResultNormalizer.js'
+        ),
         'normalizeValidationResult'
       );
       jest

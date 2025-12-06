@@ -473,6 +473,5 @@ describe('AnatomyCacheCoordinator', () => {
       expect(mockLogger.error).toHaveBeenCalled();
       expect(goodCache.has('entity1')).toBe(false); // Good cache still invalidated
     });
-
   });
 });

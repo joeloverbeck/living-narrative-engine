@@ -62,20 +62,33 @@ export class TurnOrderTickerRenderer {
     validateDependency(documentContext, 'IDocumentContext', logger, {
       requiredMethods: ['query', 'create'],
     });
-    validateDependency(validatedEventDispatcher, 'IValidatedEventDispatcher', logger, {
-      requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
-    });
+    validateDependency(
+      validatedEventDispatcher,
+      'IValidatedEventDispatcher',
+      logger,
+      {
+        requiredMethods: ['dispatch', 'subscribe', 'unsubscribe'],
+      }
+    );
     validateDependency(domElementFactory, 'DomElementFactory', logger, {
       requiredMethods: ['create'],
     });
     validateDependency(entityManager, 'IEntityManager', logger, {
       requiredMethods: ['getEntityInstance', 'hasComponent'],
     });
-    validateDependency(entityDisplayDataProvider, 'EntityDisplayDataProvider', logger, {
-      requiredMethods: ['getEntityName', 'getEntityPortraitPath'],
-    });
+    validateDependency(
+      entityDisplayDataProvider,
+      'EntityDisplayDataProvider',
+      logger,
+      {
+        requiredMethods: ['getEntityName', 'getEntityPortraitPath'],
+      }
+    );
 
-    if (!tickerContainerElement || !(tickerContainerElement instanceof HTMLElement)) {
+    if (
+      !tickerContainerElement ||
+      !(tickerContainerElement instanceof HTMLElement)
+    ) {
       throw new Error('tickerContainerElement must be a valid HTMLElement');
     }
 
@@ -130,9 +143,12 @@ export class TurnOrderTickerRenderer {
       COMPONENT_ADDED_ID,
       this.#handleParticipationChanged.bind(this)
     );
-    if (unsubComponentAdded) this.#unsubscribeFunctions.push(unsubComponentAdded);
+    if (unsubComponentAdded)
+      this.#unsubscribeFunctions.push(unsubComponentAdded);
 
-    this.#logger.debug('TurnOrderTickerRenderer event subscriptions established');
+    this.#logger.debug(
+      'TurnOrderTickerRenderer event subscriptions established'
+    );
   }
 
   // ========== PUBLIC API ==========
@@ -168,7 +184,7 @@ export class TurnOrderTickerRenderer {
       }
 
       // Log rendering activity
-      const actorIds = actors.map(actor => actor?.id).filter(Boolean);
+      const actorIds = actors.map((actor) => actor?.id).filter(Boolean);
       this.#logger.info('Rendering turn order queue', {
         actorCount: actors.length,
         actorIds,
@@ -196,11 +212,14 @@ export class TurnOrderTickerRenderer {
           }
         } catch (error) {
           // Catch per-actor failures and continue with others
-          this.#logger.error('Failed to create actor element, continuing with others', {
-            actorId: actor.id,
-            index: i,
-            error: error.message,
-          });
+          this.#logger.error(
+            'Failed to create actor element, continuing with others',
+            {
+              actorId: actor.id,
+              index: i,
+              error: error.message,
+            }
+          );
         }
       }
 
@@ -212,7 +231,6 @@ export class TurnOrderTickerRenderer {
 
       // Auto-scroll to start after rendering
       this.#_scrollToStart();
-
     } catch (error) {
       // Handle catastrophic render failures
       this.#logger.error('Failed to render turn order queue', {
@@ -256,9 +274,12 @@ export class TurnOrderTickerRenderer {
     );
 
     if (!actorElement) {
-      this.#logger.warn('updateCurrentActor: Actor element not found in ticker', {
-        entityId,
-      });
+      this.#logger.warn(
+        'updateCurrentActor: Actor element not found in ticker',
+        {
+          entityId,
+        }
+      );
       return;
     }
 
@@ -286,21 +307,28 @@ export class TurnOrderTickerRenderer {
    */
   #clearCurrentHighlight() {
     if (!this.#actorQueueElement) {
-      this.#logger.debug('clearCurrentHighlight: No actor queue element available');
+      this.#logger.debug(
+        'clearCurrentHighlight: No actor queue element available'
+      );
       return;
     }
 
-    const currentActors = this.#actorQueueElement.querySelectorAll('.ticker-actor.current');
+    const currentActors = this.#actorQueueElement.querySelectorAll(
+      '.ticker-actor.current'
+    );
     const clearedCount = currentActors.length;
 
-    currentActors.forEach(actor => {
+    currentActors.forEach((actor) => {
       actor.classList.remove('current');
     });
 
     if (clearedCount > 0) {
-      this.#logger.debug('clearCurrentHighlight: Cleared current class from actors', {
-        count: clearedCount,
-      });
+      this.#logger.debug(
+        'clearCurrentHighlight: Cleared current class from actors',
+        {
+          count: clearedCount,
+        }
+      );
     }
   }
 
@@ -340,13 +368,18 @@ export class TurnOrderTickerRenderer {
           entityId: actorElement.getAttribute('data-entity-id'),
         });
       } else {
-        this.#logger.debug('scrollToActor: Actor already visible, skipping scroll');
+        this.#logger.debug(
+          'scrollToActor: Actor already visible, skipping scroll'
+        );
       }
     } catch (err) {
       // Scroll failure is non-critical
-      this.#logger.debug('scrollToActor: Scroll operation failed (non-critical)', {
-        error: err.message,
-      });
+      this.#logger.debug(
+        'scrollToActor: Scroll operation failed (non-critical)',
+        {
+          error: err.message,
+        }
+      );
     }
   }
 
@@ -361,7 +394,9 @@ export class TurnOrderTickerRenderer {
   async removeActor(entityId) {
     // Validate entity ID parameter
     if (typeof entityId !== 'string' || entityId.trim() === '') {
-      this.#logger.warn('removeActor() called with invalid entityId', { entityId });
+      this.#logger.warn('removeActor() called with invalid entityId', {
+        entityId,
+      });
       return;
     }
 
@@ -383,10 +418,13 @@ export class TurnOrderTickerRenderer {
         await this.#_animateActorExit(actorElement);
       } catch (animationError) {
         // Log animation failure but continue with removal
-        this.#logger.error('Exit animation failed, performing fallback removal', {
-          entityId,
-          error: animationError.message,
-        });
+        this.#logger.error(
+          'Exit animation failed, performing fallback removal',
+          {
+            entityId,
+            error: animationError.message,
+          }
+        );
       }
 
       // Remove element from DOM (idempotent - safe to call even if already removed)
@@ -420,19 +458,27 @@ export class TurnOrderTickerRenderer {
    */
   updateActorParticipation(entityId, participating) {
     if (!entityId || typeof entityId !== 'string') {
-      this.#logger.warn('updateActorParticipation requires a valid entity ID', { entityId });
-      return;
-    }
-
-    if (typeof participating !== 'boolean') {
-      this.#logger.warn('updateActorParticipation requires a boolean participating value', {
+      this.#logger.warn('updateActorParticipation requires a valid entity ID', {
         entityId,
-        participating,
       });
       return;
     }
 
-    this.#logger.debug('Updating actor participation state', { entityId, participating });
+    if (typeof participating !== 'boolean') {
+      this.#logger.warn(
+        'updateActorParticipation requires a boolean participating value',
+        {
+          entityId,
+          participating,
+        }
+      );
+      return;
+    }
+
+    this.#logger.debug('Updating actor participation state', {
+      entityId,
+      participating,
+    });
 
     try {
       // Find the actor element
@@ -451,8 +497,10 @@ export class TurnOrderTickerRenderer {
       // Apply participation state
       this.#_applyParticipationState(actorElement, participating);
 
-      this.#logger.debug('Actor participation state updated', { entityId, participating });
-
+      this.#logger.debug('Actor participation state updated', {
+        entityId,
+        participating,
+      });
     } catch (error) {
       this.#logger.error('Failed to update actor participation state', {
         entityId,
@@ -468,7 +516,7 @@ export class TurnOrderTickerRenderer {
    * @public
    */
   dispose() {
-    this.#unsubscribeFunctions.forEach(unsubFn => {
+    this.#unsubscribeFunctions.forEach((unsubFn) => {
       if (typeof unsubFn === 'function') {
         unsubFn();
       }
@@ -668,12 +716,18 @@ export class TurnOrderTickerRenderer {
   #_getActorDisplayData(entityId) {
     try {
       // Use EntityDisplayDataProvider for name and portrait
-      const name = this.#_entityDisplayDataProvider.getEntityName(entityId, entityId);
-      const portraitPath = this.#_entityDisplayDataProvider.getEntityPortraitPath(entityId);
+      const name = this.#_entityDisplayDataProvider.getEntityName(
+        entityId,
+        entityId
+      );
+      const portraitPath =
+        this.#_entityDisplayDataProvider.getEntityPortraitPath(entityId);
 
       // Check participation status
       let participating = true; // Default to true
-      if (this.#_entityManager.hasComponent(entityId, PARTICIPATION_COMPONENT_ID)) {
+      if (
+        this.#_entityManager.hasComponent(entityId, PARTICIPATION_COMPONENT_ID)
+      ) {
         const participationComponent = this.#_entityManager.getComponentData(
           entityId,
           PARTICIPATION_COMPONENT_ID
@@ -695,10 +749,13 @@ export class TurnOrderTickerRenderer {
       };
     } catch (error) {
       // If any error occurs, return minimal fallback data
-      this.#logger.warn('Failed to extract actor display data, using fallback', {
-        entityId,
-        error: error.message,
-      });
+      this.#logger.warn(
+        'Failed to extract actor display data, using fallback',
+        {
+          entityId,
+          error: error.message,
+        }
+      );
 
       return {
         name: entityId,
@@ -718,7 +775,10 @@ export class TurnOrderTickerRenderer {
    */
   #_createActorElement(entity) {
     if (!entity || !entity.id) {
-      this.#logger.error('Cannot create actor element: entity or entity.id missing', { entity });
+      this.#logger.error(
+        'Cannot create actor element: entity or entity.id missing',
+        { entity }
+      );
       throw new Error('Entity must have an id property');
     }
 
@@ -729,7 +789,10 @@ export class TurnOrderTickerRenderer {
     const container = this.#domElementFactory.create('div');
     container.classList.add('ticker-actor');
     container.setAttribute('data-entity-id', entityId);
-    container.setAttribute('data-participating', displayData.participating.toString());
+    container.setAttribute(
+      'data-participating',
+      displayData.participating.toString()
+    );
 
     // ARIA attributes for accessibility
     container.setAttribute('role', 'listitem');
@@ -811,7 +874,10 @@ export class TurnOrderTickerRenderer {
    */
   #_createNameBadgeElement(container, displayData) {
     const badge = this.#domElementFactory.div('ticker-actor-name-badge');
-    const nameSpan = this.#domElementFactory.span('ticker-actor-name', displayData.name);
+    const nameSpan = this.#domElementFactory.span(
+      'ticker-actor-name',
+      displayData.name
+    );
     nameSpan.title = displayData.name; // Tooltip for long names
 
     badge.appendChild(nameSpan);
@@ -828,7 +894,10 @@ export class TurnOrderTickerRenderer {
    */
   #_applyParticipationState(element, participating) {
     if (!element || !(element instanceof HTMLElement)) {
-      this.#logger.warn('applyParticipationState requires a valid HTMLElement', { element });
+      this.#logger.warn(
+        'applyParticipationState requires a valid HTMLElement',
+        { element }
+      );
       return;
     }
 
@@ -870,7 +939,10 @@ export class TurnOrderTickerRenderer {
    */
   #announceToScreenReader(message) {
     if (!message || typeof message !== 'string') {
-      this.#logger.warn('announceToScreenReader requires a valid message string', { message });
+      this.#logger.warn(
+        'announceToScreenReader requires a valid message string',
+        { message }
+      );
       return;
     }
 
@@ -918,11 +990,7 @@ export class TurnOrderTickerRenderer {
 
     // Validate and normalize index parameter
     let normalizedIndex = index;
-    if (
-      typeof index !== 'number' ||
-      !Number.isFinite(index) ||
-      index < 0
-    ) {
+    if (typeof index !== 'number' || !Number.isFinite(index) || index < 0) {
       this.#logger.warn(
         'TurnOrderTickerRenderer: Invalid index provided to _animateActorEntry, defaulting to 0',
         { providedIndex: index, element: element.className }
@@ -1004,14 +1072,18 @@ export class TurnOrderTickerRenderer {
    */
   #_animateActorExit(element) {
     if (!element || !(element instanceof HTMLElement)) {
-      this.#logger.warn('animateActorExit requires a valid HTMLElement', { element });
+      this.#logger.warn('animateActorExit requires a valid HTMLElement', {
+        element,
+      });
       return Promise.resolve(); // Resolve immediately for invalid input
     }
 
     return new Promise((resolve) => {
       try {
         // Check if user prefers reduced motion
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const prefersReducedMotion = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches;
 
         if (prefersReducedMotion) {
           // Skip animation, just fade out quickly
@@ -1057,7 +1129,6 @@ export class TurnOrderTickerRenderer {
         this.#logger.debug('Exit animation applied', {
           entityId: element.getAttribute('data-entity-id'),
         });
-
       } catch (error) {
         this.#logger.warn('Failed to apply exit animation', {
           entityId: element.getAttribute('data-entity-id'),
@@ -1129,11 +1200,17 @@ export class TurnOrderTickerRenderer {
       const { roundNumber, actors, strategy } = event.payload || {};
 
       if (!roundNumber || !Array.isArray(actors)) {
-        this.#logger.warn('Invalid round_started event payload', { payload: event.payload });
+        this.#logger.warn('Invalid round_started event payload', {
+          payload: event.payload,
+        });
         return;
       }
 
-      this.#logger.info('Round started', { roundNumber, actorCount: actors.length, strategy });
+      this.#logger.info('Round started', {
+        roundNumber,
+        actorCount: actors.length,
+        strategy,
+      });
 
       // Update round number display
       if (this.#roundNumberElement) {
@@ -1142,14 +1219,13 @@ export class TurnOrderTickerRenderer {
 
       // Convert actor IDs to entity objects for render method
       // The render method expects entity objects with id property
-      const actorEntities = actors.map(actorId => ({ id: actorId }));
+      const actorEntities = actors.map((actorId) => ({ id: actorId }));
 
       // Render the full queue with animations
       this.render(actorEntities);
 
       // Reset current actor tracking
       this.#_currentActorId = null;
-
     } catch (error) {
       this.#logger.error('Failed to handle round_started event', {
         error: error.message,
@@ -1173,9 +1249,12 @@ export class TurnOrderTickerRenderer {
       const { entityId, entityType } = event.payload || {};
 
       if (!entityId) {
-        this.#logger.warn('Invalid turn_started event payload: missing entityId', {
-          payload: event.payload,
-        });
+        this.#logger.warn(
+          'Invalid turn_started event payload: missing entityId',
+          {
+            payload: event.payload,
+          }
+        );
         return;
       }
 
@@ -1195,7 +1274,6 @@ export class TurnOrderTickerRenderer {
       // Announce to screen readers
       const actorName = this.#_getActorDisplayData(entityId).name;
       this.#announceToScreenReader(`${actorName}'s turn`);
-
     } catch (error) {
       this.#logger.error('Failed to handle turn_started event', {
         error: error.message,
@@ -1219,9 +1297,12 @@ export class TurnOrderTickerRenderer {
       const { entityId } = event.payload || {};
 
       if (!entityId) {
-        this.#logger.warn('Invalid turn_ended event payload: missing entityId', {
-          payload: event.payload,
-        });
+        this.#logger.warn(
+          'Invalid turn_ended event payload: missing entityId',
+          {
+            payload: event.payload,
+          }
+        );
         return;
       }
 
@@ -1245,7 +1326,6 @@ export class TurnOrderTickerRenderer {
       if (this.#_currentActorId === entityId) {
         this.#_currentActorId = null;
       }
-
     } catch (error) {
       this.#logger.error('Failed to handle turn_ended event', {
         error: error.message,
@@ -1296,7 +1376,6 @@ export class TurnOrderTickerRenderer {
       this.#announceToScreenReader(
         `${actorName} ${participating ? 'enabled for' : 'disabled from'} participation`
       );
-
     } catch (error) {
       this.#logger.error('Failed to handle participation change event', {
         error: error.message,

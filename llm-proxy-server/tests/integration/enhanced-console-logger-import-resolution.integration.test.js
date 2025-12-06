@@ -5,7 +5,14 @@
  *              its sanitisation and formatting behaviour with real collaborators.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
 const ORIGINAL_GLOBAL_THIS = global.globalThis;
@@ -60,11 +67,19 @@ describe('Enhanced console logger Chalk discovery integration', () => {
     process.env = ORIGINAL_ENV;
 
     if (ORIGINAL_STDOUT_DESCRIPTOR) {
-      Object.defineProperty(process.stdout, 'isTTY', ORIGINAL_STDOUT_DESCRIPTOR);
+      Object.defineProperty(
+        process.stdout,
+        'isTTY',
+        ORIGINAL_STDOUT_DESCRIPTOR
+      );
     }
 
     if (ORIGINAL_STDERR_DESCRIPTOR) {
-      Object.defineProperty(process.stderr, 'isTTY', ORIGINAL_STDERR_DESCRIPTOR);
+      Object.defineProperty(
+        process.stderr,
+        'isTTY',
+        ORIGINAL_STDERR_DESCRIPTOR
+      );
     }
 
     delete globalThis.chalk;
@@ -125,7 +140,7 @@ describe('Enhanced console logger Chalk discovery integration', () => {
     expect(debugOutput).toContain('cyan:');
   });
 
-  it('accepts CommonJS default exports from require(\'chalk\') without downgrading formatting', async () => {
+  it("accepts CommonJS default exports from require('chalk') without downgrading formatting", async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
 

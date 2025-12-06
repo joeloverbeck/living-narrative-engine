@@ -15,18 +15,30 @@ describe('FacadeFactory', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    mockContainer = testBed.createMock('container', ['resolve', 'isRegistered']);
+    mockContainer = testBed.createMock('container', [
+      'resolve',
+      'isRegistered',
+    ]);
     mockRegistry = testBed.createMock('registry', ['getFacade', 'register']);
     mockLogger = testBed.createMockLogger();
 
     // Setup container mocks for core dependencies
     mockContainer.resolve.mockImplementation((token) => {
       switch (token) {
-        case 'ILogger': return mockLogger;
-        case 'IEventBus': return { dispatch: jest.fn() };
-        case 'IUnifiedCache': return { get: jest.fn(), set: jest.fn() };
-        case 'ICircuitBreaker': return { execute: jest.fn() };
-        default: return class MockFacade { constructor(options) { this.options = options; } };
+        case 'ILogger':
+          return mockLogger;
+        case 'IEventBus':
+          return { dispatch: jest.fn() };
+        case 'IUnifiedCache':
+          return { get: jest.fn(), set: jest.fn() };
+        case 'ICircuitBreaker':
+          return { execute: jest.fn() };
+        default:
+          return class MockFacade {
+            constructor(options) {
+              this.options = options;
+            }
+          };
       }
     });
     mockContainer.isRegistered.mockReturnValue(false); // Default to no circuit breaker
@@ -34,7 +46,7 @@ describe('FacadeFactory', () => {
     factory = new FacadeFactory({
       container: mockContainer,
       registry: mockRegistry,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -52,7 +64,7 @@ describe('FacadeFactory', () => {
         new FacadeFactory({
           container: null,
           registry: mockRegistry,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow('Missing required dependency: IContainer');
     });
@@ -62,7 +74,7 @@ describe('FacadeFactory', () => {
         new FacadeFactory({
           container: mockContainer,
           registry: null,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).not.toThrow();
     });
@@ -72,7 +84,7 @@ describe('FacadeFactory', () => {
         new FacadeFactory({
           container: mockContainer,
           registry: mockRegistry,
-          logger: null
+          logger: null,
         });
       }).toThrow('Missing required dependency: ILogger');
     });
@@ -89,21 +101,27 @@ describe('FacadeFactory', () => {
       // Override the default mock to return the facade class for TestFacade
       mockContainer.resolve.mockImplementation((token) => {
         switch (token) {
-          case 'ILogger': return mockLogger;
-          case 'IEventBus': return { dispatch: jest.fn() };
-          case 'IUnifiedCache': return { get: jest.fn(), set: jest.fn() };
-          case 'ICircuitBreaker': return { execute: jest.fn() };
-          case 'TestFacade': return mockFacadeClass;
-          default: return mockFacadeClass;
+          case 'ILogger':
+            return mockLogger;
+          case 'IEventBus':
+            return { dispatch: jest.fn() };
+          case 'IUnifiedCache':
+            return { get: jest.fn(), set: jest.fn() };
+          case 'ICircuitBreaker':
+            return { execute: jest.fn() };
+          case 'TestFacade':
+            return mockFacadeClass;
+          default:
+            return mockFacadeClass;
         }
       });
     });
 
     it('should create new facade instance', () => {
       const options = { timeout: 1000 };
-      
+
       const facade = factory.createFacade('TestFacade', options);
-      
+
       expect(facade).toBeInstanceOf(mockFacadeClass);
       expect(facade.options.timeout).toBe(1000);
       expect(facade.options.logger).toBe(mockLogger);
@@ -111,12 +129,14 @@ describe('FacadeFactory', () => {
       expect(facade.options.unifiedCache).toBeDefined();
       expect(facade.options.circuitBreaker).toBeNull();
       expect(mockContainer.resolve).toHaveBeenCalledWith('TestFacade');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Creating facade: TestFacade');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Creating facade: TestFacade'
+      );
     });
 
     it('should create facade with empty options', () => {
       const facade = factory.createFacade('TestFacade');
-      
+
       expect(facade).toBeInstanceOf(mockFacadeClass);
       expect(facade.options.logger).toBe(mockLogger);
       expect(facade.options.eventBus).toBeDefined();
@@ -141,7 +161,7 @@ describe('FacadeFactory', () => {
     });
 
     it('should handle facade class instantiation failure', () => {
-      const badFacadeClass = function() {
+      const badFacadeClass = function () {
         throw new Error('Constructor error');
       };
       mockContainer.resolve.mockReturnValue(badFacadeClass);
@@ -162,34 +182,42 @@ describe('FacadeFactory', () => {
     beforeEach(() => {
       mockContainer.resolve.mockImplementation((token) => {
         switch (token) {
-          case 'ILogger': return mockLogger;
-          case 'IEventBus': return { dispatch: jest.fn() };
-          case 'IUnifiedCache': return { get: jest.fn(), set: jest.fn() };
-          case 'ICircuitBreaker': return { execute: jest.fn() };
-          case 'TestFacade': return mockFacadeClass;
-          default: return mockFacadeClass;
+          case 'ILogger':
+            return mockLogger;
+          case 'IEventBus':
+            return { dispatch: jest.fn() };
+          case 'IUnifiedCache':
+            return { get: jest.fn(), set: jest.fn() };
+          case 'ICircuitBreaker':
+            return { execute: jest.fn() };
+          case 'TestFacade':
+            return mockFacadeClass;
+          default:
+            return mockFacadeClass;
         }
       });
     });
 
     it('should create singleton facade on first call', () => {
       const options = { cacheEnabled: true };
-      
+
       const facade = factory.getSingletonFacade('TestFacade', options);
-      
+
       expect(facade).toBeInstanceOf(mockFacadeClass);
       expect(facade.options.cacheEnabled).toBe(true);
       expect(facade.options.logger).toBe(mockLogger);
       expect(facade.options.eventBus).toBeDefined();
       expect(facade.options.unifiedCache).toBeDefined();
       expect(facade.options.circuitBreaker).toBeNull();
-      expect(mockLogger.debug).toHaveBeenCalledWith('Creating singleton facade: TestFacade');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Creating singleton facade: TestFacade'
+      );
     });
 
     it('should return same instance on subsequent calls', () => {
       const facade1 = factory.getSingletonFacade('TestFacade');
       const facade2 = factory.getSingletonFacade('TestFacade');
-      
+
       expect(facade1).toBe(facade2);
       // First call creates instance (resolves TestFacade + core deps = 4 calls)
       // Second call returns cached instance (no additional resolves)
@@ -197,9 +225,13 @@ describe('FacadeFactory', () => {
     });
 
     it('should create new instance with different options', () => {
-      const facade1 = factory.getSingletonFacade('TestFacade', { timeout: 1000 });
-      const facade2 = factory.getSingletonFacade('TestFacade', { timeout: 2000 });
-      
+      const facade1 = factory.getSingletonFacade('TestFacade', {
+        timeout: 1000,
+      });
+      const facade2 = factory.getSingletonFacade('TestFacade', {
+        timeout: 2000,
+      });
+
       expect(facade1).not.toBe(facade2);
       expect(facade1.options.timeout).toBe(1000);
       expect(facade2.options.timeout).toBe(2000);
@@ -212,7 +244,7 @@ describe('FacadeFactory', () => {
       const options = { timeout: 1000 };
       const facade1 = factory.getSingletonFacade('TestFacade', options);
       const facade2 = factory.getSingletonFacade('TestFacade', options);
-      
+
       expect(facade1).toBe(facade2);
     });
 
@@ -235,7 +267,7 @@ describe('FacadeFactory', () => {
         description: 'Test facade',
         version: '1.0.0',
         capabilities: ['query', 'modify'],
-        tags: ['test', 'facade']
+        tags: ['test', 'facade'],
       };
 
       factory.registerFacade(config);
@@ -246,11 +278,13 @@ describe('FacadeFactory', () => {
           description: 'Test facade',
           version: '1.0.0',
           capabilities: ['query', 'modify'],
-          tags: ['test', 'facade']
+          tags: ['test', 'facade'],
         },
         config
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered facade: TestFacade');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered facade: TestFacade'
+      );
     });
 
     it('should handle registration failure', () => {
@@ -291,55 +325,61 @@ describe('FacadeFactory', () => {
     it('should clear specific facade from cache', () => {
       // Create singleton
       const facade1 = factory.getSingletonFacade('TestFacade');
-      
+
       // Clear cache
       factory.clearSingletonCache('TestFacade');
-      
+
       // Get new instance
       const facade2 = factory.getSingletonFacade('TestFacade');
-      
+
       expect(facade1).not.toBe(facade2);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cleared singleton cache for: TestFacade');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cleared singleton cache for: TestFacade'
+      );
     });
 
     it('should clear all facades from cache', () => {
       // Create multiple singletons
       factory.getSingletonFacade('TestFacade1');
       factory.getSingletonFacade('TestFacade2');
-      
+
       // Clear all
       factory.clearSingletonCache();
-      
+
       // Verify cache is cleared
       const facade1 = factory.getSingletonFacade('TestFacade1');
       const facade2 = factory.getSingletonFacade('TestFacade2');
-      
+
       expect(mockContainer.resolve).toHaveBeenCalledTimes(16); // 2 creations * 4 calls each + 2 more creations * 4 calls each
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cleared all singleton cache');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cleared all singleton cache'
+      );
     });
 
     it('should handle clearing non-existent facade', () => {
       factory.clearSingletonCache('NonExistentFacade');
-      
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cleared singleton cache for: NonExistentFacade');
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cleared singleton cache for: NonExistentFacade'
+      );
     });
   });
 
   describe('isRegistered', () => {
     it('should return true when facade is registered in container', () => {
       mockContainer.isRegistered.mockReturnValue(true);
-      
+
       const result = factory.isRegistered('TestFacade');
-      
+
       expect(result).toBe(true);
       expect(mockContainer.isRegistered).toHaveBeenCalledWith('TestFacade');
     });
 
     it('should return false when facade is not registered in container', () => {
       mockContainer.isRegistered.mockReturnValue(false);
-      
+
       const result = factory.isRegistered('UnknownFacade');
-      
+
       expect(result).toBe(false);
       expect(mockContainer.isRegistered).toHaveBeenCalledWith('UnknownFacade');
     });
@@ -348,9 +388,9 @@ describe('FacadeFactory', () => {
       mockContainer.isRegistered.mockImplementation(() => {
         throw new Error('Container error');
       });
-      
+
       const result = factory.isRegistered('ErrorFacade');
-      
+
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Error checking if facade is registered: ErrorFacade',
@@ -400,7 +440,7 @@ describe('FacadeFactory', () => {
     it('should return names of cached facades', () => {
       factory.getSingletonFacade('TestFacade1');
       factory.getSingletonFacade('TestFacade2');
-      
+
       const names = factory.getCachedFacadeNames();
       expect(names).toHaveLength(2);
       expect(names).toContain('TestFacade1');
@@ -410,11 +450,11 @@ describe('FacadeFactory', () => {
     it('should update after cache operations', () => {
       factory.getSingletonFacade('TestFacade1');
       factory.getSingletonFacade('TestFacade2');
-      
+
       expect(factory.getCachedFacadeNames()).toHaveLength(2);
-      
+
       factory.clearSingletonCache('TestFacade1');
-      
+
       const names = factory.getCachedFacadeNames();
       expect(names).toHaveLength(1);
       expect(names).toContain('TestFacade2');
@@ -431,20 +471,30 @@ describe('FacadeFactory', () => {
     beforeEach(() => {
       mockContainer.resolve.mockImplementation((token) => {
         switch (token) {
-          case 'ILogger': return mockLogger;
-          case 'IEventBus': return { dispatch: jest.fn() };
-          case 'IUnifiedCache': return { get: jest.fn(), set: jest.fn() };
-          case 'ICircuitBreaker': return { execute: jest.fn() };
-          case 'TestFacade': return mockFacadeClass;
-          default: return mockFacadeClass;
+          case 'ILogger':
+            return mockLogger;
+          case 'IEventBus':
+            return { dispatch: jest.fn() };
+          case 'IUnifiedCache':
+            return { get: jest.fn(), set: jest.fn() };
+          case 'ICircuitBreaker':
+            return { execute: jest.fn() };
+          case 'TestFacade':
+            return mockFacadeClass;
+          default:
+            return mockFacadeClass;
         }
       });
     });
 
     it('should create different instances for different option values', () => {
-      const facade1 = factory.getSingletonFacade('TestFacade', { timeout: 1000 });
-      const facade2 = factory.getSingletonFacade('TestFacade', { timeout: 2000 });
-      
+      const facade1 = factory.getSingletonFacade('TestFacade', {
+        timeout: 1000,
+      });
+      const facade2 = factory.getSingletonFacade('TestFacade', {
+        timeout: 2000,
+      });
+
       expect(facade1).not.toBe(facade2);
       expect(facade1.options.timeout).toBe(1000);
       expect(facade2.options.timeout).toBe(2000);
@@ -453,38 +503,38 @@ describe('FacadeFactory', () => {
     it('should create same instance for equivalent options', () => {
       const options1 = { timeout: 1000, enabled: true };
       const options2 = { timeout: 1000, enabled: true };
-      
+
       const facade1 = factory.getSingletonFacade('TestFacade', options1);
       const facade2 = factory.getSingletonFacade('TestFacade', options2);
-      
+
       expect(facade1).toBe(facade2);
     });
 
     it('should handle complex nested options', () => {
-      const options1 = { 
-        timeout: 1000, 
+      const options1 = {
+        timeout: 1000,
         cache: { ttl: 300, maxSize: 100 },
-        features: ['a', 'b'] 
+        features: ['a', 'b'],
       };
-      const options2 = { 
-        timeout: 1000, 
+      const options2 = {
+        timeout: 1000,
         cache: { ttl: 300, maxSize: 100 },
-        features: ['a', 'b'] 
+        features: ['a', 'b'],
       };
-      
+
       const facade1 = factory.getSingletonFacade('TestFacade', options1);
       const facade2 = factory.getSingletonFacade('TestFacade', options2);
-      
+
       expect(facade1).toBe(facade2);
     });
 
     it('should differentiate based on option order independence', () => {
       const options1 = { timeout: 1000, enabled: true };
       const options2 = { enabled: true, timeout: 1000 };
-      
+
       const facade1 = factory.getSingletonFacade('TestFacade', options1);
       const facade2 = factory.getSingletonFacade('TestFacade', options2);
-      
+
       expect(facade1).toBe(facade2);
     });
   });

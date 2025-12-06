@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 jest.mock('../../../src/utils/dependencyUtils.js', () => {
   const actual = jest.requireActual('../../../src/utils/dependencyUtils.js');
@@ -13,7 +20,9 @@ jest.mock('../../../src/utils/dependencyUtils.js', () => {
 import ActionCommandFormatter from '../../../src/actions/actionFormatter.js';
 import { ENTITY as TARGET_TYPE_ENTITY } from '../../../src/constants/actionTargetTypes.js';
 
-const { validateDependencies } = jest.requireMock('../../../src/utils/dependencyUtils.js');
+const { validateDependencies } = jest.requireMock(
+  '../../../src/utils/dependencyUtils.js'
+);
 
 describe('ActionCommandFormatter resilience to dependency validator failures', () => {
   let formatter;

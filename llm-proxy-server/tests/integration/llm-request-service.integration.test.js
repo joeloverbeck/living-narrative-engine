@@ -3,11 +3,7 @@
  * @description Integration tests exercising LlmRequestService with real dependencies
  */
 
-import {
-  describe,
-  test,
-  expect,
-} from '@jest/globals';
+import { describe, test, expect } from '@jest/globals';
 import express from 'express';
 import http from 'http';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
@@ -198,7 +194,9 @@ describe('LlmRequestService integration', () => {
 
     const server = await createTestServer((app) => {
       app.post('/fail', (_req, res) => {
-        res.status(429).json({ error: 'Too many requests, please retry later.' });
+        res
+          .status(429)
+          .json({ error: 'Too many requests, please retry later.' });
       });
     });
 
@@ -267,7 +265,9 @@ describe('LlmRequestService integration', () => {
         'llm_forwarding_network_or_retry_exhausted'
       );
       expect(result.errorMessage).toContain('network issue');
-      expect(result.errorDetailsForClient.originalProxiedErrorMessage).toBeDefined();
+      expect(
+        result.errorDetailsForClient.originalProxiedErrorMessage
+      ).toBeDefined();
     } finally {
       await cleanup();
     }

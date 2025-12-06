@@ -4,6 +4,7 @@
 **Priority:** Critical (Phase 3)
 **Estimated Effort:** 1 day
 **Dependencies:**
+
 - PERPARHEAANDNARTHR-001 (Part Health Component)
 - PERPARHEAANDNARTHR-002 (Health Thresholds Lookup)
 - PERPARHEAANDNARTHR-006 (UPDATE_PART_HEALTH_STATE Schema)
@@ -12,14 +13,14 @@
 
 The original code sample had patterns that diverged from the actual codebase. Corrections:
 
-| Original Assumption | Corrected Pattern |
-|---------------------|-------------------|
-| `updateComponent()` method | `batchAddComponentsOptimized()` with single-element array |
-| `validateDependency()` in constructor | `super('HandlerName', { deps })` with inline validation |
-| `execute(context)` with `context.parameters` | `execute(params, executionContext)` - params first arg |
-| `throw new Error()` for errors | `safeDispatchError()` + early return |
-| `this._logger` | `this.getLogger(executionContext)` |
-| Missing utility imports | Added `assertParamsObject`, `safeDispatchError` |
+| Original Assumption                          | Corrected Pattern                                         |
+| -------------------------------------------- | --------------------------------------------------------- |
+| `updateComponent()` method                   | `batchAddComponentsOptimized()` with single-element array |
+| `validateDependency()` in constructor        | `super('HandlerName', { deps })` with inline validation   |
+| `execute(context)` with `context.parameters` | `execute(params, executionContext)` - params first arg    |
+| `throw new Error()` for errors               | `safeDispatchError()` + early return                      |
+| `this._logger`                               | `this.getLogger(executionContext)`                        |
+| Missing utility imports                      | Added `assertParamsObject`, `safeDispatchError`           |
 
 ---
 
@@ -32,10 +33,12 @@ Implement the `UpdatePartHealthStateHandler` operation handler that recalculates
 ## Files to Touch
 
 ### New Files
+
 - `src/logic/operationHandlers/updatePartHealthStateHandler.js`
 - `tests/unit/logic/operationHandlers/updatePartHealthStateHandler.test.js`
 
 ### Modified Files
+
 - None (DI registration in separate ticket)
 
 ---
@@ -43,6 +46,7 @@ Implement the `UpdatePartHealthStateHandler` operation handler that recalculates
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handlers
 - Any DI registration files (covered in PERPARHEAANDNARTHR-008)
 - `preValidationUtils.js` (covered in PERPARHEAANDNARTHR-008)
@@ -53,6 +57,7 @@ Implement the `UpdatePartHealthStateHandler` operation handler that recalculates
 - The `ModifyPartHealthHandler` (separate operation)
 
 **DO NOT implement:**
+
 - Per-part-type threshold overrides (future iteration)
 - Creature-type threshold overrides (future iteration)
 - Any automatic effects from state changes (future iterations)
@@ -137,7 +142,13 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
    * @private
    */
   #isDeterioration(previousState, newState) {
-    const stateOrder = ['healthy', 'bruised', 'wounded', 'badly_damaged', 'destroyed'];
+    const stateOrder = [
+      'healthy',
+      'bruised',
+      'wounded',
+      'badly_damaged',
+      'destroyed',
+    ];
     return stateOrder.indexOf(newState) > stateOrder.indexOf(previousState);
   }
 
@@ -146,7 +157,9 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
    * @private
    */
   #validateParams(params, logger) {
-    if (!assertParamsObject(params, this.#dispatcher, 'UPDATE_PART_HEALTH_STATE')) {
+    if (
+      !assertParamsObject(params, this.#dispatcher, 'UPDATE_PART_HEALTH_STATE')
+    ) {
       return null;
     }
 
@@ -155,7 +168,10 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
 
     if (typeof part_entity_ref === 'string' && part_entity_ref.trim()) {
       partEntityId = part_entity_ref.trim();
-    } else if (typeof part_entity_ref === 'object' && part_entity_ref !== null) {
+    } else if (
+      typeof part_entity_ref === 'object' &&
+      part_entity_ref !== null
+    ) {
       partEntityId = part_entity_ref.id || part_entity_ref.entityId;
     }
 
@@ -185,7 +201,10 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
 
     try {
       // Get part_health component
-      const partHealth = this.#entityManager.getComponentData(partEntityId, PART_HEALTH_COMPONENT_ID);
+      const partHealth = this.#entityManager.getComponentData(
+        partEntityId,
+        PART_HEALTH_COMPONENT_ID
+      );
       if (!partHealth) {
         safeDispatchError(
           this.#dispatcher,
@@ -196,7 +215,12 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
         return;
       }
 
-      const { currentHealth, maxHealth, state: previousState, turnsInState = 0 } = partHealth;
+      const {
+        currentHealth,
+        maxHealth,
+        state: previousState,
+        turnsInState = 0,
+      } = partHealth;
 
       // Calculate percentage and new state
       const healthPercentage = (currentHealth / maxHealth) * 100;
@@ -206,21 +230,29 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
       const newTurnsInState = newState === previousState ? turnsInState + 1 : 0;
 
       // Update component
-      await this.#entityManager.batchAddComponentsOptimized([{
-        instanceId: partEntityId,
-        componentTypeId: PART_HEALTH_COMPONENT_ID,
-        componentData: {
-          currentHealth,
-          maxHealth,
-          state: newState,
-          turnsInState: newTurnsInState,
-        },
-      }], true);
+      await this.#entityManager.batchAddComponentsOptimized(
+        [
+          {
+            instanceId: partEntityId,
+            componentTypeId: PART_HEALTH_COMPONENT_ID,
+            componentData: {
+              currentHealth,
+              maxHealth,
+              state: newState,
+              turnsInState: newTurnsInState,
+            },
+          },
+        ],
+        true
+      );
 
       // Dispatch event only if state changed
       if (newState !== previousState) {
         // Get owner info from anatomy:part component if available
-        const partComponent = this.#entityManager.getComponentData(partEntityId, PART_COMPONENT_ID);
+        const partComponent = this.#entityManager.getComponentData(
+          partEntityId,
+          PART_COMPONENT_ID
+        );
         const ownerEntityId = partComponent?.ownerEntityId || null;
         const partType = partComponent?.subType || 'unknown';
 
@@ -237,15 +269,24 @@ class UpdatePartHealthStateHandler extends BaseOperationHandler {
         });
 
         log.debug('Part health state changed', {
-          partEntityId, previousState, newState, healthPercentage, turnsInState: newTurnsInState,
+          partEntityId,
+          previousState,
+          newState,
+          healthPercentage,
+          turnsInState: newTurnsInState,
         });
       } else {
         log.debug('Part health state unchanged', {
-          partEntityId, state: newState, healthPercentage, turnsInState: newTurnsInState,
+          partEntityId,
+          state: newState,
+          healthPercentage,
+          turnsInState: newTurnsInState,
         });
       }
     } catch (error) {
-      log.error('Update part health state operation failed', error, { partEntityId });
+      log.error('Update part health state operation failed', error, {
+        partEntityId,
+      });
       safeDispatchError(
         this.#dispatcher,
         `UPDATE_PART_HEALTH_STATE: Operation failed - ${error.message}`,
@@ -298,11 +339,13 @@ Create `tests/unit/logic/operationHandlers/updatePartHealthStateHandler.test.js`
 ### Tests That Must Pass
 
 1. **Unit tests:**
+
    ```bash
    NODE_ENV=test npx jest tests/unit/logic/operationHandlers/updatePartHealthStateHandler.test.js --no-coverage --verbose
    ```
 
 2. **Full test suite:**
+
    ```bash
    npm run test:ci
    ```
@@ -353,46 +396,50 @@ npx eslint src/logic/operationHandlers/updatePartHealthStateHandler.js tests/uni
 ## Outcome (2025-11-28)
 
 ### What Was Planned
+
 - Create `UpdatePartHealthStateHandler` following ticket specifications
 - Create comprehensive unit tests for all threshold boundaries and behaviors
 
 ### What Was Actually Changed
 
 **Files Created:**
+
 1. `src/logic/operationHandlers/updatePartHealthStateHandler.js` - Handler implementation
 2. `tests/unit/logic/operationHandlers/updatePartHealthStateHandler.test.js` - 34 unit tests
 
 **Ticket Corrections Applied:**
 The original ticket code sample contained patterns that diverged from the actual codebase. Before implementation, the ticket was corrected with the following pattern updates:
 
-| Original Pattern | Corrected Pattern |
-|-----------------|-------------------|
-| `updateComponent()` | `batchAddComponentsOptimized()` with single-element array |
-| `validateDependency()` in constructor | `super('HandlerName', { deps })` with inline validation |
-| `execute(context)` | `execute(params, executionContext)` - params as first arg |
-| `throw new Error()` | `safeDispatchError()` + early return |
-| `this._logger` | `this.getLogger(executionContext)` |
-| Missing imports | Added `assertParamsObject`, `safeDispatchError` |
+| Original Pattern                      | Corrected Pattern                                         |
+| ------------------------------------- | --------------------------------------------------------- |
+| `updateComponent()`                   | `batchAddComponentsOptimized()` with single-element array |
+| `validateDependency()` in constructor | `super('HandlerName', { deps })` with inline validation   |
+| `execute(context)`                    | `execute(params, executionContext)` - params as first arg |
+| `throw new Error()`                   | `safeDispatchError()` + early return                      |
+| `this._logger`                        | `this.getLogger(executionContext)`                        |
+| Missing imports                       | Added `assertParamsObject`, `safeDispatchError`           |
 
 ### Test Coverage Summary
 
-| Category | Tests | Status |
-|----------|-------|--------|
-| Constructor validation | 4 | ✅ Pass |
-| State threshold boundaries | 9 | ✅ Pass |
-| turnsInState logic | 7 | ✅ Pass |
-| Owner/part type resolution | 2 | ✅ Pass |
-| Entity reference handling | 4 | ✅ Pass |
-| Error scenarios | 7 | ✅ Pass |
-| Health value preservation | 1 | ✅ Pass |
-| **Total** | **34** | ✅ All Pass |
+| Category                   | Tests  | Status      |
+| -------------------------- | ------ | ----------- |
+| Constructor validation     | 4      | ✅ Pass     |
+| State threshold boundaries | 9      | ✅ Pass     |
+| turnsInState logic         | 7      | ✅ Pass     |
+| Owner/part type resolution | 2      | ✅ Pass     |
+| Entity reference handling  | 4      | ✅ Pass     |
+| Error scenarios            | 7      | ✅ Pass     |
+| Health value preservation  | 1      | ✅ Pass     |
+| **Total**                  | **34** | ✅ All Pass |
 
 ### Verification Results
+
 - Unit tests: ✅ 34/34 passing
 - ESLint: ✅ No errors (warnings match reference handler pattern)
 - TypeCheck: Pre-existing CLI file errors only (not related to this ticket)
 
 ### Not Implemented (Per Ticket Scope)
+
 - DI registration (PERPARHEAANDNARTHR-008)
 - preValidationUtils.js whitelist (PERPARHEAANDNARTHR-008)
 - interpreterRegistrations.js mapping (PERPARHEAANDNARTHR-008)

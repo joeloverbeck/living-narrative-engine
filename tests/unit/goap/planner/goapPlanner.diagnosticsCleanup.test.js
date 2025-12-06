@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import BoundedCache from '../../../../src/goap/utils/boundedCache.js';
 import { createPlannerHarness } from './helpers/createPlannerHarness.js';
 

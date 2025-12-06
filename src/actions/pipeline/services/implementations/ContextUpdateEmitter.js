@@ -88,14 +88,19 @@ export class ContextUpdateEmitter {
    * @returns {TargetValidationResult} Result description.
    */
   #buildResult({ item, kept, metadata }) {
-    const sanitizedTargets = this.#sanitizeResolvedTargets(item.resolvedTargets);
+    const sanitizedTargets = this.#sanitizeResolvedTargets(
+      item.resolvedTargets
+    );
 
     return {
       actionId: item.actionDef?.id ?? null,
       kept,
       keptTargets: sanitizedTargets,
       targetContexts: this.#cloneTargetContexts(item.targetContexts),
-      stageUpdates: this.#extractStageUpdates(metadata, item.actionDef?.id ?? null),
+      stageUpdates: this.#extractStageUpdates(
+        metadata,
+        item.actionDef?.id ?? null
+      ),
       originalIndex: item.originalIndex,
       sourceFormat: item.sourceFormat,
     };
@@ -119,15 +124,22 @@ export class ContextUpdateEmitter {
     }
 
     context.actionsWithTargets = orderedValidated.map((item) => {
-      const base = item.originalRef ? { ...item.originalRef } : { actionDef: item.actionDef };
-      const sanitizedTargets = this.#sanitizeResolvedTargets(item.resolvedTargets);
+      const base = item.originalRef
+        ? { ...item.originalRef }
+        : { actionDef: item.actionDef };
+      const sanitizedTargets = this.#sanitizeResolvedTargets(
+        item.resolvedTargets
+      );
 
       return {
         ...base,
         actionDef: item.actionDef,
         resolvedTargets: sanitizedTargets,
-        targetDefinitions: item.targetDefinitions ?? base.targetDefinitions ?? null,
-        targetContexts: this.#cloneTargetContexts(item.targetContexts ?? base.targetContexts),
+        targetDefinitions:
+          item.targetDefinitions ?? base.targetDefinitions ?? null,
+        targetContexts: this.#cloneTargetContexts(
+          item.targetContexts ?? base.targetContexts
+        ),
       };
     });
   }
@@ -147,7 +159,9 @@ export class ContextUpdateEmitter {
     const orderedValidated = items.filter((item) => validatedSet.has(item));
 
     for (const item of items) {
-      const sanitizedTargets = this.#sanitizeResolvedTargets(item.resolvedTargets);
+      const sanitizedTargets = this.#sanitizeResolvedTargets(
+        item.resolvedTargets
+      );
 
       if (validatedSet.has(item) && sanitizedTargets) {
         item.actionDef.resolvedTargets = sanitizedTargets;
@@ -213,7 +227,8 @@ export class ContextUpdateEmitter {
         if (role === ACTOR_ROLE) {
           continue;
         }
-        sharedTargets[role] = this.#cloneResolvedTargetsPreservingEntities(value);
+        sharedTargets[role] =
+          this.#cloneResolvedTargetsPreservingEntities(value);
         survivingRoles.add(role);
       }
     }

@@ -235,9 +235,9 @@ describe('AnatomyStructureTemplateLoader - Schema Validation', () => {
     };
 
     // Pattern should match: ^[a-z_]+(\\{\\{[a-z_]+\\}\\}.*)?$
-    expect(
-      template.topology.limbSets[0].socketPattern.idTemplate
-    ).toMatch(/\{\{[a-z_]+\}\}/);
+    expect(template.topology.limbSets[0].socketPattern.idTemplate).toMatch(
+      /\{\{[a-z_]+\}\}/
+    );
   });
 
   it('should throw ValidationError when schema validation fails', async () => {

@@ -441,7 +441,6 @@ class SpatialIndexManager extends MapManager {
           locationId: addition.locationId,
           operation: 'add',
         });
-
       } catch (error) {
         result.failed.push({ item: addition, error });
 
@@ -483,7 +482,6 @@ class SpatialIndexManager extends MapManager {
           removed,
           operation: 'remove',
         });
-
       } catch (error) {
         result.failed.push({ item: entityId, error });
 
@@ -531,7 +529,6 @@ class SpatialIndexManager extends MapManager {
           moved,
           operation: 'move',
         });
-
       } catch (error) {
         result.failed.push({ item: update, error });
 
@@ -576,7 +573,6 @@ class SpatialIndexManager extends MapManager {
           locationId: entityLocation.locationId,
           operation: 'rebuild',
         });
-
       } catch (error) {
         result.failed.push({ item: entityLocation, error });
 

@@ -74,7 +74,11 @@ describe('ParameterResolutionService - Real Entity Components', () => {
     // Create test actor with components
     actorId = entityManager.createEntity();
     entityManager.addComponent(actorId, 'core:health', { value: 75, max: 100 });
-    entityManager.addComponent(actorId, 'core:position', { room: 'tavern', x: 5, y: 10 });
+    entityManager.addComponent(actorId, 'core:position', {
+      room: 'tavern',
+      x: 5,
+      y: 10,
+    });
     entityManager.addComponent(actorId, 'items:inventory', {
       slots: [
         { itemId: 'sword_1', slot: 0 },
@@ -90,27 +94,39 @@ describe('ParameterResolutionService - Real Entity Components', () => {
 
   it('should resolve actor health component with real EntityManager', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
-    const result = service.resolve('actor.components.core:health.value', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.core:health.value',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(result).toBe(75);
   });
 
   it('should resolve actor position component', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
-    const result = service.resolve('actor.components.core:position.room', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.core:position.room',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(result).toBe('tavern');
   });
 
   it('should resolve nested inventory data', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
-    const result = service.resolve('actor.components.items:inventory.slots', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.items:inventory.slots',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(result).toEqual([
       { itemId: 'sword_1', slot: 0 },
@@ -120,9 +136,13 @@ describe('ParameterResolutionService - Real Entity Components', () => {
 
   it('should access namespaced components correctly', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
-    const healthComponent = service.resolve('actor.components.core:health', context, {
-      validateEntity: false,
-    });
+    const healthComponent = service.resolve(
+      'actor.components.core:health',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(healthComponent).toEqual({ value: 75, max: 100 });
   });
@@ -139,7 +159,9 @@ describe('ParameterResolutionService - Real Entity Components', () => {
       },
     };
 
-    const result = service.resolve('task.params.item', context, { validateEntity: true });
+    const result = service.resolve('task.params.item', context, {
+      validateEntity: true,
+    });
     expect(result).toBe(itemId);
   });
 
@@ -212,9 +234,13 @@ describe('ParameterResolutionService - Complex Property Paths', () => {
 
   it('should resolve multiple levels with namespaced components', () => {
     const context = contextAssembly.assemblePlanningContext(actorId);
-    const result = service.resolve('actor.components.character:stats.skills.combat.level', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.character:stats.skills.combat.level',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(result).toBe(5);
   });
@@ -224,12 +250,20 @@ describe('ParameterResolutionService - Complex Property Paths', () => {
 
     const context = contextAssembly.assemblePlanningContext(actorId);
 
-    const health = service.resolve('actor.components.core:health.value', context, {
-      validateEntity: false,
-    });
-    const strength = service.resolve('actor.components.character:stats.attributes.strength', context, {
-      validateEntity: false,
-    });
+    const health = service.resolve(
+      'actor.components.core:health.value',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
+    const strength = service.resolve(
+      'actor.components.character:stats.attributes.strength',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(health).toBe(50);
     expect(strength).toBe(15);
@@ -275,10 +309,18 @@ describe('ParameterResolutionService - Refinement LocalState Accumulation', () =
       step1Result: { success: true, movedTo: 'room_12' },
     };
 
-    const context = contextAssembly.assembleRefinementContext(actorId, task, localState);
-    const result = service.resolve('refinement.localState.step1Result.success', context, {
-      validateEntity: false,
-    });
+    const context = contextAssembly.assembleRefinementContext(
+      actorId,
+      task,
+      localState
+    );
+    const result = service.resolve(
+      'refinement.localState.step1Result.success',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(result).toBe(true);
   });
@@ -295,17 +337,33 @@ describe('ParameterResolutionService - Refinement LocalState Accumulation', () =
       consumeResult: { success: true, healthGain: 20 },
     };
 
-    const context = contextAssembly.assembleRefinementContext(actorId, task, localState);
+    const context = contextAssembly.assembleRefinementContext(
+      actorId,
+      task,
+      localState
+    );
 
-    const moveSuccess = service.resolve('refinement.localState.moveResult.success', context, {
-      validateEntity: false,
-    });
-    const pickedItem = service.resolve('refinement.localState.pickupResult.item', context, {
-      validateEntity: false,
-    });
-    const healthGain = service.resolve('refinement.localState.consumeResult.healthGain', context, {
-      validateEntity: false,
-    });
+    const moveSuccess = service.resolve(
+      'refinement.localState.moveResult.success',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
+    const pickedItem = service.resolve(
+      'refinement.localState.pickupResult.item',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
+    const healthGain = service.resolve(
+      'refinement.localState.consumeResult.healthGain',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(moveSuccess).toBe(true);
     expect(pickedItem).toBe('apple_7');
@@ -322,12 +380,22 @@ describe('ParameterResolutionService - Refinement LocalState Accumulation', () =
       pickupResult: { success: true, item: 'apple_7' },
     };
 
-    const context = contextAssembly.assembleRefinementContext(actorId, task, localState);
+    const context = contextAssembly.assembleRefinementContext(
+      actorId,
+      task,
+      localState
+    );
 
-    const taskItem = service.resolve('task.params.item', context, { validateEntity: false });
-    const localItem = service.resolve('refinement.localState.pickupResult.item', context, {
+    const taskItem = service.resolve('task.params.item', context, {
       validateEntity: false,
     });
+    const localItem = service.resolve(
+      'refinement.localState.pickupResult.item',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(taskItem).toBe('apple_7');
     expect(localItem).toBe('apple_7');
@@ -371,11 +439,15 @@ describe('ParameterResolutionService - Resolution Chains', () => {
     };
 
     // First resolve the reference
-    const reference = service.resolve('task.params.itemRef', context, { validateEntity: false });
+    const reference = service.resolve('task.params.itemRef', context, {
+      validateEntity: false,
+    });
     expect(reference).toBe('refinement.localState.pickedItem');
 
     // Then resolve what it points to
-    const itemIdResolved = service.resolve(reference, context, { validateEntity: false });
+    const itemIdResolved = service.resolve(reference, context, {
+      validateEntity: false,
+    });
     expect(itemIdResolved).toBe(itemId);
   });
 
@@ -408,11 +480,19 @@ describe('ParameterResolutionService - Resolution Chains', () => {
     };
 
     // Resolve multiple related parameters
-    const targetRoom = service.resolve('task.params.targetRoom', context, { validateEntity: false });
-    const actualRoom = service.resolve('refinement.localState.moveResult.finalRoom', context, {
+    const targetRoom = service.resolve('task.params.targetRoom', context, {
       validateEntity: false,
     });
-    const itemIdResolved = service.resolve('task.params.item', context, { validateEntity: true });
+    const actualRoom = service.resolve(
+      'refinement.localState.moveResult.finalRoom',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
+    const itemIdResolved = service.resolve('task.params.item', context, {
+      validateEntity: true,
+    });
 
     expect(targetRoom).toBe('tavern');
     expect(actualRoom).toBe('tavern');
@@ -459,7 +539,9 @@ describe('ParameterResolutionService - Error Message Clarity', () => {
     try {
       service.resolve('actor.components.core:health.nonexistent', context);
     } catch (err) {
-      expect(err.message).toContain("Parameter 'actor.components.core:health.nonexistent'");
+      expect(err.message).toContain(
+        "Parameter 'actor.components.core:health.nonexistent'"
+      );
       expect(err.message).toContain('Resolved: actor.components.core:health');
       expect(err.message).toContain('Failed at: nonexistent');
       expect(err.message).toContain('Available keys');
@@ -546,7 +628,10 @@ describe('ParameterResolutionService - Real-World Examples', () => {
 
   it('should resolve parameters from consume_nourishing_item example', () => {
     const itemId = entityManager.createEntity();
-    entityManager.addComponent(itemId, 'items:nutrition', { calories: 150, health: 20 });
+    entityManager.addComponent(itemId, 'items:nutrition', {
+      calories: 150,
+      health: 20,
+    });
 
     const task = {
       id: 'consume_task',
@@ -559,12 +644,22 @@ describe('ParameterResolutionService - Real-World Examples', () => {
       pickupResult: { success: true, item: itemId },
     };
 
-    const context = contextAssembly.assembleRefinementContext(actorId, task, localState);
+    const context = contextAssembly.assembleRefinementContext(
+      actorId,
+      task,
+      localState
+    );
 
-    const taskItem = service.resolve('task.params.item', context, { validateEntity: true });
-    const pickedItem = service.resolve('refinement.localState.pickupResult.item', context, {
+    const taskItem = service.resolve('task.params.item', context, {
       validateEntity: true,
     });
+    const pickedItem = service.resolve(
+      'refinement.localState.pickupResult.item',
+      context,
+      {
+        validateEntity: true,
+      }
+    );
 
     expect(taskItem).toBe(itemId);
     expect(pickedItem).toBe(itemId);
@@ -573,7 +668,9 @@ describe('ParameterResolutionService - Real-World Examples', () => {
   it('should handle parameter-state refinement pattern', () => {
     const roomId = 'room_kitchen';
 
-    entityManager.addComponent(actorId, 'core:position', { room: 'room_bedroom' });
+    entityManager.addComponent(actorId, 'core:position', {
+      room: 'room_bedroom',
+    });
 
     const task = {
       id: 'move_task',
@@ -590,14 +687,22 @@ describe('ParameterResolutionService - Real-World Examples', () => {
       },
     };
 
-    const context = contextAssembly.assembleRefinementContext(actorId, task, localState);
+    const context = contextAssembly.assembleRefinementContext(
+      actorId,
+      task,
+      localState
+    );
 
     const destination = service.resolve('task.params.destination', context, {
       validateEntity: false,
     });
-    const actualDestination = service.resolve('refinement.localState.moveAction.to', context, {
-      validateEntity: false,
-    });
+    const actualDestination = service.resolve(
+      'refinement.localState.moveAction.to',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
 
     expect(destination).toBe(roomId);
     expect(actualDestination).toBe(roomId);

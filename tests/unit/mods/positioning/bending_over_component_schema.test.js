@@ -18,10 +18,7 @@ describe('positioning:bending_over component schema validation', () => {
 
   describe('component schema structure', () => {
     it('should have correct schema structure', () => {
-      expect(componentSchema).toHaveProperty(
-        'id',
-        'positioning:bending_over'
-      );
+      expect(componentSchema).toHaveProperty('id', 'positioning:bending_over');
       expect(componentSchema).toHaveProperty(
         '$schema',
         'schema://living-narrative-engine/component.schema.json'
@@ -32,12 +29,16 @@ describe('positioning:bending_over component schema validation', () => {
         'surface_id',
       ]);
       expect(componentSchema.dataSchema.additionalProperties).toBe(false);
-      expect(componentSchema.dataSchema.properties).toHaveProperty('surface_id');
+      expect(componentSchema.dataSchema.properties).toHaveProperty(
+        'surface_id'
+      );
     });
 
     it('should require surface_id field', () => {
       expect(componentSchema.dataSchema.required).toEqual(['surface_id']);
-      expect(componentSchema.dataSchema.properties).toHaveProperty('surface_id');
+      expect(componentSchema.dataSchema.properties).toHaveProperty(
+        'surface_id'
+      );
     });
 
     it('should use namespacedId reference for surface_id', () => {
@@ -66,11 +67,11 @@ describe('positioning:bending_over component schema validation', () => {
         { surface_id: 'kitchen:counter_01' },
         { surface_id: 'positioning:table_01' },
         { surface_id: 'furniture:desk' },
-        { surface_id: 'test:surface_entity_123' }
+        { surface_id: 'test:surface_entity_123' },
       ];
 
       // All examples should have the required surface_id field
-      validExamples.forEach(example => {
+      validExamples.forEach((example) => {
         expect(example).toHaveProperty('surface_id');
         expect(typeof example.surface_id).toBe('string');
       });

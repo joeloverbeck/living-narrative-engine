@@ -148,7 +148,7 @@ export class FIFOStrategy {
     };
 
     this.#cache.set(key, entry);
-    
+
     // Add to end of insertion order (maintains FIFO order)
     this.#insertionOrder.push(key);
   }
@@ -235,7 +235,7 @@ export class FIFOStrategy {
    *
    * @returns {IterableIterator<[string, *]>} Iterator of key-value pairs
    */
-  * entries() {
+  *entries() {
     // Return entries in insertion order
     for (const key of this.#insertionOrder) {
       const entry = this.#cache.get(key);
@@ -250,7 +250,7 @@ export class FIFOStrategy {
    *
    * @returns {IterableIterator<string>} Iterator of keys
    */
-  * keys() {
+  *keys() {
     // Return keys in insertion order
     for (const key of this.#insertionOrder) {
       const entry = this.#cache.get(key);
@@ -283,7 +283,7 @@ export class FIFOStrategy {
       }
     }
 
-    keysToRemove.forEach(key => this.delete(key));
+    keysToRemove.forEach((key) => this.delete(key));
     return keysToRemove.length;
   }
 

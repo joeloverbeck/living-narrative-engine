@@ -224,9 +224,9 @@ describe('Octopoid Regression Tests', () => {
       const originalTentacles = Object.keys(anatomyData.body.parts).filter(
         (name) => name.includes('tentacle')
       );
-      const deserializedTentacles = Object.keys(
-        deserialized.body.parts
-      ).filter((name) => name.includes('tentacle'));
+      const deserializedTentacles = Object.keys(deserialized.body.parts).filter(
+        (name) => name.includes('tentacle')
+      );
 
       expect(deserializedTentacles).toEqual(originalTentacles);
     });

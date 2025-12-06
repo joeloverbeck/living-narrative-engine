@@ -42,7 +42,9 @@ describe('Giant Spider Anatomy Generation', () => {
       });
 
       // Generate spider anatomy - should succeed
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(spider.id);
+      const result = await anatomyGenerationService.generateAnatomyIfNeeded(
+        spider.id
+      );
 
       // Verify anatomy was successfully generated
       expect(result).toBe(true);
@@ -56,13 +58,18 @@ describe('Giant Spider Anatomy Generation', () => {
       });
 
       // Generate spider anatomy
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(spider.id);
+      const result = await anatomyGenerationService.generateAnatomyIfNeeded(
+        spider.id
+      );
 
       // Verify anatomy was created
       expect(result).toBe(true);
 
       // Verify spider has anatomy:body component
-      const bodyComponent = testBed.entityManager.getComponentData(spider.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        spider.id,
+        'anatomy:body'
+      );
       expect(bodyComponent).toBeDefined();
       expect(bodyComponent.body).toBeDefined();
       expect(bodyComponent.body.parts).toBeDefined();
@@ -70,7 +77,7 @@ describe('Giant Spider Anatomy Generation', () => {
 
       // Verify spider has correct number of legs (8)
       const legParts = Object.values(bodyComponent.body.parts).filter(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === 'spider_leg';
@@ -80,7 +87,7 @@ describe('Giant Spider Anatomy Generation', () => {
 
       // Verify spider has pedipalps (2)
       const pedipalpParts = Object.values(bodyComponent.body.parts).filter(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === 'spider_pedipalp';
@@ -90,7 +97,7 @@ describe('Giant Spider Anatomy Generation', () => {
 
       // Verify spider has abdomen (1)
       const abdomenParts = Object.values(bodyComponent.body.parts).filter(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === 'spider_abdomen';
@@ -100,10 +107,12 @@ describe('Giant Spider Anatomy Generation', () => {
 
       // Verify spider has cephalothorax (1)
       const cephalothoraxParts = Object.values(bodyComponent.body.parts).filter(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
-          return partComponent && partComponent.subType === 'spider_cephalothorax';
+          return (
+            partComponent && partComponent.subType === 'spider_cephalothorax'
+          );
         }
       );
       expect(cephalothoraxParts).toHaveLength(1);
@@ -115,14 +124,19 @@ describe('Giant Spider Anatomy Generation', () => {
         recipeId: 'anatomy:giant_forest_spider',
       });
 
-      const result = await anatomyGenerationService.generateAnatomyIfNeeded(spider.id);
+      const result = await anatomyGenerationService.generateAnatomyIfNeeded(
+        spider.id
+      );
 
       expect(result).toBe(true);
 
       // Verify spider has spinnerets (if specified in recipe)
-      const bodyComponent = testBed.entityManager.getComponentData(spider.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        spider.id,
+        'anatomy:body'
+      );
       const spinneretParts = Object.values(bodyComponent.body.parts).filter(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === 'spinneret';
@@ -143,9 +157,12 @@ describe('Giant Spider Anatomy Generation', () => {
       await anatomyGenerationService.generateAnatomyIfNeeded(spider.id);
 
       // Verify that spider_leg entities were selected (not human_leg or other leg types)
-      const bodyComponent = testBed.entityManager.getComponentData(spider.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        spider.id,
+        'anatomy:body'
+      );
       const legPartIds = Object.values(bodyComponent.body.parts).filter(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
           return partComponent && partComponent.subType === 'spider_leg';
@@ -153,7 +170,7 @@ describe('Giant Spider Anatomy Generation', () => {
       );
 
       // Verify all legs have the spider_leg entity definition ID
-      legPartIds.forEach(partId => {
+      legPartIds.forEach((partId) => {
         const partEntity = testBed.entityManager.getEntityInstance(partId);
         // Entity should have been created from anatomy:spider_leg definition
         expect(partEntity).toBeDefined();
@@ -173,39 +190,52 @@ describe('Giant Spider Anatomy Generation', () => {
       await anatomyGenerationService.generateAnatomyIfNeeded(spider.id);
 
       // Get the cephalothorax entity (root body part)
-      const bodyComponent = testBed.entityManager.getComponentData(spider.id, 'anatomy:body');
+      const bodyComponent = testBed.entityManager.getComponentData(
+        spider.id,
+        'anatomy:body'
+      );
       const cephalothoraxPartId = Object.values(bodyComponent.body.parts).find(
-        partId => {
+        (partId) => {
           const partEntity = testBed.entityManager.getEntityInstance(partId);
           const partComponent = partEntity.getComponentData('anatomy:part');
-          return partComponent && partComponent.subType === 'spider_cephalothorax';
+          return (
+            partComponent && partComponent.subType === 'spider_cephalothorax'
+          );
         }
       );
 
       expect(cephalothoraxPartId).toBeDefined();
 
-      const cephalothoraxEntity = testBed.entityManager.getEntityInstance(cephalothoraxPartId);
-      const socketsComponent = cephalothoraxEntity.getComponentData('anatomy:sockets');
+      const cephalothoraxEntity =
+        testBed.entityManager.getEntityInstance(cephalothoraxPartId);
+      const socketsComponent =
+        cephalothoraxEntity.getComponentData('anatomy:sockets');
 
       expect(socketsComponent).toBeDefined();
       expect(socketsComponent.sockets).toBeDefined();
 
       // Verify leg sockets allow "spider_leg" type
-      const legSockets = socketsComponent.sockets.filter(s => s.id.startsWith('leg_'));
+      const legSockets = socketsComponent.sockets.filter((s) =>
+        s.id.startsWith('leg_')
+      );
       expect(legSockets).toHaveLength(8);
-      legSockets.forEach(socket => {
+      legSockets.forEach((socket) => {
         expect(socket.allowedTypes).toContain('spider_leg');
       });
 
       // Verify pedipalp sockets allow "spider_pedipalp" type
-      const pedipalpSockets = socketsComponent.sockets.filter(s => s.id.includes('pedipalp'));
+      const pedipalpSockets = socketsComponent.sockets.filter((s) =>
+        s.id.includes('pedipalp')
+      );
       expect(pedipalpSockets.length).toBeGreaterThanOrEqual(2); // At least 2 pedipalp sockets
-      pedipalpSockets.forEach(socket => {
+      pedipalpSockets.forEach((socket) => {
         expect(socket.allowedTypes).toContain('spider_pedipalp');
       });
 
       // Verify abdomen socket allows "spider_abdomen" type
-      const abdomenSocket = socketsComponent.sockets.find(s => s.id === 'abdomen');
+      const abdomenSocket = socketsComponent.sockets.find(
+        (s) => s.id === 'abdomen'
+      );
       expect(abdomenSocket).toBeDefined();
       expect(abdomenSocket.allowedTypes).toContain('spider_abdomen');
     });

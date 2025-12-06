@@ -83,7 +83,10 @@ function buildDebuggerScenario(initialEntities, logic) {
     logger,
   });
 
-  const context = contextBuilder.buildContext({ id: ACTION_ID }, { id: ACTOR_ID });
+  const context = contextBuilder.buildContext(
+    { id: ACTION_ID },
+    { id: ACTOR_ID }
+  );
   context.target = createEntityContext(TARGET_ID, entityManager, logger);
   context.targets = {
     primary: createEntityContext(TARGET_ID, entityManager, logger),
@@ -159,13 +162,13 @@ describe('PrerequisiteDebugger integration coverage', () => {
           target: { id: TARGET_ID },
           targets: { primary: { id: TARGET_ID } },
         },
-      },
+      }
     );
 
     expect(result).toBe(true);
 
     const debugLogEntry = logger.debug.mock.calls.find(
-      ([message]) => message === 'Prerequisite evaluated',
+      ([message]) => message === 'Prerequisite evaluated'
     );
 
     expect(debugLogEntry).toBeDefined();
@@ -200,7 +203,7 @@ describe('PrerequisiteDebugger integration coverage', () => {
       bodyParts: [],
     });
     expect(result.error.hint).toBe(
-      'Actor does not have any body parts of type "wing". Check anatomy:body component.',
+      'Actor does not have any body parts of type "wing". Check anatomy:body component.'
     );
   });
 
@@ -225,7 +228,9 @@ describe('PrerequisiteDebugger integration coverage', () => {
     });
 
     expect(result.error.entityState.bodyParts).toEqual(['arm']);
-    expect(result.error.hint).toBe('Review prerequisite logic and entity state above.');
+    expect(result.error.hint).toBe(
+      'Review prerequisite logic and entity state above.'
+    );
   });
 
   it('reports when the actor is alone at a location', () => {
@@ -237,7 +242,7 @@ describe('PrerequisiteDebugger integration coverage', () => {
 
     expect(result.error.entityState.entitiesAtLocation).toBe(1);
     expect(result.error.hint).toBe(
-      'Only the actor is at this location. Add other actors to the scene.',
+      'Only the actor is at this location. Add other actors to the scene.'
     );
   });
 
@@ -250,7 +255,7 @@ describe('PrerequisiteDebugger integration coverage', () => {
 
     expect(result.error.entityState.wornItems).toEqual([]);
     expect(result.error.hint).toBe(
-      'No clothing in slot "head". Add worn_items component with slot.',
+      'No clothing in slot "head". Add worn_items component with slot.'
     );
   });
 
@@ -263,7 +268,7 @@ describe('PrerequisiteDebugger integration coverage', () => {
 
     expect(result.error.entityState.hasComponent).toBe(false);
     expect(result.error.hint).toBe(
-      'Entity missing component "custom:memory". Add component to entity.',
+      'Entity missing component "custom:memory". Add component to entity.'
     );
   });
 });

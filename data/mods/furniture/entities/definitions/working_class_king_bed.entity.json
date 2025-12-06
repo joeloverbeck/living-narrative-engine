@@ -1,27 +1,22 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "furniture:working_class_king_bed",
-    "description": "A king-size bed with a simple wooden headboard and a rumpled gray bedspread pulled smooth enough to cover the mattress, with two off-white pillows set side by side.",
-    "components": {
-        "core:name": {
-            "text": "king-size bed"
-        },
-        "core:description": {
-            "text": "A king-size bed with a simple wooden headboard and a rumpled gray bedspread pulled smooth enough to cover the mattress, with two off-white pillows set side by side."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/working_class_king_bed.png",
-            "altText": "A king-size bed with a simple wooden headboard and a rumpled gray bedspread pulled smooth enough to cover the mattress, with two off-white pillows set side by side."
-        },
-        "positioning:allows_lying_on": {},
-        "positioning:allows_sitting": {
-            "spots": [
-                null,
-                null,
-                null,
-                null
-            ]
-        },
-        "positioning:allows_bending_over": {}
-    }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "furniture:working_class_king_bed",
+  "description": "A king-size bed with a simple wooden headboard and a rumpled gray bedspread pulled smooth enough to cover the mattress, with two off-white pillows set side by side.",
+  "components": {
+    "core:name": {
+      "text": "king-size bed"
+    },
+    "core:description": {
+      "text": "A king-size bed with a simple wooden headboard and a rumpled gray bedspread pulled smooth enough to cover the mattress, with two off-white pillows set side by side."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/working_class_king_bed.png",
+      "altText": "A king-size bed with a simple wooden headboard and a rumpled gray bedspread pulled smooth enough to cover the mattress, with two off-white pillows set side by side."
+    },
+    "positioning:allows_lying_on": {},
+    "positioning:allows_sitting": {
+      "spots": [null, null, null, null]
+    },
+    "positioning:allows_bending_over": {}
+  }
 }

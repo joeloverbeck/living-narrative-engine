@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "torso_lower"
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "clothing:blocks_removal": {
       "blockedSlots": [

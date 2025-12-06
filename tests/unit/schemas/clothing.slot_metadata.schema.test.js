@@ -318,7 +318,13 @@ describe('JSON-Schema – clothing:slot_metadata component', () => {
         slotMappings: {
           multi_layer: {
             coveredSockets: ['test'],
-            allowedLayers: ['underwear', 'base', 'outer', 'accessories', 'armor'],
+            allowedLayers: [
+              'underwear',
+              'base',
+              'outer',
+              'accessories',
+              'armor',
+            ],
           },
         },
       };

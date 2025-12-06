@@ -10,10 +10,22 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
 
   beforeEach(async () => {
     // Load all four actions we need for the workflow
-    testFixtureFacingAway = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:sit_on_lap_from_sitting_facing_away');
-    testFixtureFacing = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:sit_on_lap_from_sitting_facing');
-    testFixtureDismount = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:dismount_from_straddling');
-    testFixtureSitDown = await ModTestFixture.forActionAutoLoad('positioning', 'positioning:sit_down');
+    testFixtureFacingAway = await ModTestFixture.forActionAutoLoad(
+      'positioning',
+      'positioning:sit_on_lap_from_sitting_facing_away'
+    );
+    testFixtureFacing = await ModTestFixture.forActionAutoLoad(
+      'positioning',
+      'positioning:sit_on_lap_from_sitting_facing'
+    );
+    testFixtureDismount = await ModTestFixture.forActionAutoLoad(
+      'positioning',
+      'positioning:dismount_from_straddling'
+    );
+    testFixtureSitDown = await ModTestFixture.forActionAutoLoad(
+      'positioning',
+      'positioning:sit_down'
+    );
   });
 
   afterEach(() => {
@@ -69,12 +81,15 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       await testFixtureFacingAway.executeAction('actor1', 'target1');
 
       // Verify Step 1: sitting_on removed, straddling_waist added, facing_away added
-      let updatedActor = testFixtureFacingAway.entityManager.getEntityInstance('actor1');
+      let updatedActor =
+        testFixtureFacingAway.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
-      expect(updatedActor.components['positioning:straddling_waist']).toBeDefined();
-      expect(updatedActor.components['positioning:straddling_waist'].facing_away).toBe(
-        true
-      );
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeDefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist'].facing_away
+      ).toBe(true);
       expect(updatedActor.components['positioning:facing_away']).toBeDefined();
 
       // Step 2: Execute dismount_from_straddling
@@ -83,13 +98,18 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       await testFixtureDismount.executeAction('actor1', 'target1');
 
       // Verify Step 2: straddling_waist removed, facing_away removed, NO positional components
-      updatedActor = testFixtureDismount.entityManager.getEntityInstance('actor1');
+      updatedActor =
+        testFixtureDismount.entityManager.getEntityInstance('actor1');
       console.log(
         'Components after dismount (facing_away path):',
         Object.keys(updatedActor.components)
       );
-      expect(updatedActor.components['positioning:straddling_waist']).toBeUndefined();
-      expect(updatedActor.components['positioning:facing_away']).toBeUndefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeUndefined();
+      expect(
+        updatedActor.components['positioning:facing_away']
+      ).toBeUndefined();
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
 
       // Step 3: Try to sit on chair1 again
@@ -98,14 +118,19 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       await testFixtureSitDown.executeAction('actor1', 'chair1');
 
       // Verify Step 3: Should succeed - actor should be sitting on chair1
-      updatedActor = testFixtureSitDown.entityManager.getEntityInstance('actor1');
+      updatedActor =
+        testFixtureSitDown.entityManager.getEntityInstance('actor1');
       console.log(
         'Components after sit_down (facing_away path):',
         Object.keys(updatedActor.components)
       );
-      expect(testFixtureSitDown.events).toHaveActionSuccess('Alice sits down on Chair 1.');
+      expect(testFixtureSitDown.events).toHaveActionSuccess(
+        'Alice sits down on Chair 1.'
+      );
       expect(updatedActor.components['positioning:sitting_on']).toBeDefined();
-      expect(updatedActor.components['positioning:sitting_on'].furniture_id).toBe('chair1');
+      expect(
+        updatedActor.components['positioning:sitting_on'].furniture_id
+      ).toBe('chair1');
     });
   });
 
@@ -155,13 +180,18 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       await testFixtureFacing.executeAction('actor1', 'target1');
 
       // Verify Step 1: sitting_on removed, straddling_waist added, NO facing_away
-      let updatedActor = testFixtureFacing.entityManager.getEntityInstance('actor1');
+      let updatedActor =
+        testFixtureFacing.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
-      expect(updatedActor.components['positioning:straddling_waist']).toBeDefined();
-      expect(updatedActor.components['positioning:straddling_waist'].facing_away).toBe(
-        false
-      );
-      expect(updatedActor.components['positioning:facing_away']).toBeUndefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeDefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist'].facing_away
+      ).toBe(false);
+      expect(
+        updatedActor.components['positioning:facing_away']
+      ).toBeUndefined();
 
       // Step 2: Execute dismount_from_straddling
       // Transfer state to dismount fixture
@@ -169,13 +199,18 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       await testFixtureDismount.executeAction('actor1', 'target1');
 
       // Verify Step 2: straddling_waist removed, NO positional components
-      updatedActor = testFixtureDismount.entityManager.getEntityInstance('actor1');
+      updatedActor =
+        testFixtureDismount.entityManager.getEntityInstance('actor1');
       console.log(
         'Components after dismount (facing path):',
         Object.keys(updatedActor.components)
       );
-      expect(updatedActor.components['positioning:straddling_waist']).toBeUndefined();
-      expect(updatedActor.components['positioning:facing_away']).toBeUndefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeUndefined();
+      expect(
+        updatedActor.components['positioning:facing_away']
+      ).toBeUndefined();
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
 
       // Step 3: Try to sit on chair1 again
@@ -184,14 +219,19 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
       await testFixtureSitDown.executeAction('actor1', 'chair1');
 
       // Verify Step 3: Should succeed - actor should be sitting on chair1
-      updatedActor = testFixtureSitDown.entityManager.getEntityInstance('actor1');
+      updatedActor =
+        testFixtureSitDown.entityManager.getEntityInstance('actor1');
       console.log(
         'Components after sit_down (facing path):',
         Object.keys(updatedActor.components)
       );
-      expect(testFixtureSitDown.events).toHaveActionSuccess('Alice sits down on Chair 1.');
+      expect(testFixtureSitDown.events).toHaveActionSuccess(
+        'Alice sits down on Chair 1.'
+      );
       expect(updatedActor.components['positioning:sitting_on']).toBeDefined();
-      expect(updatedActor.components['positioning:sitting_on'].furniture_id).toBe('chair1');
+      expect(
+        updatedActor.components['positioning:sitting_on'].furniture_id
+      ).toBe('chair1');
     });
   });
 
@@ -240,18 +280,33 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .build();
 
       // Execute facing_away path
-      testFixtureFacingAway.reset([room, chair1, chair2, actorAway, targetAway]);
+      testFixtureFacingAway.reset([
+        room,
+        chair1,
+        chair2,
+        actorAway,
+        targetAway,
+      ]);
       await testFixtureFacingAway.executeAction('actor_away', 'target_away');
 
-      let updatedActorAway = testFixtureFacingAway.entityManager.getEntityInstance('actor_away');
+      let updatedActorAway =
+        testFixtureFacingAway.entityManager.getEntityInstance('actor_away');
 
       // Dismount
-      testFixtureDismount.reset([room, chair1, chair2, updatedActorAway, targetAway]);
+      testFixtureDismount.reset([
+        room,
+        chair1,
+        chair2,
+        updatedActorAway,
+        targetAway,
+      ]);
       await testFixtureDismount.executeAction('actor_away', 'target_away');
 
       const actorAwayAfterDismount =
         testFixtureDismount.entityManager.getEntityInstance('actor_away');
-      const componentsAfterFacingAway = Object.keys(actorAwayAfterDismount.components).sort();
+      const componentsAfterFacingAway = Object.keys(
+        actorAwayAfterDismount.components
+      ).sort();
 
       // Test facing path
       const actorFacing = new ModEntityBuilder('actor_facing')
@@ -277,20 +332,38 @@ describe('Sit on Lap → Dismount → Sit Again Workflow', () => {
         .build();
 
       // Execute facing path
-      testFixtureFacing.reset([room, chair1, chair2, actorFacing, targetFacing]);
+      testFixtureFacing.reset([
+        room,
+        chair1,
+        chair2,
+        actorFacing,
+        targetFacing,
+      ]);
       await testFixtureFacing.executeAction('actor_facing', 'target_facing');
 
-      let updatedActorFacing = testFixtureFacing.entityManager.getEntityInstance('actor_facing');
+      let updatedActorFacing =
+        testFixtureFacing.entityManager.getEntityInstance('actor_facing');
 
       // Dismount
-      testFixtureDismount.reset([room, chair1, chair2, updatedActorFacing, targetFacing]);
+      testFixtureDismount.reset([
+        room,
+        chair1,
+        chair2,
+        updatedActorFacing,
+        targetFacing,
+      ]);
       await testFixtureDismount.executeAction('actor_facing', 'target_facing');
 
       const actorFacingAfterDismount =
         testFixtureDismount.entityManager.getEntityInstance('actor_facing');
-      const componentsAfterFacing = Object.keys(actorFacingAfterDismount.components).sort();
+      const componentsAfterFacing = Object.keys(
+        actorFacingAfterDismount.components
+      ).sort();
 
-      console.log('Components after facing_away path:', componentsAfterFacingAway);
+      console.log(
+        'Components after facing_away path:',
+        componentsAfterFacingAway
+      );
       console.log('Components after facing path:', componentsAfterFacing);
 
       // They should be identical

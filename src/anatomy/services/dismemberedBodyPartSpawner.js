@@ -185,10 +185,10 @@ class DismemberedBodyPartSpawner extends BaseService {
         [POSITION_COMPONENT_ID]: { locationId },
       };
 
-      const spawnedEntity = await this.#entityLifecycleManager.createEntityInstance(
-        definitionId,
-        { componentOverrides }
-      );
+      const spawnedEntity =
+        await this.#entityLifecycleManager.createEntityInstance(definitionId, {
+          componentOverrides,
+        });
 
       this.#logger.info(
         `Spawned body part entity: ${spawnedEntity.id} (${spawnedEntityName}) at ${locationId}`
@@ -258,7 +258,8 @@ class DismemberedBodyPartSpawner extends BaseService {
    * @private
    */
   #getWeightForDefinition(definitionId) {
-    const definition = this.#gameDataRepository.getEntityDefinition(definitionId);
+    const definition =
+      this.#gameDataRepository.getEntityDefinition(definitionId);
     const weight = definition?.components?.[WEIGHT_COMPONENT_ID]?.weight;
 
     if (weight !== undefined && weight !== null) {

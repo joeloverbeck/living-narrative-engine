@@ -7,15 +7,9 @@
       "layer": "base",
       "equipmentSlots": {
         "primary": "legs",
-        "secondary": [
-          "torso_lower"
-        ]
+        "secondary": ["torso_lower"]
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:material": {
       "material": "synthetic"
@@ -33,9 +27,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_lower"
-      ],
+      "covers": ["torso_lower"],
       "coveragePriority": "base"
     },
     "items:item": {},

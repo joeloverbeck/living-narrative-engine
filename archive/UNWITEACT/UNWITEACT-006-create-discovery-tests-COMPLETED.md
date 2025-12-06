@@ -55,7 +55,9 @@ describe('unwield_item action definition', () => {
     });
 
     it('should require actor to have wielding component', () => {
-      expect(actionJson.required_components.actor).toContain('positioning:wielding');
+      expect(actionJson.required_components.actor).toContain(
+        'positioning:wielding'
+      );
     });
 
     it('should require exactly two actor components', () => {
@@ -121,7 +123,9 @@ describe('unwield_item action definition', () => {
 
   describe('Schema Compliance', () => {
     it('should reference correct schema', () => {
-      expect(actionJson.$schema).toBe('schema://living-narrative-engine/action.schema.json');
+      expect(actionJson.$schema).toBe(
+        'schema://living-narrative-engine/action.schema.json'
+      );
     });
 
     it('should have all required action properties', () => {
@@ -153,25 +157,32 @@ None
 ## Test Categories Explained
 
 ### Action Structure Tests
+
 Verify the basic action definition matches the spec:
+
 - Correct `id`, `name`, `template`
 - Description exists and is non-empty
 - `generateCombinations` is true
 
 ### Required Components Tests
+
 Verify the action requires both:
+
 - `items:inventory` - actor has inventory system
 - `positioning:wielding` - actor is currently wielding something
 
 This is the KEY difference from `wield_threateningly` which only requires `items:inventory`.
 
 ### Prerequisites Tests
+
 Verify there are NO prerequisites. Unlike wield (which needs free appendage), unwield releases an appendage so no prerequisite check is needed.
 
 ### Target Configuration Tests
+
 Verify the scope is `weapons:wielded_items` (created in UNWITEACT-001), not `weapons:grabbable_weapons_in_inventory` (used by wield).
 
 ### Visual Configuration Tests
+
 Verify the Arctic Steel color scheme matches `wield_threateningly` for visual consistency.
 
 ## Acceptance Criteria
@@ -200,6 +211,7 @@ npm run test:ci  # Full test suite including new tests
 ## Outcome
 
 ### What Was Changed
+
 - Created `tests/integration/mods/weapons/unwield_item_action_discovery.test.js` with 21 tests covering:
   - Action Structure (5 tests)
   - Required Components (3 tests)
@@ -209,9 +221,11 @@ npm run test:ci  # Full test suite including new tests
   - Schema Compliance (2 tests)
 
 ### Discrepancies vs Original Plan
+
 - **Minor correction**: Removed `required_components` from the "should have all required action properties" test assertion to match the pattern used in `wield_threateningly_action_discovery.test.js`. The required_components are already thoroughly tested in their own describe block.
 
 ### Test Results
+
 - All 21 new tests pass
 - All 126 weapons integration tests pass (12 test suites)
 - No existing tests modified

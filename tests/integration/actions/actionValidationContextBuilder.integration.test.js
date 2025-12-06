@@ -89,12 +89,16 @@ describe('ActionValidationContextBuilder integration', () => {
     const loggedMessages = logger.messages.debug.map((args) => args.join(' '));
     expect(
       loggedMessages.some((message) =>
-        message.includes('Validated inputs - Action: stealth:scout, Actor: actor-101')
+        message.includes(
+          'Validated inputs - Action: stealth:scout, Actor: actor-101'
+        )
       )
     ).toBe(true);
     expect(
       loggedMessages.some((message) =>
-        message.includes('ActionValidationContextBuilder: Building context for action')
+        message.includes(
+          'ActionValidationContextBuilder: Building context for action'
+        )
       )
     ).toBe(true);
   });
@@ -121,14 +125,18 @@ describe('ActionValidationContextBuilder integration', () => {
       actorId: null,
     });
     expect(caughtError.originalError).toBeInstanceOf(Error);
-    expect(caughtError.originalError.message).toBe('Actor must have a valid id property');
+    expect(caughtError.originalError.message).toBe(
+      'Actor must have a valid id property'
+    );
 
     const loggedMessages = logger.messages.debug.flat();
     expect(
       loggedMessages.some(
         (fragment) =>
           typeof fragment === 'string' &&
-          fragment.includes('Validated inputs - Action: navigation:move, Actor: null')
+          fragment.includes(
+            'Validated inputs - Action: navigation:move, Actor: null'
+          )
       )
     ).toBe(false);
   });

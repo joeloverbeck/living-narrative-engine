@@ -13,11 +13,14 @@ Conditions in refinement methods (both applicability conditions and conditional 
 **Availability**: Always present
 
 **Structure**:
+
 ```json
 {
   "id": "entity_123",
   "components": {
-    "core:actor": { /* actor component data */ },
+    "core:actor": {
+      /* actor component data */
+    },
     "items:inventory": {
       "items": ["item_1", "item_2"],
       "capacity": 10
@@ -32,6 +35,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 ```
 
 **Common Access Patterns**:
+
 ```json
 // Check if actor has a component
 { "has_component": [{ "var": "actor" }, "items:inventory"] }
@@ -51,6 +55,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 **Note**: Implementation details TBD - this will be populated by world state service
 
 **Structure** (Preliminary):
+
 ```json
 {
   "locations": {
@@ -69,6 +74,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 ```
 
 **Common Access Patterns**:
+
 ```json
 // Check current location
 { "==": [
@@ -87,6 +93,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 **Availability**: Always present
 
 **Structure**:
+
 ```json
 {
   "params": {
@@ -104,6 +111,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 ```
 
 **Common Access Patterns**:
+
 ```json
 // Access bound parameter
 { "var": "task.params.item" }
@@ -128,6 +136,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 **Availability**: When task defines a `target` parameter
 
 **Usage**:
+
 ```json
 // Equivalent expressions
 { "var": "target" }
@@ -152,6 +161,7 @@ Conditions in refinement methods (both applicability conditions and conditional 
 **Context State**: World state as modified by all previous steps in the refinement
 
 **Important**: State changes from previous steps are visible to subsequent conditionals:
+
 ```json
 {
   "steps": [
@@ -169,7 +179,9 @@ Conditions in refinement methods (both applicability conditions and conditional 
           { "var": "actor.components.items:inventory.items" }
         ]
       },
-      "thenSteps": [ /* ... */ ]
+      "thenSteps": [
+        /* ... */
+      ]
     }
   ]
 }
@@ -183,10 +195,8 @@ Conditions can fail to evaluate in several scenarios:
 
 1. **Missing Variables**: Referenced variable does not exist
    - Example: `{ "var": "task.params.nonexistent" }` when parameter not bound
-   
 2. **Type Errors**: Operation receives invalid type
    - Example: `{ "+": ["string", 5] }` - cannot add string to number
-   
 3. **Component Access on Null**: Accessing properties of undefined entities
    - Example: `{ "var": "task.params.item.components.food:nutrition" }` when item doesn't exist
 
@@ -241,17 +251,20 @@ Conditions are evaluated by `src/logic/jsonLogicEvaluationService.js`:
 All custom operators from `src/logic/jsonLogicCustomOperators.js` are available:
 
 **Component Checking**:
+
 - `has_component(entityPath, componentId)` - Check if entity has component
 - `hasPartWithComponentValue(entityPath, componentId, propertyPath, expectedValue)`
 - `hasPartOfType(entityPath, partType)`
 
 **Clothing & Equipment**:
+
 - `hasClothingInSlot(entityPath, slotName)`
 - `hasClothingInSlotLayer(entityPath, slotName, layerName)`
 - `isSocketCovered(entityPath, socketId)`
 - `isRemovalBlocked(actorPath, targetItemPath)`
 
 **Spatial & Positioning**:
+
 - `hasSittingSpaceToRight(entityPath, targetPath, minSpaces)`
 - `canScootCloser(entityPath, targetPath)`
 - `isClosestLeftOccupant(entityPath, targetPath, actorPath)`
@@ -259,12 +272,10 @@ All custom operators from `src/logic/jsonLogicCustomOperators.js` are available:
 - `hasOtherActorsAtLocation(entityPath)`
 
 **Usage Example**:
+
 ```json
 {
-  "has_component": [
-    { "var": "task.params.item" },
-    "items:nourishing"
-  ]
+  "has_component": [{ "var": "task.params.item" }, "items:nourishing"]
 }
 ```
 
@@ -304,7 +315,9 @@ Before accessing nested properties, verify the entity/component exists:
 ```json
 {
   "description": "Item is in actor's inventory and not consumed",
-  "condition": { /* ... */ }
+  "condition": {
+    /* ... */
+  }
 }
 ```
 
@@ -341,12 +354,9 @@ Consider what happens when entities disappear mid-refinement:
 
 ```json
 {
-  "onFailure": "replan",  // If item was consumed by someone else
+  "onFailure": "replan", // If item was consumed by someone else
   "condition": {
-    "has_component": [
-      { "var": "task.params.item" },
-      "items:consumable"
-    ]
+    "has_component": [{ "var": "task.params.item" }, "items:consumable"]
   }
 }
 ```

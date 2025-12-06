@@ -12,8 +12,11 @@ const baseConfig = require('./jest.config.js');
 
 // Relax coverage thresholds automatically when a specific test file/path is provided
 // on the CLI (common for single-file debugging) to avoid failing global gates.
-const isTargetedRun = process.argv.some((arg) =>
-  arg.includes('tests/integration/') || arg.endsWith('.test.js') || arg.endsWith('.spec.js')
+const isTargetedRun = process.argv.some(
+  (arg) =>
+    arg.includes('tests/integration/') ||
+    arg.endsWith('.test.js') ||
+    arg.endsWith('.spec.js')
 );
 
 module.exports = {

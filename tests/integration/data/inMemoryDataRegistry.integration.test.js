@@ -75,8 +75,12 @@ describe('InMemoryDataRegistry integration', () => {
     expect(() => registry.get('', 'id')).toThrow(DataRegistryError);
     expect(() => registry.get('actions', '')).toThrow(DataRegistryError);
     expect(() => registry.getAll('')).toThrow(DataRegistryError);
-    expect(() => registry.getContentSource('', 'id')).toThrow(DataRegistryError);
-    expect(() => registry.getContentSource('actions', '')).toThrow(DataRegistryError);
+    expect(() => registry.getContentSource('', 'id')).toThrow(
+      DataRegistryError
+    );
+    expect(() => registry.getContentSource('actions', '')).toThrow(
+      DataRegistryError
+    );
   });
 
   it('returns expected collections for domain-specific getters', () => {

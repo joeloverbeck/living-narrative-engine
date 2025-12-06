@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 import { ActionPipelineOrchestrator } from '../../../../src/actions/actionPipelineOrchestrator.js';
 import { PipelineResult } from '../../../../src/actions/pipeline/PipelineResult.js';
@@ -45,27 +52,43 @@ const createDependencies = (overrides = {}) => {
     logger,
     dependencies: {
       actionIndex: { getCandidateActions: jest.fn(() => []) },
-      prerequisiteService: { evaluate: jest.fn(async () => ({ passed: true })) },
-      targetService: { resolveTargets: jest.fn(() => ({ success: true, value: [] })) },
+      prerequisiteService: {
+        evaluate: jest.fn(async () => ({ passed: true })),
+      },
+      targetService: {
+        resolveTargets: jest.fn(() => ({ success: true, value: [] })),
+      },
       formatter: {
         formatActionCommand: jest.fn((action, targets) => ({
           ok: true,
           value: `${action.id}:${targets.length}`,
         })),
       },
-      entityManager: { getAllComponentTypesForEntity: jest.fn(() => ['core:sentient']) },
+      entityManager: {
+        getAllComponentTypesForEntity: jest.fn(() => ['core:sentient']),
+      },
       safeEventDispatcher: { dispatch: jest.fn() },
       getEntityDisplayNameFn: jest.fn((entity) => entity?.id ?? 'unknown'),
       errorBuilder: createErrorBuilder(),
       logger,
-      unifiedScopeResolver: { resolve: jest.fn(() => ({ success: true, value: new Set() })) },
-      targetContextBuilder: { build: jest.fn(() => ({ type: 'entity', entityId: 'npc-1' })) },
+      unifiedScopeResolver: {
+        resolve: jest.fn(() => ({ success: true, value: new Set() })),
+      },
+      targetContextBuilder: {
+        build: jest.fn(() => ({ type: 'entity', entityId: 'npc-1' })),
+      },
       multiTargetResolutionStage,
       targetComponentValidator: {
-        validateTargetComponents: jest.fn(() => ({ success: true, invalidTargets: [] })),
+        validateTargetComponents: jest.fn(() => ({
+          success: true,
+          invalidTargets: [],
+        })),
       },
       targetRequiredComponentsValidator: {
-        validateTargetRequirements: jest.fn(() => ({ success: true, missingRequirements: [] })),
+        validateTargetRequirements: jest.fn(() => ({
+          success: true,
+          missingRequirements: [],
+        })),
       },
       ...overrides,
     },
@@ -97,7 +120,8 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
   });
 
   it('propagates pipeline context and halts when a stage requests termination', async () => {
-    const { dependencies, logger, multiTargetResolutionStage } = createDependencies();
+    const { dependencies, logger, multiTargetResolutionStage } =
+      createDependencies();
 
     const candidates = [
       { id: 'action:warmup', template: 'wave' },
@@ -152,9 +176,7 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
         stageOrder.push(this.name);
         return Promise.resolve(
           PipelineResult.success({
-            actions: [
-              { id: 'formatted:sing', label: 'Sing with style' },
-            ],
+            actions: [{ id: 'formatted:sing', label: 'Sing with style' }],
             errors: [{ phase: 'formatting', message: 'should not be reached' }],
           })
         );
@@ -162,7 +184,9 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
 
     orchestrator = new ActionPipelineOrchestrator(dependencies);
 
-    const result = await orchestrator.discoverActions(actor, baseContext, { trace });
+    const result = await orchestrator.discoverActions(actor, baseContext, {
+      trace,
+    });
 
     expect(logger.debug).toHaveBeenNthCalledWith(
       1,
@@ -198,7 +222,9 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
         stageOrder.push(this.name);
         return Promise.resolve(
           PipelineResult.success({
-            data: { candidateActions: [{ id: 'action:wave', template: 'wave' }] },
+            data: {
+              candidateActions: [{ id: 'action:wave', template: 'wave' }],
+            },
           })
         );
       });
@@ -212,8 +238,14 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
         throw failingError;
       });
 
-    const targetSpy = jest.spyOn(TargetComponentValidationStage.prototype, 'executeInternal');
-    const formattingSpy = jest.spyOn(ActionFormattingStage.prototype, 'executeInternal');
+    const targetSpy = jest.spyOn(
+      TargetComponentValidationStage.prototype,
+      'executeInternal'
+    );
+    const formattingSpy = jest.spyOn(
+      ActionFormattingStage.prototype,
+      'executeInternal'
+    );
 
     orchestrator = new ActionPipelineOrchestrator(dependencies);
 
@@ -227,7 +259,10 @@ describe('ActionPipelineOrchestrator real pipeline flow', () => {
       `Action discovery pipeline completed for actor ${actor.id}. Found 0 actions, 1 errors.`
     );
 
-    expect(stageOrder).toEqual(['ComponentFiltering', 'PrerequisiteEvaluation']);
+    expect(stageOrder).toEqual([
+      'ComponentFiltering',
+      'PrerequisiteEvaluation',
+    ]);
     expect(componentSpy).toHaveBeenCalledTimes(1);
     expect(targetSpy).not.toHaveBeenCalled();
     expect(formattingSpy).not.toHaveBeenCalled();

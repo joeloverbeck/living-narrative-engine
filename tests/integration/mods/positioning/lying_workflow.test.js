@@ -40,7 +40,8 @@ describe('Complete Lying Workflow', () => {
       testFixture.reset([room, actor, bed]);
 
       // Verify initial state: standing (no lying component)
-      let currentActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      let currentActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(currentActor.components['positioning:lying_down']).toBeUndefined();
 
       // Act 1: Lie down
@@ -49,15 +50,21 @@ describe('Complete Lying Workflow', () => {
       // Assert: Lying state
       currentActor = testFixture.entityManager.getEntityInstance('test:actor1');
       expect(currentActor.components['positioning:lying_down']).toBeDefined();
-      expect(currentActor.components['positioning:lying_down'].furniture_id).toBe('test:bed1');
+      expect(
+        currentActor.components['positioning:lying_down'].furniture_id
+      ).toBe('test:bed1');
 
       // Act 2: Get up (requires switching to get_up_from_lying action)
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([room, currentActor, bed]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Back to standing state
-      currentActor = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      currentActor =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       expect(currentActor.components['positioning:lying_down']).toBeUndefined();
 
       getUpFixture.cleanup();
@@ -91,20 +98,31 @@ describe('Complete Lying Workflow', () => {
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
       // Get up (requires different fixture)
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
-      let currentActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
+      let currentActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       getUpFixture.reset([room, currentActor, bed, couch]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
       // Lie on couch (requires lie_down fixture again)
-      const lieDownFixture2 = await ModTestFixture.forAction('positioning', 'lie_down');
-      currentActor = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      const lieDownFixture2 = await ModTestFixture.forAction(
+        'positioning',
+        'lie_down'
+      );
+      currentActor =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       lieDownFixture2.reset([room, currentActor, bed, couch]);
       await lieDownFixture2.executeAction('test:actor1', 'test:couch1');
 
       // Assert: Now lying on couch
-      currentActor = lieDownFixture2.entityManager.getEntityInstance('test:actor1');
-      expect(currentActor.components['positioning:lying_down'].furniture_id).toBe('test:couch1');
+      currentActor =
+        lieDownFixture2.entityManager.getEntityInstance('test:actor1');
+      expect(
+        currentActor.components['positioning:lying_down'].furniture_id
+      ).toBe('test:couch1');
 
       getUpFixture.cleanup();
       lieDownFixture2.cleanup();
@@ -131,17 +149,22 @@ describe('Complete Lying Workflow', () => {
       // Act: Lie down and verify state
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
-      let currentActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      let currentActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       const lyingState = currentActor.components['positioning:lying_down'];
       expect(lyingState).toBeDefined();
       expect(lyingState.furniture_id).toBe('test:bed1');
 
       // Get up and verify state
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([room, currentActor, bed]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
-      currentActor = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      currentActor =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       expect(currentActor.components['positioning:lying_down']).toBeUndefined();
 
       getUpFixture.cleanup();
@@ -167,24 +190,37 @@ describe('Complete Lying Workflow', () => {
       testFixture.reset([room, actor, bed]);
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
-      let getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
-      let currentActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      let getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
+      let currentActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       getUpFixture.reset([room, currentActor, bed]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
       // Second cycle
-      const lieDownFixture2 = await ModTestFixture.forAction('positioning', 'lie_down');
-      currentActor = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      const lieDownFixture2 = await ModTestFixture.forAction(
+        'positioning',
+        'lie_down'
+      );
+      currentActor =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       lieDownFixture2.reset([room, currentActor, bed]);
       await lieDownFixture2.executeAction('test:actor1', 'test:bed1');
 
-      const getUpFixture2 = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
-      currentActor = lieDownFixture2.entityManager.getEntityInstance('test:actor1');
+      const getUpFixture2 = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
+      currentActor =
+        lieDownFixture2.entityManager.getEntityInstance('test:actor1');
       getUpFixture2.reset([room, currentActor, bed]);
       await getUpFixture2.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Clean final state
-      currentActor = getUpFixture2.entityManager.getEntityInstance('test:actor1');
+      currentActor =
+        getUpFixture2.entityManager.getEntityInstance('test:actor1');
       expect(currentActor.components['positioning:lying_down']).toBeUndefined();
 
       getUpFixture.cleanup();
@@ -202,7 +238,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -216,12 +252,15 @@ describe('Complete Lying Workflow', () => {
         .withName('Chair')
         .atLocation('bedroom')
         .withComponent('positioning:allows_sitting', {
-          spots: [{ occupied: false }]
+          spots: [{ occupied: false }],
         })
         .build();
 
       // Use sit_down fixture to test action is blocked
-      const sitFixture = await ModTestFixture.forAction('positioning', 'sit_down');
+      const sitFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down'
+      );
       sitFixture.reset([room, actor, bed, chair]);
 
       // Act & Assert: Try to sit (should throw ActionValidationError due to lying_down forbidden component)
@@ -240,7 +279,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -256,7 +295,10 @@ describe('Complete Lying Workflow', () => {
         .withComponent('positioning:allows_bending_over', {})
         .build();
 
-      const bendFixture = await ModTestFixture.forAction('positioning', 'bend_over');
+      const bendFixture = await ModTestFixture.forAction(
+        'positioning',
+        'bend_over'
+      );
       bendFixture.reset([room, actor, bed, counter]);
 
       // Act & Assert: Try to bend (should throw ActionValidationError due to lying_down forbidden component)
@@ -268,14 +310,16 @@ describe('Complete Lying Workflow', () => {
     });
 
     it('should prevent kneeling while lying', async () => {
-      const room = new ModEntityBuilder('throne_room').asRoom('Throne Room').build();
+      const room = new ModEntityBuilder('throne_room')
+        .asRoom('Throne Room')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Knight')
         .atLocation('throne_room')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -291,7 +335,10 @@ describe('Complete Lying Workflow', () => {
         .asActor()
         .build();
 
-      const kneelFixture = await ModTestFixture.forAction('deference', 'deference:kneel_before');
+      const kneelFixture = await ModTestFixture.forAction(
+        'deference',
+        'deference:kneel_before'
+      );
       kneelFixture.reset([room, actor, bed, king]);
 
       // Act: Try to kneel (should throw validation error due to lying_down component)
@@ -311,7 +358,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -344,7 +391,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -354,7 +401,10 @@ describe('Complete Lying Workflow', () => {
         .withComponent('positioning:allows_lying_on', {})
         .build();
 
-      const turnFixture = await ModTestFixture.forAction('physical-control', 'turn_around');
+      const turnFixture = await ModTestFixture.forAction(
+        'physical-control',
+        'turn_around'
+      );
       turnFixture.reset([room, actor, bed]);
 
       // Act: Try to turn around (should throw validation error due to missing closeness component)
@@ -375,7 +425,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -389,18 +439,25 @@ describe('Complete Lying Workflow', () => {
         .withName('Chair')
         .atLocation('bedroom')
         .withComponent('positioning:allows_sitting', {
-          spots: [{ occupied: false }]
+          spots: [{ occupied: false }],
         })
         .build();
 
       // Act: Get up from lying
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([room, actor, bed, chair]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Sitting should now work
-      const sitFixture = await ModTestFixture.forAction('positioning', 'sit_down');
-      const standingActor = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      const sitFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down'
+      );
+      const standingActor =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       sitFixture.reset([room, standingActor, bed, chair]);
 
       // Should not throw - sitting is now allowed
@@ -420,7 +477,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -437,13 +494,20 @@ describe('Complete Lying Workflow', () => {
         .build();
 
       // Act: Get up
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([room, actor, bed, counter]);
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: Bending should now work
-      const bendFixture = await ModTestFixture.forAction('positioning', 'bend_over');
-      const standingActor = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      const bendFixture = await ModTestFixture.forAction(
+        'positioning',
+        'bend_over'
+      );
+      const standingActor =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       bendFixture.reset([room, standingActor, bed, counter]);
 
       await expect(
@@ -485,13 +549,18 @@ describe('Complete Lying Workflow', () => {
       await testFixture.executeAction('test:bob', 'test:bed1');
 
       // Assert: Both should have lying_down component
-      const aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
 
       expect(aliceEntity.components['positioning:lying_down']).toBeDefined();
       expect(bobEntity.components['positioning:lying_down']).toBeDefined();
-      expect(aliceEntity.components['positioning:lying_down'].furniture_id).toBe('test:bed1');
-      expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe('test:bed1');
+      expect(
+        aliceEntity.components['positioning:lying_down'].furniture_id
+      ).toBe('test:bed1');
+      expect(bobEntity.components['positioning:lying_down'].furniture_id).toBe(
+        'test:bed1'
+      );
     });
 
     it('should handle actor getting up when another is still lying', async () => {
@@ -503,7 +572,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -512,7 +581,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -523,13 +592,18 @@ describe('Complete Lying Workflow', () => {
         .build();
 
       // Act: Alice gets up
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([room, alice, bob, bed]);
       await getUpFixture.executeAction('test:alice', 'test:bed1');
 
       // Assert: Alice standing, Bob still lying
-      const aliceEntity = getUpFixture.entityManager.getEntityInstance('test:alice');
-      const bobEntity = getUpFixture.entityManager.getEntityInstance('test:bob');
+      const aliceEntity =
+        getUpFixture.entityManager.getEntityInstance('test:alice');
+      const bobEntity =
+        getUpFixture.entityManager.getEntityInstance('test:bob');
 
       expect(aliceEntity.components['positioning:lying_down']).toBeUndefined();
       expect(bobEntity.components['positioning:lying_down']).toBeDefined();
@@ -546,11 +620,14 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([room, actor]);
       // Note: Bed not registered (simulates deletion)
 
@@ -563,7 +640,8 @@ describe('Complete Lying Workflow', () => {
       }
 
       // Assert: Should not crash, actor entity still exists
-      const actorEntity = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      const actorEntity =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorEntity).toBeDefined();
 
       getUpFixture.cleanup();
@@ -594,7 +672,8 @@ describe('Complete Lying Workflow', () => {
       await testFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: lying_down component present (movement restriction enforced by game rules)
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorEntity.components['positioning:lying_down']).toBeDefined();
     });
 
@@ -608,7 +687,7 @@ describe('Complete Lying Workflow', () => {
         .atLocation('bedroom')
         .asActor()
         .withComponent('positioning:lying_down', {
-          furniture_id: 'test:bed1'
+          furniture_id: 'test:bed1',
         })
         .build();
 
@@ -618,14 +697,18 @@ describe('Complete Lying Workflow', () => {
         .withComponent('positioning:allows_lying_on', {})
         .build();
 
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
       getUpFixture.reset([bedroom, kitchen, actor, bed]);
 
       // Act: Get up
       await getUpFixture.executeAction('test:actor1', 'test:bed1');
 
       // Assert: lying_down component removed (movement allowed)
-      const actorEntity = getUpFixture.entityManager.getEntityInstance('test:actor1');
+      const actorEntity =
+        getUpFixture.entityManager.getEntityInstance('test:actor1');
       expect(actorEntity.components['positioning:lying_down']).toBeUndefined();
 
       getUpFixture.cleanup();
@@ -670,25 +753,40 @@ describe('Complete Lying Workflow', () => {
       await testFixture.executeAction('test:bob', 'test:couch1');
 
       // Alice gets up from bed
-      const getUpFixture = await ModTestFixture.forAction('positioning', 'get_up_from_lying');
-      let aliceEntity = testFixture.entityManager.getEntityInstance('test:alice');
+      const getUpFixture = await ModTestFixture.forAction(
+        'positioning',
+        'get_up_from_lying'
+      );
+      let aliceEntity =
+        testFixture.entityManager.getEntityInstance('test:alice');
       const bobEntity = testFixture.entityManager.getEntityInstance('test:bob');
       getUpFixture.reset([room, aliceEntity, bobEntity, bed, couch]);
       await getUpFixture.executeAction('test:alice', 'test:bed1');
 
       // Alice lies on couch (need lie_down fixture again)
-      const lieDownFixture2 = await ModTestFixture.forAction('positioning', 'lie_down');
-      const aliceStanding = getUpFixture.entityManager.getEntityInstance('test:alice');
-      const bobStillLying = getUpFixture.entityManager.getEntityInstance('test:bob');
+      const lieDownFixture2 = await ModTestFixture.forAction(
+        'positioning',
+        'lie_down'
+      );
+      const aliceStanding =
+        getUpFixture.entityManager.getEntityInstance('test:alice');
+      const bobStillLying =
+        getUpFixture.entityManager.getEntityInstance('test:bob');
       lieDownFixture2.reset([room, aliceStanding, bobStillLying, bed, couch]);
       await lieDownFixture2.executeAction('test:alice', 'test:couch1');
 
       // Assert: Final state is consistent
-      const finalAlice = lieDownFixture2.entityManager.getEntityInstance('test:alice');
-      const finalBob = lieDownFixture2.entityManager.getEntityInstance('test:bob');
+      const finalAlice =
+        lieDownFixture2.entityManager.getEntityInstance('test:alice');
+      const finalBob =
+        lieDownFixture2.entityManager.getEntityInstance('test:bob');
 
-      expect(finalAlice.components['positioning:lying_down'].furniture_id).toBe('test:couch1');
-      expect(finalBob.components['positioning:lying_down'].furniture_id).toBe('test:couch1');
+      expect(finalAlice.components['positioning:lying_down'].furniture_id).toBe(
+        'test:couch1'
+      );
+      expect(finalBob.components['positioning:lying_down'].furniture_id).toBe(
+        'test:couch1'
+      );
       // Both on couch now
 
       getUpFixture.cleanup();

@@ -138,7 +138,7 @@ class RegistryAdapter {
     this.dataRegistry.store(
       'entityInstances',
       instanceDefinition.id,
-      instanceDefinition,
+      instanceDefinition
     );
   }
 
@@ -274,7 +274,7 @@ describe('dependencyUtils cross-module integration', () => {
           value: new SimpleEventDispatcher(consoleLogger),
           requiredMethods: ['dispatch'],
         },
-      },
+      }
     );
 
     const dataRegistry = new InMemoryDataRegistry({ logger: prefixedLogger });
@@ -331,7 +331,7 @@ describe('dependencyUtils cross-module integration', () => {
           name: 'RepositoryAccessor: getter',
           isFunction: true,
         },
-      ],
+      ]
     );
 
     const accessor = new ValidatedAccessor({
@@ -355,7 +355,10 @@ describe('dependencyUtils cross-module integration', () => {
       logger: prefixedLogger,
     });
 
-    const baseContext = contextBuilder.buildBaseContext('actor:1', 'location:town');
+    const baseContext = contextBuilder.buildBaseContext(
+      'actor:1',
+      'location:town'
+    );
     expect(baseContext.actor.id).toBe('actor:1');
 
     const dependentContext = contextBuilder.buildDependentContext(
@@ -367,12 +370,16 @@ describe('dependencyUtils cross-module integration', () => {
           },
         ],
       },
-      { contextFrom: 'primary' },
+      { contextFrom: 'primary' }
     );
 
     expect(dependentContext.target.id).toBe('actor:1');
 
-    const definition = getDefinition('entity:actor', repository, prefixedLogger);
+    const definition = getDefinition(
+      'entity:actor',
+      repository,
+      prefixedLogger
+    );
     expect(definition).toEqual({ id: 'entity:actor', type: 'actor' });
 
     const foundInstances = accessor.list(['actor:1']);
@@ -381,9 +388,11 @@ describe('dependencyUtils cross-module integration', () => {
 
     const modsLoader = new SimpleModsLoader(prefixedLogger);
     const contentValidator = new SimpleContentValidator(prefixedLogger);
-    const llmAdapterInitializer = new SimpleLLMAdapterInitializer(prefixedLogger);
+    const llmAdapterInitializer = new SimpleLLMAdapterInitializer(
+      prefixedLogger
+    );
     const anatomyFormattingService = new SimpleAnatomyFormattingService(
-      prefixedLogger,
+      prefixedLogger
     );
     const llmAdapter = new SimpleLLMAdapter();
     const llmConfigLoader = { load: async () => ({}) };
@@ -440,7 +449,7 @@ describe('dependencyUtils cross-module integration', () => {
           value: { get: () => {} },
           requiredMethods: ['missingMethod'],
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     const entityManager = new SimpleEntityManager();
@@ -453,40 +462,43 @@ describe('dependencyUtils cross-module integration', () => {
     const eventService = new SimpleEventDispatchService(consoleLogger);
     const scopeRegistry = new SimpleScopeRegistry(consoleLogger);
 
-    expect(() =>
-      new WorldInitializer({
-        entityManager: {},
-        worldContext,
-        gameDataRepository: repository,
-        validatedEventDispatcher: dispatcher,
-        eventDispatchService: eventService,
-        logger: consoleLogger,
-        scopeRegistry,
-      }),
+    expect(
+      () =>
+        new WorldInitializer({
+          entityManager: {},
+          worldContext,
+          gameDataRepository: repository,
+          validatedEventDispatcher: dispatcher,
+          eventDispatchService: eventService,
+          logger: consoleLogger,
+          scopeRegistry,
+        })
     ).toThrow(WorldInitializationError);
 
-    expect(() =>
-      new WorldInitializer({
-        entityManager,
-        worldContext: null,
-        gameDataRepository: repository,
-        validatedEventDispatcher: dispatcher,
-        eventDispatchService: eventService,
-        logger: consoleLogger,
-        scopeRegistry,
-      }),
+    expect(
+      () =>
+        new WorldInitializer({
+          entityManager,
+          worldContext: null,
+          gameDataRepository: repository,
+          validatedEventDispatcher: dispatcher,
+          eventDispatchService: eventService,
+          logger: consoleLogger,
+          scopeRegistry,
+        })
     ).toThrow(WorldInitializationError);
 
-    expect(() =>
-      new WorldInitializer({
-        entityManager,
-        worldContext,
-        gameDataRepository: { getWorld: () => null },
-        validatedEventDispatcher: dispatcher,
-        eventDispatchService: eventService,
-        logger: consoleLogger,
-        scopeRegistry,
-      }),
+    expect(
+      () =>
+        new WorldInitializer({
+          entityManager,
+          worldContext,
+          gameDataRepository: { getWorld: () => null },
+          validatedEventDispatcher: dispatcher,
+          eventDispatchService: eventService,
+          logger: consoleLogger,
+          scopeRegistry,
+        })
     ).toThrow(WorldInitializationError);
 
     const builder = new TargetContextBuilder({
@@ -495,56 +507,54 @@ describe('dependencyUtils cross-module integration', () => {
       logger: memoryLogger,
     });
 
-    expect(() =>
-      builder.buildBaseContext('   ', 'location:town'),
-    ).toThrow(InvalidArgumentError);
+    expect(() => builder.buildBaseContext('   ', 'location:town')).toThrow(
+      InvalidArgumentError
+    );
 
     expect(() =>
-      builder.buildDependentContext(null, {}, { contextFrom: 'primary' }),
+      builder.buildDependentContext(null, {}, { contextFrom: 'primary' })
     ).toThrow('Base context is required');
 
-    expect(() =>
-      getDefinition('   ', repository, memoryLogger),
-    ).toThrow(InvalidArgumentError);
+    expect(() => getDefinition('   ', repository, memoryLogger)).toThrow(
+      InvalidArgumentError
+    );
     expect(memoryLogger.entries.warn[0].message).toContain(
-      'definitionLookup.getDefinition called with invalid definitionId',
+      'definitionLookup.getDefinition called with invalid definitionId'
     );
 
-    const FaultyAccessor = withValidatedDeps(
-      class Faulty {},
-      () => [
-        {
-          dependency: null,
-          name: 'Faulty: repository',
-        },
-      ],
-    );
+    const FaultyAccessor = withValidatedDeps(class Faulty {}, () => [
+      {
+        dependency: null,
+        name: 'Faulty: repository',
+      },
+    ]);
 
     expect(() => new FaultyAccessor({ logger: undefined })).toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Missing required dependency: Faulty: repository.',
+      'Missing required dependency: Faulty: repository.'
     );
 
-    expect(() =>
-      new InitializationService({
-        log: { logger: memoryLogger },
-        events: {
-          validatedEventDispatcher: {},
-          safeEventDispatcher: { subscribe: () => {} },
-        },
-        llm: {},
-        persistence: {},
-        coreSystems: {},
-      }),
+    expect(
+      () =>
+        new InitializationService({
+          log: { logger: memoryLogger },
+          events: {
+            validatedEventDispatcher: {},
+            safeEventDispatcher: { subscribe: () => {} },
+          },
+          llm: {},
+          persistence: {},
+          coreSystems: {},
+        })
     ).toThrow(SystemInitializationError);
     expect(
       memoryLogger.entries.error.some((entry) =>
         entry.message.includes(
-          "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.",
-        ),
-      ),
+          "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
+        )
+      )
     ).toBe(true);
   });
 });

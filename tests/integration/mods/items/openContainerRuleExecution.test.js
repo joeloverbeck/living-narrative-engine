@@ -103,12 +103,11 @@ describe('items:open_container action integration', () => {
     });
 
     it('dispatches container_opened event with contents', async () => {
-      const scenario = setupOpenContainerScenario(
-        'Bob',
-        'vault',
-        'safe-1',
-        ['revolver-1', 'gold-bar-1', 'letter-1']
-      );
+      const scenario = setupOpenContainerScenario('Bob', 'vault', 'safe-1', [
+        'revolver-1',
+        'gold-bar-1',
+        'letter-1',
+      ]);
       testFixture.reset([scenario.room, scenario.actor, scenario.container]);
 
       await testFixture.executeAction('test:actor1', 'safe-1');
@@ -173,10 +172,7 @@ describe('items:open_container action integration', () => {
         (e) => e.eventType === 'items:container_opened'
       );
       expect(openedEvent).toBeDefined();
-      expect(openedEvent.payload.contents).toEqual([
-        'diamond-1',
-        'gold-bar-1',
-      ]);
+      expect(openedEvent.payload.contents).toEqual(['diamond-1', 'gold-bar-1']);
     });
 
     it('prevents opening locked container when actor does not have key', async () => {
@@ -280,12 +276,10 @@ describe('items:open_container action integration', () => {
 
   describe('perception logging', () => {
     it('creates perception log for successful container opening', async () => {
-      const scenario = setupOpenContainerScenario(
-        'Helen',
-        'attic',
-        'trunk-1',
-        ['diary-1', 'coin-1']
-      );
+      const scenario = setupOpenContainerScenario('Helen', 'attic', 'trunk-1', [
+        'diary-1',
+        'coin-1',
+      ]);
       testFixture.reset([scenario.room, scenario.actor, scenario.container]);
 
       await testFixture.executeAction('test:actor1', 'trunk-1');
@@ -364,15 +358,18 @@ describe('items:open_container action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'drawer-1');
 
-      const container =
-        testFixture.entityManager.getEntityInstance('drawer-1');
+      const container = testFixture.entityManager.getEntityInstance('drawer-1');
       expect(container.components['items:container'].isOpen).toBe(true);
       expect(container.components['items:container'].requiresKey).toBe(true);
-      expect(container.components['items:container'].keyItemId).toBe('desk-key');
+      expect(container.components['items:container'].keyItemId).toBe(
+        'desk-key'
+      );
     });
 
     it('handles multiple actors opening different containers', async () => {
-      const room = new ModEntityBuilder('marketplace').asRoom('Marketplace').build();
+      const room = new ModEntityBuilder('marketplace')
+        .asRoom('Marketplace')
+        .build();
 
       const actor1 = new ModEntityBuilder('actor-1')
         .withName('Larry')

@@ -131,14 +131,20 @@ describe('LogCategoryDetector integration', () => {
     expect(levelHintCategory).toBe('error');
 
     // Level metadata wins over patterns
-    const warningCategory = detector.detectCategory('Potential issue detected', {
-      level: 'warn',
-    });
+    const warningCategory = detector.detectCategory(
+      'Potential issue detected',
+      {
+        level: 'warn',
+      }
+    );
     expect(warningCategory).toBe('warning');
 
-    const errorLevelCategory = detector.detectCategory('Critical failure event', {
-      level: 'error',
-    });
+    const errorLevelCategory = detector.detectCategory(
+      'Critical failure event',
+      {
+        level: 'error',
+      }
+    );
     expect(errorLevelCategory).toBe('error');
 
     // Metadata contributes to hash-based cache keys as well
@@ -154,10 +160,15 @@ describe('LogCategoryDetector integration', () => {
     expect(cachedMetadata).toBe('actions');
 
     // Source based categorisation when explicitly enabled
-    const sourceAwareDetector = new LogCategoryDetector({ useSourceBased: true });
-    const sourceCategory = sourceAwareDetector.detectCategory('fallback message', {
-      sourceCategory: 'persistence',
+    const sourceAwareDetector = new LogCategoryDetector({
+      useSourceBased: true,
     });
+    const sourceCategory = sourceAwareDetector.detectCategory(
+      'fallback message',
+      {
+        sourceCategory: 'persistence',
+      }
+    );
     expect(sourceCategory).toBe('persistence');
 
     // Non-string inputs short circuit gracefully
@@ -178,7 +189,9 @@ describe('LogCategoryDetector integration', () => {
     const detector = new LogCategoryDetector();
 
     detector.addPattern('galaxy', /galactic/i, 99);
-    const customCategory = detector.detectCategory('Galactic navigation engaged');
+    const customCategory = detector.detectCategory(
+      'Galactic navigation engaged'
+    );
     expect(customCategory).toBe('galaxy');
 
     detector.addPattern('cluster', /cluster/i);
@@ -187,9 +200,7 @@ describe('LogCategoryDetector integration', () => {
     ).toBe('cluster');
 
     const patterns = detector.getPatterns();
-    expect(patterns.galaxy).toEqual(
-      expect.objectContaining({ priority: 99 })
-    );
+    expect(patterns.galaxy).toEqual(expect.objectContaining({ priority: 99 }));
     expect(patterns.galaxy.pattern).toContain('galactic');
 
     const validHints = detector.getValidCategoryHints();
@@ -210,7 +221,9 @@ describe('LogCategoryDetector integration', () => {
     expect(sparseMetadataDetection).toEqual(['performance', 'network']);
 
     detector.removePattern('galaxy');
-    expect(detector.detectCategory('Galactic navigation engaged')).toBeUndefined();
+    expect(
+      detector.detectCategory('Galactic navigation engaged')
+    ).toBeUndefined();
     expect(
       detector.detectCategory('Galactic navigation engaged', {
         categoryHint: 'galaxy',

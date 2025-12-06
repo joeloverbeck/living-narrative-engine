@@ -187,7 +187,8 @@ function createHarness(overrides = {}) {
       gameDataRepository,
     });
 
-  const scopeResolver = overrides.scopeResolver ?? new ConfigurableScopeResolver();
+  const scopeResolver =
+    overrides.scopeResolver ?? new ConfigurableScopeResolver();
 
   const targetResolutionService =
     overrides.targetResolutionService ??
@@ -294,7 +295,10 @@ describe('ActionCandidateProcessor real service edge cases', () => {
           phase: ERROR_PHASES.VALIDATION,
           error: new Error('downstream failure'),
           timestamp: Date.now(),
-          environmentContext: { scope: 'core:other_actors', timestamp: Date.now() },
+          environmentContext: {
+            scope: 'core:other_actors',
+            timestamp: Date.now(),
+          },
         })
       )
     );
@@ -371,7 +375,9 @@ describe('ActionCandidateProcessor real service edge cases', () => {
     expect(result.value.errors[0].error.message).toBe('scope explosion');
     expect(
       harness.logger.errorLogs.some(([message]) =>
-        message.includes("Error resolving scope for action 'social:greet_companion'")
+        message.includes(
+          "Error resolving scope for action 'social:greet_companion'"
+        )
       )
     ).toBe(true);
   });

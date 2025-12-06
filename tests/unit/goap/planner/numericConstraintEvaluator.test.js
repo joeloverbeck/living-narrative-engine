@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import NumericConstraintEvaluator from '../../../../src/goap/planner/numericConstraintEvaluator.js';
-import { clearNumericConstraintDiagnostics, getNumericConstraintDiagnostics } from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
+import {
+  clearNumericConstraintDiagnostics,
+  getNumericConstraintDiagnostics,
+} from '../../../../src/goap/planner/numericConstraintDiagnostics.js';
 import { GOAP_EVENTS } from '../../../../src/goap/events/goapEvents.js';
 
 describe('NumericConstraintEvaluator', () => {
@@ -15,7 +18,9 @@ describe('NumericConstraintEvaluator', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockJsonLogicEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    mockJsonLogicEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
     originalAdapterEnv = process.env.GOAP_NUMERIC_ADAPTER;
     originalStrictEnv = process.env.GOAP_NUMERIC_STRICT;
 
@@ -138,7 +143,12 @@ describe('NumericConstraintEvaluator', () => {
         };
 
         const distance = evaluator.calculateDistance(
-          { '>=': [{ var: 'state.actor.components.mod:category:component.value' }, 50] },
+          {
+            '>=': [
+              { var: 'state.actor.components.mod:category:component.value' },
+              50,
+            ],
+          },
           context
         );
 
@@ -180,7 +190,9 @@ describe('NumericConstraintEvaluator', () => {
         };
 
         const distance = evaluator.calculateDistance(
-          { '>=': [{ var: 'state.actor.components.core:inventory.gold' }, 100] },
+          {
+            '>=': [{ var: 'state.actor.components.core:inventory.gold' }, 100],
+          },
           context
         );
 
@@ -279,7 +291,12 @@ describe('NumericConstraintEvaluator', () => {
         };
 
         evaluator.calculateDistance(
-          { '<=': [{ var: 'state.actor.components.missing:component.field' }, 30] },
+          {
+            '<=': [
+              { var: 'state.actor.components.missing:component.field' },
+              30,
+            ],
+          },
           context
         );
 
@@ -317,7 +334,10 @@ describe('NumericConstraintEvaluator', () => {
         expect(diagnostics?.totalFallbacks).toBe(1);
         expect(dispatcher.dispatch).toHaveBeenCalledWith(
           GOAP_EVENTS.NUMERIC_CONSTRAINT_FALLBACK,
-          expect.objectContaining({ goalId: 'goal-diag', actorId: 'actor-diag' })
+          expect.objectContaining({
+            goalId: 'goal-diag',
+            actorId: 'actor-diag',
+          })
         );
       });
 
@@ -525,7 +545,10 @@ describe('NumericConstraintEvaluator', () => {
       });
 
       it('should return null when context is null', () => {
-        const distance = evaluator.calculateDistance({ '<=': [{ var: 'hunger' }, 30] }, null);
+        const distance = evaluator.calculateDistance(
+          { '<=': [{ var: 'hunger' }, 30] },
+          null
+        );
         expect(distance).toBeNull();
       });
 
@@ -541,7 +564,9 @@ describe('NumericConstraintEvaluator', () => {
       });
 
       it('should return null when constraint is not an object', () => {
-        const distance = evaluator.calculateDistance('not-an-object', { value: 10 });
+        const distance = evaluator.calculateDistance('not-an-object', {
+          value: 10,
+        });
 
         expect(distance).toBeNull();
       });
@@ -597,17 +622,23 @@ describe('NumericConstraintEvaluator', () => {
     });
 
     it('should identify >= operator as numeric', () => {
-      const result = evaluator.isNumericConstraint({ '>=': [{ var: 'x' }, 10] });
+      const result = evaluator.isNumericConstraint({
+        '>=': [{ var: 'x' }, 10],
+      });
       expect(result).toBe(true);
     });
 
     it('should identify <= operator as numeric', () => {
-      const result = evaluator.isNumericConstraint({ '<=': [{ var: 'x' }, 10] });
+      const result = evaluator.isNumericConstraint({
+        '<=': [{ var: 'x' }, 10],
+      });
       expect(result).toBe(true);
     });
 
     it('should identify == operator as numeric', () => {
-      const result = evaluator.isNumericConstraint({ '==': [{ var: 'x' }, 10] });
+      const result = evaluator.isNumericConstraint({
+        '==': [{ var: 'x' }, 10],
+      });
       expect(result).toBe(true);
     });
 
@@ -622,7 +653,9 @@ describe('NumericConstraintEvaluator', () => {
     });
 
     it('should reject has_component as non-numeric', () => {
-      const result = evaluator.isNumericConstraint({ has_component: ['core:actor'] });
+      const result = evaluator.isNumericConstraint({
+        has_component: ['core:actor'],
+      });
       expect(result).toBe(false);
     });
 
@@ -646,7 +679,10 @@ describe('NumericConstraintEvaluator', () => {
     it('should delegate to jsonLogicEvaluator', () => {
       mockJsonLogicEvaluator.evaluate.mockReturnValue(true);
 
-      const result = evaluator.evaluateConstraint({ '<=': [{ var: 'hunger' }, 30] }, { hunger: 25 });
+      const result = evaluator.evaluateConstraint(
+        { '<=': [{ var: 'hunger' }, 30] },
+        { hunger: 25 }
+      );
 
       expect(result).toBe(true);
       expect(mockJsonLogicEvaluator.evaluate).toHaveBeenCalledWith(
@@ -663,7 +699,10 @@ describe('NumericConstraintEvaluator', () => {
 
       evaluator.evaluateConstraint(constraint, context);
 
-      expect(mockJsonLogicEvaluator.evaluate).toHaveBeenCalledWith(constraint, context);
+      expect(mockJsonLogicEvaluator.evaluate).toHaveBeenCalledWith(
+        constraint,
+        context
+      );
     });
 
     it('should handle evaluation errors gracefully', () => {
@@ -671,7 +710,10 @@ describe('NumericConstraintEvaluator', () => {
         throw new Error('Evaluation error');
       });
 
-      const result = evaluator.evaluateConstraint({ '<=': [{ var: 'hunger' }, 30] }, { hunger: 25 });
+      const result = evaluator.evaluateConstraint(
+        { '<=': [{ var: 'hunger' }, 30] },
+        { hunger: 25 }
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalled();
@@ -682,7 +724,10 @@ describe('NumericConstraintEvaluator', () => {
         throw new Error('Test error');
       });
 
-      const result = evaluator.evaluateConstraint({ '<=': [{ var: 'x' }, 10] }, { x: 5 });
+      const result = evaluator.evaluateConstraint(
+        { '<=': [{ var: 'x' }, 10] },
+        { x: 5 }
+      );
 
       expect(result).toBe(false);
     });

@@ -406,11 +406,7 @@ describe('Pattern Matching Validator - Unit Tests', () => {
         mockLogger
       );
 
-      expect(result.matches).toEqual([
-        'leg_1',
-        'leg_2',
-        'leg_front_left',
-      ]);
+      expect(result.matches).toEqual(['leg_1', 'leg_2', 'leg_front_left']);
       expect(result.matcherType).toBe('matchesPattern');
     });
 
@@ -460,10 +456,7 @@ describe('Pattern Matching Validator - Unit Tests', () => {
         mockLogger
       );
 
-      expect(result.matches).toEqual([
-        'leg_left_front',
-        'leg_right_front',
-      ]);
+      expect(result.matches).toEqual(['leg_left_front', 'leg_right_front']);
     });
 
     it('should return zero matches when pattern does not match', () => {

@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { ActionButtonsRenderer } from '../../../src/domUI/actionButtonsRenderer.js';
 import { LLM_SUGGESTED_ACTION_ID } from '../../../src/constants/eventIds.js';
 
@@ -28,7 +35,9 @@ function createActionCategorizationService() {
   return {
     extractNamespace: jest.fn(() => null),
     shouldUseGrouping: jest.fn(() => false),
-    groupActionsByNamespace: jest.fn((actions) => new Map([['default', actions]])),
+    groupActionsByNamespace: jest.fn(
+      (actions) => new Map([['default', actions]])
+    ),
     getSortedNamespaces: jest.fn(() => []),
     formatNamespaceDisplayName: jest.fn(() => ''),
     shouldShowCounts: jest.fn(() => false),

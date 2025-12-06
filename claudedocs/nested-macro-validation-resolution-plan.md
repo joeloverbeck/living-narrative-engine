@@ -11,6 +11,7 @@ The four macro files (`handleMeleeCritical.macro.json`, `handleMeleeFumble.macro
 ### 1. The Misleading Error Message
 
 **Error displayed:**
+
 ```
 Unknown or invalid operation type: 'FOR_EACH'
 Did you mean "FOR_EACH"?
@@ -32,6 +33,7 @@ macro.schema.json
 ```
 
 **When AJV attempts to validate a macro with FOR_EACH:**
+
 1. AJV tries to compile `macro.schema.json`
 2. It needs to resolve `./operation.schema.json#/$defs/Action`
 3. Action references Operation, which references `forEach.schema.json`
@@ -61,10 +63,12 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
 ### 4. Why Working Macros Pass
 
 Macros like `core:endTurnOnly` that use simple operations (DISPATCH_EVENT, END_TURN) pass because:
+
 - They don't have nested `actions` arrays
 - They don't trigger the circular reference path through `forEach.schema.json` or `if.schema.json`
 
 Failing macros like `weapons:handleMeleeCritical` fail because:
+
 - They contain `FOR_EACH` operations with nested `actions` arrays
 - These nested arrays trigger the circular reference resolution
 
@@ -102,6 +106,7 @@ The codebase already has:
 **File:** `data/schemas/operations/forEach.schema.json`
 
 **Current (line 35):**
+
 ```json
 "items": {
   "$ref": "../operation.schema.json#/$defs/Action"
@@ -109,6 +114,7 @@ The codebase already has:
 ```
 
 **Proposed:**
+
 ```json
 "items": {
   "$ref": "../nested-operation.schema.json#/$defs/NestedAction"
@@ -153,7 +159,7 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
 ```javascript
 /**
  * Validates the structure of a macro definition before AJV validation.
- * 
+ *
  * @param {object} macroData - The macro data to validate
  * @param {string} filePath - Path to the macro file for error reporting
  * @returns {PreValidationResult} Validation result
@@ -185,7 +191,9 @@ export function validateMacroStructure(macroData, filePath = 'unknown') {
       isValid: false,
       error: 'Missing required "description" field in macro',
       path: 'root',
-      suggestions: ['Add a "description" field explaining what this macro does'],
+      suggestions: [
+        'Add a "description" field explaining what this macro does',
+      ],
     };
   }
 
@@ -241,12 +249,12 @@ export function validateMacroStructure(macroData, filePath = 'unknown') {
  */
 function detectCircularRefCascade(errors) {
   if (!errors || errors.length < 50) return false;
-  
+
   // Look for patterns indicating anyOf cascade
-  const anyOfErrors = errors.filter(e => 
-    e.keyword === 'anyOf' || e.keyword === 'oneOf'
+  const anyOfErrors = errors.filter(
+    (e) => e.keyword === 'anyOf' || e.keyword === 'oneOf'
   );
-  
+
   return anyOfErrors.length > 10;
 }
 
@@ -279,23 +287,27 @@ This is a lower priority because Solution 1 addresses the root cause.
 ## Implementation Priority Order
 
 ### Phase 1: Immediate Fix (< 1 hour)
+
 1. **Solution 1**: Fix `forEach.schema.json` to use `nested-operation.schema.json`
    - Single file change
    - Consistent with existing pattern in `if.schema.json`
    - Immediately resolves the validation failure
 
 ### Phase 2: Fail-Fast Improvements (2-3 hours)
+
 2. **Solution 2**: Add macro pre-validation in `preValidationUtils.js`
    - Better error messages for macro issues
    - Prevents cascade before AJV validation
    - Validates nested operations recursively
 
 ### Phase 3: Enhanced Error Handling (1-2 hours)
+
 3. **Solution 3**: Improve error cascade detection
    - Better UX when circular refs cause cascades
    - Guides modders to the actual issue
 
 ### Phase 4: Defensive Architecture (4+ hours)
+
 4. **Solution 4**: Schema loader circular ref detection (optional)
    - Long-term architectural improvement
    - Lower priority if other solutions resolve the issue
@@ -333,24 +345,24 @@ This is a lower priority because Solution 1 addresses the root cause.
 
 ### Summary Table
 
-| File | Purpose | Change Type |
-|------|---------|-------------|
-| `data/schemas/operations/forEach.schema.json` | Fix circular ref | Schema update |
-| `src/utils/preValidationUtils.js` | Add macro validation | Code addition |
-| `src/utils/schemaValidationUtils.js` | Improve error messages | Code enhancement |
-| `tests/unit/validation/ajvSchemaValidator.circularFragmentRefs.test.js` | Test coverage | Test addition |
-| `tests/integration/validation/macroSchemaNestedMacroRefsProduction.test.js` | Integration test | Test update |
+| File                                                                        | Purpose                | Change Type      |
+| --------------------------------------------------------------------------- | ---------------------- | ---------------- |
+| `data/schemas/operations/forEach.schema.json`                               | Fix circular ref       | Schema update    |
+| `src/utils/preValidationUtils.js`                                           | Add macro validation   | Code addition    |
+| `src/utils/schemaValidationUtils.js`                                        | Improve error messages | Code enhancement |
+| `tests/unit/validation/ajvSchemaValidator.circularFragmentRefs.test.js`     | Test coverage          | Test addition    |
+| `tests/integration/validation/macroSchemaNestedMacroRefsProduction.test.js` | Integration test       | Test update      |
 
 ---
 
 ## Risk Assessment
 
-| Solution | Risk Level | Rollback Difficulty | Dependencies |
-|----------|------------|---------------------|--------------|
-| 1. forEach schema fix | LOW | Easy (revert schema) | None |
-| 2. Macro pre-validation | LOW | Easy (revert function) | None |
-| 3. Error message improvement | LOW | Easy (revert function) | None |
-| 4. Schema loader detection | MEDIUM | Moderate | AJV internals |
+| Solution                     | Risk Level | Rollback Difficulty    | Dependencies  |
+| ---------------------------- | ---------- | ---------------------- | ------------- |
+| 1. forEach schema fix        | LOW        | Easy (revert schema)   | None          |
+| 2. Macro pre-validation      | LOW        | Easy (revert function) | None          |
+| 3. Error message improvement | LOW        | Easy (revert function) | None          |
+| 4. Schema loader detection   | MEDIUM     | Moderate               | AJV internals |
 
 ---
 

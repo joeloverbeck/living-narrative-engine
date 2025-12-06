@@ -73,7 +73,8 @@ describe('AwaitingActorDecisionState destroy cleanup integration', () => {
   });
 
   it('logs a warning when no actor is available in context during destruction', async () => {
-    const { state, handler, turnContext, logger, onEndTurn } = createTurnEnvironment();
+    const { state, handler, turnContext, logger, onEndTurn } =
+      createTurnEnvironment();
     jest.spyOn(turnContext, 'getActor').mockReturnValue(null);
 
     await state.destroy(handler);
@@ -85,7 +86,8 @@ describe('AwaitingActorDecisionState destroy cleanup integration', () => {
   });
 
   it('skips ending the turn when the handler is already tearing down', async () => {
-    const { state, handler, turnContext, logger, onEndTurn } = createTurnEnvironment();
+    const { state, handler, turnContext, logger, onEndTurn } =
+      createTurnEnvironment();
     handler._isDestroying = true;
     const endTurnSpy = jest.spyOn(turnContext, 'endTurn');
 
@@ -99,13 +101,16 @@ describe('AwaitingActorDecisionState destroy cleanup integration', () => {
   });
 
   it('ends the turn via the turn context when an actor is still active', async () => {
-    const { state, handler, turnContext, logger, onEndTurn, actor } = createTurnEnvironment();
+    const { state, handler, turnContext, logger, onEndTurn, actor } =
+      createTurnEnvironment();
     const endTurnSpy = jest.spyOn(turnContext, 'endTurn');
 
     await state.destroy(handler);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(`Handler destroyed while state was active for actor ${actor.id}`)
+      expect.stringContaining(
+        `Handler destroyed while state was active for actor ${actor.id}`
+      )
     );
     expect(endTurnSpy).toHaveBeenCalledTimes(1);
     const [errorArg] = endTurnSpy.mock.calls[0];

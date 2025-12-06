@@ -143,13 +143,8 @@ describe('T-08: ActorTurnHandler Resolution and Startup', () => {
 
   beforeEach(() => {
     const fixture = createActorTurnHandlerTestBed();
-    ({
-      logger,
-      mockTurnContextBuilder,
-      mockTurnState,
-      stubs,
-      aiActor,
-    } = fixture);
+    ({ logger, mockTurnContextBuilder, mockTurnState, stubs, aiActor } =
+      fixture);
     resolver = fixture.buildResolver();
   });
 
@@ -260,7 +255,9 @@ describe('TurnHandlerResolver integration edge cases', () => {
 
     expect(handler).toBeNull();
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error creating ExplosiveHandler for actor test-actor'),
+      expect.stringContaining(
+        'Error creating ExplosiveHandler for actor test-actor'
+      ),
       expect.any(Error)
     );
   });

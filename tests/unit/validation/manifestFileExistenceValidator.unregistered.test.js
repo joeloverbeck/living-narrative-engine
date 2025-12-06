@@ -43,7 +43,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
 
     it('should handle undefined manifest gracefully', async () => {
       // Act
-      const result = await validator.validateUnregisteredFiles('testmod', undefined);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        undefined
+      );
 
       // Assert
       expect(result.isValid).toBe(true);
@@ -55,7 +58,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       const manifest = {};
 
       // Act
-      const result = await validator.validateUnregisteredFiles('testmod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        manifest
+      );
 
       // Assert
       expect(result.isValid).toBe(true);
@@ -67,7 +73,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       const manifest = { content: {} };
 
       // Act
-      const result = await validator.validateUnregisteredFiles('testmod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        manifest
+      );
 
       // Assert
       expect(result.isValid).toBe(true);
@@ -84,7 +93,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       };
 
       // Act - should not throw, should return valid result
-      const result = await validator.validateUnregisteredFiles('testmod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        manifest
+      );
 
       // Assert - non-existent directories mean no unregistered files
       expect(result.isValid).toBe(true);
@@ -96,7 +108,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       const manifest = { content: {} };
 
       // Act
-      const result = await validator.validateUnregisteredFiles('my-test-mod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'my-test-mod',
+        manifest
+      );
 
       // Assert
       expect(result.modId).toBe('my-test-mod');
@@ -107,7 +122,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       const manifest = { content: {} };
 
       // Act
-      const result = await validator.validateUnregisteredFiles('testmod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        manifest
+      );
 
       // Assert - verify structure
       expect(result).toHaveProperty('modId');
@@ -125,7 +143,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       };
 
       // Act
-      const result = await validator.validateUnregisteredFiles('testmod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        manifest
+      );
 
       // Assert
       expect(result.isValid).toBe(true);
@@ -144,7 +165,10 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
       };
 
       // Act
-      const result = await validator.validateUnregisteredFiles('testmod', manifest);
+      const result = await validator.validateUnregisteredFiles(
+        'testmod',
+        manifest
+      );
 
       // Assert
       expect(result.isValid).toBe(true);
@@ -189,9 +213,7 @@ describe('ManifestFileExistenceValidator - Unregistered Files Validation', () =>
 
     it('should log summary after validation', async () => {
       // Arrange
-      const manifests = new Map([
-        ['mod1', { content: {} }],
-      ]);
+      const manifests = new Map([['mod1', { content: {} }]]);
 
       // Act
       await validator.validateAllModsUnregistered(manifests);

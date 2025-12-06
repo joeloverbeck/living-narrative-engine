@@ -12,8 +12,8 @@ Create the JSON Schema that defines the structure of a single damage capability 
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                               | Action | Description     |
+| -------------------------------------------------- | ------ | --------------- |
 | `data/schemas/damage-capability-entry.schema.json` | CREATE | New schema file |
 
 ## Out of Scope
@@ -86,6 +86,7 @@ Refer to `specs/weapon-damage-capabilities-refactoring.md` lines 214-331 for the
 ### What Was Actually Changed
 
 **Files Created:**
+
 1. `data/schemas/damage-capability-entry.schema.json` (96 lines) - Schema file following spec lines 214-331 exactly
 2. `tests/unit/schemas/damageCapabilityEntry.schema.test.js` (396 lines) - Comprehensive test suite with 36 test cases
 
@@ -98,6 +99,7 @@ Refer to `specs/weapon-damage-capabilities-refactoring.md` lines 214-331 for the
 ### Test Coverage Details
 
 The test suite exceeds the minimum acceptance criteria with additional tests for:
+
 - All effect types (bleed, fracture, burn, poison, dismember) validated individually
 - Boundary value testing for numeric constraints (penetration 0/1, amount ≥ 0)
 - `additionalProperties: false` enforcement at all levels
@@ -106,13 +108,13 @@ The test suite exceeds the minimum acceptance criteria with additional tests for
 
 ### Comparison to Plan
 
-| Planned | Actual |
-|---------|--------|
-| 1 schema file | ✅ 1 schema file created |
-| ~120 lines schema | 96 lines (more concise) |
-| 1 test file | ✅ 1 test file created |
-| ~80 lines test | 396 lines (comprehensive coverage) |
-| 6 required tests | 36 tests (exceeded requirements) |
+| Planned           | Actual                             |
+| ----------------- | ---------------------------------- |
+| 1 schema file     | ✅ 1 schema file created           |
+| ~120 lines schema | 96 lines (more concise)            |
+| 1 test file       | ✅ 1 test file created             |
+| ~80 lines test    | 396 lines (comprehensive coverage) |
+| 6 required tests  | 36 tests (exceeded requirements)   |
 
 ### No Discrepancies Found
 

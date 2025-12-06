@@ -40,7 +40,7 @@ await testEnv.scopeResolverRegistry.discoverAndRegister([
   'positioning',
   'inventory',
   'anatomy',
-  'my-mod'
+  'my-mod',
 ]);
 
 // Or use ModTestFixture's autoRegisterScopes option (backward compatible)
@@ -51,7 +51,7 @@ const fixture = await ModTestFixture.forAction(
   null,
   {
     autoRegisterScopes: true,
-    scopeCategories: ['positioning', 'inventory']
+    scopeCategories: ['positioning', 'inventory'],
   }
 );
 ```
@@ -80,16 +80,10 @@ const fixture = await ModTestFixture.forAction('mod', 'action');
 ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
 
 // NEW (cleaner, auto-discovery)
-const fixture = await ModTestFixture.forAction(
-  'mod',
-  'action',
-  null,
-  null,
-  {
-    autoRegisterScopes: true,
-    scopeCategories: ['positioning', 'inventory']
-  }
-);
+const fixture = await ModTestFixture.forAction('mod', 'action', null, null, {
+  autoRegisterScopes: true,
+  scopeCategories: ['positioning', 'inventory'],
+});
 ```
 
 ## API Reference
@@ -131,13 +125,13 @@ Auto-discover and register scopes from mod directories.
 await registry.discoverAndRegister(['positioning', 'inventory', 'anatomy']);
 
 // With category filter
-await registry.discoverAndRegister(
-  ['positioning', 'inventory'],
-  { categories: ['positioning'] }
-);
+await registry.discoverAndRegister(['positioning', 'inventory'], {
+  categories: ['positioning'],
+});
 ```
 
 **Parameters:**
+
 - `modIds` (string[]): Array of mod identifiers
 - `options.categories` (string[]|null): Filter by categories (default: null = all)
 - `options.loadConditions` (boolean): Whether to load condition dependencies (default: true)
@@ -271,7 +265,7 @@ Registry tracks and validates dependencies between scopes.
 // Registry warns if dependencies are missing
 const resolver = new CustomResolver({
   id: 'my:scope',
-  dependencies: ['positioning:close_actors'] // Will validate this exists
+  dependencies: ['positioning:close_actors'], // Will validate this exists
 });
 ```
 
@@ -304,6 +298,7 @@ npm run test:ci
 ### Scenario 1: Basic Test with Manual Registration
 
 **Before:**
+
 ```javascript
 describe('My Action Test', () => {
   let testEnv;
@@ -320,6 +315,7 @@ describe('My Action Test', () => {
 ```
 
 **After:**
+
 ```javascript
 describe('My Action Test', () => {
   let testEnv;
@@ -338,12 +334,17 @@ describe('My Action Test', () => {
 ### Scenario 2: ModTestFixture with Auto-Registration
 
 **Before:**
+
 ```javascript
-const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+const fixture = await ModTestFixture.forAction(
+  'positioning',
+  'positioning:sit_down'
+);
 ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
 ```
 
 **After:**
+
 ```javascript
 const fixture = await ModTestFixture.forAction(
   'positioning',
@@ -357,6 +358,7 @@ const fixture = await ModTestFixture.forAction(
 ### Scenario 3: Multiple Categories
 
 **Before:**
+
 ```javascript
 ScopeResolverHelpers.registerPositioningScopes(testEnv);
 ScopeResolverHelpers.registerInventoryScopes(testEnv);
@@ -364,17 +366,19 @@ ScopeResolverHelpers.registerAnatomyScopes(testEnv);
 ```
 
 **After:**
+
 ```javascript
 await testEnv.scopeResolverRegistry.discoverAndRegister([
   'positioning',
   'inventory',
-  'anatomy'
+  'anatomy',
 ]);
 ```
 
 ### Scenario 4: Custom Scopes
 
 **Before:**
+
 ```javascript
 await ScopeResolverHelpers.registerCustomScope(
   testEnv,
@@ -384,6 +388,7 @@ await ScopeResolverHelpers.registerCustomScope(
 ```
 
 **After:**
+
 ```javascript
 // Custom scopes are auto-discovered if they exist in data/mods/my-mod/scopes/
 await testEnv.scopeResolverRegistry.discoverAndRegister(['my-mod']);
@@ -402,7 +407,7 @@ class MyCustomResolver extends BaseScopeResolver {
       id: 'my-mod:my_scope',
       category: 'my-mod',
       name: 'My Custom Scope',
-      dependencies: ['positioning:close_actors']
+      dependencies: ['positioning:close_actors'],
     });
   }
 
@@ -425,10 +430,9 @@ registry.register(resolver);
 
 ```javascript
 // Only register positioning scopes
-await registry.discoverAndRegister(
-  ['positioning', 'inventory', 'anatomy'],
-  { categories: ['positioning'] }
-);
+await registry.discoverAndRegister(['positioning', 'inventory', 'anatomy'], {
+  categories: ['positioning'],
+});
 ```
 
 ### Inspecting Registered Scopes
@@ -467,7 +471,12 @@ ScopeResolverHelpers.registerCustomScope(testEnv, 'mod', 'scope');
 
 ```javascript
 // ✅ Still works
-const fixture = await ModTestFixture.forAction('mod', 'action', ruleFile, conditionFile);
+const fixture = await ModTestFixture.forAction(
+  'mod',
+  'action',
+  ruleFile,
+  conditionFile
+);
 ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
 ```
 
@@ -483,11 +492,13 @@ ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
 ### Scope Not Found
 
 **Error:**
+
 ```
 No resolver registered for scope "positioning:close_actors"
 ```
 
 **Solution:**
+
 ```javascript
 // Ensure you've registered the mod containing the scope
 await registry.discoverAndRegister(['positioning']);
@@ -503,6 +514,7 @@ console.log(registry.list());
 **Explanation:** Category filtering is based on mod ID and scope name heuristics. If a scope is categorized incorrectly, it may still be included.
 
 **Solution:**
+
 ```javascript
 // Check what was registered
 const byCategory = registry.listByCategory();
@@ -511,13 +523,14 @@ console.log(byCategory);
 // If needed, clear and re-register with explicit categories
 registry.clear();
 await registry.discoverAndRegister(['positioning'], {
-  categories: ['positioning']
+  categories: ['positioning'],
 });
 ```
 
 ### Dependency Warnings
 
 **Warning:**
+
 ```
 Resolver "my:scope" depends on "other:scope" which is not yet registered
 ```
@@ -536,6 +549,7 @@ await registry.discoverAndRegister(['my-mod']); // Then dependents
 **Issue:** Registration taking too long
 
 **Check:**
+
 ```javascript
 const start = Date.now();
 await registry.discoverAndRegister(['positioning']);
@@ -545,6 +559,7 @@ console.log(`Took ${Date.now() - start}ms`);
 **Target:** Should be < 300ms for 50 scopes
 
 **Solution:**
+
 - Ensure scope files are not too large
 - Check for parsing errors in scope definitions
 - Report performance issues if consistently > 300ms
@@ -558,6 +573,7 @@ console.log(`Took ${Date.now() - start}ms`);
 ### Q: What's the difference between test registry and production registry?
 
 **A:**
+
 - **Production ScopeRegistry** (`src/scopeDsl/scopeRegistry.js`): Stores scope **definitions** (ASTs from .scope files) for runtime evaluation
 - **TestScopeResolverRegistry** (`tests/common/engine/`): Stores JavaScript **resolver functions** for common test patterns
 
@@ -574,14 +590,19 @@ They serve different purposes and don't conflict.
 ### Q: How do I know if my test needs migration?
 
 **A:** If you see:
+
 ```javascript
 ScopeResolverHelpers.registerPositioningScopes(testEnv);
 ScopeResolverHelpers.registerInventoryScopes(testEnv);
 ```
 
 You can simplify to:
+
 ```javascript
-await testEnv.scopeResolverRegistry.discoverAndRegister(['positioning', 'inventory']);
+await testEnv.scopeResolverRegistry.discoverAndRegister([
+  'positioning',
+  'inventory',
+]);
 ```
 
 But it's not required immediately.

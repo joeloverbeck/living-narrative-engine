@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "hands"
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "goatskin"

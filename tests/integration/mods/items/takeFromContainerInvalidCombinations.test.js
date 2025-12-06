@@ -18,14 +18,16 @@
 import { describe, it, expect } from '@jest/globals';
 
 describe('take_from_container - invalid multi-target combinations bug', () => {
-
   it('should correctly pair items with their actual containers using MultiTargetActionFormatter', () => {
     // This test validates that MultiTargetActionFormatter correctly handles contextFrom dependencies
     // to prevent invalid item-container pairings when multiple containers exist.
 
     // Import the formatter directly (dynamic import for test-time only)
-    const { MultiTargetActionFormatter } = require('../../../../src/actions/formatters/MultiTargetActionFormatter.js');
-    const ConsoleLogger = require('../../../../src/logging/consoleLogger.js').default;
+    const {
+      MultiTargetActionFormatter,
+    } = require('../../../../src/actions/formatters/MultiTargetActionFormatter.js');
+    const ConsoleLogger =
+      require('../../../../src/logging/consoleLogger.js').default;
 
     // Setup formatter
     const logger = new ConsoleLogger('ERROR');

@@ -147,14 +147,10 @@ function extractFailingData(rootData, error) {
   // Check if the last part is a common operation field we're validating
   const lastPart = pathParts[pathParts.length - 1];
   const isFieldPath =
-    lastPart === 'type' ||
-    lastPart === 'macro' ||
-    lastPart === 'parameters';
+    lastPart === 'type' || lastPart === 'macro' || lastPart === 'parameters';
 
   // Navigate to parent object if this is a field path
-  const navigationParts = isFieldPath
-    ? pathParts.slice(0, -1)
-    : pathParts;
+  const navigationParts = isFieldPath ? pathParts.slice(0, -1) : pathParts;
 
   // If navigation parts is empty, return root
   if (navigationParts.length === 0) {
@@ -339,8 +335,7 @@ export function formatAnyOfErrors(errors, data) {
   const isOperationValidation = errors.some(
     (e) =>
       e.schemaPath.includes('anyOf') &&
-      (e.schemaPath.includes('/properties/type/const') ||
-        e.keyword === 'anyOf')
+      (e.schemaPath.includes('/properties/type/const') || e.keyword === 'anyOf')
   );
 
   if (!isOperationValidation) {
@@ -378,9 +373,7 @@ export function formatAnyOfErrors(errors, data) {
       // This is a fallback in case pattern detection was bypassed
       if (errors.some((e) => e.params?.additionalProperty === 'entity_id')) {
         lines.push('');
-        lines.push(
-          'Common issue detected: "entity_id" should be "entity_ref"'
-        );
+        lines.push('Common issue detected: "entity_id" should be "entity_ref"');
         lines.push(
           'The GET_NAME operation expects "entity_ref", not "entity_id"'
         );
@@ -536,7 +529,10 @@ function formatOperationTypeSummary(groupedErrors, data, errors) {
     lines.push(`Unknown or invalid operation type: '${failingItem.type}'`);
 
     // Add "Did you mean?" suggestion for typos
-    const suggestion = suggestOperationType(failingItem.type, KNOWN_OPERATION_TYPES);
+    const suggestion = suggestOperationType(
+      failingItem.type,
+      KNOWN_OPERATION_TYPES
+    );
     if (suggestion) {
       lines.push(suggestion);
     }

@@ -138,7 +138,9 @@ describe('ContextUpdateEmitter', () => {
       targetDefinitions: {
         primary: { optional: false },
       },
-      targetContexts: [{ type: 'entity', entityId: 'enemy-legacy', placeholder: 'primary' }],
+      targetContexts: [
+        { type: 'entity', entityId: 'enemy-legacy', placeholder: 'primary' },
+      ],
       custom: 'preserved-metadata',
     };
 
@@ -367,9 +369,9 @@ describe('ContextUpdateEmitter', () => {
     expect(sanitizedTargets.allies[0].entity).toBe(allyEntity);
     expect(sanitizedTargets.relic).not.toBe(items[0].resolvedTargets.relic);
     expect(sanitizedTargets.relic.entity).toBe(relicEntity);
-    expect(
-      sanitizedTargets.relic.nested.guardian.qualifiers[0].entity,
-    ).toBe(deepEntity);
+    expect(sanitizedTargets.relic.nested.guardian.qualifiers[0].entity).toBe(
+      deepEntity
+    );
     expect(sanitizedTargets.sentinel).toBe(componentEntity);
 
     expect(results).toHaveLength(1);
@@ -380,7 +382,9 @@ describe('ContextUpdateEmitter', () => {
   it('synchronises shared resolved targets for candidate actions while skipping invalid entries', () => {
     const actor = { id: 'actor-hunter' };
     const sharedTargets = {
-      primary: [{ id: 'stale-primary', entity: { id: 'stale-primary-entity' } }],
+      primary: [
+        { id: 'stale-primary', entity: { id: 'stale-primary-entity' } },
+      ],
       backup: { entity: { id: 'stale-backup-entity' } },
       stale: { id: 'remove-me' },
     };
@@ -484,16 +488,19 @@ describe('ContextUpdateEmitter', () => {
       ],
       backup: {
         entity: backupEntity,
-        metadata: { tag: 'support', nested: [{ entity: backupEntity, tier: 2 }] },
+        metadata: {
+          tag: 'support',
+          nested: [{ entity: backupEntity, tier: 2 }],
+        },
       },
     });
     expect(actionA.resolvedTargets.primary[0]).not.toBe(
-      items[0].resolvedTargets.primary[0],
+      items[0].resolvedTargets.primary[0]
     );
     expect(actionA.resolvedTargets.primary[0].entity).toBe(primaryEntity);
-    expect(
-      actionA.resolvedTargets.backup.metadata.nested[0].entity,
-    ).toBe(backupEntity);
+    expect(actionA.resolvedTargets.backup.metadata.nested[0].entity).toBe(
+      backupEntity
+    );
     expect(actionB.resolvedTargets).toBeUndefined();
 
     expect(sharedTargets).toEqual(
@@ -508,13 +515,17 @@ describe('ContextUpdateEmitter', () => {
         backup: expect.objectContaining({
           entity: backupEntity,
           metadata: expect.objectContaining({
-            nested: [expect.objectContaining({ entity: backupEntity, tier: 2 })],
+            nested: [
+              expect.objectContaining({ entity: backupEntity, tier: 2 }),
+            ],
           }),
         }),
       })
     );
     expect(sharedTargets.stale).toBeUndefined();
-    expect(sharedTargets.primary[0]).not.toBe(items[0].resolvedTargets.primary[0]);
+    expect(sharedTargets.primary[0]).not.toBe(
+      items[0].resolvedTargets.primary[0]
+    );
     expect(sharedTargets.primary[0].entity).toBe(primaryEntity);
     expect(sharedTargets.backup.metadata.nested[0].entity).toBe(backupEntity);
 
@@ -540,7 +551,10 @@ describe('ContextUpdateEmitter', () => {
       expect.objectContaining({
         actionId: 'action-beta',
         removedTargets: [
-          expect.objectContaining({ role: 'primary', targetId: 'primary-ally' }),
+          expect.objectContaining({
+            role: 'primary',
+            targetId: 'primary-ally',
+          }),
         ],
         removalReasons: ['Insufficient score'],
       }),

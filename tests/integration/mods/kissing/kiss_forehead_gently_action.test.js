@@ -63,8 +63,8 @@ describe('kissing:kiss_forehead_gently action integration', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']?.
-              facing_away_from || [];
+            actorEntity.components?.['positioning:facing_away']
+              ?.facing_away_from || [];
 
           const validTargets = partners.reduce((acc, partnerId) => {
             const partner = entityManager.getEntityInstance(partnerId);
@@ -73,8 +73,8 @@ describe('kissing:kiss_forehead_gently action integration', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']?.
-                facing_away_from || [];
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from || [];
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
               !partnerFacingAway.includes(actorId);

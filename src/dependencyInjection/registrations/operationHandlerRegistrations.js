@@ -39,7 +39,6 @@ import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHea
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
 import ApplyDamageHandler from '../../logic/operationHandlers/applyDamageHandler.js';
 
-
 import QueryComponentHandler from '../../logic/operationHandlers/queryComponentHandler.js';
 import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
 import QueryLookupHandler from '../../logic/operationHandlers/queryLookupHandler.js';

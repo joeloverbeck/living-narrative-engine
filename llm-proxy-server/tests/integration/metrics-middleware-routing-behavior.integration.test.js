@@ -5,7 +5,14 @@
  *              using a fully wired Express application.
  */
 
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -95,9 +102,16 @@ describe('metrics middleware default route resolver integration', () => {
     const httpMetric = findMetric(metrics, HTTP_REQUESTS_TOTAL);
     expect(httpMetric).toBeDefined();
 
-    const recordedRoutes = (httpMetric?.values || []).map((entry) => entry.labels.route);
+    const recordedRoutes = (httpMetric?.values || []).map(
+      (entry) => entry.labels.route
+    );
     expect(recordedRoutes).toEqual(
-      expect.arrayContaining(['/health/ready', '/api/users/:id', '/files/:hash', '/'])
+      expect.arrayContaining([
+        '/health/ready',
+        '/api/users/:id',
+        '/files/:hash',
+        '/',
+      ])
     );
     expect(recordedRoutes).not.toContain('/metrics');
 
@@ -174,14 +188,18 @@ describe('metrics middleware default route resolver integration', () => {
     metricsService.reset();
 
     const disabledApp = express();
-    disabledApp.use(createMetricsMiddleware({ metricsService, logger, enabled: false }));
+    disabledApp.use(
+      createMetricsMiddleware({ metricsService, logger, enabled: false })
+    );
     disabledApp.get('/disabled', (_req, res) => {
       res.status(200).send('ok');
     });
 
     await request(disabledApp).get('/disabled');
 
-    const disabledMetrics = await metricsService.getRegistry().getMetricsAsJSON();
+    const disabledMetrics = await metricsService
+      .getRegistry()
+      .getMetricsAsJSON();
     const disabledHttpMetric = findMetric(disabledMetrics, HTTP_REQUESTS_TOTAL);
     expect(disabledHttpMetric?.values || []).toHaveLength(0);
   });

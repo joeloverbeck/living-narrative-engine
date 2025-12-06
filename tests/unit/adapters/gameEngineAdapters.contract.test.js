@@ -36,7 +36,9 @@ describe('GameEngine adapters contract coverage', () => {
     it('rejects when the provided engine does not implement loadGame', async () => {
       const adapter = new GameEngineLoadAdapter({});
 
-      await expect(adapter.load('missing-method')).rejects.toBeInstanceOf(TypeError);
+      await expect(adapter.load('missing-method')).rejects.toBeInstanceOf(
+        TypeError
+      );
     });
   });
 
@@ -51,7 +53,10 @@ describe('GameEngine adapters contract coverage', () => {
       expect(adapter).toBeInstanceOf(ISaveService);
       await expect(adapter.save('slot-3', 'Autosave')).resolves.toBe(result);
       expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Autosave', 'slot-3');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Autosave',
+        'slot-3'
+      );
     });
 
     it('propagates synchronous exceptions from triggerManualSave', async () => {
@@ -64,13 +69,18 @@ describe('GameEngine adapters contract coverage', () => {
       const adapter = new GameEngineSaveAdapter(engine);
 
       await expect(adapter.save('slot-4', 'Manual Save')).rejects.toBe(error);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Manual Save', 'slot-4');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Manual Save',
+        'slot-4'
+      );
     });
 
     it('rejects when the engine is missing triggerManualSave', async () => {
       const adapter = new GameEngineSaveAdapter({});
 
-      await expect(adapter.save('slot-5', 'Broken')).rejects.toBeInstanceOf(TypeError);
+      await expect(adapter.save('slot-5', 'Broken')).rejects.toBeInstanceOf(
+        TypeError
+      );
     });
   });
 });

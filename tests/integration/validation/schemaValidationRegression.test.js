@@ -38,8 +38,8 @@ describe('Schema Validation Regression Prevention', () => {
         parameters: {
           actor_id: '{context.deeply.nested.path.value}',
           count: 1,
-          item_id: 'test:item'
-        }
+          item_id: 'test:item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -56,8 +56,8 @@ describe('Schema Validation Regression Prevention', () => {
         parameters: {
           actor_id: '{actor_stats.strength_modifier}',
           count: '{context.hands_required}',
-          item_id: 'test:item'
-        }
+          item_id: 'test:item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -71,7 +71,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject empty template {}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -85,7 +85,11 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject template with spaces { context.value }', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{ context.value }', item_id: 'item' }
+        parameters: {
+          actor_id: 'test',
+          count: '{ context.value }',
+          item_id: 'item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -99,7 +103,11 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject double braces {{context.value}}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{{context.value}}', item_id: 'item' }
+        parameters: {
+          actor_id: 'test',
+          count: '{{context.value}}',
+          item_id: 'item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -113,7 +121,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject trailing dot {context.}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{context.}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{context.}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -127,7 +135,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject leading dot {.value}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{.value}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{.value}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -141,7 +149,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject template starting with number {123abc}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{123abc}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{123abc}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -155,7 +163,11 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject template with hyphen {context-value}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{context-value}', item_id: 'item' }
+        parameters: {
+          actor_id: 'test',
+          count: '{context-value}',
+          item_id: 'item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -176,14 +188,20 @@ describe('ModTestFixture Schema Integration - Regression Prevention', () => {
   describe('schema validation is enabled', () => {
     it('should successfully load valid weapon rule files', async () => {
       // Test that valid rules pass validation
-      const fixture = await ModTestFixture.forAction('weapons', 'weapons:wield_threateningly');
+      const fixture = await ModTestFixture.forAction(
+        'weapons',
+        'weapons:wield_threateningly'
+      );
       expect(fixture).toBeDefined();
       await fixture.cleanup();
     });
 
     it('should successfully load valid positioning rule files', async () => {
       // Test another valid mod to ensure validation works across mods
-      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+      const fixture = await ModTestFixture.forAction(
+        'positioning',
+        'positioning:sit_down'
+      );
       expect(fixture).toBeDefined();
       await fixture.cleanup();
     });

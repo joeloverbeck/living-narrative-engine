@@ -83,7 +83,6 @@ describe('registerDomElements', () => {
       { lifecycle: 'singleton', isInstance: true },
       mockLogger
     );
-
   });
 
   it('should register IDocumentContext as singleton factory', () => {

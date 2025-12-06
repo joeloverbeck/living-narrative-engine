@@ -25,7 +25,12 @@ export default class TestEntityManagerAdapter {
    * @param {Array<object>} [config.initialEntities] - Initial entities to load
    * @param {object} [config.registry] - Data registry for looking up entity definitions
    */
-  constructor({ logger, simpleManager, initialEntities = [], registry = null }) {
+  constructor({
+    logger,
+    simpleManager,
+    initialEntities = [],
+    registry = null,
+  }) {
     this.#logger = logger;
     this.#registry = registry;
     // Note: SimpleEntityManager constructor takes array of entities, not config object
@@ -147,7 +152,11 @@ export default class TestEntityManagerAdapter {
    * @returns {Promise<boolean>} True if the component was added successfully
    */
   async addComponent(entityId, componentType, componentData) {
-    return await this.#simple.addComponent(entityId, componentType, componentData);
+    return await this.#simple.addComponent(
+      entityId,
+      componentType,
+      componentData
+    );
   }
 
   /**
@@ -171,7 +180,10 @@ export default class TestEntityManagerAdapter {
    * @returns {Promise<{results: Array, errors: Array, updateCount: number}>} Results with successes, errors, and update count
    */
   async batchAddComponentsOptimized(componentSpecs, emitBatchEvent = true) {
-    return await this.#simple.batchAddComponentsOptimized(componentSpecs, emitBatchEvent);
+    return await this.#simple.batchAddComponentsOptimized(
+      componentSpecs,
+      emitBatchEvent
+    );
   }
 
   /**
@@ -185,10 +197,10 @@ export default class TestEntityManagerAdapter {
     // SimpleEntityManager doesn't have findEntities, so implement it
     const allEntities = Array.from(this.#simple.entities);
 
-    return allEntities.filter(entity => {
+    return allEntities.filter((entity) => {
       // Check withAll - entity must have all these components
       if (queryObj.withAll && Array.isArray(queryObj.withAll)) {
-        const hasAll = queryObj.withAll.every(componentType =>
+        const hasAll = queryObj.withAll.every((componentType) =>
           this.hasComponent(entity.id, componentType)
         );
         if (!hasAll) return false;
@@ -196,7 +208,7 @@ export default class TestEntityManagerAdapter {
 
       // Check withAny - entity must have at least one of these components
       if (queryObj.withAny && Array.isArray(queryObj.withAny)) {
-        const hasAny = queryObj.withAny.some(componentType =>
+        const hasAny = queryObj.withAny.some((componentType) =>
           this.hasComponent(entity.id, componentType)
         );
         if (!hasAny) return false;
@@ -204,8 +216,8 @@ export default class TestEntityManagerAdapter {
 
       // Check without - entity must not have any of these components
       if (queryObj.without && Array.isArray(queryObj.without)) {
-        const hasNone = queryObj.without.every(componentType =>
-          !this.hasComponent(entity.id, componentType)
+        const hasNone = queryObj.without.every(
+          (componentType) => !this.hasComponent(entity.id, componentType)
         );
         if (!hasNone) return false;
       }
@@ -270,8 +282,14 @@ export default class TestEntityManagerAdapter {
       const definition = this.#registry.get('entityDefinitions', defId);
       if (definition && definition.components) {
         // Add each component from the definition to the entity
-        for (const [componentType, componentData] of Object.entries(definition.components)) {
-          await this.#simple.addComponent(instanceId, componentType, componentData);
+        for (const [componentType, componentData] of Object.entries(
+          definition.components
+        )) {
+          await this.#simple.addComponent(
+            instanceId,
+            componentType,
+            componentData
+          );
         }
       }
     }
@@ -351,7 +369,7 @@ export default class TestEntityManagerAdapter {
     this.#logger.warn(
       'TestEntityManagerAdapter.getSimpleManager() is deprecated',
       {
-        hint: 'Use adapter methods directly instead of accessing SimpleEntityManager'
+        hint: 'Use adapter methods directly instead of accessing SimpleEntityManager',
       }
     );
     return this.#simple;

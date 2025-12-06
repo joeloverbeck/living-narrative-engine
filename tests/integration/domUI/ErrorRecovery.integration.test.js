@@ -30,7 +30,12 @@ function createErrorRecovery(options = {}) {
   const eventDispatcher = new EventBus({ logger });
   const errorRecovery = new ErrorRecovery(
     { logger, eventDispatcher },
-    { maxRetryAttempts: 2, retryDelayMs: 5, useExponentialBackoff: false, ...options }
+    {
+      maxRetryAttempts: 2,
+      retryDelayMs: 5,
+      useExponentialBackoff: false,
+      ...options,
+    }
   );
 
   return { logger, eventDispatcher, errorRecovery };
@@ -111,17 +116,22 @@ describe('ErrorRecovery integration', () => {
 
     expect(result.strategy).toBe('fallback');
     expect(result.userMessage).toBe('An unexpected error occurred.');
-    expect(result.suggestions).toContain('Contact support if the problem persists');
+    expect(result.suggestions).toContain(
+      'Contact support if the problem persists'
+    );
   });
 
   const fallbackScenarios = [
     {
       description: 'missing anatomy data uses empty visualization fallback',
-      errorFactory: () => AnatomyDataError.missingAnatomyData('npc-1', 'anatomy:body'),
+      errorFactory: () =>
+        AnatomyDataError.missingAnatomyData('npc-1', 'anatomy:body'),
       expectation: (result) => {
         expect(result.strategy).toBe('fallback');
         expect(result.result).toEqual({ emptyVisualization: true });
-        expect(result.userMessage).toBe('No anatomy data available for this entity.');
+        expect(result.userMessage).toBe(
+          'No anatomy data available for this entity.'
+        );
       },
     },
     {
@@ -130,13 +140,19 @@ describe('ErrorRecovery integration', () => {
         AnatomyDataError.missingAnatomyParts('npc-2', ['arm', 'leg']),
       expectation: (result) => {
         expect(result.result).toEqual({ partialVisualization: true });
-        expect(result.userMessage).toBe('Showing available anatomy parts only.');
+        expect(result.userMessage).toBe(
+          'Showing available anatomy parts only.'
+        );
       },
     },
     {
       description: 'unrecognized data error triggers default message',
       errorFactory: () =>
-        AnatomyDataError.invalidAnatomyStructure('npc-3', { parts: [] }, 'missing joints'),
+        AnatomyDataError.invalidAnatomyStructure(
+          'npc-3',
+          { parts: [] },
+          'missing joints'
+        ),
       expectation: (result) => {
         expect(result.success).toBe(false);
         expect(result.userMessage).toBe('Could not process anatomy data.');
@@ -145,7 +161,10 @@ describe('ErrorRecovery integration', () => {
     {
       description: 'SVG rendering failures switch to text fallback',
       errorFactory: () =>
-        AnatomyRenderError.svgRenderingFailed('initial render', new Error('svg error')),
+        AnatomyRenderError.svgRenderingFailed(
+          'initial render',
+          new Error('svg error')
+        ),
       expectation: (result) => {
         expect(result.result).toEqual({ textFallback: true });
         expect(result.userMessage).toBe('Using text-based anatomy display.');
@@ -154,7 +173,11 @@ describe('ErrorRecovery integration', () => {
     {
       description: 'layout calculation failures use simplified layout',
       errorFactory: () =>
-        AnatomyRenderError.layoutCalculationFailed('grid', { parts: [] }, new Error('layout')),
+        AnatomyRenderError.layoutCalculationFailed(
+          'grid',
+          { parts: [] },
+          new Error('layout')
+        ),
       expectation: (result) => {
         expect(result.result).toEqual({ simpleLayout: true });
         expect(result.userMessage).toBe('Using simplified layout display.');
@@ -162,10 +185,13 @@ describe('ErrorRecovery integration', () => {
     },
     {
       description: 'other render errors show generic render fallback',
-      errorFactory: () => AnatomyRenderError.domElementNotFound('root', 'mount'),
+      errorFactory: () =>
+        AnatomyRenderError.domElementNotFound('root', 'mount'),
       expectation: (result) => {
         expect(result.success).toBe(false);
-        expect(result.userMessage).toBe('Could not render anatomy visualization.');
+        expect(result.userMessage).toBe(
+          'Could not render anatomy visualization.'
+        );
       },
     },
     {
@@ -189,7 +215,11 @@ describe('ErrorRecovery integration', () => {
     {
       description: 'other state errors show the default state fallback',
       errorFactory: () =>
-        AnatomyStateError.stateCorruption('ACTIVE', { parts: [] }, 'invalid linkage'),
+        AnatomyStateError.stateCorruption(
+          'ACTIVE',
+          { parts: [] },
+          'invalid linkage'
+        ),
       expectation: (result) => {
         expect(result.success).toBe(false);
         expect(result.userMessage).toBe('Visualizer state error occurred.');
@@ -208,17 +238,14 @@ describe('ErrorRecovery integration', () => {
     },
   ];
 
-  it.each(fallbackScenarios)(
-    '%s',
-    async ({ errorFactory, expectation }) => {
-      const { errorRecovery } = createErrorRecovery({ maxRetryAttempts: -1 });
-      const result = await errorRecovery.handleError(errorFactory(), {
-        operation: 'visualizer-operation',
-      });
-      await waitForEventLoop();
-      expectation(result);
-    }
-  );
+  it.each(fallbackScenarios)('%s', async ({ errorFactory, expectation }) => {
+    const { errorRecovery } = createErrorRecovery({ maxRetryAttempts: -1 });
+    const result = await errorRecovery.handleError(errorFactory(), {
+      operation: 'visualizer-operation',
+    });
+    await waitForEventLoop();
+    expectation(result);
+  });
 
   it('trims error history and prevents usage after disposal', async () => {
     const { errorRecovery } = createErrorRecovery({ maxRetryAttempts: -1 });

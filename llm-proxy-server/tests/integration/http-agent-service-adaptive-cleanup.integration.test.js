@@ -4,13 +4,7 @@
  *              adaptive cleanup heuristics and fixed-interval fallbacks.
  */
 
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
 import HttpAgentService from '../../src/services/httpAgentService.js';
 

@@ -1,10 +1,4 @@
-import {
-  describe,
-  test,
-  beforeAll,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, test, beforeAll, expect, jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -22,16 +16,12 @@ describe('Rate limiting middleware integration', () => {
     originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     jest.resetModules();
-    ({
-      createApiRateLimiter,
-      createLlmRateLimiter,
-      createAdaptiveRateLimiter,
-    } = await import('../../src/middleware/rateLimiting.js'));
+    ({ createApiRateLimiter, createLlmRateLimiter, createAdaptiveRateLimiter } =
+      await import('../../src/middleware/rateLimiting.js'));
     const constantsModule = await import('../../src/config/constants.js');
     RATE_LIMIT_GENERAL_MAX_REQUESTS =
       constantsModule.RATE_LIMIT_GENERAL_MAX_REQUESTS;
-    RATE_LIMIT_LLM_MAX_REQUESTS =
-      constantsModule.RATE_LIMIT_LLM_MAX_REQUESTS;
+    RATE_LIMIT_LLM_MAX_REQUESTS = constantsModule.RATE_LIMIT_LLM_MAX_REQUESTS;
     process.env.NODE_ENV = originalNodeEnv;
     jest.setTimeout(60000);
   });
@@ -109,7 +99,10 @@ describe('Rate limiting middleware integration', () => {
       expect(response.status).toBe(200);
     }
 
-    const blocked = await agent.post('/llm').set('x-api-key', apiKey).send({ payload: 'ok' });
+    const blocked = await agent
+      .post('/llm')
+      .set('x-api-key', apiKey)
+      .send({ payload: 'ok' });
     expect(blocked.status).toBe(429);
     expect(blocked.body.error.code).toBe('LLM_RATE_LIMIT_EXCEEDED');
     expect(blocked.body.error.details.clientType).toBe('api');

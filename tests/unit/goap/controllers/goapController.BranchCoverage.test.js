@@ -1,4 +1,11 @@
-import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 import GoapController from '../../../../src/goap/controllers/goapController.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
@@ -135,7 +142,9 @@ describe('GoapController uncovered branches', () => {
       valid: false,
       reason: 'No active plan',
     });
-    expect(() => hooks.advancePlan('actor-x')).toThrow('Cannot advance: no active plan');
+    expect(() => hooks.advancePlan('actor-x')).toThrow(
+      'Cannot advance: no active plan'
+    );
     expect(hooks.clearPlan('actor-x', 'no-op')).toBeUndefined();
     expect(hooks.cleanupActorDiagnostics(null)).toBeUndefined();
 
@@ -148,13 +157,7 @@ describe('GoapController uncovered branches', () => {
     const controller = new GoapController(deps);
     const hooks = GoapController.__getTestHooks(controller);
     const map = new Map([
-      [
-        'goal-1',
-        [
-          { timestamp: 0 },
-          { timestamp: Date.now() },
-        ],
-      ],
+      ['goal-1', [{ timestamp: 0 }, { timestamp: Date.now() }]],
     ]);
 
     hooks.pruneFailureMap(map, 10, Date.now());

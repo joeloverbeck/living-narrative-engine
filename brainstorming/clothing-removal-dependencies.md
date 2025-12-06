@@ -11,6 +11,7 @@
 ### Current Behavior
 
 When an actor wears:
+
 - **Belt**: `layer: "accessories"`, `primary slot: "torso_lower"`
 - **Pants**: `layer: "base"`, `primary slot: "legs"`, `coverage_mapping: ["torso_lower"]`
 
@@ -26,6 +27,7 @@ Both items appear in the `topmost_clothing` scope and can be removed independent
 ### Real-World Clothing Physics
 
 In reality:
+
 - **Belts** secure pants, so removing pants requires removing or loosening the belt first
 - **Armor layers** might completely block access to underlying clothing
 - **Buttoned items** might need to be unbuttoned before removal of items beneath them
@@ -38,6 +40,7 @@ In reality:
 ### Current Components
 
 #### 1. `clothing:equipment` Component
+
 ```json
 {
   "equipped": {
@@ -52,6 +55,7 @@ In reality:
 ```
 
 #### 2. `clothing:wearable` Component
+
 ```json
 {
   "layer": "accessories",
@@ -63,6 +67,7 @@ In reality:
 ```
 
 #### 3. `clothing:coverage_mapping` Component
+
 ```json
 {
   "covers": ["torso_lower"],
@@ -71,6 +76,7 @@ In reality:
 ```
 
 #### 4. `topmost_clothing` Scope Resolution
+
 - Returns ONE item per equipped slot
 - Uses layer priority: `outer > base > underwear > accessories`
 - No cross-item dependency checking
@@ -87,6 +93,7 @@ In reality:
 #### Implementation Details
 
 **New Component Schema**: `data/mods/clothing/components/blocks_removal.component.json`
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -102,7 +109,16 @@ In reality:
           "properties": {
             "slot": {
               "type": "string",
-              "enum": ["torso_upper", "torso_lower", "legs", "feet", "head_gear", "hands", "left_arm_clothing", "right_arm_clothing"]
+              "enum": [
+                "torso_upper",
+                "torso_lower",
+                "legs",
+                "feet",
+                "head_gear",
+                "hands",
+                "left_arm_clothing",
+                "right_arm_clothing"
+              ]
             },
             "layers": {
               "type": "array",
@@ -133,6 +149,7 @@ In reality:
 ```
 
 **Example: Belt Entity**
+
 ```json
 {
   "id": "clothing:black_calfskin_belt",
@@ -155,6 +172,7 @@ In reality:
 ```
 
 **Advantages**:
+
 - ✅ Explicit and easy to understand
 - ✅ Supports multiple blocking relationships
 - ✅ Allows different block types (must remove, must loosen, full block)
@@ -162,11 +180,13 @@ In reality:
 - ✅ Backward compatible (optional component)
 
 **Disadvantages**:
+
 - ❌ Requires updating existing clothing definitions
 - ❌ Could become verbose for complex outfits
 - ❌ Needs validation to prevent circular dependencies
 
 **Impact Points**:
+
 - `src/scopeDsl/nodes/slotAccessResolver.js`: Filter out blocked items
 - `data/mods/clothing/actions/remove_clothing.action.json`: Add prerequisite check
 - New operation handler: `validateRemovalBlockingHandler.js`
@@ -181,6 +201,7 @@ In reality:
 #### Implementation Details
 
 **New Component Schema**: `data/mods/clothing/components/item_dependencies.component.json`
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -218,6 +239,7 @@ In reality:
 ```
 
 **Example: Belt Entity**
+
 ```json
 {
   "clothing:item_dependencies": {
@@ -233,11 +255,13 @@ In reality:
 ```
 
 **Advantages**:
+
 - ✅ Supports bidirectional relationships (requires/blocks)
 - ✅ Good for complex dependency scenarios
 - ✅ Enables validation of outfit coherence
 
 **Disadvantages**:
+
 - ❌ More complex to implement and validate
 - ❌ Risk of circular dependencies
 - ❌ Harder to debug and visualize
@@ -252,6 +276,7 @@ In reality:
 #### Implementation Details
 
 **New Component Schema**: `data/mods/clothing/components/removal_order.component.json`
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -278,17 +303,20 @@ In reality:
 ```
 
 **Example Configuration**:
+
 - Belt: `priority: 50`, `affectsSlots: ["legs", "torso_lower"]`
 - Pants: `priority: 30`
 - Underwear: `priority: 10`
 
 **Advantages**:
+
 - ✅ Simple numeric priority system
 - ✅ Easy to understand and implement
 - ✅ Works well with existing layer system
 
 **Disadvantages**:
-- ❌ Less explicit about *why* something blocks
+
+- ❌ Less explicit about _why_ something blocks
 - ❌ Harder to configure complex relationships
 - ❌ Global priority numbers could conflict
 - ❌ Doesn't handle slot-specific blocking well
@@ -302,12 +330,17 @@ In reality:
 #### Implementation Details
 
 **Extended Component Schema**: Update `data/mods/clothing/components/coverage_mapping.component.json`
+
 ```json
 {
   "dataSchema": {
     "properties": {
-      "covers": { /* existing */ },
-      "coveragePriority": { /* existing */ },
+      "covers": {
+        /* existing */
+      },
+      "coveragePriority": {
+        /* existing */
+      },
       "blocksRemoval": {
         "type": "array",
         "items": {
@@ -329,6 +362,7 @@ In reality:
 ```
 
 **Example: Belt Entity**
+
 ```json
 {
   "clothing:coverage_mapping": {
@@ -346,11 +380,13 @@ In reality:
 ```
 
 **Advantages**:
+
 - ✅ Builds on existing coverage system
 - ✅ Natural semantic grouping (coverage + blocking)
 - ✅ Minimal new schemas needed
 
 **Disadvantages**:
+
 - ❌ Conflates two different concepts (coverage vs. blocking)
 - ❌ Makes coverage_mapping more complex
 - ❌ Less flexible for non-coverage-related blocking
@@ -370,7 +406,7 @@ function resolveTopmostClothingWithBlocking(entityId, equipped, trace) {
   const candidates = getTopmostCandidates(equipped);
 
   // New: Filter out items that are blocked
-  const availableForRemoval = candidates.filter(item => {
+  const availableForRemoval = candidates.filter((item) => {
     return !isBlockedByOtherItems(item, equipped);
   });
 
@@ -392,16 +428,19 @@ function isBlockedByOtherItems(targetItem, equipped) {
 ```
 
 **Heuristic Rules**:
+
 1. Accessories in `torso_lower` block base/outer items in `legs` if those items have `coverage_mapping` for `torso_lower`
 2. Items in `outer` layer block items in `base` layer in the same slot
 3. Items with secondary slots block items in those slots
 
 **Advantages**:
+
 - ✅ No schema changes needed
 - ✅ Fast to implement
 - ✅ Backward compatible
 
 **Disadvantages**:
+
 - ❌ Hardcoded logic, not data-driven
 - ❌ Limited to specific scenarios
 - ❌ Difficult to extend for armor/complex cases
@@ -411,13 +450,13 @@ function isBlockedByOtherItems(targetItem, equipped) {
 
 ## Comparison Matrix
 
-| Approach | Complexity | Flexibility | Backward Compat | Future-Proof | Data-Driven |
-|----------|-----------|-------------|-----------------|--------------|-------------|
-| **1. Blocking Component** | Medium | High | Yes | Yes | Yes |
-| **2. Dependency Graph** | High | Very High | Yes | Yes | Yes |
-| **3. Removal Order** | Low | Medium | Yes | Medium | Yes |
-| **4. Extended Coverage** | Medium | Medium | Partial | Medium | Yes |
-| **5. Filter Enhancement** | Low | Low | Yes | Low | No |
+| Approach                  | Complexity | Flexibility | Backward Compat | Future-Proof | Data-Driven |
+| ------------------------- | ---------- | ----------- | --------------- | ------------ | ----------- |
+| **1. Blocking Component** | Medium     | High        | Yes             | Yes          | Yes         |
+| **2. Dependency Graph**   | High       | Very High   | Yes             | Yes          | Yes         |
+| **3. Removal Order**      | Low        | Medium      | Yes             | Medium       | Yes         |
+| **4. Extended Coverage**  | Medium     | Medium      | Partial         | Medium       | Yes         |
+| **5. Filter Enhancement** | Low        | Low         | Yes             | Low          | No          |
 
 ---
 
@@ -426,6 +465,7 @@ function isBlockedByOtherItems(targetItem, equipped) {
 ### **Approach 1: Blocking Component** (Primary Recommendation)
 
 **Rationale**:
+
 - Strikes best balance between simplicity and power
 - Explicitly data-driven and visible in entity definitions
 - Supports multiple block types for future armor/layering scenarios
@@ -435,21 +475,25 @@ function isBlockedByOtherItems(targetItem, equipped) {
 ### Implementation Roadmap
 
 #### Phase 1: Foundation (2-3 hours)
+
 1. Create `clothing:blocks_removal` component schema
 2. Create `isRemovalBlocked` JSON Logic operator
 3. Add validation for circular blocking dependencies
 
 #### Phase 2: Integration (2-3 hours)
+
 1. Update `remove_clothing` and `remove_others_clothing` actions with prerequisite conditions
 2. Modify `topmost_clothing` scope resolution to filter blocked items
 3. Create new condition: `clothing:can-remove-item.condition.json`
 
 #### Phase 3: Content Updates (1-2 hours)
+
 1. Update belt entities to include `blocks_removal` component
 2. Document the blocking system in `docs/clothing/`
 3. Add test cases for blocking scenarios
 
 #### Phase 4: Testing (2-3 hours)
+
 1. Unit tests for `isRemovalBlocked` operator
 2. Integration tests for removal blocking scenarios
 3. E2E tests for complete workflows
@@ -465,6 +509,7 @@ function isBlockedByOtherItems(targetItem, equipped) {
 Add a new `loosen_belt` action that allows loosening (but not removing) a belt, which then allows pants removal without removing the belt.
 
 **Benefits**:
+
 - More realistic simulation
 - Gives players more granular control
 - Doesn't require removing the belt entirely
@@ -474,12 +519,14 @@ Add a new `loosen_belt` action that allows loosening (but not removing) a belt, 
 Implement `cascade_unequip: true` option in `UNEQUIP_CLOTHING` operation to automatically remove blocking items.
 
 **Example Flow**:
+
 1. Player attempts to remove pants
 2. System detects belt is blocking
 3. System prompts: "Remove belt first?" or automatically removes belt
 4. System then removes pants
 
 **Benefits**:
+
 - More user-friendly
 - Reduces micromanagement
 - Clear communication of dependencies
@@ -489,24 +536,30 @@ Implement `cascade_unequip: true` option in `UNEQUIP_CLOTHING` operation to auto
 ## Edge Cases and Considerations
 
 ### 1. Multiple Blocking Items
+
 **Scenario**: Wearing belt + suspenders, both block pants removal
 **Solution**: Both must be removed/loosened for pants removal
 
 ### 2. Partial Blocking
+
 **Scenario**: Heavy coat blocks access to shirt but not pants
 **Solution**: `blockType: "full_block"` specifies complete inaccessibility
 
 ### 3. Context-Dependent Blocking
+
 **Scenario**: Tucked shirt blocks pants removal, untucked shirt doesn't
 **Solution**: Add `clothing:tucked` state component that affects blocking
 
 ### 4. Armor Over Clothing
+
 **Scenario**: Plate armor completely blocks access to all underlying layers
 **Solution**: `blockType: "full_block"` for all covered slots/layers
 
 ### 5. Removal Validation Failure
+
 **Scenario**: Player tries to remove blocked item directly
 **Solution**:
+
 - Action doesn't appear in available actions (filtered by scope)
 - If somehow triggered, validation fails with clear error message
 - Dispatch `CLOTHING_REMOVAL_BLOCKED` event with reason
@@ -516,21 +569,25 @@ Implement `cascade_unequip: true` option in `UNEQUIP_CLOTHING` operation to auto
 ## Migration Strategy
 
 ### Backward Compatibility
+
 - `clothing:blocks_removal` is **optional**
 - Existing clothing without this component works as before
 - New blocking logic only activates when component is present
 
 ### Gradual Rollout
+
 1. **Phase 1**: Implement system without updating existing entities
 2. **Phase 2**: Update critical items (belts, armor) incrementally
 3. **Phase 3**: Batch update remaining items as needed
 
 ### Data Migration Script
+
 ```bash
 npm run migrate:add-blocking-components
 ```
 
 Script would:
+
 1. Identify items that should have blocking (belts, armor, etc.)
 2. Generate suggested `blocks_removal` components
 3. Create migration PRs for review
@@ -540,10 +597,12 @@ Script would:
 ## Testing Strategy
 
 ### Unit Tests
+
 - `tests/unit/logic/operators/isRemovalBlockedOperator.test.js`
 - `tests/unit/scopeDsl/nodes/slotAccessResolver.blocking.test.js`
 
 ### Integration Tests
+
 - `tests/integration/clothing/removalBlocking.integration.test.js`
   - Test: Belt blocks pants removal
   - Test: Armor blocks shirt removal
@@ -551,6 +610,7 @@ Script would:
   - Test: Removal order validation
 
 ### E2E Tests
+
 - `tests/e2e/clothing/completeRemovalWorkflow.e2e.test.js`
   - Full outfit removal workflow
   - Validate action availability
@@ -561,11 +621,13 @@ Script would:
 ## Documentation Requirements
 
 ### User-Facing
+
 - Update `docs/modding/clothing-system.md` with blocking mechanics
 - Create examples for common blocking scenarios
 - Document best practices for armor vs. clothing
 
 ### Developer-Facing
+
 - Add JSDoc to new operators and handlers
 - Update `CLAUDE.md` with blocking system overview
 - Create architecture diagram showing blocking flow
@@ -575,24 +637,32 @@ Script would:
 ## Future Enhancements
 
 ### 1. Dynamic Blocking
+
 Allow blocking rules to change based on state:
+
 - Buttoned vs. unbuttoned jacket
 - Zipped vs. unzipped dress
 - Tied vs. untied robe
 
 ### 2. Partial Accessibility
+
 Some items might be partially accessible without full removal:
+
 - "Unbutton jacket to access shirt pocket"
 - "Roll up sleeves"
 
 ### 3. Time-Based Removal
+
 Some items take longer to remove than others:
+
 - Quick: Hat, belt, shoes
 - Medium: Shirt, pants
 - Slow: Full plate armor, wedding dress
 
 ### 4. Assistance Requirements
+
 Some items require help to remove:
+
 - Corset lacing
 - Back-zippered dress
 - Complex armor
@@ -620,6 +690,7 @@ Some items require help to remove:
 ## Conclusion
 
 The **Blocking Component** approach (Approach 1) is recommended as the primary solution due to its:
+
 - Clear, explicit data-driven design
 - Future-proof extensibility for armor and complex clothing
 - Backward compatibility
@@ -712,8 +783,10 @@ export class IsRemovalBlockedOperator extends BaseOperator {
 
   itemIsBlocked(itemWearable, blockingComponent) {
     for (const blocked of blockingComponent.blockedSlots) {
-      if (blocked.slot === itemWearable.equipmentSlots.primary &&
-          blocked.layers.includes(itemWearable.layer)) {
+      if (
+        blocked.slot === itemWearable.equipmentSlots.primary &&
+        blocked.layers.includes(itemWearable.layer)
+      ) {
         return true;
       }
     }

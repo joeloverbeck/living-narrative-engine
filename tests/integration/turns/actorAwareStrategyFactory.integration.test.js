@@ -75,9 +75,7 @@ describe('[Integration] ActorAwareStrategyFactory default resolver behaviour', (
 
   it('ignores blank player_type values returned via Entity API', () => {
     const actor = {
-      getComponentData: jest
-        .fn()
-        .mockReturnValue({ type: '   ' }),
+      getComponentData: jest.fn().mockReturnValue({ type: '   ' }),
       components: {
         'core:player_type': { type: ' GOAP ' },
       },
@@ -165,8 +163,9 @@ describe('[Integration] ActorAwareStrategyFactory default resolver behaviour', (
       actorLookup: () => actor,
     });
 
-    expect(() => factory.create('missing-provider'))
-      .toThrow('ActorAwareStrategyFactory: No decision provider for actor type "rogue"');
+    expect(() => factory.create('missing-provider')).toThrow(
+      'ActorAwareStrategyFactory: No decision provider for actor type "rogue"'
+    );
   });
 
   it('derives providers map from legacy human and AI provider parameters', () => {
@@ -267,7 +266,9 @@ describe('[Integration] ActorAwareStrategyFactory default resolver behaviour', (
 
     const strategy = factory.create('entity-manager-actor');
 
-    expect(entityManager.getEntityInstance).toHaveBeenCalledWith('entity-manager-actor');
+    expect(entityManager.getEntityInstance).toHaveBeenCalledWith(
+      'entity-manager-actor'
+    );
     expect(strategy.decisionProvider).toBe(providers.llm);
   });
 
@@ -280,6 +281,8 @@ describe('[Integration] ActorAwareStrategyFactory default resolver behaviour', (
           choicePipeline,
           turnActionFactory,
         })
-    ).toThrow('ActorAwareStrategyFactory: actorLookup callback or entityManager is required');
+    ).toThrow(
+      'ActorAwareStrategyFactory: actorLookup callback or entityManager is required'
+    );
   });
 });

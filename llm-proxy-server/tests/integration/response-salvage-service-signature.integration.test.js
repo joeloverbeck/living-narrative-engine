@@ -30,7 +30,10 @@ function createLogger() {
 function buildApp(options = {}) {
   const logger = createLogger();
   const salvageService = new ResponseSalvageService(logger, options);
-  const salvageController = new SalvageRequestController(logger, salvageService);
+  const salvageController = new SalvageRequestController(
+    logger,
+    salvageService
+  );
 
   const app = express();
   app.use(express.json());
@@ -40,7 +43,14 @@ function buildApp(options = {}) {
 
   // Helper endpoint to seed the salvage cache without bypassing controller logic.
   app.post('/api/llm-request/simulate-salvage', (req, res) => {
-    const { requestId, llmId, targetPayload, responseData, statusCode = 200, ttl } = req.body;
+    const {
+      requestId,
+      llmId,
+      targetPayload,
+      responseData,
+      statusCode = 200,
+      ttl,
+    } = req.body;
     salvageService.salvageResponse(
       requestId,
       llmId,
@@ -126,10 +136,16 @@ describe('ResponseSalvageService signature integration', () => {
   });
 
   it('expires signature lookups once TTL elapses and prunes cache entries', async () => {
-    const { app, salvageService: serviceInstance } = buildApp({ defaultTtl: 50 });
+    const { app, salvageService: serviceInstance } = buildApp({
+      defaultTtl: 50,
+    });
     salvageService = serviceInstance;
 
-    const payload = { model: 'gpt-test', messages: [{ role: 'user', content: 'Hello' }], temperature: 0.1 };
+    const payload = {
+      model: 'gpt-test',
+      messages: [{ role: 'user', content: 'Hello' }],
+      temperature: 0.1,
+    };
 
     await request(app)
       .post('/api/llm-request/simulate-salvage')
@@ -198,8 +214,6 @@ describe('ResponseSalvageService signature integration', () => {
     expect(postCleanupStats.body.stats.totalCacheEntries).toBe(0);
     expect(postCleanupStats.body.stats.activeTimers).toBe(0);
 
-    await request(app)
-      .get('/api/llm-request/salvage/cleanup-1')
-      .expect(404);
+    await request(app).get('/api/llm-request/salvage/cleanup-1').expect(404);
   });
 });

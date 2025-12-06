@@ -120,9 +120,10 @@ describe('AnatomyInitializationService failure recovery integration', () => {
 
     behaviours = new Map();
     generationCalls = [];
-    originalGenerate = testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
-      testBed.anatomyGenerationService
-    );
+    originalGenerate =
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
+        testBed.anatomyGenerationService
+      );
     testBed.anatomyGenerationService.generateAnatomyIfNeeded = async (
       entityId
     ) => {
@@ -146,7 +147,8 @@ describe('AnatomyInitializationService failure recovery integration', () => {
 
   afterEach(async () => {
     if (testBed?.anatomyGenerationService && originalGenerate) {
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = originalGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        originalGenerate;
     }
     service?.destroy();
     await testBed?.cleanup();
@@ -225,7 +227,11 @@ describe('AnatomyInitializationService failure recovery integration', () => {
   it('ignores reconstructed entities and warns when instanceId is missing', async () => {
     service.initialize();
 
-    behaviours.set('ignored-entity', { type: 'resolve', value: true, delay: 10 });
+    behaviours.set('ignored-entity', {
+      type: 'resolve',
+      value: true,
+      delay: 10,
+    });
 
     await safeDispatcher.dispatch(ENTITY_CREATED_ID, {
       instanceId: 'ignored-entity',
@@ -312,9 +318,8 @@ describe('AnatomyInitializationService failure recovery integration', () => {
     );
     expect(destroyLog).toBeDefined();
 
-    const resultAfterDestroy = await destroyedService.waitForEntityGeneration(
-      'cleanup-entity'
-    );
+    const resultAfterDestroy =
+      await destroyedService.waitForEntityGeneration('cleanup-entity');
     expect(resultAfterDestroy).toBe(false);
 
     await safeDispatcher.dispatch(ENTITY_CREATED_ID, {

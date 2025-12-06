@@ -34,7 +34,9 @@ class IntegrationScopeResolver {
   async resolve(scope, context) {
     const actorId = context?.actor?.id;
     if (!actorId) {
-      return ActionResult.failure({ message: 'Missing actor for scope resolution' });
+      return ActionResult.failure({
+        message: 'Missing actor for scope resolution',
+      });
     }
 
     const ids = this.#collectIds(scope, actorId);
@@ -104,7 +106,10 @@ class IntegrationTargetResolver {
   async resolveTargets(scope, actor) {
     const actorId = actor?.id;
     if (!actorId) {
-      return { success: false, errors: [{ message: 'Actor is required for legacy resolution' }] };
+      return {
+        success: false,
+        errors: [{ message: 'Actor is required for legacy resolution' }],
+      };
     }
 
     const ids = this.#collectIds(scope, actorId);
@@ -291,8 +296,12 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     );
 
     // The layer should recognise both actions as legacy and validate the conversion.
-    expect(legacyLayer.isLegacyAction(actionWithExplicitPlaceholder)).toBe(true);
-    expect(legacyLayer.isLegacyAction(actionWithTemplatePlaceholder)).toBe(true);
+    expect(legacyLayer.isLegacyAction(actionWithExplicitPlaceholder)).toBe(
+      true
+    );
+    expect(legacyLayer.isLegacyAction(actionWithTemplatePlaceholder)).toBe(
+      true
+    );
     expect(legacyLayer.isLegacyAction(null)).toBe(false);
 
     const conversion = legacyLayer.convertLegacyFormat(
@@ -306,7 +315,11 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     );
     expect(validation.valid).toBe(true);
 
-    const errorAction = { id: 'legacy:error', name: 'Explode', targets: 'self' };
+    const errorAction = {
+      id: 'legacy:error',
+      name: 'Explode',
+      targets: 'self',
+    };
     Object.defineProperty(errorAction, 'placeholder', {
       get() {
         throw new Error('placeholder failure');
@@ -328,7 +341,11 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     );
     expect(countConversion.targetDefinitions.primary.scope).toBe('none');
 
-    const itemAction = { id: 'legacy:item', name: 'Item Scope', targets: 'actor.items' };
+    const itemAction = {
+      id: 'legacy:item',
+      name: 'Item Scope',
+      targets: 'actor.items',
+    };
     const itemConversion = legacyLayer.convertLegacyFormat(itemAction, actor);
     expect(itemConversion.targetDefinitions.primary.placeholder).toBe('item');
 
@@ -341,7 +358,9 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
       locationAction,
       actor
     );
-    expect(locationConversion.targetDefinitions.primary.placeholder).toBe('location');
+    expect(locationConversion.targetDefinitions.primary.placeholder).toBe(
+      'location'
+    );
 
     const actorTargetAction = {
       id: 'legacy:actor',
@@ -352,7 +371,9 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
       actorTargetAction,
       actor
     );
-    expect(actorTargetConversion.targetDefinitions.primary.placeholder).toBe('actor');
+    expect(actorTargetConversion.targetDefinitions.primary.placeholder).toBe(
+      'actor'
+    );
 
     const unknownTypeAction = {
       id: 'legacy:unknown-type',
@@ -374,7 +395,9 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
       selfTypeAction,
       actor
     );
-    expect(selfTypeConversion.targetDefinitions.primary.placeholder).toBe('self');
+    expect(selfTypeConversion.targetDefinitions.primary.placeholder).toBe(
+      'self'
+    );
 
     const customScopeAction = {
       id: 'legacy:custom',
@@ -455,11 +478,16 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     expect(mismatchValidation.errors).toEqual(
       expect.arrayContaining([
         expect.stringContaining('Scope mismatch'),
-        expect.stringContaining('Legacy actions should only have primary target'),
+        expect.stringContaining(
+          'Legacy actions should only have primary target'
+        ),
       ])
     );
 
-    const missingPrimaryValidation = legacyLayer.validateConversion(waitAction, {});
+    const missingPrimaryValidation = legacyLayer.validateConversion(
+      waitAction,
+      {}
+    );
     expect(missingPrimaryValidation.valid).toBe(false);
     expect(missingPrimaryValidation.errors).toContain(
       'Modern format must include a primary target'
@@ -510,9 +538,12 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     await entityManager.createEntityInstance('test:partner-location', {
       instanceId: 'location-200',
     });
-    const actor = await entityManager.createEntityInstance('test:partner-actor', {
-      instanceId: 'actor-200',
-    });
+    const actor = await entityManager.createEntityInstance(
+      'test:partner-actor',
+      {
+        instanceId: 'actor-200',
+      }
+    );
     await entityManager.createEntityInstance('test:partner', {
       instanceId: 'partner-001',
     });
@@ -543,10 +574,15 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
       })
     );
     expect(legacyEntry.targetContexts[0]).toEqual(
-      expect.objectContaining({ entityId: 'partner-001', displayName: 'Partner' })
+      expect.objectContaining({
+        entityId: 'partner-001',
+        displayName: 'Partner',
+      })
     );
 
-    const suggestion = JSON.parse(legacyLayer.getMigrationSuggestion(legacyAction));
+    const suggestion = JSON.parse(
+      legacyLayer.getMigrationSuggestion(legacyAction)
+    );
     expect(suggestion.targets.primary.scope).toBe('actor.partners');
     expect(suggestion.targets.primary.placeholder).toBe('partner');
 
@@ -561,7 +597,10 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     expect(modernResult.success).toBe(true);
     const [modernEntry] = modernResult.data.actionsWithTargets;
     expect(modernEntry.targetContexts[0]).toEqual(
-      expect.objectContaining({ entityId: 'partner-001', displayName: 'Partner' })
+      expect.objectContaining({
+        entityId: 'partner-001',
+        displayName: 'Partner',
+      })
     );
 
     const invalidModernTargets = legacyLayer.validateConversion(legacyAction, {
@@ -572,7 +611,9 @@ describe('LegacyTargetCompatibilityLayer integration', () => {
     expect(invalidModernTargets.errors).toEqual(
       expect.arrayContaining([
         expect.stringContaining('Placeholder mismatch'),
-        expect.stringContaining('Legacy actions should only have primary target'),
+        expect.stringContaining(
+          'Legacy actions should only have primary target'
+        ),
       ])
     );
   });

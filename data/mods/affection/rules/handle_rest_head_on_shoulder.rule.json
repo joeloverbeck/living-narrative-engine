@@ -3,7 +3,9 @@
   "rule_id": "handle_rest_head_on_shoulder",
   "comment": "Handles the 'affection:rest_head_on_shoulder' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "affection:event-is-action-rest-head-on-shoulder" },
+  "condition": {
+    "condition_ref": "affection:event-is-action-rest-head-on-shoulder"
+  },
   "actions": [
     { "type": "PREPARE_ACTION_CONTEXT", "parameters": {} },
     {

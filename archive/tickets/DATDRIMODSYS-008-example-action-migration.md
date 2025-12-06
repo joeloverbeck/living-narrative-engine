@@ -7,6 +7,7 @@ Migrate the `restrain_target` action to use the new data-driven modifier system.
 ## File List
 
 Files to modify:
+
 - `data/mods/physical-control/actions/restrain_target.action.json`
 
 ## Out of Scope
@@ -96,7 +97,11 @@ Add a `modifiers` array to the `chanceBased` configuration:
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+            "!!": [
+              {
+                "var": "entity.primary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "value": 25,
@@ -123,7 +128,9 @@ Add a `modifiers` array to the `chanceBased` configuration:
         "condition": {
           "logic": {
             "==": [
-              { "var": "entity.location.components.environment:lighting.level" },
+              {
+                "var": "entity.location.components.environment:lighting.level"
+              },
               "dark"
             ]
           }
@@ -150,18 +157,11 @@ Add a `modifiers` array to the `chanceBased` configuration:
   "template": "restrain {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "skills:grappling_skill"
-    ]
+    "actor": ["skills:grappling_skill"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:being_restrained",
-      "positioning:fallen"
-    ],
-    "primary": [
-      "positioning:being_restrained"
-    ]
+    "actor": ["positioning:being_restrained", "positioning:fallen"],
+    "primary": ["positioning:being_restrained"]
   },
   "prerequisites": [
     {
@@ -217,7 +217,11 @@ Add a `modifiers` array to the `chanceBased` configuration:
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+            "!!": [
+              {
+                "var": "entity.primary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "value": 25,
@@ -244,7 +248,9 @@ Add a `modifiers` array to the `chanceBased` configuration:
         "condition": {
           "logic": {
             "==": [
-              { "var": "entity.location.components.environment:lighting.level" },
+              {
+                "var": "entity.location.components.environment:lighting.level"
+              },
               "dark"
             ]
           }
@@ -268,12 +274,12 @@ Add a `modifiers` array to the `chanceBased` configuration:
 
 ## Modifier Design Rationale
 
-| Modifier | Value | Type | Rationale |
-|----------|-------|------|-----------|
-| Target prone | +15 | flat | Prone targets are significantly easier to grapple |
-| Already restrained | +25 | flat | Completing a restraint on partial grip is much easier |
-| Skill advantage | +10 | flat | Skilled grapplers get a bonus vs weaker defenders |
-| Darkness | -15 | flat | Hard to grapple what you can't see |
+| Modifier           | Value | Type | Rationale                                             |
+| ------------------ | ----- | ---- | ----------------------------------------------------- |
+| Target prone       | +15   | flat | Prone targets are significantly easier to grapple     |
+| Already restrained | +25   | flat | Completing a restraint on partial grip is much easier |
+| Skill advantage    | +10   | flat | Skilled grapplers get a bonus vs weaker defenders     |
+| Darkness           | -15   | flat | Hard to grapple what you can't see                    |
 
 ## Acceptance Criteria
 

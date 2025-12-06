@@ -18,7 +18,9 @@ describe('ExecutionContext Types - File Structure', () => {
   });
 
   it('should be a valid JavaScript module', async () => {
-    const module = await import('../../../../src/logic/types/executionTypes.js');
+    const module = await import(
+      '../../../../src/logic/types/executionTypes.js'
+    );
     expect(module).toBeDefined();
   });
 });
@@ -28,10 +30,7 @@ describe('ExecutionContext Types - Type Definitions', () => {
 
   // Read file content once before all tests
   beforeAll(() => {
-    const filePath = join(
-      process.cwd(),
-      'src/logic/types/executionTypes.js'
-    );
+    const filePath = join(process.cwd(), 'src/logic/types/executionTypes.js');
     fileContent = readFileSync(filePath, 'utf-8');
   });
 
@@ -53,8 +52,12 @@ describe('ExecutionContext Types - Type Definitions', () => {
   });
 
   it('should provide JsonLogicEvaluationContext type', () => {
-    expect(fileContent).toContain('@typedef {object} JsonLogicEvaluationContext');
-    expect(fileContent).toContain('@property {{ type: string, payload: object | null }} event');
+    expect(fileContent).toContain(
+      '@typedef {object} JsonLogicEvaluationContext'
+    );
+    expect(fileContent).toContain(
+      '@property {{ type: string, payload: object | null }} event'
+    );
     expect(fileContent).toContain(
       '@property {JsonLogicEntityContext | null} actor'
     );
@@ -74,14 +77,24 @@ describe('ExecutionContext Types - Type Definitions', () => {
 
   it('should define minimal service contracts instead of importing runtime modules', () => {
     expect(fileContent).toContain('@typedef {object} ExecutionLogger');
-    expect(fileContent).toContain('@typedef {object} ExecutionEntityManagerLike');
+    expect(fileContent).toContain(
+      '@typedef {object} ExecutionEntityManagerLike'
+    );
     expect(fileContent).toContain(
       '@typedef {object} ExecutionValidatedEventDispatcher'
     );
-    expect(fileContent).toContain('@typedef {object} ExecutionGameDataRepository');
-    expect(fileContent).not.toContain("import('../../entities/entityManager.js')");
-    expect(fileContent).not.toContain("import('../../events/validatedEventDispatcher.js')");
-    expect(fileContent).not.toContain("import('../../data/gameDataRepository.js')");
+    expect(fileContent).toContain(
+      '@typedef {object} ExecutionGameDataRepository'
+    );
+    expect(fileContent).not.toContain(
+      "import('../../entities/entityManager.js')"
+    );
+    expect(fileContent).not.toContain(
+      "import('../../events/validatedEventDispatcher.js')"
+    );
+    expect(fileContent).not.toContain(
+      "import('../../data/gameDataRepository.js')"
+    );
   });
 
   it('should contain export statement', () => {

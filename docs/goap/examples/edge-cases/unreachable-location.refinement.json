@@ -8,8 +8,8 @@
     "description": "Actor can move and target location exists",
     "condition": {
       "and": [
-        {"has_component": ["actor", "positioning:can_move"]},
-        {"has_component": ["task.params.location", "positioning:location"]}
+        { "has_component": ["actor", "positioning:can_move"] },
+        { "has_component": ["task.params.location", "positioning:location"] }
       ]
     }
   },
@@ -22,14 +22,14 @@
         "and": [
           {
             "has_component": [
-              {"var": "task.params.location"},
+              { "var": "task.params.location" },
               "positioning:accessible"
             ]
           },
           {
             "not": {
               "has_component": [
-                {"var": "task.params.location"},
+                { "var": "task.params.location" },
                 "positioning:blocked"
               ]
             }
@@ -37,7 +37,7 @@
           {
             "not": {
               "has_component": [
-                {"var": "task.params.location"},
+                { "var": "task.params.location" },
                 "positioning:out_of_bounds"
               ]
             }
@@ -58,7 +58,7 @@
           "description": "Validate movement succeeded",
           "stepType": "conditional",
           "condition": {
-            "==": [{"var": "refinement.localState.moveResult.success"}, true]
+            "==": [{ "var": "refinement.localState.moveResult.success" }, true]
           },
           "thenSteps": [
             {
@@ -101,7 +101,7 @@
           {
             "stepType": "primitive_action",
             "actionId": "positioning:move_to",
-            "targetBindings": {"target": "task.params.location"}
+            "targetBindings": { "target": "task.params.location" }
           }
         ]
       },
@@ -112,7 +112,9 @@
       "cause": "Task planning preconditions don't filter out inaccessible locations",
       "wrongCode": {
         "planningPreconditions": [
-          {"condition": {"has_component": ["target", "positioning:location"]}}
+          {
+            "condition": { "has_component": ["target", "positioning:location"] }
+          }
         ]
       },
       "fix": "Add accessibility check in task planningPreconditions"
@@ -138,8 +140,10 @@
       "description": "Check if location is within movement range",
       "pattern": {
         "<=": [
-          {"var": "task.params.location.components.positioning:location.distance"},
-          {"var": "actor.components.positioning:movement_range.maxDistance"}
+          {
+            "var": "task.params.location.components.positioning:location.distance"
+          },
+          { "var": "actor.components.positioning:movement_range.maxDistance" }
         ]
       }
     },
@@ -147,7 +151,7 @@
       "description": "Validate path to location exists",
       "pattern": {
         "has_component": [
-          {"var": "task.params.location"},
+          { "var": "task.params.location" },
           "positioning:path_to_actor"
         ]
       }
@@ -160,8 +164,14 @@
       "description": "Target location must be accessible",
       "condition": {
         "and": [
-          {"has_component": ["task.params.location", "positioning:accessible"]},
-          {"not": {"has_component": ["task.params.location", "positioning:blocked"]}}
+          {
+            "has_component": ["task.params.location", "positioning:accessible"]
+          },
+          {
+            "not": {
+              "has_component": ["task.params.location", "positioning:blocked"]
+            }
+          }
         ]
       }
     },

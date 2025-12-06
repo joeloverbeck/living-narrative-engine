@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "head_gear"
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "iron"
@@ -31,9 +29,7 @@
       "texture": "rough"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "head_gear"
-      ],
+      "covers": ["head_gear"],
       "coveragePriority": "accessories"
     },
     "items:item": {},

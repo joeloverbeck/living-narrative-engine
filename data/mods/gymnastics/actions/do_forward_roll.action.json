@@ -5,9 +5,7 @@
   "description": "Tuck tightly and roll forward along the spine for a smooth transition",
   "targets": "none",
   "required_components": {
-    "actor": [
-      "gymnastics:is_gymnast"
-    ]
+    "actor": ["gymnastics:is_gymnast"]
   },
   "forbidden_components": {
     "actor": [

@@ -102,8 +102,13 @@ describe('TargetResolutionService real-flow integration', () => {
 
     expect(result.success).toBe(true);
     expect(result.value).toHaveLength(2);
-    expect(result.value.map((ctx) => ctx.entityId)).toEqual(['chair-1', 'chair-2']);
-    expect(result.value.every((ctx) => ctx instanceof ActionTargetContext)).toBe(true);
+    expect(result.value.map((ctx) => ctx.entityId)).toEqual([
+      'chair-1',
+      'chair-2',
+    ]);
+    expect(
+      result.value.every((ctx) => ctx instanceof ActionTargetContext)
+    ).toBe(true);
 
     expect(trace.spans).toHaveLength(1);
     expect(trace.spans[0]).toMatchObject({
@@ -132,19 +137,27 @@ describe('TargetResolutionService real-flow integration', () => {
     ).toBe(true);
     expect(
       debugMessages.some((msg) =>
-        msg.includes('TargetResolutionService: Context built for UnifiedScopeResolver')
+        msg.includes(
+          'TargetResolutionService: Context built for UnifiedScopeResolver'
+        )
       )
     ).toBe(true);
     expect(
       debugMessages.some((msg) =>
-        msg.includes('TargetResolutionService: UnifiedScopeResolver result for sit_down')
+        msg.includes(
+          'TargetResolutionService: UnifiedScopeResolver result for sit_down'
+        )
       )
     ).toBe(true);
 
-    expect(trace.logs.some((entry) => entry.message.includes('Delegating scope'))).toBe(true);
+    expect(
+      trace.logs.some((entry) => entry.message.includes('Delegating scope'))
+    ).toBe(true);
     expect(
       trace.logs.some((entry) =>
-        entry.message.includes("Scope 'positioning:available_furniture' resolved to 2 target(s).")
+        entry.message.includes(
+          "Scope 'positioning:available_furniture' resolved to 2 target(s)."
+        )
       )
     ).toBe(true);
   });
@@ -162,7 +175,12 @@ describe('TargetResolutionService real-flow integration', () => {
       serviceSetup: new ServiceSetup(),
     });
 
-    const result = service.resolveTargets('none', { id: 'actor-99' }, { currentLocation: 'atrium' }, trace);
+    const result = service.resolveTargets(
+      'none',
+      { id: 'actor-99' },
+      { currentLocation: 'atrium' },
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value).toHaveLength(1);
@@ -171,7 +189,9 @@ describe('TargetResolutionService real-flow integration', () => {
 
     expect(
       trace.logs.some((entry) =>
-        entry.message.includes("Scope 'none' resolved to no targets - returning noTarget context.")
+        entry.message.includes(
+          "Scope 'none' resolved to no targets - returning noTarget context."
+        )
       )
     ).toBe(true);
   });

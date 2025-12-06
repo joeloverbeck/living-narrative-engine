@@ -56,7 +56,12 @@ describe('main.js bootstrap extended coverage', () => {
       titleElement: document.querySelector('h1'),
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     // Create mock container with resolve method for entity cache invalidation
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
@@ -117,7 +122,12 @@ describe('main.js bootstrap extended coverage', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };

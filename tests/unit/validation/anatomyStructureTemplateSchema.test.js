@@ -9,7 +9,8 @@ import createTestAjv from '../../common/validation/createTestAjv.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import structureTemplateSchema from '../../../data/schemas/anatomy.structure-template.schema.json';
 
-const SCHEMA_ID = 'schema://living-narrative-engine/anatomy.structure-template.schema.json';
+const SCHEMA_ID =
+  'schema://living-narrative-engine/anatomy.structure-template.schema.json';
 
 describe('Anatomy Structure Template Schema - Valid Templates', () => {
   let testBed;

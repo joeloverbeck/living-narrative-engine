@@ -7,25 +7,15 @@
       "layer": "armor",
       "equipmentSlots": {
         "primary": "left_arm_clothing",
-        "secondary": [
-          "right_arm_clothing"
-        ]
+        "secondary": ["right_arm_clothing"]
       },
-      "allowedLayers": [
-        "base",
-        "armor",
-        "outer"
-      ]
+      "allowedLayers": ["base", "armor", "outer"]
     },
     "core:material": {
       "material": "leather",
       "durability": 60,
-      "properties": [
-        "flexible"
-      ],
-      "careInstructions": [
-        "requires_oiling"
-      ]
+      "properties": ["flexible"],
+      "careInstructions": ["requires_oiling"]
     },
     "core:name": {
       "text": "bracers"
@@ -40,10 +30,7 @@
       "texture": "rugged"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "left_arm_clothing",
-        "right_arm_clothing"
-      ],
+      "covers": ["left_arm_clothing", "right_arm_clothing"],
       "coveragePriority": "armor"
     },
     "items:item": {},

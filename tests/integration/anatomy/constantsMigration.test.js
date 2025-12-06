@@ -40,7 +40,9 @@ describe('Body Descriptor Constants Migration - Integration', () => {
     it('should work with getAllDescriptorNames', () => {
       const registryNames = getAllDescriptorNames();
 
-      expect(SUPPORTED_DESCRIPTOR_PROPERTIES.sort()).toEqual(registryNames.sort());
+      expect(SUPPORTED_DESCRIPTOR_PROPERTIES.sort()).toEqual(
+        registryNames.sort()
+      );
     });
 
     it('should validate all constant values against registry', () => {
@@ -110,7 +112,9 @@ describe('Body Descriptor Constants Migration - Integration', () => {
 
         expect(typeof metadata.label).toBe('string');
         expect(typeof metadata.description).toBe('string');
-        expect(metadata.validValues === null || Array.isArray(metadata.validValues)).toBe(true);
+        expect(
+          metadata.validValues === null || Array.isArray(metadata.validValues)
+        ).toBe(true);
       });
     });
   });
@@ -142,11 +146,16 @@ describe('Body Descriptor Constants Migration - Integration', () => {
     });
 
     it('should validate descriptor values correctly', () => {
-      const { build, hairDensity, composition, height } = testBodyComponent.body.descriptors;
+      const { build, hairDensity, composition, height } =
+        testBodyComponent.body.descriptors;
 
       expect(validateDescriptorValue('build', build).valid).toBe(true);
-      expect(validateDescriptorValue('hairDensity', hairDensity).valid).toBe(true);
-      expect(validateDescriptorValue('composition', composition).valid).toBe(true);
+      expect(validateDescriptorValue('hairDensity', hairDensity).valid).toBe(
+        true
+      );
+      expect(validateDescriptorValue('composition', composition).valid).toBe(
+        true
+      );
       expect(validateDescriptorValue('height', height).valid).toBe(true);
     });
 
@@ -184,16 +193,24 @@ describe('Body Descriptor Constants Migration - Integration', () => {
     });
 
     it('should have matching labels', () => {
-      expect(DESCRIPTOR_METADATA.build.label).toBe(DIRECT_REGISTRY.build.displayLabel);
+      expect(DESCRIPTOR_METADATA.build.label).toBe(
+        DIRECT_REGISTRY.build.displayLabel
+      );
       expect(DESCRIPTOR_METADATA.hairDensity.label).toBe(
         DIRECT_REGISTRY.hairDensity.displayLabel
       );
       expect(DESCRIPTOR_METADATA.composition.label).toBe(
         DIRECT_REGISTRY.composition.displayLabel
       );
-      expect(DESCRIPTOR_METADATA.height.label).toBe(DIRECT_REGISTRY.height.displayLabel);
-      expect(DESCRIPTOR_METADATA.skinColor.label).toBe(DIRECT_REGISTRY.skinColor.displayLabel);
-      expect(DESCRIPTOR_METADATA.smell.label).toBe(DIRECT_REGISTRY.smell.displayLabel);
+      expect(DESCRIPTOR_METADATA.height.label).toBe(
+        DIRECT_REGISTRY.height.displayLabel
+      );
+      expect(DESCRIPTOR_METADATA.skinColor.label).toBe(
+        DIRECT_REGISTRY.skinColor.displayLabel
+      );
+      expect(DESCRIPTOR_METADATA.smell.label).toBe(
+        DIRECT_REGISTRY.smell.displayLabel
+      );
     });
 
     it('should handle null validValues (free-form descriptors)', () => {
@@ -205,7 +222,9 @@ describe('Body Descriptor Constants Migration - Integration', () => {
       expect(DESCRIPTOR_METADATA.skinColor.validValues).toBe(
         DIRECT_REGISTRY.skinColor.validValues
       );
-      expect(DESCRIPTOR_METADATA.smell.validValues).toBe(DIRECT_REGISTRY.smell.validValues);
+      expect(DESCRIPTOR_METADATA.smell.validValues).toBe(
+        DIRECT_REGISTRY.smell.validValues
+      );
     });
   });
 
@@ -297,7 +316,9 @@ describe('Body Descriptor Constants Migration - Integration', () => {
       expect(HEIGHT_CATEGORIES.VERY_TALL).toBe('very-tall');
 
       // Should validate correctly
-      expect(validateDescriptorValue('hairDensity', 'very-hairy').valid).toBe(true);
+      expect(validateDescriptorValue('hairDensity', 'very-hairy').valid).toBe(
+        true
+      );
       expect(validateDescriptorValue('height', 'very-tall').valid).toBe(true);
     });
   });

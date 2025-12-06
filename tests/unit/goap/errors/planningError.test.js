@@ -48,7 +48,7 @@ describe('PlanningError', () => {
         goalId: 'reduce_hunger',
         actorId: 'actor-123',
         worldState: { hunger: 80, hasFood: false },
-        reason: 'No path to goal state'
+        reason: 'No path to goal state',
       };
       const error = new PlanningError('Planning failed', context);
       expect(error.message).toBe('Planning failed');
@@ -93,7 +93,7 @@ describe('PlanningError', () => {
         goalId: 'reduce_hunger',
         actorId: 'actor-123',
         worldState: { hunger: 80 },
-        reason: 'No path to goal'
+        reason: 'No path to goal',
       };
       const error = new PlanningError('Planning failed', context);
       expect(error.context).toEqual(context);
@@ -119,7 +119,7 @@ describe('PlanningError', () => {
       const context = {
         goalId: 'reduce_hunger',
         actorId: 'actor-123',
-        reason: 'No path to goal'
+        reason: 'No path to goal',
       };
       const error = new PlanningError('Planning failed', context);
       const json = error.toJSON();
@@ -155,7 +155,9 @@ describe('PlanningError', () => {
     it('should have ISO format timestamp', () => {
       const error = new PlanningError('Planning failed');
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should generate correlation ID automatically', () => {
@@ -178,7 +180,7 @@ describe('PlanningError', () => {
         goalId: 'reduce_hunger',
         actorId: 'actor-player',
         worldState: { hunger: 90, hasFood: false, inKitchen: false },
-        reason: 'No path from current state to goal state'
+        reason: 'No path from current state to goal state',
       };
       const error = new PlanningError(
         'Cannot plan for goal "reduce_hunger": No path to goal state',
@@ -196,7 +198,7 @@ describe('PlanningError', () => {
         goalId: 'open_locked_door',
         actorId: 'actor-npc-01',
         worldState: { hasKey: false, doorLocked: true },
-        reason: 'No applicable actions available'
+        reason: 'No applicable actions available',
       };
       const error = new PlanningError(
         'Failed to plan for goal "open_locked_door": No applicable actions',
@@ -213,14 +215,16 @@ describe('PlanningError', () => {
         goalId: 'craft_item',
         actorId: 'actor-player',
         worldState: { materials: 0, toolAvailable: false },
-        reason: 'Insufficient resources to achieve goal'
+        reason: 'Insufficient resources to achieve goal',
       };
       const error = new PlanningError(
         'Cannot plan for "craft_item": Insufficient resources',
         context
       );
 
-      expect(error.context.reason).toBe('Insufficient resources to achieve goal');
+      expect(error.context.reason).toBe(
+        'Insufficient resources to achieve goal'
+      );
       expect(error.code).toBe('GOAP_PLANNING_ERROR');
     });
 
@@ -229,7 +233,7 @@ describe('PlanningError', () => {
         goalId: 'be_in_kitchen',
         actorId: 'actor-player',
         worldState: { inKitchen: true },
-        reason: 'Goal state already satisfied'
+        reason: 'Goal state already satisfied',
       };
       const error = new PlanningError(
         'Planning unnecessary for "be_in_kitchen": Already satisfied',
@@ -249,9 +253,9 @@ describe('PlanningError', () => {
           itemsCollected: 2,
           requiredItems: 5,
           bossDefeated: false,
-          hasWeapon: true
+          hasWeapon: true,
         },
-        reason: 'Missing quest items and boss not defeated'
+        reason: 'Missing quest items and boss not defeated',
       };
       const error = new PlanningError(
         'Cannot complete quest: Missing preconditions',

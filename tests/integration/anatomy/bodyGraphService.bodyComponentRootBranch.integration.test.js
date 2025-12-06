@@ -75,7 +75,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -128,7 +129,9 @@ async function createFixture() {
     parentId: blueprintIds.root,
     socketId: 'core',
   });
-  entityManager.addComponent(blueprintIds.leg, 'anatomy:part', { subType: 'leg' });
+  entityManager.addComponent(blueprintIds.leg, 'anatomy:part', {
+    subType: 'leg',
+  });
   entityManager.addComponent(blueprintIds.leg, 'anatomy:joint', {
     parentId: blueprintIds.torso,
     socketId: 'left-hip',
@@ -139,7 +142,9 @@ async function createFixture() {
     body: { root: actorIds.torso },
     structure: { rootPartId: actorIds.torso },
   });
-  entityManager.addComponent(actorIds.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(actorIds.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(actorIds.torso, 'anatomy:joint', {
     parentId: actorIds.actor,
     socketId: 'core',
@@ -191,7 +196,7 @@ describe('BodyGraphService integration – bodyComponent.root branch coverage', 
     const actorParts = service.getAllParts(blueprintStructure, actorId);
     expect(new Set(actorParts)).toEqual(new Set(actorPartIds));
     expect(
-      logger.info.mock.calls.some(([message]) =>
+      logger.debug.mock.calls.some(([message]) =>
         message.startsWith(
           `BodyGraphService.getAllParts: Actor '${actorId}' -> Using actor as cache root (blueprint root was '${blueprintStructure.root}'`
         )

@@ -46,7 +46,10 @@ describe('traceRoutes path guard integration', () => {
       });
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ success: false, error: 'Invalid output path' });
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Invalid output path',
+    });
 
     expect(consoleErrorSpy).toHaveBeenCalled();
     const loggedMessage = consoleErrorSpy.mock.calls
@@ -54,11 +57,15 @@ describe('traceRoutes path guard integration', () => {
       .find(
         (message) =>
           typeof message === 'string' &&
-          message.includes('Attempted to write trace batch outside project directory')
+          message.includes(
+            'Attempted to write trace batch outside project directory'
+          )
       );
     expect(loggedMessage).toBeDefined();
     expect(loggedMessage).toContain(`"outputDirectory": "${outsideDirectory}"`);
-    expect(loggedMessage).toContain(`"resolvedDirectory": "${path.resolve(projectRoot, outsideDirectory)}"`);
+    expect(loggedMessage).toContain(
+      `"resolvedDirectory": "${path.resolve(projectRoot, outsideDirectory)}"`
+    );
     expect(loggedMessage).toContain(`"projectRoot": "${projectRoot}"`);
   });
 
@@ -76,7 +83,10 @@ describe('traceRoutes path guard integration', () => {
       });
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ success: false, error: 'Invalid output path' });
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Invalid output path',
+    });
 
     expect(consoleErrorSpy).toHaveBeenCalled();
     const loggedMessage = consoleErrorSpy.mock.calls
@@ -84,11 +94,17 @@ describe('traceRoutes path guard integration', () => {
       .find(
         (message) =>
           typeof message === 'string' &&
-          message.includes('Attempted to write trace batch outside project directory')
+          message.includes(
+            'Attempted to write trace batch outside project directory'
+          )
       );
     expect(loggedMessage).toBeDefined();
-    expect(loggedMessage).toContain(`"outputDirectory": "${absoluteDirectory}"`);
-    expect(loggedMessage).toContain(`"resolvedDirectory": "${path.resolve(projectRoot, absoluteDirectory)}"`);
+    expect(loggedMessage).toContain(
+      `"outputDirectory": "${absoluteDirectory}"`
+    );
+    expect(loggedMessage).toContain(
+      `"resolvedDirectory": "${path.resolve(projectRoot, absoluteDirectory)}"`
+    );
     expect(loggedMessage).toContain(`"projectRoot": "${projectRoot}"`);
   });
 });

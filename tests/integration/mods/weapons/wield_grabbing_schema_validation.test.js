@@ -46,8 +46,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: 2,
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -67,8 +67,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: '{event.payload.actorId}',
           count: '{context.targetGrabbingReqs.handsRequired}',
-          item_id: '{event.payload.targetId}'
-        }
+          item_id: '{event.payload.targetId}',
+        },
       };
 
       // Act
@@ -88,8 +88,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: 'two', // Invalid: plain string, not template
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -109,8 +109,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: 0, // Invalid: must be ≥1
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -130,8 +130,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: -1, // Invalid: must be positive
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -143,7 +143,6 @@ describe('Grabbing Operation Schema Validation', () => {
       // Assert
       expect(isValid).toBe(false);
     });
-
   });
 
   describe('UNLOCK_GRABBING Operation', () => {
@@ -171,8 +170,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: 1,
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -192,8 +191,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: '{event.payload.actorId}',
           count: '{context.targetGrabbingReqs.handsRequired}',
-          item_id: '{event.payload.targetId}'
-        }
+          item_id: '{event.payload.targetId}',
+        },
       };
 
       // Act
@@ -213,8 +212,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: 'two', // Invalid: plain string, not template
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -234,8 +233,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: 0, // Invalid: must be ≥1
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -255,8 +254,8 @@ describe('Grabbing Operation Schema Validation', () => {
         parameters: {
           actor_id: 'test-actor',
           count: -1, // Invalid: must be positive
-          item_id: 'test-item'
-        }
+          item_id: 'test-item',
+        },
       };
 
       // Act
@@ -268,6 +267,5 @@ describe('Grabbing Operation Schema Validation', () => {
       // Assert
       expect(isValid).toBe(false);
     });
-
   });
 });

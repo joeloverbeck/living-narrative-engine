@@ -2,7 +2,10 @@ import { describe, it, expect } from '@jest/globals';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
-import { ERROR_PHASES, FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  ERROR_PHASES,
+  FIX_TYPES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import { TestDataFactory } from '../../../common/actions/testDataFactory.js';
 

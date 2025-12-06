@@ -111,7 +111,7 @@ describe('BodyDescriptionComposer - Inventory', () => {
 
     expect(description).toBe('');
   });
-  
+
   it('should return empty string if no inventory component', async () => {
     const actor = {
       id: 'actor1',

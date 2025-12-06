@@ -269,7 +269,8 @@ const loadServer = async () => {
   await new Promise((r) => setTimeout(r, 0));
 };
 
-const getRootHandler = () => serverController.app.get.mock.calls.find((c) => c[0] === '/')[1];
+const getRootHandler = () =>
+  serverController.app.get.mock.calls.find((c) => c[0] === '/')[1];
 
 describe('server initialization', () => {
   test('sets up CORS and JSON parsing when allowed origins provided', async () => {
@@ -323,31 +324,28 @@ describe('server initialization', () => {
     );
   });
 
-  test(
-    'root route returns generic 503 when not operational and no error details',
-    async () => {
-      operational = false;
-      initializationErrorDetails = null;
-      await loadServer();
+  test('root route returns generic 503 when not operational and no error details', async () => {
+    operational = false;
+    initializationErrorDetails = null;
+    await loadServer();
 
-      const req = {};
-      const res = { status: jest.fn(() => res), send: jest.fn() };
-      const handler = getRootHandler();
+    const req = {};
+    const res = { status: jest.fn(() => res), send: jest.fn() };
+    const handler = getRootHandler();
 
-      sendProxyError.mockClear();
-      handler(req, res);
+    sendProxyError.mockClear();
+    handler(req, res);
 
-      expect(sendProxyError).toHaveBeenCalledWith(
-        res,
-        503,
-        'initialization_failure_unknown',
-        'LLM Proxy Server is NOT OPERATIONAL due to unknown configuration issues.',
-        {},
-        LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
-        expect.anything()
-      );
-    }
-  );
+    expect(sendProxyError).toHaveBeenCalledWith(
+      res,
+      503,
+      'initialization_failure_unknown',
+      'LLM Proxy Server is NOT OPERATIONAL due to unknown configuration issues.',
+      {},
+      LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
+      expect.anything()
+    );
+  });
 
   test('llm request route wired to controller', async () => {
     await loadServer();

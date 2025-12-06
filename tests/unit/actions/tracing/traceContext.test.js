@@ -46,7 +46,12 @@ describe('TraceContext', () => {
 
     it('omits data property when value is null or undefined', () => {
       traceContext.addLog(TRACE_SUCCESS, 'null data', 'NullSource', null);
-      traceContext.addLog(TRACE_SUCCESS, 'undefined data', 'UndefinedSource', undefined);
+      traceContext.addLog(
+        TRACE_SUCCESS,
+        'undefined data',
+        'UndefinedSource',
+        undefined
+      );
 
       expect(traceContext.logs).toHaveLength(2);
       expect(traceContext.logs[0]).toEqual({
@@ -82,7 +87,9 @@ describe('TraceContext', () => {
         TRACE_ERROR,
         TRACE_DATA,
       ]);
-      expect(traceContext.logs.every((entry) => entry.data === undefined)).toBe(true);
+      expect(traceContext.logs.every((entry) => entry.data === undefined)).toBe(
+        true
+      );
     });
 
     it('records payload when provided explicitly', () => {
@@ -127,7 +134,11 @@ describe('TraceContext', () => {
 
     it('filters out non operator entries in getOperatorEvaluations', () => {
       traceContext.addLog(TRACE_INFO, 'regular info', 'Info');
-      traceContext.captureOperatorEvaluation({ operator: 'test', entityId: '1', result: false });
+      traceContext.captureOperatorEvaluation({
+        operator: 'test',
+        entityId: '1',
+        result: false,
+      });
       traceContext.addLog(TRACE_DATA, 'Other data', 'Misc', { type: 'other' });
 
       const evaluations = traceContext.getOperatorEvaluations();
@@ -169,7 +180,11 @@ describe('TraceContext', () => {
         candidateEntities: [],
         resolvedEntities: [],
       });
-      traceContext.captureOperatorEvaluation({ operator: 'other', entityId: 'x', result: true });
+      traceContext.captureOperatorEvaluation({
+        operator: 'other',
+        entityId: 'x',
+        result: true,
+      });
 
       const scopeEvaluations = traceContext.getScopeEvaluations();
       expect(scopeEvaluations).toHaveLength(1);

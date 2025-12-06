@@ -193,7 +193,8 @@ export class BodyBlueprintFactory {
 
       // Phase 4: Create root entity
       // Extract componentOverrides from recipe's root slot if present
-      const rootComponentOverrides = resolvedRecipe.slots?.root?.properties || {};
+      const rootComponentOverrides =
+        resolvedRecipe.slots?.root?.properties || {};
 
       const rootId = await this.#entityGraphBuilder.createRootEntity(
         blueprint.root,
@@ -204,9 +205,15 @@ export class BodyBlueprintFactory {
       context.setRootId(rootId);
 
       // Phase 5: Add generated sockets to root entity (V2 blueprints)
-      if (blueprint._generatedSockets && blueprint._generatedSockets.length > 0) {
+      if (
+        blueprint._generatedSockets &&
+        blueprint._generatedSockets.length > 0
+      ) {
         // Get existing sockets from entity definition (if any)
-        const existingSockets = this.#entityManager.getComponentData(rootId, 'anatomy:sockets');
+        const existingSockets = this.#entityManager.getComponentData(
+          rootId,
+          'anatomy:sockets'
+        );
         const existingSocketList = existingSockets?.sockets || [];
 
         // Merge template sockets with entity definition sockets
@@ -236,24 +243,41 @@ export class BodyBlueprintFactory {
 
       // Phase 6: Process blueprint slots (uses slotResolutionOrchestrator module)
       if (blueprint.slots) {
-        console.log('[DEBUG] BodyBlueprintFactory: Phase 2 - Processing blueprint slots');
-        console.log('[DEBUG]   blueprint.slots keys:', Object.keys(blueprint.slots));
-        console.log('[DEBUG]   resolvedRecipe.slots keys:', Object.keys(resolvedRecipe.slots || {}));
+        console.log(
+          '[DEBUG] BodyBlueprintFactory: Phase 2 - Processing blueprint slots'
+        );
+        console.log(
+          '[DEBUG]   blueprint.slots keys:',
+          Object.keys(blueprint.slots)
+        );
+        console.log(
+          '[DEBUG]   resolvedRecipe.slots keys:',
+          Object.keys(resolvedRecipe.slots || {})
+        );
         this.#logger.debug(
           `BodyBlueprintFactory: Processing ${Object.keys(blueprint.slots).length} blueprint slots`
         );
 
-        await processBlueprintSlots(blueprint, resolvedRecipe, context, options.ownerId, {
-          entityGraphBuilder: this.#entityGraphBuilder,
-          partSelectionService: this.#partSelectionService,
-          socketManager: this.#socketManager,
-          recipeProcessor: this.#recipeProcessor,
-          eventDispatchService: this.#eventDispatchService,
-          logger: this.#logger,
-          dataRegistry: this.#dataRegistry,
-        });
+        await processBlueprintSlots(
+          blueprint,
+          resolvedRecipe,
+          context,
+          options.ownerId,
+          {
+            entityGraphBuilder: this.#entityGraphBuilder,
+            partSelectionService: this.#partSelectionService,
+            socketManager: this.#socketManager,
+            recipeProcessor: this.#recipeProcessor,
+            eventDispatchService: this.#eventDispatchService,
+            logger: this.#logger,
+            dataRegistry: this.#dataRegistry,
+          }
+        );
       } else {
-        console.log('[DEBUG] BodyBlueprintFactory: Phase 2 - SKIPPED (blueprint.slots is falsy)', blueprint.slots);
+        console.log(
+          '[DEBUG] BodyBlueprintFactory: Phase 2 - SKIPPED (blueprint.slots is falsy)',
+          blueprint.slots
+        );
       }
 
       // Phase 7: Validate constraints

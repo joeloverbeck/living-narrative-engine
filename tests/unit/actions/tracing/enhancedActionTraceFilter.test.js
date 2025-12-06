@@ -356,7 +356,9 @@ describe('EnhancedActionTraceFilter', () => {
       filter.optimizeCache(500);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Removed 1 expired entries from enhanced filter cache')
+        expect.stringContaining(
+          'Removed 1 expired entries from enhanced filter cache'
+        )
       );
 
       nowSpy.mockRestore();

@@ -29,8 +29,8 @@ describe('CacheService advanced maintenance integration', () => {
     expect(removedCount).toBe(2);
     expect(infoSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'CacheService: Invalidated 2 cache entries matching pattern /^user:/, freed',
-      ),
+        'CacheService: Invalidated 2 cache entries matching pattern /^user:/, freed'
+      )
     );
 
     infoSpy.mockRestore();
@@ -54,7 +54,7 @@ describe('CacheService advanced maintenance integration', () => {
     expect(cache.get('gamma')).toBe('C');
 
     expect(debugSpy).toHaveBeenCalledWith(
-      "CacheService: Evicted LRU entry with key 'alpha'",
+      "CacheService: Evicted LRU entry with key 'alpha'"
     );
 
     debugSpy.mockRestore();
@@ -83,7 +83,9 @@ describe('CacheService advanced maintenance integration', () => {
       expect(stats.efficiency.autoCleanupCount).toBe(1);
 
       expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('CacheService: Auto cleanup removed 1 expired entries'),
+        expect.stringContaining(
+          'CacheService: Auto cleanup removed 1 expired entries'
+        )
       );
     } finally {
       debugSpy.mockRestore();

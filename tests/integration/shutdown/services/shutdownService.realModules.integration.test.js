@@ -113,20 +113,19 @@ class TestShutdownableSystem {
  * @param root0.turnManager
  * @param root0.systems
  */
-function registerCommonDependencies(container, { logger, turnManager, systems }) {
+function registerCommonDependencies(
+  container,
+  { logger, turnManager, systems }
+) {
   container.register('ILogger', logger, { lifecycle: 'singleton' });
   container.register(tokens.ITurnManager, () => turnManager, {
     lifecycle: 'singleton',
   });
   systems.forEach((system, index) => {
-    container.register(
-      `shutdownable-system-${index}`,
-      () => system,
-      {
-        lifecycle: 'singleton',
-        tags: SHUTDOWNABLE,
-      }
-    );
+    container.register(`shutdownable-system-${index}`, () => system, {
+      lifecycle: 'singleton',
+      tags: SHUTDOWNABLE,
+    });
   });
 }
 
@@ -153,9 +152,9 @@ describe('ShutdownService real module integration', () => {
 
     await shutdownService.runShutdownSequence();
 
-    expect(logger.hasErrorContaining('Failed to dispatch shutdown start UI event.')).toBe(
-      true
-    );
+    expect(
+      logger.hasErrorContaining('Failed to dispatch shutdown start UI event.')
+    ).toBe(true);
     expect(turnManager.stopCount).toBe(1);
     systems.forEach((system) => {
       expect(system.shutdownCount).toBe(1);
@@ -190,9 +189,11 @@ describe('ShutdownService real module integration', () => {
 
     await shutdownService.runShutdownSequence();
 
-    expect(logger.hasWarningContaining('Container does not have a disposeSingletons method')).toBe(
-      true
-    );
+    expect(
+      logger.hasWarningContaining(
+        'Container does not have a disposeSingletons method'
+      )
+    ).toBe(true);
     expect(container.disposeCallCount).toBe(0);
     expect(dispatcher.getEventNames()).toContain(
       'shutdown:shutdown_service:completed'

@@ -233,9 +233,11 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should NOT trigger dismemberment when part has anatomy:embedded component', async () => {
-        mockEntityManager.hasComponent.mockImplementation((partId, componentId) => {
-          return componentId === 'anatomy:embedded';
-        });
+        mockEntityManager.hasComponent.mockImplementation(
+          (partId, componentId) => {
+            return componentId === 'anatomy:embedded';
+          }
+        );
 
         await service.applyEffectsForDamage({
           ...baseParams,
@@ -262,9 +264,11 @@ describe('DamageTypeEffectsService', () => {
       });
 
       it('should still apply other effects (bleed) to embedded parts that cannot be dismembered', async () => {
-        mockEntityManager.hasComponent.mockImplementation((partId, componentId) => {
-          return componentId === 'anatomy:embedded';
-        });
+        mockEntityManager.hasComponent.mockImplementation(
+          (partId, componentId) => {
+            return componentId === 'anatomy:embedded';
+          }
+        );
 
         await service.applyEffectsForDamage({
           ...baseParams,
@@ -327,7 +331,11 @@ describe('DamageTypeEffectsService', () => {
           damageEntry: {
             name: 'blunt',
             amount: 55,
-            fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
+            fracture: {
+              enabled: true,
+              thresholdFraction: 0.5,
+              stunChance: 0.5,
+            },
           },
         });
 
@@ -353,7 +361,11 @@ describe('DamageTypeEffectsService', () => {
           damageEntry: {
             name: 'blunt',
             amount: 55,
-            fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
+            fracture: {
+              enabled: true,
+              thresholdFraction: 0.5,
+              stunChance: 0.5,
+            },
           },
         });
 
@@ -377,7 +389,11 @@ describe('DamageTypeEffectsService', () => {
           damageEntry: {
             name: 'blunt',
             amount: 55,
-            fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
+            fracture: {
+              enabled: true,
+              thresholdFraction: 0.5,
+              stunChance: 0.5,
+            },
           },
           rng: overrideRng,
         });
@@ -432,7 +448,11 @@ describe('DamageTypeEffectsService', () => {
           damageEntry: {
             name: 'slashing',
             amount: 30,
-            bleed: { enabled: true, severity: 'moderate', baseDurationTurns: 3 },
+            bleed: {
+              enabled: true,
+              severity: 'moderate',
+              baseDurationTurns: 3,
+            },
           },
         });
 
@@ -685,7 +705,12 @@ describe('DamageTypeEffectsService', () => {
           damageEntry: {
             name: 'venom',
             amount: 30,
-            poison: { enabled: true, tick: 2, durationTurns: 5, scope: 'entity' },
+            poison: {
+              enabled: true,
+              tick: 2,
+              durationTurns: 5,
+              scope: 'entity',
+            },
           },
         });
 

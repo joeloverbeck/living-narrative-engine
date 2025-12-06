@@ -8,7 +8,17 @@
       "texture": {
         "type": "string",
         "description": "The surface texture",
-        "enum": ["bumpy", "chitinous", "coarse", "smooth", "rough", "scaly", "slimy", "soft", "sticky"],
+        "enum": [
+          "bumpy",
+          "chitinous",
+          "coarse",
+          "smooth",
+          "rough",
+          "scaly",
+          "slimy",
+          "soft",
+          "sticky"
+        ],
         "default": "smooth"
       }
     },

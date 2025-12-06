@@ -6,7 +6,10 @@ import DirectSocketStrategy from '../../../../src/anatomy/integration/strategies
 import ClothingSlotMappingStrategy from '../../../../src/anatomy/integration/strategies/ClothingSlotMappingStrategy.js';
 import { CacheKeyTypes } from '../../../../src/anatomy/cache/AnatomyClothingCache.js';
 import { ensureValidLogger } from '../../../../src/utils/loggerUtils.js';
-import { assertPresent, validateDependency } from '../../../../src/utils/dependencyUtils.js';
+import {
+  assertPresent,
+  validateDependency,
+} from '../../../../src/utils/dependencyUtils.js';
 
 jest.mock('../../../../src/utils/dependencyUtils.js', () => ({
   validateDependency: jest.fn(),
@@ -22,33 +25,45 @@ jest.mock('../../../../src/utils/loggerUtils.js', () => ({
 }));
 
 jest.mock('../../../../src/anatomy/cache/AnatomyClothingCache.js', () => {
-  const mockCreateSlotResolutionKey = jest.fn((entityId, slotId) => `${entityId}:${slotId}`);
+  const mockCreateSlotResolutionKey = jest.fn(
+    (entityId, slotId) => `${entityId}:${slotId}`
+  );
   return {
     __esModule: true,
     CacheKeyTypes: { SLOT_RESOLUTION: 'slot_resolution' },
-    AnatomyClothingCache: { createSlotResolutionKey: mockCreateSlotResolutionKey },
+    AnatomyClothingCache: {
+      createSlotResolutionKey: mockCreateSlotResolutionKey,
+    },
     __mockCreateSlotResolutionKey: mockCreateSlotResolutionKey,
   };
 });
 
-const { __mockCreateSlotResolutionKey: mockCreateSlotResolutionKey } = jest.requireMock(
-  '../../../../src/anatomy/cache/AnatomyClothingCache.js'
+const { __mockCreateSlotResolutionKey: mockCreateSlotResolutionKey } =
+  jest.requireMock('../../../../src/anatomy/cache/AnatomyClothingCache.js');
+
+jest.mock(
+  '../../../../src/anatomy/integration/strategies/BlueprintSlotStrategy.js',
+  () => ({
+    __esModule: true,
+    default: jest.fn(),
+  })
 );
 
-jest.mock('../../../../src/anatomy/integration/strategies/BlueprintSlotStrategy.js', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/anatomy/integration/strategies/DirectSocketStrategy.js',
+  () => ({
+    __esModule: true,
+    default: jest.fn(),
+  })
+);
 
-jest.mock('../../../../src/anatomy/integration/strategies/DirectSocketStrategy.js', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
-
-jest.mock('../../../../src/anatomy/integration/strategies/ClothingSlotMappingStrategy.js', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/anatomy/integration/strategies/ClothingSlotMappingStrategy.js',
+  () => ({
+    __esModule: true,
+    default: jest.fn(),
+  })
+);
 
 describe('SlotResolver', () => {
   /** @type {{ debug: jest.Mock, info: jest.Mock, warn: jest.Mock, error: jest.Mock }} */
@@ -66,13 +81,14 @@ describe('SlotResolver', () => {
 
   const defaultDeps = () => ({
     logger,
-    entityManager: { getComponentData: jest.fn(), getEntityInstance: jest.fn() },
+    entityManager: {
+      getComponentData: jest.fn(),
+      getEntityInstance: jest.fn(),
+    },
     bodyGraphService: { getAllParts: jest.fn() },
     anatomyBlueprintRepository: { getBlueprint: jest.fn() },
     anatomySocketIndex: { findSockets: jest.fn() },
-    slotEntityMappings: new Map([
-      ['torso', 'entity-torso'],
-    ]),
+    slotEntityMappings: new Map([['torso', 'entity-torso']]),
   });
 
   const installStrategyMocks = () => {
@@ -142,8 +158,16 @@ describe('SlotResolver', () => {
 
   it('accepts custom strategies without instantiating defaults', () => {
     const customStrategies = [
-      { constructor: { name: 'CustomA' }, canResolve: jest.fn(), resolve: jest.fn() },
-      { constructor: { name: 'CustomB' }, canResolve: jest.fn(), resolve: jest.fn() },
+      {
+        constructor: { name: 'CustomA' },
+        canResolve: jest.fn(),
+        resolve: jest.fn(),
+      },
+      {
+        constructor: { name: 'CustomB' },
+        canResolve: jest.fn(),
+        resolve: jest.fn(),
+      },
     ];
 
     const resolver = new SlotResolver({
@@ -168,10 +192,18 @@ describe('SlotResolver', () => {
 
     const resolver = createResolver({ cache });
 
-    const result = await resolver.resolve('actor-1', 'slot-1', { type: 'mock' });
+    const result = await resolver.resolve('actor-1', 'slot-1', {
+      type: 'mock',
+    });
 
-    expect(mockCreateSlotResolutionKey).toHaveBeenCalledWith('actor-1', 'slot-1');
-    expect(cache.get).toHaveBeenCalledWith(CacheKeyTypes.SLOT_RESOLUTION, 'actor-1:slot-1');
+    expect(mockCreateSlotResolutionKey).toHaveBeenCalledWith(
+      'actor-1',
+      'slot-1'
+    );
+    expect(cache.get).toHaveBeenCalledWith(
+      CacheKeyTypes.SLOT_RESOLUTION,
+      'actor-1:slot-1'
+    );
     expect(cache.set).not.toHaveBeenCalled();
     expect(result).toBe(cachedAttachment);
   });
@@ -182,7 +214,9 @@ describe('SlotResolver', () => {
 
     const resolver = createResolver({ cache: legacyCache });
 
-    const result = await resolver.resolve('actor-1', 'legacy-slot', { type: 'legacy' });
+    const result = await resolver.resolve('actor-1', 'legacy-slot', {
+      type: 'legacy',
+    });
 
     expect(result).toEqual(['legacy-cached']);
     expect(logger.debug).toHaveBeenCalledWith(
@@ -204,9 +238,14 @@ describe('SlotResolver', () => {
 
     const resolver = createResolver({ cache });
 
-    const result = await resolver.resolve('actor-7', 'slot-arm', { type: 'blueprint' });
+    const result = await resolver.resolve('actor-7', 'slot-arm', {
+      type: 'blueprint',
+    });
 
-    expect(cache.get).toHaveBeenCalledWith(CacheKeyTypes.SLOT_RESOLUTION, 'actor-7:slot-arm');
+    expect(cache.get).toHaveBeenCalledWith(
+      CacheKeyTypes.SLOT_RESOLUTION,
+      'actor-7:slot-arm'
+    );
     expect(blueprintStrategy.resolve).toHaveBeenCalledWith(
       'actor-7',
       { type: 'blueprint' },
@@ -222,7 +261,9 @@ describe('SlotResolver', () => {
     );
     expect(result).toEqual(['bp-1', 'bp-2']);
 
-    const cached = await resolver.resolve('actor-7', 'slot-arm', { type: 'blueprint' });
+    const cached = await resolver.resolve('actor-7', 'slot-arm', {
+      type: 'blueprint',
+    });
     expect(cached).toEqual(['cached-second-call']);
   });
 
@@ -238,7 +279,9 @@ describe('SlotResolver', () => {
     });
 
     expect(result).toEqual(['legacy-result']);
-    expect(legacyCache.get('actor-legacy:legacy-slot')).toEqual(['legacy-result']);
+    expect(legacyCache.get('actor-legacy:legacy-slot')).toEqual([
+      'legacy-result',
+    ]);
   });
 
   it('logs a warning and returns an empty array when no strategy can resolve a mapping', async () => {
@@ -254,7 +297,9 @@ describe('SlotResolver', () => {
       },
     });
 
-    const result = await resolver.resolve('actor-x', 'slot-x', { kind: 'unsupported' });
+    const result = await resolver.resolve('actor-x', 'slot-x', {
+      kind: 'unsupported',
+    });
 
     expect(logger.warn).toHaveBeenCalledWith(
       "SlotResolver: No strategy found for mapping type in slot 'slot-x'. Available strategies: 3"
@@ -295,27 +340,50 @@ describe('SlotResolver', () => {
     });
     assertPresent.mockClear();
 
-    await expect(resolver.resolve(undefined, 'slot', {})).rejects.toThrow('Entity ID is required');
-    await expect(resolver.resolve('actor', undefined, {})).rejects.toThrow('Slot ID is required');
-    await expect(resolver.resolve('actor', 'slot', null)).rejects.toThrow('Mapping is required');
+    await expect(resolver.resolve(undefined, 'slot', {})).rejects.toThrow(
+      'Entity ID is required'
+    );
+    await expect(resolver.resolve('actor', undefined, {})).rejects.toThrow(
+      'Slot ID is required'
+    );
+    await expect(resolver.resolve('actor', 'slot', null)).rejects.toThrow(
+      'Mapping is required'
+    );
 
-    expect(assertPresent).toHaveBeenCalledWith(undefined, 'Entity ID is required');
-    expect(assertPresent).toHaveBeenCalledWith(undefined, 'Slot ID is required');
+    expect(assertPresent).toHaveBeenCalledWith(
+      undefined,
+      'Entity ID is required'
+    );
+    expect(assertPresent).toHaveBeenCalledWith(
+      undefined,
+      'Slot ID is required'
+    );
     expect(assertPresent).toHaveBeenCalledWith(null, 'Mapping is required');
   });
 
   it('adds custom strategies after validating dependencies', () => {
     const resolver = createResolver();
-    const customStrategy = { constructor: { name: 'InjectedStrategy' }, canResolve: jest.fn(), resolve: jest.fn() };
+    const customStrategy = {
+      constructor: { name: 'InjectedStrategy' },
+      canResolve: jest.fn(),
+      resolve: jest.fn(),
+    };
 
     validateDependency.mockClear();
     resolver.addStrategy(customStrategy);
 
-    expect(validateDependency).toHaveBeenCalledWith(customStrategy, 'ISlotResolutionStrategy', null, {
-      requiredMethods: ['canResolve', 'resolve'],
-    });
+    expect(validateDependency).toHaveBeenCalledWith(
+      customStrategy,
+      'ISlotResolutionStrategy',
+      null,
+      {
+        requiredMethods: ['canResolve', 'resolve'],
+      }
+    );
     expect(resolver.getStrategyCount()).toBe(4);
-    expect(logger.debug).toHaveBeenCalledWith('Added new strategy: InjectedStrategy');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Added new strategy: InjectedStrategy'
+    );
   });
 
   it('clears cached results using the cache service when available', () => {
@@ -344,13 +412,13 @@ describe('SlotResolver', () => {
 
   it('updates blueprint strategy slot mappings when available', () => {
     const resolver = createResolver();
-    const newMappings = new Map([
-      ['arm', 'entity-arm'],
-    ]);
+    const newMappings = new Map([['arm', 'entity-arm']]);
 
     resolver.setSlotEntityMappings(newMappings);
 
-    expect(blueprintStrategy.setSlotEntityMappings).toHaveBeenCalledWith(newMappings);
+    expect(blueprintStrategy.setSlotEntityMappings).toHaveBeenCalledWith(
+      newMappings
+    );
   });
 
   it('silently ignores slot mapping updates when blueprint strategy lacks the updater', () => {
@@ -361,15 +429,25 @@ describe('SlotResolver', () => {
   });
 
   it('resolves clothing slots strictly through the clothing slot mapping strategy', async () => {
-    clothingStrategy.canResolve.mockImplementation(({ clothingSlotId }) => clothingSlotId === 'belt');
+    clothingStrategy.canResolve.mockImplementation(
+      ({ clothingSlotId }) => clothingSlotId === 'belt'
+    );
     clothingStrategy.resolve.mockResolvedValueOnce(['resolved-belt']);
     const resolver = createResolver();
 
     assertPresent.mockClear();
     const result = await resolver.resolveClothingSlot('actor-4', 'belt');
 
-    expect(assertPresent).toHaveBeenNthCalledWith(1, 'actor-4', 'Entity ID is required');
-    expect(assertPresent).toHaveBeenNthCalledWith(2, 'belt', 'Slot ID is required');
+    expect(assertPresent).toHaveBeenNthCalledWith(
+      1,
+      'actor-4',
+      'Entity ID is required'
+    );
+    expect(assertPresent).toHaveBeenNthCalledWith(
+      2,
+      'belt',
+      'Slot ID is required'
+    );
     expect(clothingStrategy.resolve).toHaveBeenCalledWith(
       'actor-4',
       { clothingSlotId: 'belt' },
@@ -384,8 +462,8 @@ describe('SlotResolver', () => {
     directStrategy.canResolve.mockReturnValue(false);
     const resolver = createResolver();
 
-    await expect(resolver.resolveClothingSlot('actor-2', 'missing-slot')).rejects.toBeInstanceOf(
-      ClothingSlotNotFoundError
-    );
+    await expect(
+      resolver.resolveClothingSlot('actor-2', 'missing-slot')
+    ).rejects.toBeInstanceOf(ClothingSlotNotFoundError);
   });
 });

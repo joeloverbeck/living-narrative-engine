@@ -119,10 +119,7 @@ export class IsClosestLeftOccupantOperator extends BaseFurnitureOperator {
     const candidateIndex = candidateSitting.spot_index;
 
     // Step 3: Validate indices are valid numbers
-    if (
-      typeof actorIndex !== 'number' ||
-      typeof candidateIndex !== 'number'
-    ) {
+    if (typeof actorIndex !== 'number' || typeof candidateIndex !== 'number') {
       this.logger.warn(
         `${this.operatorName}: Invalid spot_index values - actor: ${actorIndex}, candidate: ${candidateIndex}`
       );

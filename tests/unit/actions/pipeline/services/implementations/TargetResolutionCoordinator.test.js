@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import TargetResolutionCoordinator from '../../../../../../src/actions/pipeline/services/implementations/TargetResolutionCoordinator.js';
 import { PipelineResult } from '../../../../../../src/actions/pipeline/PipelineResult.js';
 
@@ -87,7 +94,9 @@ function createMockTracingOrchestrator() {
  *
  * @param result
  */
-function createMockResultBuilder(result = PipelineResult.success({ data: { built: true } })) {
+function createMockResultBuilder(
+  result = PipelineResult.success({ data: { built: true } })
+) {
   return {
     buildMultiTargetResult: jest.fn(() => result),
   };
@@ -177,7 +186,11 @@ function createCoordinator(overrides = {}) {
 }
 
 const dependencyCases = [
-  ['dependencyResolver', { getResolutionOrder: undefined }, "Invalid or missing method 'getResolutionOrder' on dependency 'ITargetDependencyResolver'."],
+  [
+    'dependencyResolver',
+    { getResolutionOrder: undefined },
+    "Invalid or missing method 'getResolutionOrder' on dependency 'ITargetDependencyResolver'.",
+  ],
   [
     'contextBuilder',
     {
@@ -293,7 +306,9 @@ describe('TargetResolutionCoordinator - coordinateResolution', () => {
     );
     const coordinator = createCoordinator({ resultBuilder });
     const resolutionOutcome = {
-      resolvedTargets: { primary: [{ id: 'entity-1', displayName: 'Entity entity-1' }] },
+      resolvedTargets: {
+        primary: [{ id: 'entity-1', displayName: 'Entity entity-1' }],
+      },
       resolvedCounts: { primary: 1 },
       targetContexts: [{ targetKey: 'primary' }],
       detailedResolutionResults: { primary: {} },
@@ -363,7 +378,10 @@ describe('TargetResolutionCoordinator - coordinateResolution', () => {
 
   it('returns builder payload when resolved targets exist', async () => {
     const resultBuilder = createMockResultBuilder(
-      PipelineResult.success({ data: { success: true }, continueProcessing: true })
+      PipelineResult.success({
+        data: { success: true },
+        continueProcessing: true,
+      })
     );
     const coordinator = createCoordinator({ resultBuilder });
     const resolutionOutcome = {
@@ -377,7 +395,9 @@ describe('TargetResolutionCoordinator - coordinateResolution', () => {
       .mockResolvedValue(resolutionOutcome);
     const context = createPipelineContext();
     const result = await coordinator.coordinateResolution(context);
-    expect(result).toBe(resultBuilder.buildMultiTargetResult.mock.results[0].value);
+    expect(result).toBe(
+      resultBuilder.buildMultiTargetResult.mock.results[0].value
+    );
     expect(result.data.success).toBe(true);
   });
 });
@@ -407,7 +427,10 @@ describe('TargetResolutionCoordinator - resolveWithDependencies', () => {
    * @param resolutionOrder
    * @param overrides
    */
-  async function runResolve(resolutionOrder = ['primary', 'secondary'], overrides = {}) {
+  async function runResolve(
+    resolutionOrder = ['primary', 'secondary'],
+    overrides = {}
+  ) {
     const context = createPipelineContext();
     const actionDef = context.actionDef;
     return coordinator.resolveWithDependencies({
@@ -482,7 +505,9 @@ describe('TargetResolutionCoordinator - resolveWithDependencies', () => {
     expect(coordinator.resolveDependentTargets).toHaveBeenCalledWith(
       expect.objectContaining({ targetDef: expect.any(Object) })
     );
-    expect(outcome.resolvedTargets.secondary).toEqual(dependentData.resolvedTargets);
+    expect(outcome.resolvedTargets.secondary).toEqual(
+      dependentData.resolvedTargets
+    );
     expect(outcome.targetContexts).toEqual(
       expect.arrayContaining(dependentData.targetContexts)
     );
@@ -680,18 +705,15 @@ describe('TargetResolutionCoordinator - Resolution Order & Diagnostics', () => {
       trace: createMockTrace(),
       isActionAwareTrace: false,
     });
-    const scopeCalls = unifiedScopeResolver.resolve.mock.calls.map(([scope]) => scope);
+    const scopeCalls = unifiedScopeResolver.resolve.mock.calls.map(
+      ([scope]) => scope
+    );
     expect(scopeCalls).toEqual(['primary_scope', 'secondary_scope']);
   });
 
   it('normalizes scope resolution results to string identifiers', async () => {
     const unifiedScopeResolver = createMockUnifiedScopeResolver([
-      new Set([
-        { id: ' entity-1 ' },
-        { itemId: 'item-2' },
-        {},
-        'direct-id',
-      ]),
+      new Set([{ id: ' entity-1 ' }, { itemId: 'item-2' }, {}, 'direct-id']),
     ]);
     const coordinator = createCoordinator({ unifiedScopeResolver });
     const outcome = await coordinator.resolveWithDependencies({
@@ -774,20 +796,20 @@ describe('TargetResolutionCoordinator - Detailed Results Tracking', () => {
       candidatesFound: 1,
       candidatesResolved: 1,
     });
-    expect(outcome.detailedResolutionResults.primary.evaluationTimeMs).toBeGreaterThanOrEqual(0);
+    expect(
+      outcome.detailedResolutionResults.primary.evaluationTimeMs
+    ).toBeGreaterThanOrEqual(0);
   });
 
   it('captures contextEntityIds and failureReason for dependents when zero candidates', async () => {
     const coordinator = createCoordinator();
-    jest
-      .spyOn(coordinator, 'resolveDependentTargets')
-      .mockResolvedValue({
-        resolvedTargets: [],
-        targetContexts: [],
-        candidatesFound: 0,
-        contextEntityIds: ['entity-1'],
-        evaluationTimeMs: 1,
-      });
+    jest.spyOn(coordinator, 'resolveDependentTargets').mockResolvedValue({
+      resolvedTargets: [],
+      targetContexts: [],
+      candidatesFound: 0,
+      contextEntityIds: ['entity-1'],
+      evaluationTimeMs: 1,
+    });
     const context = createPipelineContext();
     const result = await coordinator.resolveWithDependencies({
       context,
@@ -801,12 +823,12 @@ describe('TargetResolutionCoordinator - Detailed Results Tracking', () => {
     });
     expect(result).toBeInstanceOf(PipelineResult);
     expect(result.success).toBe(true);
-    expect(result.data.detailedResolutionResults.secondary.failureReason).toContain(
-      'No candidates'
-    );
-    expect(result.data.detailedResolutionResults.secondary.contextEntityIds).toEqual([
-      'entity-1',
-    ]);
+    expect(
+      result.data.detailedResolutionResults.secondary.failureReason
+    ).toContain('No candidates');
+    expect(
+      result.data.detailedResolutionResults.secondary.contextEntityIds
+    ).toEqual(['entity-1']);
   });
 
   it('aggregates targetContexts for hydrated targets', async () => {
@@ -837,14 +859,19 @@ describe('TargetResolutionCoordinator - Error Handling', () => {
 
   it('returns continueProcessing false when scope resolution throws', async () => {
     const unifiedScopeResolver = {
-      resolve: jest.fn(async () => ({ success: false, errors: [{ message: 'scope failure' }] })),
+      resolve: jest.fn(async () => ({
+        success: false,
+        errors: [{ message: 'scope failure' }],
+      })),
     };
     const logger = createMockLogger();
     const coordinator = createCoordinator({ unifiedScopeResolver, logger });
     const context = createPipelineContext({
       actionDef: {
         ...createMockActionDef(),
-        targets: { primary: { scope: 'primary_scope', placeholder: 'Primary Target' } },
+        targets: {
+          primary: { scope: 'primary_scope', placeholder: 'Primary Target' },
+        },
       },
     });
     const result = await coordinator.resolveWithDependencies({
@@ -870,7 +897,9 @@ describe('TargetResolutionCoordinator - Error Handling', () => {
       }),
     };
     const coordinator = createCoordinator({ dependencyResolver });
-    const result = await coordinator.coordinateResolution(createPipelineContext());
+    const result = await coordinator.coordinateResolution(
+      createPipelineContext()
+    );
     expect(result.success).toBe(false);
     expect(result.errors[0].error).toContain('order failed');
   });
@@ -890,6 +919,8 @@ describe('TargetResolutionCoordinator - Error Handling', () => {
       isActionAwareTrace: false,
     });
     expect(tracingOrchestrator.captureScopeEvaluation).not.toHaveBeenCalled();
-    expect(tracingOrchestrator.captureMultiTargetResolution).not.toHaveBeenCalled();
+    expect(
+      tracingOrchestrator.captureMultiTargetResolution
+    ).not.toHaveBeenCalled();
   });
 });

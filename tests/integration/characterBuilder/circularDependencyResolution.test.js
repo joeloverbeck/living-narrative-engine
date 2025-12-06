@@ -90,8 +90,8 @@ describe('Character Builder - Circular Dependency Resolution', () => {
       const {
         CHARACTER_BUILDER_EVENTS,
       } = require('../../../src/characterBuilder/events/characterBuilderEvents.js');
-      const CoreMotivationsCacheManager = require('../../../src/characterBuilder/cache/CoreMotivationsCacheManager.js')
-        .default;
+      const CoreMotivationsCacheManager =
+        require('../../../src/characterBuilder/cache/CoreMotivationsCacheManager.js').default;
 
       const mockLogger = {
         info: jest.fn(),
@@ -235,9 +235,7 @@ describe('Character Builder - Circular Dependency Resolution', () => {
       const content = readFileSync(cacheManagerPath, 'utf8');
 
       // Verify correct import path
-      expect(content).toContain(
-        "from '../events/characterBuilderEvents.js'"
-      );
+      expect(content).toContain("from '../events/characterBuilderEvents.js'");
 
       // Verify no import from service file
       expect(content).not.toContain(

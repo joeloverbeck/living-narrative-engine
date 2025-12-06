@@ -56,7 +56,9 @@ describe('logger utilities integration coverage', () => {
       (call) => call[0] === 'sendProxyError: '
     );
     expect(fallbackErrorCall).toBeDefined();
-    expect(fallbackErrorCall[1]).toContain('LLM Proxy Server: Sending error to client.');
+    expect(fallbackErrorCall[1]).toContain(
+      'LLM Proxy Server: Sending error to client.'
+    );
     expect(fallbackErrorCall[2]).toEqual({
       errorDetailsSentToClient: { apiKey: 'sk-live-secret' },
     });
@@ -103,7 +105,9 @@ describe('logger utilities integration coverage', () => {
       originalStatusCode: 502,
     });
 
-    const infoCall = infoSpy.mock.calls.find(([message]) => message === 'pre-flight');
+    const infoCall = infoSpy.mock.calls.find(
+      ([message]) => message === 'pre-flight'
+    );
     expect(infoCall).toBeDefined();
     expect(infoCall[1]).toEqual({
       apiKey: 'sk-t***********',

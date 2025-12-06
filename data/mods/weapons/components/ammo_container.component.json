@@ -21,21 +21,11 @@
       },
       "containerType": {
         "type": "string",
-        "enum": [
-          "magazine",
-          "speed_loader",
-          "ammo_box",
-          "stripper_clip"
-        ],
+        "enum": ["magazine", "speed_loader", "ammo_box", "stripper_clip"],
         "description": "Type of ammunition container"
       }
     },
-    "required": [
-      "ammoType",
-      "currentRounds",
-      "maxCapacity",
-      "containerType"
-    ],
+    "required": ["ammoType", "currentRounds", "maxCapacity", "containerType"],
     "additionalProperties": false
   }
 }

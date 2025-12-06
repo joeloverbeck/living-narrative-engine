@@ -57,9 +57,12 @@ describe('EnhancedConsoleLogger additional coverage', () => {
       green: jest.fn((value) => value),
       yellow: jest.fn((value) => value),
       red: { bold: jest.fn((value) => value) },
-      gray: Object.assign(jest.fn((value) => value), {
-        italic: jest.fn((value) => value),
-      }),
+      gray: Object.assign(
+        jest.fn((value) => value),
+        {
+          italic: jest.fn((value) => value),
+        }
+      ),
     };
     globalThis.chalk = globalChalk;
 
@@ -82,7 +85,9 @@ describe('EnhancedConsoleLogger additional coverage', () => {
           level: level.toUpperCase(),
           service: 'ServiceName',
           message,
-          contextLines: args.map((arg, index) => `context-${index}:${JSON.stringify(arg)}`),
+          contextLines: args.map(
+            (arg, index) => `context-${index}:${JSON.stringify(arg)}`
+          ),
         }),
         formatSimple: jest.fn(),
       }),
@@ -114,9 +119,12 @@ describe('EnhancedConsoleLogger additional coverage', () => {
       green: jest.fn((value) => value),
       yellow: jest.fn((value) => value),
       red: { bold: jest.fn((value) => value) },
-      gray: Object.assign(jest.fn((value) => value), {
-        italic: jest.fn((value) => value),
-      }),
+      gray: Object.assign(
+        jest.fn((value) => value),
+        {
+          italic: jest.fn((value) => value),
+        }
+      ),
     };
 
     // Remove any chalk reference from globalThis and replace the Node global object
@@ -142,7 +150,9 @@ describe('EnhancedConsoleLogger additional coverage', () => {
           level: level.toUpperCase(),
           service: 'NodeGlobalService',
           message,
-          contextLines: args.map((arg, index) => `ctx-${index}:${JSON.stringify(arg)}`),
+          contextLines: args.map(
+            (arg, index) => `ctx-${index}:${JSON.stringify(arg)}`
+          ),
         }),
         formatSimple: jest.fn(),
       }),
@@ -208,10 +218,9 @@ describe('EnhancedConsoleLogger additional coverage', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       'EnhancedConsoleLogger: Formatting error, falling back to simple output'
     );
-    expect(logSpy).toHaveBeenCalledWith(
-      '[FALLBACK] DEBUG: fallback message',
-      { meta: 'data' }
-    );
+    expect(logSpy).toHaveBeenCalledWith('[FALLBACK] DEBUG: fallback message', {
+      meta: 'data',
+    });
 
     errorSpy.mockRestore();
     logSpy.mockRestore();
@@ -254,7 +263,9 @@ describe('EnhancedConsoleLogger additional coverage', () => {
 
     logger.testOutput();
 
-    expect(logSpy).toHaveBeenCalledWith('\n=== Enhanced Logger Test Output ===');
+    expect(logSpy).toHaveBeenCalledWith(
+      '\n=== Enhanced Logger Test Output ==='
+    );
     expect(logSpy).toHaveBeenCalledWith('=== End Test Output ===\n');
     expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining('INFO'));
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('WARN'));
@@ -340,7 +351,9 @@ describe('EnhancedConsoleLogger additional coverage', () => {
       }),
     }));
 
-    const formatSimple = jest.fn((level, message) => `${level.toUpperCase()}:${message}`);
+    const formatSimple = jest.fn(
+      (level, message) => `${level.toUpperCase()}:${message}`
+    );
 
     jest.doMock('../../../src/logging/logFormatter.js', () => ({
       getLogFormatter: () => ({
@@ -385,7 +398,9 @@ describe('EnhancedConsoleLogger additional coverage', () => {
       }),
     }));
 
-    const formatSimple = jest.fn((level, message) => `${level.toUpperCase()}:${message}`);
+    const formatSimple = jest.fn(
+      (level, message) => `${level.toUpperCase()}:${message}`
+    );
     const maskApiKey = jest.fn(() => '[MASKED]');
 
     jest.doMock('../../../src/logging/logFormatter.js', () => ({

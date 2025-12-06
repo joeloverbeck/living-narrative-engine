@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, afterEach, jest } from '@jest/globals';
 import { ProcessingWorkflow } from '../../../../../src/turns/states/workflows/processingWorkflow.js';
 import { ProcessingCommandState } from '../../../../../src/turns/states/processingCommandState.js';
 import { TurnContext } from '../../../../../src/turns/context/turnContext.js';
@@ -175,7 +169,12 @@ function createProcessingTestEnvironment({
     async processCommand(ctx, actorArg, actionArg) {
       processCalls.push({ ctx, actor: actorArg, action: actionArg });
       if (typeof processHook === 'function') {
-        await processHook({ ctx, actor: actorArg, action: actionArg, state: stateInstance });
+        await processHook({
+          ctx,
+          actor: actorArg,
+          action: actionArg,
+          state: stateInstance,
+        });
       }
       if (processThrows) {
         throw processThrows;

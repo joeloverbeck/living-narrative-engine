@@ -44,7 +44,9 @@ describe('numericConstraintDiagnostics', () => {
 
     // Mutate the returned object to ensure the source map is not affected
     allDiagnostics[0].recent[0].goalId = 'mutated-goal';
-    const freshDiagnostics = getNumericConstraintDiagnostics(allDiagnostics[0].actorId);
+    const freshDiagnostics = getNumericConstraintDiagnostics(
+      allDiagnostics[0].actorId
+    );
 
     expect(freshDiagnostics.recent[0].goalId).not.toBe('mutated-goal');
   });

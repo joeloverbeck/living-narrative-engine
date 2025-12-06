@@ -150,13 +150,13 @@ describe('PerformanceMonitor edge case integration', () => {
     monitor.trackOperation('fast-range', performance.now() - 5);
 
     const thresholdAlerts = monitor.getAlerts({ type: 'threshold_exceeded' });
-    expect(
-      thresholdAlerts.some((alert) => alert.severity === 'warning')
-    ).toBe(true);
+    expect(thresholdAlerts.some((alert) => alert.severity === 'warning')).toBe(
+      true
+    );
 
     const slowAlerts = monitor.getAlerts({ type: 'slow_operation' });
-    expect(
-      slowAlerts.some((alert) => alert.operation === 'slow-range')
-    ).toBe(true);
+    expect(slowAlerts.some((alert) => alert.operation === 'slow-range')).toBe(
+      true
+    );
   });
 });

@@ -151,7 +151,9 @@ describe('ActionPipelineOrchestrator integration', () => {
 
     mockPipelineExecute.mockResolvedValue(pipelineResult);
 
-    const result = await orchestrator.discoverActions(actor, actionContext, { trace });
+    const result = await orchestrator.discoverActions(actor, actionContext, {
+      trace,
+    });
 
     expect(logger.debug).toHaveBeenNthCalledWith(
       1,

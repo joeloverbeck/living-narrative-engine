@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { createEventBus } from '../../common/mockFactories/eventBus.js';
 import BodyGraphService from '../../../src/anatomy/bodyGraphService.js';
@@ -27,7 +21,9 @@ describe('BodyGraphService anatomy metadata integration', () => {
   });
 
   it('provides anatomy metadata that other services can consume', async () => {
-    const actor = await testBed.createActor({ recipeId: HUMAN_BALANCED_RECIPE });
+    const actor = await testBed.createActor({
+      recipeId: HUMAN_BALANCED_RECIPE,
+    });
     await testBed.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
 
     const bodyGraphService = new BodyGraphService({
@@ -44,16 +40,19 @@ describe('BodyGraphService anatomy metadata integration', () => {
       rootEntityId: actor.id,
     });
 
-    const blueprint = await testBed.anatomyBlueprintRepository.getBlueprintByRecipeId(
-      metadata.recipeId
-    );
+    const blueprint =
+      await testBed.anatomyBlueprintRepository.getBlueprintByRecipeId(
+        metadata.recipeId
+      );
     expect(blueprint).not.toBeNull();
 
     const bodyComponent = testBed.entityManager.getComponentData(
       actor.id,
       'anatomy:body'
     );
-    const bodyGraph = await bodyGraphService.getBodyGraph(metadata.rootEntityId);
+    const bodyGraph = await bodyGraphService.getBodyGraph(
+      metadata.rootEntityId
+    );
     const partIds = bodyGraph.getAllPartIds();
 
     expect(partIds.length).toBeGreaterThan(0);

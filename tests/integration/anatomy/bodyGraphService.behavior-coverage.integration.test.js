@@ -71,7 +71,8 @@ describe('BodyGraphService targeted integration coverage', () => {
   /** @type {Map<string, any>} */
   let components;
 
-  const componentKey = (entityId, componentId) => `${entityId}:::${componentId}`;
+  const componentKey = (entityId, componentId) =>
+    `${entityId}:::${componentId}`;
 
   const setComponent = (entityId, componentId, value) => {
     components.set(componentKey(entityId, componentId), value);
@@ -119,9 +120,9 @@ describe('BodyGraphService targeted integration coverage', () => {
     });
 
     it('throws when logger is missing', () => {
-      expect(() => new BodyGraphService({ entityManager, eventDispatcher })).toThrow(
-        InvalidArgumentError
-      );
+      expect(
+        () => new BodyGraphService({ entityManager, eventDispatcher })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('throws when eventDispatcher is missing', () => {
@@ -185,7 +186,9 @@ describe('BodyGraphService targeted integration coverage', () => {
     it('throws when the target part lacks a joint', async () => {
       const service = createService();
 
-      await expect(service.detachPart('arm-1')).rejects.toThrow(InvalidArgumentError);
+      await expect(service.detachPart('arm-1')).rejects.toThrow(
+        InvalidArgumentError
+      );
       expect(entityManager.getComponentData).toHaveBeenCalledWith(
         'arm-1',
         'anatomy:joint'
@@ -216,7 +219,9 @@ describe('BodyGraphService targeted integration coverage', () => {
         'arm-1',
         'anatomy:joint'
       );
-      expect(cacheManager.invalidateCacheForRoot).toHaveBeenCalledWith('actor-9');
+      expect(cacheManager.invalidateCacheForRoot).toHaveBeenCalledWith(
+        'actor-9'
+      );
       expect(queryCache.invalidateRoot).toHaveBeenCalledWith('actor-9');
       expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
         LIMB_DETACHED_EVENT_ID,
@@ -259,7 +264,9 @@ describe('BodyGraphService targeted integration coverage', () => {
       });
 
       expect(AnatomyGraphAlgorithms.getSubgraph).not.toHaveBeenCalled();
-      expect(cacheManager.invalidateCacheForRoot).toHaveBeenCalledWith('actor-42');
+      expect(cacheManager.invalidateCacheForRoot).toHaveBeenCalledWith(
+        'actor-42'
+      );
       expect(queryCache.invalidateRoot).toHaveBeenCalledWith('actor-42');
       expect(result).toEqual({
         detached: ['arm-1'],
@@ -353,7 +360,10 @@ describe('BodyGraphService targeted integration coverage', () => {
       const queryCache = getLatestQueryCache();
       queryCache.getCachedGetAllParts.mockReturnValue(['cached-part']);
 
-      const result = service.getAllParts({ body: { root: 'root-1' } }, 'actor-1');
+      const result = service.getAllParts(
+        { body: { root: 'root-1' } },
+        'actor-1'
+      );
 
       expect(result).toEqual(['cached-part']);
       expect(AnatomyGraphAlgorithms.getAllParts).not.toHaveBeenCalled();
@@ -366,12 +376,12 @@ describe('BodyGraphService targeted integration coverage', () => {
       cacheManager.has.mockImplementation((entityId) => entityId === 'actor-1');
       cacheManager.size.mockReturnValue(5);
       queryCache.getCachedGetAllParts.mockReturnValue(undefined);
-      AnatomyGraphAlgorithms.getAllParts.mockReturnValue([
-        'actor-1',
-        'hand-1',
-      ]);
+      AnatomyGraphAlgorithms.getAllParts.mockReturnValue(['actor-1', 'hand-1']);
 
-      const result = service.getAllParts({ body: { root: 'blueprint-root' } }, 'actor-1');
+      const result = service.getAllParts(
+        { body: { root: 'blueprint-root' } },
+        'actor-1'
+      );
 
       expect(AnatomyGraphAlgorithms.getAllParts).toHaveBeenCalledWith(
         'actor-1',
@@ -400,9 +410,10 @@ describe('BodyGraphService targeted integration coverage', () => {
         cacheManager,
         entityManager
       );
-      expect(queryCache.cacheGetAllParts).toHaveBeenCalledWith('blueprint-root', [
+      expect(queryCache.cacheGetAllParts).toHaveBeenCalledWith(
         'blueprint-root',
-      ]);
+        ['blueprint-root']
+      );
       expect(result).toEqual(['blueprint-root']);
     });
   });
@@ -497,7 +508,9 @@ describe('BodyGraphService targeted integration coverage', () => {
     it('throws when entity id is invalid', async () => {
       const service = createService();
 
-      await expect(service.getBodyGraph('')).rejects.toThrow(InvalidArgumentError);
+      await expect(service.getBodyGraph('')).rejects.toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('throws when entity has no anatomy:body component', async () => {
@@ -528,7 +541,10 @@ describe('BodyGraphService targeted integration coverage', () => {
 
       const graph = await service.getBodyGraph('actor-1');
 
-      expect(cacheManager.buildCache).toHaveBeenCalledWith('actor-1', entityManager);
+      expect(cacheManager.buildCache).toHaveBeenCalledWith(
+        'actor-1',
+        entityManager
+      );
       expect(graph.getAllPartIds()).toEqual(['root-1', 'hand-1']);
       expect(graph.getConnectedParts('root-1')).toEqual(['hand-1']);
       expect(graph.getConnectedParts('unknown')).toEqual([]);
@@ -540,7 +556,9 @@ describe('BodyGraphService targeted integration coverage', () => {
     it('throws when entity id is invalid', async () => {
       const service = createService();
 
-      await expect(service.getAnatomyData(null)).rejects.toThrow(InvalidArgumentError);
+      await expect(service.getAnatomyData(null)).rejects.toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('returns null when anatomy component is missing', async () => {

@@ -102,7 +102,13 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       };
 
       mockDeps.clothingSlotValidator.validateSlotCompatibility.mockImplementation(
-        async (entityId, slotId, itemId, availableSlots, resolveAttachmentPoints) => {
+        async (
+          entityId,
+          slotId,
+          itemId,
+          availableSlots,
+          resolveAttachmentPoints
+        ) => {
           await resolveAttachmentPoints(entityId, slotId);
           return { valid: true };
         }
@@ -120,7 +126,9 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
         'shirt',
         anatomyData.slotEntityMappings
       );
-      expect(mockDeps.slotResolver.setSlotEntityMappings).not.toHaveBeenCalled();
+      expect(
+        mockDeps.slotResolver.setSlotEntityMappings
+      ).not.toHaveBeenCalled();
     });
 
     it('should use decomposed components for validation', async () => {
@@ -408,14 +416,12 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       });
 
       // Should preserve existing clothing:wearable properties and add layer
-      expect(capturedProperties.componentOverrides['clothing:wearable']).toHaveProperty(
-        'someExistingProp',
-        'value'
-      );
-      expect(capturedProperties.componentOverrides['clothing:wearable']).toHaveProperty(
-        'layer',
-        'outer'
-      );
+      expect(
+        capturedProperties.componentOverrides['clothing:wearable']
+      ).toHaveProperty('someExistingProp', 'value');
+      expect(
+        capturedProperties.componentOverrides['clothing:wearable']
+      ).toHaveProperty('layer', 'outer');
     });
 
     it('should handle missing clothing instance when validating (line 473)', async () => {
@@ -890,12 +896,15 @@ describe('ClothingInstantiationService - Decomposed Architecture', () => {
       });
 
       // Verify that clothing:wearable was created in finalProperties
-      expect(capturedProperties.componentOverrides).toHaveProperty('clothing:wearable');
-      expect(capturedProperties.componentOverrides['clothing:wearable']).toHaveProperty(
-        'layer',
-        'outer'
+      expect(capturedProperties.componentOverrides).toHaveProperty(
+        'clothing:wearable'
       );
-      expect(capturedProperties.componentOverrides).toHaveProperty('core:physical');
+      expect(
+        capturedProperties.componentOverrides['clothing:wearable']
+      ).toHaveProperty('layer', 'outer');
+      expect(capturedProperties.componentOverrides).toHaveProperty(
+        'core:physical'
+      );
     });
 
     it('should handle layer resolution failure', async () => {

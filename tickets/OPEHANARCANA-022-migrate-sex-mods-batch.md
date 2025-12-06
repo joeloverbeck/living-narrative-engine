@@ -1,4 +1,4 @@
-# OPEHANARCANA-022: Migrate sex-* Mods Rules (Batch)
+# OPEHANARCANA-022: Migrate sex-\* Mods Rules (Batch)
 
 **Status:** Ready
 **Priority:** Medium (Phase 4 Migration)
@@ -18,27 +18,35 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
 ### Modified Files (by mod)
 
 **sex-core:**
+
 - `data/mods/sex-core/rules/*.rule.json`
 
 **sex-breastplay:**
+
 - `data/mods/sex-breastplay/rules/*.rule.json`
 
 **sex-dry-intimacy:**
+
 - `data/mods/sex-dry-intimacy/rules/*.rule.json`
 
 **sex-penile-manual:**
+
 - `data/mods/sex-penile-manual/rules/*.rule.json`
 
 **sex-penile-oral:**
+
 - `data/mods/sex-penile-oral/rules/*.rule.json`
 
 **sex-physical-control:**
+
 - `data/mods/sex-physical-control/rules/*.rule.json`
 
 **sex-vaginal-penetration:**
+
 - `data/mods/sex-vaginal-penetration/rules/*.rule.json`
 
 **sex-anal-penetration:**
+
 - `data/mods/sex-anal-penetration/rules/*.rule.json`
 
 ---
@@ -46,6 +54,7 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any action files (only rules)
 - Any condition files
 - Any component files
@@ -59,6 +68,7 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
 ## Migration Pattern
 
 ### Before (~100 lines per rule)
+
 ```json
 {
   "actions": [
@@ -77,6 +87,7 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
 ```
 
 ### After (~15 lines)
+
 ```json
 {
   "id": "[mod]:handle_[action_name]",
@@ -101,48 +112,56 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
 ## Migration Checklist (by mod)
 
 ### sex-core
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-breastplay
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-dry-intimacy
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-penile-manual
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-penile-oral
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-physical-control
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-vaginal-penetration
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
 - [ ] Run tests
 
 ### sex-anal-penetration
+
 - [ ] List all rules
 - [ ] Migrate to PREPARE_ACTION_CONTEXT
 - [ ] Validate JSON syntax
@@ -154,7 +173,8 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
 
 ### Tests That Must Pass
 
-1. **All sex-* mod integration tests:**
+1. **All sex-\* mod integration tests:**
+
    ```bash
    npm run test:integration -- tests/integration/mods/sex-core/
    npm run test:integration -- tests/integration/mods/sex-breastplay/
@@ -167,6 +187,7 @@ Migrate all rules in the sex-related mods from the expanded pattern to use `PREP
    ```
 
 2. **Mod validation for each:**
+
    ```bash
    npm run validate
    ```

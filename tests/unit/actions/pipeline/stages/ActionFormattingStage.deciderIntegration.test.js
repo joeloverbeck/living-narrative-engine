@@ -37,7 +37,11 @@ const createStage = () => {
     },
   };
 
-  return { stage: new ActionFormattingStage(dependencies), commandFormatter, dependencies };
+  return {
+    stage: new ActionFormattingStage(dependencies),
+    commandFormatter,
+    dependencies,
+  };
 };
 
 describe('ActionFormattingStage - decider integration', () => {
@@ -100,12 +104,20 @@ describe('ActionFormattingStage - decider integration', () => {
     expect(result.actions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'action-per', command: 'per-command' }),
-        expect.objectContaining({ id: 'action-batch', command: 'batch-command' }),
-        expect.objectContaining({ id: 'action-legacy', command: 'legacy-command' }),
+        expect.objectContaining({
+          id: 'action-batch',
+          command: 'batch-command',
+        }),
+        expect.objectContaining({
+          id: 'action-legacy',
+          command: 'legacy-command',
+        }),
       ])
     );
     expect(result.errors).toHaveLength(0);
-    expect(commandFormatter.formatMultiTarget.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(
+      commandFormatter.formatMultiTarget.mock.calls.length
+    ).toBeGreaterThanOrEqual(2);
     expect(commandFormatter.format.mock.calls.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -127,7 +139,11 @@ describe('ActionFormattingStage - decider integration', () => {
     );
     expect(summaryCall).toBeDefined();
     expect(summaryCall[2]).toMatchObject({
-      statistics: expect.objectContaining({ total: 3, successful: 3, failed: 0 }),
+      statistics: expect.objectContaining({
+        total: 3,
+        successful: 3,
+        failed: 0,
+      }),
     });
   });
 });

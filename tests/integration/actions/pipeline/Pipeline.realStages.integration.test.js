@@ -188,10 +188,11 @@ describe('Pipeline integration with real stage implementations', () => {
       'Executing pipeline stage: StageOne',
       'Executing pipeline stage: StageTwo',
     ]);
-    expect(logger.infoMessages.at(-1)?.message || logger.infoMessages.at(-1)).toBeUndefined();
+    expect(
+      logger.infoMessages.at(-1)?.message || logger.infoMessages.at(-1)
+    ).toBeUndefined();
     expect(trace.infos.at(-1)).toEqual({
-      message:
-        'Pipeline execution completed. Actions: 2, Errors: 1',
+      message: 'Pipeline execution completed. Actions: 2, Errors: 1',
       source: 'Pipeline.execute',
     });
   });
@@ -251,13 +252,16 @@ describe('Pipeline integration with real stage implementations', () => {
       });
     });
 
-    const recoveringStage = new RecordingStage('RecoveringStage', async (context) => {
-      expect(context.attempted).toBe(true);
-      return PipelineResult.success({
-        actions: [{ id: 'recovered-action' }],
-        data: { recovered: true },
-      });
-    });
+    const recoveringStage = new RecordingStage(
+      'RecoveringStage',
+      async (context) => {
+        expect(context.attempted).toBe(true);
+        return PipelineResult.success({
+          actions: [{ id: 'recovered-action' }],
+          data: { recovered: true },
+        });
+      }
+    );
 
     const pipeline = new Pipeline([failingStage, recoveringStage], logger);
     const result = await pipeline.execute({

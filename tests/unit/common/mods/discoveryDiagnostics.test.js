@@ -20,10 +20,7 @@ describe('DiscoveryDiagnostics - Trace Collection', () => {
             'test:scope',
             { actor: { id: actorId } }
           );
-          return [
-            { id: 'test:action1' },
-            { id: 'test:action2' },
-          ];
+          return [{ id: 'test:action1' }, { id: 'test:action2' }];
         }),
       },
     };
@@ -32,16 +29,14 @@ describe('DiscoveryDiagnostics - Trace Collection', () => {
   });
 
   it('should enable and disable diagnostics', () => {
-    const original =
-      mockTestFixture.testEnv.unifiedScopeResolver.resolveSync;
+    const original = mockTestFixture.testEnv.unifiedScopeResolver.resolveSync;
 
     diagnostics.enableDiagnostics();
     const wrapped = mockTestFixture.testEnv.unifiedScopeResolver.resolveSync;
     expect(wrapped).not.toBe(original);
 
     diagnostics.disableDiagnostics();
-    const restored =
-      mockTestFixture.testEnv.unifiedScopeResolver.resolveSync;
+    const restored = mockTestFixture.testEnv.unifiedScopeResolver.resolveSync;
 
     // Should restore to a bound version of the original
     // The implementation uses .bind() so we can't use === comparison
@@ -174,7 +169,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
 
     // Verify debugging hints were printed
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('returned empty results');
@@ -202,7 +197,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
     diagnostics.discoverWithDiagnostics('actor1', 'test:found_action');
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('WAS FOUND');
@@ -218,9 +213,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
             value: new Set(['entity1']),
           })),
         },
-        getAvailableActions: jest.fn(() => [
-          { id: 'test:different_action' },
-        ]),
+        getAvailableActions: jest.fn(() => [{ id: 'test:different_action' }]),
       },
     };
 
@@ -230,7 +223,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
     diagnostics.discoverWithDiagnostics('actor1', 'test:missing_action');
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('WAS NOT FOUND');
@@ -263,7 +256,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
     diagnostics.discoverWithDiagnostics('actor1');
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('SCOPE RESOLUTION STATISTICS');
@@ -297,7 +290,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
     diagnostics.discoverWithDiagnostics('actor1', 'test:action');
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('FAILED to resolve');
@@ -337,7 +330,7 @@ describe('DiscoveryDiagnostics - Diagnostic Output', () => {
     diagnostics.discoverWithDiagnostics('actor1', 'test:action');
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('were slow');
@@ -379,7 +372,7 @@ describe('DiscoveryDiagnostics - Context Formatting', () => {
     });
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('actor=actor1');
@@ -394,7 +387,7 @@ describe('DiscoveryDiagnostics - Context Formatting', () => {
     });
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('actor=actor1');
@@ -412,7 +405,7 @@ describe('DiscoveryDiagnostics - Context Formatting', () => {
     });
 
     const output = consoleSpy.mock.calls
-      .map(call => call.join(' '))
+      .map((call) => call.join(' '))
       .join('\n');
 
     expect(output).toContain('actor=actor1');

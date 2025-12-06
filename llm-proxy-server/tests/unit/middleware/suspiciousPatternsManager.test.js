@@ -459,7 +459,9 @@ describe('SuspiciousPatternsManager', () => {
 
   describe('Cleanup Scheduling', () => {
     it('should avoid scheduling duplicate cleanup timers', () => {
-      const manager = createSuspiciousPatternsManager({ minCleanupInterval: 0 });
+      const manager = createSuspiciousPatternsManager({
+        minCleanupInterval: 0,
+      });
       const timeoutSpy = jest.spyOn(global, 'setTimeout');
 
       manager.scheduleCleanup();
@@ -475,7 +477,9 @@ describe('SuspiciousPatternsManager', () => {
     });
 
     it('should reset cleanup timer even when cleanup throws', () => {
-      const manager = createSuspiciousPatternsManager({ minCleanupInterval: 0 });
+      const manager = createSuspiciousPatternsManager({
+        minCleanupInterval: 0,
+      });
       manager.cleanupExpired = jest.fn(() => {
         throw new Error('cleanup failed');
       });

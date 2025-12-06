@@ -45,16 +45,13 @@ describe('SimpleItemLoader', () => {
 
     expect(result).toEqual(expected);
     expect(processAndStoreItem).toHaveBeenCalledTimes(1);
-    expect(processAndStoreItem).toHaveBeenCalledWith(
-      loader,
-      {
-        data,
-        idProp: 'id',
-        category: registryKey,
-        modId,
-        filename,
-      }
-    );
+    expect(processAndStoreItem).toHaveBeenCalledWith(loader, {
+      data,
+      idProp: 'id',
+      category: registryKey,
+      modId,
+      filename,
+    });
   });
 
   it('propagates errors from processAndStoreItem', async () => {
@@ -62,7 +59,13 @@ describe('SimpleItemLoader', () => {
     processAndStoreItem.mockRejectedValue(error);
 
     await expect(
-      loader._processFetchedItem('mod', 'file.json', '/resolved', { id: 'mod:item' }, 'items')
+      loader._processFetchedItem(
+        'mod',
+        'file.json',
+        '/resolved',
+        { id: 'mod:item' },
+        'items'
+      )
     ).rejects.toBe(error);
   });
 });

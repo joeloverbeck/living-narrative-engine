@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { safeDispatchEvent } from '../../../src/utils/safeDispatchEvent.js';
 
 class MemoryLogger {
@@ -29,7 +36,10 @@ class MemoryLogger {
 }
 
 class RecordingDispatcher {
-  constructor({ shouldFail = false, errorFactory = () => new Error('dispatch failed') } = {}) {
+  constructor({
+    shouldFail = false,
+    errorFactory = () => new Error('dispatch failed'),
+  } = {}) {
     this.calls = [];
     this.shouldFail = shouldFail;
     this.errorFactory = errorFactory;
@@ -56,7 +66,12 @@ describe('safeDispatchEvent integration', () => {
   });
 
   it('logs a warning and exits early when dispatcher is unavailable', async () => {
-    await safeDispatchEvent(null, 'story:missing-dispatcher', { foo: 'bar' }, logger);
+    await safeDispatchEvent(
+      null,
+      'story:missing-dispatcher',
+      { foo: 'bar' },
+      logger
+    );
 
     expect(logger.entries.warn).toEqual([
       {
@@ -104,8 +119,12 @@ describe('safeDispatchEvent integration', () => {
       warn: () => {},
     };
 
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await expect(
       safeDispatchEvent(

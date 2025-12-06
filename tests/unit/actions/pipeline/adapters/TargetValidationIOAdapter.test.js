@@ -39,7 +39,10 @@ describe('TargetValidationIOAdapter', () => {
       hasComponent: () => true,
       getComponentData: () => ({ foo: 'bar' }),
     };
-    const primaryCandidate = { entity: entityWithLifecycle, metadata: { state: 'initial' } };
+    const primaryCandidate = {
+      entity: entityWithLifecycle,
+      metadata: { state: 'initial' },
+    };
     const primitiveCandidate = 'primitive-target';
     const originalTargetContext = [
       {
@@ -97,8 +100,12 @@ describe('TargetValidationIOAdapter', () => {
     expect(firstItem.resolvedTargets).not.toBe(
       context.actionsWithTargets[0].resolvedTargets
     );
-    expect(firstItem.resolvedTargets[PRIMARY_ROLE][0]).not.toBe(primaryCandidate);
-    expect(firstItem.resolvedTargets[PRIMARY_ROLE][0].entity).toBe(entityWithLifecycle);
+    expect(firstItem.resolvedTargets[PRIMARY_ROLE][0]).not.toBe(
+      primaryCandidate
+    );
+    expect(firstItem.resolvedTargets[PRIMARY_ROLE][0].entity).toBe(
+      entityWithLifecycle
+    );
     expect(firstItem.resolvedTargets[PRIMARY_ROLE][1]).toBe(primitiveCandidate);
     expect(firstItem.resolvedTargets.custom).not.toBe(
       context.actionsWithTargets[0].resolvedTargets.custom
@@ -112,7 +119,9 @@ describe('TargetValidationIOAdapter', () => {
     expect(firstItem.targetContexts).toHaveLength(1);
     expect(firstItem.targetContexts).not.toBe(originalTargetContext);
     expect(firstItem.targetContexts[0]).not.toBe(originalTargetContext[0]);
-    expect(firstItem.targetContexts[0].entity).toBe(originalTargetContext[0].entity);
+    expect(firstItem.targetContexts[0].entity).toBe(
+      originalTargetContext[0].entity
+    );
     firstItem.targetContexts[0].metadata = 'mutated';
     expect(originalTargetContext[0].metadata).toBeUndefined();
 
@@ -141,7 +150,9 @@ describe('TargetValidationIOAdapter', () => {
     expect(rebuiltFirst.resolvedTargets[PRIMARY_ROLE][0]).not.toBe(
       firstItem.resolvedTargets[PRIMARY_ROLE][0]
     );
-    expect(rebuiltFirst.resolvedTargets[PRIMARY_ROLE][0].entity).toBe(entityWithLifecycle);
+    expect(rebuiltFirst.resolvedTargets[PRIMARY_ROLE][0].entity).toBe(
+      entityWithLifecycle
+    );
     expect(rebuiltSecond.resolvedTargets).toBeNull();
   });
 
@@ -196,10 +207,14 @@ describe('TargetValidationIOAdapter', () => {
     expect(withOwnResolved.placeholderSource).toBe(
       context.candidateActions[0].targetDefinitions
     );
-    expect(withOwnResolved.resolvedTargets[PRIMARY_ROLE]).toBe(entityWithLifecycle);
+    expect(withOwnResolved.resolvedTargets[PRIMARY_ROLE]).toBe(
+      entityWithLifecycle
+    );
     expect(withOwnResolved.resolvedTargets[ACTOR_ROLE]).toBe(actor);
 
-    expect(targetsFallback.placeholderSource).toBe(context.candidateActions[1].targets);
+    expect(targetsFallback.placeholderSource).toBe(
+      context.candidateActions[1].targets
+    );
     expect(targetsFallback.resolvedTargets).toEqual({ [ACTOR_ROLE]: actor });
 
     expect(legacy.resolvedTargets).toEqual({
@@ -212,7 +227,9 @@ describe('TargetValidationIOAdapter', () => {
       context.candidateActions[3].target_entities[PRIMARY_ROLE][0].entity
     );
     expect(multi.resolvedTargets[SECONDARY_ROLE]).not.toBe(sharedSecondary);
-    expect(multi.resolvedTargets[SECONDARY_ROLE].entity).toBe(sharedSecondary.entity);
+    expect(multi.resolvedTargets[SECONDARY_ROLE].entity).toBe(
+      sharedSecondary.entity
+    );
     expect(multi.resolvedTargets[ACTOR_ROLE]).toBe(actor);
   });
 
@@ -224,17 +241,15 @@ describe('TargetValidationIOAdapter', () => {
     const context = {
       actor,
       resolvedTargets: sharedResolvedTargets,
-      candidateActions: [
-        { id: 'first' },
-        { id: 'second' },
-        { id: 'third' },
-      ],
+      candidateActions: [{ id: 'first' }, { id: 'second' }, { id: 'third' }],
     };
 
     const adapter = new TargetValidationIOAdapter();
     const normalized = adapter.normalize(context);
 
-    expect(normalized.metadata.sharedResolvedTargetsRef).toBe(sharedResolvedTargets);
+    expect(normalized.metadata.sharedResolvedTargetsRef).toBe(
+      sharedResolvedTargets
+    );
     expect(normalized.items).toHaveLength(3);
     normalized.items.forEach((item) => {
       expect(item.resolvedTargets).toEqual({

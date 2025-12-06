@@ -39,7 +39,10 @@ export function findGrabbingAppendages(entityManager, entityId) {
     return [];
   }
 
-  const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+  const bodyComponent = entityManager.getComponentData(
+    entityId,
+    'anatomy:body'
+  );
   if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.parts) {
     return [];
   }

@@ -3,7 +3,14 @@
  * Uses real ApplyDamageHandler with SimpleEntityManager and BodyGraphService.
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import BodyGraphService from '../../../src/anatomy/bodyGraphService.js';
@@ -139,16 +146,20 @@ describe('Damage Application Mechanics', () => {
     });
     // Use standalone damage_propagation component (new format)
     // Using damage_types whitelist to only allow piercing damage (matches original test behavior)
-    await entityManager.addComponent(ids.torso, DAMAGE_PROPAGATION_COMPONENT_ID, {
-      rules: [
-        {
-          childPartId: ids.heart,
-          baseProbability: 1,
-          damageFraction: 0.5,
-          damage_types: ['piercing'], // Only piercing damage propagates (whitelist)
-        },
-      ],
-    });
+    await entityManager.addComponent(
+      ids.torso,
+      DAMAGE_PROPAGATION_COMPONENT_ID,
+      {
+        rules: [
+          {
+            childPartId: ids.heart,
+            baseProbability: 1,
+            damageFraction: 0.5,
+            damage_types: ['piercing'], // Only piercing damage propagates (whitelist)
+          },
+        ],
+      }
+    );
     await entityManager.addComponent(ids.torso, PART_HEALTH_COMPONENT_ID, {
       currentHealth: 100,
       maxHealth: 100,
@@ -222,19 +233,24 @@ describe('Damage Application Mechanics', () => {
       executionContext
     );
 
-    expect(entityManager.getComponentData(ids.arm, PART_HEALTH_COMPONENT_ID)).toMatchObject({
+    expect(
+      entityManager.getComponentData(ids.arm, PART_HEALTH_COMPONENT_ID)
+    ).toMatchObject({
       currentHealth: 50,
       state: 'wounded',
     });
-    expect(entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      100
-    );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      100
-    );
-    expect(entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      50
-    );
+    expect(
+      entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(100);
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(100);
+    expect(
+      entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(50);
 
     const damageEvents = getEventPayloads(DAMAGE_APPLIED_EVENT);
     expect(damageEvents).toHaveLength(1);
@@ -259,32 +275,60 @@ describe('Damage Application Mechanics', () => {
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.1); // First hit lands on torso
 
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: null, amount: 10, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: null,
+        amount: 10,
+        damage_type: 'blunt',
+      },
       executionContext
     );
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: null, amount: 10, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: null,
+        amount: 10,
+        damage_type: 'blunt',
+      },
       executionContext
     );
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: null, amount: 10, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: null,
+        amount: 10,
+        damage_type: 'blunt',
+      },
       executionContext
     );
 
     randomSpy.mockRestore();
 
-    const torsoHealth = entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth;
-    const headHealth = entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).currentHealth;
-    const armHealth = entityManager.getComponentData(ids.arm, PART_HEALTH_COMPONENT_ID).currentHealth;
-    const heartHealth = entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID)
-      .currentHealth;
+    const torsoHealth = entityManager.getComponentData(
+      ids.torso,
+      PART_HEALTH_COMPONENT_ID
+    ).currentHealth;
+    const headHealth = entityManager.getComponentData(
+      ids.head,
+      PART_HEALTH_COMPONENT_ID
+    ).currentHealth;
+    const armHealth = entityManager.getComponentData(
+      ids.arm,
+      PART_HEALTH_COMPONENT_ID
+    ).currentHealth;
+    const heartHealth = entityManager.getComponentData(
+      ids.heart,
+      PART_HEALTH_COMPONENT_ID
+    ).currentHealth;
 
     expect(torsoHealth).toBe(70);
     expect(headHealth).toBe(100);
     expect(armHealth).toBe(100);
     expect(heartHealth).toBe(50);
 
-    const targetedParts = getEventPayloads(DAMAGE_APPLIED_EVENT).map((event) => event.partId);
+    const targetedParts = getEventPayloads(DAMAGE_APPLIED_EVENT).map(
+      (event) => event.partId
+    );
     expect(targetedParts).toHaveLength(3);
     expect(new Set(targetedParts)).toEqual(new Set([ids.torso]));
   });
@@ -304,12 +348,14 @@ describe('Damage Application Mechanics', () => {
 
     randomSpy.mockRestore();
 
-    expect(entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      60
-    );
-    expect(entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      30
-    );
+    expect(
+      entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(60);
+    expect(
+      entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(30);
 
     const damageEvents = getEventPayloads(DAMAGE_APPLIED_EVENT);
     expect(damageEvents).toHaveLength(2);
@@ -331,9 +377,10 @@ describe('Damage Application Mechanics', () => {
       executionContext
     );
 
-    expect(entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      100
-    );
+    expect(
+      entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(100);
     expect(getEventPayloads(DAMAGE_APPLIED_EVENT)).toHaveLength(0);
     expect(getEventPayloads(PART_HEALTH_CHANGED_EVENT)).toHaveLength(0);
     expect(getEventPayloads(INTERNAL_DAMAGE_PROPAGATED_EVENT)).toHaveLength(0);
@@ -355,7 +402,10 @@ describe('Damage Application Mechanics', () => {
       executionContext
     );
 
-    const headHealth = entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID);
+    const headHealth = entityManager.getComponentData(
+      ids.head,
+      PART_HEALTH_COMPONENT_ID
+    );
     expect(headHealth.currentHealth).toBe(0);
     expect(headHealth.state).toBe('destroyed');
 
@@ -389,46 +439,71 @@ describe('Damage Application Mechanics', () => {
 
   test('health state transitions follow thresholds', async () => {
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 10, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 10,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'healthy'
-    );
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state
+    ).toBe('healthy');
 
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 25, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 25,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'scratched'
-    );
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state
+    ).toBe('scratched');
 
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 20, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 20,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'wounded'
-    );
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state
+    ).toBe('wounded');
 
     // 45% - 24% = 21% → injured (21-40% threshold)
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 24, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 24,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'injured'
-    );
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state
+    ).toBe('injured');
 
     // 21% - 21% = 0% → destroyed (0% threshold)
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 21, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 21,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
-      'destroyed'
-    );
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state
+    ).toBe('destroyed');
   });
 
   test('does not propagate when parent part is already destroyed', async () => {
@@ -453,28 +528,48 @@ describe('Damage Application Mechanics', () => {
 
     randomSpy.mockRestore();
 
-    expect(entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(0);
-    expect(entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(50);
+    expect(
+      entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(0);
+    expect(
+      entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(50);
     expect(getEventPayloads(DAMAGE_APPLIED_EVENT)).toHaveLength(0);
     expect(getEventPayloads(INTERNAL_DAMAGE_PROPAGATED_EVENT)).toHaveLength(0);
   });
 
   test('turnsInState increments when state stays the same', async () => {
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 5, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 5,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID)).toMatchObject({
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID)
+    ).toMatchObject({
       currentHealth: 95,
       state: 'healthy',
       turnsInState: 1,
     });
 
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.head, amount: 5, damage_type: 'blunt' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.head,
+        amount: 5,
+        damage_type: 'blunt',
+      },
       executionContext
     );
-    expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID)).toMatchObject({
+    expect(
+      entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID)
+    ).toMatchObject({
       currentHealth: 90,
       state: 'healthy',
       turnsInState: 2,
@@ -504,30 +599,40 @@ describe('Damage Application Mechanics', () => {
       ids.torso,
       DAMAGE_PROPAGATION_COMPONENT_ID
     );
-    await entityManager.addComponent(ids.torso, DAMAGE_PROPAGATION_COMPONENT_ID, {
-      rules: [
-        ...(existingPropagation?.rules || []),
-        {
-          childPartId: orphanId,
-          baseProbability: 1,
-          damageFraction: 1,
-          damageTypeModifiers: { piercing: 1.0 },
-        },
-      ],
-    });
+    await entityManager.addComponent(
+      ids.torso,
+      DAMAGE_PROPAGATION_COMPONENT_ID,
+      {
+        rules: [
+          ...(existingPropagation?.rules || []),
+          {
+            childPartId: orphanId,
+            baseProbability: 1,
+            damageFraction: 1,
+            damageTypeModifiers: { piercing: 1.0 },
+          },
+        ],
+      }
+    );
 
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
 
     await handler.execute(
-      { entity_ref: ids.actor, part_ref: ids.torso, amount: 20, damage_type: 'piercing' },
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.torso,
+        amount: 20,
+        damage_type: 'piercing',
+      },
       executionContext
     );
 
     randomSpy.mockRestore();
 
-    expect(entityManager.getComponentData(orphanId, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
-      30
-    );
+    expect(
+      entityManager.getComponentData(orphanId, PART_HEALTH_COMPONENT_ID)
+        .currentHealth
+    ).toBe(30);
 
     const orphanDamageEvents = getEventPayloads(DAMAGE_APPLIED_EVENT).filter(
       (event) => event.partId === orphanId

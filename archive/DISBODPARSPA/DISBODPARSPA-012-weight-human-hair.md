@@ -17,6 +17,7 @@ Add realistic `items:weight` component to human hair body part entity definition
 ## Outcome
 
 ### Originally Planned (10 files)
+
 - `human_hair_bald.entity.json` - NOT FOUND (doesn't exist)
 - `human_hair_short.entity.json` - NOT FOUND (doesn't exist)
 - `human_hair_medium.entity.json` - NOT FOUND (doesn't exist)
@@ -29,29 +30,31 @@ Add realistic `items:weight` component to human hair body part entity definition
 - `human_skin.entity.json` - NOT FOUND (doesn't exist)
 
 ### Actually Changed (17 files)
+
 The codebase uses descriptive hair file names with color/style combinations:
 
-| File | Weight (kg) | Hair Length |
-|------|-------------|-------------|
-| `human_hair.entity.json` | 0.1 | medium |
-| `human_hair_black_long_tousled.entity.json` | 0.15 | long |
-| `human_hair_blonde.entity.json` | 0.15 | long |
-| `human_hair_blonde_buzzed.entity.json` | 0.02 | buzzed |
-| `human_hair_blonde_long_braided.entity.json` | 0.15 | long |
-| `human_hair_blonde_long_straight.entity.json` | 0.15 | long |
-| `human_hair_blonde_medium_ponytail.entity.json` | 0.1 | medium |
-| `human_hair_blonde_medium_straight.entity.json` | 0.1 | medium |
-| `human_hair_brown_short_ponytail.entity.json` | 0.05 | short |
-| `human_hair_medium_brown_ponytail.entity.json` | 0.1 | medium |
-| `human_hair_raven.entity.json` | 0.15 | long |
-| `human_hair_raven_medium_straight.entity.json` | 0.1 | medium |
-| `human_hair_red_ponytails.entity.json` | 0.1 | medium |
-| `human_hair_red_tousled.entity.json` | 0.1 | medium |
-| `human_hair_short_brown_wavy.entity.json` | 0.05 | short |
-| `human_hair_short_dirty_blonde_wavy.entity.json` | 0.05 | short |
-| `human_hair_short_gray_wavy.entity.json` | 0.05 | short |
+| File                                             | Weight (kg) | Hair Length |
+| ------------------------------------------------ | ----------- | ----------- |
+| `human_hair.entity.json`                         | 0.1         | medium      |
+| `human_hair_black_long_tousled.entity.json`      | 0.15        | long        |
+| `human_hair_blonde.entity.json`                  | 0.15        | long        |
+| `human_hair_blonde_buzzed.entity.json`           | 0.02        | buzzed      |
+| `human_hair_blonde_long_braided.entity.json`     | 0.15        | long        |
+| `human_hair_blonde_long_straight.entity.json`    | 0.15        | long        |
+| `human_hair_blonde_medium_ponytail.entity.json`  | 0.1         | medium      |
+| `human_hair_blonde_medium_straight.entity.json`  | 0.1         | medium      |
+| `human_hair_brown_short_ponytail.entity.json`    | 0.05        | short       |
+| `human_hair_medium_brown_ponytail.entity.json`   | 0.1         | medium      |
+| `human_hair_raven.entity.json`                   | 0.15        | long        |
+| `human_hair_raven_medium_straight.entity.json`   | 0.1         | medium      |
+| `human_hair_red_ponytails.entity.json`           | 0.1         | medium      |
+| `human_hair_red_tousled.entity.json`             | 0.1         | medium      |
+| `human_hair_short_brown_wavy.entity.json`        | 0.05        | short       |
+| `human_hair_short_dirty_blonde_wavy.entity.json` | 0.05        | short       |
+| `human_hair_short_gray_wavy.entity.json`         | 0.05        | short       |
 
 ### Test Created
+
 - `tests/integration/mods/anatomy/humanHairWeightValidation.test.js` - 42 test cases covering:
   - Long hair weight validation (5 files)
   - Medium hair weight validation (7 files)
@@ -64,25 +67,25 @@ The codebase uses descriptive hair file names with color/style combinations:
 
 ## Files to Touch
 
-| File | Weight (kg) | Rationale |
-|------|-------------|-----------|
-| `data/mods/anatomy/entities/definitions/human_hair.entity.json` | 0.1 | medium length (generic) |
-| `data/mods/anatomy/entities/definitions/human_hair_black_long_tousled.entity.json` | 0.15 | long hair |
-| `data/mods/anatomy/entities/definitions/human_hair_blonde.entity.json` | 0.15 | long hair |
-| `data/mods/anatomy/entities/definitions/human_hair_blonde_buzzed.entity.json` | 0.02 | buzzed (very short) |
-| `data/mods/anatomy/entities/definitions/human_hair_blonde_long_braided.entity.json` | 0.15 | long hair |
-| `data/mods/anatomy/entities/definitions/human_hair_blonde_long_straight.entity.json` | 0.15 | long hair |
-| `data/mods/anatomy/entities/definitions/human_hair_blonde_medium_ponytail.entity.json` | 0.1 | medium hair |
-| `data/mods/anatomy/entities/definitions/human_hair_blonde_medium_straight.entity.json` | 0.1 | medium hair |
-| `data/mods/anatomy/entities/definitions/human_hair_brown_short_ponytail.entity.json` | 0.05 | short hair |
-| `data/mods/anatomy/entities/definitions/human_hair_medium_brown_ponytail.entity.json` | 0.1 | medium hair |
-| `data/mods/anatomy/entities/definitions/human_hair_raven.entity.json` | 0.15 | long hair |
-| `data/mods/anatomy/entities/definitions/human_hair_raven_medium_straight.entity.json` | 0.1 | medium hair |
-| `data/mods/anatomy/entities/definitions/human_hair_red_ponytails.entity.json` | 0.1 | medium hair |
-| `data/mods/anatomy/entities/definitions/human_hair_red_tousled.entity.json` | 0.1 | medium hair |
-| `data/mods/anatomy/entities/definitions/human_hair_short_brown_wavy.entity.json` | 0.05 | short hair |
-| `data/mods/anatomy/entities/definitions/human_hair_short_dirty_blonde_wavy.entity.json` | 0.05 | short hair |
-| `data/mods/anatomy/entities/definitions/human_hair_short_gray_wavy.entity.json` | 0.05 | short hair |
+| File                                                                                    | Weight (kg) | Rationale               |
+| --------------------------------------------------------------------------------------- | ----------- | ----------------------- |
+| `data/mods/anatomy/entities/definitions/human_hair.entity.json`                         | 0.1         | medium length (generic) |
+| `data/mods/anatomy/entities/definitions/human_hair_black_long_tousled.entity.json`      | 0.15        | long hair               |
+| `data/mods/anatomy/entities/definitions/human_hair_blonde.entity.json`                  | 0.15        | long hair               |
+| `data/mods/anatomy/entities/definitions/human_hair_blonde_buzzed.entity.json`           | 0.02        | buzzed (very short)     |
+| `data/mods/anatomy/entities/definitions/human_hair_blonde_long_braided.entity.json`     | 0.15        | long hair               |
+| `data/mods/anatomy/entities/definitions/human_hair_blonde_long_straight.entity.json`    | 0.15        | long hair               |
+| `data/mods/anatomy/entities/definitions/human_hair_blonde_medium_ponytail.entity.json`  | 0.1         | medium hair             |
+| `data/mods/anatomy/entities/definitions/human_hair_blonde_medium_straight.entity.json`  | 0.1         | medium hair             |
+| `data/mods/anatomy/entities/definitions/human_hair_brown_short_ponytail.entity.json`    | 0.05        | short hair              |
+| `data/mods/anatomy/entities/definitions/human_hair_medium_brown_ponytail.entity.json`   | 0.1         | medium hair             |
+| `data/mods/anatomy/entities/definitions/human_hair_raven.entity.json`                   | 0.15        | long hair               |
+| `data/mods/anatomy/entities/definitions/human_hair_raven_medium_straight.entity.json`   | 0.1         | medium hair             |
+| `data/mods/anatomy/entities/definitions/human_hair_red_ponytails.entity.json`           | 0.1         | medium hair             |
+| `data/mods/anatomy/entities/definitions/human_hair_red_tousled.entity.json`             | 0.1         | medium hair             |
+| `data/mods/anatomy/entities/definitions/human_hair_short_brown_wavy.entity.json`        | 0.05        | short hair              |
+| `data/mods/anatomy/entities/definitions/human_hair_short_dirty_blonde_wavy.entity.json` | 0.05        | short hair              |
+| `data/mods/anatomy/entities/definitions/human_hair_short_gray_wavy.entity.json`         | 0.05        | short hair              |
 
 **Total**: 17 files
 
@@ -108,6 +111,7 @@ The following are **explicitly NOT part of this ticket**:
 For each file, add the `items:weight` component to the `components` object:
 
 **Before:**
+
 ```json
 {
   "id": "anatomy:human_hair_blonde_long_braided",
@@ -119,6 +123,7 @@ For each file, add the `items:weight` component to the `components` object:
 ```
 
 **After:**
+
 ```json
 {
   "id": "anatomy:human_hair_blonde_long_braided",
@@ -132,12 +137,12 @@ For each file, add the `items:weight` component to the `components` object:
 
 ### Weight Reference by Hair Length
 
-| Hair Length | Weight (kg) | Notes |
-|-------------|-------------|-------|
-| buzzed | 0.02 | Very short/minimal |
-| short | 0.05 | Short styles |
-| medium | 0.1 | Shoulder length |
-| long | 0.15 | Back length |
+| Hair Length | Weight (kg) | Notes              |
+| ----------- | ----------- | ------------------ |
+| buzzed      | 0.02        | Very short/minimal |
+| short       | 0.05        | Short styles       |
+| medium      | 0.1         | Shoulder length    |
+| long        | 0.15        | Back length        |
 
 ---
 

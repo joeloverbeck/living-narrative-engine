@@ -144,7 +144,9 @@ describe('TurnDirectiveStrategyResolver integration', () => {
     await repromptStrategy.execute(context, TurnDirective.RE_PROMPT, {
       success: false,
     });
-    expect(handler.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(1);
+    expect(handler.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(
+      1
+    );
     expect(validatedEventDispatcher.dispatched).toHaveLength(0);
     expect(resolver.resolveStrategy(TurnDirective.RE_PROMPT)).toBe(
       repromptStrategy
@@ -154,22 +156,18 @@ describe('TurnDirectiveStrategyResolver integration', () => {
       TurnDirective.END_TURN_SUCCESS
     );
     expect(successStrategy).toBeInstanceOf(EndTurnSuccessStrategy);
-    await successStrategy.execute(
-      context,
-      TurnDirective.END_TURN_SUCCESS,
-      { success: true }
-    );
+    await successStrategy.execute(context, TurnDirective.END_TURN_SUCCESS, {
+      success: true,
+    });
     expect(onEndTurn).toHaveBeenCalledWith(null);
 
     const failureStrategy = resolver.resolveStrategy(
       TurnDirective.END_TURN_FAILURE
     );
     expect(failureStrategy).toBeInstanceOf(EndTurnFailureStrategy);
-    await failureStrategy.execute(
-      context,
-      TurnDirective.END_TURN_FAILURE,
-      { error: 'failure-case' }
-    );
+    await failureStrategy.execute(context, TurnDirective.END_TURN_FAILURE, {
+      error: 'failure-case',
+    });
     const lastCall = onEndTurn.mock.calls[onEndTurn.mock.calls.length - 1];
     expect(lastCall[0]).toBeInstanceOf(Error);
     expect(lastCall[0].message).toContain('failure-case');
@@ -229,9 +227,9 @@ describe('TurnDirectiveStrategyResolver integration', () => {
     await strategy.execute(context, TurnDirective.WAIT_FOR_EVENT, {
       success: true,
     });
-    expect(handler.requestAwaitingExternalTurnEndStateTransition).toHaveBeenCalledTimes(
-      1
-    );
+    expect(
+      handler.requestAwaitingExternalTurnEndStateTransition
+    ).toHaveBeenCalledTimes(1);
 
     warnSpy.mockRestore();
   });

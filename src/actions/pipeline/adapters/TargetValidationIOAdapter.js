@@ -69,7 +69,9 @@ export class TargetValidationIOAdapter {
    * @returns {NormalizedTargetValidation} Canonical representation for validation.
    */
   normalize(pipelineContext) {
-    const actionsWithTargets = Array.isArray(pipelineContext?.actionsWithTargets)
+    const actionsWithTargets = Array.isArray(
+      pipelineContext?.actionsWithTargets
+    )
       ? pipelineContext.actionsWithTargets
       : [];
     const candidateActions = Array.isArray(pipelineContext?.candidateActions)
@@ -145,19 +147,26 @@ export class TargetValidationIOAdapter {
     }
 
     const validatedSet = new Set(validatedItems);
-    const orderedValidatedItems = items.filter((item) => validatedSet.has(item));
+    const orderedValidatedItems = items.filter((item) =>
+      validatedSet.has(item)
+    );
     const continueProcessing = orderedValidatedItems.length > 0;
 
     if (format === 'actionsWithTargets') {
       const rebuiltActions = orderedValidatedItems.map((item) => {
-        const base = item.originalRef ? { ...item.originalRef } : { actionDef: item.actionDef };
-        const sanitizedTargets = this.#sanitizeResolvedTargets(item.resolvedTargets);
+        const base = item.originalRef
+          ? { ...item.originalRef }
+          : { actionDef: item.actionDef };
+        const sanitizedTargets = this.#sanitizeResolvedTargets(
+          item.resolvedTargets
+        );
 
         return {
           ...base,
           actionDef: item.actionDef,
           resolvedTargets: sanitizedTargets,
-          targetDefinitions: item.targetDefinitions ?? base.targetDefinitions ?? null,
+          targetDefinitions:
+            item.targetDefinitions ?? base.targetDefinitions ?? null,
           targetContexts: Array.isArray(item.targetContexts)
             ? [...item.targetContexts]
             : base.targetContexts,
@@ -171,7 +180,9 @@ export class TargetValidationIOAdapter {
     }
 
     // Legacy format rebuild
-    const rebuiltCandidateActions = orderedValidatedItems.map((item) => item.actionDef);
+    const rebuiltCandidateActions = orderedValidatedItems.map(
+      (item) => item.actionDef
+    );
 
     return {
       data: { candidateActions: rebuiltCandidateActions },
@@ -276,7 +287,11 @@ export class TargetValidationIOAdapter {
       if (actor) {
         targets[ACTOR_ROLE] = actor;
       }
-      return Object.keys(targets).length > 0 ? targets : actor ? { [ACTOR_ROLE]: actor } : null;
+      return Object.keys(targets).length > 0
+        ? targets
+        : actor
+          ? { [ACTOR_ROLE]: actor }
+          : null;
     }
 
     if (actor) {

@@ -20,11 +20,20 @@ import SimplifiedAnatomyTestBed from '../../common/anatomy/simplifiedAnatomyTest
 async function createMinimalAnatomy(testBed) {
   const actor = await testBed.entityManager.createEntityInstance('core:actor');
 
-  const createPart = async (definitionId, partData, jointData = null, extras = {}) => {
+  const createPart = async (
+    definitionId,
+    partData,
+    jointData = null,
+    extras = {}
+  ) => {
     const part = await testBed.entityManager.createEntityInstance(definitionId);
     await testBed.entityManager.addComponent(part.id, 'anatomy:part', partData);
     if (jointData) {
-      await testBed.entityManager.addComponent(part.id, 'anatomy:joint', jointData);
+      await testBed.entityManager.addComponent(
+        part.id,
+        'anatomy:joint',
+        jointData
+      );
     }
     for (const [componentId, data] of Object.entries(extras)) {
       await testBed.entityManager.addComponent(part.id, componentId, data);
@@ -62,7 +71,11 @@ async function createMinimalAnatomy(testBed) {
     structure: { rootPartId: torso.id },
   };
 
-  await testBed.entityManager.addComponent(actor.id, 'anatomy:body', bodyComponent);
+  await testBed.entityManager.addComponent(
+    actor.id,
+    'anatomy:body',
+    bodyComponent
+  );
 
   return {
     actorId: actor.id,
@@ -149,12 +162,14 @@ describe('AnatomyQueryCache integration', () => {
     const cacheKey = CacheKeyGenerators.findPartsByType(actorId, 'hand');
     expect(queryCache.has(cacheKey)).toBe(true);
 
-    const debugMessages = testBed.logger.debug.mock.calls
-      .map(([message]) => message);
+    const debugMessages = testBed.logger.debug.mock.calls.map(
+      ([message]) => message
+    );
     expect(
-      debugMessages.some((message) =>
-        typeof message === 'string' &&
-        message.includes("AnatomyQueryCache: Cache hit for key '")
+      debugMessages.some(
+        (message) =>
+          typeof message === 'string' &&
+          message.includes("AnatomyQueryCache: Cache hit for key '")
       )
     ).toBe(true);
   });
@@ -163,10 +178,15 @@ describe('AnatomyQueryCache integration', () => {
     bodyGraphService.getAllParts(bodyComponent, actorId);
     bodyGraphService.findPartsByType(actorId, 'hand');
 
-    await bodyGraphService.detachPart(parts.hand, { cascade: false, reason: 'integration' });
+    await bodyGraphService.detachPart(parts.hand, {
+      cascade: false,
+      reason: 'integration',
+    });
 
     expect(queryCache.getCachedGetAllParts(actorId)).toBeUndefined();
-    expect(queryCache.getCachedFindPartsByType(actorId, 'hand')).toBeUndefined();
+    expect(
+      queryCache.getCachedFindPartsByType(actorId, 'hand')
+    ).toBeUndefined();
 
     await bodyGraphService.buildAdjacencyCache(actorId);
     const rebuilt = bodyGraphService.getAllParts(bodyComponent, actorId);
@@ -174,7 +194,10 @@ describe('AnatomyQueryCache integration', () => {
   });
 
   it('offers manual cache control utilities for multiple roots', () => {
-    const otherRootKey = CacheKeyGenerators.findPartsByType('other-root', 'finger');
+    const otherRootKey = CacheKeyGenerators.findPartsByType(
+      'other-root',
+      'finger'
+    );
     queryCache.cacheFindPartsByType(actorId, 'hand', ['hand-1']);
     queryCache.cacheFindPartsByType('other-root', 'finger', ['finger-1']);
     queryCache.cacheGetAllParts(actorId, ['actor', 'torso']);
@@ -198,11 +221,13 @@ describe('AnatomyQueryCache integration', () => {
 
     queryCache.invalidateRoot(actorId);
 
-    expect(queryCache.getCachedFindPartsByType(actorId, 'hand')).toBeUndefined();
+    expect(
+      queryCache.getCachedFindPartsByType(actorId, 'hand')
+    ).toBeUndefined();
     expect(queryCache.getCachedGetAllParts(actorId)).toBeUndefined();
-    expect(queryCache.getCachedFindPartsByType('other-root', 'finger')).toEqual([
-      'finger-1',
-    ]);
+    expect(queryCache.getCachedFindPartsByType('other-root', 'finger')).toEqual(
+      ['finger-1']
+    );
     expect(queryCache.get(componentKey)).toBeUndefined();
     expect(queryCache.get(componentValueKey)).toBeUndefined();
 

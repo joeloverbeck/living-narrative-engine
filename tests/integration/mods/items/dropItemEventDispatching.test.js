@@ -80,9 +80,7 @@ describe('Drop Item - Event Dispatching', () => {
 
     it('should include correct payload structure in items:item_dropped event', async () => {
       // Arrange (with grabbing hands for prerequisite)
-      const room = new ModEntityBuilder('saloon')
-        .asRoom('Saloon')
-        .build();
+      const room = new ModEntityBuilder('saloon').asRoom('Saloon').build();
 
       const actorBuilder = new ModEntityBuilder('actor-bob')
         .withName('Bob')
@@ -128,9 +126,7 @@ describe('Drop Item - Event Dispatching', () => {
 
     it('should validate event payload against registered schema', async () => {
       // Arrange (with grabbing hands for prerequisite)
-      const room = new ModEntityBuilder('tavern')
-        .asRoom('Tavern')
-        .build();
+      const room = new ModEntityBuilder('tavern').asRoom('Tavern').build();
 
       const actorBuilder = new ModEntityBuilder('actor-charlie')
         .withName('Charlie')
@@ -166,8 +162,9 @@ describe('Drop Item - Event Dispatching', () => {
 
       // Verify no validation errors in captured events
       const validationErrors = testFixture.events.filter(
-        (e) => e.eventType === 'core:system_error_occurred' &&
-               e.payload?.message?.includes('items:item_dropped')
+        (e) =>
+          e.eventType === 'core:system_error_occurred' &&
+          e.payload?.message?.includes('items:item_dropped')
       );
       expect(validationErrors).toHaveLength(0);
     });
@@ -176,9 +173,7 @@ describe('Drop Item - Event Dispatching', () => {
   describe('Event Timing and Order', () => {
     it('should dispatch items:item_dropped before turn_ended', async () => {
       // Arrange (with grabbing hands for prerequisite)
-      const room = new ModEntityBuilder('kitchen')
-        .asRoom('Kitchen')
-        .build();
+      const room = new ModEntityBuilder('kitchen').asRoom('Kitchen').build();
 
       const actorBuilder = new ModEntityBuilder('actor-diana')
         .withName('Diana')

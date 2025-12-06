@@ -3,19 +3,22 @@
 ## Context
 
 ### Location in Codebase
+
 The anatomy recipe validation system is located across several modules:
 
-| Component | Path | Purpose |
-|-----------|------|---------|
-| Validation Pipeline | `src/anatomy/validation/RecipeValidationRunner.js` | Orchestrates validator execution |
-| Entity Matcher | `src/anatomy/services/entityMatcherService.js` | Matches entities to recipe requirements |
+| Component                | Path                                               | Purpose                                      |
+| ------------------------ | -------------------------------------------------- | -------------------------------------------- |
+| Validation Pipeline      | `src/anatomy/validation/RecipeValidationRunner.js` | Orchestrates validator execution             |
+| Entity Matcher           | `src/anatomy/services/entityMatcherService.js`     | Matches entities to recipe requirements      |
 | Body Descriptor Registry | `src/anatomy/registries/bodyDescriptorRegistry.js` | Single source of truth for descriptor values |
-| Validators | `src/anatomy/validation/validators/*.js` | Individual validation rules |
-| Recipe Schema | `data/schemas/anatomy.recipe.schema.json` | JSON Schema for recipe structure |
-| CLI Entry | `scripts/validate-recipe.js` | Command-line validation interface |
+| Validators               | `src/anatomy/validation/validators/*.js`           | Individual validation rules                  |
+| Recipe Schema            | `data/schemas/anatomy.recipe.schema.json`          | JSON Schema for recipe structure             |
+| CLI Entry                | `scripts/validate-recipe.js`                       | Command-line validation interface            |
 
 ### What the Module Does
+
 The recipe validation system validates anatomy recipes before they can be used to generate entity anatomy. It ensures:
+
 1. All referenced content (blueprints, components, entities) exists and is registered
 2. Body descriptor values are valid according to the registry
 3. Recipe slots can be matched to existing entity definitions
@@ -26,9 +29,11 @@ The recipe validation system validates anatomy recipes before they can be used t
 ## Problem
 
 ### What Failed
+
 During ROOHENANAREC-003 (chicken recipe implementation), three distinct failure categories were discovered when running `npm run validate:recipe`:
 
 ### Failure 1: Missing Manifest Registration
+
 **Error**: `"Blueprint 'anatomy:rooster' does not exist"`
 
 **How it failed**: Content files existed on disk but were not listed in `data/mods/anatomy/mod-manifest.json`. The validation pipeline's `BlueprintExistenceValidator` (priority 10, failFast: true) rejected the recipe immediately.
@@ -38,6 +43,7 @@ During ROOHENANAREC-003 (chicken recipe implementation), three distinct failure 
 **Tests affected**: All recipe validation tests fail if manifest registration is incomplete.
 
 ### Failure 2: Invalid Body Descriptor Values
+
 **Error**: `"Invalid value 'small' for body descriptor 'height'. Expected one of: microscopic, minuscule, tiny, petite, short, average, tall, very-tall, gigantic, colossal, titanic"`
 
 **How it failed**: The recipe used `"height": "small"` but `small` is not in the enumerated valid values for the height descriptor.
@@ -47,9 +53,11 @@ During ROOHENANAREC-003 (chicken recipe implementation), three distinct failure 
 **Tests affected**: `tests/unit/anatomy/chicken.recipe.test.js` - body descriptor assertions.
 
 ### Failure 3: Property Semantic Misunderstanding
+
 **Error**: `"No entity definitions found for slot 'comb'"`
 
 **How it failed**: The recipe used `properties` to specify size variations:
+
 ```json
 {
   "comb": {
@@ -86,16 +94,19 @@ Since `chicken_comb.entity.json` does not have a `descriptors:size_category` com
 ## Truth Sources
 
 ### Primary Documentation
+
 - `data/schemas/anatomy.recipe.schema.json` - Canonical recipe structure
 - `src/anatomy/registries/bodyDescriptorRegistry.js` - Valid descriptor values
 - `docs/anatomy/body-descriptors-complete.md` - Body descriptor documentation
 
 ### Domain Rules
+
 1. **Manifest Registration Rule**: All content must be registered in `mod-manifest.json` to be discoverable
 2. **Descriptor Enumeration Rule**: Body descriptors with `validValues !== null` only accept those specific values
 3. **Property Filtering Rule**: `properties` matches entities that already have those values, not runtime overrides
 
 ### External Contracts
+
 - JSON Schema Draft-07 for schema validation
 - AJV validator for JSON Schema enforcement
 - Node.js fs module for file access during validation
@@ -140,13 +151,13 @@ Since `chicken_comb.entity.json` does not have a `descriptors:size_category` com
 
 ### Failure Modes
 
-| Condition | Error Type | Error Message | Recovery |
-|-----------|------------|---------------|----------|
-| Blueprint not in manifest | `BlueprintExistenceValidator` | "Blueprint '{id}' does not exist" | Register in mod-manifest.json |
-| Invalid descriptor value | `RecipeBodyDescriptorValidator` | "Invalid value '{v}' for {descriptor}" | Use value from valid list |
-| No matching entities | `PartAvailabilityValidator` | "No entity definitions found for slot '{s}'" | Remove properties filter or create matching entity |
-| Component not registered | `ComponentExistenceValidator` | "Component '{id}' does not exist" | Register component in manifest |
-| Malformed JSON | Schema validation | AJV error with path | Fix JSON syntax |
+| Condition                 | Error Type                      | Error Message                                | Recovery                                           |
+| ------------------------- | ------------------------------- | -------------------------------------------- | -------------------------------------------------- |
+| Blueprint not in manifest | `BlueprintExistenceValidator`   | "Blueprint '{id}' does not exist"            | Register in mod-manifest.json                      |
+| Invalid descriptor value  | `RecipeBodyDescriptorValidator` | "Invalid value '{v}' for {descriptor}"       | Use value from valid list                          |
+| No matching entities      | `PartAvailabilityValidator`     | "No entity definitions found for slot '{s}'" | Remove properties filter or create matching entity |
+| Component not registered  | `ComponentExistenceValidator`   | "Component '{id}' does not exist"            | Register component in manifest                     |
+| Malformed JSON            | Schema validation               | AJV error with path                          | Fix JSON syntax                                    |
 
 ---
 
@@ -246,6 +257,7 @@ Properties that must always hold:
 ### Property Tests (Recommended)
 
 1. **Descriptor Exhaustiveness**
+
    ```javascript
    // All valid values should pass validation
    for (const value of BODY_DESCRIPTOR_REGISTRY.height.validValues) {
@@ -254,6 +266,7 @@ Properties that must always hold:
    ```
 
 2. **Manifest Completeness Check**
+
    ```javascript
    // All content files in directory should be registered
    const files = glob('data/mods/anatomy/recipes/*.recipe.json');

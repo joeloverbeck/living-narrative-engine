@@ -35,9 +35,7 @@ describe('ComponentExistenceValidationRule', () => {
     });
 
     it('should have correct rule name', () => {
-      expect(validationRule.ruleName).toBe(
-        'Component Existence Validation'
-      );
+      expect(validationRule.ruleName).toBe('Component Existence Validation');
     });
   });
 

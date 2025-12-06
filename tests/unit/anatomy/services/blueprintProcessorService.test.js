@@ -146,9 +146,7 @@ describe('BlueprintProcessorService', () => {
 
     beforeEach(() => {
       mockDataRegistry.get.mockReturnValue(mockStructureTemplate);
-      mockSocketGenerator.generateSockets.mockReturnValue(
-        mockGeneratedSockets
-      );
+      mockSocketGenerator.generateSockets.mockReturnValue(mockGeneratedSockets);
       mockSlotGenerator.generateBlueprintSlots.mockReturnValue(
         mockGeneratedSlots
       );
@@ -326,9 +324,7 @@ describe('BlueprintProcessorService', () => {
 
     beforeEach(() => {
       mockDataRegistry.get.mockReturnValue(mockStructureTemplate);
-      mockSocketGenerator.generateSockets.mockReturnValue(
-        mockGeneratedSockets
-      );
+      mockSocketGenerator.generateSockets.mockReturnValue(mockGeneratedSockets);
     });
 
     it('should merge additionalSlots with generated slots', () => {

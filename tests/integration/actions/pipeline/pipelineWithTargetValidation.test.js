@@ -4,7 +4,14 @@
  * @see src/config/actionPipelineConfig.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TargetComponentValidationStage } from '../../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
 import { TargetComponentValidator } from '../../../../src/actions/validation/TargetComponentValidator.js';
 import TargetRequiredComponentsValidator from '../../../../src/actions/validation/TargetRequiredComponentsValidator.js';
@@ -78,11 +85,15 @@ jest.mock('../../../../src/config/actionPipelineConfig.js', () => {
 
     const config = getActionPipelineConfig();
 
-    if (action?.type && config.targetValidation?.skipForActionTypes?.includes(action.type)) {
+    if (
+      action?.type &&
+      config.targetValidation?.skipForActionTypes?.includes(action.type)
+    ) {
       return true;
     }
 
-    const modId = typeof action?.id === 'string' ? action.id.split(':')[0] : null;
+    const modId =
+      typeof action?.id === 'string' ? action.id.split(':')[0] : null;
     if (modId && config.targetValidation?.skipForMods?.includes(modId)) {
       return true;
     }
@@ -144,7 +155,7 @@ jest.mock('../../../../src/config/actionPipelineConfig.js', () => {
 // Helper function to create mocks
 const createMock = (name, methods) => {
   const mock = {};
-  methods.forEach(method => {
+  methods.forEach((method) => {
     mock[method] = jest.fn();
   });
   return mock;
@@ -173,24 +184,26 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
-    mockErrorContextBuilder = createMock('IActionErrorContextBuilder', ['buildErrorContext']);
+    mockErrorContextBuilder = createMock('IActionErrorContextBuilder', [
+      'buildErrorContext',
+    ]);
     mockEntityManager = createMock('IEntityManager', [
       'getEntityInstance',
       'hasComponent',
-      'getAllComponentTypesForEntity'
+      'getAllComponentTypesForEntity',
     ]);
 
     // Create real validator instances
     targetComponentValidator = new TargetComponentValidator({
       logger: mockLogger,
-      entityManager: mockEntityManager
+      entityManager: mockEntityManager,
     });
 
     targetRequiredComponentsValidator = new TargetRequiredComponentsValidator({
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     // Create validation stage
@@ -198,18 +211,25 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       targetComponentValidator,
       targetRequiredComponentsValidator,
       logger: mockLogger,
-      actionErrorContextBuilder: mockErrorContextBuilder
+      actionErrorContextBuilder: mockErrorContextBuilder,
     });
 
     // Create other required stages - don't set up default return values here
     // Let each test configure them as needed
-    const componentFilteringStage = createMock('ComponentFilteringStage', ['execute']);
+    const componentFilteringStage = createMock('ComponentFilteringStage', [
+      'execute',
+    ]);
     componentFilteringStage.name = 'ComponentFilteringStage';
 
-    const prerequisiteEvaluationStage = createMock('PrerequisiteEvaluationStage', ['execute']);
+    const prerequisiteEvaluationStage = createMock(
+      'PrerequisiteEvaluationStage',
+      ['execute']
+    );
     prerequisiteEvaluationStage.name = 'PrerequisiteEvaluationStage';
 
-    const actionFormattingStage = createMock('ActionFormattingStage', ['execute']);
+    const actionFormattingStage = createMock('ActionFormattingStage', [
+      'execute',
+    ]);
     actionFormattingStage.name = 'ActionFormattingStage';
 
     // Setup stages in correct order
@@ -217,7 +237,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       componentFilteringStage,
       prerequisiteEvaluationStage,
       validationStage, // Our target validation stage
-      actionFormattingStage
+      actionFormattingStage,
     ];
 
     // Create pipeline
@@ -227,7 +247,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     context = {
       actor: { id: 'test-actor', components: ['core:actor'] },
       candidateActions: [],
-      trace: null
+      trace: null,
     };
   });
 
@@ -246,7 +266,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     it('should pass context correctly between stages', async () => {
       const testActions = [
         { id: 'action-1', name: 'Test Action 1', forbidden_components: null },
-        { id: 'action-2', name: 'Test Action 2', forbidden_components: null }
+        { id: 'action-2', name: 'Test Action 2', forbidden_components: null },
       ];
 
       context.candidateActions = testActions;
@@ -258,14 +278,14 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       stages[0].execute.mockImplementation(async (ctx) => {
         return PipelineResult.success({
           data: { candidateActions: testActions },
-          continueProcessing: true
+          continueProcessing: true,
         });
       });
 
       stages[1].execute.mockImplementation(async (ctx) => {
         return PipelineResult.success({
           data: { candidateActions: testActions },
-          continueProcessing: true
+          continueProcessing: true,
         });
       });
 
@@ -276,7 +296,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       stages[3].execute.mockImplementation(async (ctx) => {
         return PipelineResult.success({
           data: { formattedActions: testActions },
-          continueProcessing: true
+          continueProcessing: true,
         });
       });
 
@@ -298,13 +318,13 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       stages[0].execute.mockImplementation((ctx) => ({
         success: true,
         data: { candidateActions: ctx.candidateActions },
-        continueProcessing: true
+        continueProcessing: true,
       }));
 
       stages[1].execute.mockImplementation((ctx) => ({
         success: true,
         data: { candidateActions: ctx.candidateActions },
-        continueProcessing: true
+        continueProcessing: true,
       }));
     });
 
@@ -313,13 +333,13 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
         {
           id: 'action-1',
           forbidden_components: null,
-          target_entity: { id: 'target-1' }
+          target_entity: { id: 'target-1' },
         },
         {
           id: 'action-2',
           forbidden_components: { target: [] },
-          target_entity: { id: 'target-2' }
-        }
+          target_entity: { id: 'target-2' },
+        },
       ];
 
       // Mock entity manager to return no forbidden components
@@ -339,13 +359,13 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
         {
           id: 'action-1',
           forbidden_components: { target: ['core:immobilized'] },
-          target_entity: { id: 'target-1' }
+          target_entity: { id: 'target-1' },
         },
         {
           id: 'action-2',
           forbidden_components: null,
-          target_entity: { id: 'target-2' }
-        }
+          target_entity: { id: 'target-2' },
+        },
       ];
 
       // Mock entity manager to return forbidden component for first target
@@ -367,12 +387,12 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
         id: 'multi-action',
         forbidden_components: {
           primary: ['core:immobilized'],
-          secondary: ['core:unconscious']
+          secondary: ['core:unconscious'],
         },
         target_entities: {
           primary: { id: 'primary-target' },
-          secondary: { id: 'secondary-target' }
-        }
+          secondary: { id: 'secondary-target' },
+        },
       };
 
       // Mock entity manager responses
@@ -400,12 +420,14 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
         {
           id: 'action-1',
           forbidden_components: { target: ['core:immobilized'] },
-          target_entity: { id: 'target-1' }
-        }
+          target_entity: { id: 'target-1' },
+        },
       ];
 
       // Even with forbidden components, action should pass through
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:immobilized']);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:immobilized',
+      ]);
 
       context.candidateActions = testActions;
 
@@ -428,16 +450,18 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
           id: 'debug-action',
           type: 'debug',
           forbidden_components: { target: ['core:immobilized'] },
-          target_entity: { id: 'target-1' }
+          target_entity: { id: 'target-1' },
         },
         {
           id: 'normal-action',
           forbidden_components: { target: ['core:immobilized'] },
-          target_entity: { id: 'target-2' }
-        }
+          target_entity: { id: 'target-2' },
+        },
       ];
 
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:immobilized']);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:immobilized',
+      ]);
 
       context.candidateActions = testActions;
 
@@ -458,10 +482,12 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const testAction = {
         id: 'action-1',
         forbidden_components: { target: ['core:non-critical-component'] },
-        target_entity: { id: 'target-1' }
+        target_entity: { id: 'target-1' },
       };
 
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:non-critical-component']);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:non-critical-component',
+      ]);
 
       context.candidateActions = [testAction];
 
@@ -483,7 +509,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const testAction = {
         id: 'action-1',
         forbidden_components: null,
-        target_entity: { id: 'target-1' }
+        target_entity: { id: 'target-1' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -504,7 +530,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const largeActionSet = Array.from({ length: 100 }, (_, i) => ({
         id: `action-${i}`,
         forbidden_components: i % 2 === 0 ? { target: ['core:test'] } : null,
-        target_entity: { id: `target-${i}` }
+        target_entity: { id: `target-${i}` },
       }));
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -532,7 +558,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const testAction = {
         id: 'action-1',
         forbidden_components: null,
-        target_entity: { id: 'target-1' }
+        target_entity: { id: 'target-1' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -558,10 +584,12 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const testActions = Array.from({ length: 50 }, (_, i) => ({
         id: `action-${i}`,
         forbidden_components: { target: ['core:immobilized'] },
-        target_entity: { id: `target-${i}` }
+        target_entity: { id: `target-${i}` },
       }));
 
-      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:immobilized']);
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:immobilized',
+      ]);
 
       context.candidateActions = testActions;
 
@@ -591,17 +619,20 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       });
 
       // Mock validator to throw error
-      const validateSpy = jest.spyOn(targetComponentValidator, 'validateTargetComponents')
+      const validateSpy = jest
+        .spyOn(targetComponentValidator, 'validateTargetComponents')
         .mockImplementation(() => {
           throw new Error(errorMessage);
         });
 
       mockErrorContextBuilder.buildErrorContext.mockReturnValue({
         error: errorMessage,
-        context: 'target_component_validation'
+        context: 'target_component_validation',
       });
 
-      context.candidateActions = [{ id: 'action-1', target_entity: { id: 'target-1' } }];
+      context.candidateActions = [
+        { id: 'action-1', target_entity: { id: 'target-1' } },
+      ];
 
       const result = await validationStage.execute(context);
 
@@ -619,7 +650,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
     it('should handle missing target entities', async () => {
       const actionWithoutTarget = {
         id: 'action-1',
-        forbidden_components: { target: ['core:test'] }
+        forbidden_components: { target: ['core:test'] },
         // No target_entity or target_entities
       };
 
@@ -647,7 +678,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const testAction = {
         id: 'action-1',
         forbidden_components: null,
-        target_entity: { id: 'target-1' }
+        target_entity: { id: 'target-1' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -666,13 +697,13 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const mockTrace = {
         step: jest.fn(),
         success: jest.fn(),
-        captureActionData: jest.fn().mockResolvedValue(undefined)
+        captureActionData: jest.fn().mockResolvedValue(undefined),
       };
 
       const testAction = {
         id: 'traced-action',
         forbidden_components: null,
-        target_entity: { id: 'target-1' }
+        target_entity: { id: 'target-1' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -690,7 +721,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
         'traced-action',
         expect.objectContaining({
           stage: 'target_component_validation',
-          validationPassed: true
+          validationPassed: true,
         })
       );
     });
@@ -699,13 +730,15 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const mockTrace = {
         step: jest.fn(),
         success: jest.fn(),
-        captureActionData: jest.fn().mockRejectedValue(new Error('Trace error'))
+        captureActionData: jest
+          .fn()
+          .mockRejectedValue(new Error('Trace error')),
       };
 
       const testAction = {
         id: 'action-1',
         forbidden_components: null,
-        target_entity: { id: 'target-1' }
+        target_entity: { id: 'target-1' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -729,7 +762,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
       const existingAction = {
         id: 'legacy-action',
         forbidden_components: { target: ['core:test'] },
-        target_entity: { id: 'legacy-target' }
+        target_entity: { id: 'legacy-target' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -750,7 +783,7 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
         {
           id: 'legacy-1',
           forbidden_components: { target: [] },
-          target_entity: { id: 'target-1' }
+          target_entity: { id: 'target-1' },
         },
         // Multi-target format
         {
@@ -758,20 +791,20 @@ describe('Pipeline with Target Validation - Comprehensive Tests', () => {
           forbidden_components: { primary: [], secondary: [] },
           target_entities: {
             primary: { id: 'primary-1' },
-            secondary: { id: 'secondary-1' }
-          }
+            secondary: { id: 'secondary-1' },
+          },
         },
         // No forbidden components
         {
           id: 'simple-1',
-          target_entity: { id: 'target-2' }
+          target_entity: { id: 'target-2' },
         },
         // Already resolved targets
         {
           id: 'resolved-1',
           forbidden_components: { target: [] },
-          resolvedTargets: { target: { id: 'resolved-target' } }
-        }
+          resolvedTargets: { target: { id: 'resolved-target' } },
+        },
       ];
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -807,36 +840,38 @@ describe('Pipeline Configuration Tests', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
-    mockErrorContextBuilder = createMock('IActionErrorContextBuilder', ['buildErrorContext']);
+    mockErrorContextBuilder = createMock('IActionErrorContextBuilder', [
+      'buildErrorContext',
+    ]);
     mockEntityManager = createMock('IEntityManager', [
       'getEntityInstance',
       'hasComponent',
-      'getAllComponentTypesForEntity'
+      'getAllComponentTypesForEntity',
     ]);
 
     targetComponentValidator = new TargetComponentValidator({
       logger: mockLogger,
-      entityManager: mockEntityManager
+      entityManager: mockEntityManager,
     });
 
     targetRequiredComponentsValidator = new TargetRequiredComponentsValidator({
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     validationStage = new TargetComponentValidationStage({
       targetComponentValidator,
       targetRequiredComponentsValidator,
       logger: mockLogger,
-      actionErrorContextBuilder: mockErrorContextBuilder
+      actionErrorContextBuilder: mockErrorContextBuilder,
     });
 
     context = {
       actor: { id: 'test-actor', components: ['core:actor'] },
       candidateActions: [],
-      trace: null
+      trace: null,
     };
   });
 
@@ -853,13 +888,18 @@ describe('Pipeline Configuration Tests', () => {
     const forbiddenAction = {
       id: 'action-1',
       forbidden_components: { target: ['core:immobilized'] },
-      target_entity: { id: 'target-1' }
+      target_entity: { id: 'target-1' },
     };
 
-    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:immobilized']);
+    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+      'core:immobilized',
+    ]);
 
     // Spy on the validator method before executing
-    const validateSpy = jest.spyOn(targetComponentValidator, 'validateTargetComponents');
+    const validateSpy = jest.spyOn(
+      targetComponentValidator,
+      'validateTargetComponents'
+    );
 
     context.candidateActions = [forbiddenAction];
 
@@ -881,10 +921,12 @@ describe('Pipeline Configuration Tests', () => {
     const testAction = {
       id: 'action-1',
       forbidden_components: { target: ['core:test'] },
-      target_entity: { id: 'target-1' }
+      target_entity: { id: 'target-1' },
     };
 
-    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:test']);
+    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+      'core:test',
+    ]);
 
     context.candidateActions = [testAction];
 
@@ -917,10 +959,12 @@ describe('Pipeline Configuration Tests', () => {
     const testAction = {
       id: 'action-1',
       forbidden_components: { target: ['core:immobilized'] },
-      target_entity: { id: 'target-1' }
+      target_entity: { id: 'target-1' },
     };
 
-    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:immobilized']);
+    mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+      'core:immobilized',
+    ]);
 
     context.candidateActions = [testAction];
 
@@ -936,7 +980,7 @@ describe('Pipeline Configuration Tests', () => {
     const testAction = {
       id: 'action-1',
       forbidden_components: null,
-      target_entity: { id: 'target-1' }
+      target_entity: { id: 'target-1' },
     };
 
     mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);

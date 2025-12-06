@@ -85,7 +85,9 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
       };
 
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'affection:actors_without_breasts_facing_each_other') {
+        if (
+          scopeName === 'affection:actors_without_breasts_facing_each_other'
+        ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };
@@ -104,9 +106,11 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']?.facing_away_from ?? [];
+            actorEntity.components?.['positioning:facing_away']
+              ?.facing_away_from ?? [];
           const actorKneelingBefore =
-            actorEntity.components?.['positioning:kneeling_before']?.entityId ?? null;
+            actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+            null;
 
           const validTargets = closeness.reduce((acc, partnerId) => {
             const partner = entityManager.getEntityInstance(partnerId);
@@ -115,9 +119,11 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']?.facing_away_from ?? [];
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from ?? [];
             const partnerKneelingBefore =
-              partner.components?.['positioning:kneeling_before']?.entityId ?? null;
+              partner.components?.['positioning:kneeling_before']?.entityId ??
+              null;
 
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
@@ -155,7 +161,9 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
     it('matches the expected affection action schema', () => {
       expect(restHeadAgainstFlatChestAction).toBeDefined();
       expect(restHeadAgainstFlatChestAction.id).toBe(ACTION_ID);
-      expect(restHeadAgainstFlatChestAction.name).toBe('Rest head against chest');
+      expect(restHeadAgainstFlatChestAction.name).toBe(
+        'Rest head against chest'
+      );
       expect(restHeadAgainstFlatChestAction.description).toBe(
         "Lean in close and rest your head against your partner's chest for comfort."
       );
@@ -179,11 +187,13 @@ describe('affection:rest_head_against_flat_chest action discovery', () => {
       expect(restHeadAgainstFlatChestAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
-      expect(restHeadAgainstFlatChestAction.forbidden_components.actor).toEqual([
-        'kissing:kissing',
-        'positioning:biting_neck',
-        'positioning:giving_blowjob',
-      ]);
+      expect(restHeadAgainstFlatChestAction.forbidden_components.actor).toEqual(
+        [
+          'kissing:kissing',
+          'positioning:biting_neck',
+          'positioning:giving_blowjob',
+        ]
+      );
       expect(restHeadAgainstFlatChestAction.visual).toEqual({
         backgroundColor: '#6a1b9a',
         textColor: '#f3e5f5',

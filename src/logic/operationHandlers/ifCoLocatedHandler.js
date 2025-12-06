@@ -63,10 +63,12 @@ class IfCoLocatedHandler extends BaseOperationHandler {
         value: operationInterpreter,
         validator: (val) => {
           const isFunction = typeof val === 'function';
-          const isObject = typeof val === 'object' && typeof val.execute === 'function';
+          const isObject =
+            typeof val === 'object' && typeof val.execute === 'function';
           return isFunction || isObject;
         },
-        errorMessage: 'IfCoLocatedHandler requires operationInterpreter to be either a resolver function or an object with execute() method.',
+        errorMessage:
+          'IfCoLocatedHandler requires operationInterpreter to be either a resolver function or an object with execute() method.',
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -76,7 +78,9 @@ class IfCoLocatedHandler extends BaseOperationHandler {
     this.#entityManager = entityManager;
     // Normalize to always use a resolver function
     const isFunction = typeof operationInterpreter === 'function';
-    this.#opInterpreterResolver = isFunction ? operationInterpreter : () => operationInterpreter;
+    this.#opInterpreterResolver = isFunction
+      ? operationInterpreter
+      : () => operationInterpreter;
     this.#dispatcher = safeEventDispatcher;
   }
 

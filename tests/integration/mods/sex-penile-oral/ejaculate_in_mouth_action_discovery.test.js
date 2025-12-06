@@ -105,8 +105,10 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const receivingBlowjob = actor?.components?.['positioning:receiving_blowjob'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const receivingBlowjob =
+        actor?.components?.['positioning:receiving_blowjob'];
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       // IMPORTANT: No kneeling filter here (unlike positioning:close_actors)
       // This allows the action to work when target is kneeling before actor
@@ -120,12 +122,14 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       // Check if giving entity exists and has matching giving_blowjob component
-      const givingEntity = fixture.entityManager.getEntityInstance(givingEntityId);
+      const givingEntity =
+        fixture.entityManager.getEntityInstance(givingEntityId);
       if (!givingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const givingBlowjob = givingEntity.components?.['positioning:giving_blowjob'];
+      const givingBlowjob =
+        givingEntity.components?.['positioning:giving_blowjob'];
       if (!givingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -164,7 +168,8 @@ describe('sex-penile-oral:ejaculate_in_mouth action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installActorGivingBlowjobToMeScopeOverride(testFixture);
+    restoreScopeResolver =
+      installActorGivingBlowjobToMeScopeOverride(testFixture);
   });
 
   afterEach(() => {

@@ -49,8 +49,7 @@ export function validateActionExecution({
       entityId: actorId,
       role: 'actor',
       message: `Actor entity '${actorId}' does not exist`,
-      suggestion:
-        'Ensure entity was added to testFixture.reset([...entities])',
+      suggestion: 'Ensure entity was added to testFixture.reset([...entities])',
       severity: 'critical',
     });
     // If actor doesn't exist, skip further validation
@@ -91,7 +90,7 @@ export function validateActionExecution({
   if (actionDefinition?.required_components?.actor) {
     const actorRequired = actionDefinition.required_components.actor;
 
-    actorRequired.forEach(componentType => {
+    actorRequired.forEach((componentType) => {
       if (!entityManager.hasComponent(actorId, componentType)) {
         errors.push({
           type: 'missing_required_component',
@@ -111,7 +110,7 @@ export function validateActionExecution({
   if (targetId && actionDefinition?.required_components?.primary) {
     const primaryRequired = actionDefinition.required_components.primary;
 
-    primaryRequired.forEach(componentType => {
+    primaryRequired.forEach((componentType) => {
       if (!entityManager.hasComponent(targetId, componentType)) {
         errors.push({
           type: 'missing_required_component',
@@ -128,13 +127,10 @@ export function validateActionExecution({
   }
 
   // Validate required components on secondary target
-  if (
-    secondaryTargetId &&
-    actionDefinition?.required_components?.secondary
-  ) {
+  if (secondaryTargetId && actionDefinition?.required_components?.secondary) {
     const secondaryRequired = actionDefinition.required_components.secondary;
 
-    secondaryRequired.forEach(componentType => {
+    secondaryRequired.forEach((componentType) => {
       if (!entityManager.hasComponent(secondaryTargetId, componentType)) {
         errors.push({
           type: 'missing_required_component',
@@ -151,13 +147,10 @@ export function validateActionExecution({
   }
 
   // Validate required components on tertiary target
-  if (
-    tertiaryTargetId &&
-    actionDefinition?.required_components?.tertiary
-  ) {
+  if (tertiaryTargetId && actionDefinition?.required_components?.tertiary) {
     const tertiaryRequired = actionDefinition.required_components.tertiary;
 
-    tertiaryRequired.forEach(componentType => {
+    tertiaryRequired.forEach((componentType) => {
       if (!entityManager.hasComponent(tertiaryTargetId, componentType)) {
         errors.push({
           type: 'missing_required_component',
@@ -177,7 +170,7 @@ export function validateActionExecution({
   if (actionDefinition?.forbidden_components?.actor) {
     const actorForbidden = actionDefinition.forbidden_components.actor;
 
-    actorForbidden.forEach(componentType => {
+    actorForbidden.forEach((componentType) => {
       if (entityManager.hasComponent(actorId, componentType)) {
         errors.push({
           type: 'forbidden_component_present',
@@ -197,7 +190,7 @@ export function validateActionExecution({
   if (targetId && actionDefinition?.forbidden_components?.primary) {
     const primaryForbidden = actionDefinition.forbidden_components.primary;
 
-    primaryForbidden.forEach(componentType => {
+    primaryForbidden.forEach((componentType) => {
       if (entityManager.hasComponent(targetId, componentType)) {
         errors.push({
           type: 'forbidden_component_present',
@@ -217,7 +210,7 @@ export function validateActionExecution({
   if (targetId && actionDefinition?.forbidden_components?.target) {
     const targetForbidden = actionDefinition.forbidden_components.target;
 
-    targetForbidden.forEach(componentType => {
+    targetForbidden.forEach((componentType) => {
       if (entityManager.hasComponent(targetId, componentType)) {
         errors.push({
           type: 'forbidden_component_present',
@@ -261,29 +254,29 @@ function formatActionValidationErrors(errors, context) {
   msg += `\n`;
 
   // Group errors by severity
-  const critical = errors.filter(e => e.severity === 'critical');
-  const high = errors.filter(e => e.severity === 'high');
-  const medium = errors.filter(e => e.severity === 'medium');
+  const critical = errors.filter((e) => e.severity === 'critical');
+  const high = errors.filter((e) => e.severity === 'high');
+  const medium = errors.filter((e) => e.severity === 'medium');
 
   let errorNumber = 1;
 
   if (critical.length > 0) {
     msg += `🚨 CRITICAL ERRORS (${critical.length}):\n\n`;
-    critical.forEach(error => {
+    critical.forEach((error) => {
       msg += formatError(error, errorNumber++);
     });
   }
 
   if (high.length > 0) {
     msg += `⚠️  HIGH PRIORITY ERRORS (${high.length}):\n\n`;
-    high.forEach(error => {
+    high.forEach((error) => {
       msg += formatError(error, errorNumber++);
     });
   }
 
   if (medium.length > 0) {
     msg += `ℹ️  MEDIUM PRIORITY ERRORS (${medium.length}):\n\n`;
-    medium.forEach(error => {
+    medium.forEach((error) => {
       msg += formatError(error, errorNumber++);
     });
   }

@@ -5,7 +5,14 @@
  *              intentionally missing while collaborating with real middleware.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -76,7 +83,10 @@ describe('MetricsService branch completeness integration coverage', () => {
   });
 
   it('avoids optional metric emissions when collaborating modules supply partial context', async () => {
-    const service = new MetricsService({ logger, collectDefaultMetrics: false });
+    const service = new MetricsService({
+      logger,
+      collectDefaultMetrics: false,
+    });
 
     const app = express();
     app.use(express.json());
@@ -90,7 +100,7 @@ describe('MetricsService branch completeness integration coverage', () => {
         metricsService: service,
         logger,
         enabled: service.isEnabled(),
-      }),
+      })
     );
 
     app.post(
@@ -103,16 +113,25 @@ describe('MetricsService branch completeness integration coverage', () => {
           status: 'success',
           duration: 0.05,
         });
-        service.recordCacheOperation({ operation: 'delete', result: 'success' });
+        service.recordCacheOperation({
+          operation: 'delete',
+          result: 'success',
+        });
         service.recordRateLimiting({ mapSize: 4 });
         service.recordSecurityValidation({
           incidentType: 'shadow-traffic',
         });
-        service.recordApiKeyOperation({ operation: 'retrieve', result: 'success' });
+        service.recordApiKeyOperation({
+          operation: 'retrieve',
+          result: 'success',
+        });
         service.recordHealthCheck({ checkType: 'readiness' });
-        service.recordError({ errorType: 'validation', component: 'controller' });
+        service.recordError({
+          errorType: 'validation',
+          component: 'controller',
+        });
         res.status(204).end();
-      },
+      }
     );
 
     const response = await request(app)
@@ -124,7 +143,8 @@ describe('MetricsService branch completeness integration coverage', () => {
     await new Promise((resolve) => setImmediate(resolve));
 
     const metricsJson = await service.getRegistry().getMetricsAsJSON();
-    const findMetric = (name) => metricsJson.find((metric) => metric.name === name);
+    const findMetric = (name) =>
+      metricsJson.find((metric) => metric.name === name);
     const getValues = (name) => findMetric(name)?.values ?? [];
 
     expect(getValues('llm_proxy_http_request_size_bytes')).toHaveLength(0);
@@ -133,12 +153,18 @@ describe('MetricsService branch completeness integration coverage', () => {
     expect(getValues('llm_proxy_cache_size_entries')).toHaveLength(0);
     expect(getValues('llm_proxy_cache_memory_usage_bytes')).toHaveLength(0);
     expect(getValues('llm_proxy_rate_limit_hits_total')).toHaveLength(0);
-    expect(getValues('llm_proxy_suspicious_patterns_detected_total')).toHaveLength(0);
-    expect(getValues('llm_proxy_security_validation_results_total')).toHaveLength(0);
+    expect(
+      getValues('llm_proxy_suspicious_patterns_detected_total')
+    ).toHaveLength(0);
+    expect(
+      getValues('llm_proxy_security_validation_results_total')
+    ).toHaveLength(0);
     expect(getValues('llm_proxy_security_incidents_total')).toHaveLength(0);
     expect(getValues('llm_proxy_api_key_operations_total')).toHaveLength(0);
     expect(getValues('llm_proxy_health_check_results_total')).toHaveLength(0);
-    expect(getValues('llm_proxy_health_check_duration_seconds')).toHaveLength(0);
+    expect(getValues('llm_proxy_health_check_duration_seconds')).toHaveLength(
+      0
+    );
     expect(getValues('llm_proxy_errors_total')).toHaveLength(0);
 
     const mapSizeMetric = findMetric('llm_proxy_rate_limit_map_size_entries');

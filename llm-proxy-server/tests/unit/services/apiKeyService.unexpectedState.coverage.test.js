@@ -94,7 +94,7 @@ describe('ApiKeyService unexpected fallback coverage', () => {
       expect.objectContaining({ llmId: 'llm-unexpected-state' })
     );
     expect(createErrorSpy).toHaveBeenCalledWith(
-      "Failed to retrieve API key. All configured sources (environment variable and file) failed.",
+      'Failed to retrieve API key. All configured sources (environment variable and file) failed.',
       'api_key_all_sources_failed',
       expect.objectContaining({ attemptedFile: 'fallback.key' })
     );
@@ -116,7 +116,8 @@ describe('ApiKeyService unexpected fallback coverage', () => {
       apiKey: null,
       source: 'N/A',
       errorDetails: {
-        message: 'API key for LLM could not be retrieved due to an unknown internal error.',
+        message:
+          'API key for LLM could not be retrieved due to an unknown internal error.',
         stage: 'api_key_retrieval_unknown_error',
         details: {
           llmId: 'llm-unexpected-state',

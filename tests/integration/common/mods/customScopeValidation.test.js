@@ -42,7 +42,9 @@ describe('Custom Scope Validation - Integration Tests', () => {
       expect(result.error).toBeDefined();
       expect(result.error).toContain('action pipeline context object');
       expect(result.error).toContain('instead of entity instance');
-      expect(result.error).toContain('CustomScopeResolver[positioning:available_furniture]');
+      expect(result.error).toContain(
+        'CustomScopeResolver[positioning:available_furniture]'
+      );
     });
 
     it('should fail with helpful message when passed scope context object', async () => {
@@ -68,7 +70,9 @@ describe('Custom Scope Validation - Integration Tests', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
       expect(result.error).toContain('scope resolution context');
-      expect(result.error).toContain('CustomScopeResolver[positioning:available_furniture]');
+      expect(result.error).toContain(
+        'CustomScopeResolver[positioning:available_furniture]'
+      );
     });
 
     it('should include scope name in error source location', async () => {
@@ -91,7 +95,9 @@ describe('Custom Scope Validation - Integration Tests', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain(`CustomScopeResolver[positioning:${scopeName}]`);
+      expect(result.error).toContain(
+        `CustomScopeResolver[positioning:${scopeName}]`
+      );
     });
 
     it('should provide error.context with expected/received/hint/example', async () => {

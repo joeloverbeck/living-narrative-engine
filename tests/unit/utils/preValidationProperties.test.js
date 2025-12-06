@@ -77,14 +77,11 @@ describe('preValidationUtils - Property-Based Tests', () => {
 
     it('should validate operations with END_TURN type without parameters', () => {
       fc.assert(
-        fc.property(
-          fc.constant({ type: 'END_TURN' }),
-          (operation) => {
-            const result = validateOperationStructure(operation, 'test');
-            expect(result.isValid).toBe(true);
-            expect(result.error).toBeNull();
-          }
-        ),
+        fc.property(fc.constant({ type: 'END_TURN' }), (operation) => {
+          const result = validateOperationStructure(operation, 'test');
+          expect(result.isValid).toBe(true);
+          expect(result.error).toBeNull();
+        }),
         { numRuns: 100 }
       );
     });
@@ -145,16 +142,13 @@ describe('preValidationUtils - Property-Based Tests', () => {
 
     it('should provide helpful error messages for empty actions', () => {
       fc.assert(
-        fc.property(
-          fc.constant({}),
-          (emptyAction) => {
-            const result = validateOperationStructure(emptyAction, 'test');
-            expect(result.isValid).toBe(false);
-            expect(result.error).toBeTruthy();
-            expect(result.suggestions).toBeTruthy();
-            expect(result.suggestions.length).toBeGreaterThan(0);
-          }
-        ),
+        fc.property(fc.constant({}), (emptyAction) => {
+          const result = validateOperationStructure(emptyAction, 'test');
+          expect(result.isValid).toBe(false);
+          expect(result.error).toBeTruthy();
+          expect(result.suggestions).toBeTruthy();
+          expect(result.suggestions.length).toBeGreaterThan(0);
+        }),
         { numRuns: 100 }
       );
     });
@@ -199,14 +193,11 @@ describe('preValidationUtils - Property-Based Tests', () => {
 
     it('should produce identical results for identical invalid operations', () => {
       fc.assert(
-        fc.property(
-          fc.constant({}),
-          (emptyOperation) => {
-            const result1 = validateOperationStructure(emptyOperation, 'test');
-            const result2 = validateOperationStructure(emptyOperation, 'test');
-            expect(result1).toEqual(result2);
-          }
-        ),
+        fc.property(fc.constant({}), (emptyOperation) => {
+          const result1 = validateOperationStructure(emptyOperation, 'test');
+          const result2 = validateOperationStructure(emptyOperation, 'test');
+          expect(result1).toEqual(result2);
+        }),
         { numRuns: 100 }
       );
     });

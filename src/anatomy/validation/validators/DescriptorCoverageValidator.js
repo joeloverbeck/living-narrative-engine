@@ -59,9 +59,8 @@ export class DescriptorCoverageValidator extends BaseValidator {
 
       for (const [slotName, slot] of Object.entries(slots)) {
         const propertyKeys = Object.keys(slot?.properties || {});
-        const hasDescriptorsInProperties = this.#hasDescriptorComponents(
-          propertyKeys
-        );
+        const hasDescriptorsInProperties =
+          this.#hasDescriptorComponents(propertyKeys);
 
         let hasDescriptorsInPreferredEntity = false;
         if (!hasDescriptorsInProperties && slot?.preferId) {
@@ -130,9 +129,8 @@ export class DescriptorCoverageValidator extends BaseValidator {
    */
   #preferredEntityHasDescriptors(entityId) {
     try {
-      const rawEntityDefinitions = this.#dataRegistry.getAll(
-        'entityDefinitions'
-      );
+      const rawEntityDefinitions =
+        this.#dataRegistry.getAll('entityDefinitions');
       const entityDefinitions = Array.isArray(rawEntityDefinitions)
         ? rawEntityDefinitions
         : [];

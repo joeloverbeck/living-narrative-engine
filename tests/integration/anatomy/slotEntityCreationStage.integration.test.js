@@ -92,7 +92,11 @@ describe('slotEntityCreationStage integration', () => {
 
     testBed.loadComponents(COMPONENT_DEFINITIONS);
     testBed.loadEntityDefinitions(ENTITY_DEFINITIONS);
-    dataRegistry.store('anatomyBlueprints', BLUEPRINT_ID, clone(BASE_BLUEPRINT));
+    dataRegistry.store(
+      'anatomyBlueprints',
+      BLUEPRINT_ID,
+      clone(BASE_BLUEPRINT)
+    );
   });
 
   afterEach(async () => {
@@ -190,7 +194,9 @@ describe('slotEntityCreationStage integration', () => {
     expect(slotEntityMappings.size).toBe(2);
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Could not retrieve entity instance for ID 'ghost-slot'")
+      expect.stringContaining(
+        "Could not retrieve entity instance for ID 'ghost-slot'"
+      )
     );
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Component data missing or invalid for entity')
@@ -198,12 +204,17 @@ describe('slotEntityCreationStage integration', () => {
   });
 
   it('throws when slot entity creation returns an unsupported type', async () => {
-    dataRegistry.store('anatomyBlueprints', BLUEPRINT_ID, clone(SINGLE_SLOT_BLUEPRINT));
+    dataRegistry.store(
+      'anatomyBlueprints',
+      BLUEPRINT_ID,
+      clone(SINGLE_SLOT_BLUEPRINT)
+    );
 
     const ownerId = await createOwnerEntity('owner-unsupported-type');
     const graphResult = createGraphResult();
 
-    const originalCreate = entityManager.createEntityInstance.bind(entityManager);
+    const originalCreate =
+      entityManager.createEntityInstance.bind(entityManager);
     jest
       .spyOn(entityManager, 'createEntityInstance')
       .mockImplementationOnce(async (...args) => {
@@ -223,12 +234,17 @@ describe('slotEntityCreationStage integration', () => {
   });
 
   it('throws when the generated slot entity ID is not a string', async () => {
-    dataRegistry.store('anatomyBlueprints', BLUEPRINT_ID, clone(SINGLE_SLOT_BLUEPRINT));
+    dataRegistry.store(
+      'anatomyBlueprints',
+      BLUEPRINT_ID,
+      clone(SINGLE_SLOT_BLUEPRINT)
+    );
 
     const ownerId = await createOwnerEntity('owner-invalid-id');
     const graphResult = createGraphResult();
 
-    const originalCreate = entityManager.createEntityInstance.bind(entityManager);
+    const originalCreate =
+      entityManager.createEntityInstance.bind(entityManager);
     jest
       .spyOn(entityManager, 'createEntityInstance')
       .mockImplementationOnce(async (...args) => {
@@ -248,12 +264,17 @@ describe('slotEntityCreationStage integration', () => {
   });
 
   it('propagates failures when component verification does not pass', async () => {
-    dataRegistry.store('anatomyBlueprints', BLUEPRINT_ID, clone(SINGLE_SLOT_BLUEPRINT));
+    dataRegistry.store(
+      'anatomyBlueprints',
+      BLUEPRINT_ID,
+      clone(SINGLE_SLOT_BLUEPRINT)
+    );
 
     const ownerId = await createOwnerEntity('owner-component-verification');
     const graphResult = createGraphResult();
 
-    const originalCreate = entityManager.createEntityInstance.bind(entityManager);
+    const originalCreate =
+      entityManager.createEntityInstance.bind(entityManager);
     const createdIds = [];
 
     jest
@@ -285,16 +306,21 @@ describe('slotEntityCreationStage integration', () => {
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Component verification failed for slot')
     );
-    const failureCall = logger.error.mock.calls.find(([message]) =>
-      typeof message === 'string' &&
-      message.includes('Failed to create blueprint slot entity for')
+    const failureCall = logger.error.mock.calls.find(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes('Failed to create blueprint slot entity for')
     );
     expect(failureCall).toBeDefined();
     expect(failureCall[1]).toBeInstanceOf(Error);
   });
 
   it('continues execution when clothing slot metadata creation fails', async () => {
-    dataRegistry.store('anatomyBlueprints', BLUEPRINT_ID, clone(BASE_BLUEPRINT));
+    dataRegistry.store(
+      'anatomyBlueprints',
+      BLUEPRINT_ID,
+      clone(BASE_BLUEPRINT)
+    );
 
     const ownerId = await createOwnerEntity('owner-metadata-failure');
     const graphResult = createGraphResult();
@@ -316,9 +342,10 @@ describe('slotEntityCreationStage integration', () => {
     const ownerEntity = entityManager.getEntityInstance(ownerId);
     expect(ownerEntity.hasComponent('clothing:slot_metadata')).toBe(false);
 
-    const metadataFailureLog = logger.error.mock.calls.find(([message]) =>
-      typeof message === 'string' &&
-      message.includes('Failed to create clothing slot metadata')
+    const metadataFailureLog = logger.error.mock.calls.find(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes('Failed to create clothing slot metadata')
     );
 
     expect(metadataFailureLog).toBeDefined();

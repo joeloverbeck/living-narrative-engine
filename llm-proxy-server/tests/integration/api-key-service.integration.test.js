@@ -115,7 +115,10 @@ describe('ApiKeyService integration', () => {
     const envVarName = 'INTEGRATION_API_KEY_FROM_ENV';
     setEnv(envVarName, 'env-secret-value');
 
-    const { service } = buildService({ cacheEnabled: false, projectRoot: null });
+    const { service } = buildService({
+      cacheEnabled: false,
+      projectRoot: null,
+    });
 
     const cloudConfig = {
       apiType: 'OpenAI',
@@ -183,7 +186,10 @@ describe('ApiKeyService integration', () => {
   });
 
   it('surfaces configuration errors when file retrieval is configured without a project root', async () => {
-    const { service } = buildService({ cacheEnabled: false, projectRoot: null });
+    const { service } = buildService({
+      cacheEnabled: false,
+      projectRoot: null,
+    });
 
     const config = {
       apiType: 'Azure',
@@ -224,7 +230,9 @@ describe('ApiKeyService integration', () => {
     expect(result.errorDetails.stage).toBe('api_key_all_sources_failed');
     expect(result.errorDetails.details.attemptedEnvVar).toBe(envVarName);
     expect(result.errorDetails.details.attemptedFile).toBe('empty.key');
-    expect(result.errorDetails.details.reason).toContain('Environment variable');
+    expect(result.errorDetails.details.reason).toContain(
+      'Environment variable'
+    );
   });
 
   it('reports failures when file retrieval is the only option and the file is missing', async () => {

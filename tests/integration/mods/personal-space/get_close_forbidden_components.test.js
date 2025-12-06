@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import getCloseAction from '../../../../data/mods/personal-space/actions/get_close.action.json' assert { type: 'json' };
 
 describe('personal-space:get_close - Forbidden components validation', () => {
@@ -31,15 +34,21 @@ describe('personal-space:get_close - Forbidden components validation', () => {
     });
 
     it('should include positioning:wielding in forbidden list', () => {
-      expect(getCloseAction.forbidden_components.actor).toContain('positioning:wielding');
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:wielding'
+      );
     });
 
     it('should include positioning:closeness in forbidden list', () => {
-      expect(getCloseAction.forbidden_components.actor).toContain('positioning:closeness');
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:closeness'
+      );
     });
 
     it('should include positioning:doing_complex_performance in forbidden list', () => {
-      expect(getCloseAction.forbidden_components.actor).toContain('positioning:doing_complex_performance');
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
     });
   });
 
@@ -53,7 +62,7 @@ describe('personal-space:get_close - Forbidden components validation', () => {
         .atLocation('room1')
         .asActor()
         .withComponent('positioning:wielding', {
-          wielded_item_ids: ['weapons:some_sword']
+          wielded_item_ids: ['weapons:some_sword'],
         })
         .build();
 
@@ -81,7 +90,9 @@ describe('personal-space:get_close - Forbidden components validation', () => {
     it('should have wielding in forbidden list - validates blocking configuration is correct', () => {
       // This test confirms the forbidden_components are configured correctly
       // The blocking behavior is verified in the negative test above
-      expect(getCloseAction.forbidden_components.actor).toContain('positioning:wielding');
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:wielding'
+      );
     });
   });
 });

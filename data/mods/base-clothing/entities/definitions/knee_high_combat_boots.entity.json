@@ -8,16 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "flexible"
-      ]
+      "properties": ["flexible"]
     },
     "core:name": {
       "text": "knee-high combat boots"
@@ -32,9 +27,7 @@
       "texture": "rugged"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

@@ -57,7 +57,10 @@ const buildApp = (metricsService, logger) => {
   app.use((req, _res, next) => {
     if (req.path.startsWith('/raw/')) {
       req.headers['content-length'] = '0';
-      const forcedValue = Number.parseInt(req.get('x-body-as-number') ?? '', 10);
+      const forcedValue = Number.parseInt(
+        req.get('x-body-as-number') ?? '',
+        10
+      );
       req.body = Number.isNaN(forcedValue) ? 1337 : forcedValue;
     }
     next();
@@ -71,7 +74,10 @@ const buildApp = (metricsService, logger) => {
     })
   );
 
-  const llmMetricsMiddleware = createLlmMetricsMiddleware({ metricsService, logger });
+  const llmMetricsMiddleware = createLlmMetricsMiddleware({
+    metricsService,
+    logger,
+  });
 
   app.post('/raw/:status', (req, res) => {
     const statusCode = Number.parseInt(req.params.status, 10);

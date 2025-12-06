@@ -7,6 +7,7 @@ These are the requisites for an enhancement to the way available actions are dis
 We want the new version of the available_actions section to look similar to this:
 
 <available_actions>
+
   <!-- Consider your character's emotional state, goals, and recent events when selecting. -->
 
     ## POSITIONING ACTIONS (10 actions)
@@ -35,14 +36,9 @@ We want the new version of the available_actions section to look similar to this
     [Index: 43] Command: "flirt with Registrar Copperplate" - Show romantic/sexual interest
     ...
 
-  <selection_guidance>
-    **Decision Process:**
-    1. What does my character want right now? (Check current_goals)
-    2. What just happened? (Review perception_log)
-    3. What's my emotional state? (Consider internal tensions)
-    4. Which category serves my current needs?
-    5. Which specific action within that category fits best?
-  </selection_guidance>
+<selection_guidance>
+**Decision Process:** 1. What does my character want right now? (Check current_goals) 2. What just happened? (Review perception_log) 3. What's my emotional state? (Consider internal tensions) 4. Which category serves my current needs? 5. Which specific action within that category fits best?
+</selection_guidance>
 </available_actions>
 
 I think we mostly have all the information needed to produce this, except for the 'Purpose' and 'Consider when' for each mod actions. This information shouldn't be present in each action (as they're relevant to the mod's entire set of actions, and it would be extremely redundant to add it to each action), so I think we need two new properties to the mod-manifest of mods (such as the mod manifest at data/mods/affection/ ). One of the properties will be a text about the purpose of the actions contained therein (e.g. 'Spatial relationships and body positioning relative to others or furniture'), and the other property will be about when those actions should be considered (e.g. 'Proximity matters for interaction, relationship dynamics, tactical positioning.')

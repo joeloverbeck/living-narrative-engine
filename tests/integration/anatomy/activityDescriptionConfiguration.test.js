@@ -110,7 +110,9 @@ describe('Activity Description - Configuration Integration', () => {
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'jon',
     });
-    entityManager.addComponent(jonEntity.id, 'core:name', { text: 'Jon Ureña' });
+    entityManager.addComponent(jonEntity.id, 'core:name', {
+      text: 'Jon Ureña',
+    });
     entityManager.addComponent(jonEntity.id, 'test:activity_state', {
       activityMetadata: {
         shouldDescribeInActivity: true,

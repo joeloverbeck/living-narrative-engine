@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { performance } from 'node:perf_hooks';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
@@ -68,7 +75,10 @@ describe('Activity Description - Performance', () => {
     };
 
     mockGroupingSystem = {
-      groupActivities: jest.fn((index) => ({ groups: [], simultaneousActivities: [] })),
+      groupActivities: jest.fn((index) => ({
+        groups: [],
+        simultaneousActivities: [],
+      })),
       sortByPriority: jest.fn((activities) => activities),
     };
 
@@ -83,10 +93,14 @@ describe('Activity Description - Performance', () => {
         possessive: 'their',
         possessivePronoun: 'theirs',
       })),
-      generateActivityPhrase: jest.fn((actorRef, activity) => `${actorRef} does something`),
+      generateActivityPhrase: jest.fn(
+        (actorRef, activity) => `${actorRef} does something`
+      ),
       sanitizeVerbPhrase: jest.fn((phrase) => phrase),
       buildRelatedActivityFragment: jest.fn(() => ''),
-      mergeAdverb: jest.fn((current, injected) => `${current} ${injected}`.trim()),
+      mergeAdverb: jest.fn((current, injected) =>
+        `${current} ${injected}`.trim()
+      ),
       injectSoftener: jest.fn((template, descriptor) => template),
       truncateDescription: jest.fn((desc, maxLen) => desc),
     };
@@ -146,7 +160,10 @@ describe('Activity Description - Performance', () => {
       gender: 'female',
     });
 
-    const componentIds = Array.from({ length: 10 }, (_, index) => `test:activity_generic_${index}`);
+    const componentIds = Array.from(
+      { length: 10 },
+      (_, index) => `test:activity_generic_${index}`
+    );
 
     componentIds.forEach((componentId, index) => {
       addInlineActivity(entityManager, jon.id, componentId, {
@@ -176,7 +193,10 @@ describe('Activity Description - Performance', () => {
       gender: 'female',
     });
 
-    const componentIds = Array.from({ length: 5 }, (_, index) => `test:activity_generic_alt${index}`);
+    const componentIds = Array.from(
+      { length: 5 },
+      (_, index) => `test:activity_generic_alt${index}`
+    );
 
     componentIds.forEach((componentId, index) => {
       addInlineActivity(entityManager, jon.id, componentId, {

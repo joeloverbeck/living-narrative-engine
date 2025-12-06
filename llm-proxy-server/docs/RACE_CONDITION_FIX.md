@@ -12,6 +12,7 @@ The LLM proxy server was experiencing race conditions where successful LLM respo
 ## Root Cause
 
 **Response Race Condition**: Multiple code paths attempting to send responses simultaneously:
+
 - Timeout middleware firing after configured timeout
 - Successful LLM response arriving after timeout
 - No atomic commitment mechanism to prevent conflicts
@@ -23,17 +24,21 @@ The LLM proxy server was experiencing race conditions where successful LLM respo
 **Purpose**: Track request lifecycle and prevent multiple response attempts
 
 **Key Features**:
+
 - UUID-based request correlation IDs
 - Request state machine (PENDING → PROCESSING → RESPONDING → COMPLETED/TIMEOUT/ERROR)
 - Atomic response commitment pattern
 - Response guard for safe response handling
 
 **Core Implementation**:
+
 ```javascript
 // Atomic commitment - only one path can commit response
 const commitResponse = (source) => {
   if (responseCommitted) {
-    logger.warn(`Response already committed to '${commitmentSource}', cannot commit to '${source}'`);
+    logger.warn(
+      `Response already committed to '${commitmentSource}', cannot commit to '${source}'`
+    );
     return false;
   }
   responseCommitted = true;
@@ -60,12 +65,14 @@ export const createResponseGuard = (req, res, logger) => {
 **Purpose**: Cache successful LLM responses that couldn't be delivered for later recovery
 
 **Key Features**:
+
 - In-memory cache with 30-second TTL (configurable)
 - Retrieval by request ID or signature (for duplicate requests)
 - Automatic expiration with cleanup timers
 - Request signature hashing for deduplication
 
 **Cache Strategy**:
+
 ```javascript
 salvageResponse(requestId, llmId, targetPayload, responseData, statusCode) {
   const signature = generateSignature(llmId, targetPayload);
@@ -84,12 +91,14 @@ salvageResponse(requestId, llmId, targetPayload, responseData, statusCode) {
 **Purpose**: Handle timeouts with proper coordination and grace period
 
 **Key Features**:
+
 - Integration with response commitment pattern
 - Configurable grace period after timeout
 - Detailed logging for debugging race conditions
 - Tracks timeout vs. success race scenarios
 
 **Grace Period Logic**:
+
 ```javascript
 timeout = setTimeout(() => {
   if (res.commitResponse && !res.commitResponse('timeout')) {
@@ -110,6 +119,7 @@ timeout = setTimeout(() => {
 **Purpose**: Integrate salvage service with LLM request handling
 
 **Key Changes**:
+
 ```javascript
 // Use response guard for safe response handling
 const responseGuard = createResponseGuard(req, res, this.#logger);
@@ -124,11 +134,16 @@ if (result.success) {
   // Salvage if response couldn't be sent
   if (!sent && this.#salvageService) {
     this.#salvageService.salvageResponse(
-      requestId, llmId, targetPayload,
-      result.data, result.statusCode
+      requestId,
+      llmId,
+      targetPayload,
+      result.data,
+      result.statusCode
     );
 
-    logger.info('Response salvaged successfully. Client can retry with X-Request-ID header.');
+    logger.info(
+      'Response salvaged successfully. Client can retry with X-Request-ID header.'
+    );
   }
 }
 ```
@@ -138,10 +153,12 @@ if (result.success) {
 **Purpose**: Allow clients to recover salvaged responses
 
 **Endpoints**:
+
 - `GET /api/llm-request/salvage/:requestId` - Retrieve salvaged response
 - `GET /api/llm-request/salvage-stats` - Get salvage statistics
 
 **Recovery Response Format**:
+
 ```javascript
 {
   // Original LLM response data
@@ -162,6 +179,7 @@ if (result.success) {
 ### 6. Server Integration (src/core/server.js)
 
 **Complete Integration**:
+
 1. Request tracking middleware (early in chain)
 2. Response salvage service initialization
 3. Salvage service passed to LLM controller
@@ -174,6 +192,7 @@ if (result.success) {
 ### Comprehensive Test Suite (tests/integration/race-condition-salvage.integration.test.js)
 
 **12 Tests Covering**:
+
 - Response commitment pattern (prevents multiple responses)
 - Timeout vs success race conditions
 - Response salvage when headers already sent
@@ -215,8 +234,8 @@ app.post(
   '/api/llm-request',
   createTimeoutMiddleware(90000, {
     logger: proxyLogger,
-    gracePeriod: 5000
-  }),
+    gracePeriod: 5000,
+  })
   // ... other middleware
 );
 ```
@@ -230,7 +249,7 @@ app.post(
 const response = await fetch('/api/llm-request', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ llmId, targetPayload })
+  body: JSON.stringify({ llmId, targetPayload }),
 });
 
 const requestId = response.headers.get('X-Request-ID');
@@ -253,7 +272,7 @@ if (!response.ok && requestId) {
 async function makeRobustLlmRequest(llmId, targetPayload) {
   const response = await fetch('/api/llm-request', {
     method: 'POST',
-    body: JSON.stringify({ llmId, targetPayload })
+    body: JSON.stringify({ llmId, targetPayload }),
   });
 
   const requestId = response.headers.get('X-Request-ID');

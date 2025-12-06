@@ -7,7 +7,6 @@ import {
 } from '../../../common/mods/sex-vaginal-penetration/pullPenisOutOfVaginaFixtures.js';
 import pullPenisOutOfVaginaAction from '../../../../data/mods/sex-vaginal-penetration/actions/pull_penis_out_of_vagina.action.json' assert { type: 'json' };
 
-
 describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Discovery', () => {
   let testFixture;
 
@@ -46,7 +45,9 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Discovery', 
   });
 
   it('does not appear when actor is not penetrating anyone', async () => {
-    const scenario = buildPenetrationScenario({ includePenetrationComponents: false });
+    const scenario = buildPenetrationScenario({
+      includePenetrationComponents: false,
+    });
     testFixture.reset(scenario);
     configureActionDiscovery();
 

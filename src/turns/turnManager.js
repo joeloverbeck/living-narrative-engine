@@ -392,8 +392,7 @@ class TurnManager extends ITurnManager {
 
           if (actorId !== 'unknown') {
             if (skippedNonActorIds.has(actorId)) {
-              const repeatedEntityMessage =
-                `Entity ${actorId} reappeared without an actor component while advancing turns. Stopping turn manager to avoid infinite loop.`;
+              const repeatedEntityMessage = `Entity ${actorId} reappeared without an actor component while advancing turns. Stopping turn manager to avoid infinite loop.`;
 
               this.#logger.error(repeatedEntityMessage);
 
@@ -782,7 +781,10 @@ class TurnManager extends ITurnManager {
 
     // Reset recursion counters after turn completes to prevent false warnings
     // across separate turns separated by time
-    if (this.#eventBus && typeof this.#eventBus.resetRecursionCounters === 'function') {
+    if (
+      this.#eventBus &&
+      typeof this.#eventBus.resetRecursionCounters === 'function'
+    ) {
       this.#eventBus.resetRecursionCounters();
     }
 

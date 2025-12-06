@@ -8,7 +8,14 @@
  * 3. No malformed fallback messages appear (e.g., "An entity's body part suffers damage damage")
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import InjuryNarrativeFormatterService from '../../../src/anatomy/services/injuryNarrativeFormatterService.js';
 
 describe('Damage Propagation Message Rendering', () => {

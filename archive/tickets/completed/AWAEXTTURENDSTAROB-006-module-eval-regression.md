@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-006: Add Module-Level Evaluation Regression Test
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-006
 - **Phase:** 1 - Minimal Change
 - **Priority:** Medium
@@ -12,7 +13,9 @@
 ## ⚠️ ASSUMPTIONS CORRECTED
 
 ### Original Incorrect Assumption
+
 The ticket originally assumed the constructor signature was:
+
 ```javascript
 new AwaitingExternalTurnEndState({
   context: {...},
@@ -25,13 +28,15 @@ new AwaitingExternalTurnEndState({
 ```
 
 ### Actual Constructor Signature
+
 ```javascript
-constructor(handler, { timeoutMs, setTimeoutFn, clearTimeoutFn } = {})
+constructor(handler, ({ timeoutMs, setTimeoutFn, clearTimeoutFn } = {}));
 ```
 
 Where `handler` implements `ITurnStateHost` interface (provides context, logger, eventBus, etc.)
 
 ### Additional Discovery: Browser Environment Behavior
+
 The original ticket assumed that without `process` global, the system would fallback to production timeout (30s). However, the actual implementation is more sophisticated:
 
 1. **Jest environment detection** works via `globalThis.jest`, not just `process.env`
@@ -39,6 +44,7 @@ The original ticket assumed that without `process` global, the system would fall
 3. **This is by design**: `getEnvironmentMode()` in `environmentUtils.js` returns 'development' as the safe default
 
 ### Impact on Tests
+
 - Tests must create mock handler objects implementing ITurnStateHost
 - Cannot directly inject context, logger, eventBus - they come from handler
 - Timer functions (setTimeoutFn, clearTimeoutFn) are correctly in options
@@ -52,34 +58,45 @@ Create regression tests that prevent return to module-level constant evaluation 
 ## Files Created
 
 ### New Test File
+
 - ✅ `tests/regression/turns/states/awaitingExternalTurnEndState.environmentDetection.regression.test.js`
 
 ## Test Cases Implemented
 
 ### Test 1: Multiple Instances with Different Environments (No Isolation)
+
 ✅ Verifies environment changes respected between instances without `jest.isolateModulesAsync`
+
 - First instance (production): 30s timeout
 - Second instance (development): 3s timeout
 - Proves no module-level constant evaluation
 
 ### Test 2: Multiple Instances with Alternating Environments
+
 ✅ Creates 5 instances with alternating production/development environments
+
 - Verifies correct timeout pattern: [30s, 3s, 30s, 3s, 30s]
 - Proves each instance evaluates environment independently
 
 ### Test 3: Jest Environment Compatibility
+
 ✅ Verifies Jest test environment works without complex workarounds
+
 - NODE_ENV=test treated as development (3s timeout)
 - No `jest.isolateModulesAsync` required
 - No cache busting required
 
 ### Test 4: Browser Environment - Jest Still Running
+
 ✅ Verifies graceful handling when `process` global deleted but Jest still running
+
 - `globalThis.jest` still allows test environment detection
 - Uses development timeout (3s), not production fallback
 
 ### Test 5: Browser Environment - True Browser
+
 ✅ Verifies graceful handling when both `process` and `jest` globals missing
+
 - Falls back to development mode (3s) as safe default
 - No reference errors thrown
 - System remains functional
@@ -87,6 +104,7 @@ Create regression tests that prevent return to module-level constant evaluation 
 ## Test Results
 
 ### Execution Time
+
 ```bash
 $ time NODE_ENV=test npx jest tests/regression/turns/states/awaitingExternalTurnEndState.environmentDetection.regression.test.js --no-coverage --silent
 
@@ -98,6 +116,7 @@ real    0m0.513s  # Well under 1 second requirement ✅
 ```
 
 ### Full Test Suite Integration
+
 ```bash
 $ NODE_ENV=test npx jest [all awaitingExternalTurnEndState tests] --no-coverage
 
@@ -109,11 +128,13 @@ Time:        0.676 s
 ## Acceptance Criteria - All Met ✅
 
 ### AC1: All Test Cases Pass ✅
+
 - 5 test cases implemented and passing
 - Test completes in < 1 second (0.513s)
 - No real timers used (mocked)
 
 ### AC2: Proves No Module-Level Evaluation ✅
+
 - Test 1 proves environment changes respected
 - First instance: 30s timeout (production)
 - Second instance: 3s timeout (development)
@@ -121,11 +142,13 @@ Time:        0.676 s
 - No cache busting required
 
 ### AC3: Jest Compatibility Verified ✅
+
 - Test 3 proves NODE_ENV=test works correctly
 - No module isolation needed
 - Test passes without complex workarounds
 
 ### AC4: Browser Environment Handled ✅
+
 - Tests 4 & 5 prove browser compatibility
 - No reference errors when `process` deleted
 - Graceful fallback behavior verified
@@ -133,6 +156,7 @@ Time:        0.676 s
 - True browser environment defaults to development mode
 
 ### AC5: Prevents Regression ✅
+
 - If module-level constants reintroduced, Test 1 & 2 fail
 - If environment detection removed, all tests fail
 - If browser compatibility broken, Tests 4 & 5 fail
@@ -143,15 +167,18 @@ Time:        0.676 s
 ### What Was Actually Changed vs Originally Planned
 
 **Planned:**
+
 - Create 4 regression tests with specific browser fallback expectations
 
 **Actually Implemented:**
+
 - Created 5 regression tests (added extra browser environment test)
 - Corrected ticket assumptions about constructor signature
 - Updated browser environment test expectations based on actual implementation
 - Discovered and documented sophisticated environment detection behavior
 
 **Key Differences:**
+
 1. **Constructor signature** was completely wrong in ticket - corrected
 2. **Browser environment fallback** is development (3s), not production (30s)
 3. **Jest detection** works via `globalThis.jest`, not just `process.env`
@@ -159,22 +186,26 @@ Time:        0.676 s
 5. **No code changes** required - only tests added (regression prevention only)
 
 **Rationale for Changes:**
+
 - The actual implementation is more sophisticated than originally assumed
 - Browser fallback to development is safer (shorter timeout for debugging)
 - Tests now accurately reflect actual system behavior
 - 5th test provides better coverage of edge cases
 
 ### Files Modified
+
 - ✅ `tickets/AWAEXTTURENDSTAROB-006-module-eval-regression.md` (corrected assumptions)
 - ✅ `tests/regression/turns/states/awaitingExternalTurnEndState.environmentDetection.regression.test.js` (new file)
 
 ### No Breaking Changes
+
 - ✅ All 70 existing tests still pass
 - ✅ No production code modified
 - ✅ Public APIs unchanged
 - ✅ Backward compatible
 
 ### Regression Protection Verified
+
 - ✅ Module-level constant evaluation: Prevented by Tests 1 & 2
 - ✅ Jest compatibility: Verified by Test 3
 - ✅ Browser compatibility: Verified by Tests 4 & 5

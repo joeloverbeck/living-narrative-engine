@@ -6,7 +6,9 @@ describe('Movement:exits Component Migration', () => {
   describe('Component ID Constants', () => {
     it('should reference movement:exits instead of core:exits', async () => {
       // This test will fail until we fix the constants
-      const componentIds = await import('../../../src/constants/componentIds.js');
+      const componentIds = await import(
+        '../../../src/constants/componentIds.js'
+      );
 
       // After migration, this should be 'movement:exits'
       expect(componentIds.EXITS_COMPONENT_ID).toBe('movement:exits');
@@ -25,7 +27,7 @@ describe('Movement:exits Component Migration', () => {
 
         // After migration, should use movement:exits
         expect(scopeContent).toContain('movement:exits');
-        expect(scopeContent).not.toContain("core:exits");
+        expect(scopeContent).not.toContain('core:exits');
       }
     });
   });
@@ -42,7 +44,7 @@ describe('Movement:exits Component Migration', () => {
 
         // After migration, should have movement:exits
         expect(content.components['movement:exits']).toBeDefined();
-        expect(content.components["core:exits"]).toBeUndefined();
+        expect(content.components['core:exits']).toBeUndefined();
       }
     });
 
@@ -57,14 +59,18 @@ describe('Movement:exits Component Migration', () => {
 
         // After migration, should have movement:exits
         expect(content.components['movement:exits']).toBeDefined();
-        expect(content.components["core:exits"]).toBeUndefined();
+        expect(content.components['core:exits']).toBeUndefined();
       }
     });
   });
 
   describe('Content Dependency Validator', () => {
     it('should look for movement:exits in validateExits method', async () => {
-      const ContentDependencyValidator = (await import('../../../src/initializers/services/contentDependencyValidator.js')).default;
+      const ContentDependencyValidator = (
+        await import(
+          '../../../src/initializers/services/contentDependencyValidator.js'
+        )
+      ).default;
 
       // Read the source file to check what it's looking for
       const validatorPath = path.resolve(

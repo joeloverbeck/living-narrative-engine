@@ -1,20 +1,9 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import {
-  access,
-  mkdir,
-  readFile,
-  rm,
-} from 'node:fs/promises';
+import { access, mkdir, readFile, rm } from 'node:fs/promises';
 
 import traceRoutes from '../../src/routes/traceRoutes.js';
 
@@ -52,12 +41,10 @@ describe('traceRoutes default path integration coverage', () => {
     const uniqueName = `default-trace-${randomUUID()}.log`;
     const expectedPath = path.join(defaultTracesDir, uniqueName);
 
-    const response = await request(app)
-      .post('/api/traces/write')
-      .send({
-        traceData: 'raw-trace-payload',
-        fileName: uniqueName,
-      });
+    const response = await request(app).post('/api/traces/write').send({
+      traceData: 'raw-trace-payload',
+      fileName: uniqueName,
+    });
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({
@@ -105,7 +92,9 @@ describe('traceRoutes default path integration coverage', () => {
       JSON.stringify(betaPayloadObject, null, 2),
       'utf8'
     );
-    expect(response.body.totalSize).toBe(expectedAlphaBytes + expectedBetaBytes);
+    expect(response.body.totalSize).toBe(
+      expectedAlphaBytes + expectedBetaBytes
+    );
 
     const resultsByFile = Object.fromEntries(
       response.body.results.map((result) => [result.fileName, result])

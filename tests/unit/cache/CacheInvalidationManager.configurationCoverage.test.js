@@ -19,7 +19,8 @@ describe('CacheInvalidationManager configuration coverage', () => {
     dispatcher = testBed.createMock('validatedEventDispatcher', ['dispatch']);
   });
 
-  const createCache = () => testBed.createMock('cache', ['invalidate', 'clear']);
+  const createCache = () =>
+    testBed.createMock('cache', ['invalidate', 'clear']);
 
   it('skips dependency tracking operations when disabled', () => {
     const manager = new CacheInvalidationManager(
@@ -32,8 +33,12 @@ describe('CacheInvalidationManager configuration coverage', () => {
     manager.registerCache('cache-disabled', cache);
 
     // These would throw if dependency tracking logic executed.
-    expect(() => manager.addDependency('entity:1', 'missing-cache')).not.toThrow();
-    expect(() => manager.removeDependency('entity:1', 'cache-disabled')).not.toThrow();
+    expect(() =>
+      manager.addDependency('entity:1', 'missing-cache')
+    ).not.toThrow();
+    expect(() =>
+      manager.removeDependency('entity:1', 'cache-disabled')
+    ).not.toThrow();
 
     expect(manager.getDependencyMappings()).toEqual({});
 
@@ -41,7 +46,9 @@ describe('CacheInvalidationManager configuration coverage', () => {
     const stats = manager.getStats();
     expect(stats.dependenciesResolved).toBe(0);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ type: CacheInvalidationEvents.CACHE_ENTITY_INVALIDATION })
+      expect.objectContaining({
+        type: CacheInvalidationEvents.CACHE_ENTITY_INVALIDATION,
+      })
     );
   });
 

@@ -66,7 +66,9 @@ const createDependencySet = () => {
 
   const schemaValidator = {
     validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
-    validateAgainstSchema: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+    validateAgainstSchema: jest
+      .fn()
+      .mockReturnValue({ isValid: true, errors: [] }),
     addSchema: jest.fn(),
     removeSchema: jest.fn(),
     listSchemas: jest.fn().mockReturnValue([]),
@@ -90,8 +92,12 @@ describe('CharacterConceptsManagerController constructor coverage', () => {
   });
 
   it('maps missing logger dependency errors', () => {
-    const { characterBuilderService, eventBus, schemaValidator, controllerDeps } =
-      createDependencySet();
+    const {
+      characterBuilderService,
+      eventBus,
+      schemaValidator,
+      controllerDeps,
+    } = createDependencySet();
 
     expect(
       () =>
@@ -351,7 +357,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     const displaySpy = jest
       .spyOn(controller, '_getDisplayText')
       .mockReturnValue(concept.concept);
-    const editSpy = jest.spyOn(controller, '_showEditModal').mockResolvedValue();
+    const editSpy = jest
+      .spyOn(controller, '_showEditModal')
+      .mockResolvedValue();
     const deleteSpy = jest
       .spyOn(controller, '_showDeleteConfirmation')
       .mockImplementation(() => {});
@@ -440,7 +448,10 @@ describe('CharacterConceptsManagerController additional coverage', () => {
 
     const updateSpy = jest.spyOn(controller, '_updateAdvancedStatValue');
     controller._updateAdvancedStatistics(stats);
-    expect(updateSpy).toHaveBeenCalledWith('completion-rate', `${stats.completionRate}%`);
+    expect(updateSpy).toHaveBeenCalledWith(
+      'completion-rate',
+      `${stats.completionRate}%`
+    );
     updateSpy.mockRestore();
   });
 
@@ -593,7 +604,10 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     const warnSpy = controller.logger.warn;
 
     const freshTimestamp = Date.now();
-    controller._handleCrossTabMessage({ type: 'tab-opened', timestamp: freshTimestamp });
+    controller._handleCrossTabMessage({
+      type: 'tab-opened',
+      timestamp: freshTimestamp,
+    });
     controller._handleCrossTabMessage({
       type: 'tab-closed',
       wasLeader: true,
@@ -611,7 +625,10 @@ describe('CharacterConceptsManagerController additional coverage', () => {
       tabId: 'some-tab',
       timestamp: freshTimestamp,
     });
-    controller._handleCrossTabMessage({ type: 'unknown', timestamp: freshTimestamp });
+    controller._handleCrossTabMessage({
+      type: 'unknown',
+      timestamp: freshTimestamp,
+    });
 
     // Old message ignored
     controller._handleCrossTabMessage({
@@ -777,9 +794,7 @@ describe('CharacterConceptsManagerController additional coverage', () => {
 
   it('handles directions generated events for cached concepts', () => {
     const concept = testBase.createTestConcept({ id: 'concept-xyz' });
-    controller._testExports.conceptsData = [
-      { concept, directionCount: 0 },
-    ];
+    controller._testExports.conceptsData = [{ concept, directionCount: 0 }];
 
     jest.spyOn(controller, '_isConceptVisible').mockReturnValue(true);
     const updateCardSpy = jest
@@ -918,7 +933,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     const createObjectURLSpy = jest
       .spyOn(URL, 'createObjectURL')
       .mockReturnValue('blob:url');
-    const revokeSpy = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const revokeSpy = jest
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => {});
     const clickSpy = jest.spyOn(HTMLAnchorElement.prototype, 'click');
 
     controller._exportStatistics('json');
@@ -951,13 +968,23 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     const baseNow = new Date('2024-01-01T00:10:00Z');
     const originalNow = Date.now();
     jest.setSystemTime(baseNow);
-    expect(controller._formatRelativeDate('2024-01-01T00:09:30Z')).toBe('just now');
-    expect(controller._formatRelativeDate('2024-01-01T00:05:00Z')).toBe('5 minutes ago');
-    expect(controller._formatRelativeDate('2024-01-01T00:00:00Z')).toBe('10 minutes ago');
-    expect(controller._formatRelativeDate('2023-12-30T00:00:00Z')).toBe('2 days ago');
+    expect(controller._formatRelativeDate('2024-01-01T00:09:30Z')).toBe(
+      'just now'
+    );
+    expect(controller._formatRelativeDate('2024-01-01T00:05:00Z')).toBe(
+      '5 minutes ago'
+    );
+    expect(controller._formatRelativeDate('2024-01-01T00:00:00Z')).toBe(
+      '10 minutes ago'
+    );
+    expect(controller._formatRelativeDate('2023-12-30T00:00:00Z')).toBe(
+      '2 days ago'
+    );
     jest.setSystemTime(originalNow);
 
-    expect(controller._formatFullDate('2024-01-01T00:00:00Z')).toContain('2024');
+    expect(controller._formatFullDate('2024-01-01T00:00:00Z')).toContain(
+      '2024'
+    );
   });
 
   it('renders empty states and clears search filters', () => {
@@ -1019,7 +1046,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     controller._setFormEnabled(true);
 
     controller._setSaveButtonLoading(true);
-    expect(controller._getElement('saveConceptBtn').textContent).toBe('Saving...');
+    expect(controller._getElement('saveConceptBtn').textContent).toBe(
+      'Saving...'
+    );
     controller._setSaveButtonLoading(false);
 
     const formErrorSpy = jest.spyOn(FormValidationHelper, 'showFieldError');
@@ -1079,9 +1108,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     testBase.mocks.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
       [loadConcept]
     );
-    testBase.mocks.characterBuilderService.getThematicDirections.mockResolvedValue([
-      testBase.createTestDirection(),
-    ]);
+    testBase.mocks.characterBuilderService.getThematicDirections.mockResolvedValue(
+      [testBase.createTestDirection()]
+    );
     const displaySpy = jest
       .spyOn(controller, '_displayConcepts')
       .mockImplementation(() => {});
@@ -1097,9 +1126,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     displaySpy.mockRestore();
     statsSpy.mockRestore();
 
-    testBase.mocks.characterBuilderService.getAllCharacterConcepts.mockResolvedValue([
-      { ...loadConcept, id: 'load-2' },
-    ]);
+    testBase.mocks.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      [{ ...loadConcept, id: 'load-2' }]
+    );
     testBase.mocks.characterBuilderService.getThematicDirections.mockRejectedValueOnce(
       new Error('fail')
     );
@@ -1187,7 +1216,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
 
     controller._saveEnhancedSearchState('hero', 2);
     expect(sessionStorage.getItem('conceptsManagerSearch')).toBe('hero');
-    const savedState = JSON.parse(sessionStorage.getItem('conceptsSearchState'));
+    const savedState = JSON.parse(
+      sessionStorage.getItem('conceptsSearchState')
+    );
     expect(savedState.filter).toBe('hero');
 
     const enhancedState = {
@@ -1202,7 +1233,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
       'conceptsSearchState',
       JSON.stringify(enhancedState)
     );
-    const scrollSpy = jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const scrollSpy = jest
+      .spyOn(window, 'scrollTo')
+      .mockImplementation(() => {});
     const rafSpy = jest
       .spyOn(window, 'requestAnimationFrame')
       .mockImplementation((cb) => {
@@ -1399,11 +1432,9 @@ describe('CharacterConceptsManagerController additional coverage', () => {
     const modal = controller._getElement('conceptModal');
     modal.style.display = 'flex';
     const error = new Error('close failed');
-    jest
-      .spyOn(controller, '_animateModalExit')
-      .mockImplementation(() => {
-        throw error;
-      });
+    jest.spyOn(controller, '_animateModalExit').mockImplementation(() => {
+      throw error;
+    });
 
     controller._closeConceptModal();
 

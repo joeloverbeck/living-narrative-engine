@@ -1,4 +1,5 @@
 # Outcome
+
 Extracted `locks:openable` to `mechanisms` mod (as `mechanisms:openable`) to break circular dependency between `locks` and `movement`. `movement` now checks `mechanisms:openable` in `exit-is-unblocked`. Updated all references and added tests.
 
 # LOCMODCONLOC-005: Integrate Locks with Movement Exits (via Mechanisms Mod)
@@ -6,6 +7,7 @@ Extracted `locks:openable` to `mechanisms` mod (as `mechanisms:openable`) to bre
 Refactor `mechanisms:openable` into a new `mechanisms` mod to resolve circular dependencies, then update movement gating so exits respect `mechanisms:openable` state while preserving dimensional portal behavior.
 
 ## File list (expected touches)
+
 - `data/mods/mechanisms/mod-manifest.json` (new)
 - `data/mods/mechanisms/components/openable.component.json` (moved from locks)
 - `data/mods/locks/mod-manifest.json` (remove component, add dependency)
@@ -17,10 +19,12 @@ Refactor `mechanisms:openable` into a new `mechanisms` mod to resolve circular d
 - `tests/integration/locks/movement_visibility.integration.test.js`
 
 ## Out of scope
+
 - Changing teleport or dimensional portal action definitions.
 - New narrative content outside test fixtures.
 
 ## Acceptance criteria
+
 - `mechanisms` mod is created and contains the `openable` component.
 - `locks` and `movement` mods depend on `mechanisms`.
 - `exit-is-unblocked` allows exits without blockers and exits whose blocker either lacks `mechanisms:openable` or has `mechanisms:openable.isLocked === false`.

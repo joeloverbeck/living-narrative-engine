@@ -24,9 +24,13 @@ import {
 const STORAGE_RETRY_CONFIG = {
   maxRetries: 3,
   baseDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 5 : 500,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 5
+      : 500,
   maxDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 25 : 2000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 25
+      : 2000,
 };
 
 /**

@@ -38,7 +38,9 @@ describe('unwield_item action definition', () => {
     });
 
     it('should require actor to have wielding component', () => {
-      expect(actionJson.required_components.actor).toContain('positioning:wielding');
+      expect(actionJson.required_components.actor).toContain(
+        'positioning:wielding'
+      );
     });
 
     it('should require exactly two actor components', () => {
@@ -104,7 +106,9 @@ describe('unwield_item action definition', () => {
 
   describe('Schema Compliance', () => {
     it('should reference correct schema', () => {
-      expect(actionJson.$schema).toBe('schema://living-narrative-engine/action.schema.json');
+      expect(actionJson.$schema).toBe(
+        'schema://living-narrative-engine/action.schema.json'
+      );
     });
 
     it('should have all required action properties', () => {

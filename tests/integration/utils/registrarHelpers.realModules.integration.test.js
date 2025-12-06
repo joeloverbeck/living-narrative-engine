@@ -51,7 +51,9 @@ describe('Registrar helpers with real AppContainer', () => {
 
     // The subsequent registration should not inherit tags
     expect(container.resolveByTag('singleTag')).toHaveLength(1);
-    expect(container.resolve('UntaggedService')).toBeInstanceOf(UntaggedService);
+    expect(container.resolve('UntaggedService')).toBeInstanceOf(
+      UntaggedService
+    );
   });
 
   it('creates singleton services with dependency resolution', () => {
@@ -143,7 +145,13 @@ describe('Registrar helpers with real AppContainer', () => {
 
   it('registers services via registerWithLog direct signature', () => {
     const value = { id: 'direct' };
-    registerWithLog(registrar, 'DirectToken', value, { lifecycle: 'singleton' }, logger);
+    registerWithLog(
+      registrar,
+      'DirectToken',
+      value,
+      { lifecycle: 'singleton' },
+      logger
+    );
 
     const resolved = container.resolve('DirectToken');
     expect(resolved).toEqual(value);

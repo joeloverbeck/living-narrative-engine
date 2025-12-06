@@ -47,15 +47,15 @@ State Mutation + Event Dispatch
 
 Every operation handler requires updates to **7 critical files**:
 
-| File | Purpose | Validation Command |
-|------|---------|-------------------|
-| 1. `data/schemas/operations/[operationName].schema.json` | Operation schema | `npm run validate` |
-| 2. `data/schemas/operation.schema.json` | Schema reference (root) | `npm run validate` |
-| 3. `src/logic/operationHandlers/[operationName]Handler.js` | Handler implementation | `npm run typecheck` |
-| 4. `src/dependencyInjection/tokens/tokens-core.js` | DI token | `npm run typecheck` |
-| 5. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Factory registration | `npm run typecheck` |
-| 6. `src/dependencyInjection/registrations/interpreterRegistrations.js` | Operation mapping | `npm run test:unit` |
-| 7. `src/utils/preValidationUtils.js` | **⚠️ CRITICAL** Pre-validation whitelist | `npm run validate` |
+| File                                                                        | Purpose                                  | Validation Command  |
+| --------------------------------------------------------------------------- | ---------------------------------------- | ------------------- |
+| 1. `data/schemas/operations/[operationName].schema.json`                    | Operation schema                         | `npm run validate`  |
+| 2. `data/schemas/operation.schema.json`                                     | Schema reference (root)                  | `npm run validate`  |
+| 3. `src/logic/operationHandlers/[operationName]Handler.js`                  | Handler implementation                   | `npm run typecheck` |
+| 4. `src/dependencyInjection/tokens/tokens-core.js`                          | DI token                                 | `npm run typecheck` |
+| 5. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Factory registration                     | `npm run typecheck` |
+| 6. `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Operation mapping                        | `npm run test:unit` |
+| 7. `src/utils/preValidationUtils.js`                                        | **⚠️ CRITICAL** Pre-validation whitelist | `npm run validate`  |
 
 **Forgetting step 7 is the #1 cause of "Unknown operation type" errors during mod loading.**
 
@@ -440,34 +440,40 @@ class DrinkFromHandler extends BaseOperationHandler {
         );
 
         // Set volume to 0
-        await this.#entityManager.batchAddComponentsOptimized([
-          {
-            instanceId: containerEntity,
-            componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
-            componentData: {
-              currentVolumeMilliliters: 0,
-              maxCapacityMilliliters: liquidData.maxCapacityMilliliters,
-              servingSizeMilliliters: liquidData.servingSizeMilliliters,
-              isRefillable: liquidData.isRefillable,
-              flavorText: liquidData.flavorText || '',
+        await this.#entityManager.batchAddComponentsOptimized(
+          [
+            {
+              instanceId: containerEntity,
+              componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
+              componentData: {
+                currentVolumeMilliliters: 0,
+                maxCapacityMilliliters: liquidData.maxCapacityMilliliters,
+                servingSizeMilliliters: liquidData.servingSizeMilliliters,
+                isRefillable: liquidData.isRefillable,
+                flavorText: liquidData.flavorText || '',
+              },
             },
-          },
-        ], true);
+          ],
+          true
+        );
       } else {
         // Still has liquid
-        await this.#entityManager.batchAddComponentsOptimized([
-          {
-            instanceId: containerEntity,
-            componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
-            componentData: {
-              currentVolumeMilliliters: newVolume,
-              maxCapacityMilliliters: liquidData.maxCapacityMilliliters,
-              servingSizeMilliliters: liquidData.servingSizeMilliliters,
-              isRefillable: liquidData.isRefillable,
-              flavorText: liquidData.flavorText || '',
+        await this.#entityManager.batchAddComponentsOptimized(
+          [
+            {
+              instanceId: containerEntity,
+              componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
+              componentData: {
+                currentVolumeMilliliters: newVolume,
+                maxCapacityMilliliters: liquidData.maxCapacityMilliliters,
+                servingSizeMilliliters: liquidData.servingSizeMilliliters,
+                isRefillable: liquidData.isRefillable,
+                flavorText: liquidData.flavorText || '',
+              },
             },
-          },
-        ], true);
+          ],
+          true
+        );
       }
 
       // Step 5: Dispatch events
@@ -485,7 +491,11 @@ class DrinkFromHandler extends BaseOperationHandler {
       };
 
       // Store result in context if result_variable provided
-      if (result_variable && typeof result_variable === 'string' && result_variable.trim()) {
+      if (
+        result_variable &&
+        typeof result_variable === 'string' &&
+        result_variable.trim()
+      ) {
         tryWriteContextVariable(
           result_variable.trim(),
           result,
@@ -679,11 +689,17 @@ registrar.singletonFactory(tokens.OperationRegistry, (c) => {
     logger: c.resolve(tokens.ILogger),
   });
 
-  const bind = (tkn) => (...args) => c.resolve(tkn).execute(...args);
+  const bind =
+    (tkn) =>
+    (...args) =>
+      c.resolve(tkn).execute(...args);
 
   // Operation mappings - keep alphabetically sorted
   registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
-  registry.register('DROP_ITEM_AT_LOCATION', bind(tokens.DropItemAtLocationHandler));
+  registry.register(
+    'DROP_ITEM_AT_LOCATION',
+    bind(tokens.DropItemAtLocationHandler)
+  );
   // ... other operations ...
 
   return registry;
@@ -698,12 +714,18 @@ registrar.singletonFactory(tokens.OperationRegistry, (c) => {
     logger: c.resolve(tokens.ILogger),
   });
 
-  const bind = (tkn) => (...args) => c.resolve(tkn).execute(...args);
+  const bind =
+    (tkn) =>
+    (...args) =>
+      c.resolve(tkn).execute(...args);
 
   // Operation mappings - keep alphabetically sorted
   registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
   registry.register('DRINK_FROM', bind(tokens.DrinkFromHandler));
-  registry.register('DROP_ITEM_AT_LOCATION', bind(tokens.DropItemAtLocationHandler));
+  registry.register(
+    'DROP_ITEM_AT_LOCATION',
+    bind(tokens.DropItemAtLocationHandler)
+  );
   // ... other operations ...
 
   return registry;
@@ -1040,7 +1062,9 @@ describe('DrinkFromHandler', () => {
       });
 
       mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.batchAddComponentsOptimized.mockResolvedValue(undefined);
+      mockEntityManager.batchAddComponentsOptimized.mockResolvedValue(
+        undefined
+      );
 
       // Act
       const result = await handler.execute(params, executionContext);
@@ -1076,7 +1100,9 @@ describe('DrinkFromHandler', () => {
       });
 
       mockEntityManager.hasComponent.mockReturnValue(true);
-      mockEntityManager.batchAddComponentsOptimized.mockResolvedValue(undefined);
+      mockEntityManager.batchAddComponentsOptimized.mockResolvedValue(
+        undefined
+      );
       mockEntityManager.removeComponent.mockResolvedValue(undefined);
 
       // Act
@@ -1090,7 +1116,9 @@ describe('DrinkFromHandler', () => {
         'items:drinkable'
       );
       // Should add empty component
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             componentTypeId: 'items:empty',
@@ -1408,7 +1436,7 @@ Error: Cannot resolve token: DrinkFromHandler
 
 1. Verify token in `tokens-core.js`:
    ```javascript
-   DrinkFromHandler: 'DrinkFromHandler'
+   DrinkFromHandler: 'DrinkFromHandler';
    ```
 2. Verify import in `operationHandlerRegistrations.js`:
    ```javascript
@@ -1547,11 +1575,13 @@ For complex validation logic:
 **Best practices for event dispatching**:
 
 1. **Use constants** for event IDs:
+
    ```javascript
    const LIQUID_CONSUMED_EVENT = 'items:liquid_consumed';
    ```
 
 2. **Consistent payload structure**:
+
    ```javascript
    this.#dispatcher.dispatch(LIQUID_CONSUMED_EVENT, {
      actorEntity,
@@ -1562,6 +1592,7 @@ For complex validation logic:
    ```
 
 3. **Multiple events** for complex operations:
+
    ```javascript
    // Primary event
    this.#dispatcher.dispatch('items:liquid_consumed', {...});
@@ -1606,6 +1637,7 @@ async execute(params, executionContext) {
 **Q: Why do I need to update so many files?**
 
 A: Each file serves a specific purpose in the operation lifecycle:
+
 - **Schema**: Validates operation structure
 - **Handler**: Implements business logic
 - **Token**: Enables dependency injection
@@ -1648,7 +1680,9 @@ const MY_NEW_EVENT = 'items:my_new_event';
 Then dispatch using the safe event dispatcher:
 
 ```javascript
-this.#dispatcher.dispatch(MY_NEW_EVENT, { /* payload */ });
+this.#dispatcher.dispatch(MY_NEW_EVENT, {
+  /* payload */
+});
 ```
 
 ---
@@ -1685,6 +1719,7 @@ In the schema, don't include optional parameters in `required` array.
 **Q: What's the difference between `entityManager` and `safeEventDispatcher`?**
 
 A:
+
 - **`entityManager`**: Queries and mutates component state (ECS layer)
 - **`safeEventDispatcher`**: Dispatches events for inter-system communication (Event layer)
 
@@ -1695,6 +1730,7 @@ Use `entityManager` for state changes, `safeEventDispatcher` for notifications.
 **Q: Can I call other operation handlers from my handler?**
 
 A: Generally avoid this. Instead:
+
 1. Use composition (extract shared logic to utility functions)
 2. Use events (dispatch event, let other systems react)
 3. If necessary, inject the other handler as a dependency
@@ -1706,11 +1742,13 @@ A: Generally avoid this. Instead:
 A:
 
 1. **Use logging**:
+
    ```javascript
    log.debug('Current state', { entityId, componentData });
    ```
 
 2. **Enable verbose logging** in tests:
+
    ```javascript
    NODE_ENV=test npx jest path/to/test.js --no-coverage --verbose
    ```
@@ -1740,15 +1778,15 @@ A:
 
 ### Naming Conventions
 
-| Item | Convention | Example |
-|------|-----------|---------|
-| Operation Type | UPPER_SNAKE_CASE | DRINK_FROM |
-| Schema File | camelCase + .schema.json | drinkFrom.schema.json |
-| Handler Class | PascalCase + Handler | DrinkFromHandler |
-| Handler File | camelCase + Handler.js | drinkFromHandler.js |
-| Token Name | PascalCase + Handler (NO "I" prefix) | DrinkFromHandler |
-| Event ID | namespace:snake_case | items:liquid_consumed |
-| Component ID | namespace:snake_case | items:liquid_container |
+| Item           | Convention                           | Example                |
+| -------------- | ------------------------------------ | ---------------------- |
+| Operation Type | UPPER_SNAKE_CASE                     | DRINK_FROM             |
+| Schema File    | camelCase + .schema.json             | drinkFrom.schema.json  |
+| Handler Class  | PascalCase + Handler                 | DrinkFromHandler       |
+| Handler File   | camelCase + Handler.js               | drinkFromHandler.js    |
+| Token Name     | PascalCase + Handler (NO "I" prefix) | DrinkFromHandler       |
+| Event ID       | namespace:snake_case                 | items:liquid_consumed  |
+| Component ID   | namespace:snake_case                 | items:liquid_container |
 
 ### Validation Command Sequence
 
@@ -1775,6 +1813,7 @@ npm run test:ci
 ### Common Patterns
 
 **Parameter validation**:
+
 ```javascript
 #validateParams(params, logger) {
   if (!assertParamsObject(params, this.#dispatcher, 'OPERATION_TYPE')) {
@@ -1786,23 +1825,35 @@ npm run test:ci
 ```
 
 **State query**:
+
 ```javascript
-const data = this.#entityManager.getComponentData(entityId, 'namespace:component');
-const hasComponent = this.#entityManager.hasComponent(entityId, 'namespace:component');
+const data = this.#entityManager.getComponentData(
+  entityId,
+  'namespace:component'
+);
+const hasComponent = this.#entityManager.hasComponent(
+  entityId,
+  'namespace:component'
+);
 ```
 
 **State mutation**:
+
 ```javascript
-await this.#entityManager.batchAddComponentsOptimized([
-  {
-    instanceId: entityId,
-    componentTypeId: 'namespace:component',
-    componentData: { field: value },
-  },
-], true);
+await this.#entityManager.batchAddComponentsOptimized(
+  [
+    {
+      instanceId: entityId,
+      componentTypeId: 'namespace:component',
+      componentData: { field: value },
+    },
+  ],
+  true
+);
 ```
 
 **Event dispatch**:
+
 ```javascript
 this.#dispatcher.dispatch('namespace:event_name', {
   field1: value1,
@@ -1811,8 +1862,13 @@ this.#dispatcher.dispatch('namespace:event_name', {
 ```
 
 **Result variable**:
+
 ```javascript
-if (result_variable && typeof result_variable === 'string' && result_variable.trim()) {
+if (
+  result_variable &&
+  typeof result_variable === 'string' &&
+  result_variable.trim()
+) {
   tryWriteContextVariable(
     result_variable.trim(),
     result,

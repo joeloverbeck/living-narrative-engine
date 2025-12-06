@@ -316,11 +316,15 @@ describe('CharacterBuilderBootstrap - additional resilience scenarios (integrati
 
     expect(controller).toBeInstanceOf(DependencyCaptureController);
     const warnCall = logger.warn.mock.calls.find(([message]) =>
-      message.includes("Service 'traitsDisplayEnhancer' (TraitsDisplayEnhancer) not found")
+      message.includes(
+        "Service 'traitsDisplayEnhancer' (TraitsDisplayEnhancer) not found"
+      )
     );
     expect(warnCall).toBeDefined();
     const infoCall = logger.info.mock.calls.find(([message]) =>
-      message.includes('Successfully instantiated TraitsDisplayEnhancer with logger dependency.')
+      message.includes(
+        'Successfully instantiated TraitsDisplayEnhancer with logger dependency.'
+      )
     );
     expect(infoCall).toBeDefined();
     expect(capturedDeps.traitsDisplayEnhancer).toBeInstanceOf(
@@ -380,7 +384,10 @@ describe('CharacterBuilderBootstrap - additional resilience scenarios (integrati
         controllerClass: NoopController,
         hooks: {
           preContainer: async (container) => {
-            container.setOverride(tokens.CharacterBuilderService, () => undefined);
+            container.setOverride(
+              tokens.CharacterBuilderService,
+              () => undefined
+            );
           },
         },
       })

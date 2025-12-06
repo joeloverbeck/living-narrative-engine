@@ -555,10 +555,9 @@ describe('ClothingStepResolver', () => {
       const result = resolverWithoutHandler.resolve(node, context);
 
       expect(result).toEqual(new Set());
-      expect(entitiesGatewayWithoutHandler.getComponentData).toHaveBeenCalledWith(
-        'actor_1',
-        'clothing:equipment'
-      );
+      expect(
+        entitiesGatewayWithoutHandler.getComponentData
+      ).toHaveBeenCalledWith('actor_1', 'clothing:equipment');
     });
 
     it('should handle parent resolution failures gracefully without errorHandler', () => {

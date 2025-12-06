@@ -13,23 +13,34 @@ Update `ApplyDamageHandler` to accept a `damage_entry` parameter containing the 
 
 **Critical Bug Found**: The current `ApplyDamageHandler` passes incompatible parameters to `DamageTypeEffectsService`.
 
-| Assumption | Actual State |
-|------------|--------------|
+| Assumption                                        | Actual State                                     |
+| ------------------------------------------------- | ------------------------------------------------ |
 | Handler passes `amount` + `damageType` to service | ❌ Service signature changed in WEADAMCAPREF-004 |
-| Service expects `amount` and `damageType` | ❌ Service now expects `damageEntry` object |
-| This is only a feature addition | ❌ **Also a critical bug fix** |
+| Service expects `amount` and `damageType`         | ❌ Service now expects `damageEntry` object      |
+| This is only a feature addition                   | ❌ **Also a critical bug fix**                   |
 
 **Current broken call** (line ~348):
+
 ```javascript
 await this.#damageTypeEffectsService.applyEffectsForDamage({
-  entityId, partId, amount: damageAmount, damageType, maxHealth, currentHealth
+  entityId,
+  partId,
+  amount: damageAmount,
+  damageType,
+  maxHealth,
+  currentHealth,
 });
 ```
 
 **Service now expects**:
+
 ```javascript
 await this.#damageTypeEffectsService.applyEffectsForDamage({
-  entityId, partId, damageEntry: { name, amount, ...effects }, maxHealth, currentHealth
+  entityId,
+  partId,
+  damageEntry: { name, amount, ...effects },
+  maxHealth,
+  currentHealth,
 });
 ```
 
@@ -37,11 +48,11 @@ await this.#damageTypeEffectsService.applyEffectsForDamage({
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/logic/operationHandlers/applyDamageHandler.js` | UPDATE | Accept damage_entry parameter |
-| `data/schemas/operations/applyDamage.schema.json` | UPDATE | Add damage_entry to schema |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | UPDATE | Test new and legacy modes |
+| File                                                            | Action | Description                   |
+| --------------------------------------------------------------- | ------ | ----------------------------- |
+| `src/logic/operationHandlers/applyDamageHandler.js`             | UPDATE | Accept damage_entry parameter |
+| `data/schemas/operations/applyDamage.schema.json`               | UPDATE | Add damage_entry to schema    |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | UPDATE | Test new and legacy modes     |
 
 ## Out of Scope
 
@@ -103,7 +114,9 @@ Add to `data/schemas/operations/applyDamage.schema.json`:
     "damage_entry": {
       "description": "Full damage entry object from weapon's damage_capabilities component",
       "oneOf": [
-        { "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json" },
+        {
+          "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json"
+        },
         { "$ref": "#/$defs/JSONLogic" }
       ]
     },
@@ -126,6 +139,7 @@ Add to `data/schemas/operations/applyDamage.schema.json`:
 1. `npm run test:unit -- tests/unit/logic/operationHandlers/applyDamageHandler.test.js`
 
 Test cases:
+
 - Handler accepts `damage_entry` parameter and applies damage correctly
 - Handler extracts amount from `damage_entry.amount`
 - Handler calls DamageTypeEffectsService with damageEntry object
@@ -162,6 +176,7 @@ Test cases:
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Add `damage_entry` parameter support to ApplyDamageHandler
 - Update schema to include `damage_entry`
 - Add tests for new functionality
@@ -190,19 +205,19 @@ Test cases:
 
 ### Test Results
 
-| Test | Result |
-|------|--------|
-| Handler accepts `damage_entry` and applies damage correctly | ✅ |
-| Handler calls DamageTypeEffectsService with damageEntry object | ✅ |
-| Legacy `damage_type` + `amount` backward compatibility | ✅ |
-| Deprecation warning for legacy mode | ✅ |
-| Error when missing both parameter modes | ✅ |
-| JSON Logic resolution in `damage_entry` | ✅ |
-| Validation for missing `amount` field | ✅ |
-| Validation for missing `name` field | ✅ |
-| Full effect configuration handling | ✅ |
-| Damage propagation with new structure | ✅ |
-| Schema validation passes | ✅ |
+| Test                                                           | Result |
+| -------------------------------------------------------------- | ------ |
+| Handler accepts `damage_entry` and applies damage correctly    | ✅     |
+| Handler calls DamageTypeEffectsService with damageEntry object | ✅     |
+| Legacy `damage_type` + `amount` backward compatibility         | ✅     |
+| Deprecation warning for legacy mode                            | ✅     |
+| Error when missing both parameter modes                        | ✅     |
+| JSON Logic resolution in `damage_entry`                        | ✅     |
+| Validation for missing `amount` field                          | ✅     |
+| Validation for missing `name` field                            | ✅     |
+| Full effect configuration handling                             | ✅     |
+| Damage propagation with new structure                          | ✅     |
+| Schema validation passes                                       | ✅     |
 
 ### Critical Bug Fixed
 

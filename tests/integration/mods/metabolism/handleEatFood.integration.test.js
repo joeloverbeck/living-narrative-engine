@@ -40,7 +40,7 @@ describe('metabolism:eat action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
@@ -48,7 +48,7 @@ describe('metabolism:eat action integration', () => {
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
           conversion_rate: 1.0,
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         })
         .build();
 
@@ -57,7 +57,7 @@ describe('metabolism:eat action integration', () => {
         .withComponent('metabolism:fuel_source', {
           fuel_type: 'food',
           bulk: 1,
-          energy_content: 20
+          energy_content: 20,
         })
         .build();
 
@@ -69,10 +69,14 @@ describe('metabolism:eat action integration', () => {
       const perceptibleEvent = testFixture.events.find(
         (event) => event.eventType === 'core:perceptible_event'
       );
-      expect(perceptibleEvent?.payload.descriptionText).toBe('Alice eats apple.');
+      expect(perceptibleEvent?.payload.descriptionText).toBe(
+        'Alice eats apple.'
+      );
       expect(perceptibleEvent?.payload.perceptionType).toBe('food_consumed');
 
-      expect(testFixture.events).toDispatchEvent('core:display_successful_action_result');
+      expect(testFixture.events).toDispatchEvent(
+        'core:display_successful_action_result'
+      );
       expect(testFixture.events).toHaveActionSuccess('Alice eats apple.');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
 
@@ -83,7 +87,9 @@ describe('metabolism:eat action integration', () => {
     });
 
     it('transfers food nutrients to metabolic buffer', async () => {
-      const room = new ModEntityBuilder('test:room1').asRoom('Dining Room').build();
+      const room = new ModEntityBuilder('test:room1')
+        .asRoom('Dining Room')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Bob')
@@ -94,7 +100,7 @@ describe('metabolism:eat action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
@@ -102,7 +108,7 @@ describe('metabolism:eat action integration', () => {
           efficiency: 1.0,
           accepted_fuel_tags: ['food'],
           conversion_rate: 1.0,
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         })
         .build();
 
@@ -111,7 +117,7 @@ describe('metabolism:eat action integration', () => {
         .withComponent('metabolism:fuel_source', {
           fuel_type: 'food',
           bulk: 2,
-          energy_content: 30
+          energy_content: 30,
         })
         .build();
 
@@ -119,20 +125,24 @@ describe('metabolism:eat action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:food1');
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
 
       expect(metabolicStore.buffer_storage).toHaveLength(1);
       expect(metabolicStore.buffer_storage[0]).toMatchObject({
         bulk: 2,
-        energy_content: 30
+        energy_content: 30,
       });
 
       expect(testFixture.events).toHaveActionSuccess('Bob eats bread.');
     });
 
     it('dispatches events in correct order', async () => {
-      const room = new ModEntityBuilder('test:room1').asRoom('Restaurant').build();
+      const room = new ModEntityBuilder('test:room1')
+        .asRoom('Restaurant')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Carol')
@@ -143,7 +153,7 @@ describe('metabolism:eat action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
@@ -151,7 +161,7 @@ describe('metabolism:eat action integration', () => {
           efficiency: 1.0,
           accepted_fuel_tags: ['food'],
           conversion_rate: 1.0,
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         })
         .build();
 
@@ -160,7 +170,7 @@ describe('metabolism:eat action integration', () => {
         .withComponent('metabolism:fuel_source', {
           fuel_type: 'food',
           bulk: 1,
-          energy_content: 15
+          energy_content: 15,
         })
         .build();
 
@@ -169,16 +179,16 @@ describe('metabolism:eat action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:food1');
 
       const perceptibleIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:perceptible_event'
+        (e) => e.eventType === 'core:perceptible_event'
       );
       const displayIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
       const successIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:action_success'
+        (e) => e.eventType === 'core:action_success'
       );
       const turnEndedIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:turn_ended'
+        (e) => e.eventType === 'core:turn_ended'
       );
 
       expect(perceptibleIdx).toBeLessThan(displayIdx);
@@ -200,7 +210,7 @@ describe('metabolism:eat action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
@@ -208,7 +218,7 @@ describe('metabolism:eat action integration', () => {
           efficiency: 1.0,
           accepted_fuel_tags: ['food'],
           conversion_rate: 1.0,
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         })
         .build();
 
@@ -217,7 +227,7 @@ describe('metabolism:eat action integration', () => {
         .withComponent('metabolism:fuel_source', {
           fuel_type: 'food',
           bulk: 3,
-          energy_content: 40
+          energy_content: 40,
         })
         .build();
 
@@ -230,7 +240,9 @@ describe('metabolism:eat action integration', () => {
     });
 
     it('handles eating with partially full buffer', async () => {
-      const room = new ModEntityBuilder('test:room1').asRoom('Cafeteria').build();
+      const room = new ModEntityBuilder('test:room1')
+        .asRoom('Cafeteria')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Eve')
@@ -239,10 +251,8 @@ describe('metabolism:eat action integration', () => {
         .withComponent('metabolism:metabolic_store', {
           current_energy: 70,
           max_energy: 100,
-          buffer_storage: [
-            { bulk: 2, energy_content: 25 }
-          ],
-          buffer_capacity: 10
+          buffer_storage: [{ bulk: 2, energy_content: 25 }],
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
@@ -250,7 +260,7 @@ describe('metabolism:eat action integration', () => {
           efficiency: 1.0,
           accepted_fuel_tags: ['food'],
           conversion_rate: 1.0,
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         })
         .build();
 
@@ -259,7 +269,7 @@ describe('metabolism:eat action integration', () => {
         .withComponent('metabolism:fuel_source', {
           fuel_type: 'food',
           bulk: 2,
-          energy_content: 30
+          energy_content: 30,
         })
         .build();
 
@@ -267,8 +277,10 @@ describe('metabolism:eat action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'test:food1');
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
 
       expect(metabolicStore.buffer_storage).toHaveLength(2);
       expect(testFixture.events).toHaveActionSuccess('Eve eats meat.');

@@ -69,7 +69,11 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -221,12 +225,15 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
    */
   async #updateActorCloseness(actorId, targetId, closeness, logger) {
     if (!closeness || !Array.isArray(closeness.partners)) {
-      logger.warn('Actor has no closeness component or invalid partners array', {
-        actorId,
-        targetId,
-        hasCloseness: !!closeness,
-        partnersType: closeness ? typeof closeness.partners : 'undefined',
-      });
+      logger.warn(
+        'Actor has no closeness component or invalid partners array',
+        {
+          actorId,
+          targetId,
+          hasCloseness: !!closeness,
+          partnersType: closeness ? typeof closeness.partners : 'undefined',
+        }
+      );
       return;
     }
 
@@ -265,11 +272,14 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
         partners: repairedPartners,
       });
 
-      logger.info('Updated actor closeness component (has remaining partners)', {
-        actorId,
-        targetId,
-        remainingPartners: repairedPartners,
-      });
+      logger.info(
+        'Updated actor closeness component (has remaining partners)',
+        {
+          actorId,
+          targetId,
+          remainingPartners: repairedPartners,
+        }
+      );
     }
   }
 
@@ -286,12 +296,15 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
    */
   async #updateTargetCloseness(targetId, actorId, closeness, logger) {
     if (!closeness || !Array.isArray(closeness.partners)) {
-      logger.warn('Target has no closeness component or invalid partners array', {
-        targetId,
-        actorId,
-        hasCloseness: !!closeness,
-        partnersType: closeness ? typeof closeness.partners : 'undefined',
-      });
+      logger.warn(
+        'Target has no closeness component or invalid partners array',
+        {
+          targetId,
+          actorId,
+          hasCloseness: !!closeness,
+          partnersType: closeness ? typeof closeness.partners : 'undefined',
+        }
+      );
       return;
     }
 
@@ -320,10 +333,13 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
         'positioning:closeness'
       );
 
-      logger.info('Removed target closeness component (no remaining partners)', {
-        targetId,
-        actorId,
-      });
+      logger.info(
+        'Removed target closeness component (no remaining partners)',
+        {
+          targetId,
+          actorId,
+        }
+      );
     } else {
       // Still has partners → update component
       await this.#entityManager.addComponent(
@@ -334,11 +350,14 @@ class BreakClosenessWithTargetHandler extends BaseOperationHandler {
         }
       );
 
-      logger.info('Updated target closeness component (has remaining partners)', {
-        targetId,
-        actorId,
-        remainingPartners: repairedPartners,
-      });
+      logger.info(
+        'Updated target closeness component (has remaining partners)',
+        {
+          targetId,
+          actorId,
+          remainingPartners: repairedPartners,
+        }
+      );
     }
   }
 

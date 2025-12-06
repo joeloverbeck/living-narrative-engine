@@ -218,7 +218,9 @@ describe('EventBusPromptAdapter', () => {
       safeEventDispatcher: mockSafeDispatcher,
     });
 
-    await adapter.prompt('player-empty', [], { suggestedAction: { index: 'x' } });
+    await adapter.prompt('player-empty', [], {
+      suggestedAction: { index: 'x' },
+    });
 
     expect(mockSafeDispatcher.dispatch).toHaveBeenCalledWith(
       PLAYER_TURN_PROMPT_ID,

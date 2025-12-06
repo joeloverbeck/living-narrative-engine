@@ -961,9 +961,9 @@ describe('SocketGenerator', () => {
         'leg_right_rear',
       ]);
       // Verify radial sockets
-      expect(sockets.slice(4, 12).every((s) => s.id.startsWith('tentacle_'))).toBe(
-        true
-      );
+      expect(
+        sockets.slice(4, 12).every((s) => s.id.startsWith('tentacle_'))
+      ).toBe(true);
       // Verify indexed sockets
       expect(sockets.slice(12, 15).map((s) => s.id)).toEqual([
         'sensor_1',

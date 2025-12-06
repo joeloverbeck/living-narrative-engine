@@ -191,9 +191,14 @@ function ensureConditionField(
       from: original,
       to: candidate,
     });
-    warn(context, warnings, `${field} condition wrapped in 'logic' has been normalized.`, {
-      field,
-    });
+    warn(
+      context,
+      warnings,
+      `${field} condition wrapped in 'logic' has been normalized.`,
+      {
+        field,
+      }
+    );
   }
 
   if (isConditionLike(candidate)) {
@@ -202,19 +207,29 @@ function ensureConditionField(
   }
 
   if (!context?.allowDefaults) {
-    throwNormalizationError(context, `${field} condition is missing or invalid.`, {
-      field,
-      valueType: typeof candidate,
-    });
+    throwNormalizationError(
+      context,
+      `${field} condition is missing or invalid.`,
+      {
+        field,
+        valueType: typeof candidate,
+      }
+    );
   }
 
-  const fallback = typeof fallbackBuilder === 'function'
-    ? fallbackBuilder(context)
-    : alwaysTrueCondition();
+  const fallback =
+    typeof fallbackBuilder === 'function'
+      ? fallbackBuilder(context)
+      : alwaysTrueCondition();
   normalized[field] = fallback;
-  warn(context, warnings, `${field} missing or invalid. Applied default scaffolding.`, {
-    field,
-  });
+  warn(
+    context,
+    warnings,
+    `${field} missing or invalid. Applied default scaffolding.`,
+    {
+      field,
+    }
+  );
   recordMutation(mutations, {
     field,
     type: 'defaulted',
@@ -241,7 +256,7 @@ function runNormalizationHooks(normalized, context, warnings, mutations) {
         for (const hookWarning of result.warnings) {
           warn(context, warnings, hookWarning.message, {
             ...hookWarning.details,
-            extensionName: hook.name || 'anonymous'
+            extensionName: hook.name || 'anonymous',
           });
         }
       }
@@ -290,11 +305,22 @@ export function normalizeGoalData(data, context = {}) {
   const mutations = [];
 
   coercePriority(data, context, warnings, mutations);
-  ensureConditionField(data, 'relevance', () => alwaysTrueCondition(), context, warnings, mutations);
+  ensureConditionField(
+    data,
+    'relevance',
+    () => alwaysTrueCondition(),
+    context,
+    warnings,
+    mutations
+  );
   ensureConditionField(
     data,
     'goalState',
-    () => simpleStateMatcher(context?.defaultGoalStateVar || 'state.goal.placeholder', true),
+    () =>
+      simpleStateMatcher(
+        context?.defaultGoalStateVar || 'state.goal.placeholder',
+        true
+      ),
     context,
     warnings,
     mutations

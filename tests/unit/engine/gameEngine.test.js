@@ -160,9 +160,10 @@ describeEngineSuite('GameEngine', (context) => {
       }
 
       expect(thrownError).toBeInstanceOf(Error);
-      const normalizedError = /** @type {Error & { cause?: unknown; originalError?: unknown }} */ (
-        thrownError
-      );
+      const normalizedError =
+        /** @type {Error & { cause?: unknown; originalError?: unknown }} */ (
+          thrownError
+        );
       expect(normalizedError.message).toBe(
         'Mods loader failed schema validation.'
       );
@@ -185,7 +186,8 @@ describeEngineSuite('GameEngine', (context) => {
       const clearFailure = new Error('clearAll failure');
       const { clearAll } = context.bed.getEntityManager();
       clearAll.mockImplementationOnce(() => {}); // 1st call: pre-initialization reset
-      clearAll.mockImplementationOnce(() => {    // 2nd call: failure handling
+      clearAll.mockImplementationOnce(() => {
+        // 2nd call: failure handling
         throw clearFailure;
       });
       clearAll.mockImplementationOnce(() => {}); // 3rd call: recovery attempt
@@ -694,8 +696,9 @@ describeEngineSuite('GameEngine', (context) => {
       context.bed.getTurnManager().getActiveTurnHandler.mockReturnValue(null);
       context.bed.getTurnManager().getCurrentActor.mockReturnValue(null);
 
-      await expect(context.engine.previewLlmPromptForCurrentActor()).resolves
-        .toBeUndefined();
+      await expect(
+        context.engine.previewLlmPromptForCurrentActor()
+      ).resolves.toBeUndefined();
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         UI_SHOW_LLM_PROMPT_PREVIEW,
@@ -718,11 +721,15 @@ describeEngineSuite('GameEngine', (context) => {
     it('should build prompt preview data and dispatch it without calling getAIDecision', async () => {
       const actor = { id: actorId };
       const turnContext = { ctx: 'turn' };
-      const handler = { getTurnContext: jest.fn().mockReturnValue(turnContext) };
+      const handler = {
+        getTurnContext: jest.fn().mockReturnValue(turnContext),
+      };
       const availableActions = [{ id: 'a' }, { id: 'b' }];
       const prompt = 'prompt-body';
 
-      context.bed.getTurnManager().getActiveTurnHandler.mockReturnValue(handler);
+      context.bed
+        .getTurnManager()
+        .getActiveTurnHandler.mockReturnValue(handler);
       context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
       context.bed
         .getEntityDisplayDataProvider()
@@ -730,21 +737,25 @@ describeEngineSuite('GameEngine', (context) => {
       context.bed
         .getTurnActionChoicePipeline()
         .buildChoices.mockResolvedValue(availableActions);
-      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
-      context.bed.getAiPromptPipeline().generatePrompt.mockResolvedValue(prompt);
+      context.bed
+        .getLlmAdapter()
+        .getCurrentActiveLlmId.mockResolvedValue(llmId);
+      context.bed
+        .getAiPromptPipeline()
+        .generatePrompt.mockResolvedValue(prompt);
 
       await context.engine.previewLlmPromptForCurrentActor();
 
       expect(
         context.bed.getTurnActionChoicePipeline().buildChoices
       ).toHaveBeenCalledWith(actor, turnContext);
-      expect(context.bed.getAiPromptPipeline().generatePrompt).toHaveBeenCalledWith(
-        actor,
-        turnContext,
-        availableActions
-      );
+      expect(
+        context.bed.getAiPromptPipeline().generatePrompt
+      ).toHaveBeenCalledWith(actor, turnContext, availableActions);
       expect(context.bed.getLlmAdapter().getAIDecision).not.toHaveBeenCalled();
-      expect(context.bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(
         UI_SHOW_LLM_PROMPT_PREVIEW,
         expect.objectContaining({
           prompt,
@@ -762,20 +773,30 @@ describeEngineSuite('GameEngine', (context) => {
     it('should surface errors and dispatch prompt: null when pipelines throw', async () => {
       const actor = { id: actorId };
       const turnContext = { ctx: 'turn' };
-      const handler = { getTurnContext: jest.fn().mockReturnValue(turnContext) };
+      const handler = {
+        getTurnContext: jest.fn().mockReturnValue(turnContext),
+      };
       const failure = new Error('Pipeline failure');
 
-      context.bed.getTurnManager().getActiveTurnHandler.mockReturnValue(handler);
+      context.bed
+        .getTurnManager()
+        .getActiveTurnHandler.mockReturnValue(handler);
       context.bed.getTurnManager().getCurrentActor.mockReturnValue(actor);
       context.bed
         .getTurnActionChoicePipeline()
         .buildChoices.mockRejectedValue(failure);
-      context.bed.getLlmAdapter().getCurrentActiveLlmId.mockResolvedValue(llmId);
+      context.bed
+        .getLlmAdapter()
+        .getCurrentActiveLlmId.mockResolvedValue(llmId);
 
       await context.engine.previewLlmPromptForCurrentActor();
 
-      expect(context.bed.getAiPromptPipeline().generatePrompt).not.toHaveBeenCalled();
-      expect(context.bed.getSafeEventDispatcher().dispatch).toHaveBeenCalledWith(
+      expect(
+        context.bed.getAiPromptPipeline().generatePrompt
+      ).not.toHaveBeenCalled();
+      expect(
+        context.bed.getSafeEventDispatcher().dispatch
+      ).toHaveBeenCalledWith(
         UI_SHOW_LLM_PROMPT_PREVIEW,
         expect.objectContaining({
           prompt: null,
@@ -1178,7 +1199,9 @@ describeEngineSuite('GameEngine', (context) => {
         'GameEngine._resetCoreGameState: Failed to reset PlaytimeTracker.',
         playtimeError
       );
-      expect(Array.isArray(caughtError.resetErrors) || caughtError.cause).toBe(true);
+      expect(Array.isArray(caughtError.resetErrors) || caughtError.cause).toBe(
+        true
+      );
       if (Array.isArray(caughtError.resetErrors)) {
         expect(caughtError.resetErrors).toContain(playtimeError);
       } else {

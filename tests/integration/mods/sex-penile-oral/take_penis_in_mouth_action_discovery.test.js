@@ -28,7 +28,8 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installSittingCloseUncoveredPenisScopeOverride(testFixture);
+    restoreScopeResolver =
+      installSittingCloseUncoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -44,7 +45,8 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
   });
 
   it('appears when both participants are sitting close with an uncovered penis', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario();
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -56,9 +58,10 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
   });
 
   it("does not appear when the partner's penis is covered", async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario({
-      coverPrimaryPenis: true,
-    });
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        coverPrimaryPenis: true,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -69,9 +72,10 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
   });
 
   it('does not appear when the actor is not sitting', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario({
-      includeActorSitting: false,
-    });
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        includeActorSitting: false,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -82,9 +86,10 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
   });
 
   it('does not appear when closeness is not established', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario({
-      includeCloseness: false,
-    });
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        includeCloseness: false,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -95,14 +100,19 @@ describe('sex-penile-oral:take_penis_in_mouth action discovery', () => {
   });
 
   it('does not appear when the actor is already giving a blowjob', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario();
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario();
     testFixture.reset(entities);
 
     // Manually add giving_blowjob component to actor using entity ID
-    testFixture.entityManager.addComponent(actorId, 'positioning:giving_blowjob', {
-      receiving_entity_id: 'some_other_entity',
-      initiated: true,
-    });
+    testFixture.entityManager.addComponent(
+      actorId,
+      'positioning:giving_blowjob',
+      {
+        receiving_entity_id: 'some_other_entity',
+        initiated: true,
+      }
+    );
 
     configureActionDiscovery(testFixture);
 

@@ -91,7 +91,11 @@ describe('GameConfigLoader helper methods', () => {
       configuration.getContentTypeSchemaId.mockReturnValue(undefined);
 
       expect(() =>
-        loader.validateConfigForTest({ mods: ['one'] }, '/game.json', 'game.json')
+        loader.validateConfigForTest(
+          { mods: ['one'] },
+          '/game.json',
+          'game.json'
+        )
       ).toThrow('Schema ID for ‘game’ configuration type not configured.');
       expect(logger.error).toHaveBeenCalledWith(
         "FATAL: Schema ID for 'game' configuration type not found in IConfiguration."

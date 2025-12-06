@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
 import * as safeDispatchErrorUtils from '../../../../src/utils/safeDispatchErrorUtils.js';
 import PutInContainerHandler from '../../../../src/logic/operationHandlers/putInContainerHandler.js';
@@ -234,12 +241,16 @@ describe('PutInContainerHandler', () => {
       };
 
       // Mock actor inventory without the item
-      mockEntityManager.getComponentData.mockReturnValueOnce({ items: ['item2', 'item3'] });
+      mockEntityManager.getComponentData.mockReturnValueOnce({
+        items: ['item2', 'item3'],
+      });
 
       await handler.execute(params, executionContext);
 
       // Verify no batch update
-      expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).not.toHaveBeenCalled();
 
       // Verify no event was dispatched
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
@@ -258,11 +269,16 @@ describe('PutInContainerHandler', () => {
         result_variable: ' outcome ',
       };
 
-      mockEntityManager.getComponentData.mockReturnValueOnce({ items: 'not-an-array' });
+      mockEntityManager.getComponentData.mockReturnValueOnce({
+        items: 'not-an-array',
+      });
 
       const result = await handler.execute(params, executionContext);
 
-      expect(result).toEqual({ success: false, error: 'item_not_in_inventory' });
+      expect(result).toEqual({
+        success: false,
+        error: 'item_not_in_inventory',
+      });
       expect(tryWriteContextVariableSpy).toHaveBeenCalledWith(
         'outcome',
         { success: false, error: 'item_not_in_inventory' },
@@ -286,7 +302,9 @@ describe('PutInContainerHandler', () => {
       await handler.execute(params, executionContext);
 
       // Verify no batch update
-      expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).not.toHaveBeenCalled();
 
       // Verify no event was dispatched
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
@@ -335,7 +353,9 @@ describe('PutInContainerHandler', () => {
       const result = await handler.execute(params, executionContext);
 
       // Verify no batch update
-      expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).not.toHaveBeenCalled();
 
       expect(result).toEqual({ success: false, error: 'not_a_container' });
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();

@@ -62,11 +62,12 @@ describe('BaseBodyPartOperator', () => {
     getBodyComponent.mockClear();
     extractRootId.mockClear();
 
-    hasValidEntityId.mockImplementation((entity) =>
-      entity !== undefined &&
-      entity !== null &&
-      entity.id !== undefined &&
-      entity.id !== null
+    hasValidEntityId.mockImplementation(
+      (entity) =>
+        entity !== undefined &&
+        entity !== null &&
+        entity.id !== undefined &&
+        entity.id !== null
     );
   });
 

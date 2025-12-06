@@ -30,7 +30,9 @@ describe('PlanInvalidationDetector - Constructor', () => {
     });
 
     expect(detector).toBeInstanceOf(PlanInvalidationDetector);
-    expect(mockLogger.info).toHaveBeenCalledWith('PlanInvalidationDetector initialized');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'PlanInvalidationDetector initialized'
+    );
   });
 
   it('should throw if JsonLogicEvaluationService missing evaluate method', () => {
@@ -132,7 +134,9 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
       planningPreconditions: [
         {
           description: 'Actor has item',
-          condition: { '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'] },
+          condition: {
+            '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'],
+          },
         },
       ],
     });
@@ -141,7 +145,12 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     mockJsonLogicService.evaluate.mockReturnValue(true);
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     // Assert
     expect(result.valid).toBe(true);
@@ -170,7 +179,9 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
       planningPreconditions: [
         {
           description: 'Actor has item',
-          condition: { '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'] },
+          condition: {
+            '==': [{ var: 'actor-123.core.inventory' }, 'apple-456'],
+          },
         },
       ],
     });
@@ -179,7 +190,12 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     mockJsonLogicService.evaluate.mockReturnValue(false);
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     // Assert
     expect(result.valid).toBe(false);
@@ -214,7 +230,12 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     });
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     // Assert
     expect(result.valid).toBe(true);
@@ -246,7 +267,12 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     });
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'lenient');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'lenient'
+    );
 
     // Assert
     expect(result.valid).toBe(true);
@@ -283,7 +309,12 @@ describe('PlanInvalidationDetector - Precondition Re-checking', () => {
     });
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'periodic');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'periodic'
+    );
 
     // Assert
     expect(result.valid).toBe(true);
@@ -325,9 +356,7 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
   it('should invalidate when world state changes', () => {
     // Setup: Plan that was valid in past state
     const plan = {
-      tasks: [
-        { taskId: 'core:open_door', parameters: { target: 'door-789' } },
-      ],
+      tasks: [{ taskId: 'core:open_door', parameters: { target: 'door-789' } }],
       cost: 1,
       nodesExplored: 3,
     };
@@ -352,7 +381,12 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
     mockJsonLogicService.evaluate.mockReturnValue(false);
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     // Assert
     expect(result.valid).toBe(false);
@@ -391,7 +425,12 @@ describe('PlanInvalidationDetector - State Change Detection', () => {
     mockJsonLogicService.evaluate.mockReturnValue(false);
 
     // Act
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     // Assert
     expect(result.valid).toBe(false);
@@ -451,7 +490,12 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
 
     mockJsonLogicService.evaluate.mockReturnValue(false);
 
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('precondition_violated');
@@ -480,7 +524,12 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
 
     mockJsonLogicService.evaluate.mockReturnValue(false);
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.precondition).toEqual(violatedCondition);
   });
@@ -518,7 +567,12 @@ describe('PlanInvalidationDetector - Invalidation Reasons', () => {
 
     mockJsonLogicService.evaluate.mockReturnValue(false);
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.invalidatedAt).toBe(1); // Second task (index 1)
@@ -598,7 +652,12 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
       return tasks[id];
     });
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'lenient');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'lenient'
+    );
 
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toHaveLength(1); // Only critical task
@@ -617,12 +676,20 @@ describe('PlanInvalidationDetector - Policy Behaviors', () => {
 
     mockRegistry.get.mockImplementation((type, id) => {
       const tasks = Object.fromEntries(
-        Array.from({ length: 10 }, (_, i) => [`core:task${i}`, { id: `core:task${i}` }])
+        Array.from({ length: 10 }, (_, i) => [
+          `core:task${i}`,
+          { id: `core:task${i}` },
+        ])
       );
       return tasks[id];
     });
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'periodic');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'periodic'
+    );
 
     expect(result.valid).toBe(true);
     // Periodic checks every 3rd task: indices 0, 3, 6, 9 = 4 tasks
@@ -683,7 +750,12 @@ describe('PlanInvalidationDetector - Error Handling', () => {
       throw new Error('Invalid JSON Logic expression');
     });
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('evaluation_error');
@@ -711,7 +783,12 @@ describe('PlanInvalidationDetector - Error Handling', () => {
       throw new Error('Evaluation failed');
     });
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     // Conservative invalidation on error
     expect(result.valid).toBe(false);
@@ -790,7 +867,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       nodesExplored: 0,
     };
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(true);
     expect(result.diagnostics).toHaveLength(0);
@@ -799,7 +881,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
   it('should handle invalid plan structure', () => {
     const invalidPlan = null;
 
-    const result = detector.checkPlanValidity(invalidPlan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      invalidPlan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('invalid_plan_structure');
@@ -827,7 +914,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
 
     mockRegistry.get.mockReturnValue(null); // Task not found
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('task_not_found');
@@ -846,7 +938,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       // No planningPreconditions field
     });
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(true);
     expect(result.diagnostics[0].noPreconditions).toBe(true);
@@ -870,7 +967,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       return tasks[id];
     });
 
-    detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'unknown_policy');
+    detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'unknown_policy'
+    );
 
     // Should check all tasks (strict behavior)
     expect(mockRegistry.get).toHaveBeenCalledTimes(2);
@@ -887,11 +989,18 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       nodesExplored: 1,
     };
 
-    const result = detector.checkPlanValidity(plan, null, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      null,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('invalid_plan_structure');
-    expect(mockLogger.warn).toHaveBeenCalledWith('Invalid current state', { currentState: null });
+    expect(mockLogger.warn).toHaveBeenCalledWith('Invalid current state', {
+      currentState: null,
+    });
   });
 
   it('should build evaluation context while skipping malformed keys', () => {
@@ -908,7 +1017,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
 
     mockRegistry.get.mockReturnValue({ id: 'core:task1' });
 
-    const result = detector.checkPlanValidity(plan, currentState, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      currentState,
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(true);
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -926,11 +1040,9 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
 
     mockRegistry.get.mockReturnValue({ id: 'core:task1' });
 
-    const entriesSpy = jest
-      .spyOn(Object, 'entries')
-      .mockImplementation(() => {
-        throw new Error('entries failed');
-      });
+    const entriesSpy = jest.spyOn(Object, 'entries').mockImplementation(() => {
+      throw new Error('entries failed');
+    });
 
     try {
       const result = detector.checkPlanValidity(
@@ -958,11 +1070,18 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       nodesExplored: 1,
     };
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('task_not_found');
-    expect(mockLogger.warn).toHaveBeenCalledWith('Invalid task ID', { taskId: null });
+    expect(mockLogger.warn).toHaveBeenCalledWith('Invalid task ID', {
+      taskId: null,
+    });
   });
 
   it('should handle registry errors when fetching task definitions', () => {
@@ -976,7 +1095,12 @@ describe('PlanInvalidationDetector - Edge Cases', () => {
       throw new Error('registry failure');
     });
 
-    const result = detector.checkPlanValidity(plan, {}, { actorId: 'actor-123' }, 'strict');
+    const result = detector.checkPlanValidity(
+      plan,
+      {},
+      { actorId: 'actor-123' },
+      'strict'
+    );
 
     expect(result.valid).toBe(false);
     expect(result.reason).toBe('task_not_found');

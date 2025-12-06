@@ -4,7 +4,14 @@
  * @see specs/injury-reporting-and-user-interface.md
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import BodyGraphService from '../../../src/anatomy/bodyGraphService.js';
@@ -146,7 +153,14 @@ describe('Damage Message Accumulation', () => {
     // Body component
     entityManager.addComponent(ids.actor, BODY_COMPONENT_ID, {
       rootPartId: ids.torso,
-      partIds: [ids.torso, ids.head, ids.brain, ids.leftEye, ids.rightEye, ids.arm],
+      partIds: [
+        ids.torso,
+        ids.head,
+        ids.brain,
+        ids.leftEye,
+        ids.rightEye,
+        ids.arm,
+      ],
     });
 
     // Head with propagation to brain and eyes
@@ -261,8 +275,12 @@ describe('Damage Message Accumulation', () => {
       expect(perceptibleDispatch[1]).toMatchObject({
         perceptionType: 'damage_received',
       });
-      expect(perceptibleDispatch[1].descriptionText).toContain("Rill's left arm");
-      expect(perceptibleDispatch[1].descriptionText).toContain('slashing damage');
+      expect(perceptibleDispatch[1].descriptionText).toContain(
+        "Rill's left arm"
+      );
+      expect(perceptibleDispatch[1].descriptionText).toContain(
+        'slashing damage'
+      );
     });
 
     test('should compose primary and propagated damage into unified narrative', async () => {
@@ -465,7 +483,9 @@ describe('Damage Message Accumulation', () => {
 
       // Should say "torso" not "null torso"
       expect(perceptibleDispatch[1].descriptionText).toContain('torso suffers');
-      expect(perceptibleDispatch[1].descriptionText).not.toContain('null torso');
+      expect(perceptibleDispatch[1].descriptionText).not.toContain(
+        'null torso'
+      );
     });
   });
 
@@ -475,7 +495,9 @@ describe('Damage Message Accumulation', () => {
       entityManager.addComponent(ids.actor, GENDER_COMPONENT_ID, {
         value: 'male',
       });
-      entityManager.addComponent(ids.actor, NAME_COMPONENT_ID, { text: 'Marcus' });
+      entityManager.addComponent(ids.actor, NAME_COMPONENT_ID, {
+        text: 'Marcus',
+      });
     });
 
     test('should use "his" for male entity in propagation', async () => {
@@ -503,7 +525,9 @@ describe('Damage Message Accumulation', () => {
       entityManager.addComponent(ids.actor, GENDER_COMPONENT_ID, {
         value: 'neutral',
       });
-      entityManager.addComponent(ids.actor, NAME_COMPONENT_ID, { text: 'Entity' });
+      entityManager.addComponent(ids.actor, NAME_COMPONENT_ID, {
+        text: 'Entity',
+      });
     });
 
     test('should use "their" for neutral entity in propagation', async () => {

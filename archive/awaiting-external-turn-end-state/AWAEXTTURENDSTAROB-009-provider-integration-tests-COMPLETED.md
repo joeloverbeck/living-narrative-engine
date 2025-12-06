@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-009: Add Environment Provider Integration Tests
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-009
 - **Phase:** 2 - Standard Patterns
 - **Priority:** Medium
@@ -14,11 +15,13 @@ Create integration tests that verify `environmentProvider` parameter works corre
 ## Files to Create
 
 ### New Test File
+
 - `tests/integration/turns/states/awaitingExternalTurnEndState.environmentProvider.integration.test.js` (NEW)
 
 ## Test Structure Required
 
 ### File Organization
+
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
@@ -38,10 +41,18 @@ class TestTurnHandler {
     this.requestIdleStateTransition = jest.fn();
   }
 
-  setTurnContext(ctx) { this._context = ctx; }
-  getTurnContext() { return this._context; }
-  getLogger() { return this._logger; }
-  getSafeEventDispatcher() { return this._dispatcher; }
+  setTurnContext(ctx) {
+    this._context = ctx;
+  }
+  getTurnContext() {
+    return this._context;
+  }
+  getLogger() {
+    return this._logger;
+  }
+  getSafeEventDispatcher() {
+    return this._dispatcher;
+  }
 }
 
 describe('AwaitingExternalTurnEndState - Environment Provider Integration', () => {
@@ -102,6 +113,7 @@ describe('AwaitingExternalTurnEndState - Environment Provider Integration', () =
 ## Required Test Cases (Minimum 4)
 
 ### Test 1: ProcessEnvironmentProvider with Real NODE_ENV
+
 ```javascript
 it('should use ProcessEnvironmentProvider to detect real environment', async () => {
   // Arrange
@@ -133,6 +145,7 @@ it('should use ProcessEnvironmentProvider to detect real environment', async () 
 ```
 
 ### Test 2: TestEnvironmentProvider with Custom Configuration
+
 ```javascript
 it('should use TestEnvironmentProvider for isolated test configuration', async () => {
   // Arrange - Custom test timeout (development mode = 3 seconds)
@@ -160,6 +173,7 @@ it('should use TestEnvironmentProvider for isolated test configuration', async (
 ```
 
 ### Test 3: Provider Throws Error - Graceful Fallback
+
 ```javascript
 it('should gracefully handle provider throwing error with fallback to production timeout', async () => {
   // Arrange - Provider that always throws
@@ -189,6 +203,7 @@ it('should gracefully handle provider throwing error with fallback to production
 ```
 
 ### Test 4: Provider Returns Malformed Data
+
 ```javascript
 it('should handle provider returning invalid structure with fallback', async () => {
   // Arrange - Provider returns invalid data
@@ -217,6 +232,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ## Out of Scope
 
 ### Must NOT Include
+
 - Timeout firing tests (Ticket 010)
 - Timeout consistency tests (Ticket 011)
 - Property-based tests (Phase 3)
@@ -225,6 +241,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 - Memory leak tests
 
 ### Must NOT Change
+
 - Provider implementations (ProcessEnvironmentProvider, TestEnvironmentProvider)
 - `IEnvironmentProvider` interface
 - Production code beyond what Ticket 007 already changed
@@ -233,6 +250,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ## Acceptance Criteria
 
 ### AC1: All 4 Test Cases Pass
+
 ```javascript
 // GIVEN: Integration test suite with 4 test cases
 // WHEN: npm run test:integration -- environmentProvider.integration.test.js
@@ -243,6 +261,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ```
 
 ### AC2: ProcessEnvironmentProvider Integration Verified
+
 ```javascript
 // GIVEN: Test 1 using real ProcessEnvironmentProvider
 // WHEN: Test executed
@@ -254,6 +273,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ```
 
 ### AC3: TestEnvironmentProvider Isolation Verified
+
 ```javascript
 // GIVEN: Test 2 using TestEnvironmentProvider
 // WHEN: Test executed
@@ -265,6 +285,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ```
 
 ### AC4: Error Handling Verified
+
 ```javascript
 // GIVEN: Tests 3-4 with failing/invalid providers
 // WHEN: Tests executed
@@ -276,6 +297,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ```
 
 ### AC5: Demonstrates DI Pattern Correctly
+
 ```javascript
 // GIVEN: All integration tests
 // WHEN: Code review performed
@@ -289,18 +311,21 @@ it('should handle provider returning invalid structure with fallback', async () 
 ## Invariants
 
 ### Provider Integration Guarantees (Must Verify)
+
 1. **ProcessEnvironmentProvider Works**: Real provider integrates correctly
 2. **TestEnvironmentProvider Works**: Test provider provides isolation
 3. **Error Tolerance**: Provider failures don't crash state
 4. **Safe Defaults**: Invalid/failing providers use production timeout
 
 ### Test Quality Standards (Must Maintain)
+
 1. **Integration Level**: Tests use real provider instances
 2. **Fast**: All tests complete in <1 second
 3. **Isolated**: Tests don't affect each other
 4. **Clear**: Tests demonstrate provider usage patterns
 
 ### State Lifecycle Invariants (Must Maintain)
+
 1. **Functional After Error**: Provider error doesn't prevent state creation
 2. **Resource Cleanup**: Provider errors don't leak resources
 3. **Timeout Set**: Timeout always set, even with provider errors
@@ -308,6 +333,7 @@ it('should handle provider returning invalid structure with fallback', async () 
 ## Testing Commands
 
 ### Development
+
 ```bash
 # Run integration test file
 npm run test:integration -- environmentProvider.integration.test.js
@@ -323,6 +349,7 @@ npm run test:integration -- environmentProvider.integration.test.js --watch
 ```
 
 ### Validation
+
 ```bash
 # Verify fast execution
 time npm run test:integration -- environmentProvider.integration.test.js
@@ -338,6 +365,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### ProcessEnvironmentProvider Test Pattern
+
 ```javascript
 // Arrange
 const realProvider = new ProcessEnvironmentProvider();
@@ -360,6 +388,7 @@ try {
 ```
 
 ### Error Provider Test Pattern
+
 ```javascript
 // Arrange
 const errorProvider = {
@@ -378,6 +407,7 @@ const state = new AwaitingExternalTurnEndState({
 ```
 
 ### Malformed Data Test Pattern
+
 ```javascript
 // Test various invalid returns:
 // - null
@@ -416,12 +446,14 @@ All acceptance criteria met. Tests pass in 0.855s with complete coverage of prov
 ### What Was Changed vs Originally Planned
 
 **Ticket Assumptions Corrected:**
+
 1. **Import paths** - Updated from `src/environment/` to actual `src/configuration/` location
 2. **Constructor signature** - Corrected to use actual `(handler, { options })` pattern
 3. **Test setup** - Updated to use proper TurnContext and TestTurnHandler pattern matching existing production test
 4. **Method signatures** - Changed to async and added proper handler parameter
 
 **Implementation Delivered:**
+
 - Created `tests/integration/turns/states/awaitingExternalTurnEndState.environmentProvider.integration.test.js`
 - 4 test cases covering all provider integration scenarios:
   1. ProcessEnvironmentProvider with real NODE_ENV detection
@@ -430,12 +462,14 @@ All acceptance criteria met. Tests pass in 0.855s with complete coverage of prov
   4. Malformed provider returning null (safe default via nullish coalescing)
 
 **Test Results:**
+
 - All 4 tests pass in 0.855s (well under 1s requirement)
 - No flakiness or intermittent failures
 - Proper environment restoration in finally blocks
 - Clear test names describing each scenario
 
 **Code Quality:**
+
 - Followed existing patterns from `awaitingExternalTurnEndState.production.integration.test.js`
 - Proper use of TestTurnHandler helper class
 - Complete TurnContext setup with all required services

@@ -1,11 +1,19 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { createEntityDefinition } from '../../common/entities/entityFactories.js';
 
 let uniqueIdCounter = 0;
-const createUniqueId = (prefix) => `${prefix}_${Date.now()}_${++uniqueIdCounter}`;
+const createUniqueId = (prefix) =>
+  `${prefix}_${Date.now()}_${++uniqueIdCounter}`;
 
 describe('Complete Clothing Removal Workflow - E2E', () => {
   let container;
@@ -26,7 +34,9 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
 
     // Get services from container
     entityManager = container.resolve(tokens.IEntityManager);
-    clothingAccessibilityService = container.resolve(tokens.ClothingAccessibilityService);
+    clothingAccessibilityService = container.resolve(
+      tokens.ClothingAccessibilityService
+    );
     logger = container.resolve(tokens.ILogger);
     dataRegistry = container.resolve(tokens.IDataRegistry);
 
@@ -95,18 +105,36 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
 
     // Create clothing items
     await createTestEntity(jacketId, {
-      'clothing:wearable': { layer: 'outer', equipmentSlots: { primary: 'torso_upper' } },
-      'clothing:coverage_mapping': { covers: ['torso_upper'], coveragePriority: 'outer' },
+      'clothing:wearable': {
+        layer: 'outer',
+        equipmentSlots: { primary: 'torso_upper' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['torso_upper'],
+        coveragePriority: 'outer',
+      },
     });
 
     await createTestEntity(shirtId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'torso_upper' } },
-      'clothing:coverage_mapping': { covers: ['torso_upper'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'torso_upper' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['torso_upper'],
+        coveragePriority: 'base',
+      },
     });
 
     await createTestEntity(beltId, {
-      'clothing:wearable': { layer: 'accessories', equipmentSlots: { primary: 'torso_lower' } },
-      'clothing:coverage_mapping': { covers: ['torso_lower'], coveragePriority: 'accessories' },
+      'clothing:wearable': {
+        layer: 'accessories',
+        equipmentSlots: { primary: 'torso_lower' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['torso_lower'],
+        coveragePriority: 'accessories',
+      },
       'clothing:blocks_removal': {
         blockedSlots: [
           { slot: 'legs', layers: ['base'], blockType: 'must_remove_first' },
@@ -115,12 +143,21 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(pantsId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'legs' } },
-      'clothing:coverage_mapping': { covers: ['legs'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'legs' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      },
     });
 
     // Test initial state
-    const removableItems = clothingAccessibilityService.getAccessibleItems(actorId, { mode: 'topmost' });
+    const removableItems = clothingAccessibilityService.getAccessibleItems(
+      actorId,
+      { mode: 'topmost' }
+    );
 
     // Initially: jacket (topmost in torso_upper), belt (topmost in torso_lower) removable
     // Pants should be blocked by belt
@@ -146,12 +183,21 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(pantsId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'legs' } },
-      'clothing:coverage_mapping': { covers: ['legs'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'legs' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      },
     });
 
     // Test state
-    const removableItems = clothingAccessibilityService.getAccessibleItems(actorId, { mode: 'topmost' });
+    const removableItems = clothingAccessibilityService.getAccessibleItems(
+      actorId,
+      { mode: 'topmost' }
+    );
 
     // Pants should be removable (no belt to block them)
     expect(removableItems).toContain(pantsId);
@@ -174,8 +220,14 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(beltId, {
-      'clothing:wearable': { layer: 'accessories', equipmentSlots: { primary: 'torso_lower' } },
-      'clothing:coverage_mapping': { covers: ['torso_lower'], coveragePriority: 'accessories' },
+      'clothing:wearable': {
+        layer: 'accessories',
+        equipmentSlots: { primary: 'torso_lower' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['torso_lower'],
+        coveragePriority: 'accessories',
+      },
       'clothing:blocks_removal': {
         blockedSlots: [
           { slot: 'legs', layers: ['base'], blockType: 'must_remove_first' },
@@ -184,12 +236,21 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(pantsId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'legs' } },
-      'clothing:coverage_mapping': { covers: ['legs'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'legs' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      },
     });
 
     // Act: Check what's removable
-    const removableItems = clothingAccessibilityService.getAccessibleItems(actorId, { mode: 'topmost' });
+    const removableItems = clothingAccessibilityService.getAccessibleItems(
+      actorId,
+      { mode: 'topmost' }
+    );
 
     // Assert: Pants should NOT be removable (blocked by belt)
     expect(removableItems).not.toContain(pantsId);
@@ -215,8 +276,14 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(beltAId, {
-      'clothing:wearable': { layer: 'accessories', equipmentSlots: { primary: 'torso_lower' } },
-      'clothing:coverage_mapping': { covers: ['torso_lower'], coveragePriority: 'accessories' },
+      'clothing:wearable': {
+        layer: 'accessories',
+        equipmentSlots: { primary: 'torso_lower' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['torso_lower'],
+        coveragePriority: 'accessories',
+      },
       'clothing:blocks_removal': {
         blockedSlots: [
           { slot: 'legs', layers: ['base'], blockType: 'must_remove_first' },
@@ -225,12 +292,21 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(pantsAId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'legs' } },
-      'clothing:coverage_mapping': { covers: ['legs'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'legs' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      },
     });
 
     // Verify blocking for Actor A
-    const removableA = clothingAccessibilityService.getAccessibleItems(actorAId, { mode: 'topmost' });
+    const removableA = clothingAccessibilityService.getAccessibleItems(
+      actorAId,
+      { mode: 'topmost' }
+    );
     expect(removableA).toContain(beltAId);
     expect(removableA).not.toContain(pantsAId); // Blocked by belt
 
@@ -248,12 +324,21 @@ describe('Complete Clothing Removal Workflow - E2E', () => {
     });
 
     await createTestEntity(pantsBId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'legs' } },
-      'clothing:coverage_mapping': { covers: ['legs'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'legs' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      },
     });
 
     // Verify no blocking for Actor B
-    const removableB = clothingAccessibilityService.getAccessibleItems(actorBId, { mode: 'topmost' });
+    const removableB = clothingAccessibilityService.getAccessibleItems(
+      actorBId,
+      { mode: 'topmost' }
+    );
     expect(removableB).toContain(pantsBId); // Not blocked (no belt)
   });
 });
@@ -277,7 +362,9 @@ describe('Multi-Actor Clothing Removal - E2E', () => {
 
     // Get services from container
     entityManager = container.resolve(tokens.IEntityManager);
-    clothingAccessibilityService = container.resolve(tokens.ClothingAccessibilityService);
+    clothingAccessibilityService = container.resolve(
+      tokens.ClothingAccessibilityService
+    );
     logger = container.resolve(tokens.ILogger);
     dataRegistry = container.resolve(tokens.IDataRegistry);
 
@@ -327,8 +414,14 @@ describe('Multi-Actor Clothing Removal - E2E', () => {
     });
 
     await createTestEntity(beltId, {
-      'clothing:wearable': { layer: 'accessories', equipmentSlots: { primary: 'torso_lower' } },
-      'clothing:coverage_mapping': { covers: ['torso_lower'], coveragePriority: 'accessories' },
+      'clothing:wearable': {
+        layer: 'accessories',
+        equipmentSlots: { primary: 'torso_lower' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['torso_lower'],
+        coveragePriority: 'accessories',
+      },
       'clothing:blocks_removal': {
         blockedSlots: [
           { slot: 'legs', layers: ['base'], blockType: 'must_remove_first' },
@@ -337,12 +430,21 @@ describe('Multi-Actor Clothing Removal - E2E', () => {
     });
 
     await createTestEntity(pantsId, {
-      'clothing:wearable': { layer: 'base', equipmentSlots: { primary: 'legs' } },
-      'clothing:coverage_mapping': { covers: ['legs'], coveragePriority: 'base' },
+      'clothing:wearable': {
+        layer: 'base',
+        equipmentSlots: { primary: 'legs' },
+      },
+      'clothing:coverage_mapping': {
+        covers: ['legs'],
+        coveragePriority: 'base',
+      },
     });
 
     // Check what's removable from target
-    const removableItems = clothingAccessibilityService.getAccessibleItems(targetId, { mode: 'topmost' });
+    const removableItems = clothingAccessibilityService.getAccessibleItems(
+      targetId,
+      { mode: 'topmost' }
+    );
 
     // Pants should NOT be removable (blocked by belt)
     expect(removableItems).not.toContain(pantsId);

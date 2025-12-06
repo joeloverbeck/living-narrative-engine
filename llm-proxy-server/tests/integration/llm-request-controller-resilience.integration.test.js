@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -85,12 +92,7 @@ describe('LlmRequestController integration resilience scenarios', () => {
 
     expect(
       () =>
-        new LlmRequestController(
-          logger,
-          undefined,
-          dummyService,
-          dummyService
-        )
+        new LlmRequestController(logger, undefined, dummyService, dummyService)
     ).toThrow('LlmRequestController: llmConfigService is required.');
 
     expect(
@@ -120,7 +122,12 @@ describe('LlmRequestController integration resilience scenarios', () => {
     const fileReader = new NodeFileSystemReader();
     const appConfig = createAppConfig();
     const cacheService = new CacheService(logger, { enableAutoCleanup: false });
-    const apiKeyService = new ApiKeyService(logger, fileReader, appConfig, cacheService);
+    const apiKeyService = new ApiKeyService(
+      logger,
+      fileReader,
+      appConfig,
+      cacheService
+    );
     const salvageService = new ResponseSalvageService(logger, {
       defaultTtl: 200,
       maxEntries: 5,
@@ -177,7 +184,12 @@ describe('LlmRequestController integration resilience scenarios', () => {
     const fileReader = new NodeFileSystemReader();
     const appConfig = createAppConfig();
     const cacheService = new CacheService(logger, { enableAutoCleanup: false });
-    const apiKeyService = new ApiKeyService(logger, fileReader, appConfig, cacheService);
+    const apiKeyService = new ApiKeyService(
+      logger,
+      fileReader,
+      appConfig,
+      cacheService
+    );
     const salvageService = new ResponseSalvageService(logger, {
       defaultTtl: 200,
       maxEntries: 5,
@@ -231,9 +243,8 @@ describe('LlmRequestController integration resilience scenarios', () => {
       expect(stats.salvaged).toBe(1);
       expect(salvageSpy).toHaveBeenCalledTimes(1);
       const salvagedRequestId = salvageSpy.mock.calls[0][0];
-      const salvagedEntry = salvageService.retrieveByRequestId(
-        salvagedRequestId
-      );
+      const salvagedEntry =
+        salvageService.retrieveByRequestId(salvagedRequestId);
       expect(salvagedEntry).not.toBeNull();
       expect(salvagedEntry?.statusCode).toBe(202);
       expect(salvagedEntry?.responseData).toEqual({ message: 'streamed' });
@@ -250,7 +261,12 @@ describe('LlmRequestController integration resilience scenarios', () => {
     const fileReader = new NodeFileSystemReader();
     const appConfig = createAppConfig();
     const cacheService = new CacheService(logger, { enableAutoCleanup: false });
-    const apiKeyService = new ApiKeyService(logger, fileReader, appConfig, cacheService);
+    const apiKeyService = new ApiKeyService(
+      logger,
+      fileReader,
+      appConfig,
+      cacheService
+    );
     const salvageService = new ResponseSalvageService(logger, {
       defaultTtl: 200,
       maxEntries: 5,

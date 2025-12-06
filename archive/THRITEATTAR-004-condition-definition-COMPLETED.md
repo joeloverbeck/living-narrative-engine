@@ -6,8 +6,8 @@ Create the event condition that checks if the current event is a `throw_item_at_
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                                              | Purpose                             |
+| --------------------------------------------------------------------------------- | ----------------------------------- |
 | `data/mods/ranged/conditions/event-is-action-throw-item-at-target.condition.json` | Event condition for action matching |
 
 ## Implementation Details
@@ -20,10 +20,7 @@ Create the event condition that checks if the current event is a `throw_item_at_
   "id": "ranged:event-is-action-throw-item-at-target",
   "description": "Checks if the current event is a throw_item_at_target action",
   "rule": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "ranged:throw_item_at_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "ranged:throw_item_at_target"]
   }
 }
 ```
@@ -31,6 +28,7 @@ Create the event condition that checks if the current event is a `throw_item_at_
 ### Condition Logic
 
 The condition uses JSON Logic to:
+
 1. Access the `actionId` property from the event payload
 2. Compare it to the string `"ranged:throw_item_at_target"`
 3. Return `true` if they match, `false` otherwise
@@ -74,6 +72,7 @@ npm run validate
 ## Reference Files
 
 For understanding condition patterns:
+
 - `data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json` - Similar event condition
 
 ## Dependencies

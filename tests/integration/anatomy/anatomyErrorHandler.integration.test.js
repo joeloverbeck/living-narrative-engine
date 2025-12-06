@@ -79,7 +79,8 @@ describe('AnatomyErrorHandler integration', () => {
   });
 
   it('delegates synchronous generation failures to the central handler fallback when available', () => {
-    const { anatomyErrorHandler, centralErrorHandler, dispatchEvents } = harness;
+    const { anatomyErrorHandler, centralErrorHandler, dispatchEvents } =
+      harness;
 
     const syncStrategy = () => {
       throw new Error('synchronous strategies should rely on fallback');
@@ -92,13 +93,19 @@ describe('AnatomyErrorHandler integration', () => {
       operation: errorInfo.context.operation,
     });
 
-    centralErrorHandler.registerRecoveryStrategy('AnatomyGenerationError', syncStrategy);
+    centralErrorHandler.registerRecoveryStrategy(
+      'AnatomyGenerationError',
+      syncStrategy
+    );
 
-    const result = anatomyErrorHandler.handle(new Error('generation pipeline halted'), {
-      operation: 'generation',
-      entityId: 'entity-sync',
-      recipeId: 'recipe-sync',
-    });
+    const result = anatomyErrorHandler.handle(
+      new Error('generation pipeline halted'),
+      {
+        operation: 'generation',
+        entityId: 'entity-sync',
+        recipeId: 'recipe-sync',
+      }
+    );
 
     expect(result).toEqual({
       handledBy: 'central-sync',
@@ -107,15 +114,23 @@ describe('AnatomyErrorHandler integration', () => {
       operation: 'generation',
     });
 
-    const errorEvents = dispatchEvents.filter((event) => event.type === 'ERROR_OCCURRED');
-    expect(errorEvents.some((event) => event.payload?.errorType === 'AnatomyGenerationError')).toBe(true);
+    const errorEvents = dispatchEvents.filter(
+      (event) => event.type === 'ERROR_OCCURRED'
+    );
+    expect(
+      errorEvents.some(
+        (event) => event.payload?.errorType === 'AnatomyGenerationError'
+      )
+    ).toBe(true);
   });
 
   it('returns the wrapped anatomy error when the central sync fallback flags a recovered state', () => {
     const { anatomyErrorHandler, centralErrorHandler } = harness;
 
     const syncStrategy = () => {
-      throw new Error('sync strategy execution should rely on fallback metadata');
+      throw new Error(
+        'sync strategy execution should rely on fallback metadata'
+      );
     };
     syncStrategy.sync = true;
     syncStrategy.fallback = (errorInfo) => ({
@@ -124,7 +139,10 @@ describe('AnatomyErrorHandler integration', () => {
       contextOperation: errorInfo.context.operation,
     });
 
-    centralErrorHandler.registerRecoveryStrategy('AnatomyGenerationError', syncStrategy);
+    centralErrorHandler.registerRecoveryStrategy(
+      'AnatomyGenerationError',
+      syncStrategy
+    );
 
     const upstreamError = new Error('bio-generator overheated');
     const result = anatomyErrorHandler.handle(upstreamError, {
@@ -142,14 +160,19 @@ describe('AnatomyErrorHandler integration', () => {
   it('wraps errors in graph-specific metadata and falls back to local handling when central sync handling fails', () => {
     const { anatomyErrorHandler } = harness;
 
-    const result = anatomyErrorHandler.handle(new Error('graph linkage missing'), {
-      operation: 'graphBuilding',
-      rootId: 'root-node-42',
-    });
+    const result = anatomyErrorHandler.handle(
+      new Error('graph linkage missing'),
+      {
+        operation: 'graphBuilding',
+        rootId: 'root-node-42',
+      }
+    );
 
     expect(result).toBeInstanceOf(GraphBuildingError);
     expect(result.rootId).toBe('root-node-42');
-    expect(result.message).toContain('Graph building failed: graph linkage missing');
+    expect(result.message).toContain(
+      'Graph building failed: graph linkage missing'
+    );
   });
 
   it('registers anatomy recovery strategies that surface detailed fallbacks from the recovery manager', async () => {
@@ -157,7 +180,11 @@ describe('AnatomyErrorHandler integration', () => {
 
     const anatomyFallback = await recoveryStrategyManager.executeWithRecovery(
       async () => {
-        throw new AnatomyGenerationError('primary anatomy service failure', 'entity-1', 'recipe-1');
+        throw new AnatomyGenerationError(
+          'primary anatomy service failure',
+          'entity-1',
+          'recipe-1'
+        );
       },
       {
         operationName: 'anatomy-generation',
@@ -181,18 +208,23 @@ describe('AnatomyErrorHandler integration', () => {
       ],
     });
 
-    const descriptionFallback = await recoveryStrategyManager.executeWithRecovery(
-      async () => {
-        throw new DescriptionGenerationError('language model timeout', 'entity-2', ['torso', 'leftArm']);
-      },
-      {
-        operationName: 'description-generation',
-        errorType: 'DescriptionGenerationError',
-        useCircuitBreaker: false,
-        cacheResult: false,
-        maxRetries: 1,
-      }
-    );
+    const descriptionFallback =
+      await recoveryStrategyManager.executeWithRecovery(
+        async () => {
+          throw new DescriptionGenerationError(
+            'language model timeout',
+            'entity-2',
+            ['torso', 'leftArm']
+          );
+        },
+        {
+          operationName: 'description-generation',
+          errorType: 'DescriptionGenerationError',
+          useCircuitBreaker: false,
+          cacheResult: false,
+          maxRetries: 1,
+        }
+      );
 
     expect(descriptionFallback).toEqual({
       type: 'fallback',
@@ -229,28 +261,38 @@ describe('AnatomyErrorHandler integration', () => {
   });
 
   it('awaits the central handler recovery path when handling async description failures', async () => {
-    const { anatomyErrorHandler, centralErrorHandler, recoveryStrategyManager } = harness;
+    const {
+      anatomyErrorHandler,
+      centralErrorHandler,
+      recoveryStrategyManager,
+    } = harness;
 
-    centralErrorHandler.registerRecoveryStrategy('DescriptionGenerationError', async (errorInfo) => {
-      return recoveryStrategyManager.executeWithRecovery(
-        async () => {
-          throw errorInfo.originalError;
-        },
-        {
-          operationName: 'description-recovery',
-          errorType: 'DescriptionGenerationError',
-          useCircuitBreaker: false,
-          cacheResult: false,
-          maxRetries: 1,
-        }
-      );
-    });
+    centralErrorHandler.registerRecoveryStrategy(
+      'DescriptionGenerationError',
+      async (errorInfo) => {
+        return recoveryStrategyManager.executeWithRecovery(
+          async () => {
+            throw errorInfo.originalError;
+          },
+          {
+            operationName: 'description-recovery',
+            errorType: 'DescriptionGenerationError',
+            useCircuitBreaker: false,
+            cacheResult: false,
+            maxRetries: 1,
+          }
+        );
+      }
+    );
 
-    const result = await anatomyErrorHandler.handleAsync(new Error('stream interruption detected'), {
-      operation: 'description',
-      entityId: 'entity-async',
-      partIds: ['spine', 'rightArm'],
-    });
+    const result = await anatomyErrorHandler.handleAsync(
+      new Error('stream interruption detected'),
+      {
+        operation: 'description',
+        entityId: 'entity-async',
+        partIds: ['spine', 'rightArm'],
+      }
+    );
 
     expect(result).toEqual({
       type: 'fallback',
@@ -287,7 +329,7 @@ describe('AnatomyErrorHandler integration', () => {
       'generation failed decisively',
       'entity-local',
       'recipe-local',
-      generationCause,
+      generationCause
     );
 
     const generationResult = localErrorHandler.handle(wrappedGenerationError, {
@@ -304,14 +346,17 @@ describe('AnatomyErrorHandler integration', () => {
       'description failed catastrophically',
       'entity-desc',
       ['arm', 'torso'],
-      descriptionCause,
+      descriptionCause
     );
 
-    const descriptionResult = localErrorHandler.handleSync(wrappedDescriptionError, {
-      operation: 'description',
-      entityId: 'entity-desc',
-      partIds: ['arm', 'torso'],
-    });
+    const descriptionResult = localErrorHandler.handleSync(
+      wrappedDescriptionError,
+      {
+        operation: 'description',
+        entityId: 'entity-desc',
+        partIds: ['arm', 'torso'],
+      }
+    );
 
     expect(descriptionResult).toBe(wrappedDescriptionError);
     expect(descriptionResult.partIds).toEqual(['arm', 'torso']);

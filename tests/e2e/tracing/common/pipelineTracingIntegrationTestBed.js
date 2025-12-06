@@ -158,7 +158,7 @@ export class PipelineTracingIntegrationTestBed {
     this.performanceCapture = {
       startTime: null,
       stageTimings: new Map(),
-       
+
       memoryBaseline:
         typeof process !== 'undefined' && process.memoryUsage
           ? // eslint-disable-next-line no-undef

@@ -224,7 +224,9 @@ describe('OperationInterpreter', () => {
      ─────────────────────────────────────────────────────────────────────── */
   test('execute should call registry.getHandler with trimmed operation type and throw MissingHandlerError', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
-    expect(() => interpreter.execute(unknownOperation, mockExecutionContext)).toThrow(MissingHandlerError);
+    expect(() =>
+      interpreter.execute(unknownOperation, mockExecutionContext)
+    ).toThrow(MissingHandlerError);
     expect(mockRegistry.getHandler).toHaveBeenCalledTimes(1);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
   });
@@ -273,7 +275,10 @@ describe('OperationInterpreter', () => {
     const asyncHandler = jest.fn().mockResolvedValue(handlerResult);
     mockRegistry.getHandler.mockReturnValue(asyncHandler);
 
-    const resultPromise = interpreter.execute(logOperation, mockExecutionContext);
+    const resultPromise = interpreter.execute(
+      logOperation,
+      mockExecutionContext
+    );
 
     await expect(resultPromise).resolves.toBe(handlerResult);
     expect(asyncHandler).toHaveBeenCalledWith(
@@ -497,11 +502,9 @@ describe('OperationInterpreter', () => {
       const capturingHandler = jest.fn((params) => params);
       mockRegistry.getHandler.mockReturnValue(capturingHandler);
       const error = new Error('Computation failed');
-      const applySpy = jest
-        .spyOn(jsonLogic, 'apply')
-        .mockImplementation(() => {
-          throw error;
-        });
+      const applySpy = jest.spyOn(jsonLogic, 'apply').mockImplementation(() => {
+        throw error;
+      });
 
       const executionContext = {
         ...mockExecutionContext,
@@ -587,7 +590,9 @@ describe('OperationInterpreter', () => {
   test('execute should throw MissingHandlerError when handler not found', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
 
-    expect(() => interpreter.execute(unknownOperation, mockExecutionContext)).toThrow(MissingHandlerError);
+    expect(() =>
+      interpreter.execute(unknownOperation, mockExecutionContext)
+    ).toThrow(MissingHandlerError);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('UNKNOWN_OP');
   });
 
@@ -630,7 +635,9 @@ describe('OperationInterpreter', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
 
     // Verify error propagates and isn't caught internally
-    expect(() => interpreter.execute(unknownOperation, mockExecutionContext)).toThrow(MissingHandlerError);
+    expect(() =>
+      interpreter.execute(unknownOperation, mockExecutionContext)
+    ).toThrow(MissingHandlerError);
 
     // Verify no logger.error was called (error is thrown, not logged)
     expect(mockLogger.error).not.toHaveBeenCalledWith(
@@ -692,7 +699,9 @@ describe('OperationInterpreter', () => {
   test('execute should treat IF like any other type (lookup in registry) and throw MissingHandlerError', () => {
     mockRegistry.getHandler.mockReturnValue(undefined);
 
-    expect(() => interpreter.execute(ifOperation, mockExecutionContext)).toThrow(MissingHandlerError);
+    expect(() =>
+      interpreter.execute(ifOperation, mockExecutionContext)
+    ).toThrow(MissingHandlerError);
     expect(mockRegistry.getHandler).toHaveBeenCalledWith('IF');
   });
 

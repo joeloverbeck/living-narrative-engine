@@ -1,16 +1,19 @@
 # Recovery Mod: Standing Actions Migration Spec
 
 ## Overview
+
 - Create a new `recovery` mod (`data/mods/recovery/`) focused on restoring fallen actors. It should house the existing self-stand action and a new assist action, both using the Recovery visual scheme.
 - Dependencies: declare at least `core` and `positioning` (uses `positioning:fallen` and `positioning:being_restrained` components, plus existing core macros/events).
 
 ## Current State Findings
+
 - Action: `data/mods/positioning/actions/push_yourself_to_your_feet.action.json` (id `positioning:push_yourself_to_your_feet`, template “push yourself to your feet”, visual uses `Deep Orange Energy`). Required `actor` component `positioning:fallen`; forbidden `actor` component `positioning:being_restrained`.
 - Rule: `data/mods/positioning/rules/handle_push_yourself_to_your_feet.rule.json` + condition `data/mods/positioning/conditions/event-is-action-push-yourself-to-your-feet.condition.json` listen for `core:attempt_action`, remove `positioning:fallen`, regenerate description, unlock movement, and log success/failure.
 - Tests: `tests/integration/mods/positioning/push_yourself_to_your_feet_action.test.js` covers discoverability, success path, perceptible event, wrong-action guard, witness handling.
 - Component reference: `data/mods/positioning/components/fallen.component.json` defines the fallen state; leave in `positioning` and consume via dependency.
 
 ## Color Scheme Decision
+
 - Use **Evergreen Shadow** (section 11.5) from `docs/mods/mod-color-schemes.md` for the `recovery` mod (now marked in use). Values:
   ```json
   {
@@ -23,6 +26,7 @@
 - Apply this visual set to both the migrated self-stand action and the new help action.
 
 ## Deliverables
+
 - New mod structure `data/mods/recovery/` with `mod-manifest.json` listing actions/conditions/rules and dependencies; update `data/mods/positioning/mod-manifest.json` to remove migrated entries.
 - Migrated action/condition/rule:
   - Move `push_yourself_to_your_feet.action.json` → `data/mods/recovery/actions/` and re-id to `recovery:push_yourself_to_your_feet`; keep template/name, update visual to Evergreen Shadow.
@@ -41,5 +45,6 @@
   - Follow mod testing guidance in `docs/testing/` and existing mod tests in `tests/integration/mods/` for fixtures (`ModTestFixture.forAction`).
 
 ## Cleanup/Notes
+
 - Ensure manifests and any archived references use the new ids; keep `positioning:fallen` component in `positioning` mod while declaring dependency from `recovery`.
 - Maintain WCAG compliance by keeping visuals in sync with `docs/mods/mod-color-schemes.md` (already updated with Recovery usage).

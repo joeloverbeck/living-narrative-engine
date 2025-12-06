@@ -213,7 +213,9 @@
         },
         {
           "type": "Switches to clipped, military-style speech under pressure",
-          "contexts": ["During high-stress situations requiring quick decisions"],
+          "contexts": [
+            "During high-stress situations requiring quick decisions"
+          ],
           "examples": [
             "\"Copy that. Moving to position. ETA two minutes.\"",
             "\"Affirmative. Proceeding with plan B.\""

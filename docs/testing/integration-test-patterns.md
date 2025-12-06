@@ -5,11 +5,13 @@ This document provides patterns and best practices for writing integration tests
 ## Testing Target Resolution Services
 
 ### Overview
+
 The target resolution stage uses three specialized services. Each service should be tested independently in unit tests, with integration tests verifying their coordination.
 
 ### Testing Tracing Orchestrator
 
 **Unit Test Patterns:**
+
 ```javascript
 describe('TargetResolutionTracingOrchestrator', () => {
   let orchestrator;
@@ -17,7 +19,9 @@ describe('TargetResolutionTracingOrchestrator', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    orchestrator = new TargetResolutionTracingOrchestrator({ logger: mockLogger });
+    orchestrator = new TargetResolutionTracingOrchestrator({
+      logger: mockLogger,
+    });
   });
 
   describe('Capability Detection', () => {
@@ -44,6 +48,7 @@ describe('TargetResolutionTracingOrchestrator', () => {
 ```
 
 **Integration Test Patterns:**
+
 ```javascript
 describe('Tracing Integration', () => {
   it('should capture trace data during resolution', async () => {
@@ -63,6 +68,7 @@ describe('Tracing Integration', () => {
 ### Testing Result Builder
 
 **Unit Test Patterns:**
+
 ```javascript
 describe('TargetResolutionResultBuilder', () => {
   let builder;
@@ -74,7 +80,7 @@ describe('TargetResolutionResultBuilder', () => {
     mockLogger = createMockLogger();
     builder = new TargetResolutionResultBuilder({
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -98,7 +104,7 @@ describe('TargetResolutionResultBuilder', () => {
       expect(result.data.candidateActions).toHaveLength(1);
       expect(result.data.candidateActions[0]).toMatchObject({
         ...actionDef,
-        resolvedTargets: expect.any(Object)
+        resolvedTargets: expect.any(Object),
       });
     });
   });
@@ -107,7 +113,7 @@ describe('TargetResolutionResultBuilder', () => {
     it('should build results with all resolved targets', () => {
       const resolutionResults = {
         primary: [{ id: 'entity1', displayName: 'Entity 1' }],
-        secondary: [{ id: 'entity2', displayName: 'Entity 2' }]
+        secondary: [{ id: 'entity2', displayName: 'Entity 2' }],
       };
 
       const result = builder.buildMultiTargetResult(
@@ -116,8 +122,9 @@ describe('TargetResolutionResultBuilder', () => {
         actionDef
       );
 
-      expect(result.data.candidateActions[0].resolvedTargets)
-        .toEqual(resolutionResults);
+      expect(result.data.candidateActions[0].resolvedTargets).toEqual(
+        resolutionResults
+      );
     });
   });
 });
@@ -126,6 +133,7 @@ describe('TargetResolutionResultBuilder', () => {
 ### Testing Resolution Coordinator
 
 **Unit Test Patterns:**
+
 ```javascript
 describe('TargetResolutionCoordinator', () => {
   let coordinator;
@@ -141,8 +149,12 @@ describe('TargetResolutionCoordinator', () => {
       const action = {
         targets: [
           { placeholder: 'primary', scope: 'scope:primary' },
-          { placeholder: 'dependent', scope: 'scope:dependent', contextFrom: 'primary' }
-        ]
+          {
+            placeholder: 'dependent',
+            scope: 'scope:dependent',
+            contextFrom: 'primary',
+          },
+        ],
       };
 
       const result = await coordinator.resolveTargets(context, action, trace);
@@ -156,12 +168,13 @@ describe('TargetResolutionCoordinator', () => {
       const action = {
         targets: [
           { placeholder: 'a', scope: 'scope:a', contextFrom: 'b' },
-          { placeholder: 'b', scope: 'scope:b', contextFrom: 'a' }
-        ]
+          { placeholder: 'b', scope: 'scope:b', contextFrom: 'a' },
+        ],
       };
 
-      await expect(coordinator.resolveTargets(context, action, trace))
-        .rejects.toThrow('circular dependency');
+      await expect(
+        coordinator.resolveTargets(context, action, trace)
+      ).rejects.toThrow('circular dependency');
     });
   });
 
@@ -170,28 +183,37 @@ describe('TargetResolutionCoordinator', () => {
       const action = {
         targets: [
           { placeholder: 'actor', scope: 'scope:actor' },
-          { placeholder: 'nearby', scope: 'scope:nearby', contextFrom: 'actor' }
-        ]
+          {
+            placeholder: 'nearby',
+            scope: 'scope:nearby',
+            contextFrom: 'actor',
+          },
+        ],
       };
 
       await coordinator.resolveTargets(context, action, trace);
 
-      expect(mockServices.contextBuilder.buildScopeContextForSpecificPrimary)
-        .toHaveBeenCalledWith(
-          expect.any(Object),
-          'actor',
-          expect.objectContaining({ id: expect.any(String) })
-        );
+      expect(
+        mockServices.contextBuilder.buildScopeContextForSpecificPrimary
+      ).toHaveBeenCalledWith(
+        expect.any(Object),
+        'actor',
+        expect.objectContaining({ id: expect.any(String) })
+      );
     });
   });
 });
 ```
 
 **Integration Test Patterns:**
+
 ```javascript
 describe('Resolution Coordinator Integration', () => {
   it('should coordinate full multi-target resolution', async () => {
-    const fixture = await ModTestFixture.forAction('test-mod', 'test-mod:multi_target_action');
+    const fixture = await ModTestFixture.forAction(
+      'test-mod',
+      'test-mod:multi_target_action'
+    );
     const scenario = fixture.createStandardActorTarget();
 
     await fixture.executeAction(scenario.actor.id, scenario.target.id);
@@ -199,7 +221,7 @@ describe('Resolution Coordinator Integration', () => {
     const actions = fixture.getAvailableActions();
     expect(actions[0].resolvedTargets).toMatchObject({
       actor: [{ id: scenario.actor.id }],
-      target: [{ id: scenario.target.id }]
+      target: [{ id: scenario.target.id }],
     });
   });
 });
@@ -208,6 +230,7 @@ describe('Resolution Coordinator Integration', () => {
 ### Common Test Utilities
 
 **Service Mocking:**
+
 ```javascript
 // tests/common/mocks/targetResolutionMocks.js
 export function createMockTracingOrchestrator() {
@@ -216,15 +239,17 @@ export function createMockTracingOrchestrator() {
     captureLegacyDetection: jest.fn(),
     captureScopeEvaluation: jest.fn(),
     captureResolutionData: jest.fn(),
-    captureError: jest.fn()
+    captureError: jest.fn(),
   };
 }
 
 export function createMockResultBuilder() {
   return {
     buildLegacyResult: jest.fn().mockReturnValue(PipelineResult.success({})),
-    buildMultiTargetResult: jest.fn().mockReturnValue(PipelineResult.success({})),
-    buildFinalResult: jest.fn().mockReturnValue(PipelineResult.success({}))
+    buildMultiTargetResult: jest
+      .fn()
+      .mockReturnValue(PipelineResult.success({})),
+    buildFinalResult: jest.fn().mockReturnValue(PipelineResult.success({})),
   };
 }
 
@@ -232,8 +257,8 @@ export function createMockResolutionCoordinator() {
   return {
     resolveTargets: jest.fn().mockResolvedValue({
       primary: [],
-      secondary: []
-    })
+      secondary: [],
+    }),
   };
 }
 ```

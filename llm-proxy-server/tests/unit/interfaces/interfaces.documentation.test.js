@@ -38,21 +38,23 @@ const interfaceModules = [
 ];
 
 describe('interface documentation modules', () => {
-interfaceModules.forEach(({ name, file, exportName, expectedDocSnippets }) => {
-    const moduleImportPath = `../../../src/interfaces/${file}`;
-    const absoluteFilePath = path.join(interfacesDir, file);
+  interfaceModules.forEach(
+    ({ name, file, exportName, expectedDocSnippets }) => {
+      const moduleImportPath = `../../../src/interfaces/${file}`;
+      const absoluteFilePath = path.join(interfacesDir, file);
 
-    test(`${name} exports frozen runtime metadata while remaining documentation-focused`, async () => {
-      const module = await import(moduleImportPath);
-      expect(module).toHaveProperty(exportName);
-      expect(Object.isFrozen(module[exportName])).toBe(true);
-    });
-
-    test(`${name} documentation retains key interface details`, async () => {
-      const fileContents = await readFile(absoluteFilePath, 'utf8');
-      expectedDocSnippets.forEach((snippet) => {
-        expect(fileContents).toContain(snippet);
+      test(`${name} exports frozen runtime metadata while remaining documentation-focused`, async () => {
+        const module = await import(moduleImportPath);
+        expect(module).toHaveProperty(exportName);
+        expect(Object.isFrozen(module[exportName])).toBe(true);
       });
-    });
-  });
+
+      test(`${name} documentation retains key interface details`, async () => {
+        const fileContents = await readFile(absoluteFilePath, 'utf8');
+        expectedDocSnippets.forEach((snippet) => {
+          expect(fileContents).toContain(snippet);
+        });
+      });
+    }
+  );
 });

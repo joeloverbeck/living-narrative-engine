@@ -139,31 +139,45 @@ describe('ParameterResolutionService - Simple Parameter Resolution', () => {
   });
 
   it('should resolve task.params.item to entity ID', () => {
-    const result = service.resolve('task.params.item', context, { validateEntity: false });
+    const result = service.resolve('task.params.item', context, {
+      validateEntity: false,
+    });
     expect(result).toBe('apple_7');
   });
 
   it('should resolve actor.id to actor ID', () => {
-    const result = service.resolve('actor.id', context, { validateEntity: false });
+    const result = service.resolve('actor.id', context, {
+      validateEntity: false,
+    });
     expect(result).toBe('player_1');
   });
 
   it('should resolve refinement.localState.step1Result to stored result', () => {
-    const result = service.resolve('refinement.localState.step1Result', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'refinement.localState.step1Result',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
     expect(result).toEqual({ success: true });
   });
 
   it('should resolve task.params.location to room ID', () => {
-    const result = service.resolve('task.params.location', context, { validateEntity: false });
+    const result = service.resolve('task.params.location', context, {
+      validateEntity: false,
+    });
     expect(result).toBe('room_12');
   });
 
   it('should resolve refinement.localState.pickedItem to item ID', () => {
-    const result = service.resolve('refinement.localState.pickedItem', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'refinement.localState.pickedItem',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
     expect(result).toBe('apple_7');
   });
 });
@@ -208,30 +222,46 @@ describe('ParameterResolutionService - Property Path Navigation', () => {
   });
 
   it('should resolve nested path with namespaced component ID', () => {
-    const result = service.resolve('actor.components.core:health.value', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.core:health.value',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
     expect(result).toBe(50);
   });
 
   it('should resolve multiple levels deep', () => {
-    const result = service.resolve('actor.components.core:position.room', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.core:position.room',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
     expect(result).toBe('room_12');
   });
 
   it('should handle namespaced component with multiple properties', () => {
-    const result = service.resolve('actor.components.core:position.x', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.core:position.x',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
     expect(result).toBe(10);
   });
 
   it('should handle complex nested structures', () => {
-    const result = service.resolve('actor.components.items:inventory.slots', context, {
-      validateEntity: false,
-    });
+    const result = service.resolve(
+      'actor.components.items:inventory.slots',
+      context,
+      {
+        validateEntity: false,
+      }
+    );
     expect(result).toEqual([
       { id: 'apple_7', slot: 0 },
       { id: 'sword_3', slot: 1 },
@@ -296,10 +326,14 @@ describe('ParameterResolutionService - Error Handling', () => {
 
   it('should include partial path in error', () => {
     expect(() => {
-      service.resolve('task.params.item.location', context, { validateEntity: false });
+      service.resolve('task.params.item.location', context, {
+        validateEntity: false,
+      });
     }).toThrow(ParameterResolutionError);
     try {
-      service.resolve('task.params.item.location', context, { validateEntity: false });
+      service.resolve('task.params.item.location', context, {
+        validateEntity: false,
+      });
     } catch (err) {
       expect(err.partialPath).toBe('task.params.item');
       expect(err.failedStep).toBe('location');
@@ -319,10 +353,14 @@ describe('ParameterResolutionService - Error Handling', () => {
 
   it('should include context type in error', () => {
     expect(() => {
-      service.resolve('task.params.wrongKey', context, { contextType: 'refinement' });
+      service.resolve('task.params.wrongKey', context, {
+        contextType: 'refinement',
+      });
     }).toThrow(ParameterResolutionError);
     try {
-      service.resolve('task.params.wrongKey', context, { contextType: 'refinement' });
+      service.resolve('task.params.wrongKey', context, {
+        contextType: 'refinement',
+      });
     } catch (err) {
       expect(err.contextType).toBe('refinement');
     }
@@ -395,7 +433,9 @@ describe('ParameterResolutionService - Null/Undefined Handling', () => {
       },
     };
 
-    const result = service.resolve('task.params.item', context, { validateEntity: false });
+    const result = service.resolve('task.params.item', context, {
+      validateEntity: false,
+    });
     expect(result).toBeNull();
   });
 
@@ -408,7 +448,9 @@ describe('ParameterResolutionService - Null/Undefined Handling', () => {
       },
     };
 
-    const result = service.resolve('task.params.item', context, { validateEntity: false });
+    const result = service.resolve('task.params.item', context, {
+      validateEntity: false,
+    });
     expect(result).toBeUndefined();
   });
 
@@ -480,20 +522,26 @@ describe('ParameterResolutionService - Entity Validation', () => {
   });
 
   it('should validate resolved entity exists when enabled', () => {
-    const result = service.resolve('task.params.item', context, { validateEntity: true });
+    const result = service.resolve('task.params.item', context, {
+      validateEntity: true,
+    });
     expect(result).toBe('apple_7');
     expect(mockEntityManager.hasEntity).toHaveBeenCalledWith('apple_7');
   });
 
   it('should skip validation when disabled', () => {
-    const result = service.resolve('task.params.item', context, { validateEntity: false });
+    const result = service.resolve('task.params.item', context, {
+      validateEntity: false,
+    });
     expect(result).toBe('apple_7');
     expect(mockEntityManager.hasEntity).not.toHaveBeenCalled();
   });
 
   it('should throw error for non-existent entity when validation enabled', () => {
     expect(() => {
-      service.resolve('task.params.nonexistent', context, { validateEntity: true });
+      service.resolve('task.params.nonexistent', context, {
+        validateEntity: true,
+      });
     }).toThrow(ParameterResolutionError);
   });
 
@@ -507,7 +555,9 @@ describe('ParameterResolutionService - Entity Validation', () => {
     };
 
     // Should not throw even though entity doesn't exist, because "simplename" doesn't look like entity ID
-    const result = service.resolve('task.params.name', contextWithString, { validateEntity: true });
+    const result = service.resolve('task.params.name', contextWithString, {
+      validateEntity: true,
+    });
     expect(result).toBe('simplename');
   });
 
@@ -531,7 +581,9 @@ describe('ParameterResolutionService - Entity Validation', () => {
     mockEntityManager.hasEntity.mockImplementation((id) => id !== 'mod:item_5');
 
     expect(() => {
-      service.resolve('task.params.item', contextWithColonId, { validateEntity: true });
+      service.resolve('task.params.item', contextWithColonId, {
+        validateEntity: true,
+      });
     }).toThrow(ParameterResolutionError);
   });
 });
@@ -568,12 +620,18 @@ describe('ParameterResolutionService - Cache Management', () => {
   });
 
   it('should cache resolved values', () => {
-    const result1 = service.resolve('task.params.item', context, { validateEntity: false });
-    const result2 = service.resolve('task.params.item', context, { validateEntity: false });
+    const result1 = service.resolve('task.params.item', context, {
+      validateEntity: false,
+    });
+    const result2 = service.resolve('task.params.item', context, {
+      validateEntity: false,
+    });
 
     expect(result1).toBe('apple_7');
     expect(result2).toBe('apple_7');
-    expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining('Cache hit'));
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Cache hit')
+    );
   });
 
   it('should clear cache when requested', () => {
@@ -648,7 +706,9 @@ describe('ParameterResolutionService - Multiple Resolution', () => {
 
   it('should resolve multiple references at once', () => {
     const references = ['task.params.item', 'task.params.location', 'actor.id'];
-    const results = service.resolveMultiple(references, context, { validateEntity: false });
+    const results = service.resolveMultiple(references, context, {
+      validateEntity: false,
+    });
 
     expect(results.size).toBe(3);
     expect(results.get('task.params.item')).toBe('apple_7');
@@ -657,8 +717,14 @@ describe('ParameterResolutionService - Multiple Resolution', () => {
   });
 
   it('should continue resolving even if one fails', () => {
-    const references = ['task.params.item', 'task.params.nonexistent', 'actor.id'];
-    const results = service.resolveMultiple(references, context, { validateEntity: false });
+    const references = [
+      'task.params.item',
+      'task.params.nonexistent',
+      'actor.id',
+    ];
+    const results = service.resolveMultiple(references, context, {
+      validateEntity: false,
+    });
 
     expect(results.size).toBe(2);
     expect(results.get('task.params.item')).toBe('apple_7');

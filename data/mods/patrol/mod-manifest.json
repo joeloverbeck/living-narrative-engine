@@ -81,10 +81,7 @@
     "events": [],
     "macros": [],
     "scopes": [],
-    "recipes": [
-      "dylan_crace.recipe.json",
-      "len_amezua.recipe.json"
-    ],
+    "recipes": ["dylan_crace.recipe.json", "len_amezua.recipe.json"],
     "portraits": [
       "dylan_crace.png",
       "eldritch_dimension.png",
@@ -92,8 +89,6 @@
       "perimeter_of_rip_in_reality.png",
       "writhing_observer.png"
     ],
-    "worlds": [
-      "patrol.world.json"
-    ]
+    "worlds": ["patrol.world.json"]
   }
 }

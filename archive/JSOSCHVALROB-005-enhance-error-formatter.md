@@ -1,6 +1,7 @@
 # JSOSCHVALROB-005: Enhance Error Formatter with Pattern Detection
 
 ## Objective
+
 Improve error message quality by consolidating scattered pattern detection logic into a dedicated pre-formatting layer for faster, more consistent error messages.
 
 **Key Insight**: This is a REFACTORING task that extracts and consolidates existing pattern detection logic scattered throughout the error formatter into a cohesive early-detection layer.
@@ -8,6 +9,7 @@ Improve error message quality by consolidating scattered pattern detection logic
 ## Ticket Scope
 
 ### What This Ticket WILL Do
+
 - **Consolidate** existing pattern detection into unified `detectCommonPatterns()` layer
 - **Extract** entity_id detection from conditional block (currently lines 156-161, only triggers when errors.length > 100)
 - **Move** missing type detection from `formatOperationTypeSummary()` to early detection
@@ -16,6 +18,7 @@ Improve error message quality by consolidating scattered pattern detection logic
 - Maintain backward compatibility with existing error formatting
 
 ### What This Ticket WILL NOT Do
+
 - Change validation logic in `ajvSchemaValidator.js` or `preValidationUtils.js`
 - Modify error grouping or operation type inference (keep existing logic)
 - Add new validation rules or schema changes
@@ -26,20 +29,24 @@ Improve error message quality by consolidating scattered pattern detection logic
 ## Current Implementation Status
 
 ### Pattern 1: entity_id vs entity_ref Typo
-**Current State**: 
+
+**Current State**:
+
 - Located in lines 156-161 of `ajvAnyOfErrorFormatter.js`
 - Only triggers when `errors.length > 100`
 - Already has message: "Common issue detected: entity_id should be entity_ref"
 
 **What Needs to Change**:
+
 - Extract from conditional block
 - Make unconditional (trigger for ANY entity_id detection)
 - Move to early pattern detection layer
 
 **Code Location**:
+
 ```javascript
 // Current implementation (lines 156-161)
-if (errors.some(e => e.params?.additionalProperty === 'entity_id')) {
+if (errors.some((e) => e.params?.additionalProperty === 'entity_id')) {
   lines.push('');
   lines.push('Common issue detected: "entity_id" should be "entity_ref"');
   lines.push('The GET_NAME operation expects "entity_ref", not "entity_id"');
@@ -47,17 +54,21 @@ if (errors.some(e => e.params?.additionalProperty === 'entity_id')) {
 ```
 
 ### Pattern 2: Missing type/macro Field
+
 **Current State**:
+
 - Located in `formatOperationTypeSummary()` lines 268-298
 - Fully functional, provides helpful type vs macro guidance
 - Only triggers as fallback when operation type cannot be determined
 
 **What Needs to Change**:
+
 - Extract logic from summary function
 - Move to early pattern detection layer
 - Trigger before complex anyOf processing begins
 
 **Code Location**:
+
 ```javascript
 // Current implementation (lines 283-298)
 lines.push('Missing operation type - this operation needs a "type" field.');
@@ -68,17 +79,21 @@ lines.push('  {"type": "OPERATION_NAME", "parameters": {...}}');
 ```
 
 ### Pattern 3: Invalid Enum Values
+
 **Current State**:
+
 - Located in `formatSingleError()` lines 212-230
 - Specialized implementation for `perception_type` enum
 - Provides schema fix guidance with file path and field location
 
 **What Needs to Change**:
+
 - Generalize for ALL enum errors (remove perception_type hardcoding)
 - Extract to dedicated pattern detector
 - Infer schema file from operation type dynamically
 
 **Code Location**:
+
 ```javascript
 // Current implementation (lines 212-230)
 case 'enum': {
@@ -95,30 +110,36 @@ case 'enum': {
 ## Files to Touch
 
 ### Modified Files (1)
+
 - `src/utils/ajvAnyOfErrorFormatter.js` - Refactor with pattern detection layer
 
 ### New Files (1)
+
 - `tests/unit/utils/ajvAnyOfErrorFormatter.patternDetection.test.js` - Tests for consolidated pattern detection
 
 ### Files to Audit (for test compatibility)
+
 - `tests/unit/utils/ajvAnyOfErrorFormatter.test.js` - Ensure 451 lines still pass
 - `tests/integration/validation/anyOfErrorFormatting.integration.test.js` - Verify no breaking changes
 
 ## Implementation Plan
 
 ### Step 1: Extract Existing Logic
+
 Extract the three existing pattern detections into helper functions:
+
 - `detectEntityIdTypo(errors, data)` - From lines 156-161
 - `detectMissingTypeField(errors, data)` - From lines 268-298
 - `detectInvalidEnum(errors, data)` - From lines 212-230
 
 ### Step 2: Create Pattern Detection Layer
+
 Add new `detectCommonPatterns()` function at top of `formatAjvErrorsEnhanced()`:
 
 ```javascript
 function detectCommonPatterns(errors, data) {
   // Pattern 1: entity_id vs entity_ref (UNCONDITIONAL)
-  if (errors.some(e => e.params?.additionalProperty === 'entity_id')) {
+  if (errors.some((e) => e.params?.additionalProperty === 'entity_id')) {
     return formatEntityIdTypo(errors, data);
   }
 
@@ -128,7 +149,7 @@ function detectCommonPatterns(errors, data) {
   }
 
   // Pattern 3: Invalid enum value (GENERALIZED for all enums)
-  const enumError = errors.find(e => e.keyword === 'enum');
+  const enumError = errors.find((e) => e.keyword === 'enum');
   if (enumError) {
     return formatEnumError(enumError, data);
   }
@@ -138,6 +159,7 @@ function detectCommonPatterns(errors, data) {
 ```
 
 ### Step 3: Update formatAjvErrorsEnhanced
+
 ```javascript
 export function formatAjvErrorsEnhanced(errors, data) {
   if (!errors || errors.length === 0) {
@@ -158,10 +180,12 @@ export function formatAjvErrorsEnhanced(errors, data) {
 ### Step 4: Implement Specialized Formatters
 
 #### formatEntityIdTypo (extracted from lines 156-161)
+
 ```javascript
 function formatEntityIdTypo(errors, data) {
-  const operationType = data?.type || inferOperationType(errors, data) || 'UNKNOWN';
-  
+  const operationType =
+    data?.type || inferOperationType(errors, data) || 'UNKNOWN';
+
   return `Operation type '${operationType}' has invalid parameters:
   - /parameters: Unexpected property 'entity_id'
 
@@ -171,11 +195,23 @@ The ${operationType} operation expects "entity_ref", not "entity_id"`;
 ```
 
 #### formatMissingTypeField (extracted from lines 268-298)
+
 ```javascript
 function formatMissingTypeField(errors, data) {
-  const commonTypes = ['QUERY_COMPONENT', 'MODIFY_COMPONENT', 'ADD_COMPONENT', 
-                       'REMOVE_COMPONENT', 'DISPATCH_EVENT', 'IF', 'FOR_EACH',
-                       'LOG', 'SET_VARIABLE', 'QUERY_ENTITIES', 'HAS_COMPONENT', 'GET_NAME'];
+  const commonTypes = [
+    'QUERY_COMPONENT',
+    'MODIFY_COMPONENT',
+    'ADD_COMPONENT',
+    'REMOVE_COMPONENT',
+    'DISPATCH_EVENT',
+    'IF',
+    'FOR_EACH',
+    'LOG',
+    'SET_VARIABLE',
+    'QUERY_ENTITIES',
+    'HAS_COMPONENT',
+    'GET_NAME',
+  ];
 
   return `Missing operation type - this operation needs a "type" field.
 
@@ -186,23 +222,25 @@ For macro references, use:
   {"macro": "namespace:macroId"}
 
 Common operation types:
-${commonTypes.map(t => `  - ${t}`).join('\n')}
+${commonTypes.map((t) => `  - ${t}`).join('\n')}
   ... and more`;
 }
 ```
 
 #### formatEnumError (generalized from lines 212-230)
+
 ```javascript
 function formatEnumError(error, data) {
   const field = error.instancePath.split('/').pop() || 'field';
   const allowedValues = error.params.allowedValues.join(', ');
   const invalidValue = error.data;
-  
+
   // Infer schema file from operation type
   const operationType = data?.type || 'UNKNOWN';
-  const schemaFile = operationType !== 'UNKNOWN' 
-    ? `data/schemas/operations/${operationType.toLowerCase().replace(/_/g, '')}.schema.json`
-    : 'the relevant schema file';
+  const schemaFile =
+    operationType !== 'UNKNOWN'
+      ? `data/schemas/operations/${operationType.toLowerCase().replace(/_/g, '')}.schema.json`
+      : 'the relevant schema file';
 
   return `Invalid enum value '${invalidValue}'. Allowed values: [${allowedValues}]
 
@@ -217,10 +255,14 @@ function formatEnumError(error, data) {
 ### Pattern Detection Must Work
 
 #### Pattern 1: entity_id vs entity_ref Typo
+
 ```javascript
 // Test: Unconditional detection (no 100-error threshold)
 const errors = [
-  { params: { additionalProperty: 'entity_id' }, keyword: 'additionalProperties' }
+  {
+    params: { additionalProperty: 'entity_id' },
+    keyword: 'additionalProperties',
+  },
 ];
 const data = { type: 'GET_NAME', parameters: { entity_id: 'actor' } };
 
@@ -230,14 +272,16 @@ expect(formatted).toContain('entity_id');
 expect(formatted).toContain('entity_ref');
 expect(formatted).toContain('should be');
 ```
+
 **Pass Condition**: Triggers with ANY error count, not just >100
 
 #### Pattern 2: Missing Type Field
+
 ```javascript
 // Test: Early detection before anyOf processing
 const errors = Array(60).fill({
   keyword: 'required',
-  params: { missingProperty: 'type' }
+  params: { missingProperty: 'type' },
 });
 const data = { parameters: {} }; // No type or macro
 
@@ -247,9 +291,11 @@ expect(formatted).toContain('Missing operation type');
 expect(formatted).toContain('"type": "OPERATION_NAME"');
 expect(formatted).toContain('macro');
 ```
+
 **Pass Condition**: Triggers BEFORE anyOf processing begins
 
 #### Pattern 3: Invalid Enum Value
+
 ```javascript
 // Test: Generalized for ALL enums (not just perception_type)
 const errors = [
@@ -257,10 +303,13 @@ const errors = [
     keyword: 'enum',
     params: { allowedValues: ['VALUE_A', 'VALUE_B'] },
     data: 'INVALID_VALUE',
-    instancePath: '/parameters/someField'
-  }
+    instancePath: '/parameters/someField',
+  },
 ];
-const data = { type: 'SOME_OPERATION', parameters: { someField: 'INVALID_VALUE' } };
+const data = {
+  type: 'SOME_OPERATION',
+  parameters: { someField: 'INVALID_VALUE' },
+};
 
 const formatted = formatAjvErrorsEnhanced(errors, data);
 
@@ -268,27 +317,36 @@ expect(formatted).toContain('Invalid enum value');
 expect(formatted).toContain('Allowed values');
 expect(formatted).toContain('FIX:');
 ```
+
 **Pass Condition**: Works for ANY enum field, not just perception_type
 
 ### Backward Compatibility Must Hold
 
 #### Test 1: Existing Unit Tests Pass
+
 ```bash
 npm run test:unit -- tests/unit/utils/ajvAnyOfErrorFormatter.test.js
 ```
+
 **Pass Condition**: All 451 lines pass with 0 failures
 
 #### Test 2: Integration Tests Pass
+
 ```bash
 npm run test:integration -- tests/integration/validation/anyOfErrorFormatting.integration.test.js
 ```
+
 **Pass Condition**: All integration tests pass with 0 failures
 
 #### Test 3: Function Signature Unchanged
+
 ```javascript
 // Before and after:
-export function formatAjvErrorsEnhanced(errors, data) { /* ... */ }
+export function formatAjvErrorsEnhanced(errors, data) {
+  /* ... */
+}
 ```
+
 **Must Hold**: No parameter changes, return type unchanged
 
 ## Definition of Done
@@ -327,6 +385,7 @@ git diff src/utils/ajvAnyOfErrorFormatter.js
 ```
 
 ## Expected Implementation Size
+
 - `src/utils/ajvAnyOfErrorFormatter.js`: ~120 lines added
   - Pattern detection layer: ~30 lines
   - Three specialized formatters: ~90 lines
@@ -335,6 +394,7 @@ git diff src/utils/ajvAnyOfErrorFormatter.js
 - Total: ~320 lines
 
 ## Status
+
 - [x] Implementation complete
 - [x] Tests written and passing
 - [x] Existing tests verified
@@ -359,10 +419,10 @@ git diff src/utils/ajvAnyOfErrorFormatter.js
 
 3. **Test Coverage**
    - Created comprehensive test file with 27 tests covering:
-     * All 3 pattern detection scenarios
-     * Pattern detection priority
-     * Backward compatibility verification
-     * Edge cases and thresholds
+     - All 3 pattern detection scenarios
+     - Pattern detection priority
+     - Backward compatibility verification
+     - Edge cases and thresholds
    - Updated existing tests to expect new enhanced messages
    - All tests passing: 3333 unit + 334 integration
 
@@ -372,6 +432,7 @@ git diff src/utils/ajvAnyOfErrorFormatter.js
    - Maintained full backward compatibility (no API changes)
 
 ### Files Modified
+
 - `src/utils/ajvAnyOfErrorFormatter.js` - Added ~120 lines (pattern detection layer + formatters)
 - `tests/unit/utils/ajvAnyOfErrorFormatter.patternDetection.test.js` - New file with 27 tests (~450 lines)
 - `tests/unit/utils/ajvAnyOfErrorFormatter.test.js` - Updated 2 tests for new messages
@@ -380,7 +441,9 @@ git diff src/utils/ajvAnyOfErrorFormatter.js
 - `src/utils/preValidationUtils.js` - Alphabetized KNOWN_OPERATION_TYPES array
 
 ### Verification
+
 All acceptance criteria met:
+
 - ✅ entity_id detection is unconditional (no 100-error threshold)
 - ✅ Missing type detection triggers before anyOf processing
 - ✅ Enum error formatting generalized for all enums
@@ -390,6 +453,7 @@ All acceptance criteria met:
 - ✅ Code follows project conventions
 
 ### Impact
+
 - **User Experience**: Faster, more actionable error messages for common mistakes
 - **Maintainability**: Consolidated scattered logic into dedicated layer
 - **Performance**: Early detection avoids expensive anyOf processing for common errors

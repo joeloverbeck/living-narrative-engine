@@ -32,7 +32,9 @@ const makeDummyActionCategorizationService = () => ({
 });
 
 const makeDummyCharacterDataXmlBuilder = () => ({
-  buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+  buildCharacterDataXml: jest.fn(
+    () => '<character_data>Mock XML</character_data>'
+  ),
 });
 
 const makeDummyModActionMetadataProvider = () => ({

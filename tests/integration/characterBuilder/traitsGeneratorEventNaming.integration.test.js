@@ -55,7 +55,7 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
 
     // Initialize bootstrap
     bootstrap = new CharacterBuilderBootstrap();
-    
+
     // Bootstrap with mock configuration
     const result = await bootstrap.bootstrap({
       pageName: 'test-traits-generator',
@@ -72,7 +72,7 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
     // Override logger to track warnings - must be done BEFORE resolving services
     container.register(tokens.ILogger, () => mockLogger, {
       singleton: true,
-      override: true
+      override: true,
     });
 
     // Also override the ValidatedEventDispatcher's logger if it exists
@@ -80,18 +80,22 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
     if (vedToken) {
       const originalVedFactory = container._registry?.get?.(vedToken);
       if (originalVedFactory) {
-        container.register(vedToken, (deps) => {
-          const ved = originalVedFactory(deps);
-          // Replace the logger if possible
-          if (ved && typeof ved === 'object') {
-            Object.defineProperty(ved, '_logger', {
-              value: mockLogger,
-              writable: true,
-              configurable: true
-            });
-          }
-          return ved;
-        }, { singleton: true, override: true });
+        container.register(
+          vedToken,
+          (deps) => {
+            const ved = originalVedFactory(deps);
+            // Replace the logger if possible
+            if (ved && typeof ved === 'object') {
+              Object.defineProperty(ved, '_logger', {
+                value: mockLogger,
+                writable: true,
+                configurable: true,
+              });
+            }
+            return ved;
+          },
+          { singleton: true, override: true }
+        );
       }
     }
   });
@@ -177,7 +181,10 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
       };
 
       // Register the event and its schema
-      dataRegistry.setEventDefinition('core:traits_generation_started', eventDef);
+      dataRegistry.setEventDefinition(
+        'core:traits_generation_started',
+        eventDef
+      );
       await schemaValidator.addSchema(
         eventDef.payloadSchema,
         'core:traits_generation_started#payload'
@@ -205,7 +212,7 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
           msg.includes('Payload schema') ||
           msg.includes('not found')
       );
-      
+
       expect(hasWarning).toBe(false);
     });
 
@@ -222,11 +229,11 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
       expectedEventNames.forEach((eventName) => {
         // Should start with 'core:'
         expect(eventName.startsWith('core:')).toBe(true);
-        
+
         // Part after 'core:' should be lowercase
         const eventPart = eventName.substring(5);
         expect(eventPart).toBe(eventPart.toLowerCase());
-        
+
         // Should use underscores, not hyphens or camelCase
         expect(eventPart).toMatch(/^[a-z_]+$/);
       });
@@ -243,59 +250,95 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
         clean: jest.fn((response) => response),
         parseAndRepair: jest.fn().mockResolvedValue({
           traits: ['trait1', 'trait2'],
-          physicalDescription: 'A tall figure with piercing blue eyes and weathered features that speak of years of experience. Their hair is silver-gray, kept short and practical.',
-          profile: 'A comprehensive character profile that includes background information, personality overview, and other important details that help establish the character. This profile is detailed enough to meet the minimum length requirements.',
+          physicalDescription:
+            'A tall figure with piercing blue eyes and weathered features that speak of years of experience. Their hair is silver-gray, kept short and practical.',
+          profile:
+            'A comprehensive character profile that includes background information, personality overview, and other important details that help establish the character. This profile is detailed enough to meet the minimum length requirements.',
           names: [
-            { name: 'TestName', justification: 'This is a justified name choice for the character.' },
-            { name: 'AlternateName', justification: 'An alternative name that fits the character concept well.' },
-            { name: 'NickName', justification: 'A nickname that reflects the character personality traits.' }
+            {
+              name: 'TestName',
+              justification:
+                'This is a justified name choice for the character.',
+            },
+            {
+              name: 'AlternateName',
+              justification:
+                'An alternative name that fits the character concept well.',
+            },
+            {
+              name: 'NickName',
+              justification:
+                'A nickname that reflects the character personality traits.',
+            },
           ],
           personality: [
-            { trait: 'Brave', explanation: 'Shows courage in the face of adversity and danger.' },
-            { trait: 'Thoughtful', explanation: 'Considers consequences carefully before taking action.' },
-            { trait: 'Loyal', explanation: 'Stands by friends and principles even when it costs them.' }
+            {
+              trait: 'Brave',
+              explanation: 'Shows courage in the face of adversity and danger.',
+            },
+            {
+              trait: 'Thoughtful',
+              explanation:
+                'Considers consequences carefully before taking action.',
+            },
+            {
+              trait: 'Loyal',
+              explanation:
+                'Stands by friends and principles even when it costs them.',
+            },
           ],
           strengths: [
             'Leadership - Natural ability to inspire and guide others',
             'Strategic thinking - Excellent at long-term planning',
-            'Resilience - Bounces back quickly from setbacks'
+            'Resilience - Bounces back quickly from setbacks',
           ],
           weaknesses: [
             'Stubborn - Sometimes too set in their ways',
             'Overprotective - Can be overly cautious',
-            'Perfectionist - Sets impossibly high standards'
+            'Perfectionist - Sets impossibly high standards',
           ],
-          likes: ['Reading ancient texts', 'Quiet contemplation', 'Teaching others'],
+          likes: [
+            'Reading ancient texts',
+            'Quiet contemplation',
+            'Teaching others',
+          ],
           dislikes: ['Dishonesty', 'Unnecessary violence', 'Wasted potential'],
           fears: [
             'Failure - Afraid of letting down those who depend on them',
-            'Loss - Fear of losing loved ones or important relationships'
+            'Loss - Fear of losing loved ones or important relationships',
           ],
           goals: {
-            longTerm: 'What is the character ultimately trying to achieve in their life?',
+            longTerm:
+              'What is the character ultimately trying to achieve in their life?',
             shortTerm: [
               'Find a safe place to rest',
-              'Gather information about recent events'
-            ]
+              'Gather information about recent events',
+            ],
           },
           notes: [
             'This character has a complex relationship with authority.',
-            'They often serve as a mentor figure to younger characters.'
+            'They often serve as a mentor figure to younger characters.',
           ],
           secrets: [
             'Hidden past - Has a background they keep concealed from most people',
-            'Unrequited feelings - Harbors feelings they have never expressed'
-          ]
+            'Unrequited feelings - Harbors feelings they have never expressed',
+          ],
         }),
       };
 
       const llmStrategyFactory = {
-        getAIDecision: jest.fn().mockResolvedValue('{"traits": ["trait1", "trait2"]}'),
+        getAIDecision: jest
+          .fn()
+          .mockResolvedValue('{"traits": ["trait1", "trait2"]}'),
       };
 
       const llmConfigManager = {
-        loadConfiguration: jest.fn().mockResolvedValue({ configId: 'test-config' }),
-        getActiveConfiguration: jest.fn().mockResolvedValue({ configId: 'test-config' }),
+        loadConfiguration: jest
+          .fn()
+          .mockResolvedValue({ configId: 'test-config' }),
+        getActiveConfiguration: jest
+          .fn()
+          .mockResolvedValue({ configId: 'test-config' }),
         setActiveConfiguration: jest.fn().mockResolvedValue(true),
       };
 
@@ -319,7 +362,7 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
       await traitsGenerator.generateTraits({
         concept: {
           id: 'test-concept',
-          concept: 'Test character concept with sufficient detail'
+          concept: 'Test character concept with sufficient detail',
         },
         direction: {
           id: 'test-direction',
@@ -330,15 +373,15 @@ describe('TraitsGenerator Event Naming - Integration Tests', () => {
         userInputs: {
           coreMotivation: 'The character seeks understanding',
           internalContradiction: 'Wants peace but causes conflict',
-          centralQuestion: 'Can one find peace through conflict?'
+          centralQuestion: 'Can one find peace through conflict?',
         },
         cliches: {
           categories: {
-            'Hero': ['Chosen one', 'Reluctant hero'],
-            'Villain': ['Evil overlord', 'Corrupt official']
+            Hero: ['Chosen one', 'Reluctant hero'],
+            Villain: ['Evil overlord', 'Corrupt official'],
           },
-          tropesAndStereotypes: ['Mary Sue', 'Gary Stu']
-        }
+          tropesAndStereotypes: ['Mary Sue', 'Gary Stu'],
+        },
       });
 
       // Verify the correct events were dispatched with lowercase naming

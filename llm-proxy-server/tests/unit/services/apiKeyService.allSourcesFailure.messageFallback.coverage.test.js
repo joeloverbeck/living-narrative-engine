@@ -68,10 +68,7 @@ describe('ApiKeyService combined failure message fallback coverage', () => {
     const llmId = 'llm-message-fallback';
     const fileName = 'glitch.key';
 
-    const createErrorSpy = jest.spyOn(
-      apiKeyService,
-      '_createErrorDetails'
-    );
+    const createErrorSpy = jest.spyOn(apiKeyService, '_createErrorDetails');
 
     jest.spyOn(apiKeyService, '_readApiKeyFromFile').mockResolvedValue({
       key: null,

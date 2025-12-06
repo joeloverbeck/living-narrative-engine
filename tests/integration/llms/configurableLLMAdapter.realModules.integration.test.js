@@ -175,20 +175,16 @@ function createLoaderWithFixtures(fixtures, overrides = {}) {
     logger: overrides.logger ?? new TestLogger('Loader'),
     schemaValidator:
       overrides.schemaValidator ?? new PassthroughSchemaValidator(),
-    configuration:
-      overrides.configuration ??
-      {
-        getContentTypeSchemaId: (key) =>
-          key === 'llm-configs' ? SCHEMA_ID : undefined,
+    configuration: overrides.configuration ?? {
+      getContentTypeSchemaId: (key) =>
+        key === 'llm-configs' ? SCHEMA_ID : undefined,
+    },
+    safeEventDispatcher: overrides.safeEventDispatcher ?? {
+      async dispatch() {
+        return true;
       },
-    safeEventDispatcher:
-      overrides.safeEventDispatcher ?? {
-        async dispatch() {
-          return true;
-        },
-      },
-    dataFetcher:
-      overrides.dataFetcher ?? new InMemoryDataFetcher(fixtures),
+    },
+    dataFetcher: overrides.dataFetcher ?? new InMemoryDataFetcher(fixtures),
   });
 }
 
@@ -223,8 +219,7 @@ function createAdapterDependencies({
         return httpResponder(url, options);
       }
       const payload = JSON.parse(options.body);
-      const toolName =
-        payload?.tool_choice?.function?.name ?? 'function_call';
+      const toolName = payload?.tool_choice?.function?.name ?? 'function_call';
       return {
         choices: [
           {
@@ -441,10 +436,12 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
       'Integration custom command executor'
     );
 
-    const loadedConfigs = await harness.adapter.getLoadedConfigs_FOR_TESTING_ONLY();
+    const loadedConfigs =
+      await harness.adapter.getLoadedConfigs_FOR_TESTING_ONLY();
     expect(loadedConfigs?.defaultConfigId).toBe('openrouter-primary');
 
-    const testActiveId = await harness.adapter.getActiveLlmId_FOR_TESTING_ONLY();
+    const testActiveId =
+      await harness.adapter.getActiveLlmId_FOR_TESTING_ONLY();
     expect(testActiveId).toBe('openrouter-primary');
 
     expect(harness.adapter.getEnvironmentContext_FOR_TESTING_ONLY()).toBe(
@@ -463,10 +460,11 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
       harness.strategyFactory
     );
 
-    const tokenCount = await harness.adapter.estimateTokenCount_FOR_TESTING_ONLY(
-      'short prompt',
-      activeConfig
-    );
+    const tokenCount =
+      await harness.adapter.estimateTokenCount_FOR_TESTING_ONLY(
+        'short prompt',
+        activeConfig
+      );
     expect(tokenCount).toBeGreaterThan(0);
   });
 
@@ -519,16 +517,13 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
 
     const longPrompt = 'long prompt '.repeat(200);
 
-    await expect(
-      harness.adapter.getAIDecision(longPrompt)
-    ).rejects.toThrow(PromptTooLongError);
+    await expect(harness.adapter.getAIDecision(longPrompt)).rejects.toThrow(
+      PromptTooLongError
+    );
 
-    expect(
-      harness.adapterLogger.has(
-        'error',
-        'Estimated prompt tokens'
-      )
-    ).toBe(true);
+    expect(harness.adapterLogger.has('error', 'Estimated prompt tokens')).toBe(
+      true
+    );
   });
 
   it('marks the adapter non-operational when initialization fails', async () => {
@@ -536,7 +531,9 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
 
     await expect(
       harness.adapter.init({ llmConfigLoader: { loadConfigs: null } })
-    ).rejects.toThrow('Initialization requires a valid LlmConfigLoader instance.');
+    ).rejects.toThrow(
+      'Initialization requires a valid LlmConfigLoader instance.'
+    );
 
     expect(harness.adapter.isInitialized()).toBe(true);
     expect(harness.adapter.isOperational()).toBe(false);
@@ -605,10 +602,7 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
     ).rejects.toThrow(ConfigurationError);
 
     expect(
-      harness.adapterLogger.has(
-        'error',
-        'No active LLM configuration is set'
-      )
+      harness.adapterLogger.has('error', 'No active LLM configuration is set')
     ).toBe(true);
   });
 
@@ -851,10 +845,9 @@ describe('ConfigurableLLMAdapter integration with real services', () => {
       const failureLogger = new TestLogger('Adapter');
       expect(() => {
         return new ConfigurableLLMAdapter({
-          logger:
-            Object.prototype.hasOwnProperty.call(overrides, 'logger')
-              ? overrides.logger
-              : failureLogger,
+          logger: Object.prototype.hasOwnProperty.call(overrides, 'logger')
+            ? overrides.logger
+            : failureLogger,
           environmentContext,
           apiKeyProvider,
           llmStrategyFactory: strategyFactory,

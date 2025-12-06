@@ -94,7 +94,9 @@ describe('GoapController - Core Structure', () => {
       const controller = new GoapController(createValidDependencies());
 
       expect(controller).toBeInstanceOf(GoapController);
-      expect(mockLogger.info).toHaveBeenCalledWith('GoapController initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'GoapController initialized'
+      );
     });
 
     it('should throw if goapPlanner is missing', () => {
@@ -249,7 +251,9 @@ describe('GoapController - Core Structure', () => {
     it('dispatches task preconditions normalization events when diagnostics are present', async () => {
       const goapEventDispatcher = {
         dispatch: jest.fn(),
-        getComplianceSnapshot: jest.fn().mockReturnValue({ actors: [], global: null }),
+        getComplianceSnapshot: jest
+          .fn()
+          .mockReturnValue({ actors: [], global: null }),
         getComplianceForActor: jest.fn().mockReturnValue(null),
       };
       const eventfulController = new GoapController({
@@ -259,7 +263,12 @@ describe('GoapController - Core Structure', () => {
       });
 
       mockDataRegistry.getAll.mockReturnValue([
-        { id: 'goal:reduce-hunger', priority: 1, goalState: {}, relevance: null },
+        {
+          id: 'goal:reduce-hunger',
+          priority: 1,
+          goalState: {},
+          relevance: null,
+        },
       ]);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
       mockGoapPlanner.plan.mockReturnValueOnce({ tasks: [] });
@@ -299,9 +308,13 @@ describe('GoapController - Core Structure', () => {
   describe('getNumericConstraintDiagnostics', () => {
     it('returns diagnostics snapshot for actor', () => {
       const controller = new GoapController(createValidDependencies());
-      recordNumericConstraintFallback({ actorId: 'actor-n1', goalId: 'goal-x' });
+      recordNumericConstraintFallback({
+        actorId: 'actor-n1',
+        goalId: 'goal-x',
+      });
 
-      const diagnostics = controller.getNumericConstraintDiagnostics('actor-n1');
+      const diagnostics =
+        controller.getNumericConstraintDiagnostics('actor-n1');
       expect(diagnostics).not.toBeNull();
       expect(diagnostics.totalFallbacks).toBe(1);
     });
@@ -329,8 +342,9 @@ describe('GoapController - Core Structure', () => {
         mockGoapPlanner.plan.mockReturnValue({ tasks: [] });
 
         // Empty tasks array should trigger early return, not error
-        return controller.decideTurn({ id: 'actor_1' }, { state: {} })
-          .then(result => {
+        return controller
+          .decideTurn({ id: 'actor_1' }, { state: {} })
+          .then((result) => {
             expect(result).toBeNull();
           });
       });
@@ -368,7 +382,9 @@ describe('GoapController - Core Structure', () => {
         });
 
         mockParameterResolutionService.resolve.mockResolvedValue({});
-        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+          valid: true,
+        });
 
         // Execute first turn (completes the only task)
         await controller.decideTurn({ id: 'actor_1' }, { state: {} });
@@ -406,7 +422,9 @@ describe('GoapController - Core Structure', () => {
           steps: [{ actionId: 'action:test', targetBindings: {} }],
         });
         mockParameterResolutionService.resolve.mockResolvedValue({});
-        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+          valid: true,
+        });
 
         await controller.decideTurn({ id: 'actor_1' }, { state: {} });
 
@@ -429,7 +447,10 @@ describe('GoapController - Core Structure', () => {
         mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
         mockGoapPlanner.plan.mockReturnValue({ tasks: [] });
 
-        const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+        const result = await controller.decideTurn(
+          { id: 'actor_1' },
+          { state: {} }
+        );
         expect(result).toBeNull(); // Empty plan returns null early
       });
     });
@@ -458,7 +479,8 @@ describe('GoapController - Core Structure', () => {
         const controller = new GoapController(createValidDependencies());
 
         // getTaskLibraryDiagnostics should handle null gracefully
-        const diagnostics = controller.getTaskLibraryDiagnostics('nonexistent_actor');
+        const diagnostics =
+          controller.getTaskLibraryDiagnostics('nonexistent_actor');
         expect(diagnostics).toBeNull();
       });
     });
@@ -498,19 +520,19 @@ describe('GoapController - Core Structure', () => {
         {
           id: 'goal:relevant',
           priority: 1,
-          relevance: { '==': [true, true] } // Always true
+          relevance: { '==': [true, true] }, // Always true
         },
         {
           id: 'goal:irrelevant',
           priority: 10,
-          relevance: { '==': [true, false] } // Always false
+          relevance: { '==': [true, false] }, // Always false
         },
       ];
 
       mockDataRegistry.getAll.mockReturnValue(goals);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
       mockJsonLogicService.evaluate
-        .mockReturnValueOnce(true)  // goal:relevant
+        .mockReturnValueOnce(true) // goal:relevant
         .mockReturnValueOnce(false); // goal:irrelevant
       mockGoapPlanner.plan.mockReturnValue({ tasks: [] });
 
@@ -530,12 +552,12 @@ describe('GoapController - Core Structure', () => {
         {
           id: 'goal:error',
           priority: 10,
-          relevance: { 'invalid': 'logic' }
+          relevance: { invalid: 'logic' },
         },
         {
           id: 'goal:valid',
           priority: 1,
-          relevance: null
+          relevance: null,
         },
       ];
 
@@ -572,7 +594,7 @@ describe('GoapController - Core Structure', () => {
         {
           id: 'goal:irrelevant',
           priority: 10,
-          relevance: { '==': [true, false] }
+          relevance: { '==': [true, false] },
         },
       ];
 
@@ -580,7 +602,10 @@ describe('GoapController - Core Structure', () => {
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
       mockJsonLogicService.evaluate.mockReturnValue(false);
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -605,7 +630,9 @@ describe('GoapController - Core Structure', () => {
       controller = new GoapController(createValidDependencies());
       mockDataRegistry.getAll.mockReturnValue([goal]);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
-      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+        valid: true,
+      });
     });
 
     it('handles refinement with replan flag', async () => {
@@ -621,7 +648,10 @@ describe('GoapController - Core Structure', () => {
         timestamp: Date.now(),
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -653,7 +683,10 @@ describe('GoapController - Core Structure', () => {
         timestamp: Date.now(),
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -681,7 +714,10 @@ describe('GoapController - Core Structure', () => {
         timestamp: Date.now(),
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -701,7 +737,9 @@ describe('GoapController - Core Structure', () => {
       mockDataRegistry.getAll.mockReturnValue([goal]);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
       mockGoapPlanner.plan.mockReturnValue({ tasks });
-      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+        valid: true,
+      });
     });
 
     it('returns null when refinement was not successful', async () => {
@@ -714,7 +752,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'replan',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       // Failure is handled by replan fallback handler, not by hint extraction
@@ -731,7 +772,10 @@ describe('GoapController - Core Structure', () => {
         timestamp: Date.now(),
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -754,7 +798,10 @@ describe('GoapController - Core Structure', () => {
 
       mockDataRegistry.get.mockReturnValue(null); // Method not found
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -780,7 +827,10 @@ describe('GoapController - Core Structure', () => {
         steps: [], // No steps
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -806,7 +856,10 @@ describe('GoapController - Core Structure', () => {
         steps: [{ targetBindings: {} }], // No actionId
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -829,14 +882,22 @@ describe('GoapController - Core Structure', () => {
 
       mockDataRegistry.get.mockReturnValue({
         id: 'method:test',
-        steps: [{ actionId: 'action:test', targetBindings: { target: 'task.params.item' } }],
+        steps: [
+          {
+            actionId: 'action:test',
+            targetBindings: { target: 'task.params.item' },
+          },
+        ],
       });
 
       mockParameterResolutionService.resolve.mockRejectedValue(
         new Error('Cannot resolve binding')
       );
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -862,12 +923,22 @@ describe('GoapController - Core Structure', () => {
 
       mockDataRegistry.get.mockReturnValue({
         id: 'method:test',
-        steps: [{ actionId: 'action:test', targetBindings: { target: 'task.params.item' } }],
+        steps: [
+          {
+            actionId: 'action:test',
+            targetBindings: { target: 'task.params.item' },
+          },
+        ],
       });
 
-      mockParameterResolutionService.resolve.mockResolvedValue({ target: 'item_123' });
+      mockParameterResolutionService.resolve.mockResolvedValue({
+        target: 'item_123',
+      });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toEqual({
         actionHint: {
@@ -958,7 +1029,9 @@ describe('GoapController - Core Structure', () => {
         mockDataRegistry.getAll.mockReturnValue([goal]);
         mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
         mockGoapPlanner.plan.mockReturnValue({ tasks });
-        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+          valid: true,
+        });
 
         // Refinement fails with 'fail' fallback
         mockRefinementEngine.refine.mockResolvedValue({
@@ -999,7 +1072,9 @@ describe('GoapController - Core Structure', () => {
         mockDataRegistry.getAll.mockReturnValue([goal]);
         mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
         mockGoapPlanner.plan.mockReturnValue({ tasks });
-        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+          valid: true,
+        });
 
         mockRefinementEngine.refine.mockResolvedValue({
           success: false,
@@ -1037,7 +1112,9 @@ describe('GoapController - Core Structure', () => {
       controller = new GoapController(createValidDependencies());
       mockDataRegistry.getAll.mockReturnValue([goal]);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
-      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+        valid: true,
+      });
     });
 
     it('handles "replan" fallback (default)', async () => {
@@ -1053,7 +1130,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'replan',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1100,7 +1180,10 @@ describe('GoapController - Core Structure', () => {
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       // Should return action hint from second task
       expect(result).toEqual({
@@ -1134,7 +1217,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'continue',
       }));
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1168,7 +1254,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'continue',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       // Should handle gracefully (plan advanced and completed)
       expect(result).toBeNull();
@@ -1187,7 +1276,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'continue',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1209,7 +1301,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'fail',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1238,7 +1333,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'idle',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1267,7 +1365,10 @@ describe('GoapController - Core Structure', () => {
         fallbackBehavior: 'unknown_strategy',
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1303,7 +1404,10 @@ describe('GoapController - Core Structure', () => {
         throw error;
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
 
@@ -1328,7 +1432,10 @@ describe('GoapController - Core Structure', () => {
         throw error;
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
     });
@@ -1345,7 +1452,10 @@ describe('GoapController - Core Structure', () => {
         throw error;
       });
 
-      const result = await controller.decideTurn({ id: 'actor_1' }, { state: {} });
+      const result = await controller.decideTurn(
+        { id: 'actor_1' },
+        { state: {} }
+      );
 
       expect(result).toBeNull();
     });
@@ -1523,7 +1633,9 @@ describe('GoapController - Core Structure', () => {
 
         controller.clearActorDiagnostics(actor.id);
 
-        expect(deps.goapPlanner.clearActorDiagnostics).toHaveBeenCalledWith(actor.id);
+        expect(deps.goapPlanner.clearActorDiagnostics).toHaveBeenCalledWith(
+          actor.id
+        );
         expect(clearNumericConstraintsSpy).toHaveBeenCalledWith(actor.id);
       });
 
@@ -1537,7 +1649,9 @@ describe('GoapController - Core Structure', () => {
       it('returns diagnostics for actor', () => {
         const diagnostics = controller.getPlanningStateDiagnostics('actor_1');
         // May be null if no planning occurred yet
-        expect(diagnostics === null || typeof diagnostics === 'object').toBe(true);
+        expect(diagnostics === null || typeof diagnostics === 'object').toBe(
+          true
+        );
       });
 
       it('throws when actorId is missing', () => {
@@ -1556,11 +1670,16 @@ describe('GoapController - Core Structure', () => {
       it('returns compliance diagnostics when available', () => {
         const goapEventDispatcher = {
           dispatch: jest.fn(),
-          getComplianceSnapshot: jest.fn().mockReturnValue({ actors: [], global: null }),
-          getComplianceForActor: jest.fn()
+          getComplianceSnapshot: jest
+            .fn()
+            .mockReturnValue({ actors: [], global: null }),
+          getComplianceForActor: jest
+            .fn()
             .mockReturnValueOnce({ events: 5, violations: 0 })
             .mockReturnValueOnce({ events: 10, violations: 1 }),
-          getPlanningComplianceSnapshot: jest.fn().mockReturnValue({ planningEvents: 3 }),
+          getPlanningComplianceSnapshot: jest
+            .fn()
+            .mockReturnValue({ planningEvents: 3 }),
         };
 
         const controllerWithCompliance = new GoapController({
@@ -1569,7 +1688,8 @@ describe('GoapController - Core Structure', () => {
           goapEventDispatcher,
         });
 
-        const diagnostics = controllerWithCompliance.getEventComplianceDiagnostics('actor_1');
+        const diagnostics =
+          controllerWithCompliance.getEventComplianceDiagnostics('actor_1');
 
         expect(diagnostics).not.toBeNull();
         expect(diagnostics.actor).toEqual({ events: 5, violations: 0 });
@@ -1580,8 +1700,11 @@ describe('GoapController - Core Structure', () => {
       it('handles missing planning compliance snapshot gracefully', () => {
         const goapEventDispatcher = {
           dispatch: jest.fn(),
-          getComplianceSnapshot: jest.fn().mockReturnValue({ actors: [], global: null }),
-          getComplianceForActor: jest.fn()
+          getComplianceSnapshot: jest
+            .fn()
+            .mockReturnValue({ actors: [], global: null }),
+          getComplianceForActor: jest
+            .fn()
             .mockReturnValueOnce({ events: 5 })
             .mockReturnValueOnce({ events: 10 }),
           // No getPlanningComplianceSnapshot method
@@ -1593,7 +1716,8 @@ describe('GoapController - Core Structure', () => {
           goapEventDispatcher,
         });
 
-        const diagnostics = controllerWithCompliance.getEventComplianceDiagnostics('actor_1');
+        const diagnostics =
+          controllerWithCompliance.getEventComplianceDiagnostics('actor_1');
 
         expect(diagnostics).not.toBeNull();
         expect(diagnostics.planning).toBeNull();
@@ -1615,7 +1739,9 @@ describe('GoapController - Core Structure', () => {
         mockDataRegistry.getAll.mockReturnValue([goal]);
         mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
         mockGoapPlanner.plan.mockReturnValue({ tasks });
-        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+          valid: true,
+        });
         mockRefinementEngine.refine.mockResolvedValue({
           success: true,
           methodId: 'method:test',
@@ -1666,7 +1792,9 @@ describe('GoapController - Core Structure', () => {
         mockDataRegistry.getAll.mockReturnValue([goal]);
         mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
         mockGoapPlanner.plan.mockReturnValue({ tasks });
-        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+        mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+          valid: true,
+        });
         mockRefinementEngine.refine.mockResolvedValue({
           success: true,
           methodId: 'method:test',
@@ -1722,7 +1850,9 @@ describe('GoapController - Core Structure', () => {
     it('uses goapEventDispatcher when provided with all required methods', () => {
       const validDispatcher = {
         dispatch: jest.fn(),
-        getComplianceSnapshot: jest.fn().mockReturnValue({ actors: [], global: null }),
+        getComplianceSnapshot: jest
+          .fn()
+          .mockReturnValue({ actors: [], global: null }),
         getComplianceForActor: jest.fn().mockReturnValue(null),
       };
 
@@ -1759,7 +1889,9 @@ describe('GoapController - Core Structure', () => {
 
       await controller.decideTurn({ id: 'actor_1' }, { state: {} });
 
-      expect(mockParameterResolutionService.clearCache).toHaveBeenCalledTimes(2); // Start and end
+      expect(mockParameterResolutionService.clearCache).toHaveBeenCalledTimes(
+        2
+      ); // Start and end
     });
 
     it('clears parameter resolution cache at end of top-level decideTurn', async () => {
@@ -1769,7 +1901,9 @@ describe('GoapController - Core Structure', () => {
       mockDataRegistry.getAll.mockReturnValue([goal]);
       mockContextAssemblyService.assemblePlanningContext.mockReturnValue({});
       mockGoapPlanner.plan.mockReturnValue({ tasks });
-      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({ valid: true });
+      mockPlanInvalidationDetector.checkPlanValidity.mockReturnValue({
+        valid: true,
+      });
       mockRefinementEngine.refine.mockResolvedValue({
         success: true,
         methodId: 'method:test',
@@ -1787,7 +1921,9 @@ describe('GoapController - Core Structure', () => {
       await controller.decideTurn({ id: 'actor_1' }, { state: {} });
 
       // Should clear at start and end
-      expect(mockParameterResolutionService.clearCache).toHaveBeenCalledTimes(2);
+      expect(mockParameterResolutionService.clearCache).toHaveBeenCalledTimes(
+        2
+      );
     });
   });
 });

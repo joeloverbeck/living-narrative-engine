@@ -4,7 +4,15 @@
  *              that are not covered by the primary integration suite.
  */
 
-import { describe, it, expect, beforeEach, afterEach, afterAll, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll,
+  jest,
+} from '@jest/globals';
 import { TargetComponentValidationStage } from '../../../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
 import * as pipelineConfig from '../../../../../src/config/actionPipelineConfig.js';
 
@@ -138,7 +146,9 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
       targetComponentValidator: new DeterministicComponentValidator(() => {
         throw new Error('validator should not run when validation is disabled');
       }),
-      targetRequiredComponentsValidator: new DeterministicRequiredValidator({ valid: true }),
+      targetRequiredComponentsValidator: new DeterministicRequiredValidator({
+        valid: true,
+      }),
       logger,
       actionErrorContextBuilder: new NoOpErrorContextBuilder(),
     });
@@ -176,7 +186,9 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
       valid: false,
       reason: 'non-critical target state mismatch',
     }));
-    const requiredValidator = new DeterministicRequiredValidator({ valid: true });
+    const requiredValidator = new DeterministicRequiredValidator({
+      valid: true,
+    });
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: componentValidator,
@@ -217,11 +229,15 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     expect(debugMessages).toContain(
       "Skipping validation for action 'mod:skipped' based on configuration"
     );
-    expect(debugMessages.some((msg) => msg.includes('allowed in lenient mode'))).toBe(true);
+    expect(
+      debugMessages.some((msg) => msg.includes('allowed in lenient mode'))
+    ).toBe(true);
     expect(
       debugMessages
         .filter((msg) => msg.startsWith('Validated '))
-        .some((msg) => msg.includes('2 actions, 2 passed validation (strictness: lenient)'))
+        .some((msg) =>
+          msg.includes('2 actions, 2 passed validation (strictness: lenient)')
+        )
     ).toBe(true);
 
     expect(trace.captured.map((entry) => entry.stage)).toEqual([
@@ -237,15 +253,15 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
   it('uses default configuration fallbacks when targetValidationConfig returns null', async () => {
     applyTargetValidationOverrides({ strictness: 'strict', logDetails: false });
 
-    jest
-      .spyOn(pipelineConfig, 'targetValidationConfig')
-      .mockReturnValue(null);
+    jest.spyOn(pipelineConfig, 'targetValidationConfig').mockReturnValue(null);
 
     const logger = new RecordingLogger();
     const componentValidator = new DeterministicComponentValidator(() => ({
       valid: true,
     }));
-    const requiredValidator = new DeterministicRequiredValidator({ valid: true });
+    const requiredValidator = new DeterministicRequiredValidator({
+      valid: true,
+    });
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: componentValidator,
@@ -283,7 +299,10 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
   });
 
   it('filters actions when lenient failures are critical and logging is suppressed', async () => {
-    applyTargetValidationOverrides({ strictness: 'lenient', logDetails: false });
+    applyTargetValidationOverrides({
+      strictness: 'lenient',
+      logDetails: false,
+    });
     actionPipelineConfig.targetValidation.skipForActionTypes = ['skip-me'];
 
     const logger = new RecordingLogger();
@@ -291,7 +310,9 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
       valid: false,
       reason: 'critical validation failure',
     }));
-    const requiredValidator = new DeterministicRequiredValidator({ valid: true });
+    const requiredValidator = new DeterministicRequiredValidator({
+      valid: true,
+    });
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: componentValidator,
@@ -303,7 +324,11 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     const trace = new RecordingTrace();
     const candidateActions = [
       { id: 'mod:skipped', type: 'skip-me' },
-      { id: 'mod:critical', type: 'regular', target_entity: { id: 'entity:critical' } },
+      {
+        id: 'mod:critical',
+        type: 'regular',
+        target_entity: { id: 'entity:critical' },
+      },
     ];
 
     const result = await stage.executeInternal({
@@ -315,7 +340,9 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     expect(result.data.candidateActions).toHaveLength(1);
     expect(result.data.candidateActions[0].id).toBe('mod:skipped');
     expect(
-      logger.debugLogs.some((entry) => entry.message.includes('allowed in lenient mode'))
+      logger.debugLogs.some((entry) =>
+        entry.message.includes('allowed in lenient mode')
+      )
     ).toBe(false);
   });
 
@@ -323,8 +350,12 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     applyTargetValidationOverrides({ logDetails: true });
 
     const logger = new RecordingLogger();
-    const componentValidator = new DeterministicComponentValidator(() => ({ valid: true }));
-    const requiredValidator = new DeterministicRequiredValidator({ valid: true });
+    const componentValidator = new DeterministicComponentValidator(() => ({
+      valid: true,
+    }));
+    const requiredValidator = new DeterministicRequiredValidator({
+      valid: true,
+    });
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: componentValidator,
@@ -368,7 +399,6 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     expect(noTargetEvent?.payload.targetEntityIds).toEqual({});
   });
 
-
   it('filters resolved targets lacking required components within actionsWithTargets', async () => {
     applyTargetValidationOverrides({ enabled: true, logDetails: false });
 
@@ -376,7 +406,9 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
     const componentValidator = new DeterministicComponentValidator(() => ({
       valid: true,
     }));
-    const requiredValidator = new DeterministicRequiredValidator({ valid: true });
+    const requiredValidator = new DeterministicRequiredValidator({
+      valid: true,
+    });
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: componentValidator,
@@ -431,8 +463,16 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
         },
         targetDefinitions: actionDef.targetDefinitions,
         targetContexts: [
-          { type: 'entity', entityId: 'items:readable-letter', placeholder: 'item' },
-          { type: 'entity', entityId: 'items:plain-stone', placeholder: 'item' },
+          {
+            type: 'entity',
+            entityId: 'items:readable-letter',
+            placeholder: 'item',
+          },
+          {
+            type: 'entity',
+            entityId: 'items:plain-stone',
+            placeholder: 'item',
+          },
         ],
         isMultiTarget: true,
       },
@@ -451,9 +491,15 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
 
     const [filteredAction] = result.data.actionsWithTargets;
     expect(filteredAction.resolvedTargets.primary).toHaveLength(1);
-    expect(filteredAction.resolvedTargets.primary[0].id).toBe('items:readable-letter');
+    expect(filteredAction.resolvedTargets.primary[0].id).toBe(
+      'items:readable-letter'
+    );
     expect(filteredAction.targetContexts).toEqual([
-      { type: 'entity', entityId: 'items:readable-letter', placeholder: 'item' },
+      {
+        type: 'entity',
+        entityId: 'items:readable-letter',
+        placeholder: 'item',
+      },
     ]);
 
     expect(actionDef.resolvedTargets.primary).toEqual([
@@ -478,8 +524,12 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
 
     const logger = new RecordingLogger();
     const stage = new TargetComponentValidationStage({
-      targetComponentValidator: new DeterministicComponentValidator(() => ({ valid: true })),
-      targetRequiredComponentsValidator: new DeterministicRequiredValidator({ valid: true }),
+      targetComponentValidator: new DeterministicComponentValidator(() => ({
+        valid: true,
+      })),
+      targetRequiredComponentsValidator: new DeterministicRequiredValidator({
+        valid: true,
+      }),
       logger,
       actionErrorContextBuilder: new NoOpErrorContextBuilder(),
     });
@@ -503,12 +553,16 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
 
     expect(
       logger.warnLogs.some((entry) =>
-        entry.message.includes("Failed to capture validation analysis for action 'mod:trace-errors'")
+        entry.message.includes(
+          "Failed to capture validation analysis for action 'mod:trace-errors'"
+        )
       )
     ).toBe(true);
     expect(
       logger.debugLogs.some((entry) =>
-        entry.message.includes("Failed to capture performance data for action 'mod:trace-errors'")
+        entry.message.includes(
+          "Failed to capture performance data for action 'mod:trace-errors'"
+        )
       )
     ).toBe(true);
   });
@@ -516,8 +570,12 @@ describe('TargetComponentValidationStage configuration-sensitive integration', (
   it('handles trace objects without captureActionData gracefully', async () => {
     const logger = new RecordingLogger();
     const stage = new TargetComponentValidationStage({
-      targetComponentValidator: new DeterministicComponentValidator(() => ({ valid: true })),
-      targetRequiredComponentsValidator: new DeterministicRequiredValidator({ valid: true }),
+      targetComponentValidator: new DeterministicComponentValidator(() => ({
+        valid: true,
+      })),
+      targetRequiredComponentsValidator: new DeterministicRequiredValidator({
+        valid: true,
+      }),
       logger,
       actionErrorContextBuilder: new NoOpErrorContextBuilder(),
     });

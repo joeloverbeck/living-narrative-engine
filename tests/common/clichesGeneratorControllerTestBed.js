@@ -105,54 +105,42 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
           elementsRef: {},
           contextName: 'ClichesGeneratorControllerTestBed',
         }),
-      eventListenerRegistry:
-        overrides.eventListenerRegistry ??
-        {
-          register: jest.fn(),
-          registerAll: jest.fn(),
-          unregisterAll: jest.fn(),
-          getRegisteredCount: jest.fn().mockReturnValue(0),
-          setContextName: jest.fn(),
-        },
-      asyncUtilitiesToolkit:
-        overrides.asyncUtilitiesToolkit ??
-        {
-          setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
-          setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
-          clearTimeout: jest.fn((id) => clearTimeout(id)),
-          clearInterval: jest.fn((id) => clearInterval(id)),
-          requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
-          cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
-          debounce: jest.fn((fn) => fn),
-          throttle: jest.fn((fn) => fn),
-        },
-      performanceMonitor:
-        overrides.performanceMonitor ??
-        {
-          trackOperation: jest.fn().mockResolvedValue(undefined),
-          getMetrics: jest.fn().mockReturnValue({}),
-          clearMetrics: jest.fn(),
-        },
-      memoryManager:
-        overrides.memoryManager ??
-        {
-          createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
-          getAllRefs: jest.fn().mockReturnValue([]),
-          clearAllRefs: jest.fn(),
-        },
-      errorHandlingStrategy:
-        overrides.errorHandlingStrategy ??
-        {
-          handleError: jest.fn(),
-          showError: jest.fn(),
-          dispatchErrorEvent: jest.fn(),
-        },
-      validationService:
-        overrides.validationService ??
-        {
-          validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
-          handleValidationError: jest.fn(),
-        },
+      eventListenerRegistry: overrides.eventListenerRegistry ?? {
+        register: jest.fn(),
+        registerAll: jest.fn(),
+        unregisterAll: jest.fn(),
+        getRegisteredCount: jest.fn().mockReturnValue(0),
+        setContextName: jest.fn(),
+      },
+      asyncUtilitiesToolkit: overrides.asyncUtilitiesToolkit ?? {
+        setTimeout: jest.fn((fn, delay) => setTimeout(fn, delay)),
+        setInterval: jest.fn((fn, delay) => setInterval(fn, delay)),
+        clearTimeout: jest.fn((id) => clearTimeout(id)),
+        clearInterval: jest.fn((id) => clearInterval(id)),
+        requestAnimationFrame: jest.fn((fn) => requestAnimationFrame(fn)),
+        cancelAnimationFrame: jest.fn((id) => cancelAnimationFrame(id)),
+        debounce: jest.fn((fn) => fn),
+        throttle: jest.fn((fn) => fn),
+      },
+      performanceMonitor: overrides.performanceMonitor ?? {
+        trackOperation: jest.fn().mockResolvedValue(undefined),
+        getMetrics: jest.fn().mockReturnValue({}),
+        clearMetrics: jest.fn(),
+      },
+      memoryManager: overrides.memoryManager ?? {
+        createWeakRef: jest.fn((obj) => ({ deref: () => obj })),
+        getAllRefs: jest.fn().mockReturnValue([]),
+        clearAllRefs: jest.fn(),
+      },
+      errorHandlingStrategy: overrides.errorHandlingStrategy ?? {
+        handleError: jest.fn(),
+        showError: jest.fn(),
+        dispatchErrorEvent: jest.fn(),
+      },
+      validationService: overrides.validationService ?? {
+        validateData: jest.fn().mockReturnValue({ valid: true, errors: [] }),
+        handleValidationError: jest.fn(),
+      },
     };
 
     return {

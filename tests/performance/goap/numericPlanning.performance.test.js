@@ -160,7 +160,9 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
       const goal = createTestGoal({
         id: 'test:restore_health',
         priority: 10,
-        goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+        goalState: {
+          '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -173,7 +175,9 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
 
       // Verify plan was created
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBeGreaterThan(0);
@@ -187,13 +191,55 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
     it('should plan 10 different numeric goals in < 1 second', async () => {
       // Create tasks for different numeric attributes
       const tasks = [
-        { id: 'test:reduce_hunger', component: 'core:needs', field: 'hunger', value: 30, mode: 'decrement' },
-        { id: 'test:quench_thirst', component: 'core:needs', field: 'thirst', value: 35, mode: 'decrement' },
-        { id: 'test:restore_health', component: 'core:stats', field: 'health', value: 25, mode: 'increment' },
-        { id: 'test:restore_energy', component: 'core:stats', field: 'energy', value: 20, mode: 'increment' },
-        { id: 'test:gather_gold', component: 'core:resources', field: 'gold', value: 10, mode: 'increment' },
-        { id: 'test:train_strength', component: 'core:attributes', field: 'strength', value: 2, mode: 'increment' },
-        { id: 'test:train_agility', component: 'core:attributes', field: 'agility', value: 2, mode: 'increment' },
+        {
+          id: 'test:reduce_hunger',
+          component: 'core:needs',
+          field: 'hunger',
+          value: 30,
+          mode: 'decrement',
+        },
+        {
+          id: 'test:quench_thirst',
+          component: 'core:needs',
+          field: 'thirst',
+          value: 35,
+          mode: 'decrement',
+        },
+        {
+          id: 'test:restore_health',
+          component: 'core:stats',
+          field: 'health',
+          value: 25,
+          mode: 'increment',
+        },
+        {
+          id: 'test:restore_energy',
+          component: 'core:stats',
+          field: 'energy',
+          value: 20,
+          mode: 'increment',
+        },
+        {
+          id: 'test:gather_gold',
+          component: 'core:resources',
+          field: 'gold',
+          value: 10,
+          mode: 'increment',
+        },
+        {
+          id: 'test:train_strength',
+          component: 'core:attributes',
+          field: 'strength',
+          value: 2,
+          mode: 'increment',
+        },
+        {
+          id: 'test:train_agility',
+          component: 'core:attributes',
+          field: 'agility',
+          value: 2,
+          mode: 'increment',
+        },
         {
           id: 'test:study_intelligence',
           component: 'core:attributes',
@@ -201,7 +247,13 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
           value: 2,
           mode: 'increment',
         },
-        { id: 'test:gain_experience', component: 'core:progression', field: 'experience', value: 50, mode: 'increment' },
+        {
+          id: 'test:gain_experience',
+          component: 'core:progression',
+          field: 'experience',
+          value: 50,
+          mode: 'increment',
+        },
         {
           id: 'test:improve_reputation',
           component: 'core:social',
@@ -265,52 +317,87 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         createTestGoal({
           id: 'goal:hunger',
           priority: 10,
-          goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+          goalState: {
+            '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+          },
         }),
         createTestGoal({
           id: 'goal:thirst',
           priority: 10,
-          goalState: { '<=': [{ var: 'state.actor.components.core_needs.thirst' }, 30] },
+          goalState: {
+            '<=': [{ var: 'state.actor.components.core_needs.thirst' }, 30],
+          },
         }),
         createTestGoal({
           id: 'goal:health',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+          },
         }),
         createTestGoal({
           id: 'goal:energy',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_stats.energy' }, 80] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_stats.energy' }, 80],
+          },
         }),
         createTestGoal({
           id: 'goal:gold',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+          },
         }),
         createTestGoal({
           id: 'goal:strength',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_attributes.strength' }, 10] },
+          goalState: {
+            '>=': [
+              { var: 'state.actor.components.core_attributes.strength' },
+              10,
+            ],
+          },
         }),
         createTestGoal({
           id: 'goal:agility',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_attributes.agility' }, 10] },
+          goalState: {
+            '>=': [
+              { var: 'state.actor.components.core_attributes.agility' },
+              10,
+            ],
+          },
         }),
         createTestGoal({
           id: 'goal:intelligence',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_attributes.intelligence' }, 10] },
+          goalState: {
+            '>=': [
+              { var: 'state.actor.components.core_attributes.intelligence' },
+              10,
+            ],
+          },
         }),
         createTestGoal({
           id: 'goal:experience',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_progression.experience' }, 500] },
+          goalState: {
+            '>=': [
+              { var: 'state.actor.components.core_progression.experience' },
+              500,
+            ],
+          },
         }),
         createTestGoal({
           id: 'goal:reputation',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_social.reputation' }, 100] },
+          goalState: {
+            '>=': [
+              { var: 'state.actor.components.core_social.reputation' },
+              100,
+            ],
+          },
         }),
       ];
 
@@ -357,18 +444,50 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
 
       expect(totalDuration).toBeLessThan(1000); // < 1 second for 10 goals
 
-      console.log(`Batch planning (10 goals) total time: ${totalDuration.toFixed(2)}ms`);
+      console.log(
+        `Batch planning (10 goals) total time: ${totalDuration.toFixed(2)}ms`
+      );
       console.log(`Average per goal: ${(totalDuration / 10).toFixed(2)}ms`);
     });
 
     it('should average < 100ms per goal in batch planning', async () => {
       // Similar setup but collecting individual times
       const tasks = [
-        { id: 'test:reduce_hunger', component: 'core:needs', field: 'hunger', value: 30, mode: 'decrement' },
-        { id: 'test:restore_health', component: 'core:stats', field: 'health', value: 25, mode: 'increment' },
-        { id: 'test:gather_gold', component: 'core:resources', field: 'gold', value: 10, mode: 'increment' },
-        { id: 'test:train_strength', component: 'core:attributes', field: 'strength', value: 2, mode: 'increment' },
-        { id: 'test:gain_experience', component: 'core:progression', field: 'experience', value: 50, mode: 'increment' },
+        {
+          id: 'test:reduce_hunger',
+          component: 'core:needs',
+          field: 'hunger',
+          value: 30,
+          mode: 'decrement',
+        },
+        {
+          id: 'test:restore_health',
+          component: 'core:stats',
+          field: 'health',
+          value: 25,
+          mode: 'increment',
+        },
+        {
+          id: 'test:gather_gold',
+          component: 'core:resources',
+          field: 'gold',
+          value: 10,
+          mode: 'increment',
+        },
+        {
+          id: 'test:train_strength',
+          component: 'core:attributes',
+          field: 'strength',
+          value: 2,
+          mode: 'increment',
+        },
+        {
+          id: 'test:gain_experience',
+          component: 'core:progression',
+          field: 'experience',
+          value: 50,
+          mode: 'increment',
+        },
       ];
 
       const taskObjects = {};
@@ -424,7 +543,9 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         const goal = createTestGoal({
           id: `goal-${i}`,
           priority: 10,
-          goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+          goalState: {
+            '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+          },
         });
 
         setup.dataRegistry.register('goals', goal.id, goal);
@@ -440,7 +561,9 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
 
       expect(average).toBeLessThan(100); // < 100ms average
 
-      console.log(`Individual goal planning times: ${durations.map((d) => d.toFixed(2)).join(', ')}ms`);
+      console.log(
+        `Individual goal planning times: ${durations.map((d) => d.toFixed(2)).join(', ')}ms`
+      );
       console.log(`Average: ${average.toFixed(2)}ms`);
     });
   });
@@ -616,7 +739,9 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         createTestGoal({
           id: 'goal:numeric',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+          },
         }),
       ];
 
@@ -659,16 +784,36 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
 
       expect(duration).toBeLessThan(200); // < 100ms average per goal
 
-      console.log(`Mixed goals planning time: ${duration.toFixed(2)}ms for ${mixedGoals.length} goals`);
+      console.log(
+        `Mixed goals planning time: ${duration.toFixed(2)}ms for ${mixedGoals.length} goals`
+      );
     });
   });
 
   describe('Performance Statistics Collection', () => {
     it('should collect and report performance statistics with percentiles', async () => {
       const tasks = [
-        { id: 'test:task1', component: 'core:resources', field: 'gold', value: 10, mode: 'increment' },
-        { id: 'test:task2', component: 'core:needs', field: 'hunger', value: 30, mode: 'decrement' },
-        { id: 'test:task3', component: 'core:stats', field: 'health', value: 25, mode: 'increment' },
+        {
+          id: 'test:task1',
+          component: 'core:resources',
+          field: 'gold',
+          value: 10,
+          mode: 'increment',
+        },
+        {
+          id: 'test:task2',
+          component: 'core:needs',
+          field: 'hunger',
+          value: 30,
+          mode: 'decrement',
+        },
+        {
+          id: 'test:task3',
+          component: 'core:stats',
+          field: 'health',
+          value: 25,
+          mode: 'increment',
+        },
       ];
 
       const taskObjects = {};
@@ -710,17 +855,23 @@ describe('Numeric Planning Performance - Supplementary Tests', () => {
         createTestGoal({
           id: 'goal:gold',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+          },
         }),
         createTestGoal({
           id: 'goal:hunger',
           priority: 10,
-          goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+          goalState: {
+            '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+          },
         }),
         createTestGoal({
           id: 'goal:health',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+          },
         }),
       ];
 

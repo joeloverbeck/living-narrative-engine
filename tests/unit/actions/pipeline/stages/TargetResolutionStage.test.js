@@ -343,9 +343,9 @@ describe('TargetResolutionStage', () => {
           actionDef: validAction,
           targetContexts: expectedTargets,
         });
-        expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(
-          2
-        );
+        expect(
+          mockTargetResolutionService.resolveTargets
+        ).toHaveBeenCalledTimes(2);
       });
 
       it('should preserve existing error contexts without rebuilding them', async () => {
@@ -371,7 +371,9 @@ describe('TargetResolutionStage', () => {
         const result = await stage.execute(context);
 
         expect(result.errors).toEqual([existingErrorContext]);
-        expect(mockErrorContextBuilder.buildErrorContext).not.toHaveBeenCalled();
+        expect(
+          mockErrorContextBuilder.buildErrorContext
+        ).not.toHaveBeenCalled();
         expect(mockLogger.error).toHaveBeenCalledWith(
           "Error resolving scope for action 'movement:go'",
           { errors: [existingErrorContext] }

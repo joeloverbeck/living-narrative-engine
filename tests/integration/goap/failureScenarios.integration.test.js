@@ -131,7 +131,9 @@ describe('GOAP Failure Scenarios - Integration', () => {
 
       // Verify: Planning failure event
       const events = setup.eventBus.getEvents();
-      const failures = events.filter((e) => e.type === GOAP_EVENTS.PLANNING_FAILED);
+      const failures = events.filter(
+        (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+      );
       expect(failures.length).toBeGreaterThan(0);
     });
 
@@ -190,7 +192,9 @@ describe('GOAP Failure Scenarios - Integration', () => {
 
       // Verify: Planning failure event dispatched
       const events = setup.eventBus.getEvents();
-      const failures = events.filter((e) => e.type === GOAP_EVENTS.PLANNING_FAILED);
+      const failures = events.filter(
+        (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+      );
       expect(failures.length).toBeGreaterThan(0);
     });
   });
@@ -257,14 +261,19 @@ describe('GOAP Failure Scenarios - Integration', () => {
 
       // At least one should be true (either planning worked and refinement failed,
       // or planning failed entirely)
-      expect(planningComplete || refinementFailed || result === null).toBe(true);
+      expect(planningComplete || refinementFailed || result === null).toBe(
+        true
+      );
 
       // If refinement failed, verify fallback behavior in payload
       if (refinementFailed) {
         const failureEvent = events.find(
           (e) => e.type === GOAP_EVENTS.REFINEMENT_FAILED
         );
-        expect(failureEvent.payload).toHaveProperty('fallbackBehavior', 'replan');
+        expect(failureEvent.payload).toHaveProperty(
+          'fallbackBehavior',
+          'replan'
+        );
       }
     });
   });

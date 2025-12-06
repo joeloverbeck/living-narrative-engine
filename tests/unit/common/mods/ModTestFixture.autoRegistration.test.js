@@ -13,10 +13,15 @@ describe('ModTestFixture - Auto-Registration', () => {
   describe('forAction with autoRegisterScopes', () => {
     it('should not auto-register scopes by default', async () => {
       // Act
-      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+      const fixture = await ModTestFixture.forAction(
+        'positioning',
+        'positioning:sit_down'
+      );
 
       // Assert
-      expect(ScopeResolverHelpers.registerPositioningScopes).not.toHaveBeenCalled();
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).not.toHaveBeenCalled();
 
       fixture.cleanup();
     });
@@ -32,9 +37,9 @@ describe('ModTestFixture - Auto-Registration', () => {
       );
 
       // Assert
-      expect(ScopeResolverHelpers.registerPositioningScopes).toHaveBeenCalledWith(
-        fixture.testEnv
-      );
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).toHaveBeenCalledWith(fixture.testEnv);
 
       fixture.cleanup();
     });
@@ -53,9 +58,9 @@ describe('ModTestFixture - Auto-Registration', () => {
       );
 
       // Assert
-      expect(ScopeResolverHelpers.registerPositioningScopes).toHaveBeenCalledWith(
-        fixture.testEnv
-      );
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).toHaveBeenCalledWith(fixture.testEnv);
       expect(ScopeResolverHelpers.registerAnatomyScopes).toHaveBeenCalledWith(
         fixture.testEnv
       );
@@ -110,29 +115,47 @@ describe('ModTestFixture - Auto-Registration', () => {
     it('should reject non-boolean autoRegisterScopes', async () => {
       // Act & Assert
       await expect(
-        ModTestFixture.forAction('positioning', 'positioning:sit_down', null, null, {
-          autoRegisterScopes: 'true', // ❌ string instead of boolean
-        })
+        ModTestFixture.forAction(
+          'positioning',
+          'positioning:sit_down',
+          null,
+          null,
+          {
+            autoRegisterScopes: 'true', // ❌ string instead of boolean
+          }
+        )
       ).rejects.toThrow('autoRegisterScopes must be a boolean');
     });
 
     it('should reject non-array scopeCategories', async () => {
       // Act & Assert
       await expect(
-        ModTestFixture.forAction('positioning', 'positioning:sit_down', null, null, {
-          autoRegisterScopes: true,
-          scopeCategories: 'positioning', // ❌ string instead of array
-        })
+        ModTestFixture.forAction(
+          'positioning',
+          'positioning:sit_down',
+          null,
+          null,
+          {
+            autoRegisterScopes: true,
+            scopeCategories: 'positioning', // ❌ string instead of array
+          }
+        )
       ).rejects.toThrow('scopeCategories must be an array');
     });
 
     it('should reject invalid scope categories', async () => {
       // Act & Assert
       await expect(
-        ModTestFixture.forAction('positioning', 'positioning:sit_down', null, null, {
-          autoRegisterScopes: true,
-          scopeCategories: ['positioning', 'invalid_category'],
-        })
+        ModTestFixture.forAction(
+          'positioning',
+          'positioning:sit_down',
+          null,
+          null,
+          {
+            autoRegisterScopes: true,
+            scopeCategories: ['positioning', 'invalid_category'],
+          }
+        )
       ).rejects.toThrow('Invalid scope categories: invalid_category');
     });
 
@@ -178,11 +201,16 @@ describe('ModTestFixture - Auto-Registration', () => {
   describe('backward compatibility', () => {
     it('should work without options parameter', async () => {
       // Act
-      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+      const fixture = await ModTestFixture.forAction(
+        'positioning',
+        'positioning:sit_down'
+      );
 
       // Assert
       expect(fixture).toBeDefined();
-      expect(ScopeResolverHelpers.registerPositioningScopes).not.toHaveBeenCalled();
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).not.toHaveBeenCalled();
 
       fixture.cleanup();
     });
@@ -199,7 +227,9 @@ describe('ModTestFixture - Auto-Registration', () => {
 
       // Assert
       expect(fixture).toBeDefined();
-      expect(ScopeResolverHelpers.registerPositioningScopes).not.toHaveBeenCalled();
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).not.toHaveBeenCalled();
 
       fixture.cleanup();
     });
@@ -219,9 +249,9 @@ describe('ModTestFixture - Auto-Registration', () => {
 
       // Assert
       expect(fixture).toBeDefined();
-      expect(ScopeResolverHelpers.registerPositioningScopes).toHaveBeenCalledWith(
-        fixture.testEnv
-      );
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).toHaveBeenCalledWith(fixture.testEnv);
 
       fixture.cleanup();
     });
@@ -239,10 +269,12 @@ describe('ModTestFixture - Auto-Registration', () => {
       );
 
       // Assert
-      expect(ScopeResolverHelpers.registerPositioningScopes).toHaveBeenCalledWith(
-        fixture.testEnv
-      );
-      expect(ScopeResolverHelpers.registerInventoryScopes).not.toHaveBeenCalled();
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).toHaveBeenCalledWith(fixture.testEnv);
+      expect(
+        ScopeResolverHelpers.registerInventoryScopes
+      ).not.toHaveBeenCalled();
       expect(ScopeResolverHelpers.registerAnatomyScopes).not.toHaveBeenCalled();
 
       fixture.cleanup();
@@ -265,7 +297,9 @@ describe('ModTestFixture - Auto-Registration', () => {
       expect(ScopeResolverHelpers.registerInventoryScopes).toHaveBeenCalledWith(
         fixture.testEnv
       );
-      expect(ScopeResolverHelpers.registerPositioningScopes).not.toHaveBeenCalled();
+      expect(
+        ScopeResolverHelpers.registerPositioningScopes
+      ).not.toHaveBeenCalled();
 
       fixture.cleanup();
     });

@@ -81,12 +81,9 @@ describe('AjvSchemaValidator data registry collaboration', () => {
       }
     }
 
-    const { validator } = createEnhancedValidator(
-      logger,
-      {
-        dataRegistry: new ThrowingRegistry({ logger }),
-      }
-    );
+    const { validator } = createEnhancedValidator(logger, {
+      dataRegistry: new ThrowingRegistry({ logger }),
+    });
 
     expect(validator.getLoadedComponentSchemas()).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(

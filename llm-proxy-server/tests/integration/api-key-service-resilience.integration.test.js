@@ -5,11 +5,7 @@
  */
 
 import { jest } from '@jest/globals';
-import {
-  mkdtempSync,
-  rmSync,
-  mkdirSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -141,7 +137,9 @@ describe('ApiKeyService resilience integration', () => {
     expect(result.errorDetails.details.reason).toBe(
       'Unexpected file system/read error.'
     );
-    expect(result.errorDetails.details.originalErrorMessage).toContain('EISDIR');
+    expect(result.errorDetails.details.originalErrorMessage).toContain(
+      'EISDIR'
+    );
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Unexpected error reading API key file.'),
@@ -153,7 +151,10 @@ describe('ApiKeyService resilience integration', () => {
   });
 
   it('reports configuration issues when no API key sources are defined for a cloud model', async () => {
-    const { service } = buildService({ cacheEnabled: false, projectRoot: null });
+    const { service } = buildService({
+      cacheEnabled: false,
+      projectRoot: null,
+    });
 
     const result = await service.getApiKey(
       {

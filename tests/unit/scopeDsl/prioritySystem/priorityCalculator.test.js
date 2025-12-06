@@ -819,7 +819,12 @@ describe('PriorityCalculator', () => {
       const resultNull = getLayersByMode(null);
       const resultUndefined = getLayersByMode(undefined);
       expect(resultNull).toEqual(['outer', 'base', 'underwear', 'accessories']);
-      expect(resultUndefined).toEqual(['outer', 'base', 'underwear', 'accessories']);
+      expect(resultUndefined).toEqual([
+        'outer',
+        'base',
+        'underwear',
+        'accessories',
+      ]);
     });
 
     it('should maintain backward compatibility with old LAYER_PRIORITY constants', () => {

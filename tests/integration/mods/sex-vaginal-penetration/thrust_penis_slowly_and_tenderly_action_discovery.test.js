@@ -15,7 +15,9 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Disc
    * Configures action discovery by building the action index with the thrust action.
    */
   function configureActionDiscovery() {
-    testFixture.testEnv.actionIndex.buildIndex([thrustPenisSlowlyAndTenderlyAction]);
+    testFixture.testEnv.actionIndex.buildIndex([
+      thrustPenisSlowlyAndTenderlyAction,
+    ]);
   }
 
   beforeEach(async () => {
@@ -44,7 +46,9 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Disc
   });
 
   it('does not appear when actor is not penetrating anyone', async () => {
-    const scenario = buildPenetrationScenario({ includePenetrationComponents: false });
+    const scenario = buildPenetrationScenario({
+      includePenetrationComponents: false,
+    });
     testFixture.reset(scenario);
     configureActionDiscovery();
 
@@ -134,7 +138,16 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Disc
       .asBodyPart({ parent: 'bethPelvis', children: [], subType: 'vagina' })
       .build();
 
-    const scenario = [room, alice, beth, carol, aliceGroin, alicePenis, bethPelvis, bethVagina];
+    const scenario = [
+      room,
+      alice,
+      beth,
+      carol,
+      aliceGroin,
+      alicePenis,
+      bethPelvis,
+      bethVagina,
+    ];
     testFixture.reset(scenario);
     configureActionDiscovery();
 

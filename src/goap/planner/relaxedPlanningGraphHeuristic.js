@@ -58,9 +58,14 @@ class RelaxedPlanningGraphHeuristic {
 
     const logicEvaluator = jsonLogicEvaluator ?? jsonLogicEvaluationService;
 
-    validateDependency(logicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
-      requiredMethods: ['evaluate'],
-    });
+    validateDependency(
+      logicEvaluator,
+      'JsonLogicEvaluationService',
+      this.#logger,
+      {
+        requiredMethods: ['evaluate'],
+      }
+    );
 
     this.#planningEffectsSimulator = planningEffectsSimulator;
     this.#jsonLogicEvaluator = logicEvaluator;
@@ -95,7 +100,9 @@ class RelaxedPlanningGraphHeuristic {
   calculate(state, goal, tasks = []) {
     // Validate inputs
     if (!state || typeof state !== 'object') {
-      this.#logger.warn('RelaxedPlanningGraphHeuristic.calculate: Invalid state, returning Infinity');
+      this.#logger.warn(
+        'RelaxedPlanningGraphHeuristic.calculate: Invalid state, returning Infinity'
+      );
       return Infinity;
     }
 
@@ -200,7 +207,10 @@ class RelaxedPlanningGraphHeuristic {
           return false; // Missing condition means not satisfied
         }
 
-        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, evaluationContext);
+        const satisfied = this.#jsonLogicEvaluator.evaluate(
+          condition,
+          evaluationContext
+        );
         if (!satisfied) {
           return false;
         }
@@ -269,7 +279,10 @@ class RelaxedPlanningGraphHeuristic {
           return false; // Missing condition means not applicable
         }
 
-        const satisfied = this.#jsonLogicEvaluator.evaluate(condition, evaluationContext);
+        const satisfied = this.#jsonLogicEvaluator.evaluate(
+          condition,
+          evaluationContext
+        );
         if (!satisfied) {
           return false;
         }

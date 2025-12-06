@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-008: Add Name Collision Handling in Visualizer
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-008
 - **Priority**: LOW
 - **Severity**: P8
@@ -18,7 +19,7 @@ Two anatomy parts with the same `core:name.text` value are indistinguishable in 
 
 ```javascript
 // src/domUI/anatomy-renderer/VisualizationComposer.js:293
-name = nameComponent?.text || id
+name = nameComponent?.text || id;
 ```
 
 When multiple nodes share the same name, they all display identically, making it impossible to distinguish between them in the graph visualization.
@@ -27,10 +28,10 @@ When multiple nodes share the same name, they all display identically, making it
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
-| `src/domUI/anatomy-renderer/VisualizationComposer.js` | ~110, ~195, ~291-296, ~501-506 | Modify name resolution |
-| `tests/unit/domUI/anatomy-renderer/VisualizationComposer.test.js` | New tests | Add test coverage |
+| File                                                              | Line(s)                        | Change Type            |
+| ----------------------------------------------------------------- | ------------------------------ | ---------------------- |
+| `src/domUI/anatomy-renderer/VisualizationComposer.js`             | ~110, ~195, ~291-296, ~501-506 | Modify name resolution |
+| `tests/unit/domUI/anatomy-renderer/VisualizationComposer.test.js` | New tests                      | Add test coverage      |
 
 ---
 
@@ -92,11 +93,11 @@ const baseName = nameComponent?.text || id;
 const displayName = this.#getUniqueDisplayName(baseName);
 const node = new AnatomyNode(
   id,
-  displayName,  // Use unique display name
+  displayName, // Use unique display name
   partComponent?.subType || 'unknown',
   depth
 );
-node.baseName = baseName;  // Keep original for tooltips
+node.baseName = baseName; // Keep original for tooltips
 ```
 
 **Location 2** - In `#handleUnconnectedParts()` around line 501-506:
@@ -106,11 +107,11 @@ const baseName = nameComponent?.text || name || id;
 const displayName = this.#getUniqueDisplayName(baseName);
 const node = new AnatomyNode(
   id,
-  displayName,  // Use unique display name
+  displayName, // Use unique display name
   partComponent?.subType || 'unknown',
   0
 );
-node.baseName = baseName;  // Keep original for tooltips
+node.baseName = baseName; // Keep original for tooltips
 ```
 
 ### Step 4: Reset Tracking in clear()
@@ -121,7 +122,7 @@ Add reset call in `clear()` method (around line 195):
 // Clear data
 this.#nodes.clear();
 this.#edges = [];
-this.#resetNameTracking();  // Reset name tracking for next visualization
+this.#resetNameTracking(); // Reset name tracking for next visualization
 ```
 
 ### Step 5: Update Tooltip to Use baseName
@@ -129,7 +130,9 @@ this.#resetNameTracking();  // Reset name tracking for next visualization
 Update the tooltip display (line 576) to prefer `baseName` if available:
 
 ```javascript
-<div class="tooltip-header">${DomUtils.escapeHtml(node.baseName || node.name)}</div>
+<div class="tooltip-header">
+  ${DomUtils.escapeHtml(node.baseName || node.name)}
+</div>
 ```
 
 ---
@@ -137,30 +140,38 @@ Update the tooltip display (line 576) to prefer `baseName` if available:
 ## Alternative Approaches
 
 ### Option A: Index Suffix (Recommended)
+
 ```
 finger [1], finger [2], finger [3]
 ```
+
 - Pros: Clear, consistent, minimal visual noise
 - Cons: Numbers may not be meaningful
 
 ### Option B: Parent Context
+
 ```
 left_hand/finger, right_hand/finger
 ```
+
 - Pros: Provides structural context
 - Cons: Can get long with deep hierarchies
 
 ### Option C: Entity ID Suffix
+
 ```
 finger (entity-abc123)
 ```
+
 - Pros: Guaranteed unique
 - Cons: Technical/ugly, takes up space
 
 ### Option D: Hybrid
+
 ```
 finger [left_hand], finger [right_hand]
 ```
+
 - Pros: Meaningful context
 - Cons: Requires parent name lookup
 
@@ -177,28 +188,38 @@ Create/update tests in `tests/unit/domUI/anatomy-renderer/VisualizationComposer.
 **Note**: Tests use `buildGraphData(bodyData)` method with mock entity manager, not a non-existent `buildNodes()` method.
 
 1. **Test: Should append index to duplicate names**
+
 ```javascript
 it('should append index to nodes with duplicate names', async () => {
   // Setup mock entities with same name
   mockEntityManager.getEntityInstance.mockImplementation((id) => {
     const entities = {
       'root-id': createMockEntity('root-id', { 'core:name': { text: 'root' } }),
-      'finger-1': createMockEntity('finger-1', { 'core:name': { text: 'finger' }, 'anatomy:joint': { parentId: 'root-id', socketId: 'socket1' } }),
-      'finger-2': createMockEntity('finger-2', { 'core:name': { text: 'finger' }, 'anatomy:joint': { parentId: 'root-id', socketId: 'socket2' } }),
-      'finger-3': createMockEntity('finger-3', { 'core:name': { text: 'finger' }, 'anatomy:joint': { parentId: 'root-id', socketId: 'socket3' } }),
+      'finger-1': createMockEntity('finger-1', {
+        'core:name': { text: 'finger' },
+        'anatomy:joint': { parentId: 'root-id', socketId: 'socket1' },
+      }),
+      'finger-2': createMockEntity('finger-2', {
+        'core:name': { text: 'finger' },
+        'anatomy:joint': { parentId: 'root-id', socketId: 'socket2' },
+      }),
+      'finger-3': createMockEntity('finger-3', {
+        'core:name': { text: 'finger' },
+        'anatomy:joint': { parentId: 'root-id', socketId: 'socket3' },
+      }),
     };
     return Promise.resolve(entities[id]);
   });
 
   const bodyData = {
     root: 'root-id',
-    parts: { finger1: 'finger-1', finger2: 'finger-2', finger3: 'finger-3' }
+    parts: { finger1: 'finger-1', finger2: 'finger-2', finger3: 'finger-3' },
   };
 
   await composer.buildGraphData(bodyData);
 
   const nodes = Array.from(composer.getNodes().values());
-  const fingerNodes = nodes.filter(n => n.baseName === 'finger');
+  const fingerNodes = nodes.filter((n) => n.baseName === 'finger');
 
   expect(fingerNodes[0].name).toBe('finger');
   expect(fingerNodes[1].name).toBe('finger [2]');
@@ -207,21 +228,30 @@ it('should append index to nodes with duplicate names', async () => {
 ```
 
 2. **Test: Should not add index to unique names**
+
 ```javascript
 it('should not add index when names are unique', async () => {
   // Setup mock entities with unique names
   mockEntityManager.getEntityInstance.mockImplementation((id) => {
     const entities = {
-      'root-id': createMockEntity('root-id', { 'core:name': { text: 'torso' } }),
-      'head-id': createMockEntity('head-id', { 'core:name': { text: 'head' }, 'anatomy:joint': { parentId: 'root-id', socketId: 'head-socket' } }),
-      'arm-id': createMockEntity('arm-id', { 'core:name': { text: 'left_arm' }, 'anatomy:joint': { parentId: 'root-id', socketId: 'arm-socket' } }),
+      'root-id': createMockEntity('root-id', {
+        'core:name': { text: 'torso' },
+      }),
+      'head-id': createMockEntity('head-id', {
+        'core:name': { text: 'head' },
+        'anatomy:joint': { parentId: 'root-id', socketId: 'head-socket' },
+      }),
+      'arm-id': createMockEntity('arm-id', {
+        'core:name': { text: 'left_arm' },
+        'anatomy:joint': { parentId: 'root-id', socketId: 'arm-socket' },
+      }),
     };
     return Promise.resolve(entities[id]);
   });
 
   const bodyData = {
     root: 'root-id',
-    parts: { head: 'head-id', arm: 'arm-id' }
+    parts: { head: 'head-id', arm: 'arm-id' },
   };
 
   await composer.buildGraphData(bodyData);
@@ -234,6 +264,7 @@ it('should not add index when names are unique', async () => {
 ```
 
 3. **Test: Should reset name tracking between visualizations**
+
 ```javascript
 it('should reset name tracking for new visualization', async () => {
   // First visualization with "finger" entities
@@ -248,6 +279,7 @@ it('should reset name tracking for new visualization', async () => {
 ```
 
 4. **Test: Should preserve base name for details/tooltips**
+
 ```javascript
 it('should preserve base name in node metadata', async () => {
   // Setup two entities with same name
@@ -319,10 +351,12 @@ During implementation, several incorrect assumptions in the original ticket were
 ### Implementation Summary
 
 **Files Modified**:
+
 - `src/domUI/anatomy-renderer/VisualizationComposer.js` - Added name collision handling infrastructure
 - `tests/unit/domUI/anatomy-renderer/VisualizationComposer.test.js` - Added 5 new test cases
 
 **Changes Made**:
+
 1. Added `#nameUsageCount` private Map field for tracking name occurrences
 2. Added `#resetNameTracking()` private method to clear tracking state
 3. Added `#getUniqueDisplayName(baseName)` private method with index suffix logic
@@ -333,13 +367,13 @@ During implementation, several incorrect assumptions in the original ticket were
 
 ### New Tests Added
 
-| Test | Rationale |
-|------|-----------|
-| `should append index to nodes with duplicate names` | Core requirement - validates `[2]`, `[3]` suffix logic |
-| `should not add index when names are unique` | No regression - first occurrence stays clean |
-| `should reset name tracking between visualizations via clear()` | Prevents index carryover across renders |
-| `should preserve baseName in node metadata for tooltips` | Enables tooltips to show original name |
-| `should handle name collisions in unconnected parts` | Covers second node creation location |
+| Test                                                            | Rationale                                              |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| `should append index to nodes with duplicate names`             | Core requirement - validates `[2]`, `[3]` suffix logic |
+| `should not add index when names are unique`                    | No regression - first occurrence stays clean           |
+| `should reset name tracking between visualizations via clear()` | Prevents index carryover across renders                |
+| `should preserve baseName in node metadata for tooltips`        | Enables tooltips to show original name                 |
+| `should handle name collisions in unconnected parts`            | Covers second node creation location                   |
 
 ### Test Results
 

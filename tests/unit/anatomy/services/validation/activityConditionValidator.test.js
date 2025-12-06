@@ -60,9 +60,9 @@ describe('ActivityConditionValidator', () => {
 
     it('should return true when rule has no property field', () => {
       const activity = { sourceData: { type: 'walk' } };
-      expect(validator.matchesPropertyCondition(activity, { equals: 'walk' })).toBe(
-        true
-      );
+      expect(
+        validator.matchesPropertyCondition(activity, { equals: 'walk' })
+      ).toBe(true);
     });
 
     it('should return true when property matches rule equals value', () => {
@@ -98,9 +98,7 @@ describe('ActivityConditionValidator', () => {
 
   describe('hasRequiredComponents', () => {
     it('should return false when entity is null', () => {
-      expect(validator.hasRequiredComponents(null, ['core:actor'])).toBe(
-        false
-      );
+      expect(validator.hasRequiredComponents(null, ['core:actor'])).toBe(false);
     });
 
     it('should return false when entity is undefined', () => {
@@ -198,9 +196,7 @@ describe('ActivityConditionValidator', () => {
 
   describe('hasForbiddenComponents', () => {
     it('should return false when entity is null', () => {
-      expect(validator.hasForbiddenComponents(null, ['core:dead'])).toBe(
-        false
-      );
+      expect(validator.hasForbiddenComponents(null, ['core:dead'])).toBe(false);
     });
 
     it('should return false when entity is undefined', () => {

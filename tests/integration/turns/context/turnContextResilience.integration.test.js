@@ -133,8 +133,8 @@ function createTurnContext(overrides = {}) {
  * @param substring
  */
 function consoleCallIncludes(spy, substring) {
-  return spy.mock.calls.some(([message]) =>
-    typeof message === 'string' && message.includes(substring)
+  return spy.mock.calls.some(
+    ([message]) => typeof message === 'string' && message.includes(substring)
   );
 }
 

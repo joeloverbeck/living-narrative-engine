@@ -1,7 +1,14 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import {
   ResourceMonitor,
-  ResourceExhaustionError
+  ResourceExhaustionError,
 } from '../../../src/validation/resourceMonitor.js';
 import { createMockLogger } from '../../common/mockFactories/index.js';
 
@@ -29,9 +36,9 @@ function createMonitor(config = {}, logger = createMockLogger()) {
       memoryCheckInterval: 50,
       memoryWarningThreshold: 0.7,
       memoryCriticalThreshold: 0.9,
-      ...config
+      ...config,
     },
-    logger
+    logger,
   });
 
   return { monitor, logger, memoryUsageMock };
@@ -70,7 +77,7 @@ describe('ResourceMonitor', () => {
       {
         maxMemoryUsage: 1000,
         memoryWarningThreshold: 0.75,
-        memoryCriticalThreshold: 0.9
+        memoryCriticalThreshold: 0.9,
       },
       logger
     );
@@ -96,7 +103,7 @@ describe('ResourceMonitor', () => {
       'High memory usage detected',
       expect.objectContaining({
         current: expect.stringContaining('800'),
-        limit: expect.any(String)
+        limit: expect.any(String),
       })
     );
 
@@ -105,7 +112,7 @@ describe('ResourceMonitor', () => {
       'Critical memory usage detected',
       expect.objectContaining({
         current: expect.stringContaining('950'),
-        limit: expect.any(String)
+        limit: expect.any(String),
       })
     );
     expect(gcMock).toHaveBeenCalled();
@@ -117,7 +124,7 @@ describe('ResourceMonitor', () => {
         startMemory: 100,
         peakMemory: 950,
         finalMemory: 420,
-        memoryGrowth: 320
+        memoryGrowth: 320,
       })
     );
 
@@ -142,7 +149,9 @@ describe('ResourceMonitor', () => {
     memoryUsageMock.mockReturnValue({ heapUsed: 512 });
 
     monitor.startMonitoring();
-    expect(() => monitor.checkResourceLimits()).toThrow(ResourceExhaustionError);
+    expect(() => monitor.checkResourceLimits()).toThrow(
+      ResourceExhaustionError
+    );
 
     monitor.stopMonitoring();
   });
@@ -167,12 +176,14 @@ describe('ResourceMonitor', () => {
 
     monitor.createOperationGuard('slow-op');
 
-    expect(() => jest.advanceTimersByTime(110)).toThrow(ResourceExhaustionError);
+    expect(() => jest.advanceTimersByTime(110)).toThrow(
+      ResourceExhaustionError
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Operation timeout: slow-op',
       expect.objectContaining({
         duration: expect.any(Number),
-        maxDuration: 100
+        maxDuration: 100,
       })
     );
     expect(monitor.getResourceStats().operations.current).toBe(0);
@@ -268,7 +279,7 @@ describe('ResourceMonitor', () => {
       expect.objectContaining({
         startMemory: expect.any(Number),
         peakMemory: expect.any(Number),
-        finalMemory: expect.any(Number)
+        finalMemory: expect.any(Number),
       })
     );
   });
@@ -309,17 +320,17 @@ describe('ResourceMonitor', () => {
     }
     globalThis.performance = {
       memory: {
-        usedJSHeapSize: 987654
-      }
+        usedJSHeapSize: 987654,
+      },
     };
 
     const monitor = new ResourceMonitor({
       config: {
         maxMemoryUsage: 1024 * 1024,
         maxProcessingTime: 1000,
-        maxConcurrentOperations: 5
+        maxConcurrentOperations: 5,
       },
-      logger
+      logger,
     });
 
     const stats = monitor.getResourceStats();
@@ -365,7 +376,7 @@ describe('ResourceMonitor', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         'Operation completed: timerless',
         expect.objectContaining({
-          remainingOperations: 0
+          remainingOperations: 0,
         })
       );
 
@@ -373,7 +384,7 @@ describe('ResourceMonitor', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         'Resource monitoring stopped',
         expect.objectContaining({
-          finalMemory: expect.any(Number)
+          finalMemory: expect.any(Number),
         })
       );
     } finally {
@@ -385,7 +396,11 @@ describe('ResourceMonitor', () => {
   it('logs critical memory without forcing GC when the hook is unavailable', () => {
     const logger = createMockLogger();
     const { monitor, memoryUsageMock } = createMonitor(
-      { maxMemoryUsage: 1000, memoryCriticalThreshold: 0.8, memoryCheckInterval: 25 },
+      {
+        maxMemoryUsage: 1000,
+        memoryCriticalThreshold: 0.8,
+        memoryCheckInterval: 25,
+      },
       logger
     );
 
@@ -402,7 +417,7 @@ describe('ResourceMonitor', () => {
       'Critical memory usage detected',
       expect.objectContaining({
         current: expect.stringContaining('900'),
-        limit: expect.stringContaining('1000')
+        limit: expect.stringContaining('1000'),
       })
     );
     expect(logger.info).not.toHaveBeenCalledWith(

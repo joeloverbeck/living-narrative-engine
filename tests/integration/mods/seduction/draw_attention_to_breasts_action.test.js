@@ -46,7 +46,12 @@ describe('Seduction Mod: Draw Attention to Breasts Action', () => {
     it('should require actor to not be hugging anyone', () => {
       validateComponentRequirements(drawAttentionToBreastsAction, {
         required: {},
-        forbidden: { actor: ['positioning:hugging', 'positioning:doing_complex_performance'] },
+        forbidden: {
+          actor: [
+            'positioning:hugging',
+            'positioning:doing_complex_performance',
+          ],
+        },
       });
     });
 
@@ -164,9 +169,12 @@ describe('Seduction Mod: Draw Attention to Breasts hugging restrictions', () => 
   });
 
   it('rejects the action when the actor is currently hugging someone', async () => {
-    const scenario = testFixture.createStandardActorTarget(['Brielle', 'Harper'], {
-      includeRoom: false,
-    });
+    const scenario = testFixture.createStandardActorTarget(
+      ['Brielle', 'Harper'],
+      {
+        includeRoom: false,
+      }
+    );
 
     scenario.actor.components['positioning:hugging'] = {
       embraced_entity_id: scenario.target.id,

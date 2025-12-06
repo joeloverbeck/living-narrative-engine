@@ -5,7 +5,14 @@
  * positive recursion errors during regular game operations.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 
 const createLogger = () => ({
@@ -53,7 +60,9 @@ describe('EventBus Recursion Management After Batch Mode - Integration', () => {
 
       // Create 3 "characters" with 50 anatomy parts each (150 component adds total)
       for (let charIdx = 0; charIdx < 3; charIdx++) {
-        await bus.dispatch('core:entity_created', { entityId: `character-${charIdx}` });
+        await bus.dispatch('core:entity_created', {
+          entityId: `character-${charIdx}`,
+        });
 
         // Each character triggers 50 component additions for anatomy parts
         for (let partIdx = 0; partIdx < 50; partIdx++) {

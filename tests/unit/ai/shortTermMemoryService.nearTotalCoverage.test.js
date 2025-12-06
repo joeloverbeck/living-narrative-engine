@@ -32,7 +32,9 @@ describe('ShortTermMemoryService near-total coverage scenarios', () => {
 
     it('ignores blank or whitespace-only input', () => {
       const service = new ShortTermMemoryService();
-      const mem = { thoughts: [{ text: 'Existing', timestamp: '2024-01-01T00:00:00.000Z' }] };
+      const mem = {
+        thoughts: [{ text: 'Existing', timestamp: '2024-01-01T00:00:00.000Z' }],
+      };
 
       const result = service.addThought(mem, '   \t  ');
 
@@ -46,7 +48,10 @@ describe('ShortTermMemoryService near-total coverage scenarios', () => {
         thoughts: [
           { text: 12345, timestamp: '2024-01-01T00:00:00.000Z' },
           { text: 'First memory', timestamp: '2024-01-02T00:00:00.000Z' },
-          { text: '   Duplicate Entry   ', timestamp: '2024-01-03T00:00:00.000Z' },
+          {
+            text: '   Duplicate Entry   ',
+            timestamp: '2024-01-03T00:00:00.000Z',
+          },
         ],
       };
 
@@ -95,9 +100,15 @@ describe('ShortTermMemoryService near-total coverage scenarios', () => {
   describe('emitThoughtAdded', () => {
     it('dispatches ThoughtAdded event when dispatcher is available', () => {
       const dispatch = jest.fn();
-      const service = new ShortTermMemoryService({ eventDispatcher: { dispatch } });
+      const service = new ShortTermMemoryService({
+        eventDispatcher: { dispatch },
+      });
 
-      service.emitThoughtAdded('entity-123', 'Remember this', '2024-04-01T10:00:00.000Z');
+      service.emitThoughtAdded(
+        'entity-123',
+        'Remember this',
+        '2024-04-01T10:00:00.000Z'
+      );
 
       expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
         entityId: 'entity-123',

@@ -80,7 +80,9 @@ describe('TurnOrderTickerRenderer DI Registration', () => {
           validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
           domElementFactory: c.resolve(tokens.DomElementFactory),
           entityManager: c.resolve(tokens.IEntityManager),
-          entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
+          entityDisplayDataProvider: c.resolve(
+            tokens.EntityDisplayDataProvider
+          ),
           tickerContainerElement,
         });
       },
@@ -133,9 +135,15 @@ describe('TurnOrderTickerRenderer DI Registration', () => {
         return new TurnOrderTickerRenderer({
           logger: resolvedLogger,
           documentContext: docContext,
-          validatedEventDispatcher: { subscribe: jest.fn(), unsubscribe: jest.fn() },
+          validatedEventDispatcher: {
+            subscribe: jest.fn(),
+            unsubscribe: jest.fn(),
+          },
           domElementFactory: { create: jest.fn() },
-          entityManager: { getEntityInstance: jest.fn(), hasComponent: jest.fn() },
+          entityManager: {
+            getEntityInstance: jest.fn(),
+            hasComponent: jest.fn(),
+          },
           entityDisplayDataProvider: {
             getEntityName: jest.fn(),
             getEntityPortraitPath: jest.fn(),
@@ -157,6 +165,8 @@ describe('TurnOrderTickerRenderer DI Registration', () => {
 
     expect(renderer).toBeDefined();
     expect(typeof renderer.dispose).toBe('function');
-    expect(mockLogger.info).toHaveBeenCalledWith('TurnOrderTickerRenderer initialized');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'TurnOrderTickerRenderer initialized'
+    );
   });
 });

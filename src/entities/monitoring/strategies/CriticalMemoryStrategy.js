@@ -5,7 +5,11 @@
 
 import { BaseService } from '../../../utils/serviceBase.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
-import { triggerGarbageCollection, getMemoryUsageBytes, getMemoryUsagePercent } from '../../../utils/environmentUtils.js';
+import {
+  triggerGarbageCollection,
+  getMemoryUsageBytes,
+  getMemoryUsagePercent,
+} from '../../../utils/environmentUtils.js';
 
 /** @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../interfaces/coreServices.js').IEventBus} IEventBus */
@@ -254,7 +258,7 @@ export default class CriticalMemoryStrategy extends BaseService {
       });
 
       // Give components time to stop
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       this.#logger.warn('Non-critical operations stopped');
 
@@ -289,7 +293,8 @@ export default class CriticalMemoryStrategy extends BaseService {
 
       this.#logger.warn('All caches cleared', {
         entriesRemoved: sizeBefore,
-        estimatedMemoryFreed: (estimatedMemoryFreed / 1048576).toFixed(2) + 'MB',
+        estimatedMemoryFreed:
+          (estimatedMemoryFreed / 1048576).toFixed(2) + 'MB',
       });
 
       // Notify other caches to clear via event
@@ -325,12 +330,11 @@ export default class CriticalMemoryStrategy extends BaseService {
       for (let i = 0; i < 3; i++) {
         if (triggerGarbageCollection()) {
           gcTriggered = true;
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
       }
 
       if (gcTriggered) {
-
         const memAfter = this.#getMemoryUsage();
         const memoryFreed = Math.max(0, memBefore - memAfter);
 
@@ -369,7 +373,7 @@ export default class CriticalMemoryStrategy extends BaseService {
       });
 
       // Give components more time to release resources
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       this.#logger.warn('All resources release requested');
 

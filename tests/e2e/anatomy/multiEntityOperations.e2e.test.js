@@ -3,7 +3,7 @@
  * @description End-to-end tests for multi-entity operations in the anatomy system
  * Tests bulk entity validation, concurrent generation, cross-entity relationships,
  * and mixed success/failure batch processing scenarios
- * 
+ *
  * Priority 4 implementation addressing MEDIUM-HIGH priority gaps in:
  * - Cross-entity constraint validation
  * - Bulk entity operations with validation
@@ -198,12 +198,14 @@ describe('Multi-Entity Operations E2E Tests', () => {
       const entityCount = 5;
       const entities = [];
       const ownerEntityId = UuidGenerator();
-      
+
       // Create owner entity first
       await entityManager.createEntityInstance('test:actor', {
         instanceId: ownerEntityId,
       });
-      entityManager.addComponent(ownerEntityId, 'core:name', { text: 'Owner Entity' });
+      entityManager.addComponent(ownerEntityId, 'core:name', {
+        text: 'Owner Entity',
+      });
 
       // Create multiple actor entities with shared owner
       for (let i = 0; i < entityCount; i++) {
@@ -211,8 +213,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: entityId,
         });
-        entityManager.addComponent(entityId, 'core:name', { text: `Test Actor ${i + 1}` });
-        entityManager.addComponent(entityId, 'core:owned_by', { ownerId: ownerEntityId });
+        entityManager.addComponent(entityId, 'core:name', {
+          text: `Test Actor ${i + 1}`,
+        });
+        entityManager.addComponent(entityId, 'core:owned_by', {
+          ownerId: ownerEntityId,
+        });
         entityManager.addComponent(entityId, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -222,10 +228,11 @@ describe('Multi-Entity Operations E2E Tests', () => {
       // Act - Generate anatomy for all entities
       const startTime = Date.now();
       const generationPromises = entities.map(async ({ id }) => {
-        const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(id);
+        const wasGenerated =
+          await anatomyGenerationService.generateAnatomyIfNeeded(id);
         return { id, wasGenerated };
       });
-      
+
       const results = await Promise.all(generationPromises);
       const elapsedTime = Date.now() - startTime;
 
@@ -248,19 +255,19 @@ describe('Multi-Entity Operations E2E Tests', () => {
       });
 
       // Each should have unique root part IDs
-      const rootPartIds = anatomyBodies.map(body => body?.body?.root);
+      const rootPartIds = anatomyBodies.map((body) => body?.body?.root);
       const uniqueRootPartIds = new Set(rootPartIds);
       expect(uniqueRootPartIds.size).toBe(entityCount);
 
       // Performance validation - should complete within 10 seconds for 5 entities
       expect(elapsedTime).toBeLessThan(10000);
-      
+
       // Validate no orphaned entities were created
       const allEntities = entityManager.getEntitiesWithComponent('core:name');
-      const anatomyPartEntities = allEntities.filter(e => 
+      const anatomyPartEntities = allEntities.filter((e) =>
         e.hasComponent('anatomy:part')
       );
-      
+
       // Each entity should have created anatomy parts
       expect(anatomyPartEntities.length).toBeGreaterThan(entityCount * 2); // At least torso + arms/head per entity
     });
@@ -269,12 +276,14 @@ describe('Multi-Entity Operations E2E Tests', () => {
       // Arrange - Create entities with interdependencies
       const parentEntityId = UuidGenerator();
       const childEntityIds = [];
-      
+
       // Create parent entity
       await entityManager.createEntityInstance('test:actor', {
         instanceId: parentEntityId,
       });
-      entityManager.addComponent(parentEntityId, 'core:name', { text: 'Parent Entity' });
+      entityManager.addComponent(parentEntityId, 'core:name', {
+        text: 'Parent Entity',
+      });
 
       // Create child entities referencing parent
       for (let i = 0; i < 3; i++) {
@@ -282,8 +291,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: childId,
         });
-        entityManager.addComponent(childId, 'core:name', { text: `Child Entity ${i + 1}` });
-        entityManager.addComponent(childId, 'core:owned_by', { ownerId: parentEntityId });
+        entityManager.addComponent(childId, 'core:name', {
+          text: `Child Entity ${i + 1}`,
+        });
+        entityManager.addComponent(childId, 'core:owned_by', {
+          ownerId: parentEntityId,
+        });
         entityManager.addComponent(childId, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -297,20 +310,23 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Act - Generate anatomy for all entities including parent
       const allEntityIds = [parentEntityId, ...childEntityIds];
-      const generationPromises = allEntityIds.map(id =>
+      const generationPromises = allEntityIds.map((id) =>
         anatomyGenerationService.generateAnatomyIfNeeded(id)
       );
-      
+
       await Promise.all(generationPromises);
 
       // Assert - Verify referential integrity maintained
-      childEntityIds.forEach(childId => {
+      childEntityIds.forEach((childId) => {
         const childEntity = entityManager.getEntityInstance(childId);
         expect(childEntity).toBeDefined();
-        
-        const ownedBy = entityManager.getComponentData(childId, 'core:owned_by');
+
+        const ownedBy = entityManager.getComponentData(
+          childId,
+          'core:owned_by'
+        );
         expect(ownedBy?.ownerId).toBe(parentEntityId);
-        
+
         // Verify parent still exists
         const parentEntity = entityManager.getEntityInstance(parentEntityId);
         expect(parentEntity).toBeDefined();
@@ -318,13 +334,17 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Verify anatomy generation didn't break ownership relationships
       const parentEntity = entityManager.getEntityInstance(parentEntityId);
-      expect(entityManager.hasComponent(parentEntityId, 'anatomy:body')).toBe(true);
-      
-      childEntityIds.forEach(childId => {
+      expect(entityManager.hasComponent(parentEntityId, 'anatomy:body')).toBe(
+        true
+      );
+
+      childEntityIds.forEach((childId) => {
         const childEntity = entityManager.getEntityInstance(childId);
         expect(entityManager.hasComponent(childId, 'anatomy:body')).toBe(true);
         // Ownership should still be intact
-        expect(entityManager.getComponentData(childId, 'core:owned_by')?.ownerId).toBe(parentEntityId);
+        expect(
+          entityManager.getComponentData(childId, 'core:owned_by')?.ownerId
+        ).toBe(parentEntityId);
       });
     });
 
@@ -336,7 +356,9 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: entityId,
         });
-        entityManager.addComponent(entityId, 'core:name', { text: `Entity ${i + 1}` });
+        entityManager.addComponent(entityId, 'core:name', {
+          text: `Entity ${i + 1}`,
+        });
         entityManager.addComponent(entityId, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -345,7 +367,7 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Generate anatomy for all entities
       await Promise.all(
-        entityIds.map(id =>
+        entityIds.map((id) =>
           anatomyGenerationService.generateAnatomyIfNeeded(
             id,
             'test:simple_humanoid_recipe'
@@ -355,17 +377,21 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Act - Remove one parent entity to create orphans
       const entityToRemove = entityIds[0];
-      const entityBody = entityManager.getEntityInstance(entityToRemove).getComponentData('anatomy:body');
+      const entityBody = entityManager
+        .getEntityInstance(entityToRemove)
+        .getComponentData('anatomy:body');
       const rootPartId = entityBody?.body?.root;
-      
+
       // Remove the main entity (this should orphan its anatomy parts)
       entityManager.removeEntityInstance(entityToRemove);
 
       // Assert - Verify orphaned parts can be detected
-      const remainingEntities = entityManager.getEntitiesWithComponent('core:name');
-      const orphanedParts = remainingEntities.filter(entity => {
-        if (!entityManager.hasComponent(entity.id, 'anatomy:part')) return false;
-        
+      const remainingEntities =
+        entityManager.getEntitiesWithComponent('core:name');
+      const orphanedParts = remainingEntities.filter((entity) => {
+        if (!entityManager.hasComponent(entity.id, 'anatomy:part'))
+          return false;
+
         // Check if part belongs to deleted entity
         const ownedBy = entity.getComponentData('core:owned_by');
         return ownedBy?.ownerId === entityToRemove;
@@ -375,10 +401,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
       expect(orphanedParts.length).toBeGreaterThan(0);
 
       // Other entities should remain intact
-      entityIds.slice(1).forEach(id => {
+      entityIds.slice(1).forEach((id) => {
         const entity = entityManager.getEntityInstance(id);
         expect(entity).toBeDefined();
-        expect(entityManager.hasComponent(entity.id, 'anatomy:body')).toBe(true);
+        expect(entityManager.hasComponent(entity.id, 'anatomy:body')).toBe(
+          true
+        );
       });
     });
   });
@@ -388,13 +416,15 @@ describe('Multi-Entity Operations E2E Tests', () => {
       // Arrange - Prepare multiple entities for concurrent generation
       const concurrentCount = 5;
       const entityIds = [];
-      
+
       for (let i = 0; i < concurrentCount; i++) {
         const entityId = UuidGenerator();
         await entityManager.createEntityInstance('test:actor', {
           instanceId: entityId,
         });
-        entityManager.addComponent(entityId, 'core:name', { text: `Concurrent Entity ${i + 1}` });
+        entityManager.addComponent(entityId, 'core:name', {
+          text: `Concurrent Entity ${i + 1}`,
+        });
         entityManager.addComponent(entityId, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -403,33 +433,34 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Act - Start multiple anatomy generations simultaneously
       const startTime = Date.now();
-      const concurrentGenerations = entityIds.map(async id => {
-        const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(id);
+      const concurrentGenerations = entityIds.map(async (id) => {
+        const wasGenerated =
+          await anatomyGenerationService.generateAnatomyIfNeeded(id);
         const body = entityManager.getComponentData(id, 'anatomy:body');
-        return { 
-          success: wasGenerated, 
+        return {
+          success: wasGenerated,
           rootPartId: body?.body?.root,
-          entityId: id
+          entityId: id,
         };
       });
-      
+
       const results = await Promise.all(concurrentGenerations);
       const elapsedTime = Date.now() - startTime;
 
       // Assert - Validate no race conditions in entity creation
       expect(results).toHaveLength(concurrentCount);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.success).toBe(true);
         expect(result.rootPartId).toBeDefined();
       });
 
       // Verify all entities have unique IDs (no ID collision)
       const allEntities = entityManager.getEntitiesWithComponent('core:name');
-      const entityIdSet = new Set(allEntities.map(e => e.id));
+      const entityIdSet = new Set(allEntities.map((e) => e.id));
       expect(entityIdSet.size).toBe(allEntities.length);
 
       // Verify each generated anatomy has parts (not necessarily unique IDs across entities)
-      entityIds.forEach(entityId => {
+      entityIds.forEach((entityId) => {
         const body = entityManager.getComponentData(entityId, 'anatomy:body');
         if (body?.body?.parts) {
           const partCount = Object.keys(body.body.parts).length;
@@ -441,13 +472,17 @@ describe('Multi-Entity Operations E2E Tests', () => {
       for (const entityId of entityIds) {
         const body = entityManager.getComponentData(entityId, 'anatomy:body');
         const rootId = body?.body?.root;
-        
+
         if (rootId) {
           // Cache may or may not be built automatically - it's an implementation detail
           // What matters is the anatomy was generated correctly
-          const anatomyParts = entityManager.getEntitiesWithComponent('anatomy:part')
-            .filter(e => {
-              const ownedBy = entityManager.getComponentData(e.id, 'core:owned_by');
+          const anatomyParts = entityManager
+            .getEntitiesWithComponent('anatomy:part')
+            .filter((e) => {
+              const ownedBy = entityManager.getComponentData(
+                e.id,
+                'core:owned_by'
+              );
               return ownedBy?.ownerId === entityId;
             });
           expect(anatomyParts.length).toBeGreaterThan(0);
@@ -455,14 +490,14 @@ describe('Multi-Entity Operations E2E Tests', () => {
       }
 
       // Verify transaction isolation - each generation should be independent
-      const anatomyBodies = entityIds.map(id => {
+      const anatomyBodies = entityIds.map((id) => {
         const entity = entityManager.getEntityInstance(id);
         return entity.getComponentData('anatomy:body');
       });
-      
+
       // Each should have its own anatomy structure
       expect(anatomyBodies).toHaveLength(concurrentCount);
-      anatomyBodies.forEach(body => {
+      anatomyBodies.forEach((body) => {
         expect(body).toBeDefined();
         expect(body.body).toBeDefined();
         expect(body.body.root).toBeDefined();
@@ -482,7 +517,9 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: id,
         });
-        entityManager.addComponent(id, 'core:name', { text: `Cache Test Entity ${i}` });
+        entityManager.addComponent(id, 'core:name', {
+          text: `Cache Test Entity ${i}`,
+        });
         entityManager.addComponent(id, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -491,8 +528,9 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Act - Generate anatomies concurrently and build caches
       await Promise.all(
-        entityIds.map(async id => {
-          const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(id);
+        entityIds.map(async (id) => {
+          const wasGenerated =
+            await anatomyGenerationService.generateAnatomyIfNeeded(id);
           // Build cache after generation
           if (wasGenerated) {
             const body = entityManager.getComponentData(id, 'anatomy:body');
@@ -510,11 +548,11 @@ describe('Multi-Entity Operations E2E Tests', () => {
       for (const entityId of entityIds) {
         const body = entityManager.getComponentData(entityId, 'anatomy:body');
         const rootId = body?.body?.root;
-        
+
         if (rootId) {
           // Check if cache exists
           const hasCache = bodyGraphService.hasCache(rootId);
-          
+
           cacheStates.push({
             entityId,
             rootId,
@@ -526,13 +564,13 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // All entities should have been processed (cache is implementation detail)
       expect(cacheStates.length).toBe(4);
-      cacheStates.forEach(state => {
+      cacheStates.forEach((state) => {
         expect(state.rootId).toBeDefined();
         // Cache building is optional - what matters is anatomy structure exists
       });
 
       // Verify no cache corruption between entities
-      const rootIds = cacheStates.map(s => s.rootId);
+      const rootIds = cacheStates.map((s) => s.rootId);
       const uniqueRootIds = new Set(rootIds);
       expect(uniqueRootIds.size).toBe(entityIds.length);
     });
@@ -541,13 +579,15 @@ describe('Multi-Entity Operations E2E Tests', () => {
       // Arrange - Create many entities to stress the system
       const stressCount = 10;
       const entityIds = [];
-      
+
       for (let i = 0; i < stressCount; i++) {
         const id = UuidGenerator();
         await entityManager.createEntityInstance('test:actor', {
           instanceId: id,
         });
-        entityManager.addComponent(id, 'core:name', { text: `Stress Entity ${i}` });
+        entityManager.addComponent(id, 'core:name', {
+          text: `Stress Entity ${i}`,
+        });
         entityManager.addComponent(id, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -557,9 +597,10 @@ describe('Multi-Entity Operations E2E Tests', () => {
       // Act - Generate all anatomies at once to create resource contention
       const startTime = Date.now();
       const results = await Promise.all(
-        entityIds.map(async id => {
+        entityIds.map(async (id) => {
           try {
-            const wasGenerated = await anatomyGenerationService.generateAnatomyIfNeeded(id);
+            const wasGenerated =
+              await anatomyGenerationService.generateAnatomyIfNeeded(id);
             return { success: wasGenerated, entityId: id };
           } catch (error) {
             return { success: false, error: error.message, entityId: id };
@@ -569,17 +610,17 @@ describe('Multi-Entity Operations E2E Tests', () => {
       const elapsedTime = Date.now() - startTime;
 
       // Assert - System should handle the load
-      const successCount = results.filter(r => r.success).length;
-      const failureCount = results.filter(r => !r.success).length;
-      
+      const successCount = results.filter((r) => r.success).length;
+      const failureCount = results.filter((r) => !r.success).length;
+
       // At least some should succeed even under stress
       expect(successCount + failureCount).toBe(stressCount); // All requests handled
       expect(successCount).toBeGreaterThanOrEqual(0); // May all fail under stress
-      
+
       // If there were failures, they should be graceful
       if (failureCount > 0) {
-        const failures = results.filter(r => !r.success);
-        failures.forEach(failure => {
+        const failures = results.filter((r) => !r.success);
+        failures.forEach((failure) => {
           expect(failure.error).toBeDefined();
           // Error should be meaningful, not a crash
           expect(typeof failure.error).toBe('string');
@@ -588,11 +629,14 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Performance check - should still complete in reasonable time
       expect(elapsedTime).toBeLessThan(20000); // 20 seconds for 10 entities
-      
+
       // Verify successful entities are properly formed
-      const successfulResults = results.filter(r => r.success);
-      successfulResults.forEach(result => {
-        const body = entityManager.getComponentData(result.entityId, 'anatomy:body');
+      const successfulResults = results.filter((r) => r.success);
+      successfulResults.forEach((result) => {
+        const body = entityManager.getComponentData(
+          result.entityId,
+          'anatomy:body'
+        );
         if (result.success) {
           expect(body?.body?.root).toBeDefined();
         }
@@ -611,7 +655,9 @@ describe('Multi-Entity Operations E2E Tests', () => {
       await entityManager.createEntityInstance('test:actor', {
         instanceId: grandparentId,
       });
-      entityManager.addComponent(grandparentId, 'core:name', { text: 'Grandparent' });
+      entityManager.addComponent(grandparentId, 'core:name', {
+        text: 'Grandparent',
+      });
       entityManager.addComponent(grandparentId, ANATOMY_BODY_COMPONENT_ID, {
         recipeId: 'test:simple_humanoid_recipe',
       });
@@ -622,8 +668,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: parentId,
         });
-        entityManager.addComponent(parentId, 'core:name', { text: `Parent ${i + 1}` });
-        entityManager.addComponent(parentId, 'core:owned_by', { ownerId: grandparentId });
+        entityManager.addComponent(parentId, 'core:name', {
+          text: `Parent ${i + 1}`,
+        });
+        entityManager.addComponent(parentId, 'core:owned_by', {
+          ownerId: grandparentId,
+        });
         entityManager.addComponent(parentId, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -635,8 +685,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
           await entityManager.createEntityInstance('test:actor', {
             instanceId: childId,
           });
-          entityManager.addComponent(childId, 'core:name', { text: `Child ${i + 1}-${j + 1}` });
-          entityManager.addComponent(childId, 'core:owned_by', { ownerId: parentId });
+          entityManager.addComponent(childId, 'core:name', {
+            text: `Child ${i + 1}-${j + 1}`,
+          });
+          entityManager.addComponent(childId, 'core:owned_by', {
+            ownerId: parentId,
+          });
           entityManager.addComponent(childId, ANATOMY_BODY_COMPONENT_ID, {
             recipeId: 'test:simple_humanoid_recipe',
           });
@@ -645,9 +699,13 @@ describe('Multi-Entity Operations E2E Tests', () => {
       }
 
       // Act - Generate anatomy for all entities
-      const allIds = [grandparentId, ...parentIds, ...childIds.map(c => c.id)];
+      const allIds = [
+        grandparentId,
+        ...parentIds,
+        ...childIds.map((c) => c.id),
+      ];
       await Promise.all(
-        allIds.map(id =>
+        allIds.map((id) =>
           anatomyGenerationService.generateAnatomyIfNeeded(
             id,
             'test:simple_humanoid_recipe'
@@ -662,10 +720,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
       expect(grandparent.hasComponent('anatomy:body')).toBe(true);
 
       // Check parents maintain relationship to grandparent
-      parentIds.forEach(parentId => {
+      parentIds.forEach((parentId) => {
         const parent = entityManager.getEntityInstance(parentId);
         expect(parent).toBeDefined();
-        expect(parent.getComponentData('core:owned_by')?.ownerId).toBe(grandparentId);
+        expect(parent.getComponentData('core:owned_by')?.ownerId).toBe(
+          grandparentId
+        );
         expect(parent.hasComponent('anatomy:body')).toBe(true);
       });
 
@@ -686,7 +746,9 @@ describe('Multi-Entity Operations E2E Tests', () => {
       await entityManager.createEntityInstance('test:actor', {
         instanceId: parentId,
       });
-      entityManager.addComponent(parentId, 'core:name', { text: 'Parent to Delete' });
+      entityManager.addComponent(parentId, 'core:name', {
+        text: 'Parent to Delete',
+      });
       entityManager.addComponent(parentId, ANATOMY_BODY_COMPONENT_ID, {
         recipeId: 'test:simple_humanoid_recipe',
       });
@@ -696,8 +758,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: childId,
         });
-        entityManager.addComponent(childId, 'core:name', { text: `Child ${i + 1}` });
-        entityManager.addComponent(childId, 'core:owned_by', { ownerId: parentId });
+        entityManager.addComponent(childId, 'core:name', {
+          text: `Child ${i + 1}`,
+        });
+        entityManager.addComponent(childId, 'core:owned_by', {
+          ownerId: parentId,
+        });
         entityManager.addComponent(childId, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -706,7 +772,7 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Generate anatomy for all
       await Promise.all(
-        [parentId, ...childIds].map(id =>
+        [parentId, ...childIds].map((id) =>
           anatomyGenerationService.generateAnatomyIfNeeded(
             id,
             'test:simple_humanoid_recipe'
@@ -715,9 +781,11 @@ describe('Multi-Entity Operations E2E Tests', () => {
       );
 
       // Act - Delete parent entity
-      const parentBody = entityManager.getEntityInstance(parentId).getComponentData('anatomy:body');
+      const parentBody = entityManager
+        .getEntityInstance(parentId)
+        .getComponentData('anatomy:body');
       const parentRootPartId = parentBody?.body?.root;
-      
+
       entityManager.removeEntityInstance(parentId);
 
       // Assert - Verify cascading effects
@@ -725,7 +793,7 @@ describe('Multi-Entity Operations E2E Tests', () => {
       expect(entityManager.getEntityInstance(parentId)).toBeUndefined();
 
       // Children should still exist but be orphaned
-      childIds.forEach(childId => {
+      childIds.forEach((childId) => {
         const child = entityManager.getEntityInstance(childId);
         expect(child).toBeDefined();
         // Still has anatomy
@@ -736,9 +804,12 @@ describe('Multi-Entity Operations E2E Tests', () => {
 
       // Parent's anatomy parts should be orphaned or deleted
       const allEntities = entityManager.getEntitiesWithComponent('core:name');
-      const orphanedParentParts = allEntities.filter(entity => {
+      const orphanedParentParts = allEntities.filter((entity) => {
         const ownedBy = entity.getComponentData('core:owned_by');
-        return ownedBy?.ownerId === parentId && entityManager.hasComponent(entity.id, 'anatomy:part');
+        return (
+          ownedBy?.ownerId === parentId &&
+          entityManager.hasComponent(entity.id, 'anatomy:part')
+        );
       });
 
       // These parts are now orphaned
@@ -758,7 +829,9 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: id,
         });
-        entityManager.addComponent(id, 'core:name', { text: `Valid Entity ${i + 1}` });
+        entityManager.addComponent(id, 'core:name', {
+          text: `Valid Entity ${i + 1}`,
+        });
         entityManager.addComponent(id, ANATOMY_BODY_COMPONENT_ID, {
           recipeId: 'test:simple_humanoid_recipe',
         });
@@ -771,60 +844,80 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: id,
         });
-        entityManager.addComponent(id, 'core:name', { text: `Invalid Entity ${i + 1}` });
+        entityManager.addComponent(id, 'core:name', {
+          text: `Invalid Entity ${i + 1}`,
+        });
         entityManager.addComponent(id, ANATOMY_BODY_COMPONENT_ID, {
-          recipeId: 'test:nonexistent_recipe',  // This recipe doesn't exist
+          recipeId: 'test:nonexistent_recipe', // This recipe doesn't exist
         });
         invalidEntityIds.push(id);
       }
 
       // Act - Process batch with mixed recipes
       const batchPromises = [
-        ...validEntityIds.map(id =>
-          anatomyGenerationService.generateAnatomyIfNeeded(id)
-            .then(wasGenerated => ({ success: wasGenerated, entityId: id }))
-            .catch(error => ({ success: false, entityId: id, error: error.message }))
+        ...validEntityIds.map((id) =>
+          anatomyGenerationService
+            .generateAnatomyIfNeeded(id)
+            .then((wasGenerated) => ({ success: wasGenerated, entityId: id }))
+            .catch((error) => ({
+              success: false,
+              entityId: id,
+              error: error.message,
+            }))
         ),
-        ...invalidEntityIds.map(id =>
-          anatomyGenerationService.generateAnatomyIfNeeded(id)
-            .then(wasGenerated => ({ success: wasGenerated, entityId: id }))
-            .catch(error => ({ success: false, entityId: id, error: error.message }))
+        ...invalidEntityIds.map((id) =>
+          anatomyGenerationService
+            .generateAnatomyIfNeeded(id)
+            .then((wasGenerated) => ({ success: wasGenerated, entityId: id }))
+            .catch((error) => ({
+              success: false,
+              entityId: id,
+              error: error.message,
+            }))
         ),
       ];
 
       const results = await Promise.all(batchPromises);
 
       // Assert - Verify partial success
-      const successResults = results.filter(r => r.success);
-      const failureResults = results.filter(r => !r.success);
+      const successResults = results.filter((r) => r.success);
+      const failureResults = results.filter((r) => !r.success);
 
       // Valid entities should succeed
       expect(successResults.length).toBe(validEntityIds.length);
-      successResults.forEach(result => {
-        const body = entityManager.getComponentData(result.entityId, 'anatomy:body');
+      successResults.forEach((result) => {
+        const body = entityManager.getComponentData(
+          result.entityId,
+          'anatomy:body'
+        );
         expect(body?.body?.root).toBeDefined();
       });
 
       // Invalid entities should fail gracefully
       expect(failureResults.length).toBe(invalidEntityIds.length);
-      failureResults.forEach(result => {
+      failureResults.forEach((result) => {
         expect(result.error).toBeDefined();
         expect(result.entityId).toBeDefined();
       });
 
       // Verify successful entities are properly created
-      validEntityIds.forEach(id => {
+      validEntityIds.forEach((id) => {
         const entity = entityManager.getEntityInstance(id);
         expect(entity).toBeDefined();
-        expect(entityManager.hasComponent(entity.id, 'anatomy:body')).toBe(true);
+        expect(entityManager.hasComponent(entity.id, 'anatomy:body')).toBe(
+          true
+        );
       });
 
       // Verify failed entities didn't corrupt successful ones
-      invalidEntityIds.forEach(id => {
+      invalidEntityIds.forEach((id) => {
         const entity = entityManager.getEntityInstance(id);
         expect(entity).toBeDefined();
         // Will have anatomy:body component but body field should be undefined
-        const bodyComponent = entityManager.getComponentData(id, 'anatomy:body');
+        const bodyComponent = entityManager.getComponentData(
+          id,
+          'anatomy:body'
+        );
         expect(bodyComponent?.body).toBeUndefined();
       });
     });
@@ -833,49 +926,62 @@ describe('Multi-Entity Operations E2E Tests', () => {
       // Arrange
       const successEntityId = UuidGenerator();
       const failEntityId = UuidGenerator();
-      
+
       await entityManager.createEntityInstance('test:actor', {
         instanceId: successEntityId,
       });
-      entityManager.addComponent(successEntityId, 'core:name', { text: 'Success Entity' });
+      entityManager.addComponent(successEntityId, 'core:name', {
+        text: 'Success Entity',
+      });
       entityManager.addComponent(successEntityId, ANATOMY_BODY_COMPONENT_ID, {
         recipeId: 'test:simple_humanoid_recipe',
       });
-      
+
       await entityManager.createEntityInstance('test:actor', {
         instanceId: failEntityId,
       });
-      entityManager.addComponent(failEntityId, 'core:name', { text: 'Fail Entity' });
+      entityManager.addComponent(failEntityId, 'core:name', {
+        text: 'Fail Entity',
+      });
       entityManager.addComponent(failEntityId, ANATOMY_BODY_COMPONENT_ID, {
         recipeId: 'test:invalid_recipe',
       });
 
       // Act - Process both with one designed to fail
       const results = await Promise.all([
-        anatomyGenerationService.generateAnatomyIfNeeded(successEntityId)
-          .then(wasGenerated => ({ success: wasGenerated })),
-        anatomyGenerationService.generateAnatomyIfNeeded(failEntityId)
-          .catch(error => ({ success: false, error: error.message })),
+        anatomyGenerationService
+          .generateAnatomyIfNeeded(successEntityId)
+          .then((wasGenerated) => ({ success: wasGenerated })),
+        anatomyGenerationService
+          .generateAnatomyIfNeeded(failEntityId)
+          .catch((error) => ({ success: false, error: error.message })),
       ]);
 
       // Assert
       const [successResult, failResult] = results;
-      
+
       // Success entity should be complete
       expect(successResult.success).toBe(true);
-      const successBody = entityManager.getComponentData(successEntityId, 'anatomy:body');
+      const successBody = entityManager.getComponentData(
+        successEntityId,
+        'anatomy:body'
+      );
       expect(successBody?.body?.root).toBeDefined();
-      
+
       const successEntity = entityManager.getEntityInstance(successEntityId);
-      expect(entityManager.hasComponent(successEntityId, 'anatomy:body')).toBe(true);
-      
+      expect(entityManager.hasComponent(successEntityId, 'anatomy:body')).toBe(
+        true
+      );
+
       // Failure should not affect success entity
       expect(failResult.success).toBe(false);
-      
+
       const failEntity = entityManager.getEntityInstance(failEntityId);
       expect(failEntity).toBeDefined();
-      expect(entityManager.hasComponent(failEntityId, 'anatomy:body')).toBe(true); // Component exists but body is undefined
-      
+      expect(entityManager.hasComponent(failEntityId, 'anatomy:body')).toBe(
+        true
+      ); // Component exists but body is undefined
+
       // Verify cache integrity for successful entity
       const rootId = successBody?.body?.root;
       if (rootId) {
@@ -892,38 +998,45 @@ describe('Multi-Entity Operations E2E Tests', () => {
         await entityManager.createEntityInstance('test:actor', {
           instanceId: id,
         });
-        entityManager.addComponent(id, 'core:name', { text: `Rollback Test ${i + 1}` });
+        entityManager.addComponent(id, 'core:name', {
+          text: `Rollback Test ${i + 1}`,
+        });
         entityManager.addComponent(id, ANATOMY_BODY_COMPONENT_ID, {
-          recipeId: i % 2 === 0 ? 'test:simple_humanoid_recipe' : 'test:invalid_recipe_for_rollback',
+          recipeId:
+            i % 2 === 0
+              ? 'test:simple_humanoid_recipe'
+              : 'test:invalid_recipe_for_rollback',
         });
         entityIds.push(id);
       }
 
       // Track initial entity count
-      const initialEntityCount = entityManager.getEntitiesWithComponent('core:name').length;
+      const initialEntityCount =
+        entityManager.getEntitiesWithComponent('core:name').length;
 
       // Act - Process with some failures (recipe already set in anatomy:body component)
       const results = await Promise.all(
         entityIds.map((id, index) => {
-          return anatomyGenerationService.generateAnatomyIfNeeded(id)
-            .then(wasGenerated => ({ 
-              success: wasGenerated, 
+          return anatomyGenerationService
+            .generateAnatomyIfNeeded(id)
+            .then((wasGenerated) => ({
+              success: wasGenerated,
               entityId: id,
-              index 
+              index,
             }))
-            .catch(error => ({ 
-              success: false, 
-              entityId: id, 
+            .catch((error) => ({
+              success: false,
+              entityId: id,
               error: error.message,
-              index 
+              index,
             }));
         })
       );
 
       // Assert - Verify partial rollback
-      const successCount = results.filter(r => r.success).length;
-      const failureCount = results.filter(r => !r.success).length;
-      
+      const successCount = results.filter((r) => r.success).length;
+      const failureCount = results.filter((r) => !r.success).length;
+
       expect(successCount).toBe(2); // Half should succeed
       expect(failureCount).toBe(2); // Half should fail
 
@@ -932,22 +1045,30 @@ describe('Multi-Entity Operations E2E Tests', () => {
         const entityId = entityIds[index];
         const entity = entityManager.getEntityInstance(entityId);
         if (result.success) {
-          expect(entityManager.hasComponent(entityId, 'anatomy:body')).toBe(true);
+          expect(entityManager.hasComponent(entityId, 'anatomy:body')).toBe(
+            true
+          );
         } else {
           // Failed entities would still have the anatomy:body component (with invalid recipe)
           // but the body field would be undefined since generation failed
-          const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+          const bodyComponent = entityManager.getComponentData(
+            entityId,
+            'anatomy:body'
+          );
           expect(bodyComponent?.body).toBeUndefined();
         }
       });
 
       // Verify no leaked entities from failed operations
-      const finalEntityCount = entityManager.getEntitiesWithComponent('core:name').length;
+      const finalEntityCount =
+        entityManager.getEntitiesWithComponent('core:name').length;
       const expectedNewEntities = successCount * 3; // Rough estimate of parts per successful anatomy
-      
+
       // Should only have entities from successful operations
       expect(finalEntityCount).toBeGreaterThan(initialEntityCount);
-      expect(finalEntityCount - initialEntityCount).toBeGreaterThan(expectedNewEntities * 0.5);
+      expect(finalEntityCount - initialEntityCount).toBeGreaterThan(
+        expectedNewEntities * 0.5
+      );
     });
   });
 });

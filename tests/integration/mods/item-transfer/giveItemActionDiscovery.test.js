@@ -13,7 +13,10 @@ describe('item-transfer:give_item action definition', () => {
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('item-transfer', 'item-transfer:give_item');
+    testFixture = await ModTestFixture.forAction(
+      'item-transfer',
+      'item-transfer:give_item'
+    );
 
     // Configure action discovery system
     configureActionDiscovery = () => {
@@ -115,9 +118,8 @@ describe('item-transfer:give_item action definition', () => {
       configureActionDiscovery();
 
       // Discover actions for actor with empty inventory
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'test:actor1'
-      );
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('test:actor1');
 
       // Assert: give_item action should NOT appear because there are no items to give
       // Actions only appear when they have valid targets

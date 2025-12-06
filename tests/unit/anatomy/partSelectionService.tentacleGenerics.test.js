@@ -79,7 +79,12 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
     const descriptors = undefined;
     const randomFn = Math.random;
 
-    const result = await service.selectPart(requirements, allowedTypes, descriptors, randomFn);
+    const result = await service.selectPart(
+      requirements,
+      allowedTypes,
+      descriptors,
+      randomFn
+    );
 
     expect(result).toBe('anatomy:tentacle');
     expect(mockLogger.debug).toHaveBeenCalled();
@@ -114,7 +119,12 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
     const requirements = { partType: 'tentacle' };
     const allowedTypes = ['tentacle'];
 
-    const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+    const result = await service.selectPart(
+      requirements,
+      allowedTypes,
+      undefined,
+      Math.random
+    );
 
     expect(result).toBe('anatomy:tentacle');
   });
@@ -142,7 +152,12 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
     const requirements = { partType: 'tentacle' };
     const allowedTypes = ['tentacle', 'arm']; // Multiple allowed types
 
-    const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+    const result = await service.selectPart(
+      requirements,
+      allowedTypes,
+      undefined,
+      Math.random
+    );
 
     expect(result).toBe('anatomy:tentacle');
   });
@@ -151,7 +166,12 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
     const requirements = { partType: 'tentacle' };
     const allowedTypes = ['tentacle'];
 
-    await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+    await service.selectPart(
+      requirements,
+      allowedTypes,
+      undefined,
+      Math.random
+    );
 
     expect(mockLogger.debug).toHaveBeenCalled();
   });
@@ -178,9 +198,16 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
     const requirements = { partType: 'tentacle' };
     const allowedTypes = ['tentacle'];
 
-    const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+    const result = await service.selectPart(
+      requirements,
+      allowedTypes,
+      undefined,
+      Math.random
+    );
 
     expect(result).toBe('anatomy:tentacle');
-    expect(mockDataRegistry.getEntityDefinition).not.toHaveBeenCalledWith('anatomy:kraken_tentacle');
+    expect(mockDataRegistry.getEntityDefinition).not.toHaveBeenCalledWith(
+      'anatomy:kraken_tentacle'
+    );
   });
 });

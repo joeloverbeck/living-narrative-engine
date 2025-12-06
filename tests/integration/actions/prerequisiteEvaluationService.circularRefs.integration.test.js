@@ -58,7 +58,9 @@ function createServiceEnvironment({ actorComponents, conditionDefinitions }) {
     },
   ]);
 
-  const gameDataRepository = new InMemoryConditionRepository(conditionDefinitions);
+  const gameDataRepository = new InMemoryConditionRepository(
+    conditionDefinitions
+  );
   const contextBuilder = new ActionValidationContextBuilder({
     entityManager,
     logger,
@@ -87,16 +89,23 @@ function createServiceEnvironment({ actorComponents, conditionDefinitions }) {
 describe('PrerequisiteEvaluationService circular reference integration', () => {
   it('detects circular condition_ref chains and surfaces descriptive errors', () => {
     const conditionDefinitions = {
-      'logic:cyclicA': { id: 'logic:cyclicA', logic: { condition_ref: 'logic:cyclicB' } },
-      'logic:cyclicB': { id: 'logic:cyclicB', logic: { condition_ref: 'logic:cyclicA' } },
+      'logic:cyclicA': {
+        id: 'logic:cyclicA',
+        logic: { condition_ref: 'logic:cyclicB' },
+      },
+      'logic:cyclicB': {
+        id: 'logic:cyclicB',
+        logic: { condition_ref: 'logic:cyclicA' },
+      },
     };
 
-    const { service, logger, actionDefinition, actor } = createServiceEnvironment({
-      actorComponents: {
-        'core:traits': { friendly: true },
-      },
-      conditionDefinitions,
-    });
+    const { service, logger, actionDefinition, actor } =
+      createServiceEnvironment({
+        actorComponents: {
+          'core:traits': { friendly: true },
+        },
+        conditionDefinitions,
+      });
 
     const trace = new TraceContext();
     const result = service.evaluate(
@@ -118,7 +127,10 @@ describe('PrerequisiteEvaluationService circular reference integration', () => {
         return false;
       }
       const { error } = details;
-      return typeof error === 'string' && error.includes('Circular reference detected');
+      return (
+        typeof error === 'string' &&
+        error.includes('Circular reference detected')
+      );
     });
     expect(circularErrorLog).toBeDefined();
     expect(
@@ -154,12 +166,13 @@ describe('PrerequisiteEvaluationService circular reference integration', () => {
       },
     };
 
-    const { service, logger, actionDefinition, actor } = createServiceEnvironment({
-      actorComponents: {
-        'core:health': { current: 92, max: 100 },
-      },
-      conditionDefinitions,
-    });
+    const { service, logger, actionDefinition, actor } =
+      createServiceEnvironment({
+        actorComponents: {
+          'core:health': { current: 92, max: 100 },
+        },
+        conditionDefinitions,
+      });
 
     const trace = new TraceContext();
     const result = service.evaluate(
@@ -185,8 +198,12 @@ describe('PrerequisiteEvaluationService circular reference integration', () => {
       )
     ).toBe(true);
     expect(
-      logger.debugLogs.some(([message]) =>
-        typeof message === 'string' && message.includes('PrereqEval[test:action]:   - Evaluating resolved rule:')
+      logger.debugLogs.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes(
+            'PrereqEval[test:action]:   - Evaluating resolved rule:'
+          )
       )
     ).toBe(true);
   });

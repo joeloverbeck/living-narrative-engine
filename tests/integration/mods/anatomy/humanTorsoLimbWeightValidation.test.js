@@ -166,7 +166,11 @@ describe('DISBODPARSPA-010: Human Torso/Limb Weight Validation', () => {
         minWeight: 9,
         maxWeight: 14,
       },
-      { file: 'human_leg_thick_hairy.entity.json', minWeight: 13, maxWeight: 18 },
+      {
+        file: 'human_leg_thick_hairy.entity.json',
+        minWeight: 13,
+        maxWeight: 18,
+      },
     ];
 
     it.each(LEGS)(

@@ -80,7 +80,9 @@ describe('IFileSystemReader and IEnvironmentVariableReader integration contract'
 
   test('metadata enumerates the runtime contract implemented by delegating readers', () => {
     expect(IFileSystemReaderMetadata.name).toBe('IFileSystemReader');
-    expect(IFileSystemReaderMetadata.description).toContain('asynchronous file reads');
+    expect(IFileSystemReaderMetadata.description).toContain(
+      'asynchronous file reads'
+    );
     expect(Object.isFrozen(IFileSystemReaderMetadata)).toBe(true);
 
     const [readFileContract] = IFileSystemReaderMetadata.methods;
@@ -90,7 +92,7 @@ describe('IFileSystemReader and IEnvironmentVariableReader integration contract'
       'filePath',
       'encoding',
     ]);
-    expect(readFileContract.returns).toBe("Promise<string>");
+    expect(readFileContract.returns).toBe('Promise<string>');
 
     const implementedMethod = delegatingReader[readFileContract.name];
     expect(typeof implementedMethod).toBe('function');

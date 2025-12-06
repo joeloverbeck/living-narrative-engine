@@ -132,7 +132,11 @@ class RegistryAdapter {
   }
 
   addEntityInstance(instanceDefinition) {
-    this.dataRegistry.store('entityInstances', instanceDefinition.id, instanceDefinition);
+    this.dataRegistry.store(
+      'entityInstances',
+      instanceDefinition.id,
+      instanceDefinition
+    );
   }
 
   getWorld(id) {
@@ -188,25 +192,32 @@ describe('dependencyUtils integration with real modules for full coverage', () =
   it('validates cross-module dependencies and flows without mocks', async () => {
     const baseLogger = new MemoryLogger('base');
     const serviceSetup = new ServiceSetup();
-    const prefixedLogger = serviceSetup.setupService('DependencyHarness', baseLogger, {
-      repository: {
-        value: {
-          add: () => {},
-          get: () => {},
-          remove: () => {},
+    const prefixedLogger = serviceSetup.setupService(
+      'DependencyHarness',
+      baseLogger,
+      {
+        repository: {
+          value: {
+            add: () => {},
+            get: () => {},
+            remove: () => {},
+          },
+          requiredMethods: ['add', 'get', 'remove'],
         },
-        requiredMethods: ['add', 'get', 'remove'],
-      },
-      callable: {
-        value: () => true,
-        isFunction: true,
-      },
-    });
+        callable: {
+          value: () => true,
+          isFunction: true,
+        },
+      }
+    );
 
     serviceSetup.validateDeps('DependencyHarness', prefixedLogger, null);
 
     const dataRegistry = new InMemoryDataRegistry({ logger: prefixedLogger });
-    const repository = new RegistryAdapter({ dataRegistry, logger: prefixedLogger });
+    const repository = new RegistryAdapter({
+      dataRegistry,
+      logger: prefixedLogger,
+    });
 
     repository.addWorld({ id: 'core-world', entities: [{ id: 'actor:hero' }] });
     repository.addEntityDefinition({ id: 'entity:hero', type: 'actor' });
@@ -250,7 +261,7 @@ describe('dependencyUtils integration with real modules for full coverage', () =
         {},
         null,
       ],
-      prefixedLogger,
+      prefixedLogger
     );
 
     const systemInitializer = new SystemInitializer({
@@ -296,7 +307,7 @@ describe('dependencyUtils integration with real modules for full coverage', () =
           name: 'RepositoryAccessor.lookup',
           isFunction: true,
         },
-      ],
+      ]
     );
 
     const fallbackLogger = { warn: () => {} };
@@ -318,7 +329,7 @@ describe('dependencyUtils integration with real modules for full coverage', () =
 
     const baseContext = contextBuilder.buildBaseContext(
       'actor:hero',
-      'location:town',
+      'location:town'
     );
     const dependentContext = contextBuilder.buildDependentContext(
       baseContext,
@@ -329,7 +340,7 @@ describe('dependencyUtils integration with real modules for full coverage', () =
           },
         ],
       },
-      { contextFrom: 'primary' },
+      { contextFrom: 'primary' }
     );
 
     expect(baseContext.actor.id).toBe('actor:hero');
@@ -346,22 +357,25 @@ describe('dependencyUtils integration with real modules for full coverage', () =
 
     expect(
       baseLogger.entries.debug.some((entry) =>
-        entry.message.includes('DependencyHarness:'),
-      ),
+        entry.message.includes('DependencyHarness:')
+      )
     ).toBe(true);
   });
 
   it('surfaces descriptive failures when dependencies are invalid', () => {
     const memoryLogger = new MemoryLogger('failures');
     const serviceSetup = new ServiceSetup();
-    const prefixedLogger = serviceSetup.createLogger('FailureHarness', memoryLogger);
+    const prefixedLogger = serviceSetup.createLogger(
+      'FailureHarness',
+      memoryLogger
+    );
 
     expect(() =>
       serviceSetup.validateDeps('FailureHarness', prefixedLogger, {
         missing: {
           value: null,
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(() =>
@@ -370,7 +384,7 @@ describe('dependencyUtils integration with real modules for full coverage', () =
           value: { get: () => {} },
           requiredMethods: ['missingMethod'],
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(() =>
@@ -379,21 +393,18 @@ describe('dependencyUtils integration with real modules for full coverage', () =
           value: {},
           isFunction: true,
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
-    const FaultyAccessor = withValidatedDeps(
-      class Faulty {},
-      () => [
-        {
-          dependency: null,
-          name: 'Faulty.repository',
-        },
-      ],
-    );
+    const FaultyAccessor = withValidatedDeps(class Faulty {}, () => [
+      {
+        dependency: null,
+        name: 'Faulty.repository',
+      },
+    ]);
 
     expect(() => new FaultyAccessor({ logger: undefined })).toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
 
     const builderLogger = new MemoryLogger('builder');
@@ -403,18 +414,18 @@ describe('dependencyUtils integration with real modules for full coverage', () =
     expect(() => multiTargetBuilder.setTargets(null)).toThrow(Error);
     expect(
       builderLogger.entries.error.some(({ message }) =>
-        message.includes('Targets object is required'),
-      ),
+        message.includes('Targets object is required')
+      )
     ).toBe(true);
 
     const initLogger = new MemoryLogger('init');
-    expect(() => new InitializationService({ log: { logger: initLogger } })).toThrow(
-      SystemInitializationError,
-    );
+    expect(
+      () => new InitializationService({ log: { logger: initLogger } })
+    ).toThrow(SystemInitializationError);
     expect(
       initLogger.entries.error.some(({ message }) =>
-        message.includes('validatedEventDispatcher'),
-      ),
+        message.includes('validatedEventDispatcher')
+      )
     ).toBe(true);
 
     const dataRegistry = new InMemoryDataRegistry({ logger: prefixedLogger });
@@ -444,39 +455,44 @@ describe('dependencyUtils integration with real modules for full coverage', () =
     });
 
     expect(() =>
-      contextBuilder.buildBaseContext('   ', 'location:town'),
+      contextBuilder.buildBaseContext('   ', 'location:town')
     ).toThrow(InvalidArgumentError);
     expect(contextLogger.entries.error.length).toBeGreaterThan(0);
 
     expect(() =>
-      contextBuilder.buildDependentContext(null, {}, { contextFrom: 'primary' }),
+      contextBuilder.buildDependentContext(null, {}, { contextFrom: 'primary' })
     ).toThrow(Error);
 
     expect(() => getDefinition('   ', repository, memoryLogger)).toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
     expect(memoryLogger.entries.warn.length).toBeGreaterThan(0);
 
-    expect(() =>
-      new WorldInitializer({
-        entityManager: {},
-        worldContext: {},
-        gameDataRepository: { getWorld: () => ({}), getEntityInstanceDefinition: () => ({}) },
-        validatedEventDispatcher: { dispatch: () => {} },
-        eventDispatchService: { dispatchWithLogging: () => {} },
-        logger: prefixedLogger,
-        scopeRegistry: { initialize: () => {} },
-      }),
+    expect(
+      () =>
+        new WorldInitializer({
+          entityManager: {},
+          worldContext: {},
+          gameDataRepository: {
+            getWorld: () => ({}),
+            getEntityInstanceDefinition: () => ({}),
+          },
+          validatedEventDispatcher: { dispatch: () => {} },
+          eventDispatchService: { dispatchWithLogging: () => {} },
+          logger: prefixedLogger,
+          scopeRegistry: { initialize: () => {} },
+        })
     ).toThrow(WorldInitializationError);
 
-    expect(() =>
-      new SystemInitializer({
-        resolver: {},
-        logger: prefixedLogger,
-        validatedEventDispatcher: { dispatch: () => {} },
-        eventDispatchService: new SimpleEventDispatchService(prefixedLogger),
-        initializationTag: '   ',
-      }),
+    expect(
+      () =>
+        new SystemInitializer({
+          resolver: {},
+          logger: prefixedLogger,
+          validatedEventDispatcher: { dispatch: () => {} },
+          eventDispatchService: new SimpleEventDispatchService(prefixedLogger),
+          initializationTag: '   ',
+        })
     ).toThrow(Error);
   });
 });

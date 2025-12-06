@@ -185,7 +185,6 @@ describe('Input handlers integration', () => {
       try {
         unsub?.();
       } catch (error) {
-         
         console.error('Failed to unsubscribe during cleanup', error);
       }
     });
@@ -292,35 +291,48 @@ describe('Input handlers integration', () => {
     const standaloneInput = document.createElement('input');
     document.body.appendChild(standaloneInput);
 
-    expect(() =>
-      new InputHandler(standaloneInput, () => {}, validatedEventDispatcher, {
-        document: null,
-        logger,
-      })
+    expect(
+      () =>
+        new InputHandler(standaloneInput, () => {}, validatedEventDispatcher, {
+          document: null,
+          logger,
+        })
     ).toThrow(
       'InputHandler requires a valid document with addEventListener and removeEventListener.'
     );
 
-    expect(() =>
-      new InputHandler(standaloneInput, () => {}, validatedEventDispatcher, {
-        document,
-        logger: {},
-      })
-    ).toThrow('InputHandler requires a logger implementing debug, warn, and error.');
+    expect(
+      () =>
+        new InputHandler(standaloneInput, () => {}, validatedEventDispatcher, {
+          document,
+          logger: {},
+        })
+    ).toThrow(
+      'InputHandler requires a logger implementing debug, warn, and error.'
+    );
 
-    expect(() =>
-      new InputHandler(null, () => {}, validatedEventDispatcher, {
-        document,
-        logger,
-      })
+    expect(
+      () =>
+        new InputHandler(null, () => {}, validatedEventDispatcher, {
+          document,
+          logger,
+        })
     ).toThrow('InputHandler requires a valid HTMLInputElement.');
 
-    expect(() =>
-      new InputHandler(standaloneInput, () => {}, { dispatch: () => {} }, {
-        document,
-        logger,
-      })
-    ).toThrow('InputHandler requires a valid IValidatedEventDispatcher instance.');
+    expect(
+      () =>
+        new InputHandler(
+          standaloneInput,
+          () => {},
+          { dispatch: () => {} },
+          {
+            document,
+            logger,
+          }
+        )
+    ).toThrow(
+      'InputHandler requires a valid IValidatedEventDispatcher instance.'
+    );
 
     standaloneInput.remove();
   });

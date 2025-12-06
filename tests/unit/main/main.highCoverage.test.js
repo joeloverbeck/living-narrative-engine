@@ -85,20 +85,24 @@ function primeSuccessfulStages(logger, gameEngine) {
     }
     return { success: true, payload: buildUIElements() };
   });
-  mockSetupDI.mockImplementation(async (elements, configureContainer, { createAppContainer }) => {
-    if (typeof createAppContainer === 'function') {
-      createAppContainer();
+  mockSetupDI.mockImplementation(
+    async (elements, configureContainer, { createAppContainer }) => {
+      if (typeof createAppContainer === 'function') {
+        createAppContainer();
+      }
+      return { success: true, payload: createMainBootstrapContainerMock() };
     }
-    return { success: true, payload: createMainBootstrapContainerMock() };
-  });
+  );
   mockResolveLogger.mockResolvedValue({ success: true, payload: { logger } });
   mockInitGlobalConfig.mockResolvedValue({ success: true });
-  mockInitGameEngine.mockImplementation(async (container, resolvedLogger, { createGameEngine }) => {
-    if (typeof createGameEngine === 'function') {
-      createGameEngine({ logger: resolvedLogger });
+  mockInitGameEngine.mockImplementation(
+    async (container, resolvedLogger, { createGameEngine }) => {
+      if (typeof createGameEngine === 'function') {
+        createGameEngine({ logger: resolvedLogger });
+      }
+      return { success: true, payload: gameEngine };
     }
-    return { success: true, payload: gameEngine };
-  });
+  );
   mockInitAux.mockResolvedValue({ success: true });
   mockMenuStage.mockResolvedValue({ success: true });
   mockGlobalStage.mockResolvedValue({ success: true });
@@ -132,7 +136,12 @@ afterEach(() => {
 
 describe('main.js additional coverage', () => {
   it('runs full bootstrap flow and honours manual start world overrides', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+    };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -160,29 +169,35 @@ describe('main.js additional coverage', () => {
     expect(mockInitAux).toHaveBeenCalledTimes(1);
     expect(mockMenuStage).toHaveBeenCalledTimes(1);
     expect(mockGlobalStage).toHaveBeenCalledTimes(1);
-    expect(mockStartGameStage).toHaveBeenCalledWith(gameEngine, 'manual-world', logger);
+    expect(mockStartGameStage).toHaveBeenCalledWith(
+      gameEngine,
+      'manual-world',
+      logger
+    );
     expect(gameEngine.showLoadGameUI).toHaveBeenCalledTimes(1);
     expect(mockDisplayFatalStartupError).not.toHaveBeenCalled();
   });
 
   it('uses test-only phase setter when beginGame is invoked before bootstrap', async () => {
-    mockDisplayFatalStartupError.mockImplementation((uiElements, details, passedLogger, helpers) => {
-      const ref = document.createElement('div');
-      ref.insertAdjacentElement = jest.fn();
-      const created = helpers.createElement('div');
-      helpers.insertAfter(ref, created);
-      helpers.setTextContent(created, details.consoleMessage);
-      helpers.setStyle(created, 'color', 'red');
-      helpers.alert('bootstrap begin');
-      expect(passedLogger).toBeNull();
-      // beginGame now provides fallback UI elements when uiElements is undefined
-      expect(uiElements).toMatchObject({
-        outputDiv: expect.anything(),
-        errorDiv: expect.anything(),
-        inputElement: expect.anything(),
-        document: expect.anything(),
-      });
-    });
+    mockDisplayFatalStartupError.mockImplementation(
+      (uiElements, details, passedLogger, helpers) => {
+        const ref = document.createElement('div');
+        ref.insertAdjacentElement = jest.fn();
+        const created = helpers.createElement('div');
+        helpers.insertAfter(ref, created);
+        helpers.setTextContent(created, details.consoleMessage);
+        helpers.setStyle(created, 'color', 'red');
+        helpers.alert('bootstrap begin');
+        expect(passedLogger).toBeNull();
+        // beginGame now provides fallback UI elements when uiElements is undefined
+        expect(uiElements).toMatchObject({
+          outputDiv: expect.anything(),
+          errorDiv: expect.anything(),
+          inputElement: expect.anything(),
+          document: expect.anything(),
+        });
+      }
+    );
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -224,7 +239,10 @@ describe('main.js additional coverage', () => {
 
     mockSetupDI.mockImplementationOnce(() => {
       main.__TEST_ONLY__setCurrentPhaseForError('Custom Phase');
-      return Promise.resolve({ success: false, error: new Error('DI explode') });
+      return Promise.resolve({
+        success: false,
+        error: new Error('DI explode'),
+      });
     });
 
     await main.bootstrapApp();
@@ -256,16 +274,18 @@ describe('main.js additional coverage', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    mockDisplayFatalStartupError.mockImplementation((uiElements, details, logger, helpers) => {
-      const ref = document.createElement('div');
-      ref.insertAdjacentElement = jest.fn();
-      const created = helpers.createElement('div');
-      helpers.insertAfter(ref, created);
-      helpers.setTextContent(created, details.consoleMessage);
-      helpers.setStyle(created, 'color', 'red');
-      helpers.alert('fatal alert');
-      expect(logger).toBeNull();
-    });
+    mockDisplayFatalStartupError.mockImplementation(
+      (uiElements, details, logger, helpers) => {
+        const ref = document.createElement('div');
+        ref.insertAdjacentElement = jest.fn();
+        const created = helpers.createElement('div');
+        helpers.insertAfter(ref, created);
+        helpers.setTextContent(created, details.consoleMessage);
+        helpers.setStyle(created, 'color', 'red');
+        helpers.alert('fatal alert');
+        expect(logger).toBeNull();
+      }
+    );
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -279,7 +299,9 @@ describe('main.js additional coverage', () => {
     expect(fallbackElements.outputDiv.id).toBe('outputDiv');
     expect(alertSpy).toHaveBeenCalledWith('fatal alert');
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('main.js: Bootstrap error caught in main orchestrator'),
+      expect.stringContaining(
+        'main.js: Bootstrap error caught in main orchestrator'
+      ),
       aggregateError
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -291,7 +313,12 @@ describe('main.js additional coverage', () => {
   });
 
   it('falls back to default start world when configuration fetch fails', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+    };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -310,7 +337,11 @@ describe('main.js additional coverage', () => {
     await main.bootstrapApp();
     await main.beginGame();
 
-    expect(mockStartGameStage).toHaveBeenCalledWith(gameEngine, 'default', logger);
+    expect(mockStartGameStage).toHaveBeenCalledWith(
+      gameEngine,
+      'default',
+      logger
+    );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to load startWorld from game.json:',
       expect.any(Error)
@@ -320,7 +351,12 @@ describe('main.js additional coverage', () => {
   });
 
   it('treats non-ok responses while loading start world as defaults', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+    };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -343,7 +379,11 @@ describe('main.js additional coverage', () => {
     await main.bootstrapApp();
     await main.beginGame();
 
-    expect(mockStartGameStage).toHaveBeenCalledWith(gameEngine, 'default', logger);
+    expect(mockStartGameStage).toHaveBeenCalledWith(
+      gameEngine,
+      'default',
+      logger
+    );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to load startWorld from game.json:',
       expect.any(Error)
@@ -353,7 +393,12 @@ describe('main.js additional coverage', () => {
   });
 
   it('reports startGame stage failures and exercises fatal helper functions', async () => {
-    const logger = { debug: jest.fn(), error: jest.fn(), info: jest.fn(), warn: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+    };
     const gameEngine = { showLoadGameUI: jest.fn() };
     primeSuccessfulStages(logger, gameEngine);
 
@@ -368,17 +413,19 @@ describe('main.js additional coverage', () => {
     const alertSpy = jest.fn();
     global.alert = alertSpy;
 
-    mockDisplayFatalStartupError.mockImplementation((uiElements, details, passedLogger, helpers) => {
-      const ref = document.createElement('div');
-      ref.insertAdjacentElement = jest.fn();
-      const created = helpers.createElement('div');
-      helpers.insertAfter(ref, created);
-      helpers.setTextContent(created, details.userMessage);
-      helpers.setStyle(created, 'backgroundColor', 'black');
-      helpers.alert('start failure');
-      expect(passedLogger).toBe(logger);
-      expect(uiElements.outputDiv.id).toBe('outputDiv');
-    });
+    mockDisplayFatalStartupError.mockImplementation(
+      (uiElements, details, passedLogger, helpers) => {
+        const ref = document.createElement('div');
+        ref.insertAdjacentElement = jest.fn();
+        const created = helpers.createElement('div');
+        helpers.insertAfter(ref, created);
+        helpers.setTextContent(created, details.userMessage);
+        helpers.setStyle(created, 'backgroundColor', 'black');
+        helpers.alert('start failure');
+        expect(passedLogger).toBe(logger);
+        expect(uiElements.outputDiv.id).toBe('outputDiv');
+      }
+    );
 
     let main;
     await jest.isolateModulesAsync(async () => {

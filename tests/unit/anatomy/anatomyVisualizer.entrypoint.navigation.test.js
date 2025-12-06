@@ -12,7 +12,9 @@ const mockDisplayFatalStartupError = jest.fn();
 const mockRegisterVisualizerComponents = jest.fn();
 
 let mockUIInitialize;
-const mockAnatomyVisualizerUI = jest.fn(() => ({ initialize: mockUIInitialize }));
+const mockAnatomyVisualizerUI = jest.fn(() => ({
+  initialize: mockUIInitialize,
+}));
 
 const mockTokens = {
   AnatomyDescriptionService: Symbol('AnatomyDescriptionService'),
@@ -74,14 +76,17 @@ describe('anatomy-visualizer back navigation', () => {
 
     setReadyState('complete');
     document.body.innerHTML = '';
-
   });
 
   afterEach(() => {
     document.body.innerHTML = '';
 
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     } else {
       delete document.readyState;
     }
@@ -90,7 +95,10 @@ describe('anatomy-visualizer back navigation', () => {
   it('navigates back to index when the back button is clicked after initialization', async () => {
     setReadyState('loading');
 
-    const documentAddEventListenerSpy = jest.spyOn(document, 'addEventListener');
+    const documentAddEventListenerSpy = jest.spyOn(
+      document,
+      'addEventListener'
+    );
 
     const backButton = document.createElement('button');
     backButton.id = 'back-button';
@@ -139,7 +147,9 @@ describe('anatomy-visualizer back navigation', () => {
       return { container, services };
     });
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await jest.isolateModulesAsync(async () => {
       await import('../../../src/anatomy-visualizer.js');

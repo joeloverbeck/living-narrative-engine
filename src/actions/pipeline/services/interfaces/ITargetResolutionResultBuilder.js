@@ -107,7 +107,12 @@ export default class ITargetResolutionResultBuilder {
    * @param {boolean} _isMultiTarget - Indicates whether the result originated from multi-target flow.
    * @returns {void}
    */
-  attachMetadata(_actionWithTargets, _resolvedTargets, _targetDefinitions, _isMultiTarget) {
+  attachMetadata(
+    _actionWithTargets,
+    _resolvedTargets,
+    _targetDefinitions,
+    _isMultiTarget
+  ) {
     throw new Error('Method must be implemented by concrete class');
   }
 }

@@ -93,7 +93,9 @@ const makeMockSafeEventDispatcher = () => {
 const makeMockTurnContext = (actorId = 'player1') => ({
   getActor: jest.fn().mockReturnValue({ id: actorId }),
   getLogger: jest.fn().mockReturnValue(makeMockLogger()),
-  getSafeEventDispatcher: jest.fn().mockReturnValue(makeMockSafeEventDispatcher()),
+  getSafeEventDispatcher: jest
+    .fn()
+    .mockReturnValue(makeMockSafeEventDispatcher()),
   setAwaitingExternalEvent: jest.fn(),
   isAwaitingExternalEvent: jest.fn().mockReturnValue(true),
   endTurn: jest.fn(),
@@ -376,7 +378,9 @@ describe('AwaitingExternalTurnEndState', () => {
       const endTurnError = mockTurnContext.endTurn.mock.calls[0][0];
       expect(endTurnError).toBeInstanceOf(Error);
       expect(endTurnError.code).toBe('TURN_END_TIMEOUT');
-      expect(endTurnError.message).toContain(`timed out after ${TIMEOUT_MS} ms`);
+      expect(endTurnError.message).toContain(
+        `timed out after ${TIMEOUT_MS} ms`
+      );
     });
 
     test('should not dispatch error if event arrives just before timeout', async () => {
@@ -463,7 +467,8 @@ describe('AwaitingExternalTurnEndState', () => {
       mockTurnContext.isAwaitingExternalEvent.mockReturnValue(false);
 
       // Reset call count to verify subsequent calls don't increment
-      const callCount = mockTurnContext.setAwaitingExternalEvent.mock.calls.length;
+      const callCount =
+        mockTurnContext.setAwaitingExternalEvent.mock.calls.length;
 
       await state.destroy(mockHandler);
 
@@ -536,7 +541,9 @@ describe('AwaitingExternalTurnEndState', () => {
   // --- Constructor Validation ---
   describe('Constructor Validation', () => {
     test('should throw InvalidArgumentError when timeoutMs is NaN', () => {
-      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      const {
+        InvalidArgumentError,
+      } = require('../../../../src/errors/invalidArgumentError.js');
       expect(() => {
         new AwaitingExternalTurnEndState(mockHandler, {
           timeoutMs: NaN,
@@ -551,7 +558,9 @@ describe('AwaitingExternalTurnEndState', () => {
     });
 
     test('should throw InvalidArgumentError when timeoutMs is negative', () => {
-      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      const {
+        InvalidArgumentError,
+      } = require('../../../../src/errors/invalidArgumentError.js');
       expect(() => {
         new AwaitingExternalTurnEndState(mockHandler, {
           timeoutMs: -1000,
@@ -566,7 +575,9 @@ describe('AwaitingExternalTurnEndState', () => {
     });
 
     test('should throw InvalidArgumentError when timeoutMs is Infinity', () => {
-      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      const {
+        InvalidArgumentError,
+      } = require('../../../../src/errors/invalidArgumentError.js');
       expect(() => {
         new AwaitingExternalTurnEndState(mockHandler, {
           timeoutMs: Infinity,
@@ -581,7 +592,9 @@ describe('AwaitingExternalTurnEndState', () => {
     });
 
     test('should throw InvalidArgumentError when timeoutMs is zero', () => {
-      const { InvalidArgumentError } = require('../../../../src/errors/invalidArgumentError.js');
+      const {
+        InvalidArgumentError,
+      } = require('../../../../src/errors/invalidArgumentError.js');
       expect(() => {
         new AwaitingExternalTurnEndState(mockHandler, {
           timeoutMs: 0,

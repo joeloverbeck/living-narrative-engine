@@ -52,9 +52,7 @@ describe('SocketManager integration', () => {
     const leftShoulder = socketManager.getSocket(torsoId, 'left_shoulder');
     expect(leftShoulder).toBeDefined();
     expect(leftShoulder.orientation).toBe('left');
-    expect(leftShoulder.allowedTypes).toEqual(
-      expect.arrayContaining(['arm'])
-    );
+    expect(leftShoulder.allowedTypes).toEqual(expect.arrayContaining(['arm']));
 
     const missing = socketManager.getSocket(torsoId, 'nonexistent_socket');
     expect(missing).toBeUndefined();
@@ -110,7 +108,9 @@ describe('SocketManager integration', () => {
       true
     );
     expect(requiredMissing.valid).toBe(false);
-    expect(requiredMissing.error).toContain("Socket 'missing_socket' not found");
+    expect(requiredMissing.error).toContain(
+      "Socket 'missing_socket' not found"
+    );
     expect(requiredMissing.error).toContain(expectedParentId);
 
     socketManager.occupySocket(torsoId, 'left_shoulder', occupancy);
@@ -187,11 +187,7 @@ describe('SocketManager integration', () => {
       allowedTypes: ['*'],
     });
 
-    await entityManager.addComponent(
-      headId,
-      'anatomy:sockets',
-      headSockets
-    );
+    await entityManager.addComponent(headId, 'anatomy:sockets', headSockets);
 
     const universalSocket = socketManager.getSocket(
       headId,
@@ -225,11 +221,7 @@ describe('SocketManager integration', () => {
       allowedTypes: ['ornament'],
     });
 
-    await entityManager.addComponent(
-      headId,
-      'anatomy:sockets',
-      headSockets
-    );
+    await entityManager.addComponent(headId, 'anatomy:sockets', headSockets);
 
     const adornmentSocket = socketManager.getSocket(headId, 'adornment');
     const noseId = anatomyParts['nose'];

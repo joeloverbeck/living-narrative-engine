@@ -810,7 +810,13 @@ describe('action.schema.json - chanceBased Property', () => {
     });
 
     test('modifier with valid targetRole values should validate', () => {
-      const validRoles = ['actor', 'primary', 'secondary', 'tertiary', 'location'];
+      const validRoles = [
+        'actor',
+        'primary',
+        'secondary',
+        'tertiary',
+        'location',
+      ];
       for (const role of validRoles) {
         const action = createValidAction({
           chanceBased: {

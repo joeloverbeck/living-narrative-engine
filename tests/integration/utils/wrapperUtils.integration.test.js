@@ -74,8 +74,15 @@ describe('wrapperUtils integration', () => {
       suffix: 'after {event.name} {stats.energy?}',
     };
 
-    const partiallyResolved = resolveWrapper(partialWrappers, resolver, context);
-    expect(partiallyResolved).toEqual({ prefix: '', suffix: 'after Edge-Case Summit ' });
+    const partiallyResolved = resolveWrapper(
+      partialWrappers,
+      resolver,
+      context
+    );
+    expect(partiallyResolved).toEqual({
+      prefix: '',
+      suffix: 'after Edge-Case Summit ',
+    });
 
     const defaultResolved = resolveWrapper(null, resolver, context);
     expect(defaultResolved).toEqual({ prefix: '', suffix: '' });

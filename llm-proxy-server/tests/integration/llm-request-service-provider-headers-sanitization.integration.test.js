@@ -171,12 +171,15 @@ describe('LlmRequestService provider headers and prompt sanitisation integration
       expect(received.headers['x-provider-tier']).toBe('gold');
       expect(received.headers['x-client-trace']).toBe('trace-789');
 
-      expect(received.headers['authorization']).toBe('Bearer inline-secret-key');
+      expect(received.headers['authorization']).toBe(
+        'Bearer inline-secret-key'
+      );
       expect(received.headers['content-type']).toBe('application/json');
 
-      const previewCall = logger.debug.mock.calls.find(([message]) =>
-        typeof message === 'string' &&
-        message.includes('Sanitized Target Payload Preview for')
+      const previewCall = logger.debug.mock.calls.find(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes('Sanitized Target Payload Preview for')
       );
 
       expect(previewCall).toBeDefined();

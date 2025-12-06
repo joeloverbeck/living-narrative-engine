@@ -13,12 +13,12 @@ const EXPECTED_SEGMENT_ORDER = [
   '<content_policy>',
   '{contentPolicyContent}',
   '</content_policy>',
-  
+
   // PHASE 2: Task Definition
   '<task_definition>',
   '{taskDefinitionContent}',
   '</task_definition>',
-  
+
   // PHASE 3: Character Identity
   '<character_persona>',
   '{characterPersonaContent}',
@@ -27,7 +27,7 @@ const EXPECTED_SEGMENT_ORDER = [
   '{portrayalGuidelinesContent}',
   '</portrayal_guidelines>',
   '{goalsSection}',
-  
+
   // PHASE 4: World State
   '<world_context>',
   '{worldContextContent}',
@@ -40,7 +40,7 @@ const EXPECTED_SEGMENT_ORDER = [
   '{thoughtsSection}',
   '{notesVoiceGuidance}',
   '{notesSection}',
-  
+
   // PHASE 5: Execution Context
   '<available_actions_info>',
   '{availableActionsInfoContent}',
@@ -52,7 +52,9 @@ describe('characterPromptTemplate', () => {
   it('exports a single canonical template instance', () => {
     expect(characterPromptTemplate).toBe(CHARACTER_PROMPT_TEMPLATE);
     expect(typeof CHARACTER_PROMPT_TEMPLATE).toBe('string');
-    expect(CHARACTER_PROMPT_TEMPLATE.startsWith('<system_constraints>')).toBe(true);
+    expect(CHARACTER_PROMPT_TEMPLATE.startsWith('<system_constraints>')).toBe(
+      true
+    );
   });
 
   it('lists sections in the documented constraint-first order (v2.0)', () => {
@@ -69,9 +71,13 @@ describe('characterPromptTemplate', () => {
   });
 
   it('places system constraints before character context', () => {
-    const constraintsIndex = CHARACTER_PROMPT_TEMPLATE.indexOf('<system_constraints>');
-    const personaIndex = CHARACTER_PROMPT_TEMPLATE.indexOf('<character_persona>');
-    
+    const constraintsIndex = CHARACTER_PROMPT_TEMPLATE.indexOf(
+      '<system_constraints>'
+    );
+    const personaIndex = CHARACTER_PROMPT_TEMPLATE.indexOf(
+      '<character_persona>'
+    );
+
     expect(constraintsIndex).toBeGreaterThan(-1);
     expect(personaIndex).toBeGreaterThan(-1);
     expect(constraintsIndex).toBeLessThan(personaIndex);
@@ -79,7 +85,7 @@ describe('characterPromptTemplate', () => {
 
   it('provides guidance placeholders with surrounding blank lines for clarity', () => {
     const newlineSeparated = CHARACTER_PROMPT_TEMPLATE.split('\n');
-    
+
     // Test all guidance placeholders have blank line separation
     const guidancePlaceholders = [
       '{perceptionLogVoiceGuidance}',
@@ -89,7 +95,7 @@ describe('characterPromptTemplate', () => {
 
     for (const placeholder of guidancePlaceholders) {
       const index = newlineSeparated.indexOf(placeholder);
-      
+
       expect(index).toBeGreaterThan(0);
       expect(newlineSeparated[index - 1]).toBe('');
       expect(newlineSeparated[index + 1]).toBe('');

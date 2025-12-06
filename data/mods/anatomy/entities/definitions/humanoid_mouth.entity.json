@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "teeth",
-          "allowedTypes": [
-            "teeth"
-          ],
+          "allowedTypes": ["teeth"],
           "nameTpl": "{{type}}"
         }
       ]

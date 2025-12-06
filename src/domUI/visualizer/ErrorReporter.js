@@ -569,7 +569,7 @@ class ErrorReporter {
 
     const env = {
       url: this.#reportingConfig.includeUrl
-        ? resolvedUrl ?? 'unknown'
+        ? (resolvedUrl ?? 'unknown')
         : '[REDACTED]',
       timestamp: new Date().toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

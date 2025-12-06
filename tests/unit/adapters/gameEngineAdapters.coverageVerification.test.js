@@ -9,7 +9,7 @@ const getCoverageEntry = (ending) => {
   }
 
   const entry = Object.entries(coverage).find(([filename]) =>
-    filename.endsWith(ending),
+    filename.endsWith(ending)
   );
 
   return entry ? entry[1] : null;
@@ -27,10 +27,16 @@ describe('GameEngine adapters coverage verification', () => {
     expect(engine.loadGame).toHaveBeenCalledTimes(1);
     expect(engine.loadGame).toHaveBeenCalledWith('slot-1');
 
-    const fileCoverage = getCoverageEntry('/src/adapters/GameEngineLoadAdapter.js');
+    const fileCoverage = getCoverageEntry(
+      '/src/adapters/GameEngineLoadAdapter.js'
+    );
     if (fileCoverage) {
-      Object.values(fileCoverage.s).forEach((hits) => expect(hits).toBeGreaterThan(0));
-      Object.values(fileCoverage.f).forEach((hits) => expect(hits).toBeGreaterThan(0));
+      Object.values(fileCoverage.s).forEach((hits) =>
+        expect(hits).toBeGreaterThan(0)
+      );
+      Object.values(fileCoverage.f).forEach((hits) =>
+        expect(hits).toBeGreaterThan(0)
+      );
     }
   });
 
@@ -45,10 +51,16 @@ describe('GameEngine adapters coverage verification', () => {
     expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
     expect(engine.triggerManualSave).toHaveBeenCalledWith('backup', 'slot-2');
 
-    const fileCoverage = getCoverageEntry('/src/adapters/GameEngineSaveAdapter.js');
+    const fileCoverage = getCoverageEntry(
+      '/src/adapters/GameEngineSaveAdapter.js'
+    );
     if (fileCoverage) {
-      Object.values(fileCoverage.s).forEach((hits) => expect(hits).toBeGreaterThan(0));
-      Object.values(fileCoverage.f).forEach((hits) => expect(hits).toBeGreaterThan(0));
+      Object.values(fileCoverage.s).forEach((hits) =>
+        expect(hits).toBeGreaterThan(0)
+      );
+      Object.values(fileCoverage.f).forEach((hits) =>
+        expect(hits).toBeGreaterThan(0)
+      );
     }
   });
 });

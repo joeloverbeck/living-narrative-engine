@@ -8,20 +8,13 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "armor"
-      ]
+      "allowedLayers": ["base", "armor"]
     },
     "core:material": {
       "material": "leather",
       "durability": 65,
-      "properties": [
-        "flexible"
-      ],
-      "careInstructions": [
-        "requires_oiling"
-      ]
+      "properties": ["flexible"],
+      "careInstructions": ["requires_oiling"]
     },
     "core:name": {
       "text": "boots"
@@ -36,9 +29,7 @@
       "texture": "rugged"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "armor"
     },
     "items:item": {},

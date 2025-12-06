@@ -58,7 +58,12 @@ class ModifierContextBuilder {
    * @param {string} [params.tertiaryTargetId] - Tertiary target entity ID
    * @returns {ModifierEvaluationContext}
    */
-  buildContext({ actorId, primaryTargetId, secondaryTargetId, tertiaryTargetId }) {
+  buildContext({
+    actorId,
+    primaryTargetId,
+    secondaryTargetId,
+    tertiaryTargetId,
+  }) {
     this.#logger.debug('ModifierContextBuilder: Building context', {
       actorId,
       primaryTargetId,
@@ -71,12 +76,20 @@ class ModifierContextBuilder {
 
     // Resolve location from actor's position
     const locationId = this.#resolveLocationId(actorId);
-    const locationContext = locationId ? this.#buildEntityContext(locationId) : null;
+    const locationContext = locationId
+      ? this.#buildEntityContext(locationId)
+      : null;
 
     // Build target contexts
-    const primaryContext = primaryTargetId ? this.#buildEntityContext(primaryTargetId) : null;
-    const secondaryContext = secondaryTargetId ? this.#buildEntityContext(secondaryTargetId) : null;
-    const tertiaryContext = tertiaryTargetId ? this.#buildEntityContext(tertiaryTargetId) : null;
+    const primaryContext = primaryTargetId
+      ? this.#buildEntityContext(primaryTargetId)
+      : null;
+    const secondaryContext = secondaryTargetId
+      ? this.#buildEntityContext(secondaryTargetId)
+      : null;
+    const tertiaryContext = tertiaryTargetId
+      ? this.#buildEntityContext(tertiaryTargetId)
+      : null;
 
     const context = {
       entity: {
@@ -114,7 +127,9 @@ class ModifierContextBuilder {
     try {
       const entity = this.#entityManager.getEntity(entityId);
       if (!entity) {
-        this.#logger.debug(`ModifierContextBuilder: Entity not found: ${entityId}`);
+        this.#logger.debug(
+          `ModifierContextBuilder: Entity not found: ${entityId}`
+        );
         return null;
       }
 
@@ -125,7 +140,10 @@ class ModifierContextBuilder {
       const componentIds = this.#getEntityComponentIds(entity);
 
       for (const componentId of componentIds) {
-        const componentData = this.#entityManager.getComponentData(entityId, componentId);
+        const componentData = this.#entityManager.getComponentData(
+          entityId,
+          componentId
+        );
         if (componentData !== null && componentData !== undefined) {
           components[componentId] = componentData;
         }
@@ -136,7 +154,10 @@ class ModifierContextBuilder {
         components,
       };
     } catch (error) {
-      this.#logger.warn(`ModifierContextBuilder: Error building entity context for ${entityId}`, error);
+      this.#logger.warn(
+        `ModifierContextBuilder: Error building entity context for ${entityId}`,
+        error
+      );
       return null;
     }
   }
@@ -157,7 +178,10 @@ class ModifierContextBuilder {
       // Entity.components is a plain object (not a Map)
       return Object.keys(entity.components);
     } catch (error) {
-      this.#logger.debug('ModifierContextBuilder: Could not get component IDs', error);
+      this.#logger.debug(
+        'ModifierContextBuilder: Could not get component IDs',
+        error
+      );
       return [];
     }
   }
@@ -171,13 +195,19 @@ class ModifierContextBuilder {
    */
   #resolveLocationId(actorId) {
     try {
-      const positionData = this.#entityManager.getComponentData(actorId, 'core:position');
+      const positionData = this.#entityManager.getComponentData(
+        actorId,
+        'core:position'
+      );
       if (positionData?.locationId) {
         return positionData.locationId;
       }
       return null;
     } catch (error) {
-      this.#logger.debug(`ModifierContextBuilder: Could not resolve location for ${actorId}`, error);
+      this.#logger.debug(
+        `ModifierContextBuilder: Could not resolve location for ${actorId}`,
+        error
+      );
       return null;
     }
   }

@@ -8,7 +8,9 @@ import { resolveConditionRefs } from '../../../src/utils/conditionRefResolver.js
  */
 function createRepository(definitions) {
   return {
-    getConditionDefinition: jest.fn((conditionId) => definitions[conditionId] ?? null),
+    getConditionDefinition: jest.fn(
+      (conditionId) => definitions[conditionId] ?? null
+    ),
   };
 }
 
@@ -28,10 +30,7 @@ describe('resolveConditionRefs', () => {
     });
     const logger = { debug: 'not-a-function' }; // exercise branch when logger.debug is not callable
 
-    const logic = [
-      { condition_ref: 'condA' },
-      { condition_ref: 'condA' },
-    ];
+    const logic = [{ condition_ref: 'condA' }, { condition_ref: 'condA' }];
 
     const resolved = resolveConditionRefs(logic, repo, logger);
 
@@ -55,11 +54,19 @@ describe('resolveConditionRefs', () => {
     });
     const logger = { debug: jest.fn() };
 
-    const resolved = resolveConditionRefs({ condition_ref: 'alpha' }, repo, logger);
+    const resolved = resolveConditionRefs(
+      { condition_ref: 'alpha' },
+      repo,
+      logger
+    );
 
     expect(resolved).toEqual({ nested: { value: 'resolved' } });
-    expect(logger.debug).toHaveBeenCalledWith("Resolving condition_ref 'alpha'...");
-    expect(logger.debug).toHaveBeenCalledWith("Resolving condition_ref 'beta'...");
+    expect(logger.debug).toHaveBeenCalledWith(
+      "Resolving condition_ref 'alpha'..."
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      "Resolving condition_ref 'beta'..."
+    );
     expect(repo.getConditionDefinition).toHaveBeenNthCalledWith(1, 'alpha');
     expect(repo.getConditionDefinition).toHaveBeenNthCalledWith(2, 'beta');
   });
@@ -82,22 +89,33 @@ describe('resolveConditionRefs', () => {
 
     expect(() =>
       resolveConditionRefs({ condition_ref: 'first' }, repo, logger)
-    ).toThrow("Circular condition_ref detected. Path: first -> second -> first");
+    ).toThrow(
+      'Circular condition_ref detected. Path: first -> second -> first'
+    );
   });
 
   it.each([
-    [null, "Could not resolve condition_ref 'missing'. Definition or its logic property not found."],
-    [{}, "Could not resolve condition_ref 'missing'. Definition or its logic property not found."],
-  ])('throws when repository does not return usable definition (%s)', (definition) => {
-    const repo = createRepository({ missing: definition });
-    const logger = { debug: jest.fn() };
+    [
+      null,
+      "Could not resolve condition_ref 'missing'. Definition or its logic property not found.",
+    ],
+    [
+      {},
+      "Could not resolve condition_ref 'missing'. Definition or its logic property not found.",
+    ],
+  ])(
+    'throws when repository does not return usable definition (%s)',
+    (definition) => {
+      const repo = createRepository({ missing: definition });
+      const logger = { debug: jest.fn() };
 
-    expect(() =>
-      resolveConditionRefs({ condition_ref: 'missing' }, repo, logger)
-    ).toThrow(
-      "Could not resolve condition_ref 'missing'. Definition or its logic property not found."
-    );
-  });
+      expect(() =>
+        resolveConditionRefs({ condition_ref: 'missing' }, repo, logger)
+      ).toThrow(
+        "Could not resolve condition_ref 'missing'. Definition or its logic property not found."
+      );
+    }
+  );
 
   it('recursively resolves plain objects without sharing visited state between keys', () => {
     const repo = createRepository({

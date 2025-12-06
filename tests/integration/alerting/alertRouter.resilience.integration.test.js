@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -135,7 +142,9 @@ describe('AlertRouter resilience integration', () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter flush error:',
-      expect.objectContaining({ message: 'Missing or invalid `message` in payload' })
+      expect.objectContaining({
+        message: 'Missing or invalid `message` in payload',
+      })
     );
     expect(warnSpy).toHaveBeenCalledWith('warning survives');
     expect(errorSpy).toHaveBeenCalledWith('error survives');

@@ -123,7 +123,8 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
     const event = validatedDispatcher.events[0];
     expect(event.eventName).toBe(SYSTEM_ERROR_OCCURRED_ID);
     expect(event.payload).toEqual({
-      message: "core:test-provider: Did not receive a valid integer 'chosenIndex' for actor actor:alpha.",
+      message:
+        "core:test-provider: Did not receive a valid integer 'chosenIndex' for actor actor:alpha.",
       details: debugData,
     });
 
@@ -164,13 +165,16 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         logger,
         debugData
       )
-    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
 
     expect(validatedDispatcher.events).toHaveLength(1);
     const event = validatedDispatcher.events[0];
     expect(event.eventName).toBe(SYSTEM_ERROR_OCCURRED_ID);
     expect(event.payload).toEqual({
-      message: 'core:test-provider: invalid chosenIndex (5) for actor actor:alpha.',
+      message:
+        'core:test-provider: invalid chosenIndex (5) for actor actor:alpha.',
       details: { attempted: 5, actionsCount: 2 },
     });
 
@@ -190,12 +194,15 @@ describe('actionIndexUtils assertValidActionIndex with real dispatcher', () => {
         logger,
         { attempted: 0 }
       )
-    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
 
     expect(validatedDispatcher.events).toHaveLength(1);
     const lowerEvent = validatedDispatcher.events[0];
     expect(lowerEvent.payload).toEqual({
-      message: 'core:test-provider: invalid chosenIndex (0) for actor actor:alpha.',
+      message:
+        'core:test-provider: invalid chosenIndex (0) for actor actor:alpha.',
       details: { attempted: 0, actionsCount: 2 },
     });
   });

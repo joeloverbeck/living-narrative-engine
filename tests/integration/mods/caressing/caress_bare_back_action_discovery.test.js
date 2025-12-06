@@ -85,12 +85,16 @@ describe('caressing:caress_bare_back action discovery', () => {
 
           const closenessPartners =
             actorEntity.components?.['positioning:closeness']?.partners || [];
-          if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+          if (
+            !Array.isArray(closenessPartners) ||
+            closenessPartners.length === 0
+          ) {
             return { success: true, value: new Set() };
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']?.facing_away_from || [];
+            actorEntity.components?.['positioning:facing_away']
+              ?.facing_away_from || [];
 
           const getCoveringSlots = (targetEntity, socketName) => {
             const slotMappings =
@@ -99,26 +103,34 @@ describe('caressing:caress_bare_back action discovery', () => {
               return [];
             }
 
-            return Object.entries(slotMappings).reduce((acc, [slotId, mapping]) => {
-              if (
-                mapping &&
-                Array.isArray(mapping.coveredSockets) &&
-                mapping.coveredSockets.includes(socketName)
-              ) {
-                acc.push(slotId);
-              }
-              return acc;
-            }, []);
+            return Object.entries(slotMappings).reduce(
+              (acc, [slotId, mapping]) => {
+                if (
+                  mapping &&
+                  Array.isArray(mapping.coveredSockets) &&
+                  mapping.coveredSockets.includes(socketName)
+                ) {
+                  acc.push(slotId);
+                }
+                return acc;
+              },
+              []
+            );
           };
 
           const slotHasCoveringItems = (targetEntity, slotName) => {
-            const equipped = targetEntity.components?.['clothing:equipment']?.equipped;
+            const equipped =
+              targetEntity.components?.['clothing:equipment']?.equipped;
             if (!equipped) {
               return false;
             }
 
             const slotData = equipped[slotName];
-            if (!slotData || typeof slotData !== 'object' || Array.isArray(slotData)) {
+            if (
+              !slotData ||
+              typeof slotData !== 'object' ||
+              Array.isArray(slotData)
+            ) {
               return false;
             }
 
@@ -155,7 +167,9 @@ describe('caressing:caress_bare_back action discovery', () => {
           };
 
           const isBackUncovered = (targetEntity) =>
-            BACK_SOCKETS.every((socket) => !isSocketCovered(targetEntity, socket));
+            BACK_SOCKETS.every(
+              (socket) => !isSocketCovered(targetEntity, socket)
+            );
 
           const validTargets = closenessPartners.reduce((acc, partnerId) => {
             const partner = entityManager.getEntityInstance(partnerId);
@@ -164,14 +178,18 @@ describe('caressing:caress_bare_back action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']?.facing_away_from || [];
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from || [];
 
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&
               !partnerFacingAway.includes(actorId);
             const actorBehindTarget = partnerFacingAway.includes(actorId);
 
-            if ((facingEachOther || actorBehindTarget) && isBackUncovered(partner)) {
+            if (
+              (facingEachOther || actorBehindTarget) &&
+              isBackUncovered(partner)
+            ) {
               acc.add(partnerId);
             }
 

@@ -22,19 +22,22 @@ describe('CentralErrorHandler - Memory Tests', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
+    mockEventBus = testBed.createMock('MockEventBus', [
+      'dispatch',
+      'subscribe',
+    ]);
 
     // Create real MonitoringCoordinator instance
     monitoringCoordinator = new MonitoringCoordinator({
       logger: mockLogger,
       enabled: true,
-      checkInterval: 1000
+      checkInterval: 1000,
     });
 
     centralErrorHandler = new CentralErrorHandler({
       logger: mockLogger,
       eventBus: mockEventBus,
-      monitoringCoordinator
+      monitoringCoordinator,
     });
 
     // Force garbage collection before each test
@@ -100,7 +103,7 @@ describe('CentralErrorHandler - Memory Tests', () => {
       // Use adaptive thresholds for CI environments
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({
         MAX_MEMORY_MB: 10,
-        MEMORY_GROWTH_LIMIT_PERCENT: 50
+        MEMORY_GROWTH_LIMIT_PERCENT: 50,
       });
 
       // Assert memory growth is within acceptable limits
@@ -110,7 +113,9 @@ describe('CentralErrorHandler - Memory Tests', () => {
         6
       );
 
-      console.log(`Memory growth after ${errorCount} errors: ${memoryGrowthMB.toFixed(2)}MB`);
+      console.log(
+        `Memory growth after ${errorCount} errors: ${memoryGrowthMB.toFixed(2)}MB`
+      );
     });
 
     it('should not leak memory when handling recoverable errors', async () => {
@@ -118,16 +123,21 @@ describe('CentralErrorHandler - Memory Tests', () => {
       await global.memoryTestUtils.addPreTestStabilization();
 
       // Register a simple recovery strategy
-      centralErrorHandler.registerRecoveryStrategy('RecoverableError', async () => {
-        return 'recovered';
-      });
+      centralErrorHandler.registerRecoveryStrategy(
+        'RecoverableError',
+        async () => {
+          return 'recovered';
+        }
+      );
 
       class RecoverableError extends Error {
         constructor(message) {
           super(message);
           this.name = 'RecoverableError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       // Get initial memory baseline
@@ -175,7 +185,9 @@ describe('CentralErrorHandler - Memory Tests', () => {
           'testOperation',
           async () => {
             try {
-              await centralErrorHandler.handle(new Error(`Monitored error ${i}`));
+              await centralErrorHandler.handle(
+                new Error(`Monitored error ${i}`)
+              );
             } catch {
               // Expected, ignore
             }
@@ -190,7 +202,7 @@ describe('CentralErrorHandler - Memory Tests', () => {
       // Get adaptive thresholds
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({
         MAX_MEMORY_MB: 5,
-        MEMORY_GROWTH_LIMIT_PERCENT: 25
+        MEMORY_GROWTH_LIMIT_PERCENT: 25,
       });
 
       // Assert memory is within limits

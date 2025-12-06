@@ -1533,7 +1533,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       // Species-specific cephalopod entities
       'anatomy:kraken_tentacle': {
         id: 'anatomy:kraken_tentacle',
-        description: 'Elder kraken tentacle with enormous size and dark purple coloring',
+        description:
+          'Elder kraken tentacle with enormous size and dark purple coloring',
         components: {
           'anatomy:part': {
             subType: 'tentacle',
@@ -1560,7 +1561,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'anatomy:kraken_mantle': {
         id: 'anatomy:kraken_mantle',
-        description: 'Elder kraken mantle body with massive size and abyssal black coloring',
+        description:
+          'Elder kraken mantle body with massive size and abyssal black coloring',
         components: {
           'anatomy:part': {
             subType: 'mantle',
@@ -1598,7 +1600,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'anatomy:squid_tentacle': {
         id: 'anatomy:squid_tentacle',
-        description: 'Common squid tentacle with medium size, long length and translucent-white coloring',
+        description:
+          'Common squid tentacle with medium size, long length and translucent-white coloring',
         components: {
           'anatomy:part': {
             subType: 'tentacle',
@@ -1619,7 +1622,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'anatomy:squid_mantle': {
         id: 'anatomy:squid_mantle',
-        description: 'Common squid mantle body with small size and pale-translucent smooth texture',
+        description:
+          'Common squid mantle body with small size and pale-translucent smooth texture',
         components: {
           'anatomy:part': {
             subType: 'mantle',
@@ -1654,7 +1658,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'anatomy:octopus_tentacle': {
         id: 'anatomy:octopus_tentacle',
-        description: 'Common octopus tentacle with medium size, thick shape and reddish-brown coloring',
+        description:
+          'Common octopus tentacle with medium size, thick shape and reddish-brown coloring',
         components: {
           'anatomy:part': {
             subType: 'tentacle',
@@ -1675,7 +1680,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'anatomy:octopus_mantle': {
         id: 'anatomy:octopus_mantle',
-        description: 'Common octopus mantle body with medium size and soft texture',
+        description:
+          'Common octopus mantle body with medium size and soft texture',
         components: {
           'anatomy:part': {
             subType: 'mantle',
@@ -2453,7 +2459,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       },
       'anatomy:structure_tortoise_biped': {
         id: 'anatomy:structure_tortoise_biped',
-        description: 'Bipedal tortoise body plan with shell, clawed limbs, and beak',
+        description:
+          'Bipedal tortoise body plan with shell, clawed limbs, and beak',
         topology: {
           rootType: 'torso_with_shell',
           limbSets: [

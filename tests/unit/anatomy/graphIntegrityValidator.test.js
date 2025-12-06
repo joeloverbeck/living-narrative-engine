@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { GraphIntegrityValidator } from '../../../src/anatomy/graphIntegrityValidator.js';
 import { ValidationRuleChain } from '../../../src/anatomy/validation/validationRuleChain.js';
 import { ValidationContext } from '../../../src/anatomy/validation/validationContext.js';
@@ -43,9 +50,9 @@ describe('GraphIntegrityValidator', () => {
     });
 
     it('throws when logger is missing', () => {
-      expect(() => new GraphIntegrityValidator({ entityManager: mockEntityManager })).toThrow(
-        InvalidArgumentError
-      );
+      expect(
+        () => new GraphIntegrityValidator({ entityManager: mockEntityManager })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('logs initialization details with rule count', () => {
@@ -61,7 +68,11 @@ describe('GraphIntegrityValidator', () => {
         .spyOn(ValidationRuleChain.prototype, 'execute')
         .mockImplementation(async () => undefined);
 
-      const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+      const result = await validator.validateGraph(
+        entityIds,
+        recipe,
+        socketOccupancy
+      );
 
       expect(executeSpy).toHaveBeenCalledTimes(1);
       expect(executeSpy.mock.calls[0][0]).toBeInstanceOf(ValidationContext);
@@ -88,7 +99,11 @@ describe('GraphIntegrityValidator', () => {
           ]);
         });
 
-      const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+      const result = await validator.validateGraph(
+        entityIds,
+        recipe,
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(true);
       expect(result.warnings).toEqual(['incomplete metadata']);
@@ -111,7 +126,11 @@ describe('GraphIntegrityValidator', () => {
           ]);
         });
 
-      const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+      const result = await validator.validateGraph(
+        entityIds,
+        recipe,
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual(['missing joint connection']);
@@ -128,7 +147,11 @@ describe('GraphIntegrityValidator', () => {
           throw failure;
         });
 
-      const result = await validator.validateGraph(entityIds, recipe, socketOccupancy);
+      const result = await validator.validateGraph(
+        entityIds,
+        recipe,
+        socketOccupancy
+      );
 
       expect(result.valid).toBe(false);
       expect(result.errors).toEqual([`Validation error: ${failure.message}`]);

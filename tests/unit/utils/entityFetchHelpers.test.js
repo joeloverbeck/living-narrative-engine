@@ -4,7 +4,10 @@ jest.mock('../../../src/entities/entityAccessService.js', () => ({
   resolveEntity: jest.fn(),
 }));
 
-import { fetchEntity, withEntity } from '../../../src/utils/entityFetchHelpers.js';
+import {
+  fetchEntity,
+  withEntity,
+} from '../../../src/utils/entityFetchHelpers.js';
 import { resolveEntity } from '../../../src/entities/entityAccessService.js';
 import { InvalidEntityIdError } from '../../../src/errors/invalidEntityIdError.js';
 
@@ -27,7 +30,9 @@ describe('entityFetchHelpers', () => {
 
   describe('fetchEntity', () => {
     it('throws InvalidEntityIdError when entityId is falsy', () => {
-      expect(() => fetchEntity(entityManager, '')).toThrow(InvalidEntityIdError);
+      expect(() => fetchEntity(entityManager, '')).toThrow(
+        InvalidEntityIdError
+      );
       expect(resolveEntity).not.toHaveBeenCalled();
     });
 
@@ -77,7 +82,10 @@ describe('entityFetchHelpers', () => {
         'No entity resolved.'
       );
 
-      expect(resolveEntity).toHaveBeenCalledWith('missing-entity', entityManager);
+      expect(resolveEntity).toHaveBeenCalledWith(
+        'missing-entity',
+        entityManager
+      );
       expect(logger.debug).toHaveBeenCalledWith('[Test] No entity resolved.');
       expect(result).toBe(fallback);
       expect(callback).not.toHaveBeenCalled();
@@ -96,7 +104,10 @@ describe('entityFetchHelpers', () => {
         '[Test]'
       );
 
-      expect(resolveEntity).toHaveBeenCalledWith('missing-entity', entityManager);
+      expect(resolveEntity).toHaveBeenCalledWith(
+        'missing-entity',
+        entityManager
+      );
       expect(logger.debug).not.toHaveBeenCalled();
       expect(result).toBe(fallback);
       expect(callback).not.toHaveBeenCalled();

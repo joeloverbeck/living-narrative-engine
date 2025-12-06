@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "malformed_hand",
-          "allowedTypes": [
-            "eldritch_malformed_hand"
-          ],
+          "allowedTypes": ["eldritch_malformed_hand"],
           "nameTpl": "malformed hand"
         }
       ]

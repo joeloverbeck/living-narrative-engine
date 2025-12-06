@@ -56,7 +56,9 @@ describe('violence:peck_target action discovery', () => {
       expect(peckTargetAction).toBeDefined();
       expect(peckTargetAction.id).toBe(ACTION_ID);
       expect(peckTargetAction.name).toBe('Peck Target');
-      expect(peckTargetAction.description).toBe('Peck at a target with your beak');
+      expect(peckTargetAction.description).toBe(
+        'Peck at a target with your beak'
+      );
       expect(peckTargetAction.template).toBe(
         'peck {target} with {weapon} ({chance}% chance)'
       );
@@ -73,14 +75,18 @@ describe('violence:peck_target action discovery', () => {
         'violence:actor_beak_body_parts'
       );
       expect(peckTargetAction.targets.primary.placeholder).toBe('weapon');
-      expect(peckTargetAction.targets.primary.description).toBe('Beak to peck with');
+      expect(peckTargetAction.targets.primary.description).toBe(
+        'Beak to peck with'
+      );
 
       // Secondary target is the victim
       expect(peckTargetAction.targets.secondary.scope).toBe(
         'core:actors_in_location'
       );
       expect(peckTargetAction.targets.secondary.placeholder).toBe('target');
-      expect(peckTargetAction.targets.secondary.description).toBe('Target to attack');
+      expect(peckTargetAction.targets.secondary.description).toBe(
+        'Target to attack'
+      );
     });
 
     it('requires damage_capabilities on primary target', () => {
@@ -100,7 +106,9 @@ describe('violence:peck_target action discovery', () => {
 
     it('forbids dead secondary targets', () => {
       expect(peckTargetAction.forbidden_components).toBeDefined();
-      expect(peckTargetAction.forbidden_components.secondary).toContain('core:dead');
+      expect(peckTargetAction.forbidden_components.secondary).toContain(
+        'core:dead'
+      );
     });
 
     it('has forbidden actor positioning states', () => {

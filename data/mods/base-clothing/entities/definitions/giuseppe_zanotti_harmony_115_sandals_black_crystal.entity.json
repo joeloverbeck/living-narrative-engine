@@ -8,15 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base"
-      ]
+      "allowedLayers": ["base"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "flexible"
-      ]
+      "properties": ["flexible"]
     },
     "core:name": {
       "text": "Harmony 115 sandals"
@@ -37,9 +33,7 @@
       "embellishment": "crystals"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

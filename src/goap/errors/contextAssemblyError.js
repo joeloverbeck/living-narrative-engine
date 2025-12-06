@@ -32,7 +32,7 @@ class ContextAssemblyError extends GoapError {
       contextType: details.contextType,
       missingData: details.missingData,
       reason: details.reason,
-      ...details // Include all other details
+      ...details, // Include all other details
     };
 
     super(message, 'GOAP_CONTEXT_ASSEMBLY_ERROR', context, options);

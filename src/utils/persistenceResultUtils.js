@@ -72,7 +72,13 @@ export function normalizePersistenceFailure(result, fallbackCode, defaultMsg) {
     }
 
     if (typeof errorValue === 'object') {
-      const messageKeys = ['message', 'error', 'details', 'reason', 'description'];
+      const messageKeys = [
+        'message',
+        'error',
+        'details',
+        'reason',
+        'description',
+      ];
       for (const key of messageKeys) {
         const value = /** @type {Record<string, unknown>} */ (errorValue)[key];
         if (typeof value === 'string') {

@@ -3,7 +3,9 @@
   "rule_id": "handle_fondle_breasts",
   "comment": "Handles the 'sex-breastplay:fondle_breasts' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex-breastplay:event-is-action-fondle-breasts" },
+  "condition": {
+    "condition_ref": "sex-breastplay:event-is-action-fondle-breasts"
+  },
   "actions": [
     {
       "type": "GET_NAME",

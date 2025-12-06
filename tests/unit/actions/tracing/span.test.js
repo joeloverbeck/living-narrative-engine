@@ -46,8 +46,12 @@ describe('Span', () => {
   });
 
   it('validates constructor arguments', () => {
-    expect(() => new Span('not-number', 'op')).toThrow('Span id must be a number');
-    expect(() => new Span(1, '')).toThrow('Span operation must be a non-empty string');
+    expect(() => new Span('not-number', 'op')).toThrow(
+      'Span id must be a number'
+    );
+    expect(() => new Span(1, '')).toThrow(
+      'Span operation must be a non-empty string'
+    );
     expect(() => new Span(1, 'valid', 'nope')).toThrow(
       'Span parentId must be a number or null'
     );
@@ -92,7 +96,9 @@ describe('Span', () => {
     span.setStatus('error');
     expect(span.status).toBe('error');
 
-    expect(() => span.setStatus('invalid')).toThrow('Invalid span status: invalid');
+    expect(() => span.setStatus('invalid')).toThrow(
+      'Invalid span status: invalid'
+    );
   });
 
   it('manages attributes through setAttribute, setAttributes and addAttributes', () => {
@@ -100,11 +106,15 @@ describe('Span', () => {
 
     span.setAttribute('first', 1);
     expect(span.attributes).toEqual({ first: 1 });
-    expect(() => span.setAttribute(123, 'nope')).toThrow('Attribute key must be a string');
+    expect(() => span.setAttribute(123, 'nope')).toThrow(
+      'Attribute key must be a string'
+    );
 
     span.setAttributes({ second: 2 });
     expect(span.attributes).toEqual({ first: 1, second: 2 });
-    expect(() => span.setAttributes(null)).toThrow('Attributes must be an object');
+    expect(() => span.setAttributes(null)).toThrow(
+      'Attributes must be an object'
+    );
 
     span.addAttributes({ third: 3 });
     expect(span.attributes).toEqual({ first: 1, second: 2, third: 3 });
@@ -127,7 +137,9 @@ describe('Span', () => {
     expect(span.error).toBe(replacementError);
     expect(span.attributes['error.message']).toBe('again');
 
-    expect(() => span.setError('nope')).toThrow('setError requires an Error instance');
+    expect(() => span.setError('nope')).toThrow(
+      'setError requires an Error instance'
+    );
   });
 
   it('adds events with timestamps and validates names', () => {
@@ -144,14 +156,19 @@ describe('Span', () => {
 
     const events = span.attributes.events;
     expect(events).toHaveLength(3);
-    expect(events[0]).toMatchObject({ name: 'first', attributes: { foo: 'bar' } });
+    expect(events[0]).toMatchObject({
+      name: 'first',
+      attributes: { foo: 'bar' },
+    });
     expect(events[0].timestamp).toBe(1200);
     expect(events[1]).toMatchObject({ name: 'second', attributes: {} });
     expect(events[1].timestamp).toBe(1250);
     expect(events[2]).toMatchObject({ name: 'third', attributes: {} });
     expect(events[2].timestamp).toBe(1300);
 
-    expect(() => span.addEvent('', {})).toThrow('Event name must be a non-empty string');
+    expect(() => span.addEvent('', {})).toThrow(
+      'Event name must be a non-empty string'
+    );
   });
 
   it('manages child spans with validation', () => {
@@ -190,7 +207,10 @@ describe('Span', () => {
       operation: 'parent',
       parentId: null,
       status: 'error',
-      attributes: expect.objectContaining({ key: 'value', 'error.message': 'problem' }),
+      attributes: expect.objectContaining({
+        key: 'value',
+        'error.message': 'problem',
+      }),
     });
     expect(json.children).toHaveLength(1);
     expect(json.children[0].id).toBe(12);

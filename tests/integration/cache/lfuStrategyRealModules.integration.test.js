@@ -1,5 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import { UnifiedCache, EvictionPolicy } from '../../../src/cache/UnifiedCache.js';
+import {
+  UnifiedCache,
+  EvictionPolicy,
+} from '../../../src/cache/UnifiedCache.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -42,9 +45,19 @@ describe('LFU strategy real module integration', () => {
     await wait(35);
     expect(cache.get('ghost:value')).toBeUndefined();
 
-    expect(cache.get('array:value')).toEqual(['gamma', { active: true }, ['delta', 7]]);
-    expect(cache.get('object:value')).toEqual({ label: 'beta', nested: { id: 42 } });
-    expect(cache.get('object:value')).toEqual({ label: 'beta', nested: { id: 42 } });
+    expect(cache.get('array:value')).toEqual([
+      'gamma',
+      { active: true },
+      ['delta', 7],
+    ]);
+    expect(cache.get('object:value')).toEqual({
+      label: 'beta',
+      nested: { id: 42 },
+    });
+    expect(cache.get('object:value')).toEqual({
+      label: 'beta',
+      nested: { id: 42 },
+    });
 
     cache.set('string:value', 'alpha');
     expect(cache.get('string:value')).toBe('alpha');
@@ -58,13 +71,22 @@ describe('LFU strategy real module integration', () => {
 
     const entries = cache.getEntries(10);
     const entryMap = Object.fromEntries(entries);
-    expect(entryMap['array:value']).toEqual(['gamma', { active: true }, ['delta', 7]]);
+    expect(entryMap['array:value']).toEqual([
+      'gamma',
+      { active: true },
+      ['delta', 7],
+    ]);
     expect(entryMap['string:value']).toBe('alpha');
     expect(entryMap['circular:value']).toBe(circular);
 
     const keys = cache.getKeys(10);
     expect(keys).toEqual(
-      expect.arrayContaining(['array:value', 'object:value', 'string:value', 'circular:value'])
+      expect.arrayContaining([
+        'array:value',
+        'object:value',
+        'string:value',
+        'circular:value',
+      ])
     );
     expect(keys).not.toContain('ghost:value');
 
@@ -83,8 +105,13 @@ describe('LFU strategy real module integration', () => {
     const metricsBeforeAggressive = cache.getMetrics();
     expect(metricsBeforeAggressive.strategyName).toBe('LFU');
     expect(metricsBeforeAggressive.memorySize).toBeGreaterThan(0);
-    expect(metricsBeforeAggressive.frequencyStats.minFrequency).toBeGreaterThanOrEqual(1);
-    expect(Object.keys(metricsBeforeAggressive.frequencyStats.frequencyDistribution).length).toBeGreaterThan(0);
+    expect(
+      metricsBeforeAggressive.frequencyStats.minFrequency
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      Object.keys(metricsBeforeAggressive.frequencyStats.frequencyDistribution)
+        .length
+    ).toBeGreaterThan(0);
 
     const memoryUsage = cache.getMemoryUsage();
     expect(memoryUsage.currentBytes).toBe(metricsBeforeAggressive.memorySize);

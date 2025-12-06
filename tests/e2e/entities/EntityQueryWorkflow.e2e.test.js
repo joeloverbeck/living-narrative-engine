@@ -18,10 +18,10 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 import EntityQuery from '../../../src/query/EntityQuery.js';
 import { EntityDisplayDataProvider } from '../../../src/entities/entityDisplayDataProvider.js';
-import { 
-  resolveEntity, 
-  getComponent, 
-  setComponent 
+import {
+  resolveEntity,
+  getComponent,
+  setComponent,
 } from '../../../src/entities/entityAccessService.js';
 
 describe('Entity Query & Access E2E Workflow', () => {
@@ -113,62 +113,74 @@ describe('Entity Query & Access E2E Workflow', () => {
       const merchants = [];
 
       for (let i = 0; i < 5; i++) {
-        warriors.push(await testBed.createTestEntity(warriorDefinition, {
-          instanceId: `warrior_${i}`,
-        }));
-        mages.push(await testBed.createTestEntity(mageDefinition, {
-          instanceId: `mage_${i}`,
-        }));
-        rogues.push(await testBed.createTestEntity(rogueDefinition, {
-          instanceId: `rogue_${i}`,
-        }));
-        merchants.push(await testBed.createTestEntity(merchantDefinition, {
-          instanceId: `merchant_${i}`,
-        }));
+        warriors.push(
+          await testBed.createTestEntity(warriorDefinition, {
+            instanceId: `warrior_${i}`,
+          })
+        );
+        mages.push(
+          await testBed.createTestEntity(mageDefinition, {
+            instanceId: `mage_${i}`,
+          })
+        );
+        rogues.push(
+          await testBed.createTestEntity(rogueDefinition, {
+            instanceId: `rogue_${i}`,
+          })
+        );
+        merchants.push(
+          await testBed.createTestEntity(merchantDefinition, {
+            instanceId: `merchant_${i}`,
+          })
+        );
       }
 
       // Act & Assert - Test complex query with withAll
       const meleeQuery = entityManager.findEntities({
         withAll: ['combat:melee', 'core:stats'],
       });
-      
+
       expect(meleeQuery).toHaveLength(10); // 5 warriors + 5 rogues
-      expect(meleeQuery.every(e => 
-        e.hasComponent('combat:melee') && e.hasComponent('core:stats')
-      )).toBe(true);
+      expect(
+        meleeQuery.every(
+          (e) => e.hasComponent('combat:melee') && e.hasComponent('core:stats')
+        )
+      ).toBe(true);
 
       // Test query with withAny
       const combatQuery = entityManager.findEntities({
         withAny: ['combat:melee', 'combat:magic'],
       });
-      
+
       expect(combatQuery).toHaveLength(15); // 5 warriors + 5 mages + 5 rogues
-      
+
       // Test query with without
       const nonCombatQuery = entityManager.findEntities({
         withAll: ['core:position'],
         without: ['combat:melee', 'combat:magic'],
       });
-      
+
       expect(nonCombatQuery).toHaveLength(5); // Only merchants
-      expect(nonCombatQuery.every(e => e.hasComponent('commerce:trader'))).toBe(true);
+      expect(
+        nonCombatQuery.every((e) => e.hasComponent('commerce:trader'))
+      ).toBe(true);
 
       // Test complex combined query
       const stealthyMeleeQuery = entityManager.findEntities({
         withAll: ['combat:melee', 'combat:stealth'],
         without: ['combat:magic'],
       });
-      
+
       expect(stealthyMeleeQuery).toHaveLength(5); // Only rogues
-      expect(stealthyMeleeQuery.every(e => 
-        e.id.startsWith('rogue_')
-      )).toBe(true);
+      expect(stealthyMeleeQuery.every((e) => e.id.startsWith('rogue_'))).toBe(
+        true
+      );
 
       // Test empty result query
       const impossibleQuery = entityManager.findEntities({
         withAll: ['combat:magic', 'commerce:trader'],
       });
-      
+
       expect(impossibleQuery).toHaveLength(0);
     });
 
@@ -190,36 +202,36 @@ describe('Entity Query & Access E2E Workflow', () => {
       const noConditionsQuery = entityManager.findEntities({
         without: ['non:existent'],
       });
-      
+
       expect(noConditionsQuery).toEqual([]);
-      
+
       // Test query with empty arrays
       const emptyQuery = entityManager.findEntities({
         withAll: [],
         withAny: [],
         without: [],
       });
-      
+
       expect(emptyQuery).toEqual([]);
-      
+
       // Test query with null/undefined (should handle gracefully)
       const query = new EntityQuery({
         withAll: null,
         withAny: undefined,
         without: ['test'],
       });
-      
+
       expect(query.withAll).toEqual([]);
       expect(query.withAny).toEqual([]);
       expect(query.without).toEqual(['test']);
-      
+
       // Test query on entity with no components except defaults
       const minimalQuery = entityManager.findEntities({
         withAll: ['core:name'],
       });
-      
+
       expect(minimalQuery.length).toBeGreaterThan(0);
-      expect(minimalQuery.some(e => e.id === 'edge_case_001')).toBe(true);
+      expect(minimalQuery.some((e) => e.id === 'edge_case_001')).toBe(true);
     });
 
     it('should validate query result consistency across different query methods', async () => {
@@ -236,13 +248,16 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       const entities = [];
       for (let i = 0; i < 10; i++) {
-        entities.push(await testBed.createTestEntity(definitionId, {
-          instanceId: `consistency_${i}`,
-        }));
+        entities.push(
+          await testBed.createTestEntity(definitionId, {
+            instanceId: `consistency_${i}`,
+          })
+        );
       }
 
       // Act - Query using different methods
-      const componentQuery = entityManager.getEntitiesWithComponent('test:marker');
+      const componentQuery =
+        entityManager.getEntitiesWithComponent('test:marker');
       const findQuery = entityManager.findEntities({
         withAll: ['test:marker'],
       });
@@ -256,15 +271,15 @@ describe('Entity Query & Access E2E Workflow', () => {
       expect(findQuery).toHaveLength(10);
       expect(complexQuery).toHaveLength(10);
 
-      const componentIds = componentQuery.map(e => e.id).sort();
-      const findIds = findQuery.map(e => e.id).sort();
-      const complexIds = complexQuery.map(e => e.id).sort();
+      const componentIds = componentQuery.map((e) => e.id).sort();
+      const findIds = findQuery.map((e) => e.id).sort();
+      const complexIds = complexQuery.map((e) => e.id).sort();
 
       expect(componentIds).toEqual(findIds);
       expect(findIds).toEqual(complexIds);
 
       // Verify all entities have expected components
-      componentQuery.forEach(entity => {
+      componentQuery.forEach((entity) => {
         expect(entity.hasComponent('test:marker')).toBe(true);
         expect(entity.hasComponent('core:position')).toBe(true);
         expect(entity.hasComponent('core:name')).toBe(true);
@@ -300,7 +315,9 @@ describe('Entity Query & Access E2E Workflow', () => {
         id: definitionId,
         components: {
           'core:name': { text: 'Display Test Entity' },
-          'core:description': { text: 'This entity tests display data aggregation' },
+          'core:description': {
+            text: 'This entity tests display data aggregation',
+          },
           'core:portrait': { imagePath: 'portraits/test_portrait.png' },
           'core:position': { locationId: 'display_location' },
         },
@@ -312,8 +329,10 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       // Act - Retrieve display data
       const name = displayDataProvider.getEntityName('display_test_001');
-      const description = displayDataProvider.getEntityDescription('display_test_001');
-      const portraitPath = displayDataProvider.getEntityPortraitPath('display_test_001');
+      const description =
+        displayDataProvider.getEntityDescription('display_test_001');
+      const portraitPath =
+        displayDataProvider.getEntityPortraitPath('display_test_001');
 
       // Assert - Verify display data consistency
       expect(name).toBe('Display Test Entity');
@@ -321,13 +340,20 @@ describe('Entity Query & Access E2E Workflow', () => {
       expect(portraitPath).toContain('portraits/test_portrait.png');
 
       // Test fallback behavior for missing entity
-      const missingName = displayDataProvider.getEntityName('non_existent', 'Fallback Name');
+      const missingName = displayDataProvider.getEntityName(
+        'non_existent',
+        'Fallback Name'
+      );
       expect(missingName).toBe('Fallback Name');
 
-      const missingDesc = displayDataProvider.getEntityDescription('non_existent', 'Fallback Desc');
+      const missingDesc = displayDataProvider.getEntityDescription(
+        'non_existent',
+        'Fallback Desc'
+      );
       expect(missingDesc).toBe('Fallback Desc');
 
-      const missingPortrait = displayDataProvider.getEntityPortraitPath('non_existent');
+      const missingPortrait =
+        displayDataProvider.getEntityPortraitPath('non_existent');
       expect(missingPortrait).toBeNull();
     });
 
@@ -349,7 +375,7 @@ describe('Entity Query & Access E2E Workflow', () => {
       // Act - Verify initial display data
       let name = displayDataProvider.getEntityName('mutable_001');
       let description = displayDataProvider.getEntityDescription('mutable_001');
-      
+
       expect(name).toBe('Original Name');
       expect(description).toBe('Original Description');
 
@@ -364,7 +390,7 @@ describe('Entity Query & Access E2E Workflow', () => {
       // Assert - Verify updated display data
       name = displayDataProvider.getEntityName('mutable_001');
       description = displayDataProvider.getEntityDescription('mutable_001');
-      
+
       expect(name).toBe('Updated Name');
       expect(description).toBe('Updated Description');
 
@@ -378,12 +404,15 @@ describe('Entity Query & Access E2E Workflow', () => {
           // No description component
         },
       });
-      
+
       const noDescEntity = await testBed.createTestEntity(noDescDef, {
         instanceId: 'no_desc_001',
       });
-      
-      const noDescResult = displayDataProvider.getEntityDescription('no_desc_001', 'No Description');
+
+      const noDescResult = displayDataProvider.getEntityDescription(
+        'no_desc_001',
+        'No Description'
+      );
       expect(noDescResult).toBe('No Description');
     });
 
@@ -409,19 +438,22 @@ describe('Entity Query & Access E2E Workflow', () => {
       }
 
       // Act - Query entities and get their location display data
-      const positionedEntities = entityManager.getEntitiesWithComponent('core:position');
-      
+      const positionedEntities =
+        entityManager.getEntitiesWithComponent('core:position');
+
       // Assert - Verify location integration
-      expect(positionedEntities.length).toBeGreaterThanOrEqual(locations.length);
+      expect(positionedEntities.length).toBeGreaterThanOrEqual(
+        locations.length
+      );
 
       for (const entity of entities) {
         const position = entity.getComponentData('core:position');
         expect(position).toBeDefined();
         expect(position.locationId).toBeDefined();
-        
+
         // Verify entity has position component
         expect(locations).toContain(position.locationId);
-        
+
         // Verify entity name contains location
         const entityName = displayDataProvider.getEntityName(entity.id);
         expect(entityName).toContain(position.locationId);
@@ -455,14 +487,21 @@ describe('Entity Query & Access E2E Workflow', () => {
         },
       });
 
-      const completeEntity = await testBed.createTestEntity(completeDefinition, {
-        instanceId: 'complete_001',
-      });
+      const completeEntity = await testBed.createTestEntity(
+        completeDefinition,
+        {
+          instanceId: 'complete_001',
+        }
+      );
 
       // Act & Assert - Test partial entity display data
       const partialName = displayDataProvider.getEntityName('partial_001');
-      const partialDesc = displayDataProvider.getEntityDescription('partial_001', 'Default Desc');
-      const partialPortrait = displayDataProvider.getEntityPortraitPath('partial_001');
+      const partialDesc = displayDataProvider.getEntityDescription(
+        'partial_001',
+        'Default Desc'
+      );
+      const partialPortrait =
+        displayDataProvider.getEntityPortraitPath('partial_001');
 
       expect(partialName).toBe('Partial Entity');
       expect(partialDesc).toBe('Default Desc');
@@ -470,8 +509,10 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       // Test complete entity display data
       const completeName = displayDataProvider.getEntityName('complete_001');
-      const completeDesc = displayDataProvider.getEntityDescription('complete_001');
-      const completePortrait = displayDataProvider.getEntityPortraitPath('complete_001');
+      const completeDesc =
+        displayDataProvider.getEntityDescription('complete_001');
+      const completePortrait =
+        displayDataProvider.getEntityPortraitPath('complete_001');
 
       expect(completeName).toBe('Complete Entity');
       expect(completeDesc).toBe('Complete Description');
@@ -479,16 +520,17 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       // Test batch display data retrieval
       const allEntities = entityManager.getEntityIds();
-      const displayData = allEntities.map(id => ({
+      const displayData = allEntities.map((id) => ({
         id,
         name: displayDataProvider.getEntityName(id, 'Unknown'),
-        hasDescription: displayDataProvider.getEntityDescription(id, null) !== null,
+        hasDescription:
+          displayDataProvider.getEntityDescription(id, null) !== null,
         hasPortrait: displayDataProvider.getEntityPortraitPath(id) !== null,
       }));
 
       expect(displayData.length).toBeGreaterThan(0);
-      expect(displayData.some(d => d.id === 'partial_001')).toBe(true);
-      expect(displayData.some(d => d.id === 'complete_001')).toBe(true);
+      expect(displayData.some((d) => d.id === 'partial_001')).toBe(true);
+      expect(displayData.some((d) => d.id === 'complete_001')).toBe(true);
     });
   });
 
@@ -498,7 +540,7 @@ describe('Entity Query & Access E2E Workflow', () => {
       // Reduced from 500 to 300 for faster test execution while preserving statistical validity
       const entityCount = 300;
       const definitions = ['test:type_a', 'test:type_b', 'test:type_c'];
-      
+
       for (const def of definitions) {
         await testBed.ensureEntityDefinitionExists(def, {
           id: def,
@@ -536,50 +578,51 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       const creationEnd = performance.now();
       const creationTime = creationEnd - creationStart;
-      
+
       // Performance baseline: <200ms per entity for creation
       const avgCreationTime = creationTime / entityCount;
       expect(avgCreationTime).toBeLessThan(200);
 
       // Act - Perform various queries and measure performance
       const queryStart = performance.now();
-      
+
       // Simple component query
       const statsQuery = entityManager.getEntitiesWithComponent('core:stats');
-      
+
       const queryEnd = performance.now();
       const simpleQueryTime = queryEnd - queryStart;
-      
+
       // Complex query
       const complexStart = performance.now();
-      
+
       const complexQuery = entityManager.findEntities({
         withAll: ['core:stats', 'test:category'],
         without: ['non:existent'],
       });
-      
+
       const complexEnd = performance.now();
       const complexQueryTime = complexEnd - complexStart;
 
       // Assert - Performance thresholds
       expect(simpleQueryTime).toBeLessThan(50); // <50ms for simple query
       expect(complexQueryTime).toBeLessThan(25); // <25ms for complex query
-      
+
       expect(statsQuery).toHaveLength(entityCount);
       expect(complexQuery).toHaveLength(entityCount);
 
       // Test query result caching behavior
       const cacheStart = performance.now();
-      
+
       // Repeat same query multiple times
       for (let i = 0; i < 10; i++) {
-        const cachedQuery = entityManager.getEntitiesWithComponent('core:stats');
+        const cachedQuery =
+          entityManager.getEntitiesWithComponent('core:stats');
         expect(cachedQuery).toHaveLength(entityCount);
       }
-      
+
       const cacheEnd = performance.now();
       const cacheTime = (cacheEnd - cacheStart) / 10;
-      
+
       // Cached queries should be reasonably fast (not necessarily faster in test environment)
       expect(cacheTime).toBeLessThan(10); // <10ms average for cached queries
     });
@@ -622,30 +665,31 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       // Act - Test index-based lookup performance
       const lookupTimes = [];
-      
+
       for (const comp of indexedComponents) {
         const lookupStart = performance.now();
         const results = entityManager.getEntitiesWithComponent(comp);
         const lookupEnd = performance.now();
-        
+
         lookupTimes.push(lookupEnd - lookupStart);
-        
+
         // Verify results
         expect(results.length).toBeGreaterThan(0);
-        expect(results.every(e => e.hasComponent(comp))).toBe(true);
+        expect(results.every((e) => e.hasComponent(comp))).toBe(true);
       }
 
       // Assert - Index lookups should be consistently fast
-      const avgLookupTime = lookupTimes.reduce((a, b) => a + b, 0) / lookupTimes.length;
+      const avgLookupTime =
+        lookupTimes.reduce((a, b) => a + b, 0) / lookupTimes.length;
       const maxLookupTime = Math.max(...lookupTimes);
-      
+
       expect(avgLookupTime).toBeLessThan(10); // <10ms average
       expect(maxLookupTime).toBeLessThan(20); // <20ms worst case
 
       // Test that index is maintained during mutations
       const mutationEntity = entityBatches[0][0];
       const newComponent = 'index:component_d';
-      
+
       // Register schema for new component first
       await testBed.validator.addSchema(
         {
@@ -657,10 +701,13 @@ describe('Entity Query & Access E2E Workflow', () => {
         },
         newComponent
       );
-      
-      await entityManager.addComponent(mutationEntity.id, newComponent, { indexed: true });
-      
-      const mutatedResults = entityManager.getEntitiesWithComponent(newComponent);
+
+      await entityManager.addComponent(mutationEntity.id, newComponent, {
+        indexed: true,
+      });
+
+      const mutatedResults =
+        entityManager.getEntitiesWithComponent(newComponent);
       expect(mutatedResults).toContainEqual(mutationEntity);
     });
 
@@ -685,11 +732,13 @@ describe('Entity Query & Access E2E Workflow', () => {
       }
 
       // Act - Compare optimized vs unoptimized query patterns
-      
+
       // Optimized: Query light component first, then filter
       const optimizedStart = performance.now();
       const lightEntities = entityManager.getEntitiesWithComponent('opt:light');
-      const optimizedResults = lightEntities.filter(e => e.hasComponent('opt:heavy'));
+      const optimizedResults = lightEntities.filter((e) =>
+        e.hasComponent('opt:heavy')
+      );
       const optimizedEnd = performance.now();
       const optimizedTime = optimizedEnd - optimizedStart;
 
@@ -713,7 +762,7 @@ describe('Entity Query & Access E2E Workflow', () => {
       // Test query plan optimization through repeated execution
       const iterations = 50;
       const iterationTimes = [];
-      
+
       for (let i = 0; i < iterations; i++) {
         const iterStart = performance.now();
         const iterResults = entityManager.findEntities({
@@ -727,10 +776,12 @@ describe('Entity Query & Access E2E Workflow', () => {
       // Later iterations should be faster due to optimization
       const firstHalf = iterationTimes.slice(0, iterations / 2);
       const secondHalf = iterationTimes.slice(iterations / 2);
-      
-      const avgFirstHalf = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-      const avgSecondHalf = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-      
+
+      const avgFirstHalf =
+        firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+      const avgSecondHalf =
+        secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
       // Second half should be reasonably fast (optimization may vary in test environment)
       // Both halves should complete in reasonable time
       expect(avgFirstHalf).toBeLessThan(5); // <5ms average
@@ -772,7 +823,7 @@ describe('Entity Query & Access E2E Workflow', () => {
       const directAccessTime = directAccessEnd - directAccessStart;
 
       expect(directResults).toHaveLength(30);
-      expect(directResults.every(e => e !== undefined)).toBe(true);
+      expect(directResults.every((e) => e !== undefined)).toBe(true);
       expect(directAccessTime).toBeLessThan(50); // <50ms for 30 entities
 
       // Pattern 2: Bulk component access
@@ -808,7 +859,7 @@ describe('Entity Query & Access E2E Workflow', () => {
       const componentAccessTime = componentAccessEnd - componentAccessStart;
 
       expect(componentData).toHaveLength(30);
-      expect(componentData.every(d => d !== undefined)).toBe(true);
+      expect(componentData.every((d) => d !== undefined)).toBe(true);
       expect(componentAccessTime).toBeLessThan(50);
 
       // Compare access pattern efficiency
@@ -846,13 +897,13 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       for (const count of accessCounts) {
         const start = performance.now();
-        
+
         for (let i = 0; i < count; i++) {
           const result = entityManager.getEntityInstance('cache_test_001');
           expect(result).toBeDefined();
           expect(result.id).toBe('cache_test_001');
         }
-        
+
         const end = performance.now();
         const totalTime = end - start;
         const avgTime = totalTime / count;
@@ -861,15 +912,15 @@ describe('Entity Query & Access E2E Workflow', () => {
 
       // Assert - Average time should generally improve with caching
       logger.debug('Cache Performance:', accessTimes);
-      
+
       // Cache effectiveness should be visible in the highest iteration count
       // Compare first access (cold) vs highest iteration count (warmest cache)
       const coldCacheTime = accessTimes[0].avgTime;
       const warmCacheTime = accessTimes[3].avgTime;
-      
+
       // Warm cache should be faster than cold cache, or at least not significantly slower
       expect(warmCacheTime).toBeLessThan(coldCacheTime * 2);
-      
+
       // Very high repeat count should be reasonably fast
       expect(accessTimes[3].avgTime).toBeLessThan(5); // <5ms per access
     });
@@ -894,14 +945,14 @@ describe('Entity Query & Access E2E Workflow', () => {
       }
 
       // Act - Test entity access service patterns
-      
+
       // Pattern 1: Entity resolution
       const resolutionStart = performance.now();
       for (const entity of serviceEntities) {
         // Test both entity object and ID resolution
         const resolvedFromObj = resolveEntity(entity, entityManager, logger);
         const resolvedFromId = resolveEntity(entity.id, entityManager, logger);
-        
+
         expect(resolvedFromObj).toBe(entity);
         expect(resolvedFromId).toBe(entity);
       }

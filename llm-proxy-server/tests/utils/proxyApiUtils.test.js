@@ -402,9 +402,7 @@ describe('proxyApiUtils', () => {
       };
 
       const fullJsonString = JSON.stringify(oversizedErrorBody);
-      expect(fullJsonString.length).toBeGreaterThan(
-        ERROR_BODY_PREVIEW_LENGTH
-      );
+      expect(fullJsonString.length).toBeGreaterThan(ERROR_BODY_PREVIEW_LENGTH);
 
       fetch.mockResolvedValueOnce(
         mockFetchResponse(500, oversizedErrorBody, true, false)

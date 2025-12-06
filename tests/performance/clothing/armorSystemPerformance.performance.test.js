@@ -436,8 +436,7 @@ describe('Armor System Performance - ARMSYSANA-010', () => {
       // This scaling check is a secondary validation for algorithmic complexity.
 
       if (avgFourLayer > 0.1 && avgFiveLayer > 0.1) {
-        const overhead =
-          ((avgFiveLayer - avgFourLayer) / avgFourLayer) * 100;
+        const overhead = ((avgFiveLayer - avgFourLayer) / avgFourLayer) * 100;
         console.log(`Overhead: ${overhead.toFixed(2)}%`);
 
         // Allow up to 125% overhead to accommodate measurement variance while still
@@ -596,7 +595,9 @@ describe('Armor System Performance - ARMSYSANA-010', () => {
       );
 
       console.log('Armored character scaling:', measurements);
-      console.log(`Max deviation from linear: ${(maxDeviation * 100).toFixed(2)}%`);
+      console.log(
+        `Max deviation from linear: ${(maxDeviation * 100).toFixed(2)}%`
+      );
 
       // Linear scaling means per-char time stays approximately constant.
       // Relaxed from 0.5 to 1.0 because:

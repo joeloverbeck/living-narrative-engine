@@ -8,15 +8,15 @@ Create the JSON schema for the `UNWIELD_ITEM` operation and add its reference to
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                              | Purpose                     |
+| ------------------------------------------------- | --------------------------- |
 | `data/schemas/operations/unwieldItem.schema.json` | Operation schema definition |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/schemas/operation.schema.json` | Add `$ref` to unwieldItem schema in `anyOf` array |
+| File                                       | Change                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| `data/schemas/operation.schema.json`       | Add `$ref` to unwieldItem schema in `anyOf` array                 |
 | `src/configuration/staticConfiguration.js` | Add `'unwieldItem.schema.json'` to `OPERATION_SCHEMA_FILES` array |
 
 > **Note (Added)**: The original ticket missed the `staticConfiguration.js` modification. Schema files must be registered in `OPERATION_SCHEMA_FILES` for the schema loader to discover them at runtime.
@@ -142,17 +142,18 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/unlockGrabbing.schema.json` | Similar operation schema pattern |
-| `data/schemas/operations/dropItemAtLocation.schema.json` | Similar parameter structure |
-| `data/schemas/base-operation.schema.json` | Base schema to extend |
+| File                                                     | Purpose                          |
+| -------------------------------------------------------- | -------------------------------- |
+| `data/schemas/operations/unlockGrabbing.schema.json`     | Similar operation schema pattern |
+| `data/schemas/operations/dropItemAtLocation.schema.json` | Similar parameter structure      |
+| `data/schemas/base-operation.schema.json`                | Base schema to extend            |
 
 ## Outcome
 
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create `data/schemas/operations/unwieldItem.schema.json` with `actor_id`/`item_id` parameters
 - Add `$ref` to `data/schemas/operation.schema.json` in alphabetical order
 
@@ -171,11 +172,13 @@ npm run test:ci
    - Without this, the schema would not be loaded at runtime
 
 **Key Discrepancies Corrected:**
+
 1. Parameter naming convention (`actorEntity`/`itemEntity` vs `actor_id`/`item_id`)
 2. Missing `staticConfiguration.js` modification (critical for schema loading)
 3. `operation.schema.json` uses functional grouping, not alphabetical order
 
 **Tests Passing:**
+
 - `npm run validate` ✅
 - `npm run validate:strict` ✅
 - `tests/integration/loaders/schemaLoader.integration.test.js` ✅

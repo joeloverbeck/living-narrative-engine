@@ -12,9 +12,7 @@ const currentFilename = fileURLToPath(import.meta.url);
 const currentDirname = path.dirname(currentFilename);
 
 describe('Movement Mod - Travel Through Dimensions Validation', () => {
-
   describe('Rule Validation - handle_travel_through_dimensions', () => {
-
     it('should have event_type field after fix', () => {
       const rulePath = path.resolve(
         process.cwd(),
@@ -60,7 +58,6 @@ describe('Movement Mod - Travel Through Dimensions Validation', () => {
   });
 
   describe('Entity Instance Validation - dimensional_rift_blocker', () => {
-
     it('should have instanceId field after fix', () => {
       const entityPath = path.resolve(
         process.cwd(),
@@ -101,7 +98,9 @@ describe('Movement Mod - Travel Through Dimensions Validation', () => {
       const entityContent = JSON.parse(fs.readFileSync(entityPath, 'utf-8'));
 
       expect(entityContent).toHaveProperty('definitionId');
-      expect(entityContent.definitionId).toBe('patrol:dimensional_rift_blocker');
+      expect(entityContent.definitionId).toBe(
+        'patrol:dimensional_rift_blocker'
+      );
     });
   });
 });

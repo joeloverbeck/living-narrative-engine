@@ -32,13 +32,19 @@ describe('validateAndClone', () => {
       schemaValidator,
       logger,
       'EntityManager',
-      clonerFn,
+      clonerFn
     );
 
     expect(clonerFn).toHaveBeenCalledTimes(1);
     expect(clonerFn).toHaveBeenCalledWith(original);
-    expect(schemaValidator.validate).toHaveBeenCalledWith('core:test_component', cloned);
-    expect(validationSucceeded).toHaveBeenCalledWith({ isValid: true, errors: [] });
+    expect(schemaValidator.validate).toHaveBeenCalledWith(
+      'core:test_component',
+      cloned
+    );
+    expect(validationSucceeded).toHaveBeenCalledWith({
+      isValid: true,
+      errors: [],
+    });
     expect(logger.error).not.toHaveBeenCalled();
     expect(result).toBe(cloned);
     expect(result).not.toBe(original);
@@ -48,12 +54,18 @@ describe('validateAndClone', () => {
     const componentData = { name: 'invalid', payload: { value: null } };
     const cloned = { ...componentData };
     const clonerFn = jest.fn(() => cloned);
-    const validationError = { isValid: false, errors: [{ path: '#/value', message: 'required' }] };
-    const schemaValidator = { validate: jest.fn().mockReturnValue(validationError) };
+    const validationError = {
+      isValid: false,
+      errors: [{ path: '#/value', message: 'required' }],
+    };
+    const schemaValidator = {
+      validate: jest.fn().mockReturnValue(validationError),
+    };
     const logger = { error: jest.fn() };
 
     validationSucceeded.mockReturnValue(false);
-    const formattedErrors = '{\n  "path": "#/value",\n  "message": "required"\n}';
+    const formattedErrors =
+      '{\n  "path": "#/value",\n  "message": "required"\n}';
     formatValidationErrors.mockReturnValue(formattedErrors);
 
     const callValidateAndClone = () =>
@@ -63,18 +75,21 @@ describe('validateAndClone', () => {
         schemaValidator,
         logger,
         'EntityFactory',
-        clonerFn,
+        clonerFn
       );
 
     expect(callValidateAndClone).toThrow(
-      new Error(`EntityFactory Errors:\n${formattedErrors}`),
+      new Error(`EntityFactory Errors:\n${formattedErrors}`)
     );
     expect(validationSucceeded).toHaveBeenCalledWith(validationError);
     expect(formatValidationErrors).toHaveBeenCalledWith(validationError);
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(
-      `EntityFactory Errors:\n${formattedErrors}`,
+      `EntityFactory Errors:\n${formattedErrors}`
     );
-    expect(schemaValidator.validate).toHaveBeenCalledWith('core:test_component', cloned);
+    expect(schemaValidator.validate).toHaveBeenCalledWith(
+      'core:test_component',
+      cloned
+    );
   });
 });

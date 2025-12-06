@@ -443,7 +443,12 @@ describe('OutcomeDeterminerService', () => {
     });
 
     it('should only return valid outcome types', () => {
-      const validOutcomes = ['CRITICAL_SUCCESS', 'SUCCESS', 'FAILURE', 'FUMBLE'];
+      const validOutcomes = [
+        'CRITICAL_SUCCESS',
+        'SUCCESS',
+        'FAILURE',
+        'FUMBLE',
+      ];
 
       // Test various scenarios
       const scenarios = [

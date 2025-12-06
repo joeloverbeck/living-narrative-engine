@@ -60,7 +60,7 @@ describe('statusCodeMapper falsy and dynamic cases', () => {
 
   it('honors dynamically added mappings for newly introduced status codes', () => {
     const code = 418;
-    const customMessage = "Short and stout";
+    const customMessage = 'Short and stout';
     statusCodeMap.set(code, customMessage);
     addedCodes.add(code);
 

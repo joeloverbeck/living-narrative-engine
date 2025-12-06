@@ -1,32 +1,32 @@
 {
-    "$schema": "http://example.com/schemas/world.schema.json",
-    "id": "patrol:patrol",
-    "name": "Salt flats rip in reality",
-    "description": "A self-contained game world centered around a rip in reality.",
-    "instances": [
-        {
-            "instanceId": "patrol:perimeter_of_rip_in_reality_instance"
-        },
-        {
-            "instanceId": "patrol:eldritch_dimension_instance"
-        },
-        {
-            "instanceId": "patrol:dimensional_rift_blocker_instance"
-        },
-        {
-            "instanceId": "patrol:coffee_cup_instance"
-        },
-        {
-            "instanceId": "patrol:field_notebook_instance"
-        },
-        {
-            "instanceId": "patrol:dylan_crace_instance"
-        },
-        {
-            "instanceId": "patrol:len_amezua_instance"
-        },
-        {
-            "instanceId": "patrol:writhing_observer_instance"
-        }
-    ]
+  "$schema": "http://example.com/schemas/world.schema.json",
+  "id": "patrol:patrol",
+  "name": "Salt flats rip in reality",
+  "description": "A self-contained game world centered around a rip in reality.",
+  "instances": [
+    {
+      "instanceId": "patrol:perimeter_of_rip_in_reality_instance"
+    },
+    {
+      "instanceId": "patrol:eldritch_dimension_instance"
+    },
+    {
+      "instanceId": "patrol:dimensional_rift_blocker_instance"
+    },
+    {
+      "instanceId": "patrol:coffee_cup_instance"
+    },
+    {
+      "instanceId": "patrol:field_notebook_instance"
+    },
+    {
+      "instanceId": "patrol:dylan_crace_instance"
+    },
+    {
+      "instanceId": "patrol:len_amezua_instance"
+    },
+    {
+      "instanceId": "patrol:writhing_observer_instance"
+    }
+  ]
 }

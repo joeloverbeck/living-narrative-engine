@@ -6,13 +6,26 @@
  *              context fields using the real formatter/configuration stack.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import EnhancedConsoleLogger from '../../src/logging/enhancedConsoleLogger.js';
 
 const ORIGINAL_ENV = { ...process.env };
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 function setColorCapabilities() {
   if (stdoutDescriptor?.configurable) {

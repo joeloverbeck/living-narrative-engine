@@ -60,8 +60,8 @@ describe('hugging:release_hug action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
-          [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from || [];
 
         return closeness.reduce((acc, partnerId) => {
           const partner = entityManager.getEntityInstance(partnerId);
@@ -70,7 +70,8 @@ describe('hugging:release_hug action integration', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from || [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ||
+            [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
             !partnerFacingAway.includes(actorId);
@@ -159,7 +160,9 @@ describe('hugging:release_hug action integration', () => {
   };
 
   it('clears hugging state and emits matching release messaging', async () => {
-    const scenario = primeHugScenario(['Lena', 'Miles'], { location: 'solarium' });
+    const scenario = primeHugScenario(['Lena', 'Miles'], {
+      location: 'solarium',
+    });
     const room = ModEntityScenarios.createRoom('solarium', 'Solarium');
     testFixture.reset([room, scenario.actor, scenario.target]);
 
@@ -195,7 +198,9 @@ describe('hugging:release_hug action integration', () => {
   });
 
   it('preserves other hugging relationships while releasing the target', async () => {
-    const scenario = primeHugScenario(['Aria', 'Bennett'], { location: 'atrium' });
+    const scenario = primeHugScenario(['Aria', 'Bennett'], {
+      location: 'atrium',
+    });
     const otherPair = ModEntityScenarios.createActorTargetPair({
       names: ['Chloe', 'Darius'],
       location: 'atrium',

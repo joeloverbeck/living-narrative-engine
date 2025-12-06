@@ -27,7 +27,10 @@
 /** @typedef {import('../operationInterpreter.js').default} OperationInterpreter */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
+import {
+  assertNonBlankString,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
@@ -190,7 +193,10 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
    */
   #validateParameters(parameters, logger) {
     try {
-      assertPresent(parameters, 'Parameters required for auto-move closeness partners');
+      assertPresent(
+        parameters,
+        'Parameters required for auto-move closeness partners'
+      );
       assertNonBlankString(
         parameters.actor_id,
         'actor_id',
@@ -373,15 +379,24 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
       // Get the operation interpreter
       const interpreter = this.#operationInterpreterResolver();
       if (!interpreter) {
-        logger.warn('Operation interpreter not available, skipping perceptible messages', {
-          partnerId,
-        });
+        logger.warn(
+          'Operation interpreter not available, skipping perceptible messages',
+          {
+            partnerId,
+          }
+        );
         return;
       }
 
       // Get entity names for the message
-      const partnerName = this.#entityManager.getComponentData(partnerId, 'core:name');
-      const actorName = this.#entityManager.getComponentData(actorId, 'core:name');
+      const partnerName = this.#entityManager.getComponentData(
+        partnerId,
+        'core:name'
+      );
+      const actorName = this.#entityManager.getComponentData(
+        actorId,
+        'core:name'
+      );
       const destinationName = this.#entityManager.getComponentData(
         destinationId,
         'core:name'
@@ -424,10 +439,13 @@ class AutoMoveClosenessPartnersHandler extends BaseOperationHandler {
         message: messageText,
       });
     } catch (error) {
-      logger.warn('Failed to dispatch perceptible message for auto-moved partner', {
-        partnerId,
-        error: error.message,
-      });
+      logger.warn(
+        'Failed to dispatch perceptible message for auto-moved partner',
+        {
+          partnerId,
+          error: error.message,
+        }
+      );
       // Don't throw - perceptible messages are non-critical
     }
   }

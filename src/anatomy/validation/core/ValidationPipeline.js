@@ -215,7 +215,9 @@ export class ValidationPipeline {
       .map((issue) =>
         this.#applySeverityOverride(issue, defaultSeverity, overrides)
       )
-      .filter((issue) => issue.severity && VALID_SEVERITIES.has(issue.severity));
+      .filter(
+        (issue) => issue.severity && VALID_SEVERITIES.has(issue.severity)
+      );
 
     if (normalizedIssues.length > 0) {
       builder.addIssues(normalizedIssues);

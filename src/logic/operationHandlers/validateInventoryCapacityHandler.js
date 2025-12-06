@@ -67,7 +67,11 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
    */
   #validateParams(params, logger) {
     if (
-      !assertParamsObject(params, this.#dispatcher, 'VALIDATE_INVENTORY_CAPACITY')
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'VALIDATE_INVENTORY_CAPACITY'
+      )
     ) {
       return null;
     }

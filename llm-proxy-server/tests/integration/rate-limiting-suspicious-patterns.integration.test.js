@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, afterEach, jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -59,7 +53,9 @@ describe('adaptive rate limiting suspicious pattern integration', () => {
 
       expect(blockResponse).not.toBeNull();
       expect(blockResponse.status).toBe(429);
-      expect(blockResponse.body.error.code).toBe('ADAPTIVE_RATE_LIMIT_EXCEEDED');
+      expect(blockResponse.body.error.code).toBe(
+        'ADAPTIVE_RATE_LIMIT_EXCEEDED'
+      );
       expect(blockResponse.body.error.details.severity).toBe('high');
 
       await wait(600);

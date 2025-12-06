@@ -693,7 +693,9 @@ describe('AnyOf Error Formatting Integration', () => {
         macro: 'core:sample_macro',
       });
 
-      expect(formattedError).toContain('Invalid macro reference format detected.');
+      expect(formattedError).toContain(
+        'Invalid macro reference format detected.'
+      );
       expect(formattedError).toContain(
         'Do NOT include a "type" field with macro references.'
       );

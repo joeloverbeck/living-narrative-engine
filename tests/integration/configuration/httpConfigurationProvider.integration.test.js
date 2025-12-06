@@ -288,9 +288,9 @@ describe('HttpConfigurationProvider integration', () => {
     expect(() => new HttpConfigurationProvider()).toThrow(
       'HttpConfigurationProvider requires ISafeEventDispatcher'
     );
-    expect(() => new HttpConfigurationProvider({ logger: createLogger() })).toThrow(
-      'HttpConfigurationProvider requires ISafeEventDispatcher'
-    );
+    expect(
+      () => new HttpConfigurationProvider({ logger: createLogger() })
+    ).toThrow('HttpConfigurationProvider requires ISafeEventDispatcher');
   });
 
   it('falls back to the console logger when none is provided', async () => {
@@ -322,7 +322,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       message:
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.',
@@ -342,7 +344,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       message: expect.stringContaining('Failed to fetch configuration from'),
       details: expect.objectContaining({
@@ -362,7 +366,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       details: expect.objectContaining({
         statusCode: 503,
@@ -381,7 +387,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       message: expect.stringContaining('Failed to parse JSON response'),
       details: expect.objectContaining({
@@ -400,7 +408,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       details: expect.objectContaining({ url, error: 'broken-json' }),
     });
@@ -415,9 +425,13 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
-      message: expect.stringContaining('Error loading or parsing configuration'),
+      message: expect.stringContaining(
+        'Error loading or parsing configuration'
+      ),
       details: expect.objectContaining({ url: unreachableUrl }),
     });
   });
@@ -431,7 +445,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       details: expect.objectContaining({ url, error: 'broken-network' }),
     });
@@ -446,7 +462,9 @@ describe('HttpConfigurationProvider integration', () => {
     );
 
     expect(dispatchedEvents).toHaveLength(1);
-    expect(dispatchedEvents[0]).toMatchObject({ type: SYSTEM_ERROR_OCCURRED_ID });
+    expect(dispatchedEvents[0]).toMatchObject({
+      type: SYSTEM_ERROR_OCCURRED_ID,
+    });
     expect(dispatchedEvents[0].payload).toMatchObject({
       details: expect.objectContaining({ url, error: 'boom-error' }),
     });

@@ -3,11 +3,13 @@
 ## Status: ✅ COMPLETED
 
 ## Objective
+
 Add comprehensive unit tests to ensure `KNOWN_OPERATION_TYPES` whitelist remains synchronized with operation handler registry, preventing configuration drift and validation failures.
 
 ## Ticket Scope
 
 ### What This Ticket WILL Do
+
 - Enhance `tests/unit/utils/preValidationUtils.test.js` with completeness tests
 - Add 3 synchronization tests:
   1. All registered handlers are whitelisted
@@ -17,6 +19,7 @@ Add comprehensive unit tests to ensure `KNOWN_OPERATION_TYPES` whitelist remains
 - Ensure tests will catch future synchronization issues
 
 ### What This Ticket WILL NOT Do
+
 - Modify `KNOWN_OPERATION_TYPES` array in `preValidationUtils.js`
 - Change operation handler registration logic
 - Add operation handlers or remove existing ones
@@ -26,11 +29,13 @@ Add comprehensive unit tests to ensure `KNOWN_OPERATION_TYPES` whitelist remains
 ## Assumption Corrections
 
 ### Original Assumption (INCORRECT)
+
 ```javascript
 const registeredHandlers = registry.getAllTypes();
 ```
 
 ### Actual Implementation (CORRECT)
+
 ```javascript
 const registeredHandlers = registry.getRegisteredTypes();
 ```
@@ -40,9 +45,11 @@ const registeredHandlers = registry.getRegisteredTypes();
 ## Files to Touch
 
 ### Modified Files (1)
+
 - `tests/unit/utils/preValidationUtils.test.js` - Add whitelist completeness tests
 
 ### Files to Read (for context)
+
 - `src/utils/preValidationUtils.js` - Understand KNOWN_OPERATION_TYPES structure
 - `src/logic/operationRegistry.js` - Understand `getRegisteredTypes()` method
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` - Understand handler registration
@@ -52,12 +59,14 @@ const registeredHandlers = registry.getRegisteredTypes();
 ## Out of Scope
 
 ### Must NOT Change
+
 - ❌ `src/utils/preValidationUtils.js` - Whitelist array unchanged
 - ❌ `src/dependencyInjection/registrations/*.js` - Registration logic unchanged
 - ❌ `src/logic/operationHandlers/*.js` - Handler implementations unchanged
 - ❌ Any existing tests - Only add new test cases
 
 ### Must NOT Add
+
 - ❌ New validation script (covered by JSOSCHVALROB-004)
 - ❌ Integration tests (unit tests only)
 - ❌ Changes to DI container or tokens
@@ -68,6 +77,7 @@ const registeredHandlers = registry.getRegisteredTypes();
 ### Tests Must Pass
 
 #### Test 1: All Registered Handlers are Whitelisted
+
 ```javascript
 describe('KNOWN_OPERATION_TYPES Whitelist Completeness', () => {
   it('should include all registered operation handlers', () => {
@@ -78,13 +88,13 @@ describe('KNOWN_OPERATION_TYPES Whitelist Completeness', () => {
     const whitelistedTypes = KNOWN_OPERATION_TYPES;
 
     // Act & Assert
-    registeredHandlers.forEach(handlerType => {
+    registeredHandlers.forEach((handlerType) => {
       expect(whitelistedTypes).toContain(handlerType);
     });
 
     // Additional assertion: No handlers missing from whitelist
     const missing = registeredHandlers.filter(
-      type => !whitelistedTypes.includes(type)
+      (type) => !whitelistedTypes.includes(type)
     );
     expect(missing).toHaveLength(0);
   });
@@ -96,6 +106,7 @@ describe('KNOWN_OPERATION_TYPES Whitelist Completeness', () => {
 **Failure Example**: If handler exists but not whitelisted, test fails with clear message
 
 #### Test 2: All Whitelist Entries Have Handlers
+
 ```javascript
 it('should not include non-existent operation types', () => {
   // Arrange
@@ -104,13 +115,13 @@ it('should not include non-existent operation types', () => {
   const registeredHandlers = registry.getRegisteredTypes(); // CORRECTED METHOD NAME
 
   // Act & Assert
-  KNOWN_OPERATION_TYPES.forEach(type => {
+  KNOWN_OPERATION_TYPES.forEach((type) => {
     expect(registeredHandlers).toContain(type);
   });
 
   // Additional assertion: No orphaned whitelist entries
   const orphaned = KNOWN_OPERATION_TYPES.filter(
-    type => !registeredHandlers.includes(type)
+    (type) => !registeredHandlers.includes(type)
   );
   expect(orphaned).toHaveLength(0);
 });
@@ -121,6 +132,7 @@ it('should not include non-existent operation types', () => {
 **Failure Example**: If whitelist entry has no handler, test fails with clear message
 
 #### Test 3: Whitelist Maintains Alphabetical Order
+
 ```javascript
 it('should maintain alphabetical order for maintainability', () => {
   // Arrange
@@ -150,18 +162,23 @@ it('should maintain alphabetical order for maintainability', () => {
 ### Invariants That Must Remain True
 
 #### Invariant 1: Existing Tests Still Pass
+
 ```bash
 npm run test:unit -- tests/unit/utils/preValidationUtils.test.js
 ```
+
 **Must Return**: All tests pass (0 failures)
 
 #### Invariant 2: Tests Pass in Current State
+
 ```bash
 npm run test:unit -- tests/unit/utils/preValidationUtils.test.js --testNamePattern="Completeness"
 ```
+
 **Must Return**: All 3 new completeness tests pass
 
 #### Invariant 3: Tests Detect Real Issues
+
 ```javascript
 // Manual verification (don't commit):
 // 1. Temporarily remove one entry from KNOWN_OPERATION_TYPES
@@ -171,7 +188,7 @@ npm run test:unit -- tests/unit/utils/preValidationUtils.test.js --testNamePatte
 
 // Expected failure message:
 `Expected KNOWN_OPERATION_TYPES to contain 'REMOVED_TYPE'
-Missing from whitelist: REMOVED_TYPE`
+Missing from whitelist: REMOVED_TYPE`;
 ```
 
 **Must Verify**: Tests actually detect synchronization issues
@@ -179,6 +196,7 @@ Missing from whitelist: REMOVED_TYPE`
 ## Implementation Notes
 
 ### Test Structure
+
 ```javascript
 import { describe, it, expect } from '@jest/globals';
 import { KNOWN_OPERATION_TYPES } from '../../../src/utils/preValidationUtils.js';
@@ -213,13 +231,14 @@ describe('preValidationUtils - KNOWN_OPERATION_TYPES', () => {
 ```
 
 ### Helper Functions (if needed)
+
 ```javascript
 function findMissingFromWhitelist(registered, whitelist) {
-  return registered.filter(type => !whitelist.includes(type));
+  return registered.filter((type) => !whitelist.includes(type));
 }
 
 function findOrphanedInWhitelist(whitelist, registered) {
-  return whitelist.filter(type => !registered.includes(type));
+  return whitelist.filter((type) => !registered.includes(type));
 }
 
 function findSortingIssues(whitelist) {
@@ -237,6 +256,7 @@ function findSortingIssues(whitelist) {
 ```
 
 ### Error Message Quality
+
 ```javascript
 // Good error messages for failures:
 
@@ -245,7 +265,6 @@ function findSortingIssues(whitelist) {
 Missing from KNOWN_OPERATION_TYPES: ${missing.join(', ')}
 
 Add these types to src/utils/preValidationUtils.js (lines 32-94)`
-
 // Orphaned in whitelist:
 `Expected all whitelisted types to have registered handlers.
 No handler found for: ${orphaned.join(', ')}
@@ -253,17 +272,17 @@ No handler found for: ${orphaned.join(', ')}
 Either:
 1. Register handlers for these types, or
 2. Remove from KNOWN_OPERATION_TYPES in src/utils/preValidationUtils.js`
-
 // Not sorted:
 `Expected KNOWN_OPERATION_TYPES to be alphabetically sorted.
-Sorting issues at positions: ${issues.map(i => i.position).join(', ')}
+Sorting issues at positions: ${issues.map((i) => i.position).join(', ')}
 
 Expected order:
 ${sorted.slice(0, 10).join('\n')}
-...`
+...`;
 ```
 
 ### Test Isolation
+
 ```javascript
 // Ensure tests don't depend on specific operation count
 it('should have consistent counts', () => {
@@ -310,16 +329,17 @@ git diff tests/unit/utils/preValidationUtils.test.js
 
 These tests complement the validation script created in JSOSCHVALROB-004:
 
-| Aspect | Script (JSOSCHVALROB-004) | Tests (This Ticket) |
-|--------|---------------------------|---------------------|
-| **When Runs** | On-demand, CI/CD | Every test run |
-| **Scope** | Pre-commit validation | Continuous verification |
-| **Output** | Terminal, exit code | Test results, coverage |
-| **Action** | Blocks commit/deploy | Fails test suite |
+| Aspect        | Script (JSOSCHVALROB-004) | Tests (This Ticket)     |
+| ------------- | ------------------------- | ----------------------- |
+| **When Runs** | On-demand, CI/CD          | Every test run          |
+| **Scope**     | Pre-commit validation     | Continuous verification |
+| **Output**    | Terminal, exit code       | Test results, coverage  |
+| **Action**    | Blocks commit/deploy      | Fails test suite        |
 
 **Together they ensure**: No unsynchronized state reaches production
 
 ## Related Documentation
+
 - Spec: `specs/json-schema-validation-robustness.md` (lines 1060-1085, 1351-1397)
 - Pre-validation: `src/utils/preValidationUtils.js` (lines 32-94)
 - Operation Registry: `src/logic/operationRegistry.js` (lines 96-99 for `getRegisteredTypes()`)
@@ -328,12 +348,14 @@ These tests complement the validation script created in JSOSCHVALROB-004:
 - CLAUDE.md: Operation registration checklist (lines 421-504)
 
 ## Expected diff size
+
 - `tests/unit/utils/preValidationUtils.test.js`: ~100 lines added (3 tests + setup + helper functions)
 - Total: ~100 lines changed
 
 ## Outcome
 
 ### What Was Actually Changed
+
 - Added 3 completeness tests to `tests/unit/utils/preValidationUtils.test.js`:
   1. `should include all registered operation handlers` - Verifies all registered handlers are in whitelist
   2. `should not include non-existent operation types` - Verifies no orphaned whitelist entries
@@ -345,6 +367,7 @@ These tests complement the validation script created in JSOSCHVALROB-004:
 - Minimal source code change (only sorting of existing array for maintainability)
 
 ### Deviations from Original Plan
+
 - **Method name correction**: Used `getRegisteredTypes()` instead of assumed `getAllTypes()`
 - **Simpler implementation**: No helper functions needed (tests are self-contained and clear)
 - **Enhanced error messages**: Tests throw descriptive errors with file paths and specific guidance
@@ -352,6 +375,7 @@ These tests complement the validation script created in JSOSCHVALROB-004:
 - **Line count**: ~70 lines added to tests (slightly less than estimated 100 lines)
 
 ### Verification Results
+
 ✅ All existing tests pass (backward compatibility maintained)
 ✅ All 3 new tests pass in current state
 ✅ Manual verification confirmed tests detect synchronization issues

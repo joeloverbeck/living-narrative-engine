@@ -166,11 +166,11 @@ console.log(updated);
 
 #### Tips
 
-* Combine `showOnlyIfProperty` with inline metadata flags (`shouldDescribeInActivity`) for simple
+- Combine `showOnlyIfProperty` with inline metadata flags (`shouldDescribeInActivity`) for simple
   runtime toggles.
-* For more complex logic use `JsonLogicEvaluationService` by providing a `jsonLogic`
+- For more complex logic use `JsonLogicEvaluationService` by providing a `jsonLogic`
   expression in your metadata (see ACTDESC-018 examples in the unit tests).
-* Conditions run against the component data and resolved target state, so ensure any referenced
+- Conditions run against the component data and resolved target state, so ensure any referenced
   properties exist before enabling the condition.
 
 ## Example 3: Group Related Activities
@@ -260,10 +260,10 @@ without repetition.
 
 #### Tips
 
-* Prioritise the primary activity by giving it the highest `priority`. The first item in the group
+- Prioritise the primary activity by giving it the highest `priority`. The first item in the group
   controls the base template.
-* Use `groupKey` values to scope combinations. Activities with different keys never merge.
-* If you need custom conjunctions or phrasing, adjust the metadata templates to include the
+- Use `groupKey` values to scope combinations. Activities with different keys never merge.
+- If you need custom conjunctions or phrasing, adjust the metadata templates to include the
   conjunction text directly (for example, `'{actor} is embracing {target} while {adverb}'`).
 
 ## Example 4: Optimise Performance
@@ -331,7 +331,7 @@ dispatcher.subscribe('ACTIVITY_DESCRIPTION_ERROR', ({ payload }) => {
 
 ### Avoid unnecessary recomputation
 
-* Fetch the service once per container and reuse it; it is registered as a singleton.
-* Refrain from calling `clearAllCaches()` in production—use targeted invalidation instead.
-* When previewing data in tools, use `getTestHooks().getCacheSnapshot()` to inspect cache sizes
+- Fetch the service once per container and reuse it; it is registered as a singleton.
+- Refrain from calling `clearAllCaches()` in production—use targeted invalidation instead.
+- When previewing data in tools, use `getTestHooks().getCacheSnapshot()` to inspect cache sizes
   before adding extra logging or instrumentation.

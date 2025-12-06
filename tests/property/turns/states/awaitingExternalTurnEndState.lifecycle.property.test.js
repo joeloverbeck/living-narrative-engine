@@ -3,7 +3,14 @@
  * Uses fast-check to verify lifecycle invariants hold for all possible inputs
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fc from 'fast-check';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
@@ -74,12 +81,18 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
             const mockSetTimeout = jest.fn(() => 'timeout-id');
             const mockClearTimeout = jest.fn();
 
-            const mockCtx = createMockContext(actorId, mockEventBus, mockLogger);
+            const mockCtx = createMockContext(
+              actorId,
+              mockEventBus,
+              mockLogger
+            );
             const mockHandler = createMockHandler(mockCtx, mockLogger);
 
             const state = new AwaitingExternalTurnEndState(mockHandler, {
               timeoutMs,
-              environmentProvider: new TestEnvironmentProvider({ IS_PRODUCTION: isProduction }),
+              environmentProvider: new TestEnvironmentProvider({
+                IS_PRODUCTION: isProduction,
+              }),
               setTimeoutFn: mockSetTimeout,
               clearTimeoutFn: mockClearTimeout,
             });
@@ -89,7 +102,10 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
 
             // Assert - Property: ∀ valid inputs, enterState creates exactly 1 timeout
             expect(mockSetTimeout).toHaveBeenCalledTimes(1);
-            expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), timeoutMs);
+            expect(mockSetTimeout).toHaveBeenCalledWith(
+              expect.any(Function),
+              timeoutMs
+            );
 
             // Cleanup
             await state.destroy(mockHandler);
@@ -124,7 +140,11 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
             const mockSetTimeout = jest.fn(() => timeoutIdValue);
             const mockClearTimeout = jest.fn();
 
-            const mockCtx = createMockContext(actorId, mockEventBus, mockLogger);
+            const mockCtx = createMockContext(
+              actorId,
+              mockEventBus,
+              mockLogger
+            );
             const mockHandler = createMockHandler(mockCtx, mockLogger);
 
             const state = new AwaitingExternalTurnEndState(mockHandler, {
@@ -176,7 +196,11 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
             };
             const mockClearTimeout = jest.fn();
 
-            const mockCtx = createMockContext('test-actor', mockEventBus, mockLogger);
+            const mockCtx = createMockContext(
+              'test-actor',
+              mockEventBus,
+              mockLogger
+            );
             const mockHandler = createMockHandler(mockCtx, mockLogger);
 
             const state = new AwaitingExternalTurnEndState(mockHandler, {
@@ -239,7 +263,11 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
             const mockSetTimeout = jest.fn(() => corruptedTimeoutId);
             const mockClearTimeout = jest.fn();
 
-            const mockCtx = createMockContext('test-actor', mockEventBus, mockLogger);
+            const mockCtx = createMockContext(
+              'test-actor',
+              mockEventBus,
+              mockLogger
+            );
             const mockHandler = createMockHandler(mockCtx, mockLogger);
 
             const state = new AwaitingExternalTurnEndState(mockHandler, {
@@ -251,7 +279,9 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
             await state.enterState(mockHandler, null);
 
             // Act & Assert - Property: ∀ falsy IDs, cleanup never throws
-            await expect(state.exitState(mockHandler, null)).resolves.not.toThrow();
+            await expect(
+              state.exitState(mockHandler, null)
+            ).resolves.not.toThrow();
             await expect(state.destroy(mockHandler)).resolves.not.toThrow();
 
             // Property verified: Falsy guards prevent cleanup calls, no exceptions
@@ -268,7 +298,11 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
-            fc.oneof(fc.constant('enter'), fc.constant('exit'), fc.constant('destroy')),
+            fc.oneof(
+              fc.constant('enter'),
+              fc.constant('exit'),
+              fc.constant('destroy')
+            ),
             { minLength: 1, maxLength: 10 }
           ),
           async (transitionSequence) => {
@@ -284,7 +318,11 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
               subscribe: jest.fn(() => jest.fn()),
             };
 
-            const mockCtx = createMockContext('test-actor', mockEventBus, mockLogger);
+            const mockCtx = createMockContext(
+              'test-actor',
+              mockEventBus,
+              mockLogger
+            );
             const mockHandler = createMockHandler(mockCtx, mockLogger);
 
             const state = new AwaitingExternalTurnEndState(mockHandler, {
@@ -347,7 +385,11 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
               timeoutCount--;
             });
 
-            const mockCtx = createMockContext('test-actor', mockEventBus, mockLogger);
+            const mockCtx = createMockContext(
+              'test-actor',
+              mockEventBus,
+              mockLogger
+            );
             const mockHandler = createMockHandler(mockCtx, mockLogger);
 
             const state = new AwaitingExternalTurnEndState(mockHandler, {

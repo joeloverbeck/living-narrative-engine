@@ -31,8 +31,7 @@ export class JsonProcessingError extends Error {
       this.stack = `${this.stack}\nCaused by: ${details.originalError.stack}`;
     }
     if (details.initialParseError && details.initialParseError.stack) {
-      this.stack =
-        `${this.stack}\nInitial parse error: ${details.initialParseError.stack}`;
+      this.stack = `${this.stack}\nInitial parse error: ${details.initialParseError.stack}`;
     }
   }
 }

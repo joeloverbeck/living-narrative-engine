@@ -231,9 +231,15 @@ describe('Wielding Component Workflow', () => {
         (action) => action.type === 'LOCK_GRABBING'
       );
       expect(lockGrabbingOp).toBeDefined();
-      expect(lockGrabbingOp.parameters.actor_id).toBe('{event.payload.actorId}');
-      expect(lockGrabbingOp.parameters.count).toBe('{context.targetGrabbingReqs.handsRequired}');
-      expect(lockGrabbingOp.parameters.item_id).toBe('{event.payload.targetId}');
+      expect(lockGrabbingOp.parameters.actor_id).toBe(
+        '{event.payload.actorId}'
+      );
+      expect(lockGrabbingOp.parameters.count).toBe(
+        '{context.targetGrabbingReqs.handsRequired}'
+      );
+      expect(lockGrabbingOp.parameters.item_id).toBe(
+        '{event.payload.targetId}'
+      );
     });
 
     it('should query target grabbing requirements before LOCK_GRABBING', () => {
@@ -258,7 +264,9 @@ describe('Wielding Component Workflow', () => {
           action.type === 'QUERY_COMPONENT' &&
           action.parameters?.component_type === 'anatomy:requires_grabbing'
       );
-      expect(queryGrabbingReqsOp.parameters.missing_value).toEqual({ handsRequired: 1 });
+      expect(queryGrabbingReqsOp.parameters.missing_value).toEqual({
+        handsRequired: 1,
+      });
     });
   });
 

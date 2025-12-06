@@ -31,11 +31,7 @@
       "label": "Validate Mods: Current File",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "run",
-        "validate:mod",
-        "${fileBasenameNoExtension}"
-      ],
+      "args": ["run", "validate:mod", "${fileBasenameNoExtension}"],
       "group": "test",
       "presentation": {
         "echo": true,

@@ -111,8 +111,10 @@ function installKneelingBeforeTargetWithPenisScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
-      const kneelingBefore = actor?.components?.['positioning:kneeling_before']?.entityId;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
+      const kneelingBefore =
+        actor?.components?.['positioning:kneeling_before']?.entityId;
 
       if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
         return { success: true, value: new Set() };
@@ -157,7 +159,8 @@ function installKneelingBeforeTargetWithPenisScopeOverride(fixture) {
           }
 
           // Check children
-          const children = part.components?.['anatomy:body_part']?.children || [];
+          const children =
+            part.components?.['anatomy:body_part']?.children || [];
           for (const childId of children) {
             const child = fixture.entityManager.getEntityInstance(childId);
             if (child && hasPenisSocket(child)) {
@@ -186,8 +189,12 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installKneelingBeforeTargetWithPenisScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-penile-oral',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installKneelingBeforeTargetWithPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -204,7 +211,8 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
 
   // eslint-disable-next-line jest/expect-expect -- Uses ModAssertionHelpers which internally uses expect
   it('dispatches the blowjob initiation narration and perceptible event', async () => {
-    const { entities, actorId, primaryId, roomId } = buildTakePenisInMouthKneelingScenario();
+    const { entities, actorId, primaryId, roomId } =
+      buildTakePenisInMouthKneelingScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -212,10 +220,14 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
       additionalPayload: { primaryId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
@@ -227,7 +239,8 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
   });
 
   it('establishes reciprocal blowjob components on both participants', async () => {
-    const { entities, actorId, primaryId } = buildTakePenisInMouthKneelingScenario();
+    const { entities, actorId, primaryId } =
+      buildTakePenisInMouthKneelingScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -253,7 +266,8 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
   });
 
   it('cleans up existing blowjob state when initiating with a new partner', async () => {
-    const { entities, actorId, primaryId } = buildTakePenisInMouthKneelingScenario();
+    const { entities, actorId, primaryId } =
+      buildTakePenisInMouthKneelingScenario();
 
     // Add a third entity that primary is initially giving a blowjob to
     const oldReceivingEntity = new ModEntityBuilder('old_receiver')
@@ -300,7 +314,8 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
     });
 
     // Verify cleanup happened
-    const oldReceiver = testFixture.entityManager.getEntityInstance('old_receiver');
+    const oldReceiver =
+      testFixture.entityManager.getEntityInstance('old_receiver');
     expect(oldReceiver).not.toHaveComponent('positioning:receiving_blowjob');
 
     const oldGiver = testFixture.entityManager.getEntityInstance('old_giver');
@@ -325,7 +340,8 @@ describe('sex-penile-oral:take_penis_in_mouth_kneeling action integration', () =
   });
 
   it('does not fire rule for a different action', async () => {
-    const { entities, actorId, primaryId } = buildTakePenisInMouthKneelingScenario();
+    const { entities, actorId, primaryId } =
+      buildTakePenisInMouthKneelingScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 

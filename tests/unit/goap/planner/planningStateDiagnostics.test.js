@@ -40,14 +40,21 @@ describe('planningStateDiagnostics', () => {
 
   it('shifts older misses once the buffer exceeds five entries', () => {
     for (let index = 0; index < 6; index += 1) {
-      recordPlanningStateMiss({ actorId: 'actor-buffer', path: `path-${index}` });
+      recordPlanningStateMiss({
+        actorId: 'actor-buffer',
+        path: `path-${index}`,
+      });
     }
 
     const diagnostics = getPlanningStateDiagnostics('actor-buffer');
 
     expect(diagnostics.lastMisses).toHaveLength(5);
-    expect(diagnostics.lastMisses.map((miss) => miss.path)).not.toContain('path-0');
-    expect(diagnostics.lastMisses[diagnostics.lastMisses.length - 1].path).toBe('path-5');
+    expect(diagnostics.lastMisses.map((miss) => miss.path)).not.toContain(
+      'path-0'
+    );
+    expect(diagnostics.lastMisses[diagnostics.lastMisses.length - 1].path).toBe(
+      'path-5'
+    );
   });
 
   it('returns null diagnostics for falsy actor identifiers', () => {

@@ -148,7 +148,10 @@ describe('TargetCandidatePruner', () => {
       actionDef,
       resolvedTargets,
       targetContexts: [],
-      config: { strictness: 'lenient', placeholderSource: actionDef.targetDefinitions },
+      config: {
+        strictness: 'lenient',
+        placeholderSource: actionDef.targetDefinitions,
+      },
     });
 
     expect(lenientResult).toEqual(strictResult);

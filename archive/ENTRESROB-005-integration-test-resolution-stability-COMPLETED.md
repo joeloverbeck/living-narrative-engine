@@ -12,6 +12,7 @@ See `specs/entity-resolution-robustness.md` for full context.
 ## Problem Statement
 
 Integration coverage is missing for entity resolution stability and for ensuring socket-bearing anatomy parts stay compatible with slot expectations when loaded from real mod data. The current code already implements deterministic resolution rules (fewest underscores → alphabetical → shortest ID) and has unit tests from ENTRESROB-001/003, but we still need end-to-end checks that:
+
 1. Socket-bearing heads keep required sockets (`brain_socket`) while allowing non-socketed heads (e.g., `anatomy:kraken_head`) that intentionally omit anatomy sockets.
 2. Torsos retain vital sockets (`heart_socket`, `spine_socket`).
 3. `resolveEntityId` stays deterministic against registry ordering and still prefers the canonical head entity (`anatomy:humanoid_head`) when multiple heads are present.

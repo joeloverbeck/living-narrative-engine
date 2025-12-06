@@ -26,6 +26,7 @@ Create comprehensive Gherkin scenarios (GIVEN/WHEN/THEN) for all GOAP features, 
 ## Task Categories
 
 ### 1. Task Loading & Validation (5 scenarios)
+
 ```gherkin
 Scenario: Successfully load valid task from mod
   Given a mod with task file "consume_nourishing_item.task.json"
@@ -61,6 +62,7 @@ Scenario: Load multiple tasks with parameter variations
 ```
 
 ### 2. Structural Gates Evaluation (8 scenarios)
+
 ```gherkin
 Scenario: Exclude task when actor missing required component
   Given actor without "biology:can_eat" component
@@ -119,6 +121,7 @@ Scenario: Reevaluate gates after component added
 ```
 
 ### 3. Planning Scope Resolution (6 scenarios)
+
 ```gherkin
 Scenario: Resolve world-wide scope with knowledge filter
   Given actor knows about apple in room_12
@@ -165,6 +168,7 @@ Scenario: Invalidate scope cache on world change
 ```
 
 ### 4. Refinement Success & Failure (10 scenarios)
+
 ```gherkin
 Scenario: Refine with item in inventory (simple)
   Given actor has apple in inventory
@@ -237,6 +241,7 @@ Scenario: Refinement respects permissions
 ```
 
 ### 5. Plan Invalidation (5 scenarios)
+
 ```gherkin
 Scenario: Detect invalidation - entity moved
   Given plan includes "pick_up_item(apple)" in room_12
@@ -275,6 +280,7 @@ Scenario: Replan backoff prevents thrashing
 ```
 
 ### 6. Performance Requirements (5 scenarios)
+
 ```gherkin
 Scenario: Planning completes within time budget - small library
   Given task library with 15 tasks
@@ -309,6 +315,7 @@ Scenario: Planning success rate meets target
 ```
 
 ### 7. Test Data Requirements
+
 ```yaml
 test_worlds:
   small:

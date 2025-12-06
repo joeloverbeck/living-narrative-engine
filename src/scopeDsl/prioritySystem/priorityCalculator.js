@@ -230,7 +230,7 @@ export function getLayersByMode(mode) {
     case 'all':
       return [...VALID_LAYERS]; // Create copy to avoid readonly type issues
     case 'topmost_no_accessories':
-      return VALID_LAYERS.filter(layer => layer !== 'accessories');
+      return VALID_LAYERS.filter((layer) => layer !== 'accessories');
     case 'outer':
     case 'base':
     case 'underwear':

@@ -17,7 +17,10 @@ import {
   getMemoryUsageBytes,
   getMemoryUsagePercent,
 } from '../../../src/utils/environmentUtils.js';
-import { createBootstrapLogger, resolveBootstrapLogLevel } from '../../../src/logging/bootstrapLogger.js';
+import {
+  createBootstrapLogger,
+  resolveBootstrapLogLevel,
+} from '../../../src/logging/bootstrapLogger.js';
 import { LogLevel } from '../../../src/logging/consoleLogger.js';
 
 const originalDescriptors = {
@@ -131,7 +134,9 @@ describe('environmentUtils integration behavior', () => {
       expect(detectEnvironment()).toBe('browser');
       expect(isNodeEnvironment()).toBe(false);
       expect(isBrowserEnvironment()).toBe(true);
-      expect(getEnvironmentVariable('FEATURE_FLAG', 'disabled')).toBe('enabled');
+      expect(getEnvironmentVariable('FEATURE_FLAG', 'disabled')).toBe(
+        'enabled'
+      );
 
       if (typeof window !== 'undefined') {
         if (previousEnv === undefined) {
@@ -507,7 +512,9 @@ describe('environmentUtils integration behavior', () => {
       process.env.DEBUG_LOG_LEVEL = 'warn';
       const logger = createBootstrapLogger();
 
-      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
       const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 

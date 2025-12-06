@@ -3,7 +3,14 @@
  * @description Ensures the action is available only when intimate breastplay requirements are met.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import {
   buildNuzzleBareBreastsScenario as buildSuckOnNipplesScenario,
@@ -60,7 +67,7 @@ describe('sex-breastplay:suck_on_nipples action discovery', () => {
       expect(suckOnNipplesAction.id).toBe(ACTION_ID);
       expect(suckOnNipplesAction.name).toBe('Suck On Nipples');
       expect(suckOnNipplesAction.description).toBe(
-        'Take the target\'s nipples into your mouth and nurse them hungrily.'
+        "Take the target's nipples into your mouth and nurse them hungrily."
       );
       expect(suckOnNipplesAction.template).toBe("suck on {target}'s nipples");
       expect(suckOnNipplesAction.prerequisites).toEqual([]);
@@ -103,7 +110,9 @@ describe('sex-breastplay:suck_on_nipples action discovery', () => {
 
     it('does not appear when closeness is missing', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const { entities } = buildSuckOnNipplesScenario({ includeCloseness: false });
+      const { entities } = buildSuckOnNipplesScenario({
+        includeCloseness: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery(testFixture);
 
@@ -131,7 +140,9 @@ describe('sex-breastplay:suck_on_nipples action discovery', () => {
 
     it('does not appear when the actor is giving a blowjob', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const { entities } = buildSuckOnNipplesScenario({ actorGivingBlowjob: true });
+      const { entities } = buildSuckOnNipplesScenario({
+        actorGivingBlowjob: true,
+      });
       testFixture.reset(entities);
       configureActionDiscovery(testFixture);
 

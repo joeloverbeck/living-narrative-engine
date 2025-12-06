@@ -12,7 +12,11 @@ import {
 
 describe('FacadeOptions utilities', () => {
   it('creates base options with overrides without mutating defaults', () => {
-    const overrides = { cache: false, metadata: { source: 'test' }, timeout: 5000 };
+    const overrides = {
+      cache: false,
+      metadata: { source: 'test' },
+      timeout: 5000,
+    };
     const result = createDefaultOptions(overrides);
 
     expect(result).toMatchObject({
@@ -25,7 +29,11 @@ describe('FacadeOptions utilities', () => {
   });
 
   it('creates query options with expected defaults and merges overrides', () => {
-    const result = createQueryOptions({ sortOrder: 'desc', limit: 25, cache: false });
+    const result = createQueryOptions({
+      sortOrder: 'desc',
+      limit: 25,
+      cache: false,
+    });
 
     expect(result).toMatchObject({
       cache: false,
@@ -37,7 +45,10 @@ describe('FacadeOptions utilities', () => {
   });
 
   it('creates modification and bulk options layering defaults correctly', () => {
-    const modification = createModificationOptions({ force: true, cascade: false });
+    const modification = createModificationOptions({
+      force: true,
+      cascade: false,
+    });
     expect(modification).toMatchObject({
       cache: true,
       validate: true,
@@ -46,7 +57,11 @@ describe('FacadeOptions utilities', () => {
       notifyOnChange: true,
     });
 
-    const bulk = createBulkOptions({ batchSize: 50, parallel: true, force: true });
+    const bulk = createBulkOptions({
+      batchSize: 50,
+      parallel: true,
+      force: true,
+    });
     expect(bulk).toMatchObject({
       batchSize: 50,
       parallel: true,
@@ -58,7 +73,10 @@ describe('FacadeOptions utilities', () => {
   });
 
   it('creates validation and description options with sensible defaults', () => {
-    const validation = createValidationOptions({ level: 'moderate', includeWarnings: true });
+    const validation = createValidationOptions({
+      level: 'moderate',
+      includeWarnings: true,
+    });
     expect(validation).toMatchObject({
       cache: true,
       validate: true,
@@ -67,7 +85,10 @@ describe('FacadeOptions utilities', () => {
       fixIssues: false,
     });
 
-    const description = createDescriptionOptions({ style: 'detailed', includeContext: false });
+    const description = createDescriptionOptions({
+      style: 'detailed',
+      includeContext: false,
+    });
     expect(description).toMatchObject({
       style: 'detailed',
       perspective: 'third-person',
@@ -97,7 +118,10 @@ describe('FacadeOptions utilities', () => {
     const schema = {
       required: ['cache', 'level'],
       types: { cache: 'boolean', metadata: 'object', attempts: 'number' },
-      allowedValues: { level: ['strict', 'moderate'], sortOrder: ['asc', 'desc'] },
+      allowedValues: {
+        level: ['strict', 'moderate'],
+        sortOrder: ['asc', 'desc'],
+      },
     };
 
     const { valid, errors } = validateOptions(
@@ -143,6 +167,9 @@ describe('FacadeOptions utilities', () => {
 
   it('reports when the options value is not an object', () => {
     const result = validateOptions(null, { required: ['cache'] });
-    expect(result).toEqual({ valid: false, errors: ['Options must be an object'] });
+    expect(result).toEqual({
+      valid: false,
+      errors: ['Options must be an object'],
+    });
   });
 });

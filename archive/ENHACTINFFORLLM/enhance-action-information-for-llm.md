@@ -7,6 +7,7 @@ This specification defines enhancements to the available actions display for LLM
 ## Problem Statement
 
 Currently, available actions are grouped by mod namespace (e.g., "POSITIONING Actions", "ITEMS Actions") but provide no context about:
+
 - What the mod's actions accomplish narratively
 - When the LLM should consider using these actions
 
@@ -70,6 +71,7 @@ Add two new optional properties to the schema `properties` object:
 ```
 
 **Notes:**
+
 - Both properties are optional (not added to `required` array)
 - Length constraints ensure meaningful content without prompt bloat
 - Placed at top level because they describe the mod's actions as a whole
@@ -83,6 +85,7 @@ Add two new optional properties to the schema `properties` object:
 Create a dedicated service responsible for retrieving mod-level action metadata from manifests.
 
 **Rationale for new service (vs. extending ActionCategorizationService):**
+
 - Single Responsibility: ActionCategorizationService handles categorization logic only
 - Testability: Each service testable in isolation
 - Caching: Metadata lookups cached independently
@@ -152,6 +155,7 @@ class ModActionMetadataProvider {
 **File:** `src/dependencyInjection/tokens/tokens-ai.js`
 
 Add:
+
 ```javascript
 IModActionMetadataProvider: 'IModActionMetadataProvider',
 ```
@@ -161,6 +165,7 @@ IModActionMetadataProvider: 'IModActionMetadataProvider',
 **File:** `src/dependencyInjection/registrations/aiRegistrations.js`
 
 Add service registration:
+
 ```javascript
 import { ModActionMetadataProvider } from '../../prompting/services/modActionMetadataProvider.js';
 
@@ -174,6 +179,7 @@ registrar.singletonFactory(tokens.IModActionMetadataProvider, (c) => {
 ```
 
 Update AIPromptContentProvider registration to include new dependency:
+
 ```javascript
 modActionMetadataProvider: c.resolve(tokens.IModActionMetadataProvider),
 ```
@@ -203,7 +209,9 @@ for (const [namespace, namespaceActions] of grouped) {
   const metadata = this.#modActionMetadataProvider.getMetadataForMod(namespace);
 
   // Format header with action count
-  segments.push(`## ${displayName} ACTIONS (${namespaceActions.length} actions)`);
+  segments.push(
+    `## ${displayName} ACTIONS (${namespaceActions.length} actions)`
+  );
 
   // NEW: Add purpose if available
   if (metadata?.actionPurpose) {
@@ -251,30 +259,35 @@ for (const [namespace, namespaceActions] of grouped) {
 ### Examples
 
 #### positioning
+
 ```json
 "actionPurpose": "Change body position, spatial relationships, and physical arrangement relative to others and furniture.",
 "actionConsiderWhen": "Getting closer or farther from someone, changing posture (sitting, standing, lying, kneeling), or adjusting facing direction."
 ```
 
 #### affection
+
 ```json
 "actionPurpose": "Express caring, supportive physical contact that conveys warmth and comfort, from platonic to romantic gestures.",
 "actionConsiderWhen": "Showing tenderness, providing comfort, expressing affection without overt romantic or sexual intent, or building emotional closeness."
 ```
 
 #### items
+
 ```json
 "actionPurpose": "Interact with objects through pickup, examination, use, storage, and transfer between characters and containers.",
 "actionConsiderWhen": "Managing inventory, examining interesting objects, sharing items with others, storing belongings, or using functional items."
 ```
 
 #### violence
+
 ```json
 "actionPurpose": "Inflict physical harm through strikes, grabs, and lethal attacks.",
 "actionConsiderWhen": "Combat, assault, self-defense, or when a character intends to cause physical pain or injury to another."
 ```
 
 #### core
+
 ```json
 "actionPurpose": "Pass time without taking significant action, allowing events to unfold.",
 "actionConsiderWhen": "Choosing to observe rather than act, pausing to think, waiting for someone else to act first, or when no other action is appropriate."
@@ -286,37 +299,37 @@ for (const [namespace, namespaceActions] of grouped) {
 
 The following 29 mods have actions and should receive `actionPurpose` and `actionConsiderWhen` properties:
 
-| Mod ID | Action Count | Category |
-|--------|-------------|----------|
-| affection | 20 | Physical intimacy |
-| ballet | ~10 | Physical activity |
-| caressing | ~12 | Physical intimacy |
-| clothing | 2 | Utility |
-| companionship | 3 | Social |
-| core | 1 | Fundamental |
-| distress | 2 | Emotional |
-| exercise | 1 | Physical activity |
-| gymnastics | 3 | Physical activity |
-| hand-holding | 5 | Physical intimacy |
-| hugging | 4 | Physical intimacy |
-| items | 16 | Utility |
-| kissing | ~16 | Physical intimacy |
-| metabolism | 3 | Survival |
-| movement | 3 | Navigation |
-| music | ~17 | Performance |
-| physical-control | 5 | Dominance |
-| positioning | 24 | Spatial |
-| seduction | 8 | Social/romantic |
-| sex-anal-penetration | ~5 | Sexual |
-| sex-breastplay | ~10 | Sexual |
-| sex-dry-intimacy | ~6 | Sexual |
-| sex-penile-manual | ~4 | Sexual |
-| sex-penile-oral | ~24 | Sexual |
-| sex-physical-control | ~3 | Sexual |
-| sex-vaginal-penetration | ~7 | Sexual |
-| vampirism | 5 | Supernatural |
-| violence | 5 | Combat |
-| weapons | 1 | Combat |
+| Mod ID                  | Action Count | Category          |
+| ----------------------- | ------------ | ----------------- |
+| affection               | 20           | Physical intimacy |
+| ballet                  | ~10          | Physical activity |
+| caressing               | ~12          | Physical intimacy |
+| clothing                | 2            | Utility           |
+| companionship           | 3            | Social            |
+| core                    | 1            | Fundamental       |
+| distress                | 2            | Emotional         |
+| exercise                | 1            | Physical activity |
+| gymnastics              | 3            | Physical activity |
+| hand-holding            | 5            | Physical intimacy |
+| hugging                 | 4            | Physical intimacy |
+| items                   | 16           | Utility           |
+| kissing                 | ~16          | Physical intimacy |
+| metabolism              | 3            | Survival          |
+| movement                | 3            | Navigation        |
+| music                   | ~17          | Performance       |
+| physical-control        | 5            | Dominance         |
+| positioning             | 24           | Spatial           |
+| seduction               | 8            | Social/romantic   |
+| sex-anal-penetration    | ~5           | Sexual            |
+| sex-breastplay          | ~10          | Sexual            |
+| sex-dry-intimacy        | ~6           | Sexual            |
+| sex-penile-manual       | ~4           | Sexual            |
+| sex-penile-oral         | ~24          | Sexual            |
+| sex-physical-control    | ~3           | Sexual            |
+| sex-vaginal-penetration | ~7           | Sexual            |
+| vampirism               | 5            | Supernatural      |
+| violence                | 5            | Combat            |
+| weapons                 | 1            | Combat            |
 
 ### Mods WITHOUT Actions (No properties needed)
 
@@ -331,6 +344,7 @@ The following 29 mods have actions and should receive `actionPurpose` and `actio
 **File:** `tests/unit/prompting/services/modActionMetadataProvider.test.js`
 
 Test cases:
+
 1. Returns metadata when manifest exists with both properties
 2. Returns metadata with only `actionPurpose`
 3. Returns metadata with only `actionConsiderWhen`
@@ -343,6 +357,7 @@ Test cases:
 **File:** `tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js`
 
 Test cases:
+
 1. Includes purpose and consider when in formatted output
 2. Handles missing metadata gracefully (no Purpose/Consider lines)
 3. Handles partial metadata (only purpose OR only consider when)
@@ -354,6 +369,7 @@ Test cases:
 **File:** `tests/integration/prompting/actionFormattingWithMetadata.integration.test.js`
 
 Test cases:
+
 1. Full integration with real data registry and manifests
 2. Verifies output format matches expected LLM prompt structure
 3. Mixed scenario: some mods have metadata, others don't
@@ -364,21 +380,25 @@ Test cases:
 ## Implementation Order
 
 ### Phase 1: Foundation (~1 hour)
+
 1. Update `mod-manifest.schema.json` with new properties
 2. Create `ModActionMetadataProvider` service
 3. Add DI token and registration
 
 ### Phase 2: Integration (~1 hour)
+
 4. Update `AIPromptContentProvider` constructor
 5. Update `_formatCategorizedActions()` method
 6. Update AIPromptContentProvider DI registration
 
 ### Phase 3: Testing (~1.5 hours)
+
 7. Create unit tests for ModActionMetadataProvider
 8. Create/update unit tests for AIPromptContentProvider
 9. Create integration tests
 
 ### Phase 4: Content (~30 minutes)
+
 10. Add metadata to 5 key mods (positioning, items, affection, core, violence)
 11. Remaining mods can be updated incrementally
 
@@ -402,11 +422,11 @@ Test cases:
 
 ## Risks and Mitigations
 
-| Risk | Mitigation |
-|------|------------|
+| Risk                           | Mitigation                                                            |
+| ------------------------------ | --------------------------------------------------------------------- |
 | Namespace doesn't match mod ID | Registry uses normalized mod IDs; namespace extraction already tested |
-| Long content bloats prompts | Schema enforces 200 char max per property |
-| Missing manifests cause errors | Graceful null return with fallback to current behavior |
+| Long content bloats prompts    | Schema enforces 200 char max per property                             |
+| Missing manifests cause errors | Graceful null return with fallback to current behavior                |
 
 ---
 

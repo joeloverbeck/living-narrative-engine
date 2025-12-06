@@ -4,7 +4,10 @@
  */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
@@ -18,7 +21,12 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   #regenerateDescriptionHandler;
   #dispatcher;
 
-  constructor({ entityManager, regenerateDescriptionHandler, safeEventDispatcher, logger }) {
+  constructor({
+    entityManager,
+    regenerateDescriptionHandler,
+    safeEventDispatcher,
+    logger,
+  }) {
     const depSpec = {
       logger: { value: logger },
       entityManager: {
@@ -51,7 +59,13 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
-    if (!assertParamsObject(params, this.#dispatcher, 'BREAK_BIDIRECTIONAL_CLOSENESS')) {
+    if (
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'BREAK_BIDIRECTIONAL_CLOSENESS'
+      )
+    ) {
       return executionContext;
     }
 
@@ -63,10 +77,14 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
     const { actorId, targetId } = this.#getPayloadIds(executionContext);
 
     if (!actorId || !targetId) {
-       await safeDispatchError(
+      await safeDispatchError(
         this.#dispatcher,
         'BREAK_BIDIRECTIONAL_CLOSENESS: actorId or targetId missing from event payload',
-        { actorId, targetId, payload: executionContext?.evaluationContext?.event?.payload },
+        {
+          actorId,
+          targetId,
+          payload: executionContext?.evaluationContext?.event?.payload,
+        },
         log
       );
       return executionContext;
@@ -124,7 +142,9 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
     return {
       actorComponentType,
       targetComponentType,
-      additionalComponentTypes: Array.isArray(params.additional_component_types_to_remove)
+      additionalComponentTypes: Array.isArray(
+        params.additional_component_types_to_remove
+      )
         ? params.additional_component_types_to_remove
         : [],
       regenerateDescriptions: params.regenerate_descriptions !== false,
@@ -134,7 +154,7 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   #getPayloadIds(executionContext) {
     return {
       actorId: executionContext?.evaluationContext?.event?.payload?.actorId,
-      targetId: executionContext?.evaluationContext?.event?.payload?.targetId
+      targetId: executionContext?.evaluationContext?.event?.payload?.targetId,
     };
   }
 

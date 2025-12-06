@@ -155,15 +155,18 @@ export class DiscoveryDiagnostics {
 
     if (actions.length > 0) {
       console.log(
-        `Action IDs: [${actions.map(a => a.id).slice(0, 10).join(', ')}${actions.length > 10 ? '...' : ''}]`
+        `Action IDs: [${actions
+          .map((a) => a.id)
+          .slice(0, 10)
+          .join(', ')}${actions.length > 10 ? '...' : ''}]`
       );
     }
 
     if (expectedActionId) {
-      const found = actions.some(a => a.id === expectedActionId);
+      const found = actions.some((a) => a.id === expectedActionId);
       if (found) {
         console.log(`\n✅ Expected action '${expectedActionId}' WAS FOUND`);
-        const action = actions.find(a => a.id === expectedActionId);
+        const action = actions.find((a) => a.id === expectedActionId);
         console.log(`   Targets: ${JSON.stringify(action.targets || {})}`);
       } else {
         console.log(`\n❌ Expected action '${expectedActionId}' WAS NOT FOUND`);
@@ -185,18 +188,18 @@ export class DiscoveryDiagnostics {
    * @param expectedActionId
    */
   _provideDiagnosticHints(expectedActionId) {
-    const scopeTraces = this.trace.filter(t => t.type === 'scope_resolution');
+    const scopeTraces = this.trace.filter((t) => t.type === 'scope_resolution');
 
     // Find empty scopes
     const emptyScopes = scopeTraces.filter(
-      t => t.result.success && t.result.count === 0
+      (t) => t.result.success && t.result.count === 0
     );
 
     if (emptyScopes.length > 0) {
       console.log(
         `\n   ⚠️  ${emptyScopes.length} scope(s) returned empty results:`
       );
-      emptyScopes.forEach(t => {
+      emptyScopes.forEach((t) => {
         console.log(`      - ${t.scope}`);
         console.log(`        Context: ${this._formatContext(t.context)}`);
         console.log(`        💡 Check if entities have required components`);
@@ -205,10 +208,10 @@ export class DiscoveryDiagnostics {
     }
 
     // Find failed scopes
-    const failedScopes = scopeTraces.filter(t => !t.result.success);
+    const failedScopes = scopeTraces.filter((t) => !t.result.success);
     if (failedScopes.length > 0) {
       console.log(`\n   ❌ ${failedScopes.length} scope(s) FAILED to resolve:`);
-      failedScopes.forEach(t => {
+      failedScopes.forEach((t) => {
         console.log(`      - ${t.scope}`);
         console.log(`        Error: ${t.result.error || 'Unknown'}`);
         console.log(
@@ -221,12 +224,10 @@ export class DiscoveryDiagnostics {
     }
 
     // Find slow scopes
-    const slowScopes = scopeTraces.filter(t => t.duration > 100);
+    const slowScopes = scopeTraces.filter((t) => t.duration > 100);
     if (slowScopes.length > 0) {
-      console.log(
-        `\n   ⏱️  ${slowScopes.length} scope(s) were slow (>100ms):`
-      );
-      slowScopes.forEach(t => {
+      console.log(`\n   ⏱️  ${slowScopes.length} scope(s) were slow (>100ms):`);
+      slowScopes.forEach((t) => {
         console.log(`      - ${t.scope}: ${t.duration}ms`);
       });
     }
@@ -246,7 +247,7 @@ export class DiscoveryDiagnostics {
    * Print scope resolution statistics
    */
   _printScopeStatistics() {
-    const scopeTraces = this.trace.filter(t => t.type === 'scope_resolution');
+    const scopeTraces = this.trace.filter((t) => t.type === 'scope_resolution');
 
     if (scopeTraces.length === 0) {
       console.log('   No scope resolutions traced');
@@ -255,13 +256,12 @@ export class DiscoveryDiagnostics {
 
     const stats = {
       total: scopeTraces.length,
-      successful: scopeTraces.filter(t => t.result.success).length,
-      failed: scopeTraces.filter(t => !t.result.success).length,
-      empty: scopeTraces.filter(
-        t => t.result.success && t.result.count === 0
-      ).length,
+      successful: scopeTraces.filter((t) => t.result.success).length,
+      failed: scopeTraces.filter((t) => !t.result.success).length,
+      empty: scopeTraces.filter((t) => t.result.success && t.result.count === 0)
+        .length,
       nonEmpty: scopeTraces.filter(
-        t => t.result.success && t.result.count > 0
+        (t) => t.result.success && t.result.count > 0
       ).length,
       avgDuration:
         scopeTraces.reduce((sum, t) => sum + t.duration, 0) /
@@ -275,7 +275,9 @@ export class DiscoveryDiagnostics {
       `   Empty results: ${stats.empty} ${stats.empty > 0 ? '⚠️' : ''}`
     );
     console.log(`   Non-empty results: ${stats.nonEmpty}`);
-    console.log(`   Average resolution time: ${stats.avgDuration.toFixed(2)}ms`);
+    console.log(
+      `   Average resolution time: ${stats.avgDuration.toFixed(2)}ms`
+    );
   }
 
   /**

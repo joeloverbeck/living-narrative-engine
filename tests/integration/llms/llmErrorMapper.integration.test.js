@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { LLMErrorMapper } from '../../../src/llms/services/llmErrorMapper.js';
 import {
   ApiKeyError,
@@ -81,7 +88,9 @@ describe('Integration – LLMErrorMapper interacting with real domain errors', (
     expect(networkReset.llmId).toBe('gamma-llm');
 
     const jsonFailure = mapper.mapHttpError(
-      Object.assign(new Error('could not parse'), { name: 'JsonProcessingError' }),
+      Object.assign(new Error('could not parse'), {
+        name: 'JsonProcessingError',
+      }),
       { llmId: 'delta-llm' }
     );
     expect(jsonFailure).toBeInstanceOf(MalformedResponseError);
@@ -96,18 +105,26 @@ describe('Integration – LLMErrorMapper interacting with real domain errors', (
 
   it('creates domain errors with detailed context and supports all categories', () => {
     const original = new Error('root cause');
-    const configurationIssue = mapper.createDomainError('configuration', 'missing endpoint', {
-      llmId: 'cfg-llm',
-      problematicField: 'endpointUrl',
-      originalError: original,
-    });
+    const configurationIssue = mapper.createDomainError(
+      'configuration',
+      'missing endpoint',
+      {
+        llmId: 'cfg-llm',
+        problematicField: 'endpointUrl',
+        originalError: original,
+      }
+    );
     expect(configurationIssue).toBeInstanceOf(ConfigurationError);
     expect(configurationIssue.problematicField).toBe('endpointUrl');
     expect(configurationIssue.llmId).toBe('cfg-llm');
 
-    const malformed = mapper.createDomainError('malformed_response', 'invalid payload', {
-      llmId: 'malformed-llm',
-    });
+    const malformed = mapper.createDomainError(
+      'malformed_response',
+      'invalid payload',
+      {
+        llmId: 'malformed-llm',
+      }
+    );
     expect(malformed).toBeInstanceOf(MalformedResponseError);
     expect(malformed.llmId).toBe('malformed-llm');
 
@@ -119,8 +136,14 @@ describe('Integration – LLMErrorMapper interacting with real domain errors', (
     expect(generic.status).toBe(503);
 
     expect(mapper.getErrorTypeFromStatus(401)).toBe('api_key');
-    expect(mapper.getErrorTypeFromStatus(403, { message: 'Content policy violation' })).toBe('content_policy');
-    expect(mapper.getErrorTypeFromStatus(403, { message: 'access denied' })).toBe('permission');
+    expect(
+      mapper.getErrorTypeFromStatus(403, {
+        message: 'Content policy violation',
+      })
+    ).toBe('content_policy');
+    expect(
+      mapper.getErrorTypeFromStatus(403, { message: 'access denied' })
+    ).toBe('permission');
     expect(mapper.getErrorTypeFromStatus(422)).toBe('bad_request');
     expect(mapper.getErrorTypeFromStatus(429)).toBe('generic');
     expect(mapper.getErrorTypeFromStatus(500)).toBe('generic');
@@ -144,7 +167,9 @@ describe('Integration – LLMErrorMapper interacting with real domain errors', (
     mapper.logError(creditError, { llmId: 'warn-llm', operation: 'summarize' });
     expect(logger.warn).toHaveBeenCalledTimes(initialWarnCalls + 1);
 
-    const transient = new LLMInteractionError('retry later', { llmId: 'debug-llm' });
+    const transient = new LLMInteractionError('retry later', {
+      llmId: 'debug-llm',
+    });
     mapper.logError(transient, { llmId: 'debug-llm', operation: 'chat' });
     expect(logger.debug).toHaveBeenCalledTimes(initialDebugCalls + 1);
 
@@ -170,7 +195,9 @@ describe('Integration – LLMErrorMapper interacting with real domain errors', (
     expect(typeof extracted.timestamp).toBe('string');
 
     expect(mapper.isConfigurationError(configurationError)).toBe(true);
-    expect(mapper.isConfigurationError({ problematicField: 'timeout' })).toBe(true);
+    expect(mapper.isConfigurationError({ problematicField: 'timeout' })).toBe(
+      true
+    );
     expect(mapper.isConfigurationError(new Error('plain error'))).toBe(false);
   });
 });

@@ -30,9 +30,8 @@ jest.mock(
   })
 );
 
-jest.mock(
-  '../../../../src/domUI/perceptibleEventSenderController.js',
-  () => jest.fn()
+jest.mock('../../../../src/domUI/perceptibleEventSenderController.js', () =>
+  jest.fn()
 );
 
 describe('registerControllers', () => {

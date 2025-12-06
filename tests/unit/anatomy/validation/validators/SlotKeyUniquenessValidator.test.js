@@ -98,7 +98,9 @@ describe('SlotKeyUniquenessValidator', () => {
 
         const result = builder.build();
         expect(result.isValid).toBe(true);
-        expect(mockAnatomyBlueprintRepository.getBlueprint).not.toHaveBeenCalled();
+        expect(
+          mockAnatomyBlueprintRepository.getBlueprint
+        ).not.toHaveBeenCalled();
       });
 
       it('should skip validation when blueprint does not exist', async () => {
@@ -128,9 +130,9 @@ describe('SlotKeyUniquenessValidator', () => {
 
         const result = builder.build();
         expect(result.isValid).toBe(true);
-        expect(result.passed.some((p) => p.check === 'SLOT_KEY_UNIQUENESS_SKIP')).toBe(
-          true
-        );
+        expect(
+          result.passed.some((p) => p.check === 'SLOT_KEY_UNIQUENESS_SKIP')
+        ).toBe(true);
       });
 
       it('should skip validation when V2 blueprint has no structureTemplate', async () => {
@@ -148,9 +150,9 @@ describe('SlotKeyUniquenessValidator', () => {
 
         const result = builder.build();
         expect(result.isValid).toBe(true);
-        expect(result.passed.some((p) => p.check === 'SLOT_KEY_UNIQUENESS_SKIP')).toBe(
-          true
-        );
+        expect(
+          result.passed.some((p) => p.check === 'SLOT_KEY_UNIQUENESS_SKIP')
+        ).toBe(true);
       });
 
       it('should handle missing template gracefully', async () => {
@@ -200,9 +202,9 @@ describe('SlotKeyUniquenessValidator', () => {
 
         const result = builder.build();
         expect(result.isValid).toBe(true);
-        expect(result.passed.some((p) => p.check === 'SLOT_KEY_UNIQUENESS_PASS')).toBe(
-          true
-        );
+        expect(
+          result.passed.some((p) => p.check === 'SLOT_KEY_UNIQUENESS_PASS')
+        ).toBe(true);
       });
 
       it('should pass when additionalSlots is empty', async () => {
@@ -303,9 +305,9 @@ describe('SlotKeyUniquenessValidator', () => {
         const result = builder.build();
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBe(2);
-        expect(result.errors.every((e) => e.type === 'UNINTENTIONAL_SLOT_DUPLICATE')).toBe(
-          true
-        );
+        expect(
+          result.errors.every((e) => e.type === 'UNINTENTIONAL_SLOT_DUPLICATE')
+        ).toBe(true);
       });
     });
 

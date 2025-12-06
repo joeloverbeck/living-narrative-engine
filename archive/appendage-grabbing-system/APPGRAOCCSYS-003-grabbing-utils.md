@@ -15,10 +15,10 @@ Create utility functions for managing grabbing appendage locks. These functions 
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
-| `src/utils/grabbingUtils.js` | Utility functions for grabbing appendage management |
-| `tests/unit/utils/grabbingUtils.test.js` | Unit tests for utility functions (43 tests) |
+| File                                     | Purpose                                             |
+| ---------------------------------------- | --------------------------------------------------- |
+| `src/utils/grabbingUtils.js`             | Utility functions for grabbing appendage management |
+| `tests/unit/utils/grabbingUtils.test.js` | Unit tests for utility functions (43 tests)         |
 
 ## Files Modified
 
@@ -51,6 +51,7 @@ Implemented all planned functions with the specified API:
 ### Pattern Followed
 
 Implementation followed `mouthEngagementUtils.js` pattern:
+
 - Synchronous reads via `entityManager.getComponentData()`
 - Async mutations via `await entityManager.addComponent()`
 - Safe cloning with `structuredClone` fallback
@@ -64,6 +65,7 @@ Implementation followed `mouthEngagementUtils.js` pattern:
 All 43 unit tests pass:
 
 #### findGrabbingAppendages ✅
+
 - [x] Returns empty array when entity has no body component
 - [x] Returns empty array when entityManager is null
 - [x] Returns empty array when entityId is null
@@ -72,21 +74,25 @@ All 43 unit tests pass:
 - [x] Handles entity with multiple grabbing appendages
 
 #### countFreeGrabbingAppendages ✅
+
 - [x] Returns 0 when entity has no grabbing appendages
 - [x] Returns correct count when all appendages are free
 - [x] Returns correct count when some appendages are locked
 - [x] Returns 0 when all appendages are locked
 
 #### countTotalGrabbingAppendages ✅
+
 - [x] Returns total count regardless of locked state
 - [x] Returns 0 when entity has no appendages
 
 #### calculateFreeGripStrength ✅
+
 - [x] Returns 0 when no free appendages
 - [x] Returns sum of gripStrength from free appendages only
 - [x] Uses default gripStrength (1.0) when not specified
 
 #### lockGrabbingAppendages ✅
+
 - [x] Successfully locks requested count of appendages
 - [x] Sets heldItemId when itemId provided
 - [x] Returns lockedParts array with affected part IDs
@@ -96,6 +102,7 @@ All 43 unit tests pass:
 - [x] Returns error for invalid arguments
 
 #### unlockGrabbingAppendages ✅
+
 - [x] Successfully unlocks requested count of appendages
 - [x] Clears heldItemId on unlocked appendages
 - [x] Filters by itemId when provided
@@ -104,18 +111,21 @@ All 43 unit tests pass:
 - [x] Handles count of 0 gracefully
 
 #### unlockAppendagesHoldingItem ✅
+
 - [x] Unlocks all appendages holding the specified item
 - [x] Returns empty array when item not held
 - [x] Clears heldItemId on unlocked appendages
 - [x] Returns failure for invalid arguments
 
 #### getHeldItems ✅
+
 - [x] Returns empty array when nothing held
 - [x] Returns array of { partId, itemId } for held items
 - [x] Excludes appendages with null heldItemId
 - [x] Returns empty array for null entityManager
 
 #### hasEnoughFreeAppendages ✅
+
 - [x] Returns true when requirements met
 - [x] Returns false when not enough free appendages
 - [x] Checks grip strength when requiredGripStrength > 0
@@ -123,7 +133,8 @@ All 43 unit tests pass:
 - [x] Returns false for null entityManager
 - [x] Returns false for null entityId
 
-#### __testing__.cloneComponent ✅
+#### **testing**.cloneComponent ✅
+
 - [x] Creates deep copy of component
 
 ### Invariants Maintained ✅

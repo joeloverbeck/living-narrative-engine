@@ -64,11 +64,9 @@ describe('Metrics middleware OpenRouter nested provider integration', () => {
   });
 
   it('records metrics with the OpenRouter nested provider and propagates structured tokens', async () => {
-    const response = await request(app)
-      .post('/llm/observability')
-      .send({
-        llmId: 'OpenRouter/NVIDIA/Nemotron-4-340B-Instruct',
-      });
+    const response = await request(app).post('/llm/observability').send({
+      llmId: 'OpenRouter/NVIDIA/Nemotron-4-340B-Instruct',
+    });
 
     expect(response.status).toBe(202);
     expect(metricsService.llmRequests).toHaveLength(1);

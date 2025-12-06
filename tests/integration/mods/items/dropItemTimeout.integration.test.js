@@ -70,7 +70,12 @@ describe('drop_item action handler instantiation and execution', () => {
   describe('handler instantiation', () => {
     it('should successfully instantiate handler from DI container without errors', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.item,
+      ]);
 
       // The act of executing the action triggers handler instantiation
       // If handler creation fails, this will throw an error
@@ -81,7 +86,12 @@ describe('drop_item action handler instantiation and execution', () => {
 
     it('should not throw validation errors about missing methods', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.item,
+      ]);
 
       // Execute - should not throw any errors
       await expect(
@@ -96,7 +106,12 @@ describe('drop_item action handler instantiation and execution', () => {
   describe('successful execution', () => {
     it('should complete drop operation successfully', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.item,
+      ]);
 
       const startTime = Date.now();
       await testFixture.executeAction('actor-1', 'item-1');
@@ -117,7 +132,12 @@ describe('drop_item action handler instantiation and execution', () => {
 
     it('should NOT dispatch system error events on successful execution', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.item,
+      ]);
 
       await testFixture.executeAction('actor-1', 'item-1');
 
@@ -130,7 +150,12 @@ describe('drop_item action handler instantiation and execution', () => {
 
     it('should dispatch expected events in correct order', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.item,
+      ]);
 
       await testFixture.executeAction('actor-1', 'item-1');
 
@@ -138,8 +163,12 @@ describe('drop_item action handler instantiation and execution', () => {
       const attemptAction = testFixture.events.find(
         (e) => e.eventType === 'core:attempt_action'
       );
-      const itemDropped = testFixture.events.find((e) => e.eventType === 'items:item_dropped');
-      const turnEnded = testFixture.events.find((e) => e.eventType === 'core:turn_ended');
+      const itemDropped = testFixture.events.find(
+        (e) => e.eventType === 'items:item_dropped'
+      );
+      const turnEnded = testFixture.events.find(
+        (e) => e.eventType === 'core:turn_ended'
+      );
 
       expect(attemptAction).toBeDefined();
       expect(itemDropped).toBeDefined();
@@ -154,7 +183,12 @@ describe('drop_item action handler instantiation and execution', () => {
   describe('event payload schema compliance', () => {
     it('should dispatch events with schema-compliant payloads', async () => {
       const scenario = createDropScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.item,
+      ]);
 
       await testFixture.executeAction('actor-1', 'item-1');
 
@@ -163,7 +197,9 @@ describe('drop_item action handler instantiation and execution', () => {
       expect(events.length).toBeGreaterThan(0);
 
       // Filter to system error events (if any exist)
-      const systemErrors = events.filter((e) => e.eventType === 'core:system_error_occurred');
+      const systemErrors = events.filter(
+        (e) => e.eventType === 'core:system_error_occurred'
+      );
 
       // Validate each system error event payload
       for (const event of systemErrors) {
@@ -186,7 +222,9 @@ describe('drop_item action handler instantiation and execution', () => {
 
         // Verify no additional properties beyond allowed list
         const detailKeys = details ? Object.keys(details) : [];
-        const invalidKeys = detailKeys.filter((key) => !allowedProps.includes(key));
+        const invalidKeys = detailKeys.filter(
+          (key) => !allowedProps.includes(key)
+        );
         expect(invalidKeys).toEqual([]);
 
         // Specifically verify 'code' and 'actorId' are not present

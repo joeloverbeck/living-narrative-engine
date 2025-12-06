@@ -4,7 +4,10 @@
  */
 
 import crypto from 'crypto';
-import { SALVAGE_DEFAULT_TTL, SALVAGE_MAX_ENTRIES } from '../config/constants.js';
+import {
+  SALVAGE_DEFAULT_TTL,
+  SALVAGE_MAX_ENTRIES,
+} from '../config/constants.js';
 
 /**
  * Service for caching and salvaging successful LLM responses that couldn't be delivered
@@ -68,7 +71,14 @@ export class ResponseSalvageService {
    * @param {number} statusCode - HTTP status code
    * @param {number} [ttl] - Time to live in milliseconds
    */
-  salvageResponse(requestId, llmId, targetPayload, responseData, statusCode, ttl) {
+  salvageResponse(
+    requestId,
+    llmId,
+    targetPayload,
+    responseData,
+    statusCode,
+    ttl
+  ) {
     const signature = this.#generateSignature(llmId, targetPayload);
     const expirationMs = ttl || this.#defaultTtl;
 
@@ -238,7 +248,9 @@ export class ResponseSalvageService {
     this.#salvageCache.clear();
     this.#expirationTimers.clear();
 
-    this.#logger.debug('ResponseSalvageService: Cleared all salvaged responses');
+    this.#logger.debug(
+      'ResponseSalvageService: Cleared all salvaged responses'
+    );
   }
 
   /**

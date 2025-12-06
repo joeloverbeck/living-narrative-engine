@@ -31,7 +31,8 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-dry-intimacy', ACTION_ID);
-    restoreScopeResolver = installPenisFacingEachOtherScopeOverride(testFixture);
+    restoreScopeResolver =
+      installPenisFacingEachOtherScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -51,16 +52,17 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
     configureActionDiscovery(testFixture);
 
     const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
-    const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-      rubPenisAgainstPenisAction.prerequisites,
-      rubPenisAgainstPenisAction,
-      actorEntity
-    );
+    const prerequisitesPassed =
+      testFixture.testEnv.prerequisiteService.evaluate(
+        rubPenisAgainstPenisAction.prerequisites,
+        rubPenisAgainstPenisAction,
+        actorEntity
+      );
     expect(prerequisitesPassed).toBe(true);
     expect(actorEntity.components['positioning:closeness']).toBeDefined();
 
-    const candidateIds = testFixture.testEnv
-      .actionIndex.getCandidateActions({ id: ACTOR_ID })
+    const candidateIds = testFixture.testEnv.actionIndex
+      .getCandidateActions({ id: ACTOR_ID })
       .map((action) => action.id);
     expect(candidateIds).toContain(ACTION_ID);
 
@@ -68,20 +70,25 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("rub your penis against {primary}'s penis");
+    expect(discovered.template).toBe(
+      "rub your penis against {primary}'s penis"
+    );
   });
 
   it('does not appear when the actor lacks a penis', async () => {
-    const { entities } = buildRubPenisAgainstPenisScenario({ includeActorPenis: false });
+    const { entities } = buildRubPenisAgainstPenisScenario({
+      includeActorPenis: false,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
     const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
-    const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-      rubPenisAgainstPenisAction.prerequisites,
-      rubPenisAgainstPenisAction,
-      actorEntity
-    );
+    const prerequisitesPassed =
+      testFixture.testEnv.prerequisiteService.evaluate(
+        rubPenisAgainstPenisAction.prerequisites,
+        rubPenisAgainstPenisAction,
+        actorEntity
+      );
     expect(prerequisitesPassed).toBe(false);
 
     const actions = await testFixture.discoverActions(ACTOR_ID);
@@ -91,16 +98,19 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
   });
 
   it("does not appear when the actor's penis is covered", async () => {
-    const { entities } = buildRubPenisAgainstPenisScenario({ coverActorPenis: true });
+    const { entities } = buildRubPenisAgainstPenisScenario({
+      coverActorPenis: true,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
     const actorEntity = testFixture.entityManager.getEntityInstance(ACTOR_ID);
-    const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-      rubPenisAgainstPenisAction.prerequisites,
-      rubPenisAgainstPenisAction,
-      actorEntity
-    );
+    const prerequisitesPassed =
+      testFixture.testEnv.prerequisiteService.evaluate(
+        rubPenisAgainstPenisAction.prerequisites,
+        rubPenisAgainstPenisAction,
+        actorEntity
+      );
     expect(prerequisitesPassed).toBe(false);
 
     const actions = await testFixture.discoverActions(ACTOR_ID);
@@ -110,7 +120,9 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
   });
 
   it("does not appear when the target's penis is covered", async () => {
-    const { entities } = buildRubPenisAgainstPenisScenario({ coverTargetPenis: true });
+    const { entities } = buildRubPenisAgainstPenisScenario({
+      coverTargetPenis: true,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -121,7 +133,9 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
   });
 
   it('does not appear without closeness between the participants', async () => {
-    const { entities } = buildRubPenisAgainstPenisScenario({ includeCloseness: false });
+    const { entities } = buildRubPenisAgainstPenisScenario({
+      includeCloseness: false,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -132,7 +146,9 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
   });
 
   it('does not appear when the target faces away from the actor', async () => {
-    const { entities } = buildRubPenisAgainstPenisScenario({ targetFacingAway: true });
+    const { entities } = buildRubPenisAgainstPenisScenario({
+      targetFacingAway: true,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -143,7 +159,9 @@ describe('sex-dry-intimacy:rub_penis_against_penis action discovery', () => {
   });
 
   it('does not appear when the actor faces away from the target', async () => {
-    const { entities } = buildRubPenisAgainstPenisScenario({ actorFacingAway: true });
+    const { entities } = buildRubPenisAgainstPenisScenario({
+      actorFacingAway: true,
+    });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 

@@ -3,9 +3,6 @@
   "id": "kissing:event-is-action-accept-kiss-passively",
   "description": "Checks if event is accept kiss passively action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "kissing:accept_kiss_passively"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "kissing:accept_kiss_passively"]
   }
 }

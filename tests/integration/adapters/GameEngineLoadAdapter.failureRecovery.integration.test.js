@@ -206,7 +206,8 @@ function createLoadAdapterEnvironment() {
   const turnManager = new SimpleTurnManager();
   const playtimeTracker = new SimplePlaytimeTracker();
   const initializationService = new SimpleInitializationService();
-  const anatomyInitializationService = new PassiveAnatomyInitializationService();
+  const anatomyInitializationService =
+    new PassiveAnatomyInitializationService();
   const persistenceService = new ConfigurablePersistenceService();
   const turnActionChoicePipeline = { buildChoices: jest.fn() };
   const aiPromptPipeline = { generatePrompt: jest.fn() };
@@ -214,7 +215,10 @@ function createLoadAdapterEnvironment() {
   const entityDisplayDataProvider = { getEntityName: jest.fn() };
 
   const ensureRegistered = (token, value) => {
-    if (typeof container.isRegistered === 'function' && container.isRegistered(token)) {
+    if (
+      typeof container.isRegistered === 'function' &&
+      container.isRegistered(token)
+    ) {
       return;
     }
     container.register(token, value);
@@ -226,7 +230,10 @@ function createLoadAdapterEnvironment() {
   ensureRegistered(tokens.ITurnManager, turnManager);
   ensureRegistered(tokens.PlaytimeTracker, playtimeTracker);
   ensureRegistered(tokens.IInitializationService, initializationService);
-  ensureRegistered(tokens.AnatomyInitializationService, anatomyInitializationService);
+  ensureRegistered(
+    tokens.AnatomyInitializationService,
+    anatomyInitializationService
+  );
   ensureRegistered(tokens.GamePersistenceService, persistenceService);
   ensureRegistered(tokens.TurnActionChoicePipeline, turnActionChoicePipeline);
   ensureRegistered(tokens.IAIPromptPipeline, aiPromptPipeline);
@@ -265,10 +272,9 @@ describe('GameEngineLoadAdapter integration – failure recovery coverage', () =
     expect(env.playtimeTracker.sessionStarted).toBe(true);
     expect(env.turnManager.startCount).toBe(1);
     expect(env.turnManager.started).toBe(true);
-    expect(env.validatedDispatcher.events.map((event) => event.eventId)).toEqual([
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      ENGINE_READY_UI,
-    ]);
+    expect(
+      env.validatedDispatcher.events.map((event) => event.eventId)
+    ).toEqual([ENGINE_OPERATION_IN_PROGRESS_UI, ENGINE_READY_UI]);
     expect(env.engine.getEngineStatus()).toEqual({
       isInitialized: true,
       isLoopRunning: true,
@@ -282,7 +288,11 @@ describe('GameEngineLoadAdapter integration – failure recovery coverage', () =
 
     const result = await env.adapter.load('slot-crash');
 
-    expect(result).toEqual({ success: false, error: 'storage offline', data: null });
+    expect(result).toEqual({
+      success: false,
+      error: 'storage offline',
+      data: null,
+    });
     expect(env.persistenceService.loadCalls).toEqual(['slot-crash']);
     // Entity manager and playtime tracker are cleared/reset twice: once during prepare phase, once during failure recovery
     expect(env.entityManager.clearCount).toBe(2);
@@ -290,10 +300,9 @@ describe('GameEngineLoadAdapter integration – failure recovery coverage', () =
     expect(env.playtimeTracker.sessionStarted).toBe(false);
     expect(env.turnManager.startCount).toBe(0);
     expect(env.turnManager.started).toBe(false);
-    expect(env.validatedDispatcher.events.map((event) => event.eventId)).toEqual([
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      ENGINE_OPERATION_FAILED_UI,
-    ]);
+    expect(
+      env.validatedDispatcher.events.map((event) => event.eventId)
+    ).toEqual([ENGINE_OPERATION_IN_PROGRESS_UI, ENGINE_OPERATION_FAILED_UI]);
     expect(env.engine.getEngineStatus()).toEqual({
       isInitialized: false,
       isLoopRunning: false,

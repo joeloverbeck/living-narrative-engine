@@ -12,11 +12,11 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
 
 ## Files to Touch
 
-| File | Change Type |
-|------|-------------|
-| `data/mods/violence/rules/handle_peck_target.rule.json` | **Create** |
-| `data/mods/violence/mod-manifest.json` | **Modify** - Add rule to `content.rules` array |
-| `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js` | **Create** |
+| File                                                          | Change Type                                    |
+| ------------------------------------------------------------- | ---------------------------------------------- |
+| `data/mods/violence/rules/handle_peck_target.rule.json`       | **Create**                                     |
+| `data/mods/violence/mod-manifest.json`                        | **Modify** - Add rule to `content.rules` array |
+| `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js` | **Create**                                     |
 
 ## Out of Scope
 
@@ -45,7 +45,10 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
@@ -152,7 +155,9 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeCritical" }]
       }
     },
@@ -160,7 +165,9 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
       "type": "IF",
       "comment": "Handle SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeHit" }]
       }
     },
@@ -168,7 +175,9 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
       "type": "IF",
       "comment": "Handle FUMBLE outcome - uses beak-specific fumble",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
         "then_actions": [{ "macro": "violence:handleBeakFumble" }]
       }
     },
@@ -176,7 +185,9 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
       "type": "IF",
       "comment": "Handle FAILURE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeMiss" }]
       }
     }
@@ -186,18 +197,19 @@ This rule bridges the action (user intent) and the game effects (damage, narrati
 
 ### Key Differences from `handle_strike_target`
 
-| Aspect | handle_strike_target | handle_peck_target |
-|--------|---------------------|-------------------|
-| `attackVerb` | "strike" | "peck" |
-| `attackVerbPast` | "strikes" | "pecks" |
-| `hitDescription` | "crushing their flesh" | "piercing their flesh" |
-| `excludeDamageTypes` | [] (empty) | ["slashing", "blunt"] |
-| FUMBLE macro | `weapons:handleMeleeFumble` | `violence:handleBeakFumble` |
-| CRITICAL/SUCCESS/FAILURE | Same macros | Same macros |
+| Aspect                   | handle_strike_target        | handle_peck_target          |
+| ------------------------ | --------------------------- | --------------------------- |
+| `attackVerb`             | "strike"                    | "peck"                      |
+| `attackVerbPast`         | "strikes"                   | "pecks"                     |
+| `hitDescription`         | "crushing their flesh"      | "piercing their flesh"      |
+| `excludeDamageTypes`     | [] (empty)                  | ["slashing", "blunt"]       |
+| FUMBLE macro             | `weapons:handleMeleeFumble` | `violence:handleBeakFumble` |
+| CRITICAL/SUCCESS/FAILURE | Same macros                 | Same macros                 |
 
 ### Macro Reuse Strategy
 
 The rule reuses existing weapon macros where appropriate:
+
 - **handleMeleeCritical**: Works for any melee attack (applies double damage)
 - **handleMeleeHit**: Works for any melee attack (applies damage)
 - **handleMeleeMiss**: Works for any melee attack (generates miss narrative)
@@ -208,6 +220,7 @@ The rule reuses existing weapon macros where appropriate:
 ### Tests That Must Pass
 
 1. **Schema Validation**:
+
    ```bash
    npm run validate:mod:violence
    ```
@@ -282,6 +295,7 @@ Setting `excludeDamageTypes` to `["slashing", "blunt"]` ensures that even if a b
 ### Skill System Note
 
 The rule uses `skills:melee_skill` and `skills:defense_skill` with defaults of 10 and 0 respectively. A dedicated `combat:beak_fighting` skill could be added in the future by:
+
 1. Creating the skill component
 2. Modifying this rule's `RESOLVE_OUTCOME` parameters
 
@@ -292,10 +306,12 @@ This is outside the scope of the beak attack feature.
 ### What Was Actually Changed
 
 **Files Created:**
+
 1. `data/mods/violence/rules/handle_peck_target.rule.json` - The rule definition following the exact pattern of `handle_strike_target`
 2. `tests/unit/mods/violence/rules/handlePeckTargetRule.test.js` - Comprehensive unit tests (29 tests)
 
 **Files Modified:**
+
 1. `data/mods/violence/mod-manifest.json` - Added `handle_peck_target.rule.json` to `content.rules` array
 
 ### Compared to Original Plan

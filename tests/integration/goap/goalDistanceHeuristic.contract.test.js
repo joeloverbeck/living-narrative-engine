@@ -44,11 +44,14 @@ describe('GoalDistanceHeuristic integration contract', () => {
       },
       {
         id: 'goal:test',
-        goalState: { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 20] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 20],
+        },
       }
     );
 
-    const compliance = setup.controller.getEventComplianceDiagnostics('actor-contract');
+    const compliance =
+      setup.controller.getEventComplianceDiagnostics('actor-contract');
     expect(compliance).not.toBeNull();
     expect(compliance.actor).toEqual(
       expect.objectContaining({
@@ -58,7 +61,8 @@ describe('GoalDistanceHeuristic integration contract', () => {
     );
     expect(compliance.actor.totalEvents).toBeGreaterThan(0);
 
-    const numericDiagnostics = setup.controller.getNumericConstraintDiagnostics('actor-contract');
+    const numericDiagnostics =
+      setup.controller.getNumericConstraintDiagnostics('actor-contract');
     expect(numericDiagnostics).not.toBeNull();
     expect(numericDiagnostics.totalFallbacks).toBe(1);
   });

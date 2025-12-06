@@ -93,15 +93,11 @@ describe('TraceExportButton', () => {
     expect(progressBar.querySelector('.export-progress-fill').style.width).toBe(
       '42.6%'
     );
-    expect(progressText.textContent).toBe(
-      'Exporting: 3/7 traces (43%)'
-    );
+    expect(progressText.textContent).toBe('Exporting: 3/7 traces (43%)');
 
     progressBar.querySelector('.export-progress-fill').remove();
     progressHandler({ payload: { progress: 12.3, current: 1, total: 9 } });
-    expect(progressText.textContent).toBe(
-      'Exporting: 1/9 traces (12%)'
-    );
+    expect(progressText.textContent).toBe('Exporting: 1/9 traces (12%)');
   });
 
   it('handles a successful export using the file system API', async () => {
@@ -208,7 +204,10 @@ describe('TraceExportButton', () => {
     await button.onclick();
 
     expect(service.exportTracesToFileSystem).toHaveBeenCalledWith(null, 'json');
-    expect(logger.error).toHaveBeenCalledWith('Export error:', 'Permission denied');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Export error:',
+      'Permission denied'
+    );
 
     const progressText = container.querySelector('.export-progress-text');
     expect(progressText.textContent).toBe('Error: Permission denied');

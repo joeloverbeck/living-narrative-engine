@@ -26,10 +26,9 @@ describe('AnatomyValidationPhase Integration', () => {
     testBed = createTestBed();
     mockLogger = testBed.mockLogger;
 
-    mockRecipePatternResolver = testBed.createMock(
-      'recipePatternResolver',
-      ['resolveRecipePatterns']
-    );
+    mockRecipePatternResolver = testBed.createMock('recipePatternResolver', [
+      'resolveRecipePatterns',
+    ]);
 
     mockSafeEventDispatcher = testBed.createMock('safeEventDispatcher', [
       'dispatch',
@@ -104,7 +103,9 @@ describe('AnatomyValidationPhase Integration', () => {
       const result = await validationPhase.execute(ctx);
 
       // Verify validation was executed
-      expect(mockRecipePatternResolver.resolveRecipePatterns).toHaveBeenCalled();
+      expect(
+        mockRecipePatternResolver.resolveRecipePatterns
+      ).toHaveBeenCalled();
 
       // Verify results were attached to context
       expect(result.anatomyValidation).toBeDefined();
@@ -190,7 +191,6 @@ describe('AnatomyValidationPhase Integration', () => {
       );
       expect(criticalError).toBeDefined();
     });
-
   });
 
   describe('Multi-Blueprint Validation', () => {
@@ -257,7 +257,9 @@ describe('AnatomyValidationPhase Integration', () => {
 
       const result = await validationPhase.execute(ctx);
 
-      expect(mockRecipePatternResolver.resolveRecipePatterns).not.toHaveBeenCalled();
+      expect(
+        mockRecipePatternResolver.resolveRecipePatterns
+      ).not.toHaveBeenCalled();
       expect(result.anatomyValidation.errors).toBe(0);
       expect(result.anatomyValidation.warnings).toBe(0);
       expect(result.anatomyValidation.issues).toHaveLength(0);

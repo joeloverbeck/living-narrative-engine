@@ -350,7 +350,6 @@ export class StorageRotationManager {
         }
         break;
       }
-
     }
 
     return { toKeep, toDelete };

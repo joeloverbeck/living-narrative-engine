@@ -4,7 +4,14 @@
  *              serialization fails and when the metrics backend throws unexpectedly.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -96,11 +103,9 @@ describe('Metrics middleware serialization resilience integration', () => {
     });
 
     const errorSpy = jest.spyOn(logger, 'error');
-    jest
-      .spyOn(metricsService, 'recordHttpRequest')
-      .mockImplementation(() => {
-        throw new Error('intentional metrics failure');
-      });
+    jest.spyOn(metricsService, 'recordHttpRequest').mockImplementation(() => {
+      throw new Error('intentional metrics failure');
+    });
 
     const app = buildApp({
       metricsService,

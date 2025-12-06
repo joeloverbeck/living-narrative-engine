@@ -85,9 +85,9 @@ describe('Status code mapper integration through alert pipeline', () => {
       'Service temporarily unavailable. Please retry in a moment.'
     );
 
-    const detailsText = bubble
-      .querySelector('.chat-alert-details-content code')
-      .textContent;
+    const detailsText = bubble.querySelector(
+      '.chat-alert-details-content code'
+    ).textContent;
     expect(detailsText).toContain('Status Code: 503');
     expect(detailsText).toContain('URL: /system/api');
     expect(detailsText).toContain('Details: Service down');
@@ -127,9 +127,9 @@ describe('Status code mapper integration through alert pipeline', () => {
       .textContent.trim();
     expect(messageText).toBe('Original system error');
 
-    const detailsText = bubble
-      .querySelector('.chat-alert-details-content code')
-      .textContent;
+    const detailsText = bubble.querySelector(
+      '.chat-alert-details-content code'
+    ).textContent;
     expect(detailsText).toContain('"raw": "Detailed failure for debugging"');
   });
 

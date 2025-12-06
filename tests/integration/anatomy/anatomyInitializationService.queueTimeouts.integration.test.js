@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
@@ -125,7 +132,8 @@ describe('AnatomyInitializationService queue resilience integration', () => {
   });
 
   const createActorWithAnatomy = async () => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -184,7 +192,8 @@ describe('AnatomyInitializationService queue resilience integration', () => {
 
     await Promise.resolve();
 
-    const waitPromise = anatomyInitializationService.waitForAllGenerationsToComplete(60);
+    const waitPromise =
+      anatomyInitializationService.waitForAllGenerationsToComplete(60);
 
     await Promise.resolve();
     jest.advanceTimersByTime(50);

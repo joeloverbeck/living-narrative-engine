@@ -117,8 +117,8 @@ describe('affection:rest_head_against_chest action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']?.facing_away_from ??
-              [];
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from ?? [];
             const partnerKneelingBefore =
               partner.components?.['positioning:kneeling_before']?.entityId ??
               null;

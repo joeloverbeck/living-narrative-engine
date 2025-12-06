@@ -141,9 +141,7 @@ describe('EventBusTurnEndAdapter', () => {
     });
     const entityId = 'npc-invalid-success';
 
-    await expect(
-      adapter.notifyTurnEnded(entityId, undefined)
-    ).rejects.toThrow(
+    await expect(adapter.notifyTurnEnded(entityId, undefined)).rejects.toThrow(
       /success' parameter must be a boolean/
     );
 
@@ -165,9 +163,10 @@ describe('EventBusTurnEndAdapter', () => {
       })
     );
 
-    expect(
-      mockSafeDispatcher.dispatch
-    ).not.toHaveBeenCalledWith(TURN_ENDED_ID, expect.anything());
+    expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalledWith(
+      TURN_ENDED_ID,
+      expect.anything()
+    );
   });
 
   it('should attempt fallback error dispatch when invalid entity dispatch fails', async () => {

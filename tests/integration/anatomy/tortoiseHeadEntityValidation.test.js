@@ -5,7 +5,10 @@ import { join } from 'path';
 describe('Tortoise Head Entity Validation', () => {
   const headEntity = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_head.entity.json'),
+      join(
+        process.cwd(),
+        'data/mods/anatomy/entities/definitions/tortoise_head.entity.json'
+      ),
       'utf-8'
     )
   );
@@ -16,12 +19,16 @@ describe('Tortoise Head Entity Validation', () => {
     });
 
     it('should have correct description', () => {
-      expect(headEntity.description).toBe('Reptilian head with beak mount and eye sockets');
+      expect(headEntity.description).toBe(
+        'Reptilian head with beak mount and eye sockets'
+      );
     });
 
     it('should have anatomy:part component with tortoise_head subType', () => {
       expect(headEntity.components['anatomy:part']).toBeDefined();
-      expect(headEntity.components['anatomy:part'].subType).toBe('tortoise_head');
+      expect(headEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_head'
+      );
     });
 
     it('should have core:name component with text "tortoise head"', () => {
@@ -31,17 +38,23 @@ describe('Tortoise Head Entity Validation', () => {
 
     it('should have descriptors:texture component with "scaled" texture', () => {
       expect(headEntity.components['descriptors:texture']).toBeDefined();
-      expect(headEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(headEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
 
     it('should have descriptors:shape_general component with "domed" shape', () => {
       expect(headEntity.components['descriptors:shape_general']).toBeDefined();
-      expect(headEntity.components['descriptors:shape_general'].shape).toBe('domed');
+      expect(headEntity.components['descriptors:shape_general'].shape).toBe(
+        'domed'
+      );
     });
 
     it('should have descriptors:color_extended component with "sickly-gray-green" color', () => {
       expect(headEntity.components['descriptors:color_extended']).toBeDefined();
-      expect(headEntity.components['descriptors:color_extended'].color).toBe('sickly-gray-green');
+      expect(headEntity.components['descriptors:color_extended'].color).toBe(
+        'sickly-gray-green'
+      );
     });
   });
 
@@ -111,7 +124,9 @@ describe('Tortoise Head Entity Validation', () => {
     });
 
     it('should have unique subType for tortoise head', () => {
-      expect(headEntity.components['anatomy:part'].subType).toBe('tortoise_head');
+      expect(headEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_head'
+      );
     });
   });
 });

@@ -105,30 +105,27 @@ describe('Tortoise Torso Entity Definition (TORPERANAREC-003)', () => {
     });
 
     it('should have carapace_mount socket with correct configuration', () => {
-      const carapaceSocket =
-        entityDefinition.components['anatomy:sockets'].sockets.find(
-          (s) => s.id === 'carapace_mount'
-        );
+      const carapaceSocket = entityDefinition.components[
+        'anatomy:sockets'
+      ].sockets.find((s) => s.id === 'carapace_mount');
       expect(carapaceSocket).toBeDefined();
       expect(carapaceSocket.allowedTypes).toEqual(['shell_carapace']);
       expect(carapaceSocket.nameTpl).toBe('upper shell mount');
     });
 
     it('should have plastron_mount socket with correct configuration', () => {
-      const plastronSocket =
-        entityDefinition.components['anatomy:sockets'].sockets.find(
-          (s) => s.id === 'plastron_mount'
-        );
+      const plastronSocket = entityDefinition.components[
+        'anatomy:sockets'
+      ].sockets.find((s) => s.id === 'plastron_mount');
       expect(plastronSocket).toBeDefined();
       expect(plastronSocket.allowedTypes).toEqual(['shell_plastron']);
       expect(plastronSocket.nameTpl).toBe('lower shell mount');
     });
 
     it('should have torso socket with correct configuration', () => {
-      const torsoSocket =
-        entityDefinition.components['anatomy:sockets'].sockets.find(
-          (s) => s.id === 'torso'
-        );
+      const torsoSocket = entityDefinition.components[
+        'anatomy:sockets'
+      ].sockets.find((s) => s.id === 'torso');
       expect(torsoSocket).toBeDefined();
       expect(torsoSocket.allowedTypes).toEqual(['torso_clothing']);
       expect(torsoSocket.nameTpl).toBe('torso');
@@ -215,29 +212,27 @@ describe('Tortoise Torso Entity Definition (TORPERANAREC-003)', () => {
 
   describe('Invariants (TORPERANAREC-003)', () => {
     it('should have socket IDs matching blueprint expectations', () => {
-      const socketIds =
-        entityDefinition.components['anatomy:sockets'].sockets.map(
-          (s) => s.id
-        );
+      const socketIds = entityDefinition.components[
+        'anatomy:sockets'
+      ].sockets.map((s) => s.id);
       expect(socketIds).toContain('carapace_mount');
       expect(socketIds).toContain('plastron_mount');
     });
 
     it('should have socket allowedTypes matching blueprint expectations', () => {
-      const carapaceSocket =
-        entityDefinition.components['anatomy:sockets'].sockets.find(
-          (s) => s.id === 'carapace_mount'
-        );
-      const plastronSocket =
-        entityDefinition.components['anatomy:sockets'].sockets.find(
-          (s) => s.id === 'plastron_mount'
-        );
+      const carapaceSocket = entityDefinition.components[
+        'anatomy:sockets'
+      ].sockets.find((s) => s.id === 'carapace_mount');
+      const plastronSocket = entityDefinition.components[
+        'anatomy:sockets'
+      ].sockets.find((s) => s.id === 'plastron_mount');
       expect(carapaceSocket.allowedTypes).toEqual(['shell_carapace']);
       expect(plastronSocket.allowedTypes).toEqual(['shell_plastron']);
     });
 
     it('should use valid texture value per schema', () => {
-      const validTextures = textureComponentSchema.dataSchema.properties.texture.enum;
+      const validTextures =
+        textureComponentSchema.dataSchema.properties.texture.enum;
       expect(validTextures).toContain(
         entityDefinition.components['descriptors:texture'].texture
       );

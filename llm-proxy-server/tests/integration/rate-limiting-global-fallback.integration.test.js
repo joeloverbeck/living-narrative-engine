@@ -52,7 +52,9 @@ describe('rate limiting global fallback integration coverage', () => {
   });
 
   it('falls back to the global rate limit key when request identity data is unavailable', async () => {
-    const { createApiRateLimiter } = await import('../../src/middleware/rateLimiting.js');
+    const { createApiRateLimiter } = await import(
+      '../../src/middleware/rateLimiting.js'
+    );
 
     const app = express();
     app.get(

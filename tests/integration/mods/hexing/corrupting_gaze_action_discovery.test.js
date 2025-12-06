@@ -39,9 +39,10 @@ describe('hexing:corrupting_gaze action discovery', () => {
           if (!actorId) return { success: true, value: new Set() };
 
           const { entityManager } = testEnv;
-          const actorLocation =
-            entityManager.getComponentData(actorId, 'core:position')
-              ?.locationId;
+          const actorLocation = entityManager.getComponentData(
+            actorId,
+            'core:position'
+          )?.locationId;
           if (!actorLocation) return { success: true, value: new Set() };
 
           const targets = new Set();

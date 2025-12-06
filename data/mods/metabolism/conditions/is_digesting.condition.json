@@ -4,7 +4,9 @@
   "description": "Check if entity has food in buffer being digested",
   "logic": {
     ">": [
-      { "var": "entity.components.metabolism:metabolic_store.buffer_storage.length" },
+      {
+        "var": "entity.components.metabolism:metabolic_store.buffer_storage.length"
+      },
       0
     ]
   }

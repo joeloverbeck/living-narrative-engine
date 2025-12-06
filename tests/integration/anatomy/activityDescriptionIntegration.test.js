@@ -3,7 +3,14 @@
  * @description Tests complete activity description generation workflow with inline and dedicated metadata
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
@@ -95,7 +102,9 @@ describe('Activity Description System - Complete Workflow', () => {
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'jon',
     });
-    entityManager.addComponent(jonEntity.id, 'core:name', { text: 'Jon Ureña' });
+    entityManager.addComponent(jonEntity.id, 'core:name', {
+      text: 'Jon Ureña',
+    });
 
     // Add activity component with inline metadata
     entityManager.addComponent(jonEntity.id, 'test:activity_state', {
@@ -108,9 +117,12 @@ describe('Activity Description System - Complete Workflow', () => {
       },
     });
 
-    const aliciaEntity = await entityManager.createEntityInstance('core:actor', {
-      instanceId: 'alicia',
-    });
+    const aliciaEntity = await entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: 'alicia',
+      }
+    );
     entityManager.addComponent(aliciaEntity.id, 'core:name', {
       text: 'Alicia Western',
     });
@@ -119,14 +131,18 @@ describe('Activity Description System - Complete Workflow', () => {
     const description =
       await activityDescriptionService.generateActivityDescription('jon');
 
-    expect(description).toBe('Activity: Jon Ureña is kneeling before Alicia Western');
+    expect(description).toBe(
+      'Activity: Jon Ureña is kneeling before Alicia Western'
+    );
   });
 
   it('should generate activity description from dedicated metadata', async () => {
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'jon',
     });
-    entityManager.addComponent(jonEntity.id, 'core:name', { text: 'Jon Ureña' });
+    entityManager.addComponent(jonEntity.id, 'core:name', {
+      text: 'Jon Ureña',
+    });
 
     // Add source component
     entityManager.addComponent(jonEntity.id, 'test:kissing', {
@@ -144,9 +160,12 @@ describe('Activity Description System - Complete Workflow', () => {
       priority: 90,
     });
 
-    const aliciaEntity = await entityManager.createEntityInstance('core:actor', {
-      instanceId: 'alicia',
-    });
+    const aliciaEntity = await entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: 'alicia',
+      }
+    );
     entityManager.addComponent(aliciaEntity.id, 'core:name', {
       text: 'Alicia Western',
     });
@@ -163,7 +182,9 @@ describe('Activity Description System - Complete Workflow', () => {
     const jonEntity = await entityManager.createEntityInstance('core:actor', {
       instanceId: 'jon',
     });
-    entityManager.addComponent(jonEntity.id, 'core:name', { text: 'Jon Ureña' });
+    entityManager.addComponent(jonEntity.id, 'core:name', {
+      text: 'Jon Ureña',
+    });
 
     // Lower priority activity
     entityManager.addComponent(jonEntity.id, 'test:activity_state_1', {
@@ -187,9 +208,12 @@ describe('Activity Description System - Complete Workflow', () => {
       },
     });
 
-    const aliciaEntity = await entityManager.createEntityInstance('core:actor', {
-      instanceId: 'alicia',
-    });
+    const aliciaEntity = await entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: 'alicia',
+      }
+    );
     entityManager.addComponent(aliciaEntity.id, 'core:name', {
       text: 'Alicia Western',
     });

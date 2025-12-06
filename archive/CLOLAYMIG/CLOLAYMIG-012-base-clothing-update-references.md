@@ -22,20 +22,20 @@ Update all recipe files that reference base-clothing entities to use the new `ba
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | Updated 2 references to `base-clothing:*` |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | Updated 3 references to `base-clothing:*` |
+| File                                                         | Changes                                   |
+| ------------------------------------------------------------ | ----------------------------------------- |
+| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`   | Updated 2 references to `base-clothing:*` |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`    | Updated 3 references to `base-clothing:*` |
 | `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | Updated 3 references to `base-clothing:*` |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | Updated 3 references to `base-clothing:*` |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | Updated 2 references to `base-clothing:*` |
-| `data/mods/fantasy/mod-manifest.json` | Added `base-clothing` dependency |
-| `data/mods/patrol/mod-manifest.json` | Added `base-clothing` dependency |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`           | Updated 3 references to `base-clothing:*` |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`            | Updated 2 references to `base-clothing:*` |
+| `data/mods/fantasy/mod-manifest.json`                        | Added `base-clothing` dependency          |
+| `data/mods/patrol/mod-manifest.json`                         | Added `base-clothing` dependency          |
 
 ### New Tests Added
 
-| Test File | Purpose |
-|-----------|---------|
+| Test File                                                                               | Purpose                                                                             |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `tests/integration/mods/base-clothing/baseClothingRecipeReferences.integration.test.js` | 16 tests validating recipe references, manifest dependencies, and entity resolution |
 
 ### Test Results
@@ -60,13 +60,13 @@ Update all recipe files that reference base-clothing entities to use the new `ba
 
 #### Recipe Files to Modify
 
-| Recipe File | Entity References to Update |
-|------------|----------------------------|
-| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | `shale_gray_nylon_field_pants`, `black_leather_duty_boots` |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | `shale_gray_nylon_field_pants`, `charcoal_wool_tshirt`, `black_leather_duty_boots` |
+| Recipe File                                                  | Entity References to Update                                                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`   | `shale_gray_nylon_field_pants`, `black_leather_duty_boots`                                              |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`    | `shale_gray_nylon_field_pants`, `charcoal_wool_tshirt`, `black_leather_duty_boots`                      |
 | `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | `cream_poets_shirt_billowing_sleeves`, `black_breeches_tapered_knee`, `digitigrade_foot_wraps_burgundy` |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | `shale_gray_nylon_field_pants`, `charcoal_wool_tshirt`, `black_leather_duty_boots` |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | `shale_gray_nylon_field_pants`, `black_leather_duty_boots` |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`           | `shale_gray_nylon_field_pants`, `charcoal_wool_tshirt`, `black_leather_duty_boots`                      |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`            | `shale_gray_nylon_field_pants`, `black_leather_duty_boots`                                              |
 
 ### Exact Changes Per File
 
@@ -166,15 +166,15 @@ Add to `dependencies` array:
 
 ### Files Summary
 
-| File | Action |
-|------|--------|
-| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | Update 2 references |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | Update 3 references |
+| File                                                         | Action              |
+| ------------------------------------------------------------ | ------------------- |
+| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`   | Update 2 references |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`    | Update 3 references |
 | `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | Update 3 references |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | Update 3 references |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | Update 2 references |
-| `data/mods/fantasy/mod-manifest.json` | Add dependency |
-| `data/mods/patrol/mod-manifest.json` | Add dependency |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`           | Update 3 references |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`            | Update 2 references |
+| `data/mods/fantasy/mod-manifest.json`                        | Add dependency      |
+| `data/mods/patrol/mod-manifest.json`                         | Add dependency      |
 
 **Total: 13 references across 5 recipe files, 2 manifest updates**
 

@@ -5,7 +5,10 @@ import { join } from 'path';
 describe('Tortoise Hand Entity Validation', () => {
   const handEntity = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_hand.entity.json'),
+      join(
+        process.cwd(),
+        'data/mods/anatomy/entities/definitions/tortoise_hand.entity.json'
+      ),
       'utf-8'
     )
   );
@@ -16,12 +19,16 @@ describe('Tortoise Hand Entity Validation', () => {
     });
 
     it('should have correct description', () => {
-      expect(handEntity.description).toBe('Thick-skinned hand with three prominent claws');
+      expect(handEntity.description).toBe(
+        'Thick-skinned hand with three prominent claws'
+      );
     });
 
     it('should have anatomy:part component with tortoise_hand subType', () => {
       expect(handEntity.components['anatomy:part']).toBeDefined();
-      expect(handEntity.components['anatomy:part'].subType).toBe('tortoise_hand');
+      expect(handEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_hand'
+      );
     });
 
     it('should have core:name component with text "hand"', () => {
@@ -31,18 +38,24 @@ describe('Tortoise Hand Entity Validation', () => {
 
     it('should have descriptors:texture component with "leathery" texture', () => {
       expect(handEntity.components['descriptors:texture']).toBeDefined();
-      expect(handEntity.components['descriptors:texture'].texture).toBe('leathery');
+      expect(handEntity.components['descriptors:texture'].texture).toBe(
+        'leathery'
+      );
     });
 
     it('should have descriptors:digit_count component with string "3"', () => {
       expect(handEntity.components['descriptors:digit_count']).toBeDefined();
       expect(handEntity.components['descriptors:digit_count'].count).toBe('3');
-      expect(typeof handEntity.components['descriptors:digit_count'].count).toBe('string');
+      expect(
+        typeof handEntity.components['descriptors:digit_count'].count
+      ).toBe('string');
     });
 
     it('should have descriptors:projection component with "clawed" projection', () => {
       expect(handEntity.components['descriptors:projection']).toBeDefined();
-      expect(handEntity.components['descriptors:projection'].projection).toBe('clawed');
+      expect(handEntity.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
     });
 
     it('should have descriptors:color_extended component with "sickly-gray-green" color', () => {
@@ -108,7 +121,9 @@ describe('Tortoise Hand Entity Validation', () => {
     });
 
     it('should have subType matching arm socket allowedTypes', () => {
-      expect(handEntity.components['anatomy:part'].subType).toBe('tortoise_hand');
+      expect(handEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_hand'
+      );
     });
   });
 
@@ -152,12 +167,16 @@ describe('Tortoise Hand Entity Validation', () => {
         'velvety',
         'webbed-clawed',
       ];
-      expect(validTextures).toContain(handEntity.components['descriptors:texture'].texture);
+      expect(validTextures).toContain(
+        handEntity.components['descriptors:texture'].texture
+      );
     });
 
     it('should use valid digit count from schema enum', () => {
       const validCounts = ['3', '4', '5', '6+', 'abnormal'];
-      expect(validCounts).toContain(handEntity.components['descriptors:digit_count'].count);
+      expect(validCounts).toContain(
+        handEntity.components['descriptors:digit_count'].count
+      );
     });
 
     it('should use valid projection from schema enum', () => {
@@ -219,7 +238,9 @@ describe('Tortoise Hand Entity Validation', () => {
         'violet',
         'warm-brown',
       ];
-      expect(validColors).toContain(handEntity.components['descriptors:color_extended'].color);
+      expect(validColors).toContain(
+        handEntity.components['descriptors:color_extended'].color
+      );
     });
   });
 
@@ -229,7 +250,9 @@ describe('Tortoise Hand Entity Validation', () => {
     });
 
     it('should have leathery texture consistent with reptilian anatomy', () => {
-      expect(handEntity.components['descriptors:texture'].texture).toBe('leathery');
+      expect(handEntity.components['descriptors:texture'].texture).toBe(
+        'leathery'
+      );
     });
 
     it('should have exactly 3 digits as specified for tortoise anatomy', () => {
@@ -237,7 +260,9 @@ describe('Tortoise Hand Entity Validation', () => {
     });
 
     it('should have clawed projection characteristic', () => {
-      expect(handEntity.components['descriptors:projection'].projection).toBe('clawed');
+      expect(handEntity.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
     });
 
     it('should have color consistent with tortoise appearance', () => {
@@ -250,7 +275,10 @@ describe('Tortoise Hand Entity Validation', () => {
   describe('Compatibility with arm socket', () => {
     const armEntity = JSON.parse(
       readFileSync(
-        join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'),
+        join(
+          process.cwd(),
+          'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+        ),
         'utf-8'
       )
     );
@@ -267,7 +295,9 @@ describe('Tortoise Hand Entity Validation', () => {
       const handSocket = armEntity.components['anatomy:sockets'].sockets.find(
         (s) => s.id === 'hand'
       );
-      expect(handEntity.components['anatomy:part'].subType).toBe(handSocket.allowedTypes[0]);
+      expect(handEntity.components['anatomy:part'].subType).toBe(
+        handSocket.allowedTypes[0]
+      );
     });
   });
 });

@@ -82,7 +82,9 @@ describe('validationCore', () => {
           'string.assertNonBlank'
         );
         expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining("Parameter 'failureParam' must be a non-blank string")
+          expect.stringContaining(
+            "Parameter 'failureParam' must be a non-blank string"
+          )
         );
       });
 
@@ -125,7 +127,7 @@ describe('validationCore', () => {
           'string.validateParam'
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          "Validated parameter 'myParam': \"test\""
+          'Validated parameter \'myParam\': "test"'
         );
       });
 
@@ -231,10 +233,7 @@ describe('validationCore', () => {
 
         const result = loggerValidation.ensure(null, fallbackContext);
 
-        expect(ensureValidLogger).toHaveBeenCalledWith(
-          null,
-          fallbackContext
-        );
+        expect(ensureValidLogger).toHaveBeenCalledWith(null, fallbackContext);
         expect(result).toBe(customLogger);
       });
     });

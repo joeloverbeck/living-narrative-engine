@@ -24,7 +24,8 @@ describe('setupEntityCacheInvalidation', () => {
 
     // Re-require the module to get fresh state
     entityHelpersModule = require('../../../../src/scopeDsl/core/entityHelpers.js');
-    setupEntityCacheInvalidation = entityHelpersModule.setupEntityCacheInvalidation;
+    setupEntityCacheInvalidation =
+      entityHelpersModule.setupEntityCacheInvalidation;
     invalidateEntityCache = entityHelpersModule.invalidateEntityCache;
     const { clearEntityCache } = entityHelpersModule;
     clearEntityCache();

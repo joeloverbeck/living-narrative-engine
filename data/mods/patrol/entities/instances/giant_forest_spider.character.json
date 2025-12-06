@@ -1,5 +1,5 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "patrol:giant_forest_spider_instance",
-    "definitionId": "patrol:giant_forest_spider"
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "patrol:giant_forest_spider_instance",
+  "definitionId": "patrol:giant_forest_spider"
 }

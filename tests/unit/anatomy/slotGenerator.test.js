@@ -509,7 +509,9 @@ describe('SlotGenerator', () => {
       expect(slots['limb_2']).toBeDefined();
       expect(slots['limb_3']).toBeDefined();
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Custom orientation scheme used without positions array')
+        expect.stringContaining(
+          'Custom orientation scheme used without positions array'
+        )
       );
     });
   });

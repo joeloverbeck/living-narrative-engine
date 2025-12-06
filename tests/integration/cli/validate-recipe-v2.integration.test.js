@@ -25,7 +25,11 @@ jest.mock('chalk', () => ({
  * @param root0.errors
  * @param root0.warnings
  */
-function createReport({ recipeId = 'test:recipe', errors = [], warnings = [] } = {}) {
+function createReport({
+  recipeId = 'test:recipe',
+  errors = [],
+  warnings = [],
+} = {}) {
   const base = {
     recipeId,
     recipePath: `${recipeId}.recipe.json`,
@@ -84,7 +88,12 @@ function createRuntime({ reports = [] } = {}) {
     }),
   };
 
-  const loggerStub = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+  const loggerStub = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  };
 
   const container = {
     register: jest.fn(),
@@ -112,7 +121,9 @@ function createRuntime({ reports = [] } = {}) {
     registerFetchers: jest.fn(),
     createConfigurationLoader: () => loader,
     createValidator: () => validator,
-    loadRecipeFile: jest.fn(async (recipePath) => ({ recipeId: `test:${recipePath}` })),
+    loadRecipeFile: jest.fn(async (recipePath) => ({
+      recipeId: `test:${recipePath}`,
+    })),
     loadMods: jest.fn().mockResolvedValue({ loadFailures: {} }),
     console: consoleStub,
     detectRecipeUsageMods: jest.fn().mockResolvedValue([]),
@@ -162,10 +173,15 @@ describe('validate-recipe-v2 runner', () => {
       recipeId: 'test:failing',
       errors: [{ message: 'boom' }],
     });
-    const { runtimeOverrides, validator } = createRuntime({ reports: [failingReport] });
+    const { runtimeOverrides, validator } = createRuntime({
+      reports: [failingReport],
+    });
 
     const result = await executeRecipeValidation(
-      ['data/mods/anatomy/recipes/first.recipe.json', 'data/mods/anatomy/recipes/second.recipe.json'],
+      [
+        'data/mods/anatomy/recipes/first.recipe.json',
+        'data/mods/anatomy/recipes/second.recipe.json',
+      ],
       { failFast: true },
       runtimeOverrides
     );
@@ -199,7 +215,9 @@ describe('validate-recipe-v2 runner', () => {
       runtimeOverrides
     );
 
-    expect(consoleStub.log).toHaveBeenCalledWith(expect.stringContaining('<testsuite'));
+    expect(consoleStub.log).toHaveBeenCalledWith(
+      expect.stringContaining('<testsuite')
+    );
   });
 
   it('emits per-recipe JSON output when --json is used', async () => {

@@ -6,7 +6,14 @@
  *              logger configuration singletons together.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -70,7 +77,9 @@ describe('log formatter integration with non-numeric max length updates', () => 
     });
 
     expect(baseline.message.endsWith('...')).toBe(true);
-    expect(baseline.contextLines.some((line) => line.includes('↳ Context: {'))).toBe(true);
+    expect(
+      baseline.contextLines.some((line) => line.includes('↳ Context: {'))
+    ).toBe(true);
 
     configuration.updateConfig({ maxMessageLength: 'non-numeric-length' });
 

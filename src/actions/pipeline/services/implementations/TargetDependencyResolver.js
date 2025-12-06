@@ -369,16 +369,16 @@ export class TargetDependencyResolver extends BaseService {
       );
     }
 
-      const recursionStack = new Set();
+    const recursionStack = new Set();
 
-      const hasCycle = (key) => {
-        if (recursionStack.has(key)) {
-          return true;
-        }
+    const hasCycle = (key) => {
+      if (recursionStack.has(key)) {
+        return true;
+      }
 
-        recursionStack.add(key);
+      recursionStack.add(key);
 
-        const targetDef = targetDefinitions[key];
+      const targetDef = targetDefinitions[key];
       if (targetDef?.contextFrom && targetDefinitions[targetDef.contextFrom]) {
         if (hasCycle(targetDef.contextFrom)) {
           return true;

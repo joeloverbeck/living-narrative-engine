@@ -6,12 +6,8 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import {
-  CoreMotivationsGeneratorController,
-} from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
-import {
-  CoreMotivationsDisplayEnhancer,
-} from '../../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
+import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
+import { CoreMotivationsDisplayEnhancer } from '../../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
 import {
   ERROR_CATEGORIES,
   ERROR_SEVERITY,
@@ -43,7 +39,11 @@ const createMotivation = (overrides = {}) => ({
   createdAt: overrides.createdAt || new Date().toISOString(),
 });
 
-const createControllerDependencies = ({ logger, eventBus, schemaValidator }) => {
+const createControllerDependencies = ({
+  logger,
+  eventBus,
+  schemaValidator,
+}) => {
   const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger });
   const domElementManager = new DOMElementManager({
     logger,
@@ -247,14 +247,12 @@ describe('Core Motivations accessibility integration', () => {
         () =>
           new Promise((resolve) => {
             resolveConcept = resolve;
-          }),
+          })
       ),
       getClichesByDirectionId: jest
         .fn()
         .mockResolvedValue([{ id: 'cliche-1', text: 'Chosen one' }]),
-      saveCoreMotivations: jest
-        .fn()
-        .mockResolvedValue(['generated-1']),
+      saveCoreMotivations: jest.fn().mockResolvedValue(['generated-1']),
       getCoreMotivationsByDirectionId: jest
         .fn()
         .mockResolvedValueOnce([existingMotivation])
@@ -269,7 +267,10 @@ describe('Core Motivations accessibility integration', () => {
       generate: jest
         .fn()
         .mockResolvedValue([
-          createMotivation({ id: 'generated-1', createdAt: new Date().toISOString() }),
+          createMotivation({
+            id: 'generated-1',
+            createdAt: new Date().toISOString(),
+          }),
         ]),
     };
 
@@ -285,7 +286,9 @@ describe('Core Motivations accessibility integration', () => {
     eventBus = new EventBus({ logger });
 
     if (!navigator.clipboard) {
-      navigator.clipboard = { writeText: jest.fn().mockResolvedValue(undefined) };
+      navigator.clipboard = {
+        writeText: jest.fn().mockResolvedValue(undefined),
+      };
     }
 
     setupDOM();
@@ -337,7 +340,7 @@ describe('Core Motivations accessibility integration', () => {
 
     expect(characterBuilderService.saveCoreMotivations).toHaveBeenCalledWith(
       'direction-1',
-      expect.arrayContaining([expect.objectContaining({ id: 'generated-1' })]),
+      expect.arrayContaining([expect.objectContaining({ id: 'generated-1' })])
     );
 
     expect(generateBtn.classList.contains('loading-disabled')).toBe(false);
@@ -346,7 +349,9 @@ describe('Core Motivations accessibility integration', () => {
 
     const announcer = document.getElementById('sr-announcements');
     expect(announcer).toBeTruthy();
-    expect(announcer.textContent).toBe('Core motivations generated successfully!');
+    expect(announcer.textContent).toBe(
+      'Core motivations generated successfully!'
+    );
 
     jest.advanceTimersByTime(1000);
     expect(announcer.textContent).toBe('');

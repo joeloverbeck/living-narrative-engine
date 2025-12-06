@@ -1,25 +1,21 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "furniture:living_room_sofa",
-    "description": "A comfortable three-seat sofa suitable for living rooms",
-    "components": {
-        "core:name": {
-            "text": "comfortable sofa"
-        },
-        "core:description": {
-            "text": "A gray three-seat sofa with comfortable cushions. Square cushions in warm colors and a draped throw make it inviting."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/living_room_sofa.png",
-            "altText": "A comfortable three-seat living room sofa"
-        },
-        "positioning:allows_sitting": {
-            "spots": [
-                null,
-                null,
-                null
-            ]
-        },
-        "positioning:allows_bending_over": {}
-    }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:living_room_sofa",
+  "description": "A comfortable three-seat sofa suitable for living rooms",
+  "components": {
+    "core:name": {
+      "text": "comfortable sofa"
+    },
+    "core:description": {
+      "text": "A gray three-seat sofa with comfortable cushions. Square cushions in warm colors and a draped throw make it inviting."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/living_room_sofa.png",
+      "altText": "A comfortable three-seat living room sofa"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null, null, null]
+    },
+    "positioning:allows_bending_over": {}
+  }
 }

@@ -120,7 +120,10 @@ class ActivityFilteringSystem {
     const metadata = activity.metadata ?? activity.activityMetadata ?? {};
     const conditions = activity.conditions ?? metadata.conditions;
 
-    if (!conditions || this.#conditionValidator.isEmptyConditionsObject(conditions)) {
+    if (
+      !conditions ||
+      this.#conditionValidator.isEmptyConditionsObject(conditions)
+    ) {
       return metadata.shouldDescribeInActivity !== false;
     }
 
@@ -130,7 +133,10 @@ class ActivityFilteringSystem {
 
     if (
       conditions.showOnlyIfProperty &&
-      !this.#conditionValidator.matchesPropertyCondition(activity, conditions.showOnlyIfProperty)
+      !this.#conditionValidator.matchesPropertyCondition(
+        activity,
+        conditions.showOnlyIfProperty
+      )
     ) {
       return false;
     }
@@ -138,7 +144,10 @@ class ActivityFilteringSystem {
     if (
       Array.isArray(conditions.requiredComponents) &&
       conditions.requiredComponents.length > 0 &&
-      !this.#conditionValidator.hasRequiredComponents(entity, conditions.requiredComponents)
+      !this.#conditionValidator.hasRequiredComponents(
+        entity,
+        conditions.requiredComponents
+      )
     ) {
       return false;
     }
@@ -146,7 +155,10 @@ class ActivityFilteringSystem {
     if (
       Array.isArray(conditions.forbiddenComponents) &&
       conditions.forbiddenComponents.length > 0 &&
-      this.#conditionValidator.hasForbiddenComponents(entity, conditions.forbiddenComponents)
+      this.#conditionValidator.hasForbiddenComponents(
+        entity,
+        conditions.forbiddenComponents
+      )
     ) {
       return false;
     }
@@ -199,7 +211,9 @@ class ActivityFilteringSystem {
     return {
       entity: this.#conditionValidator.extractEntityData(entity),
       activity: activity?.sourceData ?? {},
-      target: targetEntity ? this.#conditionValidator.extractEntityData(targetEntity) : null,
+      target: targetEntity
+        ? this.#conditionValidator.extractEntityData(targetEntity)
+        : null,
     };
   }
 

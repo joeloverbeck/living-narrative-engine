@@ -63,6 +63,7 @@ This condition follows the exact pattern of the existing wield condition. Compar
 ```
 
 The only differences are:
+
 - `id`: `weapons:event-is-action-unwield-item`
 - `description`: Updated to reference unwield
 - Logic value: `weapons:unwield_item`
@@ -99,14 +100,17 @@ npm run test:integration -- --testPathPattern="weapons"  # Existing weapons test
 ### What Was Actually Changed vs Originally Planned
 
 **Planned:**
+
 - Create `data/mods/weapons/conditions/event-is-action-unwield-item.condition.json`
 
 **Actual:**
+
 - Created `data/mods/weapons/conditions/event-is-action-unwield-item.condition.json` exactly as specified
 
 ### Assumption Validation
 
 All ticket assumptions were verified correct:
+
 1. ✅ Reference condition file `event-is-action-wield-threateningly.condition.json` exists with matching structure
 2. ✅ Conditions directory exists at `data/mods/weapons/conditions/`
 3. ✅ Pattern matches exactly - only differences are id, description, and action ID value
@@ -122,6 +126,7 @@ All ticket assumptions were verified correct:
 ### New/Modified Tests
 
 No new tests were required for this ticket. The condition file is a data-only JSON file that will be tested by:
+
 - Schema validation (via `npm run validate`)
 - Rule execution tests in UNWITEACT-007 (when the rule uses this condition)
 

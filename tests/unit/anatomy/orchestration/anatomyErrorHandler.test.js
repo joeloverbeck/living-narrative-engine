@@ -102,19 +102,23 @@ describe('AnatomyErrorHandler', () => {
 
     beforeEach(() => {
       centralErrorHandler = {
-        handle: jest.fn().mockResolvedValue({ recovered: true, fallbackData: {} }),
-        handleSync: jest.fn().mockReturnValue({ recovered: true, fallbackData: {} })
+        handle: jest
+          .fn()
+          .mockResolvedValue({ recovered: true, fallbackData: {} }),
+        handleSync: jest
+          .fn()
+          .mockReturnValue({ recovered: true, fallbackData: {} }),
       };
 
       recoveryStrategyManager = {
         executeWithRecovery: jest.fn(),
-        registerStrategy: jest.fn()
+        registerStrategy: jest.fn(),
       };
 
       handler = new AnatomyErrorHandler({
         logger,
         centralErrorHandler,
-        recoveryStrategyManager
+        recoveryStrategyManager,
       });
     });
 
@@ -128,7 +132,7 @@ describe('AnatomyErrorHandler', () => {
         expect.any(AnatomyGenerationError),
         expect.objectContaining({
           ...context,
-          domain: 'anatomy'
+          domain: 'anatomy',
         })
       );
     });
@@ -143,7 +147,7 @@ describe('AnatomyErrorHandler', () => {
         expect.any(AnatomyGenerationError),
         expect.objectContaining({
           ...context,
-          domain: 'anatomy'
+          domain: 'anatomy',
         })
       );
     });
@@ -192,13 +196,13 @@ describe('AnatomyErrorHandler', () => {
         expect.objectContaining({
           retry: expect.objectContaining({
             maxRetries: 2,
-            backoff: 'exponential'
+            backoff: 'exponential',
           }),
           fallback: expect.any(Function),
           circuitBreaker: expect.objectContaining({
             failureThreshold: 3,
-            resetTimeout: 120000
-          })
+            resetTimeout: 120000,
+          }),
         })
       );
 
@@ -207,9 +211,9 @@ describe('AnatomyErrorHandler', () => {
         expect.objectContaining({
           retry: expect.objectContaining({
             maxRetries: 3,
-            backoff: 'linear'
+            backoff: 'linear',
           }),
-          fallback: expect.any(Function)
+          fallback: expect.any(Function),
         })
       );
 
@@ -218,9 +222,9 @@ describe('AnatomyErrorHandler', () => {
         expect.objectContaining({
           retry: expect.objectContaining({
             maxRetries: 1,
-            backoff: 'constant'
+            backoff: 'constant',
           }),
-          fallback: expect.any(Function)
+          fallback: expect.any(Function),
         })
       );
 
@@ -230,7 +234,9 @@ describe('AnatomyErrorHandler', () => {
     });
 
     it('falls back to local handling if central handler fails (async)', async () => {
-      centralErrorHandler.handle.mockRejectedValueOnce(new Error('Central handler failed'));
+      centralErrorHandler.handle.mockRejectedValueOnce(
+        new Error('Central handler failed')
+      );
 
       const error = new Error('test error');
       const context = { operation: 'generation', entityId: 'e1' };
@@ -262,16 +268,19 @@ describe('AnatomyErrorHandler', () => {
     });
 
     it('provides fallback data for anatomy errors', async () => {
-      const anatomyStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(
-        ([name]) => name === 'AnatomyGenerationError'
-      )[1];
+      const anatomyStrategy =
+        recoveryStrategyManager.registerStrategy.mock.calls.find(
+          ([name]) => name === 'AnatomyGenerationError'
+        )[1];
       logger.warn.mockClear();
 
       const fallbackResult = await anatomyStrategy.fallback({
-        context: { entityId: 'entity-123' }
+        context: { entityId: 'entity-123' },
       });
 
-      expect(logger.warn).toHaveBeenCalledWith('Using default anatomy fallback');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Using default anatomy fallback'
+      );
       expect(fallbackResult).toEqual({
         type: 'fallback',
         entityId: 'entity-123',
@@ -281,49 +290,55 @@ describe('AnatomyErrorHandler', () => {
           { id: 'leftArm', type: 'arm', description: 'left arm' },
           { id: 'rightArm', type: 'arm', description: 'right arm' },
           { id: 'leftLeg', type: 'leg', description: 'left leg' },
-          { id: 'rightLeg', type: 'leg', description: 'right leg' }
-        ]
+          { id: 'rightLeg', type: 'leg', description: 'right leg' },
+        ],
       });
     });
 
     it('provides fallback data for description errors', async () => {
-      const descriptionStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(
-        ([name]) => name === 'DescriptionGenerationError'
-      )[1];
+      const descriptionStrategy =
+        recoveryStrategyManager.registerStrategy.mock.calls.find(
+          ([name]) => name === 'DescriptionGenerationError'
+        )[1];
       logger.warn.mockClear();
 
       const fallbackResult = await descriptionStrategy.fallback({
-        context: { entityId: 'entity-456', partIds: ['arm', 'leg'] }
+        context: { entityId: 'entity-456', partIds: ['arm', 'leg'] },
       });
 
-      expect(logger.warn).toHaveBeenCalledWith('Using generic description fallback');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Using generic description fallback'
+      );
       expect(fallbackResult).toEqual({
         type: 'fallback',
         entityId: 'entity-456',
         description: 'A standard humanoid form.',
         parts: [
           { id: 'arm', description: 'arm part' },
-          { id: 'leg', description: 'leg part' }
-        ]
+          { id: 'leg', description: 'leg part' },
+        ],
       });
     });
 
     it('provides fallback data for graph building errors', async () => {
-      const graphStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(
-        ([name]) => name === 'GraphBuildingError'
-      )[1];
+      const graphStrategy =
+        recoveryStrategyManager.registerStrategy.mock.calls.find(
+          ([name]) => name === 'GraphBuildingError'
+        )[1];
       logger.warn.mockClear();
 
       const fallbackResult = await graphStrategy.fallback({
-        context: { rootId: 'root-node' }
+        context: { rootId: 'root-node' },
       });
 
-      expect(logger.warn).toHaveBeenCalledWith('Using minimal graph structure fallback');
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Using minimal graph structure fallback'
+      );
       expect(fallbackResult).toEqual({
         type: 'fallback',
         rootId: 'root-node',
         nodes: [{ id: 'root-node', type: 'root' }],
-        edges: []
+        edges: [],
       });
     });
   });
@@ -364,13 +379,16 @@ describe('AnatomyErrorHandler', () => {
 
   it('extracts graph error context for logging', () => {
     const graphError = new GraphBuildingError('failed', 'root-ctx');
-    handler.handle(graphError, { operation: 'graphBuilding', rootId: 'root-ctx' });
+    handler.handle(graphError, {
+      operation: 'graphBuilding',
+      rootId: 'root-ctx',
+    });
 
     expect(logger.error).toHaveBeenCalledWith(
       'AnatomyErrorHandler: GraphBuildingError occurred during anatomy operation',
       expect.objectContaining({
         context: { operation: 'graphBuilding', rootId: 'root-ctx' },
-        rootId: 'root-ctx'
+        rootId: 'root-ctx',
       })
     );
   });

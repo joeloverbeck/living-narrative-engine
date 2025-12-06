@@ -3,7 +3,14 @@
  * @description Tests how services use the configuration in practice
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import CentralErrorHandler from '../../../src/errors/CentralErrorHandler.js';
 import RecoveryStrategyManager from '../../../src/errors/RecoveryStrategyManager.js';
 import ErrorReporter from '../../../src/errors/ErrorReporter.js';
@@ -13,7 +20,7 @@ import { getErrorConfig } from '../../../src/config/errorHandling.config.js';
 
 // Mock environmentUtils to control environment
 jest.mock('../../../src/utils/environmentUtils.js', () => ({
-  getEnvironmentMode: jest.fn()
+  getEnvironmentMode: jest.fn(),
 }));
 
 import { getEnvironmentMode } from '../../../src/utils/environmentUtils.js';
@@ -29,13 +36,13 @@ describe('Error Handling Configuration Integration', () => {
       info: jest.fn(),
       error: jest.fn(),
       warn: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     // Create mock event bus
     mockEventBus = {
       dispatch: jest.fn(),
-      subscribe: jest.fn()
+      subscribe: jest.fn(),
     };
 
     // Create mock monitoring coordinator
@@ -43,7 +50,7 @@ describe('Error Handling Configuration Integration', () => {
       executeMonitored: jest.fn(async (name, op) => await op()),
       getStats: jest.fn(() => ({})),
       getPerformanceMonitor: jest.fn(),
-      getCircuitBreaker: jest.fn(() => ({ execute: jest.fn() }))
+      getCircuitBreaker: jest.fn(() => ({ execute: jest.fn() })),
     };
 
     // Default to development environment
@@ -61,7 +68,7 @@ describe('Error Handling Configuration Integration', () => {
       errorHandler = new CentralErrorHandler({
         logger: mockLogger,
         eventBus: mockEventBus,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
     });
 
@@ -79,21 +86,34 @@ describe('Error Handling Configuration Integration', () => {
       }
 
       // Check that history is limited to max
-      const history = errorHandler.getErrorHistory(config.performance.maxErrorHistory + 50);
-      expect(history.length).toBeLessThanOrEqual(config.performance.maxErrorHistory);
+      const history = errorHandler.getErrorHistory(
+        config.performance.maxErrorHistory + 50
+      );
+      expect(history.length).toBeLessThanOrEqual(
+        config.performance.maxErrorHistory
+      );
     });
 
     it('should use configuration for fallback values', () => {
       // Test clothing domain fallback
-      const clothingFallback = errorHandler.getFallbackValue('getEquipment', 'ClothingError');
+      const clothingFallback = errorHandler.getFallbackValue(
+        'getEquipment',
+        'ClothingError'
+      );
       expect(clothingFallback).toEqual([]);
 
       // Test anatomy domain fallback
-      const anatomyFallback = errorHandler.getFallbackValue('generateDescription', 'AnatomyVisualizationError');
+      const anatomyFallback = errorHandler.getFallbackValue(
+        'generateDescription',
+        'AnatomyVisualizationError'
+      );
       expect(anatomyFallback).toBe('A standard humanoid form.');
 
       // Test default fallback
-      const defaultFallback = errorHandler.getFallbackValue('fetch', 'UnknownError');
+      const defaultFallback = errorHandler.getFallbackValue(
+        'fetch',
+        'UnknownError'
+      );
       expect(defaultFallback).toBe(null);
     });
 
@@ -104,7 +124,7 @@ describe('Error Handling Configuration Integration', () => {
       const handler = new CentralErrorHandler({
         logger: mockLogger,
         eventBus: mockEventBus,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
 
       const error = new Error('Test error with stack');
@@ -127,7 +147,7 @@ describe('Error Handling Configuration Integration', () => {
 
       const recoveryManager = new RecoveryStrategyManager({
         logger: mockLogger,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
 
       // Test that recovery manager was initialized with config
@@ -136,12 +156,14 @@ describe('Error Handling Configuration Integration', () => {
 
       // Test registering with configuration values
       recoveryManager.registerStrategy('TestError', {
-        fallback: () => 'test-fallback'
+        fallback: () => 'test-fallback',
       });
 
       // The strategy should be registered
       const metricsAfter = recoveryManager.getMetrics();
-      expect(metricsAfter.registeredStrategies).toBeGreaterThan(metrics.registeredStrategies);
+      expect(metricsAfter.registeredStrategies).toBeGreaterThan(
+        metrics.registeredStrategies
+      );
     });
   });
 
@@ -151,7 +173,7 @@ describe('Error Handling Configuration Integration', () => {
 
       const reporter = new ErrorReporter({
         logger: mockLogger,
-        eventBus: mockEventBus
+        eventBus: mockEventBus,
       });
 
       // In development, reporting should be disabled by default
@@ -161,7 +183,7 @@ describe('Error Handling Configuration Integration', () => {
       // Should not attempt to send because disabled in dev
       expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'ERROR_ALERT'
+          type: 'ERROR_ALERT',
         })
       );
     });
@@ -173,14 +195,16 @@ describe('Error Handling Configuration Integration', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         enabled: true,
-        endpoint: 'http://test.com'
+        endpoint: 'http://test.com',
       });
 
       // Report critical errors up to threshold
       for (let i = 0; i < config.reporting.alerts.criticalErrors; i++) {
         // Create a custom error with critical severity
         class CriticalError extends BaseError {
-          getSeverity() { return 'critical'; }
+          getSeverity() {
+            return 'critical';
+          }
         }
         const error = new CriticalError('Critical error', 'CRITICAL_ERROR');
         reporter.report(error);
@@ -188,8 +212,8 @@ describe('Error Handling Configuration Integration', () => {
 
       // Check if alert was triggered at threshold
       const dispatchCalls = mockEventBus.dispatch.mock.calls;
-      const alertCalls = dispatchCalls.filter(call =>
-        call[0].type === 'ERROR_ALERT'
+      const alertCalls = dispatchCalls.filter(
+        (call) => call[0].type === 'ERROR_ALERT'
       );
 
       expect(alertCalls.length).toBeGreaterThan(0);
@@ -203,7 +227,7 @@ describe('Error Handling Configuration Integration', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         enabled: true,
-        endpoint: 'http://test.com'
+        endpoint: 'http://test.com',
       });
 
       // Report many errors to test sampling
@@ -214,7 +238,9 @@ describe('Error Handling Configuration Integration', () => {
         constructor(message, code) {
           super(message, code);
         }
-        getSeverity() { return 'critical'; }
+        getSeverity() {
+          return 'critical';
+        }
       }
       const criticalError = new CriticalError('Critical', 'CRITICAL');
 
@@ -245,7 +271,7 @@ describe('Error Handling Configuration Integration', () => {
 
       const coordinator = new MonitoringCoordinator({
         logger: mockLogger,
-        eventBus: mockEventBus
+        eventBus: mockEventBus,
       });
 
       // Get a circuit breaker
@@ -261,7 +287,7 @@ describe('Error Handling Configuration Integration', () => {
     it('should use service-specific circuit breaker config', () => {
       const coordinator = new MonitoringCoordinator({
         logger: mockLogger,
-        eventBus: mockEventBus
+        eventBus: mockEventBus,
       });
 
       // Get circuit breakers for specific services
@@ -291,19 +317,22 @@ describe('Error Handling Configuration Integration', () => {
 
       const recoveryManager = new RecoveryStrategyManager({
         logger: mockLogger,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
 
       // Should use test config with fewer retries
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(new Error('Fail'))
         .mockResolvedValue('success');
 
-      recoveryManager.executeWithRecovery(operation, {
-        operationName: 'test-op'
-      }).catch(() => {
-        // Expected to fail after 1 attempt in test mode
-      });
+      recoveryManager
+        .executeWithRecovery(operation, {
+          operationName: 'test-op',
+        })
+        .catch(() => {
+          // Expected to fail after 1 attempt in test mode
+        });
     });
 
     it('should adapt behavior when switching to production environment', () => {
@@ -316,7 +345,7 @@ describe('Error Handling Configuration Integration', () => {
       const errorHandler = new CentralErrorHandler({
         logger: mockLogger,
         eventBus: mockEventBus,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
 
       // Stack traces should not be included in production
@@ -342,17 +371,17 @@ describe('Error Handling Configuration Integration', () => {
       const errorHandler = new CentralErrorHandler({
         logger: mockLogger,
         eventBus: mockEventBus,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
 
       const recoveryManager = new RecoveryStrategyManager({
         logger: mockLogger,
-        monitoringCoordinator: mockMonitoringCoordinator
+        monitoringCoordinator: mockMonitoringCoordinator,
       });
 
       const reporter = new ErrorReporter({
         logger: mockLogger,
-        eventBus: mockEventBus
+        eventBus: mockEventBus,
       });
 
       // Verify that all components are using configuration
@@ -369,7 +398,7 @@ describe('Error Handling Configuration Integration', () => {
 
       const result = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'test-operation',
-        useCircuitBreaker: false  // Disable circuit breaker for this test
+        useCircuitBreaker: false, // Disable circuit breaker for this test
       });
 
       expect(result).toBe('success');
@@ -378,11 +407,15 @@ describe('Error Handling Configuration Integration', () => {
       expect(attempts).toBeLessThanOrEqual(expectedAttempts);
 
       // Test that error handler uses config for fallback values
-      const fallbackValue = errorHandler.getFallbackValue('fetch', 'UnknownError');
+      const fallbackValue = errorHandler.getFallbackValue(
+        'fetch',
+        'UnknownError'
+      );
       expect(fallbackValue).toBe(config.fallback.defaults.fetch);
 
       // Test that monitoring coordinator created circuit breakers with config
-      const breaker = mockMonitoringCoordinator.getCircuitBreaker('test-service');
+      const breaker =
+        mockMonitoringCoordinator.getCircuitBreaker('test-service');
       expect(breaker).toBeDefined();
 
       // All components are using configuration

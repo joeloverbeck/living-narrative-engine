@@ -28,21 +28,15 @@ const createLogger = () => ({
   debug: jest.fn(),
 });
 
-const createHandler = ({
-  entityManager,
-  logger,
-  dispatcher,
-} = {}) => {
+const createHandler = ({ entityManager, logger, dispatcher } = {}) => {
   const handler = new ResolveDirectionHandler({
-    entityManager:
-      entityManager ?? {
-        getComponentData: jest.fn(),
-      },
+    entityManager: entityManager ?? {
+      getComponentData: jest.fn(),
+    },
     logger: logger ?? createLogger(),
-    safeEventDispatcher:
-      dispatcher ?? {
-        dispatch: jest.fn(),
-      },
+    safeEventDispatcher: dispatcher ?? {
+      dispatch: jest.fn(),
+    },
   });
   return {
     handler,
@@ -58,7 +52,9 @@ describe('ResolveDirectionHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     assertParamsObject.mockReturnValue(true);
-    ensureEvaluationContext.mockReturnValue(executionContext.evaluationContext.context);
+    ensureEvaluationContext.mockReturnValue(
+      executionContext.evaluationContext.context
+    );
   });
 
   it('returns early when assertParamsObject fails', () => {
@@ -67,7 +63,11 @@ describe('ResolveDirectionHandler', () => {
 
     handler.execute(null, executionContext);
 
-    expect(assertParamsObject).toHaveBeenCalledWith(null, dispatcher, 'RESOLVE_DIRECTION');
+    expect(assertParamsObject).toHaveBeenCalledWith(
+      null,
+      dispatcher,
+      'RESOLVE_DIRECTION'
+    );
     expect(entityManager.getComponentData).not.toHaveBeenCalled();
     expect(tryWriteContextVariable).not.toHaveBeenCalled();
   });
@@ -167,9 +167,12 @@ describe('ResolveDirectionHandler', () => {
       executionContext
     );
 
-    expect(entityManager.getComponentData).toHaveBeenCalledWith('location-1', EXITS_COMPONENT_ID);
+    expect(entityManager.getComponentData).toHaveBeenCalledWith(
+      'location-1',
+      EXITS_COMPONENT_ID
+    );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Could not retrieve exits component"),
+      expect.stringContaining('Could not retrieve exits component'),
       { error: 'boom' }
     );
     expect(tryWriteContextVariable).toHaveBeenCalledWith(
@@ -198,7 +201,7 @@ describe('ResolveDirectionHandler', () => {
     );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no exits array")
+      expect.stringContaining('has no exits array')
     );
     expect(tryWriteContextVariable).toHaveBeenCalledWith(
       'resultVar',
@@ -211,9 +214,7 @@ describe('ResolveDirectionHandler', () => {
 
   it('writes matching target when exit is found', () => {
     const logger = createLogger();
-    const exits = [
-      { direction: 'north', target: 'loc-2' },
-    ];
+    const exits = [{ direction: 'north', target: 'loc-2' }];
     const entityManager = {
       getComponentData: jest.fn().mockReturnValue(exits),
     };
@@ -228,7 +229,10 @@ describe('ResolveDirectionHandler', () => {
       executionContext
     );
 
-    expect(entityManager.getComponentData).toHaveBeenCalledWith('location-1', EXITS_COMPONENT_ID);
+    expect(entityManager.getComponentData).toHaveBeenCalledWith(
+      'location-1',
+      EXITS_COMPONENT_ID
+    );
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining("leads to 'loc-2'")
     );
@@ -243,9 +247,7 @@ describe('ResolveDirectionHandler', () => {
 
   it('writes null when matching exit has no target', () => {
     const entityManager = {
-      getComponentData: jest.fn().mockReturnValue([
-        { direction: 'north' },
-      ]),
+      getComponentData: jest.fn().mockReturnValue([{ direction: 'north' }]),
     };
     const logger = createLogger();
     const { handler } = createHandler({ entityManager, logger });
@@ -273,9 +275,9 @@ describe('ResolveDirectionHandler', () => {
 
   it('stores null when no exit matches direction', () => {
     const entityManager = {
-      getComponentData: jest.fn().mockReturnValue([
-        { direction: 'east', target: 'loc-3' },
-      ]),
+      getComponentData: jest
+        .fn()
+        .mockReturnValue([{ direction: 'east', target: 'loc-3' }]),
     };
     const logger = createLogger();
     const { handler } = createHandler({ entityManager, logger });
@@ -290,7 +292,7 @@ describe('ResolveDirectionHandler', () => {
     );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("No exit found")
+      expect.stringContaining('No exit found')
     );
     expect(tryWriteContextVariable).toHaveBeenCalledWith(
       'resultVar',

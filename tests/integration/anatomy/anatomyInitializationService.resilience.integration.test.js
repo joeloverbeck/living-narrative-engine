@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
@@ -145,14 +152,16 @@ describe('AnatomyInitializationService resilience integration', () => {
       anatomyGenerationService: testBed.anatomyGenerationService,
     });
 
-    restoreGenerate = testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
-      testBed.anatomyGenerationService
-    );
+    restoreGenerate =
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
+        testBed.anatomyGenerationService
+      );
   });
 
   afterEach(async () => {
     if (testBed?.anatomyGenerationService && restoreGenerate) {
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = restoreGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        restoreGenerate;
     }
     service?.destroy();
     await testBed.cleanup();
@@ -162,13 +171,15 @@ describe('AnatomyInitializationService resilience integration', () => {
     service.initialize();
     service.initialize();
 
-    const duplicateWarning = logger.calls.warn.find(([message]) =>
-      typeof message === 'string' &&
-      message.includes('AnatomyInitializationService: Already initialized')
+    const duplicateWarning = logger.calls.warn.find(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes('AnatomyInitializationService: Already initialized')
     );
     expect(duplicateWarning).toBeDefined();
 
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await safeDispatcher.dispatch(ENTITY_CREATED_ID, {
       instanceId: actor.id,
       definitionId: 'core:actor',
@@ -182,8 +193,10 @@ describe('AnatomyInitializationService resilience integration', () => {
   it('resolves successful generations and rejects failures without stopping the queue', async () => {
     service.initialize();
 
-    const firstActor = await testBed.entityManager.createEntityInstance('core:actor');
-    const secondActor = await testBed.entityManager.createEntityInstance('core:actor');
+    const firstActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
+    const secondActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
 
     await testBed.entityManager.addComponent(firstActor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
@@ -216,8 +229,12 @@ describe('AnatomyInitializationService resilience integration', () => {
 
     await new Promise((resolve) => setImmediate(resolve));
 
-    await expect(service.waitForEntityGeneration(firstActor.id, 200)).resolves.toBe(true);
-    await expect(service.waitForEntityGeneration(secondActor.id, 200)).rejects.toBe(failure);
+    await expect(
+      service.waitForEntityGeneration(firstActor.id, 200)
+    ).resolves.toBe(true);
+    await expect(
+      service.waitForEntityGeneration(secondActor.id, 200)
+    ).rejects.toBe(failure);
 
     await service.waitForAllGenerationsToComplete();
 
@@ -239,7 +256,9 @@ describe('AnatomyInitializationService resilience integration', () => {
       .mockResolvedValueOnce(true)
       .mockRejectedValueOnce(new Error('direct failure'));
 
-    await expect(service.generateAnatomy('entity-alpha', 'blueprint-a')).resolves.toBe(true);
+    await expect(
+      service.generateAnatomy('entity-alpha', 'blueprint-a')
+    ).resolves.toBe(true);
 
     expect(
       logger.calls.info.some(
@@ -251,9 +270,9 @@ describe('AnatomyInitializationService resilience integration', () => {
       )
     ).toBe(true);
 
-    await expect(service.generateAnatomy('entity-beta', 'blueprint-b')).rejects.toThrow(
-      'direct failure'
-    );
+    await expect(
+      service.generateAnatomy('entity-beta', 'blueprint-b')
+    ).rejects.toThrow('direct failure');
 
     expect(
       logger.calls.error.some(
@@ -271,7 +290,9 @@ describe('AnatomyInitializationService resilience integration', () => {
   it('supports timeout handling utilities and test helpers for queue management', async () => {
     service.initialize();
 
-    await expect(service.waitForEntityGeneration('not-pending')).resolves.toBe(false);
+    await expect(service.waitForEntityGeneration('not-pending')).resolves.toBe(
+      false
+    );
 
     service.__TEST_ONLY__setInternalState({
       queue: ['stuck-entity'],
@@ -285,7 +306,9 @@ describe('AnatomyInitializationService resilience integration', () => {
     const timeline = [baseTime, baseTime, baseTime + 10];
     Date.now = () => {
       const value =
-        callIndex < timeline.length ? timeline[callIndex] : timeline[timeline.length - 1];
+        callIndex < timeline.length
+          ? timeline[callIndex]
+          : timeline[timeline.length - 1];
       callIndex += 1;
       return value;
     };
@@ -331,7 +354,11 @@ describe('AnatomyInitializationService resilience integration', () => {
       'Timeout waiting for anatomy generation'
     );
 
-    service.__TEST_ONLY__setInternalState({ queue: ['helper'], pending: [], processing: false });
+    service.__TEST_ONLY__setInternalState({
+      queue: ['helper'],
+      pending: [],
+      processing: false,
+    });
     const helperSpy = jest
       .spyOn(testBed.anatomyGenerationService, 'generateAnatomyIfNeeded')
       .mockResolvedValue(false);
@@ -349,6 +376,8 @@ describe('AnatomyInitializationService resilience integration', () => {
     );
 
     service.__TEST_ONLY__setInternalState({ pending: [], queue: [] });
-    await expect(service.waitForAllGenerationsToComplete()).resolves.toBeUndefined();
+    await expect(
+      service.waitForAllGenerationsToComplete()
+    ).resolves.toBeUndefined();
   });
 });

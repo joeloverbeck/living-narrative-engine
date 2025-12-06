@@ -65,19 +65,24 @@ describe('SaveValidationService with real serializer + checksum stack', () => {
   it('validates a well-formed save structure and checksum end-to-end', async () => {
     const { validationService, serializer } = buildValidationStack();
     const payload = makeValidSaveStructure();
-    payload.integrityChecks.gameStateChecksum = await serializer.calculateGameStateChecksum(
-      payload.gameState,
-    );
+    payload.integrityChecks.gameStateChecksum =
+      await serializer.calculateGameStateChecksum(payload.gameState);
 
-    const structureResult = validationService.validateStructure(payload, 'slot-alpha');
+    const structureResult = validationService.validateStructure(
+      payload,
+      'slot-alpha'
+    );
     expect(structureResult).toEqual({ success: true });
 
-    const checksumResult = await validationService.verifyChecksum(payload, 'slot-alpha');
+    const checksumResult = await validationService.verifyChecksum(
+      payload,
+      'slot-alpha'
+    );
     expect(checksumResult).toEqual({ success: true });
 
     const combinedResult = await validationService.validateLoadedSaveObject(
       payload,
-      'slot-alpha',
+      'slot-alpha'
     );
     expect(combinedResult).toEqual({ success: true });
   });
@@ -101,12 +106,14 @@ describe('SaveValidationService with real serializer + checksum stack', () => {
 
     const combinedResult = await validationService.validateLoadedSaveObject(
       invalid,
-      'slot-gamma',
+      'slot-gamma'
     );
 
     expect(combinedResult.success).toBe(false);
     expect(combinedResult.error).toBeInstanceOf(PersistenceError);
-    expect(combinedResult.error.code).toBe(PersistenceErrorCodes.INVALID_GAME_STATE);
+    expect(combinedResult.error.code).toBe(
+      PersistenceErrorCodes.INVALID_GAME_STATE
+    );
   });
 
   it('rejects saves that lack checksum data before invoking the serializer', async () => {
@@ -114,7 +121,10 @@ describe('SaveValidationService with real serializer + checksum stack', () => {
     const payload = makeValidSaveStructure();
     delete payload.integrityChecks.gameStateChecksum;
 
-    const result = await validationService.verifyChecksum(payload, 'slot-delta');
+    const result = await validationService.verifyChecksum(
+      payload,
+      'slot-delta'
+    );
 
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(PersistenceError);
@@ -133,11 +143,16 @@ describe('SaveValidationService with real serializer + checksum stack', () => {
     const payload = makeValidSaveStructure();
     payload.integrityChecks.gameStateChecksum = 'placeholder-checksum';
 
-    const result = await validationService.verifyChecksum(payload, 'slot-epsilon');
+    const result = await validationService.verifyChecksum(
+      payload,
+      'slot-epsilon'
+    );
 
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(PersistenceError);
-    expect(result.error.code).toBe(PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR);
+    expect(result.error.code).toBe(
+      PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR
+    );
     expect(result.error.message).toBe(MSG_INTEGRITY_CALCULATION_ERROR);
   });
 

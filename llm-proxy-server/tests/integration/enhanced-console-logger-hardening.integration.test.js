@@ -9,8 +9,14 @@
 import { jest } from '@jest/globals';
 
 const ORIGINAL_ENV = process.env;
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 /**
  * Ensures the terminal descriptors emulate a TTY so the logger attempts to use

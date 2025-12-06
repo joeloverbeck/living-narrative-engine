@@ -182,7 +182,8 @@ function installActorsSittingCloseScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
         return { success: true, value: new Set() };
@@ -223,7 +224,10 @@ describe('sex-physical-control:pull_head_to_bare_penis action discovery', () => 
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-physical-control', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'sex-physical-control',
+      ACTION_ID
+    );
     restoreScopeResolver = installActorsSittingCloseScopeOverride(testFixture);
   });
 
@@ -248,7 +252,9 @@ describe('sex-physical-control:pull_head_to_bare_penis action discovery', () => 
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("pull {primary}'s head onto your bare penis");
+    expect(discovered.template).toBe(
+      "pull {primary}'s head onto your bare penis"
+    );
   });
 
   it("does not appear when actor's penis is covered", async () => {
@@ -289,7 +295,6 @@ describe('sex-physical-control:pull_head_to_bare_penis action discovery', () => 
 
     expect(discovered).toBeUndefined();
   });
-
 
   it('does not appear when actor is already receiving a blowjob', async () => {
     const { entities, actorId } = buildPullHeadToBarePenisScenario();

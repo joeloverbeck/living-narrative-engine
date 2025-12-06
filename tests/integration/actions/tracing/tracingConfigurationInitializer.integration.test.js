@@ -76,21 +76,22 @@ function createTraceConfigLoaderStub(initialConfig, { delayMs = 0 } = {}) {
  * @param root0.logger
  * @param root0.delayMs
  */
-async function createRealConfigLoader({
-  traceConfig,
-  logger,
-  delayMs = 0,
-}) {
+async function createRealConfigLoader({ traceConfig, logger, delayMs = 0 }) {
   const schemaValidator = new AjvSchemaValidator({ logger });
 
   // Load both schemas - actionTraceConfig must be loaded first for $ref resolution
   const actionTraceConfigSchema = await loadActionTraceConfigSchema();
-  await schemaValidator.addSchema(actionTraceConfigSchema, actionTraceConfigSchema.$id);
+  await schemaValidator.addSchema(
+    actionTraceConfigSchema,
+    actionTraceConfigSchema.$id
+  );
 
   const schema = await loadTraceConfigSchema();
   await schemaValidator.addSchema(schema, schema.$id);
 
-  const traceConfigLoader = createTraceConfigLoaderStub(traceConfig, { delayMs });
+  const traceConfigLoader = createTraceConfigLoaderStub(traceConfig, {
+    delayMs,
+  });
 
   const configLoader = new ActionTraceConfigLoader({
     traceConfigLoader,
@@ -222,10 +223,7 @@ describe('TracingConfigurationInitializer - Integration', () => {
 
     expect(typeof promise2.then).toBe('function');
 
-    const [firstResult, secondResult] = await Promise.all([
-      promise1,
-      promise2,
-    ]);
+    const [firstResult, secondResult] = await Promise.all([promise1, promise2]);
     expect(firstResult).toBe(secondResult);
     expect(firstResult.success).toBe(true);
     expect(traceConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
@@ -358,11 +356,16 @@ describe('TracingConfigurationInitializer - Integration', () => {
       verbosity: 'standard',
     });
 
-    const schemaValidator = new AjvSchemaValidator({ logger: testBed.mockLogger });
+    const schemaValidator = new AjvSchemaValidator({
+      logger: testBed.mockLogger,
+    });
 
     // Load both schemas - actionTraceConfig must be loaded first for $ref resolution
     const actionTraceConfigSchema = await loadActionTraceConfigSchema();
-    await schemaValidator.addSchema(actionTraceConfigSchema, actionTraceConfigSchema.$id);
+    await schemaValidator.addSchema(
+      actionTraceConfigSchema,
+      actionTraceConfigSchema.$id
+    );
 
     const schema = await loadTraceConfigSchema();
     await schemaValidator.addSchema(schema, schema.$id);

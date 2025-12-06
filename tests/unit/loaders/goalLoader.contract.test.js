@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import GoalLoader from '../../../src/loaders/goalLoader.js';
 import { ModValidationError } from '../../../src/errors/modValidationError.js';
 import * as processHelper from '../../../src/loaders/helpers/processAndStoreItem.js';
@@ -21,9 +28,7 @@ function createContractLoader() {
   const dataFetcher = { fetch: jest.fn() };
   const schemaValidator = {
     isSchemaLoaded: jest.fn().mockReturnValue(true),
-    validate: jest
-      .fn()
-      .mockReturnValue({ isValid: true, errors: null }),
+    validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
     getValidator: jest.fn(),
   };
   const dataRegistry = {
@@ -52,7 +57,8 @@ function createContractLoader() {
 
 describe('GoalLoader contract', () => {
   const originalFlag = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
-  const originalDiagnosticsFlag = process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
+  const originalDiagnosticsFlag =
+    process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,7 +74,8 @@ describe('GoalLoader contract', () => {
     if (typeof originalDiagnosticsFlag === 'undefined') {
       delete process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
     } else {
-      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS = originalDiagnosticsFlag;
+      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS =
+        originalDiagnosticsFlag;
     }
   });
 

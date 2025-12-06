@@ -30,8 +30,7 @@ export function safeStringify(value) {
     return val;
   };
 
-  const sanitizedRoot =
-    typeof value === 'bigint' ? value.toString() : value;
+  const sanitizedRoot = typeof value === 'bigint' ? value.toString() : value;
 
   const jsonResult = JSON.stringify(sanitizedRoot, replacer);
 

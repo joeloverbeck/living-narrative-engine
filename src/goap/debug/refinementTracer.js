@@ -1,6 +1,6 @@
 /**
  * @file Refinement tracer for step-by-step execution capture
- * 
+ *
  * Captures and formats refinement execution traces via events from the event bus.
  * Provides detailed step-by-step execution timeline for debugging and analysis.
  */

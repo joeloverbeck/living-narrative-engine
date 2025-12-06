@@ -19,9 +19,7 @@ import {
 } from '../../../src/utils/savePathUtils.js';
 import { CHECKSUM_PENDING } from '../../../src/constants/persistence.js';
 import { ENGINE_VERSION } from '../../../src/engine/engineVersion.js';
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import createMemoryStorageProvider from '../../common/mockFactories/memoryStorageProvider.js';
 
 const baseMetadata = {
@@ -141,8 +139,8 @@ describe('SaveFileParser integration', () => {
       metadataOverride === undefined
         ? clone(baseMetadata)
         : metadataOverride === null
-        ? null
-        : clone({ ...baseMetadata, ...metadataOverride });
+          ? null
+          : clone({ ...baseMetadata, ...metadataOverride });
 
     return {
       metadata,

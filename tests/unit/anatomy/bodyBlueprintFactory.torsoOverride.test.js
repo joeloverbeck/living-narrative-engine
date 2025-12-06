@@ -92,7 +92,7 @@ describe('BodyBlueprintFactory - Torso Override', () => {
     };
 
     const mockRecipePatternResolver = {
-      resolveRecipePatterns: jest.fn(recipe => recipe),
+      resolveRecipePatterns: jest.fn((recipe) => recipe),
     };
 
     factory = new BodyBlueprintFactory({

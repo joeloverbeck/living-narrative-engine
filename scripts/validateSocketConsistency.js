@@ -20,10 +20,10 @@ function parseArgs() {
     format: 'console',
     strict: false,
     help: false,
-    verbose: false
+    verbose: false,
   };
 
-  args.forEach(arg => {
+  args.forEach((arg) => {
     if (arg === '--help' || arg === '-h') {
       config.help = true;
     } else if (arg.startsWith('--format=')) {
@@ -71,7 +71,7 @@ Examples:
  */
 function getSocketIds(entity) {
   const sockets = entity.components?.['anatomy:sockets']?.sockets || [];
-  return sockets.map(s => s.id).sort();
+  return sockets.map((s) => s.id).sort();
 }
 
 /**
@@ -84,7 +84,9 @@ function loadCategoriesConfig(configPath) {
     const content = fs.readFileSync(configPath, 'utf-8');
     return JSON.parse(content);
   } catch (err) {
-    console.warn(`Warning: Could not load categories config from ${configPath}: ${err.message}`);
+    console.warn(
+      `Warning: Could not load categories config from ${configPath}: ${err.message}`
+    );
     console.warn('Falling back to legacy union-based validation.\n');
     return null;
   }
@@ -102,14 +104,19 @@ function inferCategoriesForEntity(entity, categoriesConfig) {
   const subType = entity.components?.['anatomy:part']?.subType;
   const entityId = entity.id || '';
 
-  for (const [categoryName, categoryDef] of Object.entries(categoriesConfig.categories)) {
+  for (const [categoryName, categoryDef] of Object.entries(
+    categoriesConfig.categories
+  )) {
     const appliesTo = categoryDef.appliesTo || {};
     let applies = false;
 
     // Check subType-based application
     if (appliesTo.subTypes && appliesTo.subTypes.includes(subType)) {
       // Check exclusions
-      if (!appliesTo.excludeSubTypes || !appliesTo.excludeSubTypes.includes(subType)) {
+      if (
+        !appliesTo.excludeSubTypes ||
+        !appliesTo.excludeSubTypes.includes(subType)
+      ) {
         applies = true;
       }
     }
@@ -163,7 +170,9 @@ function validateEntityCategories(entity, categoriesConfig) {
     const categoryDef = categoriesConfig.categories[categoryName];
     if (!categoryDef || !categoryDef.sockets) continue;
 
-    const missingSockets = categoryDef.sockets.filter(socket => !entitySockets.has(socket));
+    const missingSockets = categoryDef.sockets.filter(
+      (socket) => !entitySockets.has(socket)
+    );
     if (missingSockets.length > 0) {
       missingByCategory[categoryName] = missingSockets;
       hasIssues = true;
@@ -174,7 +183,7 @@ function validateEntityCategories(entity, categoriesConfig) {
     entityId: entity.id,
     inferredCategories: [...inferredCategories],
     missingByCategory,
-    hasIssues
+    hasIssues,
   };
 }
 
@@ -190,20 +199,31 @@ async function main() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  const definitionsDir = path.resolve(__dirname, '../data/mods/anatomy/entities/definitions');
-  const categoriesConfigPath = path.resolve(__dirname, './config/socketCategories.json');
+  const definitionsDir = path.resolve(
+    __dirname,
+    '../data/mods/anatomy/entities/definitions'
+  );
+  const categoriesConfigPath = path.resolve(
+    __dirname,
+    './config/socketCategories.json'
+  );
 
   try {
     // Load categories config
     const categoriesConfig = loadCategoriesConfig(categoriesConfigPath);
 
     // Load entities
-    const files = fs.readdirSync(definitionsDir).filter(f => f.endsWith('.json'));
+    const files = fs
+      .readdirSync(definitionsDir)
+      .filter((f) => f.endsWith('.json'));
     const entities = [];
 
     for (const file of files) {
       try {
-        const content = fs.readFileSync(path.join(definitionsDir, file), 'utf-8');
+        const content = fs.readFileSync(
+          path.join(definitionsDir, file),
+          'utf-8'
+        );
         const entity = JSON.parse(content);
         entities.push(entity);
       } catch (err) {
@@ -213,7 +233,7 @@ async function main() {
 
     // Group by subType for organized output
     const grouped = {};
-    entities.forEach(entity => {
+    entities.forEach((entity) => {
       const subType = entity.components?.['anatomy:part']?.subType;
       if (subType) {
         if (!grouped[subType]) {
@@ -228,14 +248,15 @@ async function main() {
       consistent: true,
       mode: categoriesConfig ? 'category-based' : 'legacy-union',
       subTypes: {},
-      entityIssues: []
+      entityIssues: [],
     };
 
     let consoleOutput = 'Socket Consistency Validation (Category-Based)\n';
     consoleOutput += '==============================================\n\n';
 
     if (!categoriesConfig) {
-      consoleOutput += '⚠️  No categories config found. Using legacy union-based validation.\n\n';
+      consoleOutput +=
+        '⚠️  No categories config found. Using legacy union-based validation.\n\n';
     }
 
     for (const [subType, group] of Object.entries(grouped)) {
@@ -262,18 +283,20 @@ async function main() {
         if (subTypeIssues.length === 0) {
           results.subTypes[subType] = {
             consistent: true,
-            entityCount: group.length
+            entityCount: group.length,
           };
           consoleOutput += `✓ ${subType}: ${group.length} entities validated by category\n`;
         } else {
           results.subTypes[subType] = {
             consistent: false,
             entityCount: group.length,
-            issues: subTypeIssues
+            issues: subTypeIssues,
           };
           consoleOutput += `✗ ${subType}: ${group.length} entities, ${subTypeIssues.length} with issues\n`;
           for (const issue of subTypeIssues) {
-            for (const [category, missingSockets] of Object.entries(issue.missingByCategory)) {
+            for (const [category, missingSockets] of Object.entries(
+              issue.missingByCategory
+            )) {
               consoleOutput += `  - ${issue.entityId} (${category}): missing ${missingSockets.join(', ')}\n`;
             }
           }
@@ -281,17 +304,19 @@ async function main() {
       } else {
         // Legacy union-based validation (fallback)
         const allSeenSockets = new Set();
-        group.forEach(e => getSocketIds(e).forEach(id => allSeenSockets.add(id)));
+        group.forEach((e) =>
+          getSocketIds(e).forEach((id) => allSeenSockets.add(id))
+        );
 
         let subTypeConsistent = true;
-        group.forEach(e => {
+        group.forEach((e) => {
           const eSockets = new Set(getSocketIds(e));
-          const missing = [...allSeenSockets].filter(id => !eSockets.has(id));
+          const missing = [...allSeenSockets].filter((id) => !eSockets.has(id));
           if (missing.length > 0) {
             subTypeConsistent = false;
             subTypeIssues.push({
               entityId: e.id,
-              missingSockets: missing
+              missingSockets: missing,
             });
           }
         });
@@ -301,30 +326,35 @@ async function main() {
           results.subTypes[subType] = {
             consistent: false,
             entityCount: group.length,
-            issues: subTypeIssues
+            issues: subTypeIssues,
           };
           consoleOutput += `✗ ${subType}: ${group.length} entities, INCONSISTENT\n`;
-          subTypeIssues.forEach(issue => {
+          subTypeIssues.forEach((issue) => {
             consoleOutput += `  - ${issue.entityId} missing: ${issue.missingSockets.join(', ')}\n`;
           });
         } else {
           results.subTypes[subType] = {
             consistent: true,
             entityCount: group.length,
-            socketCount: getSocketIds(group[0]).length
+            socketCount: getSocketIds(group[0]).length,
           };
           consoleOutput += `✓ ${subType}: ${group.length} entities, all consistent\n`;
         }
       }
     }
 
-    const inconsistentCount = Object.values(results.subTypes).filter(r => !r.consistent).length;
-    const consistentCount = Object.values(results.subTypes).filter(r => r.consistent).length;
+    const inconsistentCount = Object.values(results.subTypes).filter(
+      (r) => !r.consistent
+    ).length;
+    const consistentCount = Object.values(results.subTypes).filter(
+      (r) => r.consistent
+    ).length;
 
     consoleOutput += `\nSummary: ${consistentCount} subTypes consistent, ${inconsistentCount} with issues\n`;
 
     if (results.consistent) {
-      consoleOutput += '\n✓ All entities are consistent with their inferred socket categories.\n';
+      consoleOutput +=
+        '\n✓ All entities are consistent with their inferred socket categories.\n';
     }
 
     if (cliConfig.format === 'json') {
@@ -338,7 +368,6 @@ async function main() {
     } else {
       process.exit(0);
     }
-
   } catch (err) {
     console.error('Fatal error:', err);
     process.exit(2);

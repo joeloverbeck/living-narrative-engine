@@ -9,9 +9,11 @@ The issue is a **race condition in handler lifecycle management** where `TurnMan
 ## 1. Event Subscription Flow
 
 ### Location
+
 **File**: `src/turns/turnManager.js` (lines 210-210 & 573-807)
 
 ### Subscription Setup
+
 ```javascript
 // Line 210 in start()
 this.#eventSubscription.subscribe((ev) => this.#handleTurnEndedEvent(ev));
@@ -20,9 +22,11 @@ this.#eventSubscription.subscribe((ev) => this.#handleTurnEndedEvent(ev));
 The subscription wraps `#handleTurnEndedEvent` which is a **synchronous method** (not async).
 
 ### TurnEventSubscription Details
+
 **File**: `src/turns/turnEventSubscription.js` (lines 57-98)
 
 The subscription mechanism:
+
 1. Receives `TURN_ENDED_ID` events
 2. **Schedules** the callback via `scheduler.setTimeout(callback, 0)` (line 84)
 3. Creates a "deferred execution" pattern to avoid synchronous event processing
@@ -34,6 +38,7 @@ The subscription mechanism:
 ## 2. Handler Destruction in handleTurnEndedEvent
 
 ### Location
+
 **File**: `src/turns/turnManager.js` (lines 775-800)
 
 ### The Critical Code Section
@@ -46,9 +51,7 @@ this.#currentHandler = null;
 
 // Lines 780-800: Destroy the handler
 if (handlerToDestroy) {
-  if (
-    typeof handlerToDestroy.signalNormalApparentTermination === 'function'
-  ) {
+  if (typeof handlerToDestroy.signalNormalApparentTermination === 'function') {
     handlerToDestroy.signalNormalApparentTermination();
   }
   if (typeof handlerToDestroy.destroy === 'function') {
@@ -81,6 +84,7 @@ if (handlerToDestroy) {
 ## 3. State Machine Lifecycle - TurnEndingState
 
 ### Location
+
 **File**: `src/turns/states/turnEndingState.js` (lines 49-114)
 
 ### enterState Execution Flow
@@ -140,6 +144,7 @@ async enterState(handler, previousState) {
 **The Problem:**
 
 When `handler.destroy()` executes asynchronously (line 792):
+
 ```javascript
 async destroy() {
   // From BaseTurnHandler (lines 512-600)
@@ -150,7 +155,7 @@ async destroy() {
       // ...
     }
   }
-  
+
   // Forces transition to Idle if needed
   if (needsTransition) {
     await this._transitionToState(
@@ -161,10 +166,12 @@ async destroy() {
 ```
 
 And simultaneously, `TurnEndingState.enterState()` is still executing:
+
 - Line 104: `await ctx.requestIdleStateTransition()` is queued or pending
 - Handler state machine is trying to transition to Idle via `enterState()`
 
 **Result**: Both paths try to manage state transitions at the same time:
+
 - `destroy()` path forcing Idle transition
 - `enterState()` path requesting Idle transition via ITurnContext
 
@@ -229,33 +236,36 @@ BaseTurnHandler.destroy()
 
 ## 5. Key Code Locations Summary
 
-| Component | File | Lines | Purpose |
-|-----------|------|-------|---------|
-| `TurnManager.#handleTurnEndedEvent()` | `turnManager.js` | 573-807 | Event handler, **synchronous** |
-| Event subscription | `turnManager.js` | 210 | Subscribes to TURN_ENDED_ID |
-| TurnEventSubscription | `turnEventSubscription.js` | 57-98 | Schedules callback via setTimeout |
-| Handler destruction call | `turnManager.js` | 792 | **Fire-and-forget Promise** ❌ |
-| TurnEndingState.enterState() | `turnEndingState.js` | 49-114 | State entry, requests Idle transition |
-| BaseTurnHandler.destroy() | `baseTurnHandler.js` | 512-600 | Full handler teardown |
-| BaseTurnHandler._transitionToState() | `baseTurnHandler.js` | 203-301 | State machine coordination |
-| BaseTurnHandler._resetTurnStateAndResources() | `baseTurnHandler.js` | 431-484 | Clears context & actor |
+| Component                                      | File                       | Lines   | Purpose                               |
+| ---------------------------------------------- | -------------------------- | ------- | ------------------------------------- |
+| `TurnManager.#handleTurnEndedEvent()`          | `turnManager.js`           | 573-807 | Event handler, **synchronous**        |
+| Event subscription                             | `turnManager.js`           | 210     | Subscribes to TURN_ENDED_ID           |
+| TurnEventSubscription                          | `turnEventSubscription.js` | 57-98   | Schedules callback via setTimeout     |
+| Handler destruction call                       | `turnManager.js`           | 792     | **Fire-and-forget Promise** ❌        |
+| TurnEndingState.enterState()                   | `turnEndingState.js`       | 49-114  | State entry, requests Idle transition |
+| BaseTurnHandler.destroy()                      | `baseTurnHandler.js`       | 512-600 | Full handler teardown                 |
+| BaseTurnHandler.\_transitionToState()          | `baseTurnHandler.js`       | 203-301 | State machine coordination            |
+| BaseTurnHandler.\_resetTurnStateAndResources() | `baseTurnHandler.js`       | 431-484 | Clears context & actor                |
 
 ---
 
 ## 6. The Fundamental Issue
 
 **TurnManager assumes this contract:**
+
 1. Handler destruction is fire-and-forget
 2. State machine will complete immediately upon turn end
 3. No coordination needed between destroy() and state transitions
 
 **But the actual behavior:**
+
 1. State machines are async (enterState() has awaited operations)
 2. TurnEndingState explicitly requests Idle transition (line 104)
 3. destroy() also tries to force Idle transition independently
 4. No synchronization mechanism prevents both from executing
 
 **The fix requires:**
+
 - ✅ Making handler destruction properly awaited
 - ✅ Ensuring TurnEndingState completion before destroy() runs
 - ✅ Preventing double state transitions

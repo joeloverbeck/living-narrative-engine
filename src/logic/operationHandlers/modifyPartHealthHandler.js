@@ -51,7 +51,12 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
   /** @type {import('../jsonLogicEvaluationService.js').default} */ #jsonLogicService;
 
-  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService }) {
+  constructor({
+    logger,
+    entityManager,
+    safeEventDispatcher,
+    jsonLogicService,
+  }) {
     super('ModifyPartHealthHandler', {
       logger: { value: logger },
       entityManager: {
@@ -71,7 +76,6 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
     this.#dispatcher = safeEventDispatcher;
     this.#jsonLogicService = jsonLogicService;
   }
-
 
   /**
    * Resolve entity reference from string or JSON Logic expression
@@ -193,7 +197,11 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
     const { part_entity_ref, delta, clamp_to_bounds = true } = params;
 
     // Resolve part entity ID
-    const partEntityId = this.#resolveEntityRef(part_entity_ref, context, logger);
+    const partEntityId = this.#resolveEntityRef(
+      part_entity_ref,
+      context,
+      logger
+    );
     if (!partEntityId) {
       safeDispatchError(
         this.#dispatcher,
@@ -243,7 +251,12 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
 
     try {
       // Verify entity has part_health component
-      if (!this.#entityManager.hasComponent(partEntityId, PART_HEALTH_COMPONENT_ID)) {
+      if (
+        !this.#entityManager.hasComponent(
+          partEntityId,
+          PART_HEALTH_COMPONENT_ID
+        )
+      ) {
         safeDispatchError(
           this.#dispatcher,
           `MODIFY_PART_HEALTH: Entity does not have ${PART_HEALTH_COMPONENT_ID} component`,

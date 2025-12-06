@@ -3,7 +3,14 @@
  * Validates graceful handling of missing/invalid body.root fields and circular references
  */
 
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 
 describe('AnatomyCacheManager - Edge Cases', () => {
@@ -43,12 +50,14 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -72,12 +81,14 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -96,12 +107,14 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         body: {},
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -122,12 +135,14 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         // body object missing entirely
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -150,13 +165,15 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          // Return null for non-existent entity's anatomy:part
+          return null;
         }
-        // Return null for non-existent entity's anatomy:part
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -182,16 +199,18 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
-        }
-        // Entity exists but has no anatomy:part component
-        if (entityId === rootId && componentId === 'anatomy:part') {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          // Entity exists but has no anatomy:part component
+          if (entityId === rootId && componentId === 'anatomy:part') {
+            return null;
+          }
           return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -214,12 +233,14 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -276,16 +297,18 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
-        }
-        // When checking if actor is anatomy:part, return null
-        if (entityId === actorId && componentId === 'anatomy:part') {
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          // When checking if actor is anatomy:part, return null
+          if (entityId === actorId && componentId === 'anatomy:part') {
+            return null;
+          }
           return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache (should not hang or stack overflow)
       await expect(
@@ -334,29 +357,33 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentId) => {
-        if (componentId === 'anatomy:joint') {
-          return joints;
-        }
-        return [];
-      });
-
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
-        }
-        if (componentId === 'anatomy:part') {
-          // All parts have anatomy:part component
-          if ([partA, partB, partC].includes(entityId)) {
-            return { subType: 'test_part' };
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentId) => {
+          if (componentId === 'anatomy:joint') {
+            return joints;
           }
+          return [];
         }
-        if (componentId === 'anatomy:joint') {
-          const joint = joints.find((j) => j.id === entityId);
-          return joint ? joint.component : null;
+      );
+
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          if (componentId === 'anatomy:part') {
+            // All parts have anatomy:part component
+            if ([partA, partB, partC].includes(entityId)) {
+              return { subType: 'test_part' };
+            }
+          }
+          if (componentId === 'anatomy:joint') {
+            const joint = joints.find((j) => j.id === entityId);
+            return joint ? joint.component : null;
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act: Build cache (should not infinite loop)
       await expect(
@@ -409,21 +436,23 @@ describe('AnatomyCacheManager - Edge Cases', () => {
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(joints);
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
-        }
-        if (componentId === 'anatomy:part') {
-          if ([rootPart, childPart, grandchildPart].includes(entityId)) {
-            return { subType: 'test_part' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
           }
+          if (componentId === 'anatomy:part') {
+            if ([rootPart, childPart, grandchildPart].includes(entityId)) {
+              return { subType: 'test_part' };
+            }
+          }
+          if (componentId === 'anatomy:joint') {
+            const joint = joints.find((j) => j.id === entityId);
+            return joint ? joint.component : null;
+          }
+          return null;
         }
-        if (componentId === 'anatomy:joint') {
-          const joint = joints.find((j) => j.id === entityId);
-          return joint ? joint.component : null;
-        }
-        return null;
-      });
+      );
 
       // Act: Build cache
       const startTime = Date.now();
@@ -448,15 +477,17 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         body: { root: rootId },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          if (entityId === rootId && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          return null;
         }
-        if (entityId === rootId && componentId === 'anatomy:part') {
-          return { subType: 'torso' };
-        }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -483,15 +514,17 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         body: { root: rootId },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return anatomyBody;
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return anatomyBody;
+          }
+          if (entityId === rootId && componentId === 'anatomy:part') {
+            return { subType: 'torso' };
+          }
+          return null;
         }
-        if (entityId === rootId && componentId === 'anatomy:part') {
-          return { subType: 'torso' };
-        }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);
@@ -525,23 +558,27 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentId) => {
-        if (componentId === 'anatomy:joint') return joints;
-        return [];
-      });
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentId) => {
+          if (componentId === 'anatomy:joint') return joints;
+          return [];
+        }
+      );
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'anatomy:body') {
-          return { body: { root: 'test:root' } };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'anatomy:body') {
+            return { body: { root: 'test:root' } };
+          }
+          if (entityId === childId && componentId === 'anatomy:part') {
+            return { subType: 'child_part' };
+          }
+          if (entityId === childId && componentId === 'anatomy:joint') {
+            return joints[0].component;
+          }
+          return null;
         }
-        if (entityId === childId && componentId === 'anatomy:part') {
-          return { subType: 'child_part' };
-        }
-        if (entityId === childId && componentId === 'anatomy:joint') {
-          return joints[0].component;
-        }
-        return null;
-      });
+      );
 
       // Act: Build cache
       await cacheManager.buildCache(actorId, mockEntityManager);

@@ -22,7 +22,9 @@ describe('ErrorClassifier integration for anatomy visualizer failures', () => {
 
     const classification = ErrorClassifier.classify(renderError, context);
 
-    expect(classification.category).toBe(ErrorClassifier.ERROR_CATEGORIES.RENDER);
+    expect(classification.category).toBe(
+      ErrorClassifier.ERROR_CATEGORIES.RENDER
+    );
     expect(classification.domain).toBe(ErrorClassifier.ERROR_DOMAINS.ANATOMY);
     expect(classification.retryable).toBe(true);
     expect(classification.recommendedStrategy).toBe('retry');
@@ -42,7 +44,9 @@ describe('ErrorClassifier integration for anatomy visualizer failures', () => {
 
     const classification = ErrorClassifier.classify(fetchError, context);
 
-    expect(classification.category).toBe(ErrorClassifier.ERROR_CATEGORIES.NETWORK);
+    expect(classification.category).toBe(
+      ErrorClassifier.ERROR_CATEGORIES.NETWORK
+    );
     expect(classification.domain).toBe(ErrorClassifier.ERROR_DOMAINS.NETWORK);
     expect(classification.severity).toBe('CRITICAL');
     expect(classification.userImpact).toBe('blocking');
@@ -82,7 +86,9 @@ describe('ErrorClassifier integration for anatomy visualizer failures', () => {
     expect(classification.category).toBe(ErrorClassifier.ERROR_CATEGORIES.DATA);
     expect(classification.domain).toBe(ErrorClassifier.ERROR_DOMAINS.ANATOMY);
     expect(classification.retryable).toBe(true);
-    expect(classification.priority).toBe(ErrorClassifier.RECOVERY_PRIORITIES.HIGH);
+    expect(classification.priority).toBe(
+      ErrorClassifier.RECOVERY_PRIORITIES.HIGH
+    );
     expect(classification.systemImpact).toBe('moderate');
     expect(classification.recommendedStrategy).toBe('retry');
     expect(classification.fallbackAvailable).toBe(true);
@@ -127,7 +133,9 @@ describe('ErrorClassifier integration for anatomy visualizer failures', () => {
 
     const classification = ErrorClassifier.classify(stateError, context);
 
-    expect(classification.category).toBe(ErrorClassifier.ERROR_CATEGORIES.STATE);
+    expect(classification.category).toBe(
+      ErrorClassifier.ERROR_CATEGORIES.STATE
+    );
     expect(classification.priority).toBe(
       ErrorClassifier.RECOVERY_PRIORITIES.IMMEDIATE
     );
@@ -157,7 +165,8 @@ describe('ErrorClassifier integration for anatomy visualizer failures', () => {
         name: 'permission errors',
         factory: () => new Error('permission denied for dataset'),
         category: ErrorClassifier.ERROR_CATEGORIES.PERMISSION,
-        expectedMessage: 'You do not have permission to view this anatomy data.',
+        expectedMessage:
+          'You do not have permission to view this anatomy data.',
         expectedSuggestions: [
           'Contact your administrator for access',
           'Ensure you are logged in with the correct account',
@@ -174,26 +183,24 @@ describe('ErrorClassifier integration for anatomy visualizer failures', () => {
           'Try again with a smaller dataset',
         ],
       },
-    ])('provides guidance for %s', ({
-      factory,
-      category,
-      expectedMessage,
-      expectedSuggestions,
-    }) => {
-      const error = factory();
-      const classification = ErrorClassifier.classify(error, {
-        operation: 'entity_selection',
-        component: 'ControlsUI',
-      });
+    ])(
+      'provides guidance for %s',
+      ({ factory, category, expectedMessage, expectedSuggestions }) => {
+        const error = factory();
+        const classification = ErrorClassifier.classify(error, {
+          operation: 'entity_selection',
+          component: 'ControlsUI',
+        });
 
-      expect(classification.category).toBe(category);
-      expect(classification.userMessageSuggested).toBe(expectedMessage);
-      expectedSuggestions.forEach((suggestion) => {
-        expect(classification.actionsSuggested).toEqual(
-          expect.arrayContaining([suggestion])
-        );
-      });
-      expect(classification.retryable).toBe(false);
-    });
+        expect(classification.category).toBe(category);
+        expect(classification.userMessageSuggested).toBe(expectedMessage);
+        expectedSuggestions.forEach((suggestion) => {
+          expect(classification.actionsSuggested).toEqual(
+            expect.arrayContaining([suggestion])
+          );
+        });
+        expect(classification.retryable).toBe(false);
+      }
+    );
   });
 });

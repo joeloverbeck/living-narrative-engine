@@ -45,7 +45,9 @@ class RecordingStage extends PipelineStage {
 describe('Pipeline integration', () => {
   it('requires at least one stage', () => {
     const logger = createLogger();
-    expect(() => new Pipeline([], logger)).toThrow('Pipeline requires at least one stage');
+    expect(() => new Pipeline([], logger)).toThrow(
+      'Pipeline requires at least one stage'
+    );
   });
 
   it('executes through all stages and merges results under structured tracing', async () => {
@@ -66,19 +68,27 @@ describe('Pipeline integration', () => {
       continueProcessing: true,
     });
 
-    const firstStage = new RecordingStage('ComponentFiltering', async (context) => {
-      expect(context.actor.id).toBe('actor-1');
-      expect(context.actionContext.intent).toBe('investigate');
-      expect(context.candidateActions).toEqual([]);
-      return firstStageResult;
-    }, calls);
+    const firstStage = new RecordingStage(
+      'ComponentFiltering',
+      async (context) => {
+        expect(context.actor.id).toBe('actor-1');
+        expect(context.actionContext.intent).toBe('investigate');
+        expect(context.candidateActions).toEqual([]);
+        return firstStageResult;
+      },
+      calls
+    );
 
-    const secondStage = new RecordingStage('Formatting', async (context) => {
-      expect(context.fromFirst).toBe('payload');
-      expect(context.actions).toEqual(firstStageResult.actions);
-      expect(context.errors).toEqual(firstStageResult.errors);
-      return secondStageResult;
-    }, calls);
+    const secondStage = new RecordingStage(
+      'Formatting',
+      async (context) => {
+        expect(context.fromFirst).toBe('payload');
+        expect(context.actions).toEqual(firstStageResult.actions);
+        expect(context.errors).toEqual(firstStageResult.errors);
+        return secondStageResult;
+      },
+      calls
+    );
 
     const pipeline = new Pipeline([firstStage, secondStage], logger);
 
@@ -141,16 +151,24 @@ describe('Pipeline integration', () => {
     const logger = createLogger();
     const calls = [];
 
-    const haltStage = new RecordingStage('TargetValidation', async () => {
-      return PipelineResult.success({
-        data: { validated: true },
-        continueProcessing: false,
-      });
-    }, calls);
+    const haltStage = new RecordingStage(
+      'TargetValidation',
+      async () => {
+        return PipelineResult.success({
+          data: { validated: true },
+          continueProcessing: false,
+        });
+      },
+      calls
+    );
 
-    const skippedStage = new RecordingStage('Formatting', async () => {
-      throw new Error('Should not be executed');
-    }, calls);
+    const skippedStage = new RecordingStage(
+      'Formatting',
+      async () => {
+        throw new Error('Should not be executed');
+      },
+      calls
+    );
 
     const pipeline = new Pipeline([haltStage, skippedStage], logger);
 
@@ -188,20 +206,28 @@ describe('Pipeline integration', () => {
     const logger = createLogger();
     const calls = [];
 
-    const problematicStage = new RecordingStage('MultiTarget', async () => {
-      return new PipelineResult({
-        success: false,
-        errors: [{ message: 'target missing' }],
-        data: { attempted: true },
-        continueProcessing: true,
-      });
-    }, calls);
+    const problematicStage = new RecordingStage(
+      'MultiTarget',
+      async () => {
+        return new PipelineResult({
+          success: false,
+          errors: [{ message: 'target missing' }],
+          data: { attempted: true },
+          continueProcessing: true,
+        });
+      },
+      calls
+    );
 
-    const recoveryStage = new RecordingStage('Formatting', async () => {
-      return PipelineResult.success({
-        data: { formatted: true },
-      });
-    }, calls);
+    const recoveryStage = new RecordingStage(
+      'Formatting',
+      async () => {
+        return PipelineResult.success({
+          data: { formatted: true },
+        });
+      },
+      calls
+    );
 
     const pipeline = new Pipeline([problematicStage, recoveryStage], logger);
 
@@ -222,7 +248,10 @@ describe('Pipeline integration', () => {
     expect(result.success).toBe(false);
     expect(result.errors).toEqual([{ message: 'target missing' }]);
     expect(result.data).toMatchObject({ attempted: true, formatted: true });
-    expect(calls.map((call) => call.name)).toEqual(['MultiTarget', 'Formatting']);
+    expect(calls.map((call) => call.name)).toEqual([
+      'MultiTarget',
+      'Formatting',
+    ]);
     expect(logger.warn).toHaveBeenCalledWith(
       'Stage MultiTarget completed with errors'
     );
@@ -236,9 +265,13 @@ describe('Pipeline integration', () => {
     const logger = createLogger();
     const calls = [];
 
-    const failingStage = new RecordingStage('Prerequisites', async () => {
-      throw new Error('stage exploded');
-    }, calls);
+    const failingStage = new RecordingStage(
+      'Prerequisites',
+      async () => {
+        throw new Error('stage exploded');
+      },
+      calls
+    );
 
     const pipeline = new Pipeline([failingStage], logger);
 

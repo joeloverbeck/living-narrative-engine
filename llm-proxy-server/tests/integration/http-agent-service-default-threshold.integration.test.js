@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import HttpAgentService from '../../src/services/httpAgentService.js';
 
@@ -11,10 +18,14 @@ const createCapturingLogger = () => {
   return {
     entries,
     logger: {
-      info: (message, context) => entries.push({ level: 'info', message, context }),
-      warn: (message, context) => entries.push({ level: 'warn', message, context }),
-      error: (message, context) => entries.push({ level: 'error', message, context }),
-      debug: (message, context) => entries.push({ level: 'debug', message, context }),
+      info: (message, context) =>
+        entries.push({ level: 'info', message, context }),
+      warn: (message, context) =>
+        entries.push({ level: 'warn', message, context }),
+      error: (message, context) =>
+        entries.push({ level: 'error', message, context }),
+      debug: (message, context) =>
+        entries.push({ level: 'debug', message, context }),
       isDebugEnabled: true,
     },
   };
@@ -51,7 +62,9 @@ describe('HttpAgentService default threshold coverage', () => {
       service.getAgent(httpUrl);
       service.getAgent(httpsUrl);
 
-      expect(service.hasAgent('http://plain-http.example/follow-up')).toBe(true);
+      expect(service.hasAgent('http://plain-http.example/follow-up')).toBe(
+        true
+      );
       expect(service.hasAgent(httpsUrl)).toBe(true);
 
       currentTimestamp = 600000;

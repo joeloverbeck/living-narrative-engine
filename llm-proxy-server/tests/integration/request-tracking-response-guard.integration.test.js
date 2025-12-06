@@ -60,7 +60,9 @@ describe('request tracking middleware + response guard integration', () => {
       });
     });
 
-    const response = await request(app).post('/success').send({ payload: 'data' });
+    const response = await request(app)
+      .post('/success')
+      .send({ payload: 'data' });
     await waitFor();
 
     expect(response.status).toBe(201);
@@ -94,7 +96,9 @@ describe('request tracking middleware + response guard integration', () => {
     expect(toStates).toContain(REQUEST_STATE.COMPLETED);
     expect(transitionsCapture[1].metadata).toMatchObject({ source: 'success' });
     expect(
-      transitionsCapture.find((transition) => transition.metadata?.method === 'json')
+      transitionsCapture.find(
+        (transition) => transition.metadata?.method === 'json'
+      )
     ).toBeDefined();
 
     expect(entries.warn).toHaveLength(0);
@@ -130,7 +134,9 @@ describe('request tracking middleware + response guard integration', () => {
       });
     });
 
-    const response = await request(app).post('/timeout').send({ payload: 'data' });
+    const response = await request(app)
+      .post('/timeout')
+      .send({ payload: 'data' });
     await waitFor();
 
     expect(response.status).toBe(504);
@@ -175,7 +181,11 @@ describe('request tracking middleware + response guard integration', () => {
 
       res.on('finish', () => {
         postCommitStatus = guard.canSendResponse();
-        secondAttemptResult = guard.sendError(500, 'llm.failure', 'late failure');
+        secondAttemptResult = guard.sendError(
+          500,
+          'llm.failure',
+          'late failure'
+        );
       });
 
       guard.sendSuccess(200, {
@@ -184,7 +194,9 @@ describe('request tracking middleware + response guard integration', () => {
       });
     });
 
-    const response = await request(app).post('/double-commit').send({ payload: 'data' });
+    const response = await request(app)
+      .post('/double-commit')
+      .send({ payload: 'data' });
     await waitFor();
 
     expect(response.status).toBe(200);
@@ -200,7 +212,9 @@ describe('request tracking middleware + response guard integration', () => {
     expect(secondAttemptResult).toBe(false);
     expect(entries.warn).not.toHaveLength(0);
     expect(entries.warn[0].message).toContain('Response already committed');
-    expect(entries.warn[0].metadata).toMatchObject({ existingSource: 'success' });
+    expect(entries.warn[0].metadata).toMatchObject({
+      existingSource: 'success',
+    });
   });
 
   it('blocks guard responses after headers have been flushed to the client', async () => {

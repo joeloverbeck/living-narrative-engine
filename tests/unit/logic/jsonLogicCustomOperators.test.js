@@ -175,12 +175,7 @@ describe('JsonLogicCustomOperators', () => {
       },
     ])(
       'delegates %s evaluation to operator instance',
-      ({
-        operatorName,
-        operatorClass,
-        invocationArgs,
-        expectedParams,
-      }) => {
+      ({ operatorName, operatorClass, invocationArgs, expectedParams }) => {
         const evaluateReturn = `result-${operatorName}`;
         const evaluateSpy = jest
           .spyOn(operatorClass.prototype, 'evaluate')

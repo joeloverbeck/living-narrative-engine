@@ -170,7 +170,13 @@ export default class TargetResolutionTracingOrchestrator {
    * @param {object} [detailedResults] - Optional detailed results payload
    * @returns {void}
    */
-  captureResolutionData(trace, actionDef, actor, resolutionData, detailedResults) {
+  captureResolutionData(
+    trace,
+    actionDef,
+    actor,
+    resolutionData,
+    detailedResults
+  ) {
     if (!this.isActionAwareTrace(trace)) return;
 
     const traceData = {
@@ -184,10 +190,16 @@ export default class TargetResolutionTracingOrchestrator {
       traceData.targetResolutionDetails = detailedResults;
     }
 
-    this.#safeCaptureActionData(trace, 'target_resolution', actionDef.id, traceData, {
-      successMessage: `Captured target resolution data for action '${actionDef.id}'`,
-      failureMessage: `Failed to capture target resolution data for action '${actionDef.id}'`,
-    });
+    this.#safeCaptureActionData(
+      trace,
+      'target_resolution',
+      actionDef.id,
+      traceData,
+      {
+        successMessage: `Captured target resolution data for action '${actionDef.id}'`,
+        failureMessage: `Failed to capture target resolution data for action '${actionDef.id}'`,
+      }
+    );
   }
 
   /**
@@ -211,10 +223,16 @@ export default class TargetResolutionTracingOrchestrator {
       timestamp: Date.now(),
     };
 
-    this.#safeCaptureActionData(trace, 'target_resolution', actionDef.id, errorData, {
-      successMessage: `Captured target resolution error for action '${actionDef.id}'`,
-      failureMessage: `Failed to capture target resolution error for action '${actionDef.id}'`,
-    });
+    this.#safeCaptureActionData(
+      trace,
+      'target_resolution',
+      actionDef.id,
+      errorData,
+      {
+        successMessage: `Captured target resolution error for action '${actionDef.id}'`,
+        failureMessage: `Failed to capture target resolution error for action '${actionDef.id}'`,
+      }
+    );
   }
 
   /**
@@ -292,11 +310,17 @@ export default class TargetResolutionTracingOrchestrator {
       stageName: 'MultiTargetResolution',
     };
 
-    await this.#safeCaptureActionData(trace, 'stage_performance', actionDef.id, payload, {
-      successMessage: `Captured performance data for action '${actionDef.id}'`,
-      failureMessage: `Failed to capture performance data for action '${actionDef.id}'`,
-      suppressLoggerOnSuccess: true,
-    });
+    await this.#safeCaptureActionData(
+      trace,
+      'stage_performance',
+      actionDef.id,
+      payload,
+      {
+        successMessage: `Captured performance data for action '${actionDef.id}'`,
+        failureMessage: `Failed to capture performance data for action '${actionDef.id}'`,
+        suppressLoggerOnSuccess: true,
+      }
+    );
   }
 
   /**

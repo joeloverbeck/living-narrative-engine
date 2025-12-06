@@ -207,13 +207,10 @@ describe('multi-turn combat scenario e2e (high priority)', () => {
   let deathCheckService;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
     jest.spyOn(Math, 'random').mockReturnValue(0);
@@ -290,9 +287,10 @@ describe('multi-turn combat scenario e2e (high priority)', () => {
       })
     );
 
-    const initialHealth =
-      testEnv.entityManager.getComponentData(torso.id, 'anatomy:part_health')
-        ?.currentHealth;
+    const initialHealth = testEnv.entityManager.getComponentData(
+      torso.id,
+      'anatomy:part_health'
+    )?.currentHealth;
     expect(initialHealth).toBeLessThan(52);
 
     const bleedingSystem = new BleedingTickSystem({
@@ -303,7 +301,9 @@ describe('multi-turn combat scenario e2e (high priority)', () => {
     });
 
     const originalGetEntitiesWithComponent =
-      testEnv.entityManager.getEntitiesWithComponent.bind(testEnv.entityManager);
+      testEnv.entityManager.getEntitiesWithComponent.bind(
+        testEnv.entityManager
+      );
     testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
       componentId === 'anatomy:bleeding'
         ? [torso.id]
@@ -314,9 +314,10 @@ describe('multi-turn combat scenario e2e (high priority)', () => {
     await testEnv.eventBus.dispatch('core:turn_ended', { turn: 2 });
     await new Promise((resolve) => setTimeout(resolve, 15));
 
-    const postTickHealth =
-      testEnv.entityManager.getComponentData(torso.id, 'anatomy:part_health')
-        ?.currentHealth;
+    const postTickHealth = testEnv.entityManager.getComponentData(
+      torso.id,
+      'anatomy:part_health'
+    )?.currentHealth;
     expect(postTickHealth).toBeLessThan(initialHealth);
 
     const dyingResult = deathCheckService.checkDeathConditions(
@@ -410,7 +411,9 @@ describe('multi-turn combat scenario e2e (high priority)', () => {
       target.id,
       'anatomy:dying'
     );
-    expect(stabilizedComponent?.turnsRemaining).toBe(dyingComponent.turnsRemaining);
+    expect(stabilizedComponent?.turnsRemaining).toBe(
+      dyingComponent.turnsRemaining
+    );
 
     const noDeathEvent = fixture.events.find(
       (e) => e.eventType === 'anatomy:entity_died'

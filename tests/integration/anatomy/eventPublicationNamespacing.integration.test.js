@@ -48,7 +48,9 @@ describe('Anatomy Event Publication Namespacing - Integration', () => {
       // Extract the event ID used in dispatch call
       // Pattern: eventBus.dispatch('EVENT_ID', {
       const dispatchPattern = /eventBus\.dispatch\(['"]([^'"]+)['"]/g;
-      const matches = [...eventPublicationStageSource.matchAll(dispatchPattern)];
+      const matches = [
+        ...eventPublicationStageSource.matchAll(dispatchPattern),
+      ];
 
       expect(matches.length).toBeGreaterThan(0);
 
@@ -62,7 +64,9 @@ describe('Anatomy Event Publication Namespacing - Integration', () => {
     it('should use namespaced format (modId:eventName) for event dispatch', () => {
       // Extract the event ID used in dispatch
       const dispatchPattern = /eventBus\.dispatch\(['"]([^'"]+)['"]/g;
-      const matches = [...eventPublicationStageSource.matchAll(dispatchPattern)];
+      const matches = [
+        ...eventPublicationStageSource.matchAll(dispatchPattern),
+      ];
 
       for (const match of matches) {
         const eventId = match[1];
@@ -80,7 +84,9 @@ describe('Anatomy Event Publication Namespacing - Integration', () => {
       // the warning: "EventDefinition not found for 'ANATOMY_GENERATED'"
 
       const dispatchPattern = /eventBus\.dispatch\(['"]([^'"]+)['"]/g;
-      const matches = [...eventPublicationStageSource.matchAll(dispatchPattern)];
+      const matches = [
+        ...eventPublicationStageSource.matchAll(dispatchPattern),
+      ];
 
       for (const match of matches) {
         const eventId = match[1];

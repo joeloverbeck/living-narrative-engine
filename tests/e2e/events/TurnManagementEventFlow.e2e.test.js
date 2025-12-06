@@ -14,13 +14,7 @@
  * @jest-environment jsdom
  */
 
-import { 
-  describe, 
-  it, 
-  expect, 
-  beforeEach, 
-  afterEach
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 // Test Module Pattern for turn execution environment
 import { TestModuleBuilder } from '../../common/testing/builders/testModuleBuilder.js';
@@ -30,9 +24,7 @@ import EventBus from '../../../src/events/eventBus.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 
 // Turn management event constants
-import {
-  TURN_STARTED_ID
-} from '../../../src/constants/eventIds.js';
+import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
 describe('Turn Management Event Flow E2E', () => {
   let testEnv;
@@ -40,14 +32,14 @@ describe('Turn Management Event Flow E2E', () => {
   beforeEach(async () => {
     // Initialize turn execution environment using Test Module Pattern
     testEnv = await TestModuleBuilder.forTurnExecution()
-      .withMockLLM({ 
+      .withMockLLM({
         strategy: 'tool-calling',
-        mockResponses: createMockTurnResponses()
+        mockResponses: createMockTurnResponses(),
       })
       .withTestActors(['test-actor'])
-      .withWorld({ 
-        name: 'Turn Event Test World', 
-        createConnections: true 
+      .withWorld({
+        name: 'Turn Event Test World',
+        createConnections: true,
       })
       .build();
   });
@@ -72,7 +64,6 @@ describe('Turn Management Event Flow E2E', () => {
     return [];
   }
 
-
   /**
    * Creates mock LLM responses for controlled turn execution
    *
@@ -85,8 +76,8 @@ describe('Turn Management Event Flow E2E', () => {
         targets: {},
         reasoning: 'Test turn execution for event flow validation',
         speech: 'Waiting for event validation',
-        thoughts: 'Executing turn for event testing'
-      }
+        thoughts: 'Executing turn for event testing',
+      },
     };
   }
 
@@ -97,8 +88,8 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
         },
         validationResults: {
           'test-actor:core:wait': {
@@ -106,10 +97,10 @@ describe('Turn Management Event Flow E2E', () => {
             validatedAction: {
               actionId: 'core:wait',
               actorId: 'test-actor',
-              targets: {}
-            }
-          }
-        }
+              targets: {},
+            },
+          },
+        },
       });
 
       // Act: Execute a complete AI turn
@@ -126,8 +117,8 @@ describe('Turn Management Event Flow E2E', () => {
       expect(allEvents.length).toBeGreaterThan(0);
 
       // Look for any turn-related events that might have been dispatched
-      const eventTypes = allEvents.map(e => e.type || e.eventType || e.name);
-      
+      const eventTypes = allEvents.map((e) => e.type || e.eventType || e.name);
+
       // The test passes if turn execution worked, even if specific events aren't captured
       // This validates the integration works and events could be monitored
       expect(eventTypes.length).toBeGreaterThanOrEqual(0);
@@ -139,9 +130,9 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn and capture processing events
@@ -149,7 +140,7 @@ describe('Turn Management Event Flow E2E', () => {
 
       // Assert: Get events and verify execution
       const allEvents = getCapturedEvents();
-      
+
       // Verify turn was executed successfully
       expect(turnResult).toBeDefined();
       expect(turnResult.success).toBe(true);
@@ -165,9 +156,9 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn
@@ -177,13 +168,15 @@ describe('Turn Management Event Flow E2E', () => {
       expect(turnResult).toBeDefined();
       expect(turnResult.success).toBe(true);
       expect(turnResult.actorId).toBe('test-actor');
-      
+
       // Verify the turn result contains expected metadata structure
-      expect(turnResult).toEqual(expect.objectContaining({
-        actorId: expect.any(String),
-        aiDecision: expect.any(Object),
-        duration: expect.any(Number)
-      }));
+      expect(turnResult).toEqual(
+        expect.objectContaining({
+          actorId: expect.any(String),
+          aiDecision: expect.any(Object),
+          duration: expect.any(Number),
+        })
+      );
     });
   });
 
@@ -194,14 +187,14 @@ describe('Turn Management Event Flow E2E', () => {
     });
 
     it('should fire turn events at appropriate execution moments', async () => {
-      // Arrange: Setup mock responses  
+      // Arrange: Setup mock responses
       testEnv.facades.turnExecutionFacade.setupMocks({
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn with timing monitoring
@@ -212,7 +205,7 @@ describe('Turn Management Event Flow E2E', () => {
       // Assert: Verify timing relationships
       expect(turnResult).toBeDefined();
       expect(turnResult.success).toBe(true);
-      
+
       // Verify turn took some time to execute (allow for very fast execution in tests)
       const executionTime = endTime - startTime;
       expect(executionTime).toBeGreaterThanOrEqual(0);
@@ -227,9 +220,9 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn
@@ -239,7 +232,7 @@ describe('Turn Management Event Flow E2E', () => {
       expect(turnResult).toBeDefined();
       expect(turnResult.success).toBe(true);
       expect(turnResult.actorId).toBe('test-actor');
-      
+
       // The turn result itself represents consistent state
       expect(turnResult.aiDecision).toBeDefined();
       expect(turnResult.aiDecision.actionId).toBe('core:wait');
@@ -251,9 +244,9 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute multiple turns
@@ -276,10 +269,10 @@ describe('Turn Management Event Flow E2E', () => {
     it('should handle turn execution errors gracefully', async () => {
       // Arrange: Configure test environment for error scenario
       const errorTestEnv = await TestModuleBuilder.forTurnExecution()
-        .withMockLLM({ 
+        .withMockLLM({
           strategy: 'tool-calling',
           shouldThrowError: true,
-          errorMessage: 'Simulated turn execution error'
+          errorMessage: 'Simulated turn execution error',
         })
         .withTestActors([{ id: 'error-actor', name: 'Error Actor' }])
         .withWorld({ name: 'Error Test World' })
@@ -290,7 +283,7 @@ describe('Turn Management Event Flow E2E', () => {
       // Act: Attempt turn execution with error
       let turnResult;
       let caughtError;
-      
+
       try {
         turnResult = await errorTestEnv.executeAITurn('error-actor');
       } catch (error) {
@@ -300,10 +293,12 @@ describe('Turn Management Event Flow E2E', () => {
       // Assert: Verify error handling
       // Turn should either complete with error handling or fail gracefully
       expect(caughtError || turnResult).toBeDefined();
-      
+
       // If we got a result, it should indicate the error state
       // Either success or controlled failure
-      expect(caughtError || (turnResult && typeof turnResult.success === 'boolean')).toBeTruthy();
+      expect(
+        caughtError || (turnResult && typeof turnResult.success === 'boolean')
+      ).toBeTruthy();
 
       // Clean up error test environment
       if (errorTestEnv.cleanup) {
@@ -316,15 +311,15 @@ describe('Turn Management Event Flow E2E', () => {
     it('should allow elevated recursion limits for turn workflow events', async () => {
       // This test validates that turn workflow events work with elevated recursion limits
       // We test this conceptually by validating the turn execution system works
-      
+
       // Arrange: Setup mock responses
       testEnv.facades.turnExecutionFacade.setupMocks({
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn (which internally uses workflow events with elevated limits)
@@ -334,7 +329,7 @@ describe('Turn Management Event Flow E2E', () => {
       expect(turnResult).toBeDefined();
       expect(turnResult.success).toBe(true);
       expect(turnResult.actorId).toBe('test-actor');
-      
+
       // The fact that the turn executed successfully means the workflow event
       // system with elevated recursion limits is functioning correctly
       expect(turnResult.aiDecision.actionId).toBe('core:wait');
@@ -342,37 +337,43 @@ describe('Turn Management Event Flow E2E', () => {
 
     it('should handle workflow event recursion in batch mode', async () => {
       // Arrange: Set up batch mode environment
-      const batchModeEventBus = new EventBus({ 
+      const batchModeEventBus = new EventBus({
         logger: new ConsoleLogger(),
         maxRecursionDepth: 25, // Batch mode limit
-        maxGlobalRecursion: 50
+        maxGlobalRecursion: 50,
       });
 
       const recursionCounter = { count: 0, maxReached: 0 };
 
       // Set up batch mode
-      batchModeEventBus.setBatchMode(true, { 
+      batchModeEventBus.setBatchMode(true, {
         maxRecursionDepth: 25,
-        maxGlobalRecursion: 50 
+        maxGlobalRecursion: 50,
       });
 
       // Mock batch workflow handler
       batchModeEventBus.subscribe(TURN_STARTED_ID, () => {
         recursionCounter.count++;
-        recursionCounter.maxReached = Math.max(recursionCounter.maxReached, recursionCounter.count);
-        
+        recursionCounter.maxReached = Math.max(
+          recursionCounter.maxReached,
+          recursionCounter.count
+        );
+
         // Simulate batch workflow recursion
         if (recursionCounter.count < 10) {
-          batchModeEventBus.dispatch(TURN_STARTED_ID, { 
+          batchModeEventBus.dispatch(TURN_STARTED_ID, {
             turnNumber: recursionCounter.count,
-            batchMode: true 
+            batchMode: true,
           });
         }
         recursionCounter.count--;
       });
 
       // Act: Trigger batch workflow
-      await batchModeEventBus.dispatch(TURN_STARTED_ID, { turnNumber: 1, batchMode: true });
+      await batchModeEventBus.dispatch(TURN_STARTED_ID, {
+        turnNumber: 1,
+        batchMode: true,
+      });
 
       // Assert: Verify batch mode recursion limits
       expect(recursionCounter.maxReached).toBeGreaterThan(0);
@@ -390,9 +391,9 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn that includes action decision
@@ -403,13 +404,15 @@ describe('Turn Management Event Flow E2E', () => {
       expect(turnResult.success).toBe(true);
       expect(turnResult.aiDecision).toBeDefined();
       expect(turnResult.aiDecision.actionId).toBe('core:wait');
-      
+
       // Verify the turn properly integrated action decision
-      expect(turnResult.aiDecision).toEqual(expect.objectContaining({
-        actionId: expect.any(String),
-        targets: expect.any(Object),
-        reasoning: expect.any(String)
-      }));
+      expect(turnResult.aiDecision).toEqual(
+        expect.objectContaining({
+          actionId: expect.any(String),
+          targets: expect.any(Object),
+          reasoning: expect.any(String),
+        })
+      );
     });
   });
 
@@ -420,23 +423,24 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       const performanceMetrics = {
         startTime: 0,
         endTime: 0,
-        executionTime: 0
+        executionTime: 0,
       };
 
       // Act: Execute turn with performance monitoring
       performanceMetrics.startTime = performance.now();
       const turnResult = await testEnv.executeAITurn('test-actor');
       performanceMetrics.endTime = performance.now();
-      
-      performanceMetrics.executionTime = performanceMetrics.endTime - performanceMetrics.startTime;
+
+      performanceMetrics.executionTime =
+        performanceMetrics.endTime - performanceMetrics.startTime;
 
       // Assert: Verify reasonable performance
       expect(turnResult).toBeDefined();
@@ -451,9 +455,9 @@ describe('Turn Management Event Flow E2E', () => {
         aiResponses: createMockTurnResponses(),
         actionResults: {
           'test-actor': [
-            { actionId: 'core:wait', name: 'Wait', available: true }
-          ]
-        }
+            { actionId: 'core:wait', name: 'Wait', available: true },
+          ],
+        },
       });
 
       // Act: Execute turn
@@ -463,13 +467,15 @@ describe('Turn Management Event Flow E2E', () => {
       expect(turnResult).toBeDefined();
       expect(turnResult.success).toBe(true);
       expect(turnResult.duration).toBeGreaterThanOrEqual(0);
-      
+
       // Verify comprehensive monitoring data in turn result
-      expect(turnResult).toEqual(expect.objectContaining({
-        actorId: expect.any(String),
-        aiDecision: expect.any(Object),
-        duration: expect.any(Number)
-      }));
+      expect(turnResult).toEqual(
+        expect.objectContaining({
+          actorId: expect.any(String),
+          aiDecision: expect.any(Object),
+          duration: expect.any(Number),
+        })
+      );
     });
   });
 });

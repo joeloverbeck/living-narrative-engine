@@ -2,7 +2,14 @@
  * @file Additional edge case coverage tests for SpeechPatternsDisplayEnhancer
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import SpeechPatternsDisplayEnhancer from '../../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 import { createMockSpeechPatternsArray } from '../../../common/characterBuilder/speechPatternsTestHelpers.js';
@@ -143,7 +150,9 @@ describe('SpeechPatternsDisplayEnhancer - Coverage Edge Cases', () => {
   });
 
   it('preserves provided export option timestamp', () => {
-    const validated = enhancer.validateExportOptions({ timestamp: '2024-04-05' });
+    const validated = enhancer.validateExportOptions({
+      timestamp: '2024-04-05',
+    });
     expect(validated.timestamp).toBe('2024-04-05');
   });
 
@@ -166,7 +175,9 @@ describe('SpeechPatternsDisplayEnhancer - Coverage Edge Cases', () => {
       characterName: '',
     };
 
-    const output = enhancer.applyTemplate(patterns, 'summary', { maxPatterns: 2 });
+    const output = enhancer.applyTemplate(patterns, 'summary', {
+      maxPatterns: 2,
+    });
 
     expect(output).toContain('SPEECH PATTERN SUMMARY: CHARACTER');
     expect(output).toContain('KEY PATTERNS (Top 2)');
@@ -180,10 +191,11 @@ describe('SpeechPatternsDisplayEnhancer - Coverage Edge Cases', () => {
     const patterns = {
       speechPatterns: Array.from({ length: 6 }, (_, index) => ({
         pattern:
-          'Pattern with a sentence that is intentionally crafted to exceed the sixty four character width used in the renderer '
-          + index,
+          'Pattern with a sentence that is intentionally crafted to exceed the sixty four character width used in the renderer ' +
+          index,
         example:
-          'Example with description long enough to wrap across multiple lines for readability ' + index,
+          'Example with description long enough to wrap across multiple lines for readability ' +
+          index,
       })),
       characterName: '',
       generatedAt: '',

@@ -15,6 +15,7 @@ Fix the existing `handle_wield_threateningly.rule.json` to properly lock grabbin
 ### `data/mods/weapons/rules/handle_wield_threateningly.rule.json`
 
 **Current state (lines 8-22):**
+
 ```json
 "actions": [
   {
@@ -127,6 +128,7 @@ None
 ## Why This Fix Is Required
 
 ### Current Problem
+
 1. Actor wields a two-handed sword
 2. `positioning:wielding` component is added with the sword's ID
 3. BUT no grabbing appendages are locked
@@ -134,6 +136,7 @@ None
 5. `wield_threateningly` prerequisite checks free appendage, but appendage is never actually locked
 
 ### After Fix
+
 1. Actor wields a two-handed sword
 2. `LOCK_GRABBING` locks 2 appendages, associating them with the sword
 3. `positioning:wielding` component is added with the sword's ID
@@ -202,17 +205,17 @@ npm run test:ci                            # Full test suite passes
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `data/mods/weapons/rules/handle_wield_threateningly.rule.json` | Added 2 operations for grabbing appendage locking |
-| `tests/integration/mods/weapons/wieldThreateninglyRuleValidation.test.js` | Updated assertions for new operations |
-| `tests/integration/mods/weapons/wieldingComponentWorkflow.integration.test.js` | Added 3 tests for grabbing appendage locking |
+| File                                                                           | Change                                            |
+| ------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `data/mods/weapons/rules/handle_wield_threateningly.rule.json`                 | Added 2 operations for grabbing appendage locking |
+| `tests/integration/mods/weapons/wieldThreateninglyRuleValidation.test.js`      | Updated assertions for new operations             |
+| `tests/integration/mods/weapons/wieldingComponentWorkflow.integration.test.js` | Added 3 tests for grabbing appendage locking      |
 
 ### New/Modified Tests
 
-| Test File | Test | Rationale |
-|-----------|------|-----------|
-| `wieldThreateninglyRuleValidation.test.js` | Updated `should follow standard rule pattern with context setup operations` | Updated action count from 11→13 and added assertions for new operations at indices 2-4 |
-| `wieldingComponentWorkflow.integration.test.js` | Added `should have LOCK_GRABBING operation in rule for appendage tracking` | Validates the presence and correct parameters of the LOCK_GRABBING operation |
-| `wieldingComponentWorkflow.integration.test.js` | Added `should query target grabbing requirements before LOCK_GRABBING` | Ensures correct operation ordering (query before lock) |
-| `wieldingComponentWorkflow.integration.test.js` | Added `should use missing_value for weapons without explicit grabbing requirements` | Validates graceful handling of weapons without `anatomy:requires_grabbing` component |
+| Test File                                       | Test                                                                                | Rationale                                                                              |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `wieldThreateninglyRuleValidation.test.js`      | Updated `should follow standard rule pattern with context setup operations`         | Updated action count from 11→13 and added assertions for new operations at indices 2-4 |
+| `wieldingComponentWorkflow.integration.test.js` | Added `should have LOCK_GRABBING operation in rule for appendage tracking`          | Validates the presence and correct parameters of the LOCK_GRABBING operation           |
+| `wieldingComponentWorkflow.integration.test.js` | Added `should query target grabbing requirements before LOCK_GRABBING`              | Ensures correct operation ordering (query before lock)                                 |
+| `wieldingComponentWorkflow.integration.test.js` | Added `should use missing_value for weapons without explicit grabbing requirements` | Validates graceful handling of weapons without `anatomy:requires_grabbing` component   |

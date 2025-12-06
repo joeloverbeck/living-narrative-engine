@@ -1,45 +1,45 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "patrol:dylan_crace",
-    "components": {
-        "core:name": {
-            "text": "Dylan Crace"
-        },
-        "core:portrait": {
-            "imagePath": "portraits/dylan_crace.png",
-            "altText": "Dylan Crace - ex-military corpo."
-        },
-        "core:actor": {},
-        "core:profile": {
-            "text": "He's the company believer. Crace believes that the corporation he works for is the only thing keeping the tear from eating the world. Dylan's background: ex-military security contractor. He did convoy escort and asset recovery in disaster zones for subsidiaries of this same megacorp. He's not a rent-a-cop. He's seen human beings do worse than any monster. Dylan is lean but wired tight, like he's always half-flexed. Sun-cooked skin. Buzzed hair because 'long hair gives hands something to grab in a fight.' Thick forearms, twitchy knee. Moves like he's never not expecting someone to take a swing at him. Nose broken and rebroken. Scar just under the eye from shrapnel. But his eyes? Weirdly boyish, clear, earnest when he's not lit up. That's important. He's not a goon. He's a believer. He isn't here, in the salt flats, for money. He's here because he thinks this post is history-level important. He actually asked for this assignment. To Crace, this is the first job he's had in years that doesn't feel like guarding a warehouse full of tear gas canisters for some regime. This one feels… righteous. He needs righteous. He's starving for it. He's constantly adjusting his vest, tightening straps, checking mags, doing readiness rituals. He's afraid if he's not perfectly ready, something will happen and it'll be his fault again."
-        },
-        "core:personality": {
-            "text": "Dylan talks. Won't shut up."
-        },
-        "core:weaknesses": {
-            "text": "He's unstable in exactly one way: he's got this caged panic under the surface that leaks out wrong. He's not afraid of dying. He's afraid of freezing when the thing finally happens. In his last op, he froze. He was supposed to clear a stairwell. He hesitated for maybe one, two seconds because there was a kid crying on the landing. Turned out not to be a kid, turned out to be bait, ambush, his teammate took a screwdriver in the throat. Corporate reviewed footage and called it a 'tragic coordinated hostile escalation outside expected parameters,' no personal fault assigned. He doesn't believe that. He thinks that was his fault."
-        },
-        "core:speech_patterns": {
-            "patterns": [
-                "(when Dylan is pissed with women, he addresses them as 'ma'am' to create distance without screaming) 'Ma'am, per protocol, I am authorized to engage if the hostile is within five meters.'"
-            ]
-        },
-        "core:player_type": {
-            "type": "human"
-        },
-        "core:perception_log": {
-            "maxEntries": 50,
-            "logEntries": []
-        },
-        "anatomy:body": {
-            "recipeId": "patrol:dylan_crace_recipe"
-        },
-        "core:gender": {
-            "value": "male"
-        },
-        "core:apparent_age": {
-            "minAge": 30,
-            "maxAge": 32
-        }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "patrol:dylan_crace",
+  "components": {
+    "core:name": {
+      "text": "Dylan Crace"
+    },
+    "core:portrait": {
+      "imagePath": "portraits/dylan_crace.png",
+      "altText": "Dylan Crace - ex-military corpo."
+    },
+    "core:actor": {},
+    "core:profile": {
+      "text": "He's the company believer. Crace believes that the corporation he works for is the only thing keeping the tear from eating the world. Dylan's background: ex-military security contractor. He did convoy escort and asset recovery in disaster zones for subsidiaries of this same megacorp. He's not a rent-a-cop. He's seen human beings do worse than any monster. Dylan is lean but wired tight, like he's always half-flexed. Sun-cooked skin. Buzzed hair because 'long hair gives hands something to grab in a fight.' Thick forearms, twitchy knee. Moves like he's never not expecting someone to take a swing at him. Nose broken and rebroken. Scar just under the eye from shrapnel. But his eyes? Weirdly boyish, clear, earnest when he's not lit up. That's important. He's not a goon. He's a believer. He isn't here, in the salt flats, for money. He's here because he thinks this post is history-level important. He actually asked for this assignment. To Crace, this is the first job he's had in years that doesn't feel like guarding a warehouse full of tear gas canisters for some regime. This one feels… righteous. He needs righteous. He's starving for it. He's constantly adjusting his vest, tightening straps, checking mags, doing readiness rituals. He's afraid if he's not perfectly ready, something will happen and it'll be his fault again."
+    },
+    "core:personality": {
+      "text": "Dylan talks. Won't shut up."
+    },
+    "core:weaknesses": {
+      "text": "He's unstable in exactly one way: he's got this caged panic under the surface that leaks out wrong. He's not afraid of dying. He's afraid of freezing when the thing finally happens. In his last op, he froze. He was supposed to clear a stairwell. He hesitated for maybe one, two seconds because there was a kid crying on the landing. Turned out not to be a kid, turned out to be bait, ambush, his teammate took a screwdriver in the throat. Corporate reviewed footage and called it a 'tragic coordinated hostile escalation outside expected parameters,' no personal fault assigned. He doesn't believe that. He thinks that was his fault."
+    },
+    "core:speech_patterns": {
+      "patterns": [
+        "(when Dylan is pissed with women, he addresses them as 'ma'am' to create distance without screaming) 'Ma'am, per protocol, I am authorized to engage if the hostile is within five meters.'"
+      ]
+    },
+    "core:player_type": {
+      "type": "human"
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "anatomy:body": {
+      "recipeId": "patrol:dylan_crace_recipe"
+    },
+    "core:gender": {
+      "value": "male"
+    },
+    "core:apparent_age": {
+      "minAge": 30,
+      "maxAge": 32
     }
+  }
 }

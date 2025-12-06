@@ -13,12 +13,9 @@ import {
 } from '@jest/globals';
 import { BrowserStorageProvider } from '../../../src/storage/browserStorageProvider.js';
 import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
-jest.mock(
-  '../../../src/utils/systemErrorDispatchUtils.js',
-  () => ({
-    dispatchSystemErrorEvent: jest.fn().mockResolvedValue(undefined),
-  })
-);
+jest.mock('../../../src/utils/systemErrorDispatchUtils.js', () => ({
+  dispatchSystemErrorEvent: jest.fn().mockResolvedValue(undefined),
+}));
 
 const { dispatchSystemErrorEvent } = jest.requireMock(
   '../../../src/utils/systemErrorDispatchUtils.js'
@@ -42,11 +39,7 @@ const createRootHandle = () => ({
   values: jest.fn().mockImplementation(async function* values() {}),
 });
 
-const createFileHandle = ({
-  name,
-  arrayBuffer,
-  writable,
-}) => ({
+const createFileHandle = ({ name, arrayBuffer, writable }) => ({
   name,
   kind: 'file',
   createWritable:
@@ -103,9 +96,7 @@ describe('BrowserStorageProvider additional coverage', () => {
 
     expect(
       () => new BrowserStorageProvider({ safeEventDispatcher: dispatcher })
-    ).toThrow(
-      'BrowserStorageProvider requires a valid ILogger instance.'
-    );
+    ).toThrow('BrowserStorageProvider requires a valid ILogger instance.');
 
     expect(consoleError).toHaveBeenCalledWith(
       'BrowserStorageProvider requires a valid ILogger instance.'
@@ -115,7 +106,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
   it('reuses the cached root directory handle when permission remains granted', async () => {
     const rootHandle = createRootHandle();
-    rootHandle.getFileHandle.mockResolvedValue(createFileHandle({ name: 'file' }));
+    rootHandle.getFileHandle.mockResolvedValue(
+      createFileHandle({ name: 'file' })
+    );
     global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
 
     const provider = new BrowserStorageProvider({
@@ -136,7 +129,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
   it('requests permission again when the cached handle loses access and succeeds', async () => {
     const rootHandle = createRootHandle();
-    rootHandle.getFileHandle.mockResolvedValue(createFileHandle({ name: 'file' }));
+    rootHandle.getFileHandle.mockResolvedValue(
+      createFileHandle({ name: 'file' })
+    );
     rootHandle.queryPermission
       .mockResolvedValueOnce('granted')
       .mockResolvedValueOnce('prompt');
@@ -161,7 +156,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
   it('clears the cached handle and reprompts when permission is denied', async () => {
     const firstHandle = createRootHandle();
-    firstHandle.getFileHandle.mockResolvedValue(createFileHandle({ name: 'file' }));
+    firstHandle.getFileHandle.mockResolvedValue(
+      createFileHandle({ name: 'file' })
+    );
     firstHandle.queryPermission
       .mockResolvedValueOnce('granted')
       .mockResolvedValueOnce('denied');
@@ -206,9 +203,7 @@ describe('BrowserStorageProvider additional coverage', () => {
   });
 
   it('dispatches a system error when directory selection fails unexpectedly', async () => {
-    global.window.showDirectoryPicker.mockRejectedValueOnce(
-      new Error('boom')
-    );
+    global.window.showDirectoryPicker.mockRejectedValueOnce(new Error('boom'));
 
     const provider = new BrowserStorageProvider({
       logger,
@@ -257,9 +252,7 @@ describe('BrowserStorageProvider additional coverage', () => {
         logger,
         safeEventDispatcher: dispatcher,
       });
-      jest
-        .spyOn(provider, 'deleteFile')
-        .mockResolvedValue({ success: true });
+      jest.spyOn(provider, 'deleteFile').mockResolvedValue({ success: true });
 
       const result = await provider.writeFileAtomically('file.sav', data);
 
@@ -295,7 +288,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
       expect(result.success).toBe(false);
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not clean up temporary file file.sav.tmp'),
+        expect.stringContaining(
+          'Could not clean up temporary file file.sav.tmp'
+        ),
         expect.any(Error)
       );
     });
@@ -346,14 +341,18 @@ describe('BrowserStorageProvider additional coverage', () => {
 
       expect(result).toEqual({ success: true });
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to clean up temporary file file.sav.tmp'),
+        expect.stringContaining(
+          'Failed to clean up temporary file file.sav.tmp'
+        ),
         expect.any(Error)
       );
     });
 
     it('dispatches errors when creating intermediate directories fails even with create=true', async () => {
       const rootHandle = createRootHandle();
-      rootHandle.getDirectoryHandle.mockRejectedValueOnce(new Error('disk offline'));
+      rootHandle.getDirectoryHandle.mockRejectedValueOnce(
+        new Error('disk offline')
+      );
       global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
 
       const provider = new BrowserStorageProvider({
@@ -361,7 +360,10 @@ describe('BrowserStorageProvider additional coverage', () => {
         safeEventDispatcher: dispatcher,
       });
 
-      const result = await provider.writeFileAtomically('nested/file.sav', data);
+      const result = await provider.writeFileAtomically(
+        'nested/file.sav',
+        data
+      );
 
       expect(result.success).toBe(false);
       expectDispatch(/Failed to get\/create directory handle/);
@@ -413,7 +415,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
     it('wraps NotFound errors with a StorageErrorCodes flag', async () => {
       const rootHandle = createRootHandle();
-      const notFound = Object.assign(new Error('missing'), { name: 'NotFoundError' });
+      const notFound = Object.assign(new Error('missing'), {
+        name: 'NotFoundError',
+      });
       rootHandle.getDirectoryHandle.mockRejectedValue(notFound);
       global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
 
@@ -432,7 +436,9 @@ describe('BrowserStorageProvider additional coverage', () => {
     });
 
     it('returns an empty list when root selection was not completed', async () => {
-      global.window.showDirectoryPicker.mockRejectedValueOnce(new Error('oops'));
+      global.window.showDirectoryPicker.mockRejectedValueOnce(
+        new Error('oops')
+      );
 
       const provider = new BrowserStorageProvider({
         logger,
@@ -604,7 +610,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
     it('treats missing files as a successful deletion with context', async () => {
       const rootHandle = createRootHandle();
-      const notFound = Object.assign(new Error('missing'), { name: 'NotFoundError' });
+      const notFound = Object.assign(new Error('missing'), {
+        name: 'NotFoundError',
+      });
       rootHandle.getFileHandle.mockRejectedValue(notFound);
       global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
 
@@ -620,7 +628,9 @@ describe('BrowserStorageProvider additional coverage', () => {
     });
 
     it('propagates root handle errors when deletion cannot proceed', async () => {
-      global.window.showDirectoryPicker.mockRejectedValueOnce(new Error('no root'));
+      global.window.showDirectoryPicker.mockRejectedValueOnce(
+        new Error('no root')
+      );
 
       const provider = new BrowserStorageProvider({
         logger,
@@ -672,7 +682,9 @@ describe('BrowserStorageProvider additional coverage', () => {
   describe('fileExists', () => {
     it('returns true when the file can be resolved', async () => {
       const rootHandle = createRootHandle();
-      rootHandle.getFileHandle.mockResolvedValue(createFileHandle({ name: 'file' }));
+      rootHandle.getFileHandle.mockResolvedValue(
+        createFileHandle({ name: 'file' })
+      );
       global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
 
       const provider = new BrowserStorageProvider({
@@ -686,7 +698,9 @@ describe('BrowserStorageProvider additional coverage', () => {
 
     it('returns false for missing files after dispatching a detailed event', async () => {
       const rootHandle = createRootHandle();
-      const notFound = Object.assign(new Error('missing'), { name: 'NotFoundError' });
+      const notFound = Object.assign(new Error('missing'), {
+        name: 'NotFoundError',
+      });
       rootHandle.getFileHandle.mockRejectedValue(notFound);
       global.window.showDirectoryPicker.mockResolvedValue(rootHandle);
 
@@ -701,7 +715,9 @@ describe('BrowserStorageProvider additional coverage', () => {
     });
 
     it('returns false when root selection fails', async () => {
-      global.window.showDirectoryPicker.mockRejectedValueOnce(new Error('blocked'));
+      global.window.showDirectoryPicker.mockRejectedValueOnce(
+        new Error('blocked')
+      );
 
       const provider = new BrowserStorageProvider({
         logger,

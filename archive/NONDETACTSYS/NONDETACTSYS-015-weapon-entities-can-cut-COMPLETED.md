@@ -10,22 +10,22 @@ Add the `damage-types:can_cut` marker component to existing weapon entity defini
 
 **Original ticket assumptions were incorrect.** Key corrections:
 
-| Original Assumption | Actual Reality |
-|---------------------|----------------|
+| Original Assumption                                  | Actual Reality                                                               |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------- |
 | Weapons in `data/mods/weapons/entities/definitions/` | Directory is empty; weapons are in `data/mods/fantasy/entities/definitions/` |
-| `weapons:weapon` has `weaponType` property | Pure marker component with no properties |
-| `weapons:weapon` has `damageType` property | Does not exist |
-| Many weapon files exist | Only 3 weapon entities exist |
+| `weapons:weapon` has `weaponType` property           | Pure marker component with no properties                                     |
+| `weapons:weapon` has `damageType` property           | Does not exist                                                               |
+| Many weapon files exist                              | Only 3 weapon entities exist                                                 |
 
 ## Files to Modify
 
 Weapon entity files with `weapons:weapon` component in `data/mods/fantasy/entities/definitions/`:
 
-| File | Weapon Type | Should Have can_cut | Rationale |
-|------|-------------|---------------------|-----------|
-| `threadscar_melissa_longsword.entity.json` | Longsword | ✅ Yes | Swords deal slashing damage |
-| `vespera_rapier.entity.json` | Rapier | ✅ Yes | Rapiers can slash |
-| `vespera_main_gauche.entity.json` | Parrying dagger | ❌ No | "needle-thin, purpose-built for finding gaps... rather than broad slashing" - piercing weapon |
+| File                                       | Weapon Type     | Should Have can_cut | Rationale                                                                                     |
+| ------------------------------------------ | --------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| `threadscar_melissa_longsword.entity.json` | Longsword       | ✅ Yes              | Swords deal slashing damage                                                                   |
+| `vespera_rapier.entity.json`               | Rapier          | ✅ Yes              | Rapiers can slash                                                                             |
+| `vespera_main_gauche.entity.json`          | Parrying dagger | ❌ No               | "needle-thin, purpose-built for finding gaps... rather than broad slashing" - piercing weapon |
 
 ## Implementation Details
 
@@ -47,6 +47,7 @@ For each cutting weapon entity, add to the `components` object:
 ### Example: threadscar_melissa_longsword.entity.json
 
 Before:
+
 ```json
 {
   "components": {
@@ -57,6 +58,7 @@ Before:
 ```
 
 After:
+
 ```json
 {
   "components": {
@@ -103,22 +105,22 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/fantasy/entities/definitions/` | Directory containing weapon entities |
-| `data/mods/damage-types/components/can_cut.component.json` | Marker component definition |
-| `data/schemas/entity-definition.schema.json` | Entity schema reference |
+| File                                                       | Purpose                              |
+| ---------------------------------------------------------- | ------------------------------------ |
+| `data/mods/fantasy/entities/definitions/`                  | Directory containing weapon entities |
+| `data/mods/damage-types/components/can_cut.component.json` | Marker component definition          |
+| `data/schemas/entity-definition.schema.json`               | Entity schema reference              |
 
 ## Outcome
 
 ### Originally Planned vs Actual Changes
 
-| Aspect | Original Plan | Actual Implementation |
-|--------|---------------|----------------------|
-| Files to modify | 6+ files in `weapons/entities/definitions/` | 2 files in `fantasy/entities/definitions/` |
-| `weapons:weapon` structure | Assumed `weaponType`/`damageType` properties | Pure marker component (empty) |
-| Weapons found | longsword, shortsword, dagger, axe, battleaxe, scimitar, mace, hammer, club, staff | Only 3 weapons: longsword, rapier, main-gauche |
-| Main-gauche classification | Not mentioned | Classified as piercing-only (no can_cut) based on description |
+| Aspect                     | Original Plan                                                                      | Actual Implementation                                         |
+| -------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Files to modify            | 6+ files in `weapons/entities/definitions/`                                        | 2 files in `fantasy/entities/definitions/`                    |
+| `weapons:weapon` structure | Assumed `weaponType`/`damageType` properties                                       | Pure marker component (empty)                                 |
+| Weapons found              | longsword, shortsword, dagger, axe, battleaxe, scimitar, mace, hammer, club, staff | Only 3 weapons: longsword, rapier, main-gauche                |
+| Main-gauche classification | Not mentioned                                                                      | Classified as piercing-only (no can_cut) based on description |
 
 ### Files Modified
 

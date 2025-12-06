@@ -16,9 +16,7 @@ import { PerformanceMonitor } from '../../../src/characterBuilder/services/perfo
 import { MemoryManager } from '../../../src/characterBuilder/services/memoryManager.js';
 import { ErrorHandlingStrategy } from '../../../src/characterBuilder/services/errorHandlingStrategy.js';
 import { ValidationService } from '../../../src/characterBuilder/services/validationService.js';
-import {
-  createMockSpeechPatterns,
-} from '../../common/characterBuilder/speechPatternsTestHelpers.js';
+import { createMockSpeechPatterns } from '../../common/characterBuilder/speechPatternsTestHelpers.js';
 
 describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibility', () => {
   let mockLogger;
@@ -41,12 +39,12 @@ describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibili
   const buildCharacterDefinition = () =>
     JSON.stringify(
       {
-        $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'test:character',
         components: {
           'core:name': {
-            text:
-              'Test Character with a detailed backstory that exceeds validation thresholds for length and structure.',
+            text: 'Test Character with a detailed backstory that exceeds validation thresholds for length and structure.',
           },
           'core:personality': {
             traits: ['brave', 'kind', 'curious'],
@@ -121,8 +119,11 @@ describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibili
           index: index + 1,
           pattern: pattern.pattern || pattern.type || 'Pattern',
           example: pattern.example || pattern.examples?.[0] || 'example',
-          circumstances: pattern.circumstances || pattern.contexts?.[0] || 'context',
-          htmlSafeExamples: [pattern.example || pattern.examples?.[0] || 'example'],
+          circumstances:
+            pattern.circumstances || pattern.contexts?.[0] || 'context',
+          htmlSafeExamples: [
+            pattern.example || pattern.examples?.[0] || 'example',
+          ],
           htmlSafeContexts: [
             pattern.circumstances || pattern.contexts?.[0] || 'context',
           ],
@@ -136,8 +137,20 @@ describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibili
       formatAsMarkdown: jest.fn().mockReturnValue('# markdown'),
       formatAsCsv: jest.fn().mockReturnValue('csv,data'),
       getSupportedExportFormats: jest.fn().mockReturnValue([
-        { id: 'txt', name: 'Text', description: 'Plain text', extension: 'txt', mimeType: 'text/plain' },
-        { id: 'json', name: 'JSON', description: 'JSON export', extension: 'json', mimeType: 'application/json' },
+        {
+          id: 'txt',
+          name: 'Text',
+          description: 'Plain text',
+          extension: 'txt',
+          mimeType: 'text/plain',
+        },
+        {
+          id: 'json',
+          name: 'JSON',
+          description: 'JSON export',
+          extension: 'json',
+          mimeType: 'application/json',
+        },
       ]),
       getAvailableTemplates: jest.fn().mockReturnValue([
         { id: 'default', name: 'Default', description: 'Default template' },
@@ -258,7 +271,11 @@ describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibili
 
     // Start generation via Ctrl+Enter
     mockElements.characterDefinition.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+      })
     );
 
     // Abort while generation is in-flight using Escape
@@ -270,7 +287,9 @@ describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibili
     resolveGeneration(mockPatterns);
     await jest.runOnlyPendingTimersAsync();
 
-    expect(mockSpeechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalled();
+    expect(
+      mockSpeechPatternsGenerator.generateSpeechPatterns
+    ).toHaveBeenCalled();
 
     // Trigger export via Ctrl+E after results exist
     mockElements.characterDefinition.dispatchEvent(
@@ -300,15 +319,27 @@ describe('SpeechPatternsGeneratorController - keyboard shortcuts and accessibili
     mockSpeechPatternsGenerator.generateSpeechPatterns.mockResolvedValue({
       ...createMockSpeechPatterns(),
       speechPatterns: [
-        { pattern: 'First pattern', example: 'example one', circumstances: 'c1' },
-        { pattern: 'Second pattern', example: 'example two', circumstances: 'c2' },
+        {
+          pattern: 'First pattern',
+          example: 'example one',
+          circumstances: 'c1',
+        },
+        {
+          pattern: 'Second pattern',
+          example: 'example two',
+          circumstances: 'c2',
+        },
       ],
     });
 
     await provideValidCharacterInput();
 
     mockElements.characterDefinition.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true })
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        ctrlKey: true,
+        bubbles: true,
+      })
     );
     await jest.runAllTimersAsync();
 

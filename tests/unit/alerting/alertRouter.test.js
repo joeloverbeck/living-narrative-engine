@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import {
@@ -29,13 +36,17 @@ describe('AlertRouter', () => {
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     scheduledCallbacks = [];
-    setTimeoutSpy = jest.spyOn(global, 'setTimeout').mockImplementation((cb) => {
-      scheduledCallbacks.push(cb);
-      return Symbol('timer');
-    });
-    clearTimeoutSpy = jest.spyOn(global, 'clearTimeout').mockImplementation(() => {
-      scheduledCallbacks = [];
-    });
+    setTimeoutSpy = jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation((cb) => {
+        scheduledCallbacks.push(cb);
+        return Symbol('timer');
+      });
+    clearTimeoutSpy = jest
+      .spyOn(global, 'clearTimeout')
+      .mockImplementation(() => {
+        scheduledCallbacks = [];
+      });
   });
 
   afterEach(() => {
@@ -156,10 +167,7 @@ describe('AlertRouter', () => {
       triggerEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'ignored' })
     ).not.toThrow();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'AlertRouter error:',
-      failure
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith('AlertRouter error:', failure);
   });
 
   it('logs outer flush errors when the queue cannot be iterated', () => {
@@ -217,9 +225,7 @@ describe('AlertRouter', () => {
   it('flushes timer entries with unrecognized event names without logging', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
 
-    router.queue = [
-      { name: 'custom:event', payload: { message: 'mystery' } },
-    ];
+    router.queue = [{ name: 'custom:event', payload: { message: 'mystery' } }];
 
     router.startFlushTimer();
 

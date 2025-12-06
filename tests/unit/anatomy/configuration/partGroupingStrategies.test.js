@@ -451,9 +451,9 @@ describe('PartGroupingStrategies', () => {
     });
 
     it('should throw an error when no strategy can handle the configuration', () => {
-      expect(() =>
-        factory.getStrategy('arm', [], [], mockConfig)
-      ).toThrow('No strategy found for part type: arm');
+      expect(() => factory.getStrategy('arm', [], [], mockConfig)).toThrow(
+        'No strategy found for part type: arm'
+      );
     });
   });
 });

@@ -49,7 +49,9 @@ class FlakyComponentRegistry extends InMemoryDataRegistry {
       const count = this.invocationCounts.get(id) ?? 0;
       this.invocationCounts.set(id, count + 1);
       if (count >= 1) {
-        throw new Error(`component registry subsequent access failed for ${id}`);
+        throw new Error(
+          `component registry subsequent access failed for ${id}`
+        );
       }
     }
     return super.get(type, id);
@@ -142,7 +144,10 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
    * @param root0.blueprintId
    * @param root0.rootId
    */
-  function seedBlueprintWithRoot({ blueprintId = 'test:blueprint', rootId = 'test:root' } = {}) {
+  function seedBlueprintWithRoot({
+    blueprintId = 'test:blueprint',
+    rootId = 'test:root',
+  } = {}) {
     dataRegistry.store('anatomyBlueprints', blueprintId, {
       id: blueprintId,
       schemaVersion: '1.0',
@@ -208,7 +213,9 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     );
     expect(
       json.errors.some(
-        (entry) => entry.check === 'component_existence' && entry.type === 'VALIDATION_ERROR'
+        (entry) =>
+          entry.check === 'component_existence' &&
+          entry.type === 'VALIDATION_ERROR'
       )
     ).toBe(true);
   });
@@ -238,7 +245,9 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
       (entry) => entry.type === 'COMPONENT_NOT_FOUND'
     );
     expect(missingComponentErrors).toHaveLength(2);
-    expect(json.errors.some((entry) => entry.type === 'PART_UNAVAILABLE')).toBe(false);
+    expect(json.errors.some((entry) => entry.type === 'PART_UNAVAILABLE')).toBe(
+      false
+    );
   });
 
   it('records property schema validation failures when schema validator throws', async () => {
@@ -288,7 +297,9 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     );
     expect(
       json.errors.some(
-        (entry) => entry.check === 'property_schemas' && entry.type === 'VALIDATION_ERROR'
+        (entry) =>
+          entry.check === 'property_schemas' &&
+          entry.type === 'VALIDATION_ERROR'
       )
     ).toBe(true);
   });
@@ -359,7 +370,11 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     expect(
       report
         .toJSON()
-        .passed.some((entry) => entry.check === 'body_descriptors' && entry.message.includes('No bodyDescriptors'))
+        .passed.some(
+          (entry) =>
+            entry.check === 'body_descriptors' &&
+            entry.message.includes('No bodyDescriptors')
+        )
     ).toBe(true);
   });
 
@@ -402,7 +417,11 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     expect(
       report
         .toJSON()
-        .errors.some((entry) => entry.type === 'INVALID_BODY_DESCRIPTOR_TYPE' && entry.field === 'stature')
+        .errors.some(
+          (entry) =>
+            entry.type === 'INVALID_BODY_DESCRIPTOR_TYPE' &&
+            entry.field === 'stature'
+        )
     ).toBe(true);
   });
 
@@ -413,7 +432,10 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
       dataRegistry,
     });
     seedCommonComponents();
-    seedBlueprintWithRoot({ blueprintId: 'test:valid_blueprint', rootId: 'test:root' });
+    seedBlueprintWithRoot({
+      blueprintId: 'test:valid_blueprint',
+      rootId: 'test:root',
+    });
     const validator = createValidator();
 
     const recipe = {
@@ -437,7 +459,11 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
       expect.any(Error)
     );
     expect(
-      json.errors.some((entry) => entry.check === 'body_descriptors' && entry.type === 'VALIDATION_ERROR')
+      json.errors.some(
+        (entry) =>
+          entry.check === 'body_descriptors' &&
+          entry.type === 'VALIDATION_ERROR'
+      )
     ).toBe(true);
   });
 
@@ -468,7 +494,11 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
       expect.any(Error)
     );
     expect(
-      json.errors.some((entry) => entry.check === 'blueprint_exists' && entry.type === 'VALIDATION_ERROR')
+      json.errors.some(
+        (entry) =>
+          entry.check === 'blueprint_exists' &&
+          entry.type === 'VALIDATION_ERROR'
+      )
     ).toBe(true);
   });
 
@@ -509,8 +539,12 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     });
 
     const json = report.toJSON();
-    expect(json.errors.some((entry) => entry.type === 'PART_UNAVAILABLE')).toBe(true);
-    expect(json.errors.every((entry) => entry.type !== 'COMPONENT_NOT_FOUND')).toBe(true);
+    expect(json.errors.some((entry) => entry.type === 'PART_UNAVAILABLE')).toBe(
+      true
+    );
+    expect(
+      json.errors.every((entry) => entry.type !== 'COMPONENT_NOT_FOUND')
+    ).toBe(true);
   });
 
   it('reports INVALID_PROPERTY_OBJECT instead of treating numeric keys as components', async () => {
@@ -537,16 +571,23 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
     });
 
     const json = report.toJSON();
-    expect(json.errors.some((entry) => entry.type === 'INVALID_PROPERTY_OBJECT')).toBe(true);
+    expect(
+      json.errors.some((entry) => entry.type === 'INVALID_PROPERTY_OBJECT')
+    ).toBe(true);
     expect(
       json.errors.some(
-        (entry) => entry.type === 'COMPONENT_NOT_FOUND' && entry.context?.componentId === '0'
+        (entry) =>
+          entry.type === 'COMPONENT_NOT_FOUND' &&
+          entry.context?.componentId === '0'
       )
     ).toBe(false);
   });
 
   it('skips generated slot validation when the blueprint becomes unavailable mid-run', async () => {
-    seedBlueprintWithRoot({ blueprintId: 'test:flaky', rootId: 'test:flaky_root' });
+    seedBlueprintWithRoot({
+      blueprintId: 'test:flaky',
+      rootId: 'test:flaky_root',
+    });
     anatomyBlueprintRepository = new FlakyBlueprintRepository({
       logger,
       dataRegistry,
@@ -572,11 +613,18 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
       skipRecipeUsageCheck: true,
     });
 
-    expect(report.toJSON().errors.some((entry) => entry.type === 'BLUEPRINT_NOT_FOUND')).toBe(false);
+    expect(
+      report
+        .toJSON()
+        .errors.some((entry) => entry.type === 'BLUEPRINT_NOT_FOUND')
+    ).toBe(false);
   });
 
   it('merges blueprint slot property requirements with pattern constraints', async () => {
-    seedBlueprintWithRoot({ blueprintId: 'test:generated', rootId: 'test:generated_root' });
+    seedBlueprintWithRoot({
+      blueprintId: 'test:generated',
+      rootId: 'test:generated_root',
+    });
     dataRegistry.store('anatomyBlueprints', 'test:generated', {
       id: 'test:generated',
       schemaVersion: '1.0',
@@ -627,7 +675,9 @@ describe('RecipeValidationRunner edge-case integration coverage', () => {
 
     const json = report.toJSON();
     expect(
-      json.errors.some((entry) => entry.type === 'GENERATED_SLOT_PART_UNAVAILABLE')
+      json.errors.some(
+        (entry) => entry.type === 'GENERATED_SLOT_PART_UNAVAILABLE'
+      )
     ).toBe(true);
   });
 

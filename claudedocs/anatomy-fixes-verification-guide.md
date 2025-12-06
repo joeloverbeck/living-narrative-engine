@@ -5,21 +5,26 @@ This guide explains how to manually verify the anatomy generation fixes in the a
 ## Fixes Completed
 
 ### ✅ Issue #2: Bilateral Limb Generation (FIXED)
+
 **Problem**: Left/right paired body parts (hands and feet) were not being generated with proper bilateral symmetry.
 
 **Fix Applied**:
+
 - Updated socket name templates in `tortoise_arm.entity.json` and `tortoise_leg.entity.json`
 - Changed `nameTpl` from `"hand"` and `"foot"` to `"{{orientation}} hand"` and `"{{orientation}} foot"`
 - Updated test bed hardcoded entities to match
 
 **Expected Result**: When generating anatomy for a tortoise person, you should now see:
+
 - ✅ "left hand" and "right hand" (previously only one "hand")
 - ✅ "left foot" and "right foot" (previously only one "foot")
 
 ### ✅ Issue #3: Clothing Service Registration (FIXED)
+
 **Problem**: `ClothingInstantiationService` was not registered in the DI container, preventing clothing from recipes from being equipped.
 
 **Fix Applied**:
+
 - Added `ClothingInstantiationService` and `ClothingManagementService` registrations to the test bed container
 
 **Expected Result**: The clothing instantiation service is now available during anatomy generation.
@@ -94,6 +99,7 @@ If the anatomy visualizer supports viewing clothing/equipment:
 ## Test Results Summary
 
 ### Automated Test Results
+
 - ✅ All 227 anatomy integration test suites PASS
 - ✅ 1830 tests passing (3 skipped)
 - ✅ Bilateral limb generation tests: ALL PASS
@@ -102,10 +108,12 @@ If the anatomy visualizer supports viewing clothing/equipment:
 ### Files Modified
 
 **Production Code**:
+
 1. `data/mods/anatomy/entities/definitions/tortoise_arm.entity.json` (line 14)
 2. `data/mods/anatomy/entities/definitions/tortoise_leg.entity.json` (line 14)
 
 **Test Code**:
+
 1. `tests/common/anatomy/anatomyIntegrationTestBed.js` (lines 2068, 2119, 439-446)
 2. `tests/integration/anatomy/bilateralLimbGeneration.integration.test.js` (method name fixes)
 3. `tests/integration/anatomy/recipeClothingAssignment.integration.test.js` (new test file)
@@ -131,6 +139,7 @@ If the anatomy visualizer supports viewing clothing/equipment:
 ## Next Steps
 
 The following tasks are complete:
+
 - ✅ Create test for bilateral limb generation
 - ✅ Fix bilateral limb generation logic
 - ✅ Create test for clothing assignment
@@ -143,6 +152,7 @@ Issue #1 (entity queue warnings) was not addressed as the specific issue details
 ## Contact
 
 If you encounter any issues during verification, please:
+
 1. Check the browser console for error messages
 2. Run the automated test suite: `npm run test:integration -- tests/integration/anatomy/`
 3. Review this guide and ensure all steps were followed correctly

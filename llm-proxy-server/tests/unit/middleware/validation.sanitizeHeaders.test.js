@@ -1,8 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { validationResult } from 'express-validator';
 import { validateLlmRequest } from '../../../src/middleware/validation.js';
 
@@ -39,7 +35,7 @@ describe('validateLlmRequest header sanitization', () => {
         targetPayload: { prompt: 'Hello' },
         targetHeaders: {
           'X-Good_Header ': 'safe-value',
-          '__proto__': 'should-be-removed',
+          __proto__: 'should-be-removed',
           'X-Bad\nName': 'bad-value',
           'X-Looooong-Header!!!!': 'a'.repeat(1_200),
           'X-Value-With-Newline': 'line1\nline2',

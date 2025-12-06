@@ -29,13 +29,10 @@ export async function safeDispatch(bus, id, payload, logger) {
         logger && typeof logger.warn === 'function'
           ? logger.warn.bind(logger)
           : logger && typeof logger.error === 'function'
-          ? logger.error.bind(logger)
-          : console.warn.bind(console);
+            ? logger.error.bind(logger)
+            : console.warn.bind(console);
 
-      warn(
-        `Dispatch ${id} was rejected by the dispatcher.`,
-        { payload }
-      );
+      warn(`Dispatch ${id} was rejected by the dispatcher.`, { payload });
       return;
     }
 
@@ -44,8 +41,8 @@ export async function safeDispatch(bus, id, payload, logger) {
         logger && typeof logger.warn === 'function'
           ? logger.warn.bind(logger)
           : logger && typeof logger.error === 'function'
-          ? logger.error.bind(logger)
-          : console.warn.bind(console);
+            ? logger.error.bind(logger)
+            : console.warn.bind(console);
 
       warn(`Dispatch ${id} returned unexpected result: ${result}.`, {
         payload,

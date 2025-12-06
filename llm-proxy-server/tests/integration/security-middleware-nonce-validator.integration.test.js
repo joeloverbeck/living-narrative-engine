@@ -92,7 +92,10 @@ describe('security middleware integration hardening', () => {
         localsNonce: res.locals.cspNonce,
       });
     };
-    const app = buildApp([createCSPNonceMiddleware({ nonceLength: 24 })], handler);
+    const app = buildApp(
+      [createCSPNonceMiddleware({ nonceLength: 24 })],
+      handler
+    );
 
     const response = await request(app).get('/test');
 

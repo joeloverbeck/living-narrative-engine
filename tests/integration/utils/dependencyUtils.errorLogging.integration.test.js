@@ -92,7 +92,9 @@ describe('dependencyUtils error logging integration coverage', () => {
     const deps = buildInitializationServiceDeps(logger);
     deps.events.validatedEventDispatcher = {}; // Missing dispatch method
 
-    expect(() => new InitializationService(deps)).toThrow(SystemInitializationError);
+    expect(() => new InitializationService(deps)).toThrow(
+      SystemInitializationError
+    );
 
     expect(logger.errors).not.toHaveLength(0);
     const [firstError] = logger.errors;
@@ -113,7 +115,9 @@ describe('dependencyUtils error logging integration coverage', () => {
     expect(logger.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: expect.stringContaining('Missing required dependency: IValidatedEventDispatcher.'),
+          message: expect.stringContaining(
+            'Missing required dependency: IValidatedEventDispatcher.'
+          ),
         }),
       ])
     );

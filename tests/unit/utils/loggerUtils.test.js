@@ -163,12 +163,23 @@ describe('loggerUtils', () => {
     fallback.error('error message');
     fallback.debug('debug message', 'details');
 
-    expect(consoleSpies.info).toHaveBeenCalledWith('Service: ', 'info message', {
-      foo: 1,
-    });
+    expect(consoleSpies.info).toHaveBeenCalledWith(
+      'Service: ',
+      'info message',
+      {
+        foo: 1,
+      }
+    );
     expect(consoleSpies.warn).toHaveBeenCalledWith('Service: ', 'warn message');
-    expect(consoleSpies.error).toHaveBeenCalledWith('Service: ', 'error message');
-    expect(consoleSpies.debug).toHaveBeenCalledWith('Service: ', 'debug message', 'details');
+    expect(consoleSpies.error).toHaveBeenCalledWith(
+      'Service: ',
+      'error message'
+    );
+    expect(consoleSpies.debug).toHaveBeenCalledWith(
+      'Service: ',
+      'debug message',
+      'details'
+    );
   });
 
   it('ensureValidLogger fallback omits prefix when empty string provided', () => {
@@ -184,7 +195,10 @@ describe('loggerUtils', () => {
 
     fallback.info('defaulted');
 
-    expect(consoleSpies.info).toHaveBeenCalledWith('FallbackLogger: ', 'defaulted');
+    expect(consoleSpies.info).toHaveBeenCalledWith(
+      'FallbackLogger: ',
+      'defaulted'
+    );
   });
 
   it('logStart, logEnd, and logError decorate messages with symbols', () => {
@@ -200,7 +214,10 @@ describe('loggerUtils', () => {
 
     expect(logger.debug).toHaveBeenNthCalledWith(1, '▶️  boot sequence');
     expect(logger.debug).toHaveBeenNthCalledWith(2, '✅ boot sequence');
-    expect(logger.error).toHaveBeenCalledWith('❌ boot sequence: network offline', err);
+    expect(logger.error).toHaveBeenCalledWith(
+      '❌ boot sequence: network offline',
+      err
+    );
   });
 
   it('getPrefixedLogger omits prefix when provided value is falsy', () => {

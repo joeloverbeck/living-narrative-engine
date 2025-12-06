@@ -592,7 +592,9 @@ describe('MultiTargetActionFormatter - Modifier Tag Display', () => {
       );
 
       expect(result.ok).toBe(true);
-      expect(result.value[0].command).toBe('attack Enemy (65% chance) [valid tag]');
+      expect(result.value[0].command).toBe(
+        'attack Enemy (65% chance) [valid tag]'
+      );
     });
   });
 

@@ -277,7 +277,9 @@ describe('TraitsRewriterResponseProcessor', () => {
           'core:likes': 'Detailed likes description',
         },
       };
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(responseWithEmptyTrait);
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(
+        responseWithEmptyTrait
+      );
 
       const result = await processor.processResponse(
         JSON.stringify(responseWithEmptyTrait),
@@ -353,7 +355,9 @@ describe('TraitsRewriterResponseProcessor', () => {
           'core:goals': ['Win every tournament'],
         },
       };
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(responseWithArrayTrait);
+      mockLlmJsonService.parseAndRepair.mockResolvedValue(
+        responseWithArrayTrait
+      );
 
       const result = await processor.processResponse(
         JSON.stringify(responseWithArrayTrait),

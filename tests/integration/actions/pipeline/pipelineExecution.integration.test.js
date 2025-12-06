@@ -106,9 +106,9 @@ describe('Pipeline integration', () => {
       'EnrichmentStage',
       'FinalizerStage',
     ]);
-    expect(hierarchy.children.every((child) => child.status === 'success')).toBe(
-      true
-    );
+    expect(
+      hierarchy.children.every((child) => child.status === 'success')
+    ).toBe(true);
   });
 
   test('halts when a stage marks continueProcessing false', async () => {
@@ -162,7 +162,10 @@ describe('Pipeline integration', () => {
       PipelineResult.success({ data: { starter: true } })
     );
 
-    const failingContext = { error: 'validation failed', stageName: 'Validator' };
+    const failingContext = {
+      error: 'validation failed',
+      stageName: 'Validator',
+    };
     const validator = new RecordingStage('Validator', () =>
       PipelineResult.failure([failingContext], { validator: true })
     );
@@ -218,9 +221,9 @@ describe('Pipeline integration', () => {
       phase: 'PIPELINE_EXECUTION',
     });
 
-    const crashSpan = trace.getHierarchicalView().children.find(
-      (child) => child.operation === 'CrashStage'
-    );
+    const crashSpan = trace
+      .getHierarchicalView()
+      .children.find((child) => child.operation === 'CrashStage');
     expect(crashSpan.status).toBe('error');
     expect(crashSpan.error).toBe('boom');
   });
@@ -303,8 +306,12 @@ describe('Pipeline integration', () => {
     expect(result.data.chainExtra).toBe('dsl');
     expect(result.data.shouldPersist).toBe(true);
 
-    expect(trace.logs.some((entry) =>
-      entry.type === 'info' && entry.message.includes('Pipeline execution completed')
-    )).toBe(true);
+    expect(
+      trace.logs.some(
+        (entry) =>
+          entry.type === 'info' &&
+          entry.message.includes('Pipeline execution completed')
+      )
+    ).toBe(true);
   });
 });

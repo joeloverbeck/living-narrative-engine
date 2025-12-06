@@ -8,9 +8,7 @@ import { ClichesGeneratorController } from '../../../../src/clichesGenerator/con
 const createControllerLifecycleOrchestratorMock = () => {
   return {
     setControllerName: jest.fn(),
-    createControllerMethodHook: jest
-      .fn()
-      .mockImplementation(() => jest.fn()),
+    createControllerMethodHook: jest.fn().mockImplementation(() => jest.fn()),
     registerHook: jest.fn(),
   };
 };
@@ -43,7 +41,8 @@ const createBaseDependencies = (overrides = {}) => {
     schemaValidator: {
       validate: jest.fn().mockReturnValue({ valid: true }),
     },
-    controllerLifecycleOrchestrator: createControllerLifecycleOrchestratorMock(),
+    controllerLifecycleOrchestrator:
+      createControllerLifecycleOrchestratorMock(),
     domElementManager: {
       configure: jest.fn(),
     },
@@ -85,7 +84,7 @@ describe('ClichesGeneratorController error handler factory fallback', () => {
     });
 
     // Act: instantiate the controller so the constructor exercises the fallback.
-     
+
     new ClichesGeneratorController(dependencies);
 
     expect(dependencies.logger.debug).toHaveBeenCalledWith(

@@ -131,7 +131,10 @@ describe('BrowserStorageProvider listFiles and helpers', () => {
       throw err;
     });
 
-    const results = await provider.listFiles('saves\\manual_saves', '\\.(sav)$');
+    const results = await provider.listFiles(
+      'saves\\manual_saves',
+      '\\.(sav)$'
+    );
     expect(results).toEqual(['slot1.sav']);
     expect(rootHandle.getDirectoryHandle).toHaveBeenCalledWith('saves', {
       create: false,

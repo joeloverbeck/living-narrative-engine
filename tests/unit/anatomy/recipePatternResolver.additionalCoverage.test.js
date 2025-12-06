@@ -155,9 +155,7 @@ describe('RecipePatternResolver additional coverage', () => {
 
     expect(thrown).toBeDefined();
     expect(thrown.name).toBe('ValidationError');
-    expect(thrown.message).toContain(
-      "Invalid slot group reference format: ''"
-    );
+    expect(thrown.message).toContain("Invalid slot group reference format: ''");
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn).toHaveBeenCalledWith(
       "Pattern 1: Invalid slot group reference format: ''"
@@ -223,11 +221,12 @@ describe('RecipePatternResolver additional coverage', () => {
     const result = resolver.resolveRecipePatterns(recipe, blueprint);
 
     expect(result.slots.shoulder_joint.partType).toBe('existing_socket');
-    expect(Object.prototype.hasOwnProperty.call(result.slots, 'forearm_joint'))
-      .toBe(false);
+    expect(
+      Object.prototype.hasOwnProperty.call(result.slots, 'forearm_joint')
+    ).toBe(false);
     const overrideLogs = logger.info.mock.calls
-      .map(call => call[0])
-      .filter(message => message.includes('overrides Pattern'));
+      .map((call) => call[0])
+      .filter((message) => message.includes('overrides Pattern'));
     expect(overrideLogs).toHaveLength(0);
   });
 
@@ -334,7 +333,7 @@ describe('RecipePatternResolver additional coverage', () => {
     expect(result.slots.arm_right).toBeUndefined();
     expect(result._patternConflicts).toContainEqual(
       expect.objectContaining({
-        pattern: "matchesAll: {\"slotType\":\"socket\",\"orientation\":\"*_left\"}",
+        pattern: 'matchesAll: {"slotType":"socket","orientation":"*_left"}',
         slotKey: 'arm_left',
       })
     );

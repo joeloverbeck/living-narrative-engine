@@ -73,7 +73,9 @@ function createLogger() {
 describe('CacheService integration guard coverage', () => {
   describe('constructor requirements', () => {
     it('enforces logger dependency at construction time', () => {
-      expect(() => new CacheService()).toThrow('CacheService: logger is required.');
+      expect(() => new CacheService()).toThrow(
+        'CacheService: logger is required.'
+      );
     });
   });
 

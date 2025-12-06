@@ -46,5 +46,4 @@ describe('Recipe Clothing Assignment', () => {
       expect(anatomyData.body).toBeDefined();
     });
   });
-
 });

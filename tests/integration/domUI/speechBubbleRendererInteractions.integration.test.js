@@ -84,7 +84,8 @@ describe('SpeechBubbleRenderer integration coverage', () => {
 
   beforeEach(() => {
     logger = createLoggerMock();
-    document.body.innerHTML = '<div id="outputDiv"></div><div id="message-list"></div>';
+    document.body.innerHTML =
+      '<div id="outputDiv"></div><div id="message-list"></div>';
     copyToClipboard.mockResolvedValue(true);
     showCopyFeedback.mockImplementation(() => {});
     documentContext = new DocumentContext(document);
@@ -92,14 +93,20 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     eventBus = new EventBus({ logger });
 
     validatedEventDispatcher = {
-      dispatch: jest.fn((event) => eventBus.dispatch(event.type, event.payload)),
-      subscribe: jest.fn((eventName, handler) => eventBus.subscribe(eventName, handler)),
+      dispatch: jest.fn((event) =>
+        eventBus.dispatch(event.type, event.payload)
+      ),
+      subscribe: jest.fn((eventName, handler) =>
+        eventBus.subscribe(eventName, handler)
+      ),
     };
 
     safeEventDispatcher = { dispatch: jest.fn() };
     entityStore = new Map();
     entityManager = {
-      getEntityInstance: jest.fn((entityId) => entityStore.get(entityId) ?? null),
+      getEntityInstance: jest.fn(
+        (entityId) => entityStore.get(entityId) ?? null
+      ),
     };
 
     locationDisplayService = {
@@ -164,7 +171,9 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     const metaContainer = entry?.querySelector('.speech-meta');
     expect(metaContainer).not.toBeNull();
 
-    const buttons = Array.from(metaContainer?.querySelectorAll('.meta-btn') ?? []);
+    const buttons = Array.from(
+      metaContainer?.querySelectorAll('.meta-btn') ?? []
+    );
     expect(buttons).toHaveLength(1);
     expect(buttons[0].classList.contains('copy-all')).toBe(true);
 
@@ -272,7 +281,8 @@ describe('SpeechBubbleRenderer integration coverage', () => {
 
     speechBubbleRenderer.renderSpeech({
       entityId: 'npc-without-portrait',
-      speechContent: 'Look at *carefully studies* <strong>the artifact</strong>.',
+      speechContent:
+        'Look at *carefully studies* <strong>the artifact</strong>.',
       allowHtml: true,
       thoughts: 'I hope they do not notice me writing this.',
       notes: [
@@ -293,12 +303,16 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     expect(quotedSpeech?.textContent?.endsWith('"')).toBe(true);
     const actionSpan = firstEntry.querySelector('.speech-action-text');
     expect(actionSpan?.textContent).toBe('*carefully studies*');
-    const strongElement = firstEntry.querySelector('.speech-quoted-text strong');
+    const strongElement = firstEntry.querySelector(
+      '.speech-quoted-text strong'
+    );
     expect(strongElement?.textContent).toBe('the artifact');
 
     const metaContainer = firstEntry.querySelector('.speech-meta');
     expect(metaContainer).not.toBeNull();
-    expect(firstEntry.querySelector('.speech-bubble')?.classList.contains('has-meta')).toBe(true);
+    expect(
+      firstEntry.querySelector('.speech-bubble')?.classList.contains('has-meta')
+    ).toBe(true);
 
     expect(scrollSpy).toHaveBeenCalled();
 
@@ -333,7 +347,9 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     });
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("Speaker entity with ID 'unknown-speaker' not found for player check.")
+      expect.stringContaining(
+        "Speaker entity with ID 'unknown-speaker' not found for player check."
+      )
     );
 
     speechBubbleRenderer.dispose();
@@ -371,7 +387,9 @@ describe('SpeechBubbleRenderer integration coverage', () => {
       speechContent: 'Observe this manuscript.',
     });
 
-    const portraitImg = document.querySelector('.speech-entry.has-portrait img');
+    const portraitImg = document.querySelector(
+      '.speech-entry.has-portrait img'
+    );
     expect(portraitImg).not.toBeNull();
     expect(portraitImg?.getAttribute('aria-label')).toBe(
       'View full portrait of Scholar'
@@ -382,7 +400,9 @@ describe('SpeechBubbleRenderer integration coverage', () => {
     expect(scrollSpy).toHaveBeenCalledTimes(1);
 
     const clickSpy = jest.spyOn(portraitImg, 'click');
-    portraitImg?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    portraitImg?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    );
     expect(clickSpy).toHaveBeenCalled();
 
     const clickEvent = new Event('click', { bubbles: true });
@@ -441,7 +461,7 @@ describe('SpeechBubbleRenderer integration coverage', () => {
         {
           text: 'Remember to check the hidden compartment.',
           subject: 'Reminder',
-          context: 'Captain\'s Quarters',
+          context: "Captain's Quarters",
         },
       ],
     });
@@ -458,7 +478,11 @@ describe('SpeechBubbleRenderer integration coverage', () => {
 
     const meta = thoughtEntry?.querySelector('.speech-meta');
     expect(meta).not.toBeNull();
-    expect(thoughtEntry?.querySelector('.thought-bubble')?.classList.contains('has-meta')).toBe(true);
+    expect(
+      thoughtEntry
+        ?.querySelector('.thought-bubble')
+        ?.classList.contains('has-meta')
+    ).toBe(true);
 
     expect(scrollSpy).not.toHaveBeenCalled();
 

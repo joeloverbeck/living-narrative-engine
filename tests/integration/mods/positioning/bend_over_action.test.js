@@ -68,7 +68,9 @@ function setupSittingScenario() {
   const chair = new ModEntityBuilder('test:chair')
     .withName('Kitchen Chair')
     .atLocation('kitchen')
-    .withComponent('positioning:allows_sitting', { spots: [{ occupied: false }] })
+    .withComponent('positioning:allows_sitting', {
+      spots: [{ occupied: false }],
+    })
     .build();
 
   // Actor is sitting on the chair
@@ -158,10 +160,7 @@ describe('positioning:bend_over action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'positioning',
-      'bend_over'
-    );
+    testFixture = await ModTestFixture.forAction('positioning', 'bend_over');
   });
 
   afterEach(() => {
@@ -171,14 +170,18 @@ describe('positioning:bend_over action integration', () => {
   describe('basic bend over action execution', () => {
     it('should add bending_over component to actor when action is performed', async () => {
       // Arrange
-      const { room, actor, surface } = setupBendingScenario('Alice', 'Kitchen Counter');
+      const { room, actor, surface } = setupBendingScenario(
+        'Alice',
+        'Kitchen Counter'
+      );
       testFixture.reset([room, actor, surface]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:bending_over']).toBeDefined();
       expect(updatedActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:surface1',
@@ -194,13 +197,17 @@ describe('positioning:bend_over action integration', () => {
       await testFixture.executeAction('test:actor1', 'test:surface1');
 
       // Assert first bend
-      let updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      let updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:surface1',
       });
 
       // Remove bending state manually for test
-      await testFixture.entityManager.removeComponent('test:actor1', 'positioning:bending_over');
+      await testFixture.entityManager.removeComponent(
+        'test:actor1',
+        'positioning:bending_over'
+      );
 
       // Act - bend over second surface
       await testFixture.executeAction('test:actor1', 'test:surface2');
@@ -220,17 +227,21 @@ describe('positioning:bend_over action integration', () => {
       testFixture.reset([room, actor, surface]);
 
       // Verify initial state
-      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const initialActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(initialActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:existing_surface',
       });
 
       // Act - attempt to bend over different surface
-      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
+      await testFixture.executeAction('test:actor1', 'test:surface1', {
+        skipDiscovery: true,
+      });
 
       // Assert - action still executes since rule processes any bend_over event
       // The rule will add/overwrite the bending_over component
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:surface1',
       });
@@ -242,19 +253,23 @@ describe('positioning:bend_over action integration', () => {
       testFixture.reset([room, actor, surface, chair]);
 
       // Verify initial state
-      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const initialActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(initialActor.components['positioning:sitting_on']).toEqual({
         furniture_id: 'test:chair',
         spot_index: 0,
       });
 
       // Act - attempt to bend over surface while sitting
-      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
+      await testFixture.executeAction('test:actor1', 'test:surface1', {
+        skipDiscovery: true,
+      });
 
       // Assert - rule executes and adds bending_over component
       // Note: In real gameplay, action discovery would prevent this scenario
       // due to forbidden_components, but rule testing bypasses that layer
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:surface1',
       });
@@ -271,18 +286,22 @@ describe('positioning:bend_over action integration', () => {
       testFixture.reset([room, actor, surface, target]);
 
       // Verify initial state
-      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const initialActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(initialActor.components['positioning:kneeling_before']).toEqual({
         entityId: 'test:target1',
       });
 
       // Act - attempt to bend over surface while kneeling
-      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
+      await testFixture.executeAction('test:actor1', 'test:surface1', {
+        skipDiscovery: true,
+      });
 
       // Assert - rule executes and adds bending_over component
       // Note: In real gameplay, action discovery would prevent this scenario
       // due to forbidden_components, but rule testing bypasses that layer
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:surface1',
       });
@@ -298,19 +317,23 @@ describe('positioning:bend_over action integration', () => {
       testFixture.reset([room, actor, surface, chair, target]);
 
       // Verify initial state
-      const initialActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const initialActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(initialActor.components['positioning:straddling_waist']).toEqual({
         target_id: 'test:target1',
         facing_away: false,
       });
 
       // Act - attempt to bend over surface while straddling
-      await testFixture.executeAction('test:actor1', 'test:surface1', { skipDiscovery: true });
+      await testFixture.executeAction('test:actor1', 'test:surface1', {
+        skipDiscovery: true,
+      });
 
       // Assert - rule executes and adds bending_over component
       // Note: In real gameplay, action discovery would prevent this scenario
       // due to forbidden_components, but rule testing bypasses that layer
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor.components['positioning:bending_over']).toEqual({
         surface_id: 'test:surface1',
       });
@@ -389,7 +412,9 @@ describe('positioning:bend_over action integration', () => {
     it('should match the expected bending_over component schema', () => {
       expect(bendingOverComponent.id).toBe('positioning:bending_over');
       expect(bendingOverComponent.dataSchema.type).toBe('object');
-      expect(bendingOverComponent.dataSchema.properties).toHaveProperty('surface_id');
+      expect(bendingOverComponent.dataSchema.properties).toHaveProperty(
+        'surface_id'
+      );
       expect(bendingOverComponent.dataSchema.properties.surface_id.$ref).toBe(
         'schema://living-narrative-engine/common.schema.json#/definitions/namespacedId'
       );

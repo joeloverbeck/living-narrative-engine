@@ -25,7 +25,10 @@ describe('PerformanceMonitor service', () => {
   });
 
   it('records marks and returns measurement metadata', () => {
-    performanceRef.now.mockReturnValueOnce(10).mockReturnValueOnce(50).mockReturnValue(75);
+    performanceRef.now
+      .mockReturnValueOnce(10)
+      .mockReturnValueOnce(50)
+      .mockReturnValue(75);
     const monitor = new PerformanceMonitor({
       logger,
       eventBus,
@@ -163,7 +166,9 @@ describe('PerformanceMonitor service', () => {
 
     const timestamp = monitor.mark('');
     expect(timestamp).toBeNull();
-    expect(logger.warn).toHaveBeenCalledWith('PerformanceMonitor: mark name is required');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'PerformanceMonitor: mark name is required'
+    );
   });
 
   it('logs mark failures and returns null when native mark throws', () => {
@@ -173,7 +178,11 @@ describe('PerformanceMonitor service', () => {
       throw nativeError;
     });
 
-    const monitor = new PerformanceMonitor({ logger, eventBus, performanceRef });
+    const monitor = new PerformanceMonitor({
+      logger,
+      eventBus,
+      performanceRef,
+    });
     const result = monitor.mark('unstable-mark');
 
     expect(result).toBeNull();
@@ -222,7 +231,11 @@ describe('PerformanceMonitor service', () => {
       throw clearMeasuresError;
     });
 
-    const monitor = new PerformanceMonitor({ logger, eventBus, performanceRef });
+    const monitor = new PerformanceMonitor({
+      logger,
+      eventBus,
+      performanceRef,
+    });
     monitor.mark('test-start');
     monitor.mark('test-end');
     monitor.measure('test-measure', 'test-start', 'test-end');
@@ -234,13 +247,19 @@ describe('PerformanceMonitor service', () => {
     );
     expect(logger.debug).toHaveBeenCalledWith(
       'PerformanceMonitor: clearMeasures failed',
-      expect.objectContaining({ measureKey: 'test-measure', error: clearMeasuresError })
+      expect.objectContaining({
+        measureKey: 'test-measure',
+        error: clearMeasuresError,
+      })
     );
 
     expect(() => monitor.clearData()).not.toThrow();
-    expect(logger.debug).toHaveBeenCalledWith('PerformanceMonitor: clear all failed', {
-      error: clearMarksError,
-    });
+    expect(logger.debug).toHaveBeenCalledWith(
+      'PerformanceMonitor: clear all failed',
+      {
+        error: clearMarksError,
+      }
+    );
   });
 
   it('manages stats listeners and guards against listener errors', () => {
@@ -309,15 +328,15 @@ describe('PerformanceMonitor service', () => {
 
     it('computes aggregated statistics correctly', () => {
       performanceRef.now
-        .mockReturnValueOnce(0)      // task1-start mark
-        .mockReturnValueOnce(100)    // task1-end mark
-        .mockReturnValueOnce(150)    // task1 measure timestamp
-        .mockReturnValueOnce(200)    // task2-start mark
-        .mockReturnValueOnce(250)    // task2-end mark
-        .mockReturnValueOnce(300)    // task2 measure timestamp
-        .mockReturnValueOnce(400)    // task3-start mark
-        .mockReturnValueOnce(550)    // task3-end mark
-        .mockReturnValueOnce(600);   // task3 measure timestamp
+        .mockReturnValueOnce(0) // task1-start mark
+        .mockReturnValueOnce(100) // task1-end mark
+        .mockReturnValueOnce(150) // task1 measure timestamp
+        .mockReturnValueOnce(200) // task2-start mark
+        .mockReturnValueOnce(250) // task2-end mark
+        .mockReturnValueOnce(300) // task2 measure timestamp
+        .mockReturnValueOnce(400) // task3-start mark
+        .mockReturnValueOnce(550) // task3-end mark
+        .mockReturnValueOnce(600); // task3 measure timestamp
 
       const monitor = new PerformanceMonitor({
         logger,
@@ -359,12 +378,12 @@ describe('PerformanceMonitor service', () => {
 
     it('emits aggregated summary to listeners', () => {
       performanceRef.now
-        .mockReturnValueOnce(0)      // task1-start mark
-        .mockReturnValueOnce(50)     // task1-end mark
-        .mockReturnValueOnce(100)    // task1 measure timestamp
-        .mockReturnValueOnce(150)    // task2-start mark
-        .mockReturnValueOnce(250)    // task2-end mark
-        .mockReturnValueOnce(300);   // task2 measure timestamp
+        .mockReturnValueOnce(0) // task1-start mark
+        .mockReturnValueOnce(50) // task1-end mark
+        .mockReturnValueOnce(100) // task1 measure timestamp
+        .mockReturnValueOnce(150) // task2-start mark
+        .mockReturnValueOnce(250) // task2-end mark
+        .mockReturnValueOnce(300); // task2 measure timestamp
 
       const monitor = new PerformanceMonitor({
         logger,

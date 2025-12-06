@@ -82,10 +82,14 @@ describe('ProcessingCommandState thought payload integration', () => {
       })
     );
 
-    const debugMessages = mockLogger.debug.mock.calls.map(([message]) => message);
+    const debugMessages = mockLogger.debug.mock.calls.map(
+      ([message]) => message
+    );
     expect(
-      debugMessages.some((msg) =>
-        typeof msg === 'string' && msg.includes(`Dispatching ${ENTITY_THOUGHT_ID}`)
+      debugMessages.some(
+        (msg) =>
+          typeof msg === 'string' &&
+          msg.includes(`Dispatching ${ENTITY_THOUGHT_ID}`)
       )
     ).toBe(true);
   });
@@ -109,7 +113,10 @@ describe('ProcessingCommandState thought payload integration', () => {
   it('does not dispatch a thought event when thought content is missing or blank', async () => {
     const actor = { id: 'actor-9' };
 
-    await state._dispatchSpeech(turnContext, actor, { thoughts: '   ', notes: 'Leftover note' });
+    await state._dispatchSpeech(turnContext, actor, {
+      thoughts: '   ',
+      notes: 'Leftover note',
+    });
     await state._dispatchSpeech(turnContext, actor, null);
 
     expect(dispatcher.dispatch).not.toHaveBeenCalled();

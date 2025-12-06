@@ -99,7 +99,12 @@ describe('StartupErrorHandler integration', () => {
 
   it('renders fatal error details with working DOM dependencies', () => {
     const uiElements = setupUi();
-    const handler = new StartupErrorHandler(logger, domAdapter, dispatcher, 'bootstrap');
+    const handler = new StartupErrorHandler(
+      logger,
+      domAdapter,
+      dispatcher,
+      'bootstrap'
+    );
 
     const errorDetails = {
       userMessage: 'Application failed to initialize.',
@@ -117,7 +122,9 @@ describe('StartupErrorHandler integration', () => {
     expect(uiElements.errorDiv?.style.display).toBe('block');
     expect(uiElements.titleElement?.textContent).toBe(errorDetails.pageTitle);
     expect(uiElements.inputElement?.disabled).toBe(true);
-    expect(uiElements.inputElement?.placeholder).toBe(errorDetails.inputPlaceholder);
+    expect(uiElements.inputElement?.placeholder).toBe(
+      errorDetails.inputPlaceholder
+    );
     expect(domAdapter.alertMessages).toHaveLength(0);
 
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -126,7 +133,9 @@ describe('StartupErrorHandler integration', () => {
     expect(payload.message).toBe(
       `[Bootstrapper Error - Phase: ${errorDetails.phase}] ${errorDetails.consoleMessage}`
     );
-    expect(payload.details).toEqual({ error: errorDetails.errorObject.message });
+    expect(payload.details).toEqual({
+      error: errorDetails.errorObject.message,
+    });
   });
 
   it('falls back to a temporary error element when the primary target fails', () => {
@@ -220,7 +229,9 @@ describe('StartupErrorHandler integration', () => {
       'Catastrophic startup failure.',
     ]);
 
-    const dispatchedMessages = dispatcher.dispatch.mock.calls.map(([, payload]) => payload.message);
+    const dispatchedMessages = dispatcher.dispatch.mock.calls.map(
+      ([, payload]) => payload.message
+    );
     expect(dispatchedMessages).toEqual([
       '[Bootstrapper Error - Phase: Bootstrap Pipeline] Initialization pipeline halted',
       'displayFatalStartupError: Failed to set textContent on errorDiv.',
@@ -251,11 +262,7 @@ describe('StartupErrorHandler integration', () => {
       }
     })();
 
-    const handler = new StartupErrorHandler(
-      logger,
-      failingDomAdapter,
-      null
-    );
+    const handler = new StartupErrorHandler(logger, failingDomAdapter, null);
 
     const result = handler.displayFatalStartupError(
       {
@@ -284,7 +291,9 @@ describe('StartupErrorHandler integration', () => {
     expect(logger.info).toHaveBeenCalledWith(
       '[errorUtils] displayFatalStartupError: Displayed error using alert() as a fallback.'
     );
-    expect(document.getElementById('page-title')?.textContent).toBe('Fatal Error!');
+    expect(document.getElementById('page-title')?.textContent).toBe(
+      'Fatal Error!'
+    );
   });
 
   it('sanitizes non-error values before dispatching failure telemetry', () => {
@@ -334,7 +343,9 @@ describe('StartupErrorHandler integration', () => {
       'Primitive failures everywhere.',
     ]);
 
-    const dispatched = dispatcher.dispatch.mock.calls.map(([, payload]) => payload);
+    const dispatched = dispatcher.dispatch.mock.calls.map(
+      ([, payload]) => payload
+    );
     expect(dispatched[0].message).toBe(
       '[Bootstrapper Error - Phase: Telemetry] Multiple DOM operations rejected.'
     );

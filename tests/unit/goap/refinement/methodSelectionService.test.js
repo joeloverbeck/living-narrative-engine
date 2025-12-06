@@ -61,10 +61,12 @@ describe('MethodSelectionService', () => {
   const createMethod = (overrides = {}) => ({
     id: overrides.id || 'core:test_method',
     taskId: overrides.taskId || TEST_TASK_ID,
-    applicability:
-      Object.prototype.hasOwnProperty.call(overrides, 'applicability')
-        ? overrides.applicability
-        : { condition: { var: 'canExecute' } },
+    applicability: Object.prototype.hasOwnProperty.call(
+      overrides,
+      'applicability'
+    )
+      ? overrides.applicability
+      : { condition: { var: 'canExecute' } },
     steps: overrides.steps || [{ type: 'test-step' }],
   });
 
@@ -245,7 +247,11 @@ describe('MethodSelectionService', () => {
       };
       mockGameDataRepository.get.mockReturnValue(mockTasks);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBeNull();
       expect(result.diagnostics.methodsEvaluated).toBe(0);
@@ -260,7 +266,11 @@ describe('MethodSelectionService', () => {
       };
       mockGameDataRepository.get.mockReturnValue(mockTasks);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBeNull();
     });
@@ -310,7 +320,9 @@ describe('MethodSelectionService', () => {
           .mockReturnValueOnce(mockTasks)
           .mockReturnValueOnce({});
         service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
-      }).toThrow("Refinement method 'core:consume_nourishing_item.simple_consume' not found in registry");
+      }).toThrow(
+        "Refinement method 'core:consume_nourishing_item.simple_consume' not found in registry"
+      );
     });
 
     it('should throw MethodSelectionError when method registry is unavailable', () => {
@@ -382,11 +394,19 @@ describe('MethodSelectionService', () => {
       setupTaskWithMethods(primaryMethod, fallbackMethod);
 
       const refinementContext = { actorId: TEST_ACTOR_ID, task: TEST_TASK_ID };
-      mockContextAssemblyService.assembleRefinementContext.mockReturnValue(refinementContext);
-      mockContextAssemblyService.assembleConditionContext.mockImplementation((ctx) => ctx);
+      mockContextAssemblyService.assembleRefinementContext.mockReturnValue(
+        refinementContext
+      );
+      mockContextAssemblyService.assembleConditionContext.mockImplementation(
+        (ctx) => ctx
+      );
       mockJsonLogicService.evaluate.mockReturnValue(true);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBe(primaryMethod);
       expect(result.diagnostics.methodsEvaluated).toBe(1);
@@ -408,9 +428,14 @@ describe('MethodSelectionService', () => {
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS, {
-        enableDiagnostics: false,
-      });
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS,
+        {
+          enableDiagnostics: false,
+        }
+      );
 
       expect(result.selectedMethod).toBe(secondMethod);
       expect(result.diagnostics.evaluationResults).toEqual([]);
@@ -426,7 +451,11 @@ describe('MethodSelectionService', () => {
       mockContextAssemblyService.assembleConditionContext.mockReturnValue({});
       mockJsonLogicService.evaluate.mockReturnValue(false);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBeNull();
       expect(result.diagnostics.evaluationResults).toHaveLength(2);
@@ -442,10 +471,16 @@ describe('MethodSelectionService', () => {
       });
       setupTaskWithMethods(unconditionalMethod);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBe(unconditionalMethod);
-      expect(mockContextAssemblyService.assembleRefinementContext).not.toHaveBeenCalled();
+      expect(
+        mockContextAssemblyService.assembleRefinementContext
+      ).not.toHaveBeenCalled();
       expect(mockJsonLogicService.evaluate).not.toHaveBeenCalled();
     });
 
@@ -456,10 +491,16 @@ describe('MethodSelectionService', () => {
       });
       setupTaskWithMethods(method);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBe(method);
-      expect(mockContextAssemblyService.assembleRefinementContext).not.toHaveBeenCalled();
+      expect(
+        mockContextAssemblyService.assembleRefinementContext
+      ).not.toHaveBeenCalled();
       expect(mockJsonLogicService.evaluate).not.toHaveBeenCalled();
     });
 
@@ -473,7 +514,11 @@ describe('MethodSelectionService', () => {
         throw new Error('JSON failure');
       });
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBeNull();
       expect(result.diagnostics.evaluationResults[0]).toEqual(
@@ -484,7 +529,9 @@ describe('MethodSelectionService', () => {
         })
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(`Error evaluating applicability for method '${method.id}'`),
+        expect.stringContaining(
+          `Error evaluating applicability for method '${method.id}'`
+        ),
         expect.objectContaining({ methodId: method.id })
       );
     });
@@ -497,14 +544,20 @@ describe('MethodSelectionService', () => {
       mockContextAssemblyService.assembleConditionContext.mockReturnValue({});
       mockJsonLogicService.evaluate.mockReturnValue(false);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result.selectedMethod).toBeNull();
       expect(result.diagnostics.evaluationResults[0]).toEqual(
         expect.objectContaining({
           methodId: method.id,
           applicable: false,
-          reason: expect.stringContaining('Applicability condition evaluated to false'),
+          reason: expect.stringContaining(
+            'Applicability condition evaluated to false'
+          ),
         })
       );
     });
@@ -520,7 +573,11 @@ describe('MethodSelectionService', () => {
       };
       mockGameDataRepository.get.mockReturnValue(mockTasks);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS);
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS
+      );
 
       expect(result).toHaveProperty('diagnostics');
       expect(result.diagnostics).toHaveProperty('methodsEvaluated');
@@ -536,9 +593,14 @@ describe('MethodSelectionService', () => {
       };
       mockGameDataRepository.get.mockReturnValue(mockTasks);
 
-      const result = service.selectMethod(TEST_TASK_ID, TEST_ACTOR_ID, TEST_TASK_PARAMS, {
-        enableDiagnostics: true,
-      });
+      const result = service.selectMethod(
+        TEST_TASK_ID,
+        TEST_ACTOR_ID,
+        TEST_TASK_PARAMS,
+        {
+          enableDiagnostics: true,
+        }
+      );
 
       expect(result.diagnostics).toBeDefined();
     });
@@ -580,5 +642,4 @@ describe('MethodSelectionService', () => {
       );
     });
   });
-
 });

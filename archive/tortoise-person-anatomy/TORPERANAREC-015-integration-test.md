@@ -1,16 +1,20 @@
 # TORPERANAREC-015: Create Tortoise Person Integration Test
 
 ## Objective
+
 Create comprehensive integration test to verify complete anatomy generation and formatting.
 
 ## Dependencies
+
 - **REQUIRES**: TORPERANAREC-001 through TORPERANAREC-014 (all implementation complete)
 
 ## Files to Touch
+
 - **CREATE**: `tests/integration/anatomy/tortoisePerson.integration.test.js`
 - **MODIFY**: `tests/common/anatomy/anatomyIntegrationTestBed.js` (add tortoise entity definitions and recipe to loadAnatomyModData method)
 
 ## Out of Scope
+
 - Do NOT modify existing test files (other than test bed)
 - Do NOT create unit tests (only integration test)
 - Do NOT test individual entity files in isolation
@@ -30,6 +34,7 @@ Create integration test with:
 **Suite 1: "Complete Anatomy Generation"**
 
 Test 1: "should generate complete tortoise anatomy with all required parts"
+
 - Generate anatomy using `anatomy:tortoise_person` recipe and blueprint
 - Verify root entity exists and is torso
 - Verify 16 total body parts:
@@ -44,6 +49,7 @@ Test 1: "should generate complete tortoise anatomy with all required parts"
   - Tail: tail
 
 Test 2: "should have correct body descriptors"
+
 - Verify height: "short"
 - Verify build: "stocky"
 - Verify composition: "average"
@@ -52,6 +58,7 @@ Test 2: "should have correct body descriptors"
 - Verify smell: "earthy"
 
 Test 3: "should have shell parts with correct descriptors"
+
 - Verify carapace texture: "scaled"
 - Verify carapace shape: "domed"
 - Verify carapace color: "bronze"
@@ -60,6 +67,7 @@ Test 3: "should have shell parts with correct descriptors"
 - Verify plastron color: "cream"
 
 Test 4: "should have clawed hands and feet"
+
 - Verify left_hand projection: "clawed"
 - Verify left_hand digit_count: 3
 - Verify right_hand projection: "clawed"
@@ -70,6 +78,7 @@ Test 4: "should have clawed hands and feet"
 - Verify right_foot digit_count: 3
 
 Test 5: "should have beak properly attached to head"
+
 - Verify head exists
 - Verify beak exists
 - Verify beak texture: "ridged"
@@ -78,6 +87,7 @@ Test 5: "should have beak properly attached to head"
 **Suite 2: "Formatting Output"**
 
 Test 6: "should include shell, beak, and claw mentions in description"
+
 - Generate anatomy
 - Format description using testBed formatter
 - **UPDATED**: Current description system only generates body descriptors (height, skin color, build, etc.), not individual part descriptions. Test adjusted to verify description structure and body descriptors only.
@@ -87,6 +97,7 @@ Test 6: "should include shell, beak, and claw mentions in description"
 ## Acceptance Criteria
 
 ### Tests that must pass:
+
 1. All 6 tests pass successfully
 2. `npm run test:integration` - Integration test suite passes
 3. Test coverage includes:
@@ -96,6 +107,7 @@ Test 6: "should include shell, beak, and claw mentions in description"
    - Formatting output
 
 ### Invariants that must remain true:
+
 1. No existing tests are modified
 2. Test uses AnatomyIntegrationTestBed helper
 3. Test setup/cleanup follows project patterns
@@ -106,12 +118,14 @@ Test 6: "should include shell, beak, and claw mentions in description"
 8. All descriptor values match recipe specification
 
 ## Test Execution Commands
+
 ```bash
 npm run test:integration -- tortoisePerson.integration.test.js
 npm run test:integration  # Run all integration tests
 ```
 
 ## Definition of Done
+
 - [x] Test file created in correct location
 - [x] All 6 tests implemented
 - [x] Test uses proper setup/cleanup
@@ -126,6 +140,7 @@ npm run test:integration  # Run all integration tests
 **Status**: ✅ COMPLETED
 
 **Files Modified:**
+
 1. `tests/integration/anatomy/tortoisePerson.integration.test.js` (CREATED)
    - 6 integration tests verifying tortoise anatomy generation
    - Tests cover: complete anatomy, body descriptors, shell parts, clawed extremities, beak attachment, description formatting
@@ -147,12 +162,14 @@ npm run test:integration  # Run all integration tests
    - Changed line 61 from `return;` to `return { bodyDescription, partDescriptions };`
 
 **Changes vs Original Plan:**
+
 1. **Scope Expansion**: Had to modify test bed and filesystem blueprint (originally only planned to create test file)
 2. **Part Count Adjustment**: Expected 14 parts instead of 16 due to pattern matching limitation for nested slots with parent references
 3. **Test Simplification**: Description test adjusted to verify body descriptors only (current system doesn't generate individual part descriptions)
 4. **Code Bug Fixes**: Fixed incomplete blueprint file and missing return statement in description service
 
 **Test Results:**
+
 - All 6 tests passing
 - Test coverage: anatomy generation, body descriptors, part descriptors, formatting output
 - No existing tests broken

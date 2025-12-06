@@ -1,6 +1,6 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "items:red_lipstick_instance",
-    "definitionId": "items:red_lipstick",
-    "componentOverrides": {}
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "items:red_lipstick_instance",
+  "definitionId": "items:red_lipstick",
+  "componentOverrides": {}
 }

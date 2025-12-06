@@ -12,7 +12,7 @@ import { ClothingServiceError } from '../errors/clothingErrors.js';
 export const CircuitBreakerState = {
   CLOSED: 'CLOSED',
   OPEN: 'OPEN',
-  HALF_OPEN: 'HALF_OPEN'
+  HALF_OPEN: 'HALF_OPEN',
 };
 
 /**
@@ -38,9 +38,9 @@ export class CircuitBreaker {
    * @param {number} halfOpenSuccessThreshold - Successes needed to close from half-open
    */
   constructor(
-    serviceName, 
-    failureThreshold = 5, 
-    resetTimeout = 60000, 
+    serviceName,
+    failureThreshold = 5,
+    resetTimeout = 60000,
     logger,
     halfOpenSuccessThreshold = 2
   ) {
@@ -80,13 +80,15 @@ export class CircuitBreaker {
       return result;
     } catch (error) {
       this.#onFailure(error);
-      
+
       // If we have a fallback, use it
       if (fallback) {
-        this.#logger.info(`Circuit breaker using fallback for ${this.#serviceName}`);
+        this.#logger.info(
+          `Circuit breaker using fallback for ${this.#serviceName}`
+        );
         return fallback();
       }
-      
+
       // Otherwise, re-throw the error
       throw error;
     }
@@ -100,11 +102,13 @@ export class CircuitBreaker {
   #onSuccess() {
     if (this.#state === CircuitBreakerState.HALF_OPEN) {
       this.#successCount++;
-      
+
       if (this.#successCount >= this.#halfOpenSuccessThreshold) {
         this.#transitionToClosed();
       } else {
-        this.#logger.debug(`Circuit breaker half-open success ${this.#successCount}/${this.#halfOpenSuccessThreshold} for ${this.#serviceName}`);
+        this.#logger.debug(
+          `Circuit breaker half-open success ${this.#successCount}/${this.#halfOpenSuccessThreshold} for ${this.#serviceName}`
+        );
       }
     } else if (this.#state === CircuitBreakerState.CLOSED) {
       // Reset failure count on success in closed state
@@ -122,15 +126,20 @@ export class CircuitBreaker {
     this.#failureCount++;
     this.#lastFailureTime = Date.now();
 
-    this.#logger.warn(`Circuit breaker failure ${this.#failureCount}/${this.#failureThreshold} for ${this.#serviceName}`, {
-      error: error.message
-    });
+    this.#logger.warn(
+      `Circuit breaker failure ${this.#failureCount}/${this.#failureThreshold} for ${this.#serviceName}`,
+      {
+        error: error.message,
+      }
+    );
 
     if (this.#state === CircuitBreakerState.HALF_OPEN) {
       // Any failure in half-open state reopens the circuit
       this.#transitionToOpen();
-    } else if (this.#state === CircuitBreakerState.CLOSED && 
-               this.#failureCount >= this.#failureThreshold) {
+    } else if (
+      this.#state === CircuitBreakerState.CLOSED &&
+      this.#failureCount >= this.#failureThreshold
+    ) {
       this.#transitionToOpen();
     }
   }
@@ -144,20 +153,22 @@ export class CircuitBreaker {
    * @throws {ClothingServiceError} When no fallback provided
    */
   #handleOpenCircuit(fallback) {
-    this.#logger.warn(`Circuit breaker OPEN for ${this.#serviceName}, using fallback`);
-    
+    this.#logger.warn(
+      `Circuit breaker OPEN for ${this.#serviceName}, using fallback`
+    );
+
     if (fallback) {
       return fallback();
     }
-    
+
     throw new ClothingServiceError(
       `Service ${this.#serviceName} is unavailable (circuit breaker open)`,
       this.#serviceName,
       'circuit_breaker',
-      { 
-        state: this.#state, 
+      {
+        state: this.#state,
         failureCount: this.#failureCount,
-        lastFailureTime: this.#lastFailureTime
+        lastFailureTime: this.#lastFailureTime,
       }
     );
   }
@@ -169,8 +180,10 @@ export class CircuitBreaker {
    * @returns {boolean} Whether to attempt reset
    */
   #shouldAttemptReset() {
-    return this.#lastFailureTime && 
-           (Date.now() - this.#lastFailureTime) > this.#resetTimeout;
+    return (
+      this.#lastFailureTime &&
+      Date.now() - this.#lastFailureTime > this.#resetTimeout
+    );
   }
 
   /**
@@ -193,7 +206,9 @@ export class CircuitBreaker {
   #transitionToOpen() {
     this.#state = CircuitBreakerState.OPEN;
     this.#successCount = 0;
-    this.#logger.warn(`Circuit breaker OPEN for ${this.#serviceName} after ${this.#failureCount} failures`);
+    this.#logger.warn(
+      `Circuit breaker OPEN for ${this.#serviceName} after ${this.#failureCount} failures`
+    );
   }
 
   /**
@@ -204,7 +219,9 @@ export class CircuitBreaker {
   #transitionToHalfOpen() {
     this.#state = CircuitBreakerState.HALF_OPEN;
     this.#successCount = 0;
-    this.#logger.info(`Circuit breaker transitioning to HALF_OPEN for ${this.#serviceName}`);
+    this.#logger.info(
+      `Circuit breaker transitioning to HALF_OPEN for ${this.#serviceName}`
+    );
   }
 
   /**
@@ -220,7 +237,7 @@ export class CircuitBreaker {
       successCount: this.#successCount,
       lastFailureTime: this.#lastFailureTime,
       failureThreshold: this.#failureThreshold,
-      resetTimeout: this.#resetTimeout
+      resetTimeout: this.#resetTimeout,
     };
   }
 

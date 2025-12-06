@@ -3,13 +3,7 @@
  * @description Integration tests validating secure error formatting across HTTP flows
  */
 
-import {
-  describe,
-  it,
-  beforeAll,
-  afterEach,
-  expect,
-} from '@jest/globals';
+import { describe, it, beforeAll, afterEach, expect } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 

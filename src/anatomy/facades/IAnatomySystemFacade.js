@@ -9,8 +9,8 @@
 import BaseFacade from '../../shared/facades/BaseFacade.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
-import { 
-  createSuccessResponse, 
+import {
+  createSuccessResponse,
   createErrorResponse,
   createQueryResponse,
   createModificationResponse,
@@ -58,16 +58,16 @@ class IAnatomySystemFacade extends BaseFacade {
    * @param {*} deps.unifiedCache - Unified cache service
    * @param {*} [deps.circuitBreaker] - Circuit breaker service
    */
-  constructor({ 
+  constructor({
     bodyGraphService,
     anatomyDescriptionService,
     graphIntegrityValidator,
     anatomyGenerationService,
     bodyBlueprintFactory,
-    ...baseDeps 
+    ...baseDeps
   }) {
     super(baseDeps);
-    
+
     // Prevent direct instantiation of abstract interface
     if (this.constructor === IAnatomySystemFacade) {
       throw new Error('Cannot instantiate abstract class IAnatomySystemFacade');
@@ -94,57 +94,78 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
    */
   async getBodyParts(entityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'getBodyParts', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'getBodyParts', this);
 
-      const queryOptions = mergeOptions(createQueryOptions(), options);
-      const cacheKey = `anatomy:parts:${entityId}:${JSON.stringify(queryOptions)}`;
+        const queryOptions = mergeOptions(createQueryOptions(), options);
+        const cacheKey = `anatomy:parts:${entityId}:${JSON.stringify(queryOptions)}`;
 
-      return await this.cacheableOperation(cacheKey, async () => {
-        const parts = await this.executeWithResilience(
-          'getBodyParts',
-          async () => await this.#bodyGraphService.getBodyParts(entityId, queryOptions),
-          async () => [], // Fallback to empty array
-        );
-
-        // Apply filters and sorting if specified
-        let filteredParts = parts;
-        if (queryOptions.filters) {
-          filteredParts = this.#applyFilters(parts, queryOptions.filters);
-        }
-
-        if (queryOptions.sortBy) {
-          filteredParts = this.#sortItems(filteredParts, queryOptions.sortBy, queryOptions.sortOrder);
-        }
-
-        // Apply pagination
-        const total = filteredParts.length;
-        const offset = queryOptions.offset || 0;
-        const limit = queryOptions.limit;
-        
-        let paginatedParts = filteredParts;
-        if (limit) {
-          paginatedParts = filteredParts.slice(offset, offset + limit);
-        }
-
-        const pagination = {
-          total,
-          count: paginatedParts.length,
-          offset,
-          hasMore: limit ? (offset + limit) < total : false,
-          limit,
-        };
-
-        return createQueryResponse(paginatedParts, pagination, 'getBodyParts', {
-          requestId: queryOptions.requestId,
-          cached: false,
+        return await this.cacheableOperation(
           cacheKey,
-          filters: queryOptions.filters,
-          sortBy: queryOptions.sortBy,
-          sortOrder: queryOptions.sortOrder,
-        });
-      }, { ttl: queryOptions.ttl });
-    }, 'getBodyParts', { requestId: options.requestId });
+          async () => {
+            const parts = await this.executeWithResilience(
+              'getBodyParts',
+              async () =>
+                await this.#bodyGraphService.getBodyParts(
+                  entityId,
+                  queryOptions
+                ),
+              async () => [] // Fallback to empty array
+            );
+
+            // Apply filters and sorting if specified
+            let filteredParts = parts;
+            if (queryOptions.filters) {
+              filteredParts = this.#applyFilters(parts, queryOptions.filters);
+            }
+
+            if (queryOptions.sortBy) {
+              filteredParts = this.#sortItems(
+                filteredParts,
+                queryOptions.sortBy,
+                queryOptions.sortOrder
+              );
+            }
+
+            // Apply pagination
+            const total = filteredParts.length;
+            const offset = queryOptions.offset || 0;
+            const limit = queryOptions.limit;
+
+            let paginatedParts = filteredParts;
+            if (limit) {
+              paginatedParts = filteredParts.slice(offset, offset + limit);
+            }
+
+            const pagination = {
+              total,
+              count: paginatedParts.length,
+              offset,
+              hasMore: limit ? offset + limit < total : false,
+              limit,
+            };
+
+            return createQueryResponse(
+              paginatedParts,
+              pagination,
+              'getBodyParts',
+              {
+                requestId: queryOptions.requestId,
+                cached: false,
+                cacheKey,
+                filters: queryOptions.filters,
+                sortBy: queryOptions.sortBy,
+                sortOrder: queryOptions.sortOrder,
+              }
+            );
+          },
+          { ttl: queryOptions.ttl }
+        );
+      },
+      'getBodyParts',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -163,14 +184,14 @@ class IAnatomySystemFacade extends BaseFacade {
         const graph = await this.executeWithResilience(
           'getBodyGraph',
           async () => await this.#bodyGraphService.buildGraph(entityId),
-          async () => ({ nodes: [], edges: [], properties: {} }), // Fallback to empty graph
+          async () => ({ nodes: [], edges: [], properties: {} }) // Fallback to empty graph
         );
 
         // Get graph analysis
         const analysis = await this.executeWithResilience(
           'analyzeBodyGraph',
           async () => await this.#bodyGraphService.analyzeGraph(graph),
-          async () => ({}), // Fallback to empty analysis
+          async () => ({}) // Fallback to empty analysis
         );
 
         const graphData = {
@@ -205,8 +226,9 @@ class IAnatomySystemFacade extends BaseFacade {
       return await this.cacheableOperation(cacheKey, async () => {
         const parts = await this.executeWithResilience(
           'getPartByType',
-          async () => await this.#bodyGraphService.getPartsByType(entityId, partType),
-          async () => [], // Fallback to empty array
+          async () =>
+            await this.#bodyGraphService.getPartsByType(entityId, partType),
+          async () => [] // Fallback to empty array
         );
 
         const pagination = {
@@ -242,8 +264,9 @@ class IAnatomySystemFacade extends BaseFacade {
       return await this.cacheableOperation(cacheKey, async () => {
         const connectedParts = await this.executeWithResilience(
           'getConnectedParts',
-          async () => await this.#bodyGraphService.getConnectedParts(entityId, partId),
-          async () => [], // Fallback to empty array
+          async () =>
+            await this.#bodyGraphService.getConnectedParts(entityId, partId),
+          async () => [] // Fallback to empty array
         );
 
         const pagination = {
@@ -253,11 +276,16 @@ class IAnatomySystemFacade extends BaseFacade {
           hasMore: false,
         };
 
-        return createQueryResponse(connectedParts, pagination, 'getConnectedParts', {
-          cached: false,
-          cacheKey,
-          filters: { connectedTo: partId },
-        });
+        return createQueryResponse(
+          connectedParts,
+          pagination,
+          'getConnectedParts',
+          {
+            cached: false,
+            cacheKey,
+            filters: { connectedTo: partId },
+          }
+        );
       });
     }, 'getConnectedParts');
   }
@@ -276,67 +304,81 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async attachPart(entityId, partId, parentPartId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'attachPart', this);
-      assertNonBlankString(partId, 'Part ID', 'attachPart', this);
-      assertNonBlankString(parentPartId, 'Parent Part ID', 'attachPart', this);
-
-      const modOptions = mergeOptions(createModificationOptions(), options);
-
-      const result = await this.executeWithResilience(
-        'attachPart',
-        async () => {
-          // Validate attachment if required
-          if (modOptions.validate && !modOptions.force) {
-            const validation = await this.#graphIntegrityValidator.validateAttachment(
-              entityId, 
-              partId, 
-              parentPartId
-            );
-            
-            if (!validation.valid) {
-              throw new InvalidArgumentError(`Invalid attachment: ${validation.errors.join(', ')}`);
-            }
-          }
-
-          // Execute attachment
-          const attachResult = await this.#bodyGraphService.attachPart(
-            entityId, 
-            partId, 
-            parentPartId, 
-            modOptions
-          );
-
-          // Invalidate related caches
-          await this.invalidateCache(`anatomy:graph:${entityId}`);
-          await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
-          await this.invalidateCache(`anatomy:connected-parts:${entityId}:${parentPartId}`);
-
-          return attachResult;
-        },
-      );
-
-      const changes = {
-        added: [{ partId, parentPartId, entityId }],
-        removed: [],
-        modified: [{ entityId, type: 'graph-structure' }],
-      };
-
-      // Dispatch attachment event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('ANATOMY_PART_ATTACHED', {
-          entityId,
-          partId,
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'attachPart', this);
+        assertNonBlankString(partId, 'Part ID', 'attachPart', this);
+        assertNonBlankString(
           parentPartId,
-          timestamp: Date.now(),
-        });
-      }
+          'Parent Part ID',
+          'attachPart',
+          this
+        );
 
-      return createModificationResponse(result, changes, 'attachPart', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'attachPart', { requestId: options.requestId });
+        const modOptions = mergeOptions(createModificationOptions(), options);
+
+        const result = await this.executeWithResilience(
+          'attachPart',
+          async () => {
+            // Validate attachment if required
+            if (modOptions.validate && !modOptions.force) {
+              const validation =
+                await this.#graphIntegrityValidator.validateAttachment(
+                  entityId,
+                  partId,
+                  parentPartId
+                );
+
+              if (!validation.valid) {
+                throw new InvalidArgumentError(
+                  `Invalid attachment: ${validation.errors.join(', ')}`
+                );
+              }
+            }
+
+            // Execute attachment
+            const attachResult = await this.#bodyGraphService.attachPart(
+              entityId,
+              partId,
+              parentPartId,
+              modOptions
+            );
+
+            // Invalidate related caches
+            await this.invalidateCache(`anatomy:graph:${entityId}`);
+            await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
+            await this.invalidateCache(
+              `anatomy:connected-parts:${entityId}:${parentPartId}`
+            );
+
+            return attachResult;
+          }
+        );
+
+        const changes = {
+          added: [{ partId, parentPartId, entityId }],
+          removed: [],
+          modified: [{ entityId, type: 'graph-structure' }],
+        };
+
+        // Dispatch attachment event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('ANATOMY_PART_ATTACHED', {
+            entityId,
+            partId,
+            parentPartId,
+            timestamp: Date.now(),
+          });
+        }
+
+        return createModificationResponse(result, changes, 'attachPart', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
+        });
+      },
+      'attachPart',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -348,54 +390,71 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async detachPart(entityId, partId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'detachPart', this);
-      assertNonBlankString(partId, 'Part ID', 'detachPart', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'detachPart', this);
+        assertNonBlankString(partId, 'Part ID', 'detachPart', this);
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'detachPart',
-        async () => {
-          // Get current parent for event dispatching
-          const connectedParts = await this.getConnectedParts(entityId, partId);
-          const parentPart = connectedParts.data.find(p => p.relationship === 'parent');
+        const result = await this.executeWithResilience(
+          'detachPart',
+          async () => {
+            // Get current parent for event dispatching
+            const connectedParts = await this.getConnectedParts(
+              entityId,
+              partId
+            );
+            const parentPart = connectedParts.data.find(
+              (p) => p.relationship === 'parent'
+            );
 
-          // Execute detachment
-          const detachResult = await this.#bodyGraphService.detachPart(entityId, partId, modOptions);
+            // Execute detachment
+            const detachResult = await this.#bodyGraphService.detachPart(
+              entityId,
+              partId,
+              modOptions
+            );
 
-          // Invalidate related caches
-          await this.invalidateCache(`anatomy:graph:${entityId}`);
-          await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
-          if (parentPart) {
-            await this.invalidateCache(`anatomy:connected-parts:${entityId}:${parentPart.partId}`);
+            // Invalidate related caches
+            await this.invalidateCache(`anatomy:graph:${entityId}`);
+            await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
+            if (parentPart) {
+              await this.invalidateCache(
+                `anatomy:connected-parts:${entityId}:${parentPart.partId}`
+              );
+            }
+
+            return { ...detachResult, previousParent: parentPart };
           }
+        );
 
-          return { ...detachResult, previousParent: parentPart };
-        },
-      );
+        const changes = {
+          added: [],
+          removed: [
+            { partId, parentPartId: result.previousParent?.partId, entityId },
+          ],
+          modified: [{ entityId, type: 'graph-structure' }],
+        };
 
-      const changes = {
-        added: [],
-        removed: [{ partId, parentPartId: result.previousParent?.partId, entityId }],
-        modified: [{ entityId, type: 'graph-structure' }],
-      };
+        // Dispatch detachment event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('ANATOMY_PART_DETACHED', {
+            entityId,
+            partId,
+            previousParentId: result.previousParent?.partId,
+            timestamp: Date.now(),
+          });
+        }
 
-      // Dispatch detachment event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('ANATOMY_PART_DETACHED', {
-          entityId,
-          partId,
-          previousParentId: result.previousParent?.partId,
-          timestamp: Date.now(),
+        return createModificationResponse(result, changes, 'detachPart', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'detachPart', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'detachPart', { requestId: options.requestId });
+      },
+      'detachPart',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -408,61 +467,70 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async replacePart(entityId, oldPartId, newPartId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'replacePart', this);
-      assertNonBlankString(oldPartId, 'Old Part ID', 'replacePart', this);
-      assertNonBlankString(newPartId, 'New Part ID', 'replacePart', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'replacePart', this);
+        assertNonBlankString(oldPartId, 'Old Part ID', 'replacePart', this);
+        assertNonBlankString(newPartId, 'New Part ID', 'replacePart', this);
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'replacePart',
-        async () => {
-          // Get connections of the old part for proper replacement
-          const oldConnections = await this.getConnectedParts(entityId, oldPartId);
+        const result = await this.executeWithResilience(
+          'replacePart',
+          async () => {
+            // Get connections of the old part for proper replacement
+            const oldConnections = await this.getConnectedParts(
+              entityId,
+              oldPartId
+            );
 
-          // Execute replacement
-          const replaceResult = await this.#bodyGraphService.replacePart(
-            entityId, 
-            oldPartId, 
-            newPartId, 
-            modOptions
-          );
+            // Execute replacement
+            const replaceResult = await this.#bodyGraphService.replacePart(
+              entityId,
+              oldPartId,
+              newPartId,
+              modOptions
+            );
 
-          // Invalidate related caches
-          await this.invalidateCache(`anatomy:graph:${entityId}`);
-          await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
-          
-          // Invalidate connected parts caches
-          for (const connection of oldConnections.data) {
-            await this.invalidateCache(`anatomy:connected-parts:${entityId}:${connection.partId}`);
+            // Invalidate related caches
+            await this.invalidateCache(`anatomy:graph:${entityId}`);
+            await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
+
+            // Invalidate connected parts caches
+            for (const connection of oldConnections.data) {
+              await this.invalidateCache(
+                `anatomy:connected-parts:${entityId}:${connection.partId}`
+              );
+            }
+
+            return { ...replaceResult, oldConnections: oldConnections.data };
           }
+        );
 
-          return { ...replaceResult, oldConnections: oldConnections.data };
-        },
-      );
+        const changes = {
+          added: [{ partId: newPartId, entityId }],
+          removed: [{ partId: oldPartId, entityId }],
+          modified: [{ entityId, type: 'part-replacement' }],
+        };
 
-      const changes = {
-        added: [{ partId: newPartId, entityId }],
-        removed: [{ partId: oldPartId, entityId }],
-        modified: [{ entityId, type: 'part-replacement' }],
-      };
+        // Dispatch replacement event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('ANATOMY_PART_REPLACED', {
+            entityId,
+            oldPartId,
+            newPartId,
+            timestamp: Date.now(),
+          });
+        }
 
-      // Dispatch replacement event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('ANATOMY_PART_REPLACED', {
-          entityId,
-          oldPartId,
-          newPartId,
-          timestamp: Date.now(),
+        return createModificationResponse(result, changes, 'replacePart', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'replacePart', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'replacePart', { requestId: options.requestId });
+      },
+      'replacePart',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -475,56 +543,64 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async modifyPart(entityId, partId, modifications, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'modifyPart', this);
-      assertNonBlankString(partId, 'Part ID', 'modifyPart', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'modifyPart', this);
+        assertNonBlankString(partId, 'Part ID', 'modifyPart', this);
 
-      if (!modifications || typeof modifications !== 'object') {
-        throw new InvalidArgumentError('Modifications must be an object');
-      }
+        if (!modifications || typeof modifications !== 'object') {
+          throw new InvalidArgumentError('Modifications must be an object');
+        }
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'modifyPart',
-        async () => {
-          // Execute modification
-          const modifyResult = await this.#bodyGraphService.modifyPart(
-            entityId, 
-            partId, 
-            modifications, 
-            modOptions
-          );
+        const result = await this.executeWithResilience(
+          'modifyPart',
+          async () => {
+            // Execute modification
+            const modifyResult = await this.#bodyGraphService.modifyPart(
+              entityId,
+              partId,
+              modifications,
+              modOptions
+            );
 
-          // Invalidate related caches
-          await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
-          await this.invalidateCache(`anatomy:connected-parts:${entityId}:${partId}`);
+            // Invalidate related caches
+            await this.invalidateCache(`anatomy:parts:${entityId}:*`, true);
+            await this.invalidateCache(
+              `anatomy:connected-parts:${entityId}:${partId}`
+            );
 
-          return modifyResult;
-        },
-      );
+            return modifyResult;
+          }
+        );
 
-      const changes = {
-        added: [],
-        removed: [],
-        modified: [{ partId, entityId, modifications: Object.keys(modifications) }],
-      };
+        const changes = {
+          added: [],
+          removed: [],
+          modified: [
+            { partId, entityId, modifications: Object.keys(modifications) },
+          ],
+        };
 
-      // Dispatch modification event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('ANATOMY_PART_MODIFIED', {
-          entityId,
-          partId,
-          modificationKeys: Object.keys(modifications),
-          timestamp: Date.now(),
+        // Dispatch modification event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('ANATOMY_PART_MODIFIED', {
+            entityId,
+            partId,
+            modificationKeys: Object.keys(modifications),
+            timestamp: Date.now(),
+          });
+        }
+
+        return createModificationResponse(result, changes, 'modifyPart', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'modifyPart', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'modifyPart', { requestId: options.requestId });
+      },
+      'modifyPart',
+      { requestId: options.requestId }
+    );
   }
 
   // =============================================================================
@@ -540,59 +616,67 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').GraphResponse>}
    */
   async buildBodyGraph(entityId, blueprint, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'buildBodyGraph', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'buildBodyGraph', this);
 
-      if (!blueprint || typeof blueprint !== 'object') {
-        throw new InvalidArgumentError('Blueprint must be an object');
-      }
+        if (!blueprint || typeof blueprint !== 'object') {
+          throw new InvalidArgumentError('Blueprint must be an object');
+        }
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'buildBodyGraph',
-        async () => {
-          // Validate blueprint if required
-          if (modOptions.validate && !modOptions.force) {
-            const validation = await this.#bodyBlueprintFactory.validateBlueprint(blueprint);
-            if (!validation.valid) {
-              throw new InvalidArgumentError(`Invalid blueprint: ${validation.errors.join(', ')}`);
+        const result = await this.executeWithResilience(
+          'buildBodyGraph',
+          async () => {
+            // Validate blueprint if required
+            if (modOptions.validate && !modOptions.force) {
+              const validation =
+                await this.#bodyBlueprintFactory.validateBlueprint(blueprint);
+              if (!validation.valid) {
+                throw new InvalidArgumentError(
+                  `Invalid blueprint: ${validation.errors.join(', ')}`
+                );
+              }
             }
+
+            // Build the graph
+            const buildResult =
+              await this.#anatomyGenerationService.buildFromBlueprint(
+                entityId,
+                blueprint,
+                modOptions
+              );
+
+            // Invalidate all anatomy caches for this entity
+            await this.invalidateCache(`anatomy:*:${entityId}:*`, true);
+
+            return buildResult;
           }
+        );
 
-          // Build the graph
-          const buildResult = await this.#anatomyGenerationService.buildFromBlueprint(
-            entityId, 
-            blueprint, 
-            modOptions
-          );
+        // Get the final graph for response
+        const finalGraph = await this.getBodyGraph(entityId);
 
-          // Invalidate all anatomy caches for this entity
-          await this.invalidateCache(`anatomy:*:${entityId}:*`, true);
+        // Dispatch build event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('ANATOMY_GRAPH_BUILT', {
+            entityId,
+            blueprintType: blueprint.type || 'custom',
+            partCount: finalGraph.data.nodes.length,
+            timestamp: Date.now(),
+          });
+        }
 
-          return buildResult;
-        },
-      );
-
-      // Get the final graph for response
-      const finalGraph = await this.getBodyGraph(entityId);
-
-      // Dispatch build event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('ANATOMY_GRAPH_BUILT', {
-          entityId,
-          blueprintType: blueprint.type || 'custom',
-          partCount: finalGraph.data.nodes.length,
-          timestamp: Date.now(),
+        return createSuccessResponse(finalGraph.data, 'buildBodyGraph', {
+          requestId: modOptions.requestId,
+          analysis: finalGraph.analysis,
+          blueprintUsed: blueprint.type || 'custom',
         });
-      }
-
-      return createSuccessResponse(finalGraph.data, 'buildBodyGraph', {
-        requestId: modOptions.requestId,
-        analysis: finalGraph.analysis,
-        blueprintUsed: blueprint.type || 'custom',
-      });
-    }, 'buildBodyGraph', { requestId: options.requestId });
+      },
+      'buildBodyGraph',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -603,27 +687,37 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ValidationResponse>}
    */
   async validateGraph(entityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'validateGraph', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'validateGraph', this);
 
-      const validationOptions = mergeOptions(createValidationOptions(), options);
+        const validationOptions = mergeOptions(
+          createValidationOptions(),
+          options
+        );
 
-      const validation = await this.executeWithResilience(
-        'validateGraph',
-        async () => {
-          return await this.#graphIntegrityValidator.validateEntityGraph(entityId, validationOptions);
-        },
-        async () => ({ 
-          valid: false, 
-          errors: [{ message: 'Graph validation service unavailable' }] 
-        }),
-      );
+        const validation = await this.executeWithResilience(
+          'validateGraph',
+          async () => {
+            return await this.#graphIntegrityValidator.validateEntityGraph(
+              entityId,
+              validationOptions
+            );
+          },
+          async () => ({
+            valid: false,
+            errors: [{ message: 'Graph validation service unavailable' }],
+          })
+        );
 
-      return createValidationResponse(validation, 'validateGraph', {
-        requestId: validationOptions.requestId,
-        autoFixApplied: validationOptions.fixIssues && validation.autoFixed,
-      });
-    }, 'validateGraph', { requestId: options.requestId });
+        return createValidationResponse(validation, 'validateGraph', {
+          requestId: validationOptions.requestId,
+          autoFixApplied: validationOptions.fixIssues && validation.autoFixed,
+        });
+      },
+      'validateGraph',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -642,7 +736,7 @@ class IAnatomySystemFacade extends BaseFacade {
         const constraints = await this.executeWithResilience(
           'getGraphConstraints',
           async () => await this.#bodyGraphService.getConstraints(entityId),
-          async () => ({ rules: [], limits: {} }), // Fallback to empty constraints
+          async () => ({ rules: [], limits: {} }) // Fallback to empty constraints
         );
 
         return createSuccessResponse(constraints, 'getGraphConstraints', {
@@ -665,43 +759,63 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').DescriptionResponse>}
    */
   async generateDescription(entityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'generateDescription', this);
-
-      const descriptionOptions = mergeOptions(createDescriptionOptions(), options);
-      const cacheKey = `anatomy:description:${entityId}:${JSON.stringify(descriptionOptions)}`;
-
-      return await this.cacheableOperation(cacheKey, async () => {
-        const description = await this.executeWithResilience(
+    return await withTiming(
+      async () => {
+        assertNonBlankString(
+          entityId,
+          'Entity ID',
           'generateDescription',
-          async () => {
-            return await this.#anatomyDescriptionService.generateEntityDescription(
-              entityId, 
-              descriptionOptions
-            );
-          },
-          async () => ({ 
-            description: 'Description unavailable', 
-            style: descriptionOptions.style,
-            perspective: descriptionOptions.perspective 
-          }),
+          this
         );
 
-        const descriptionData = {
-          description: description.text || description.description,
-          style: descriptionOptions.style,
-          perspective: descriptionOptions.perspective,
-          context: descriptionOptions.context,
-          focusAreas: descriptionOptions.focus,
-        };
+        const descriptionOptions = mergeOptions(
+          createDescriptionOptions(),
+          options
+        );
+        const cacheKey = `anatomy:description:${entityId}:${JSON.stringify(descriptionOptions)}`;
 
-        return createSuccessResponse(descriptionData, 'generateDescription', {
-          cached: false,
+        return await this.cacheableOperation(
           cacheKey,
-          generationMetadata: description.metadata,
-        });
-      }, { ttl: descriptionOptions.ttl });
-    }, 'generateDescription', { requestId: options.requestId });
+          async () => {
+            const description = await this.executeWithResilience(
+              'generateDescription',
+              async () => {
+                return await this.#anatomyDescriptionService.generateEntityDescription(
+                  entityId,
+                  descriptionOptions
+                );
+              },
+              async () => ({
+                description: 'Description unavailable',
+                style: descriptionOptions.style,
+                perspective: descriptionOptions.perspective,
+              })
+            );
+
+            const descriptionData = {
+              description: description.text || description.description,
+              style: descriptionOptions.style,
+              perspective: descriptionOptions.perspective,
+              context: descriptionOptions.context,
+              focusAreas: descriptionOptions.focus,
+            };
+
+            return createSuccessResponse(
+              descriptionData,
+              'generateDescription',
+              {
+                cached: false,
+                cacheKey,
+                generationMetadata: description.metadata,
+              }
+            );
+          },
+          { ttl: descriptionOptions.ttl }
+        );
+      },
+      'generateDescription',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -713,45 +827,60 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').DescriptionResponse>}
    */
   async getPartDescription(entityId, partId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'getPartDescription', this);
-      assertNonBlankString(partId, 'Part ID', 'getPartDescription', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'getPartDescription', this);
+        assertNonBlankString(partId, 'Part ID', 'getPartDescription', this);
 
-      const descriptionOptions = mergeOptions(createDescriptionOptions(), options);
-      const cacheKey = `anatomy:part-description:${entityId}:${partId}:${JSON.stringify(descriptionOptions)}`;
+        const descriptionOptions = mergeOptions(
+          createDescriptionOptions(),
+          options
+        );
+        const cacheKey = `anatomy:part-description:${entityId}:${partId}:${JSON.stringify(descriptionOptions)}`;
 
-      return await this.cacheableOperation(cacheKey, async () => {
-        const description = await this.executeWithResilience(
-          'getPartDescription',
+        return await this.cacheableOperation(
+          cacheKey,
           async () => {
-            return await this.#anatomyDescriptionService.generatePartDescription(
-              entityId, 
-              partId, 
-              descriptionOptions
+            const description = await this.executeWithResilience(
+              'getPartDescription',
+              async () => {
+                return await this.#anatomyDescriptionService.generatePartDescription(
+                  entityId,
+                  partId,
+                  descriptionOptions
+                );
+              },
+              async () => ({
+                description: 'Part description unavailable',
+                partId,
+                style: descriptionOptions.style,
+              })
+            );
+
+            const descriptionData = {
+              description: description.text || description.description,
+              partId,
+              style: descriptionOptions.style,
+              perspective: descriptionOptions.perspective,
+              context: descriptionOptions.context,
+            };
+
+            return createSuccessResponse(
+              descriptionData,
+              'getPartDescription',
+              {
+                cached: false,
+                cacheKey,
+                generationMetadata: description.metadata,
+              }
             );
           },
-          async () => ({ 
-            description: 'Part description unavailable',
-            partId,
-            style: descriptionOptions.style 
-          }),
+          { ttl: descriptionOptions.ttl }
         );
-
-        const descriptionData = {
-          description: description.text || description.description,
-          partId,
-          style: descriptionOptions.style,
-          perspective: descriptionOptions.perspective,
-          context: descriptionOptions.context,
-        };
-
-        return createSuccessResponse(descriptionData, 'getPartDescription', {
-          cached: false,
-          cacheKey,
-          generationMetadata: description.metadata,
-        });
-      }, { ttl: descriptionOptions.ttl });
-    }, 'getPartDescription', { requestId: options.requestId });
+      },
+      'getPartDescription',
+      { requestId: options.requestId }
+    );
   }
 
   // =============================================================================
@@ -767,79 +896,98 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').BulkResponse>}
    */
   async attachMultipleParts(entityId, parts, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'attachMultipleParts', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(
+          entityId,
+          'Entity ID',
+          'attachMultipleParts',
+          this
+        );
 
-      if (!Array.isArray(parts)) {
-        throw new InvalidArgumentError('Parts must be an array');
-      }
+        if (!Array.isArray(parts)) {
+          throw new InvalidArgumentError('Parts must be an array');
+        }
 
-      const bulkOptions = mergeOptions(createBulkOptions(), options);
-      const results = { processed: 0, successful: 0, failed: 0, results: [], errors: [] };
+        const bulkOptions = mergeOptions(createBulkOptions(), options);
+        const results = {
+          processed: 0,
+          successful: 0,
+          failed: 0,
+          results: [],
+          errors: [],
+        };
 
-      for (let i = 0; i < parts.length; i += bulkOptions.batchSize) {
-        const batch = parts.slice(i, i + bulkOptions.batchSize);
-        
-        const batchPromises = batch.map(async (part) => {
-          try {
-            const result = await this.attachPart(
-              entityId, 
-              part.partId, 
-              part.parentPartId, 
-              bulkOptions
-            );
-            results.successful++;
-            if (bulkOptions.returnResults) {
-              results.results.push({ part, result, success: true });
+        for (let i = 0; i < parts.length; i += bulkOptions.batchSize) {
+          const batch = parts.slice(i, i + bulkOptions.batchSize);
+
+          const batchPromises = batch.map(async (part) => {
+            try {
+              const result = await this.attachPart(
+                entityId,
+                part.partId,
+                part.parentPartId,
+                bulkOptions
+              );
+              results.successful++;
+              if (bulkOptions.returnResults) {
+                results.results.push({ part, result, success: true });
+              }
+            } catch (error) {
+              results.failed++;
+              results.errors.push({ part, error: error.message });
+              if (bulkOptions.returnResults) {
+                results.results.push({
+                  part,
+                  error: error.message,
+                  success: false,
+                });
+              }
+
+              if (bulkOptions.stopOnError) {
+                throw error;
+              }
             }
-          } catch (error) {
-            results.failed++;
-            results.errors.push({ part, error: error.message });
-            if (bulkOptions.returnResults) {
-              results.results.push({ part, error: error.message, success: false });
-            }
-            
-            if (bulkOptions.stopOnError) {
-              throw error;
+          });
+
+          if (bulkOptions.parallel) {
+            await Promise.allSettled(batchPromises);
+          } else {
+            for (const promise of batchPromises) {
+              await promise;
             }
           }
+
+          results.processed += batch.length;
+
+          // Call progress callback if provided
+          if (bulkOptions.onProgress) {
+            bulkOptions.onProgress({
+              processed: results.processed,
+              total: parts.length,
+              successful: results.successful,
+              failed: results.failed,
+            });
+          }
+        }
+
+        // Dispatch bulk event
+        this.dispatchEvent('ANATOMY_BULK_ATTACH_COMPLETED', {
+          entityId,
+          partCount: parts.length,
+          successful: results.successful,
+          failed: results.failed,
+          timestamp: Date.now(),
         });
 
-        if (bulkOptions.parallel) {
-          await Promise.allSettled(batchPromises);
-        } else {
-          for (const promise of batchPromises) {
-            await promise;
-          }
-        }
-
-        results.processed += batch.length;
-
-        // Call progress callback if provided
-        if (bulkOptions.onProgress) {
-          bulkOptions.onProgress({
-            processed: results.processed,
-            total: parts.length,
-            successful: results.successful,
-            failed: results.failed,
-          });
-        }
-      }
-
-      // Dispatch bulk event
-      this.dispatchEvent('ANATOMY_BULK_ATTACH_COMPLETED', {
-        entityId,
-        partCount: parts.length,
-        successful: results.successful,
-        failed: results.failed,
-        timestamp: Date.now(),
-      });
-
-      return createBulkResponse(results, 'attachMultipleParts', {
-        requestId: bulkOptions.requestId,
-        partial: results.failed > 0,
-      });
-    }, 'attachMultipleParts', { requestId: options.requestId });
+        return createBulkResponse(results, 'attachMultipleParts', {
+          requestId: bulkOptions.requestId,
+          partial: results.failed > 0,
+        });
+      },
+      'attachMultipleParts',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -851,74 +999,97 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').BulkResponse>}
    */
   async detachMultipleParts(entityId, partIds, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'detachMultipleParts', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(
+          entityId,
+          'Entity ID',
+          'detachMultipleParts',
+          this
+        );
 
-      if (!Array.isArray(partIds)) {
-        throw new InvalidArgumentError('Part IDs must be an array');
-      }
+        if (!Array.isArray(partIds)) {
+          throw new InvalidArgumentError('Part IDs must be an array');
+        }
 
-      const bulkOptions = mergeOptions(createBulkOptions(), options);
-      const results = { processed: 0, successful: 0, failed: 0, results: [], errors: [] };
+        const bulkOptions = mergeOptions(createBulkOptions(), options);
+        const results = {
+          processed: 0,
+          successful: 0,
+          failed: 0,
+          results: [],
+          errors: [],
+        };
 
-      for (let i = 0; i < partIds.length; i += bulkOptions.batchSize) {
-        const batch = partIds.slice(i, i + bulkOptions.batchSize);
-        
-        const batchPromises = batch.map(async (partId) => {
-          try {
-            const result = await this.detachPart(entityId, partId, bulkOptions);
-            results.successful++;
-            if (bulkOptions.returnResults) {
-              results.results.push({ partId, result, success: true });
+        for (let i = 0; i < partIds.length; i += bulkOptions.batchSize) {
+          const batch = partIds.slice(i, i + bulkOptions.batchSize);
+
+          const batchPromises = batch.map(async (partId) => {
+            try {
+              const result = await this.detachPart(
+                entityId,
+                partId,
+                bulkOptions
+              );
+              results.successful++;
+              if (bulkOptions.returnResults) {
+                results.results.push({ partId, result, success: true });
+              }
+            } catch (error) {
+              results.failed++;
+              results.errors.push({ partId, error: error.message });
+              if (bulkOptions.returnResults) {
+                results.results.push({
+                  partId,
+                  error: error.message,
+                  success: false,
+                });
+              }
+
+              if (bulkOptions.stopOnError) {
+                throw error;
+              }
             }
-          } catch (error) {
-            results.failed++;
-            results.errors.push({ partId, error: error.message });
-            if (bulkOptions.returnResults) {
-              results.results.push({ partId, error: error.message, success: false });
-            }
-            
-            if (bulkOptions.stopOnError) {
-              throw error;
+          });
+
+          if (bulkOptions.parallel) {
+            await Promise.allSettled(batchPromises);
+          } else {
+            for (const promise of batchPromises) {
+              await promise;
             }
           }
+
+          results.processed += batch.length;
+
+          // Call progress callback if provided
+          if (bulkOptions.onProgress) {
+            bulkOptions.onProgress({
+              processed: results.processed,
+              total: partIds.length,
+              successful: results.successful,
+              failed: results.failed,
+            });
+          }
+        }
+
+        // Dispatch bulk event
+        this.dispatchEvent('ANATOMY_BULK_DETACH_COMPLETED', {
+          entityId,
+          partCount: partIds.length,
+          successful: results.successful,
+          failed: results.failed,
+          timestamp: Date.now(),
         });
 
-        if (bulkOptions.parallel) {
-          await Promise.allSettled(batchPromises);
-        } else {
-          for (const promise of batchPromises) {
-            await promise;
-          }
-        }
-
-        results.processed += batch.length;
-
-        // Call progress callback if provided
-        if (bulkOptions.onProgress) {
-          bulkOptions.onProgress({
-            processed: results.processed,
-            total: partIds.length,
-            successful: results.successful,
-            failed: results.failed,
-          });
-        }
-      }
-
-      // Dispatch bulk event
-      this.dispatchEvent('ANATOMY_BULK_DETACH_COMPLETED', {
-        entityId,
-        partCount: partIds.length,
-        successful: results.successful,
-        failed: results.failed,
-        timestamp: Date.now(),
-      });
-
-      return createBulkResponse(results, 'detachMultipleParts', {
-        requestId: bulkOptions.requestId,
-        partial: results.failed > 0,
-      });
-    }, 'detachMultipleParts', { requestId: options.requestId });
+        return createBulkResponse(results, 'detachMultipleParts', {
+          requestId: bulkOptions.requestId,
+          partial: results.failed > 0,
+        });
+      },
+      'detachMultipleParts',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -930,59 +1101,72 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').GraphResponse>}
    */
   async rebuildFromBlueprint(entityId, blueprint, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'rebuildFromBlueprint', this);
-
-      if (!blueprint || typeof blueprint !== 'object') {
-        throw new InvalidArgumentError('Blueprint must be an object');
-      }
-
-      const modOptions = mergeOptions(createModificationOptions(), options);
-
-      const result = await this.executeWithResilience(
-        'rebuildFromBlueprint',
-        async () => {
-          // Get current state for rollback if needed
-          const currentGraph = await this.getBodyGraph(entityId);
-
-          // Clear existing anatomy if cascade option is true
-          if (modOptions.cascade) {
-            await this.#anatomyGenerationService.clearEntityAnatomy(entityId);
-          }
-
-          // Build new anatomy
-          const rebuildResult = await this.buildBodyGraph(entityId, blueprint, {
-            ...modOptions,
-            notifyOnChange: false, // We'll dispatch our own event
-          });
-
-          // Invalidate all caches
-          await this.invalidateCache(`anatomy:*:${entityId}:*`, true);
-
-          return {
-            ...rebuildResult.data,
-            previousGraph: currentGraph.data,
-            blueprint: blueprint,
-          };
-        },
-      );
-
-      // Dispatch rebuild event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('ANATOMY_GRAPH_REBUILT', {
+    return await withTiming(
+      async () => {
+        assertNonBlankString(
           entityId,
-          blueprintType: blueprint.type || 'custom',
-          partCount: result.nodes.length,
-          timestamp: Date.now(),
-        });
-      }
+          'Entity ID',
+          'rebuildFromBlueprint',
+          this
+        );
 
-      return createSuccessResponse(result, 'rebuildFromBlueprint', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-        blueprintUsed: blueprint.type || 'custom',
-      });
-    }, 'rebuildFromBlueprint', { requestId: options.requestId });
+        if (!blueprint || typeof blueprint !== 'object') {
+          throw new InvalidArgumentError('Blueprint must be an object');
+        }
+
+        const modOptions = mergeOptions(createModificationOptions(), options);
+
+        const result = await this.executeWithResilience(
+          'rebuildFromBlueprint',
+          async () => {
+            // Get current state for rollback if needed
+            const currentGraph = await this.getBodyGraph(entityId);
+
+            // Clear existing anatomy if cascade option is true
+            if (modOptions.cascade) {
+              await this.#anatomyGenerationService.clearEntityAnatomy(entityId);
+            }
+
+            // Build new anatomy
+            const rebuildResult = await this.buildBodyGraph(
+              entityId,
+              blueprint,
+              {
+                ...modOptions,
+                notifyOnChange: false, // We'll dispatch our own event
+              }
+            );
+
+            // Invalidate all caches
+            await this.invalidateCache(`anatomy:*:${entityId}:*`, true);
+
+            return {
+              ...rebuildResult.data,
+              previousGraph: currentGraph.data,
+              blueprint: blueprint,
+            };
+          }
+        );
+
+        // Dispatch rebuild event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('ANATOMY_GRAPH_REBUILT', {
+            entityId,
+            blueprintType: blueprint.type || 'custom',
+            partCount: result.nodes.length,
+            timestamp: Date.now(),
+          });
+        }
+
+        return createSuccessResponse(result, 'rebuildFromBlueprint', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
+          blueprintUsed: blueprint.type || 'custom',
+        });
+      },
+      'rebuildFromBlueprint',
+      { requestId: options.requestId }
+    );
   }
 
   // =============================================================================
@@ -998,7 +1182,7 @@ class IAnatomySystemFacade extends BaseFacade {
    * @returns {object[]} Filtered items
    */
   #applyFilters(items, filters) {
-    return items.filter(item => {
+    return items.filter((item) => {
       for (const [key, value] of Object.entries(filters)) {
         if (item[key] !== value) {
           return false;
@@ -1021,7 +1205,7 @@ class IAnatomySystemFacade extends BaseFacade {
     return [...items].sort((a, b) => {
       const aValue = a[sortBy];
       const bValue = b[sortBy];
-      
+
       if (aValue < bValue) {
         return sortOrder === 'asc' ? -1 : 1;
       }

@@ -44,7 +44,10 @@
     },
     {
       "type": "SET_VARIABLE",
-      "parameters": { "variable_name": "perceptionType", "value": "action_target_general" }
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
     },
     {
       "type": "SET_VARIABLE",
@@ -103,8 +106,14 @@
               "value": {}
             }
           },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "target" }
+          },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
@@ -131,10 +140,7 @@
       "comment": "Handle SUCCESS outcome",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.breakFreeResult.outcome" },
-            "SUCCESS"
-          ]
+          "==": [{ "var": "context.breakFreeResult.outcome" }, "SUCCESS"]
         },
         "then_actions": [
           {
@@ -168,8 +174,14 @@
               "item_id": "{event.payload.actorId}"
             }
           },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
-          { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "actor" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "target" }
+          },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
@@ -196,10 +208,7 @@
       "comment": "Handle FAILURE outcome",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.breakFreeResult.outcome" },
-            "FAILURE"
-          ]
+          "==": [{ "var": "context.breakFreeResult.outcome" }, "FAILURE"]
         },
         "then_actions": [
           {
@@ -228,10 +237,7 @@
       "comment": "Handle FUMBLE outcome",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.breakFreeResult.outcome" },
-            "FUMBLE"
-          ]
+          "==": [{ "var": "context.breakFreeResult.outcome" }, "FUMBLE"]
         },
         "then_actions": [
           {

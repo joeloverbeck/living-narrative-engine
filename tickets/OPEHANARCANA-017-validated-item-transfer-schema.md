@@ -16,9 +16,11 @@ Create the JSON schema for the `VALIDATED_ITEM_TRANSFER` operation, which will c
 ## Files to Touch
 
 ### New Files
+
 - `data/schemas/operations/validatedItemTransfer.schema.json`
 
 ### Modified Files
+
 - `data/schemas/operation.schema.json` (add `$ref` entry)
 
 ---
@@ -26,6 +28,7 @@ Create the JSON schema for the `VALIDATED_ITEM_TRANSFER` operation, which will c
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handler schemas
 - Any operation handler implementation files
 - Any rule files (migrations are separate tickets)
@@ -78,7 +81,13 @@ Create `data/schemas/operations/validatedItemTransfer.schema.json`:
             },
             "transfer_type": {
               "type": "string",
-              "enum": ["inventory_to_inventory", "location_to_inventory", "inventory_to_location", "inventory_to_container", "container_to_inventory"],
+              "enum": [
+                "inventory_to_inventory",
+                "location_to_inventory",
+                "inventory_to_location",
+                "inventory_to_container",
+                "container_to_inventory"
+              ],
               "description": "Type of transfer operation"
             },
             "success_message_template": {

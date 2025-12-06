@@ -591,7 +591,9 @@ describe('Node Resolvers Performance', () => {
       // tolerance since first-window timings can be extremely low (<0.02ms) which can
       // magnify ratios despite healthy absolute performance.
       const jitterToleranceMs = 0.5;
-      expect(lastWindowTime).toBeLessThan(firstWindowTime * 3.5 + jitterToleranceMs);
+      expect(lastWindowTime).toBeLessThan(
+        firstWindowTime * 3.5 + jitterToleranceMs
+      );
     });
   });
 });

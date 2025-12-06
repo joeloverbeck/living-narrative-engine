@@ -155,16 +155,13 @@ describe('ConsumeItemHandler', () => {
       expect(em.removeEntityInstance).toHaveBeenCalledWith('bread_1');
 
       // Verify event was dispatched
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_CONSUMED_EVENT,
-        {
-          consumerId: 'actor_1',
-          itemId: 'bread_1',
-          fuelBulk: 30,
-          fuelEnergy: 200,
-          newBufferUsage: 40,
-        }
-      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_CONSUMED_EVENT, {
+        consumerId: 'actor_1',
+        itemId: 'bread_1',
+        fuelBulk: 30,
+        fuelEnergy: 200,
+        newBufferUsage: 40,
+      });
     });
 
     test('handles multiple fuel tags correctly', async () => {
@@ -387,7 +384,6 @@ describe('ConsumeItemHandler', () => {
       );
     });
 
-
     test('rejects when buffer capacity is exceeded', async () => {
       const fuelSource = {
         energy_content: 300,
@@ -482,9 +478,7 @@ describe('ConsumeItemHandler', () => {
         .mockReturnValueOnce(fuelSource) // item fuel_source
         .mockReturnValueOnce(metabolicStore) // consumer metabolic_store
         .mockReturnValueOnce(fuelConverter); // consumer fuel_converter
-      em.addComponent.mockRejectedValueOnce(
-        new Error('Database error')
-      );
+      em.addComponent.mockRejectedValueOnce(new Error('Database error'));
 
       const executionContext = { evaluationContext: { context: {} } };
       await handler.execute(

@@ -3,12 +3,7 @@
  * @description Integration tests covering validation middleware behavior with real Express pipelines
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  expect,
-} from '@jest/globals';
+import { describe, it, beforeEach, expect } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -94,7 +89,7 @@ describe('Validation middleware integration', () => {
       expect.objectContaining({
         'Valid-Header': 'value',
         'X-CustomHeader': 'custom-value',
-        'SpacingHeader': 'spaces',
+        SpacingHeader: 'spaces',
         'Long-Header': 'x'.repeat(1000),
         Numeric: '123',
       })

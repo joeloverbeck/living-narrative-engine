@@ -27,8 +27,12 @@ describe('sex-penile-oral:suckle_testicle_lying_close action discovery', () => {
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installLyingCloseUncoveredTesticleScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-penile-oral',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installLyingCloseUncoveredTesticleScopeOverride(testFixture);
   });
 
   afterEach(() => {

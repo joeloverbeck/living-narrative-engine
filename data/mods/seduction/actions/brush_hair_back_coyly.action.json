@@ -22,18 +22,13 @@
     },
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "hair"
-        ]
+        "hasPartOfType": ["actor", "hair"]
       },
       "failure_message": "You need hair to perform this action."
     },
     {
       "logic": {
-        "hasOtherActorsAtLocation": [
-          "actor"
-        ]
+        "hasOtherActorsAtLocation": ["actor"]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

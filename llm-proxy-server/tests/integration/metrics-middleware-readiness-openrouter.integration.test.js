@@ -225,7 +225,9 @@ describe('metrics middleware readiness + OpenRouter integration coverage', () =>
       expect(llmTokensMetric.values).not.toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            labels: expect.objectContaining({ llm_provider: 'openrouter_anthropic' }),
+            labels: expect.objectContaining({
+              llm_provider: 'openrouter_anthropic',
+            }),
           }),
         ])
       );

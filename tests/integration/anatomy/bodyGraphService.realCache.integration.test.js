@@ -47,10 +47,14 @@ async function buildAnatomyGraph(testBed) {
     { parentId: actor.id, socketId: 'torso-socket' },
     { 'custom:flag': { isImportant: true } }
   );
-  const head = await createPart('anatomy:head', { subType: 'head' }, {
-    parentId: torso.id,
-    socketId: 'neck-socket',
-  });
+  const head = await createPart(
+    'anatomy:head',
+    { subType: 'head' },
+    {
+      parentId: torso.id,
+      socketId: 'neck-socket',
+    }
+  );
   const leftArm = await createPart(
     'anatomy:arm',
     { subType: 'arm', orientation: 'left' },
@@ -221,9 +225,7 @@ describe('BodyGraphService real cache integration', () => {
 
     const actorParts = service.getAllParts(bodyComponent, actorId);
     expect(actorParts).toContain(actorId);
-    expect(new Set(actorParts)).toEqual(
-      new Set([actorId, ...blueprintParts])
-    );
+    expect(new Set(actorParts)).toEqual(new Set([actorId, ...blueprintParts]));
 
     const actorPartsCached = service.getAllParts(bodyComponent, actorId);
     expect(actorPartsCached).toBe(actorParts);
@@ -232,9 +234,7 @@ describe('BodyGraphService real cache integration', () => {
     expect(new Set(fallbackParts)).toEqual(new Set(blueprintParts));
 
     const hands = service.findPartsByType(actorId, 'hand');
-    expect(new Set(hands)).toEqual(
-      new Set([parts.leftHand, parts.rightHand])
-    );
+    expect(new Set(hands)).toEqual(new Set([parts.leftHand, parts.rightHand]));
     const cachedHands = service.findPartsByType(actorId, 'hand');
     expect(cachedHands).toBe(hands);
 
@@ -276,12 +276,7 @@ describe('BodyGraphService real cache integration', () => {
     const graph = await service.getBodyGraph(actorId);
     expect(graph.getAllPartIds()).toBe(actorParts);
     expect(new Set(graph.getConnectedParts(parts.torso))).toEqual(
-      new Set([
-        parts.head,
-        parts.leftArm,
-        parts.rightArm,
-        parts.heart,
-      ])
+      new Set([parts.head, parts.leftArm, parts.rightArm, parts.heart])
     );
 
     const ancestors = service.getAncestors(parts.leftHand);
@@ -353,10 +348,7 @@ describe('BodyGraphService real cache integration', () => {
     );
 
     expect(
-      testBed.entityManager.getComponentData(
-        parts.leftArm,
-        'anatomy:joint'
-      )
+      testBed.entityManager.getComponentData(parts.leftArm, 'anatomy:joint')
     ).toBeUndefined();
 
     await service.buildAdjacencyCache(actorId);

@@ -211,10 +211,7 @@ describe('throw_item_at_target outcome resolution rule', () => {
     });
 
     it('should delegate FUMBLE to handleThrowFumble macro', () => {
-      const fumbleIf = findIfByOutcome(
-        throwItemAtTargetRule.actions,
-        'FUMBLE'
-      );
+      const fumbleIf = findIfByOutcome(throwItemAtTargetRule.actions, 'FUMBLE');
       expect(fumbleIf).toBeDefined();
 
       // Verify macro reference in rule
@@ -537,7 +534,9 @@ describe('throw_item_at_target outcome resolution rule', () => {
       );
 
       expect(forEachAction).toBeDefined();
-      expect(forEachAction.parameters.collection).toBe('context.throwableDamage');
+      expect(forEachAction.parameters.collection).toBe(
+        'context.throwableDamage'
+      );
 
       const applyDamageAction = forEachAction.parameters.actions.find(
         (action) => action.type === 'APPLY_DAMAGE'
@@ -618,9 +617,9 @@ describe('throw_item_at_target outcome resolution rule', () => {
       expect(throwItemAtTargetAction.chanceBased.actorSkill.component).toBe(
         'skills:ranged_skill'
       );
-      expect(
-        throwItemAtTargetAction.chanceBased.actorSkill.component
-      ).not.toBe('skills:melee_skill');
+      expect(throwItemAtTargetAction.chanceBased.actorSkill.component).not.toBe(
+        'skills:melee_skill'
+      );
     });
   });
 });

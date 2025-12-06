@@ -41,10 +41,14 @@ describe('sex-physical-control:guide_hand_to_clothed_crotch rule', () => {
   it('executes successfully and ends the turn', async () => {
     await testFixture.executeAction(ACTOR_ID, PRIMARY_ID);
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, SUCCESS_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      SUCCESS_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
   });
 
   it('produces matching log and perceptible event messages', async () => {
@@ -71,7 +75,9 @@ describe('sex-physical-control:guide_hand_to_clothed_crotch rule', () => {
     );
 
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
     expect(perceptibleEvent.payload.locationId).toBe(ROOM_ID);
     expect(perceptibleEvent.payload.targetId).toBe(PRIMARY_ID);
     expect(perceptibleEvent.payload.actorId).toBe(ACTOR_ID);
@@ -100,7 +106,9 @@ describe('sex-physical-control:guide_hand_to_clothed_crotch rule', () => {
   });
 
   it('includes the success macro in the rule definition', () => {
-    expect(testFixture.ruleFile.rule_id).toBe('handle_guide_hand_to_clothed_crotch');
+    expect(testFixture.ruleFile.rule_id).toBe(
+      'handle_guide_hand_to_clothed_crotch'
+    );
     expect(testFixture.ruleFile.event_type).toBe('core:attempt_action');
     expect(testFixture.conditionFile.id).toBe(
       'sex-physical-control:event-is-action-guide-hand-to-clothed-crotch'

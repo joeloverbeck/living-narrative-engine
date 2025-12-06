@@ -94,9 +94,13 @@ describe('EstablishBidirectionalClosenessHandler', () => {
       'target-1',
       'hugging:being_hugged'
     );
-    expect(entityManager.addComponent).toHaveBeenCalledWith('actor-1', 'hugging:hugging', {
-      embraced_entity_id: 'target-1',
-    });
+    expect(entityManager.addComponent).toHaveBeenCalledWith(
+      'actor-1',
+      'hugging:hugging',
+      {
+        embraced_entity_id: 'target-1',
+      }
+    );
     expect(entityManager.addComponent).toHaveBeenCalledWith(
       'target-1',
       'hugging:being_hugged',
@@ -251,7 +255,10 @@ describe('EstablishBidirectionalClosenessHandler', () => {
     );
 
     expect(entityManager.removeComponent).toHaveBeenCalledTimes(1);
-    expect(entityManager.removeComponent).toHaveBeenCalledWith('actor-1', 'type-a');
+    expect(entityManager.removeComponent).toHaveBeenCalledWith(
+      'actor-1',
+      'type-a'
+    );
   });
 
   it('handles invalid params object (line 74)', async () => {
@@ -342,7 +349,7 @@ describe('EstablishBidirectionalClosenessHandler', () => {
   });
 
   it('handles remove component failure (line 299)', async () => {
-    entityManager.getComponentData.mockReturnValue({}); 
+    entityManager.getComponentData.mockReturnValue({});
     entityManager.removeComponent.mockRejectedValue(new Error('Remove failed'));
 
     await handler.execute(
@@ -380,7 +387,9 @@ describe('EstablishBidirectionalClosenessHandler', () => {
     );
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('regenerate_descriptions requested but handler not available'),
+      expect.stringContaining(
+        'regenerate_descriptions requested but handler not available'
+      ),
       expect.any(Object)
     );
   });

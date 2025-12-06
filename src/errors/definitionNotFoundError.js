@@ -19,7 +19,11 @@ export class DefinitionNotFoundError extends BaseError {
    */
   constructor(definitionId) {
     const context = { definitionId };
-    super(`Entity definition not found: '${definitionId}'`, 'DEFINITION_NOT_FOUND_ERROR', context);
+    super(
+      `Entity definition not found: '${definitionId}'`,
+      'DEFINITION_NOT_FOUND_ERROR',
+      context
+    );
     this.name = 'DefinitionNotFoundError';
     // Backward compatibility
     this.definitionId = definitionId;

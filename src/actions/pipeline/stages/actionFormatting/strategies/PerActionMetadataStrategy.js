@@ -173,7 +173,13 @@ export class PerActionMetadataStrategy {
     createError,
     trace,
   }) {
-    const { actionDef: originalActionDef, actor, resolvedTargets, targetDefinitions, formattedTemplate } = task;
+    const {
+      actionDef: originalActionDef,
+      actor,
+      resolvedTargets,
+      targetDefinitions,
+      formattedTemplate,
+    } = task;
     // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
     const actionDef = formattedTemplate
       ? { ...originalActionDef, template: formattedTemplate }
@@ -252,9 +258,10 @@ export class PerActionMetadataStrategy {
     }
 
     if (!formatterResult || !formatterResult.ok) {
-      let errorOrResult = formatterResult ?? formatException ?? {
-        error: 'Multi-target formatter returned no result',
-      };
+      let errorOrResult = formatterResult ??
+        formatException ?? {
+          error: 'Multi-target formatter returned no result',
+        };
 
       if (formatException) {
         const fallbackError = formatterResult?.error;
@@ -451,7 +458,12 @@ export class PerActionMetadataStrategy {
     createError,
     trace,
   }) {
-    const { actionDef: originalActionDef, actor, targetContexts, formattedTemplate } = task;
+    const {
+      actionDef: originalActionDef,
+      actor,
+      targetContexts,
+      formattedTemplate,
+    } = task;
     // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
     const actionDef = formattedTemplate
       ? { ...originalActionDef, template: formattedTemplate }

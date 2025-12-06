@@ -8,7 +8,14 @@
  * @see data/mods/anatomy/events/body_part_spawned.event.json
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
@@ -31,7 +38,10 @@ describe('anatomy:body_part_spawned Event - Validation', () => {
 
     // Register the payload schema
     const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
-    await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+    await schemaValidator.addSchema(
+      bodyPartSpawnedEvent.payloadSchema,
+      payloadSchemaId
+    );
   });
 
   afterEach(() => {
@@ -99,7 +109,8 @@ describe('anatomy:body_part_spawned Event - Validation', () => {
 
   describe('Schema type verification', () => {
     it('should have orientation type as [string, null]', () => {
-      const orientationType = bodyPartSpawnedEvent.payloadSchema.properties.orientation.type;
+      const orientationType =
+        bodyPartSpawnedEvent.payloadSchema.properties.orientation.type;
       expect(orientationType).toEqual(['string', 'null']);
     });
   });
@@ -122,7 +133,9 @@ describe('anatomy:body_part_spawned Event - Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'spawnedEntityId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'spawnedEntityId'
+        )
       ).toBe(true);
     });
 
@@ -164,7 +177,9 @@ describe('anatomy:body_part_spawned Event - Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'definitionId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'definitionId'
+        )
       ).toBe(true);
     });
 

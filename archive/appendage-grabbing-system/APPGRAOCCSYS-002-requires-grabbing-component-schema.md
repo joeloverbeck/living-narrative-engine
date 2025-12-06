@@ -14,15 +14,15 @@ Create the `anatomy:requires_grabbing` component schema that specifies how many 
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/mods/anatomy/components/requires_grabbing.component.json` | Component schema definition |
+| File                                                                     | Purpose                          |
+| ------------------------------------------------------------------------ | -------------------------------- |
+| `data/mods/anatomy/components/requires_grabbing.component.json`          | Component schema definition      |
 | `tests/unit/mods/anatomy/components/requires_grabbing.component.test.js` | Unit tests for schema validation |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                  | Change                                                          |
+| ------------------------------------- | --------------------------------------------------------------- |
 | `data/mods/anatomy/mod-manifest.json` | Add component reference if manifest lists components explicitly |
 
 ## Out of Scope
@@ -212,32 +212,36 @@ npm run test:unit -- --testPathPattern="anatomy"
 
 ### Example Usage by Item Type
 
-| Item Type | handsRequired | minGripStrength | Notes |
-|-----------|---------------|-----------------|-------|
-| Dagger | 1 | - | Light one-handed |
-| Rapier | 1 | - | One-handed |
-| Longsword | 2 | - | Two-handed |
-| Greataxe | 2 | 2.0 | Heavy two-handed |
-| Shield | 1 | - | One-handed |
-| Lute | 2 | - | Two-handed instrument |
-| Ring | 0 | - | Worn, not held |
-| Torch | 1 | - | One-handed |
+| Item Type | handsRequired | minGripStrength | Notes                 |
+| --------- | ------------- | --------------- | --------------------- |
+| Dagger    | 1             | -               | Light one-handed      |
+| Rapier    | 1             | -               | One-handed            |
+| Longsword | 2             | -               | Two-handed            |
+| Greataxe  | 2             | 2.0             | Heavy two-handed      |
+| Shield    | 1             | -               | One-handed            |
+| Lute      | 2             | -               | Two-handed instrument |
+| Ring      | 0             | -               | Worn, not held        |
+| Torch     | 1             | -               | One-handed            |
 
 ## Outcome
 
 ### What Was Changed (vs. Originally Planned)
 
 **Ticket Corrections Applied:**
+
 - The test file template was corrected to match the actual established pattern from `can_grab.component.test.js`. The original template incorrectly assumed `createTestBed()` provides `getSchemaValidator()` and `loadSchemas()` methods—these don't exist. The actual pattern uses direct AJV imports and schema compilation.
 
 **Files Created (as planned):**
+
 1. `data/mods/anatomy/components/requires_grabbing.component.json` — Component schema exactly as specified
 2. `tests/unit/mods/anatomy/components/requires_grabbing.component.test.js` — Comprehensive test suite with 34 tests
 
 **Files Modified (as planned):**
+
 1. `data/mods/anatomy/mod-manifest.json` — Added `requires_grabbing.component.json` to components array
 
 **Test Results:**
+
 - All 34 new tests pass
 - All 233 anatomy-related test suites pass (4706 tests total)
 - No regressions introduced

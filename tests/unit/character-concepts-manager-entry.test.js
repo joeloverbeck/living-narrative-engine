@@ -1,4 +1,12 @@
-import { describe, beforeAll, afterAll, beforeEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 
 jest.mock('../../src/character-concepts-manager-main.js', () => ({
   __esModule: true,
@@ -6,7 +14,10 @@ jest.mock('../../src/character-concepts-manager-main.js', () => ({
 }));
 
 let readyStateValue = 'complete';
-const originalDescriptor = Object.getOwnPropertyDescriptor(document, 'readyState');
+const originalDescriptor = Object.getOwnPropertyDescriptor(
+  document,
+  'readyState'
+);
 
 const setReadyState = (value) => {
   readyStateValue = value;
@@ -35,7 +46,9 @@ describe('character-concepts-manager-entry', () => {
   });
 
   it('initializes immediately when the DOM is already ready', async () => {
-    const { initializeApp } = await import('../../src/character-concepts-manager-main.js');
+    const { initializeApp } = await import(
+      '../../src/character-concepts-manager-main.js'
+    );
     initializeApp.mockResolvedValue();
     setReadyState('complete');
 
@@ -47,7 +60,9 @@ describe('character-concepts-manager-entry', () => {
   });
 
   it('waits for DOMContentLoaded when the DOM is still loading', async () => {
-    const { initializeApp } = await import('../../src/character-concepts-manager-main.js');
+    const { initializeApp } = await import(
+      '../../src/character-concepts-manager-main.js'
+    );
     initializeApp.mockResolvedValue();
     setReadyState('loading');
 
@@ -68,11 +83,15 @@ describe('character-concepts-manager-entry', () => {
 
   it('logs an error when initialization fails', async () => {
     const error = new Error('boom');
-    const { initializeApp } = await import('../../src/character-concepts-manager-main.js');
+    const { initializeApp } = await import(
+      '../../src/character-concepts-manager-main.js'
+    );
     initializeApp.mockRejectedValue(error);
     setReadyState('complete');
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await import('../../src/character-concepts-manager-entry.js');
     await Promise.resolve();

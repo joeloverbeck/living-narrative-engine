@@ -11,11 +11,13 @@ Remove duplicate body part references in the first-person injury narrative outpu
 ## Problem Statement
 
 **Current buggy output:**
+
 ```
 My right ear and right ear is completely numb.
 ```
 
 **Expected output:**
+
 ```
 My right ear is completely numb.
 ```
@@ -28,9 +30,7 @@ In `injuryNarrativeFormatterService.js` lines 129-136, when processing `state ==
 if (state === 'destroyed') {
   parts = [...(summary.destroyedParts || [])];
   if (summary.injuredParts) {
-    parts.push(
-      ...summary.injuredParts.filter((p) => p.state === 'destroyed')
-    );
+    parts.push(...summary.injuredParts.filter((p) => p.state === 'destroyed'));
   }
 }
 ```
@@ -52,10 +52,10 @@ if (state === 'destroyed') {
 
 ## Files to Touch
 
-| File | Change Type | Lines |
-|------|-------------|-------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Modify | ~129-136 |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests | New test cases |
+| File                                                                  | Change Type | Lines          |
+| --------------------------------------------------------------------- | ----------- | -------------- |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`             | Modify      | ~129-136       |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests   | New test cases |
 
 ---
 
@@ -101,19 +101,36 @@ All existing tests in `tests/unit/anatomy/services/injuryNarrativeFormatterServi
 ### Manual Verification
 
 Run the formatter with this test case:
+
 ```javascript
 const summary = {
   entityId: 'test',
   injuredParts: [
-    { partEntityId: 'p1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+    {
+      partEntityId: 'p1',
+      partType: 'arm',
+      orientation: 'left',
+      state: 'destroyed',
+    },
   ],
   destroyedParts: [
-    { partEntityId: 'p1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+    {
+      partEntityId: 'p1',
+      partType: 'arm',
+      orientation: 'left',
+      state: 'destroyed',
+    },
   ],
-  bleedingParts: [], burningParts: [], poisonedParts: [], fracturedParts: [],
-  dismemberedParts: [], isDying: false, isDead: false
+  bleedingParts: [],
+  burningParts: [],
+  poisonedParts: [],
+  fracturedParts: [],
+  dismemberedParts: [],
+  isDying: false,
+  isDead: false,
 };
 ```
+
 Expected: `"My left arm is completely numb."` (NOT `"My left arm and left arm is completely numb."`)
 
 ---
@@ -166,6 +183,7 @@ Expected: `"My left arm is completely numb."` (NOT `"My left arm and left arm is
 ### Discrepancies From Plan
 
 **None** - implementation matched the ticket exactly:
+
 - Same lines modified as specified
 - Same fix approach (remove redundant filter)
 - Same test structure as provided in template
@@ -174,6 +192,7 @@ Expected: `"My left arm is completely numb."` (NOT `"My left arm and left arm is
 ### Pre-existing Issues (Not Fixed)
 
 The source file has pre-existing linting issues unrelated to this ticket:
+
 - Line 167: `entityPronoun` assigned but never used
 - Line 355: `#getPossessivePronoun` defined but never used
 

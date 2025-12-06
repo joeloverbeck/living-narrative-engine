@@ -104,7 +104,10 @@ describe('affection:rest_head_on_shoulder action integration', () => {
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     expect(perceptibleEvent.payload.actorId).toBe(scenario.actor.id);
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      EXPECTED_SENTENCE.replace('{actor}', 'Elena').replace('{target}', 'Marcus')
+      EXPECTED_SENTENCE.replace('{actor}', 'Elena').replace(
+        '{target}',
+        'Marcus'
+      )
     );
   });
 
@@ -124,7 +127,7 @@ describe('affection:rest_head_on_shoulder action integration', () => {
     const perceptibleEvent = findPerceptibleEvent();
     if (perceptibleEvent) {
       expect(perceptibleEvent.payload.descriptionText).not.toContain(
-        "leans their head against"
+        'leans their head against'
       );
     }
 

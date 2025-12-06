@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
@@ -18,7 +25,10 @@ describe('formatActionCommand dependency validation fallbacks', () => {
     logger = createMockLogger();
     dispatcher = { dispatch: jest.fn() };
     entityManager = {
-      getEntityInstance: jest.fn(() => ({ id: 'target-99', name: 'Target 99' })),
+      getEntityInstance: jest.fn(() => ({
+        id: 'target-99',
+        name: 'Target 99',
+      })),
     };
     displayNameFn = jest.fn(() => 'Target 99');
   });

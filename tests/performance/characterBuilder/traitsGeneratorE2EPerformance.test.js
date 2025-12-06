@@ -102,19 +102,21 @@ describe('Traits Generator Performance E2E Tests', () => {
 
         if (window.performance) {
           // jsdom v27 has performance but it's readonly, so we need to mock individual methods
-          Object.keys(performanceMock).forEach(key => {
+          Object.keys(performanceMock).forEach((key) => {
             if (key === 'memory') {
               // Handle memory property separately
               if (!window.performance.memory) {
                 Object.defineProperty(window.performance, 'memory', {
                   value: performanceMock.memory,
-                  configurable: true
+                  configurable: true,
                 });
               }
             } else if (typeof performanceMock[key] === 'function') {
               // Mock the method if it exists, or add it if it doesn't
               if (window.performance[key]) {
-                jest.spyOn(window.performance, key).mockImplementation(performanceMock[key]);
+                jest
+                  .spyOn(window.performance, key)
+                  .mockImplementation(performanceMock[key]);
               } else {
                 window.performance[key] = performanceMock[key];
               }
@@ -124,7 +126,7 @@ describe('Traits Generator Performance E2E Tests', () => {
           // If performance doesn't exist at all, create it
           Object.defineProperty(window, 'performance', {
             value: performanceMock,
-            configurable: true
+            configurable: true,
           });
         }
 
@@ -164,11 +166,13 @@ describe('Traits Generator Performance E2E Tests', () => {
       registerHook: jest.fn(function (phase, hook) {
         this.hooks.push({ phase, hook });
       }),
-      createControllerMethodHook: jest.fn((controller, methodName) => async () => {
-        if (typeof controller[methodName] === 'function') {
-          await controller[methodName]();
+      createControllerMethodHook: jest.fn(
+        (controller, methodName) => async () => {
+          if (typeof controller[methodName] === 'function') {
+            await controller[methodName]();
+          }
         }
-      }),
+      ),
       initialize: jest.fn(async function () {
         // Execute registered hooks in order
         for (const { hook } of this.hooks) {
@@ -202,7 +206,9 @@ describe('Traits Generator Performance E2E Tests', () => {
       validateElementCache: jest.fn(() => ({ valid: true })),
       validateElement: jest.fn(),
       normalizeElementConfig: jest.fn((config) =>
-        typeof config === 'string' ? { selector: config, required: true } : config
+        typeof config === 'string'
+          ? { selector: config, required: true }
+          : config
       ),
       showElement: jest.fn(),
       hideElement: jest.fn(),

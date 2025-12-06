@@ -259,7 +259,7 @@ describe('ArrayIterationResolver', () => {
         dispatcher.resolve.mockReturnValueOnce(new Set([null, undefined]));
       });
 
-      parents.forEach(parent => {
+      parents.forEach((parent) => {
         const node = { type: 'ArrayIterationStep', parent };
         const result = resolver.resolve(node, ctx);
         expect(result.size).toBe(0);
@@ -335,7 +335,7 @@ describe('ArrayIterationResolver', () => {
     it('should avoid console diagnostics when debug logging is unavailable', async () => {
       const originalDebug = console.debug;
       // Ensure console.debug is not treated as a function so the fallback branch executes
-       
+
       delete console.debug;
 
       try {
@@ -377,23 +377,26 @@ describe('ArrayIterationResolver', () => {
         const clothingAccess = {
           __isClothingAccessObject: true,
           entityId: 'test-entity',
-          mode: 'topmost'
+          mode: 'topmost',
         };
 
         mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
-          'jacket1', 'pants1'
+          'jacket1',
+          'pants1',
         ]);
 
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
         const result = resolver.resolve(node, ctx);
 
-        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+        expect(
+          mockClothingAccessibilityService.getAccessibleItems
+        ).toHaveBeenCalledWith(
           'test-entity',
           expect.objectContaining({
             mode: 'topmost',
             context: 'removal',
-            sortByPriority: true
+            sortByPriority: true,
           })
         );
 
@@ -413,27 +416,34 @@ describe('ArrayIterationResolver', () => {
         const clothingAccess = {
           __isClothingAccessObject: true,
           entityId: 'test-entity',
-          mode: 'all'
+          mode: 'all',
         };
 
         mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
-          'jacket1', 'shirt1', 'undergarment1', 'necklace1'
+          'jacket1',
+          'shirt1',
+          'undergarment1',
+          'necklace1',
         ]);
 
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
         const result = resolver.resolve(node, ctx);
 
-        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+        expect(
+          mockClothingAccessibilityService.getAccessibleItems
+        ).toHaveBeenCalledWith(
           'test-entity',
           expect.objectContaining({
             mode: 'all',
             context: 'removal',
-            sortByPriority: true
+            sortByPriority: true,
           })
         );
 
-        expect(result).toEqual(new Set(['jacket1', 'shirt1', 'undergarment1', 'necklace1']));
+        expect(result).toEqual(
+          new Set(['jacket1', 'shirt1', 'undergarment1', 'necklace1'])
+        );
       });
 
       it('should handle service errors gracefully', () => {
@@ -449,12 +459,14 @@ describe('ArrayIterationResolver', () => {
         const clothingAccess = {
           __isClothingAccessObject: true,
           entityId: 'test-entity',
-          mode: 'topmost'
+          mode: 'topmost',
         };
 
-        mockClothingAccessibilityService.getAccessibleItems.mockImplementation(() => {
-          throw new Error('Service error');
-        });
+        mockClothingAccessibilityService.getAccessibleItems.mockImplementation(
+          () => {
+            throw new Error('Service error');
+          }
+        );
 
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -462,12 +474,12 @@ describe('ArrayIterationResolver', () => {
 
         expect(errorHandler.handleError).toHaveBeenCalledWith(
           expect.objectContaining({
-            message: 'Service error'
+            message: 'Service error',
           }),
           expect.objectContaining({
             context: 'processClothingAccess',
             entityId: 'test-entity',
-            mode: 'topmost'
+            mode: 'topmost',
           }),
           'ArrayIterationResolver',
           ErrorCodes.CLOTHING_ACCESS_FAILED
@@ -488,22 +500,26 @@ describe('ArrayIterationResolver', () => {
 
         const clothingAccess = {
           __isClothingAccessObject: true,
-          entityId: 'test-entity'
+          entityId: 'test-entity',
           // no mode specified
         };
 
-        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(['jacket1']);
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+          'jacket1',
+        ]);
 
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
         const result = resolver.resolve(node, ctx);
 
-        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+        expect(
+          mockClothingAccessibilityService.getAccessibleItems
+        ).toHaveBeenCalledWith(
           'test-entity',
           expect.objectContaining({
             mode: 'topmost', // should default to topmost
             context: 'removal',
-            sortByPriority: true
+            sortByPriority: true,
           })
         );
 
@@ -523,7 +539,7 @@ describe('ArrayIterationResolver', () => {
         const clothingAccess = {
           __isClothingAccessObject: true,
           entityId: 'test-entity',
-          mode: 'base'
+          mode: 'base',
         };
 
         mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([]);
@@ -551,8 +567,13 @@ describe('ArrayIterationResolver', () => {
           mode: 'topmost',
         };
 
-        const largeResult = Array.from({ length: 10005 }, (_, index) => `item-${index}`);
-        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(largeResult);
+        const largeResult = Array.from(
+          { length: 10005 },
+          (_, index) => `item-${index}`
+        );
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(
+          largeResult
+        );
 
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -612,13 +633,17 @@ describe('ArrayIterationResolver', () => {
           mode: 'base',
         };
 
-        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue(['cap']);
+        mockClothingAccessibilityService.getAccessibleItems.mockReturnValue([
+          'cap',
+        ]);
         dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
         const result = resolver.resolve(node, ctx);
 
         expect(result).toEqual(new Set(['cap']));
-        expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalled();
+        expect(
+          mockClothingAccessibilityService.getAccessibleItems
+        ).toHaveBeenCalled();
       });
 
       it('should suppress trace and error reporting when service throws without handlers', () => {
@@ -669,7 +694,10 @@ describe('ArrayIterationResolver', () => {
           mode: 'topmost',
         };
 
-        const largeResult = Array.from({ length: 10005 }, (_, index) => `item-${index}`);
+        const largeResult = Array.from(
+          { length: 10005 },
+          (_, index) => `item-${index}`
+        );
         const service = {
           getAccessibleItems: jest.fn(() => largeResult),
         };
@@ -851,10 +879,10 @@ describe('ArrayIterationResolver', () => {
       // Should handle the lack of service and report error
       expect(errorHandler.handleError).toHaveBeenCalledWith(
         'Clothing accessibility service not available',
-        expect.objectContaining({ 
+        expect.objectContaining({
           context: 'processClothingAccess',
           entityId: 'test-entity',
-          mode: 'topmost'
+          mode: 'topmost',
         }),
         'ArrayIterationResolver',
         ErrorCodes.SERVICE_NOT_FOUND
@@ -945,7 +973,9 @@ describe('ArrayIterationResolver', () => {
       const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
       const ctx = { dispatcher, trace, actorEntity };
 
-      dispatcher.resolve.mockReturnValue(new Set(['entity-a', null, 'entity-b']));
+      dispatcher.resolve.mockReturnValue(
+        new Set(['entity-a', null, 'entity-b'])
+      );
 
       const result = resolverWithErrorHandler.resolve(node, ctx);
 

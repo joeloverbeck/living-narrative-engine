@@ -59,7 +59,8 @@ describe('CharacterBuilderService additional coverage', () => {
     const deps = {
       logger: overrides.logger ?? baseDeps.logger,
       storageService: overrides.storageService ?? baseDeps.storageService,
-      directionGenerator: overrides.directionGenerator ?? baseDeps.directionGenerator,
+      directionGenerator:
+        overrides.directionGenerator ?? baseDeps.directionGenerator,
       eventBus: overrides.eventBus ?? baseDeps.eventBus,
       database: overrides.database ?? null,
       cacheManager: overrides.cacheManager ?? null,
@@ -72,7 +73,10 @@ describe('CharacterBuilderService additional coverage', () => {
 
   it('migrates legacy caches when cache manager is provided', () => {
     const initialCliche = ['direction-1', { data: { id: 'cliche-1' } }];
-    const initialMotivation = ['motivation-key', { data: [{ id: 'motivation-1' }] }];
+    const initialMotivation = [
+      'motivation-key',
+      { data: [{ id: 'motivation-1' }] },
+    ];
     const cacheManager = { set: jest.fn(), get: jest.fn() };
 
     createService({
@@ -115,7 +119,9 @@ describe('CharacterBuilderService additional coverage', () => {
         return delay;
       });
     const storageError = new Error('Save failed');
-    baseDeps.storageService.storeCharacterConcept.mockRejectedValue(storageError);
+    baseDeps.storageService.storeCharacterConcept.mockRejectedValue(
+      storageError
+    );
 
     const service = createService();
 
@@ -125,7 +131,9 @@ describe('CharacterBuilderService additional coverage', () => {
       'Failed to create character concept after 3 attempts: Save failed'
     );
 
-    expect(baseDeps.storageService.storeCharacterConcept).toHaveBeenCalledTimes(3);
+    expect(baseDeps.storageService.storeCharacterConcept).toHaveBeenCalledTimes(
+      3
+    );
     expect(setTimeoutSpy).toHaveBeenNthCalledWith(1, expect.any(Function), 1);
     expect(setTimeoutSpy).toHaveBeenNthCalledWith(2, expect.any(Function), 2);
     expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
@@ -159,8 +167,12 @@ describe('CharacterBuilderService additional coverage', () => {
       id: conceptId,
       concept: 'A concept',
     });
-    baseDeps.directionGenerator.generateDirections.mockResolvedValue([direction]);
-    baseDeps.storageService.storeThematicDirections.mockResolvedValue([direction]);
+    baseDeps.directionGenerator.generateDirections.mockResolvedValue([
+      direction,
+    ]);
+    baseDeps.storageService.storeThematicDirections.mockResolvedValue([
+      direction,
+    ]);
 
     const service = createService();
     const breakerKey = `directions_${conceptId}`;
@@ -172,9 +184,9 @@ describe('CharacterBuilderService additional coverage', () => {
     const result = await service.generateThematicDirections(conceptId);
 
     expect(result).toEqual([direction]);
-    expect(
-      service.__getCircuitBreakerStateForTests(breakerKey).failures
-    ).toBe(0);
+    expect(service.__getCircuitBreakerStateForTests(breakerKey).failures).toBe(
+      0
+    );
   });
 
   it('wraps storage errors when listing all thematic directions', async () => {
@@ -212,9 +224,7 @@ describe('CharacterBuilderService additional coverage', () => {
   it('throws when deleting clichés without a database connection', async () => {
     const service = createService();
     const cliche = { id: 'c1' };
-    jest
-      .spyOn(service, 'getClichesByDirectionId')
-      .mockResolvedValue(cliche);
+    jest.spyOn(service, 'getClichesByDirectionId').mockResolvedValue(cliche);
 
     await expect(
       service.deleteClichesForDirection('direction-1')
@@ -223,15 +233,11 @@ describe('CharacterBuilderService additional coverage', () => {
 
   it('throws when removing a cliché item for an unknown direction', async () => {
     const service = createService();
-    jest
-      .spyOn(service, 'getClichesByDirectionId')
-      .mockResolvedValue(null);
+    jest.spyOn(service, 'getClichesByDirectionId').mockResolvedValue(null);
 
     await expect(
       service.removeClicheItem('direction-1', 'names', 'Item text')
-    ).rejects.toThrow(
-      'No clichés found for direction: direction-1'
-    );
+    ).rejects.toThrow('No clichés found for direction: direction-1');
   });
 
   it('surfaces cache updates errors when no database is configured', async () => {
@@ -299,31 +305,29 @@ describe('CharacterBuilderService additional coverage', () => {
     );
 
     expect(result).toBe(updatedCliche);
-    expect(database.updateCliche).toHaveBeenCalledWith(
-      'cliche-1',
-      { id: 'cliche-1' }
-    );
+    expect(database.updateCliche).toHaveBeenCalledWith('cliche-1', {
+      id: 'cliche-1',
+    });
     expect(existingCliche.createWithItemRemoved).toHaveBeenCalledWith(
       'names',
       'Item text'
     );
     expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
       CHARACTER_BUILDER_EVENTS.CLICHE_ITEM_DELETED,
-      expect.objectContaining({ directionId: 'direction-1', categoryId: 'names' })
+      expect.objectContaining({
+        directionId: 'direction-1',
+        categoryId: 'names',
+      })
     );
   });
 
   it('throws when removing a trope for an unknown direction', async () => {
     const service = createService();
-    jest
-      .spyOn(service, 'getClichesByDirectionId')
-      .mockResolvedValue(null);
+    jest.spyOn(service, 'getClichesByDirectionId').mockResolvedValue(null);
 
     await expect(
       service.removeClicheTrope('direction-1', 'Trope text')
-    ).rejects.toThrow(
-      'No clichés found for direction: direction-1'
-    );
+    ).rejects.toThrow('No clichés found for direction: direction-1');
   });
 
   it('removes a cliché trope and refreshes cache', async () => {
@@ -352,16 +356,18 @@ describe('CharacterBuilderService additional coverage', () => {
     );
 
     expect(result).toBe(updatedCliche);
-    expect(database.updateCliche).toHaveBeenCalledWith(
-      'cliche-2',
-      { id: 'cliche-2' }
-    );
+    expect(database.updateCliche).toHaveBeenCalledWith('cliche-2', {
+      id: 'cliche-2',
+    });
     expect(existingCliche.createWithTropeRemoved).toHaveBeenCalledWith(
       'Overused trope'
     );
     expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
       CHARACTER_BUILDER_EVENTS.CLICHE_TROPE_DELETED,
-      expect.objectContaining({ directionId: 'direction-2', tropeText: 'Overused trope' })
+      expect.objectContaining({
+        directionId: 'direction-2',
+        tropeText: 'Overused trope',
+      })
     );
   });
 
@@ -382,8 +388,11 @@ describe('CharacterBuilderService additional coverage', () => {
     );
     expect(baseDeps.eventBus.dispatch).toHaveBeenCalledWith(
       CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-      expect.objectContaining({ directionId: 'direction-1', source: 'cache', count: 1 })
+      expect.objectContaining({
+        directionId: 'direction-1',
+        source: 'cache',
+        count: 1,
+      })
     );
   });
 });
-

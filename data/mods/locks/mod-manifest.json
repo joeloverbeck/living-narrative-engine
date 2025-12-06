@@ -30,10 +30,7 @@
   ],
   "content": {
     "components": [],
-    "actions": [
-      "lock_connection.action.json",
-      "unlock_connection.action.json"
-    ],
+    "actions": ["lock_connection.action.json", "unlock_connection.action.json"],
     "rules": [
       "handle_lock_connection.rule.json",
       "handle_unlock_connection.rule.json"

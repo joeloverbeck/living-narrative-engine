@@ -247,7 +247,9 @@ describe('Character Builder Events - Constants', () => {
     it('should import without circular dependency', () => {
       expect(() => {
         // eslint-disable-next-line no-unused-vars
-        const { CHARACTER_BUILDER_EVENTS: events } = require('../../../../src/characterBuilder/events/characterBuilderEvents.js');
+        const {
+          CHARACTER_BUILDER_EVENTS: events,
+        } = require('../../../../src/characterBuilder/events/characterBuilderEvents.js');
       }).not.toThrow();
     });
 

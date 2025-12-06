@@ -99,12 +99,16 @@ const createLogger = () => {
     error: [],
   };
 
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((value) =>
+          typeof value === 'string' ? value : JSON.stringify(value)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
 
   return {
     messages,
@@ -219,7 +223,11 @@ describe('BodyGraphService integration – end-to-end cache and graph behaviors'
     expect(service.getChildren('unknown')).toEqual([]);
     expect(service.getParent('leftArm')).toBe('torso');
     expect(service.getParent('missing')).toBeNull();
-    expect(service.getAncestors('leftHand')).toEqual(['leftArm', 'torso', ACTOR_ID]);
+    expect(service.getAncestors('leftHand')).toEqual([
+      'leftArm',
+      'torso',
+      ACTOR_ID,
+    ]);
     expect(service.getAncestors('torso')).toEqual([ACTOR_ID]);
 
     const descendants = service.getAllDescendants('torso');
@@ -273,17 +281,25 @@ describe('BodyGraphService integration – end-to-end cache and graph behaviors'
     const getAllPartsKey = CacheKeyGenerators.getAllParts(ACTOR_ID);
     expect(queryCache.has(getAllPartsKey)).toBe(true);
     queryCache.set(getAllPartsKey, ['cached-root'], ACTOR_ID);
-    expect(service.getAllParts(bodyComponent, ACTOR_ID)).toEqual(['cached-root']);
+    expect(service.getAllParts(bodyComponent, ACTOR_ID)).toEqual([
+      'cached-root',
+    ]);
     queryCache.invalidateRoot(ACTOR_ID);
 
     entityManager.setComponent('leftArm', 'custom:decor', {});
     entityManager.setComponent('rightArm', 'custom:decor', {});
-    expect(service.hasPartWithComponent(bodyComponent, 'custom:decor')).toBe(false);
-    entityManager.setComponent('leftArm', 'custom:decor', { details: { color: 'blue' } });
-    expect(service.hasPartWithComponent(bodyComponent, 'custom:decor')).toBe(true);
-    expect(service.hasPartWithComponent(bodyComponent, 'missing:component')).toBe(
+    expect(service.hasPartWithComponent(bodyComponent, 'custom:decor')).toBe(
       false
     );
+    entityManager.setComponent('leftArm', 'custom:decor', {
+      details: { color: 'blue' },
+    });
+    expect(service.hasPartWithComponent(bodyComponent, 'custom:decor')).toBe(
+      true
+    );
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'missing:component')
+    ).toBe(false);
 
     const valueMatch = service.hasPartWithComponentValue(
       bodyComponent,
@@ -324,7 +340,10 @@ describe('BodyGraphService integration – end-to-end cache and graph behaviors'
     );
 
     const anatomyData = await service.getAnatomyData(ACTOR_ID);
-    expect(anatomyData).toEqual({ recipeId: 'humanoid.basic', rootEntityId: ACTOR_ID });
+    expect(anatomyData).toEqual({
+      recipeId: 'humanoid.basic',
+      rootEntityId: ACTOR_ID,
+    });
     expect(await service.getAnatomyData('spectator')).toBeNull();
     await expect(service.getAnatomyData()).rejects.toThrow(
       'Entity ID is required and must be a string'
@@ -343,11 +362,15 @@ describe('BodyGraphService integration – end-to-end cache and graph behaviors'
     expect(queryCache.has(armsKey)).toBe(true);
     expect(queryCache.has(getAllKey)).toBe(true);
 
-    const detachResult = await service.detachPart('leftArm', { reason: 'injury' });
+    const detachResult = await service.detachPart('leftArm', {
+      reason: 'injury',
+    });
     expect(detachResult.detached.sort()).toEqual(['leftArm', 'leftHand']);
     expect(detachResult.parentId).toBe('torso');
     expect(detachResult.socketId).toBe('shoulder-left');
-    expect(entityManager.getComponentData('leftArm', 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData('leftArm', 'anatomy:joint')
+    ).toBeNull();
     expect(service.hasCache(ACTOR_ID)).toBe(false);
     expect(queryCache.has(armsKey)).toBe(false);
     expect(queryCache.has(getAllKey)).toBe(false);
@@ -381,10 +404,12 @@ describe('BodyGraphService integration – end-to-end cache and graph behaviors'
     expect(noCascadeResult.detached).toEqual(['rightArm']);
     expect(noCascadeResult.parentId).toBe('torso');
     expect(noCascadeResult.socketId).toBe('shoulder-right');
-    expect(dispatcher.events.some((event) => event.payload.reason === 'surgery')).toBe(
-      true
-    );
+    expect(
+      dispatcher.events.some((event) => event.payload.reason === 'surgery')
+    ).toBe(true);
 
-    await expect(service.detachPart('ornament')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.detachPart('ornament')).rejects.toThrow(
+      InvalidArgumentError
+    );
   });
 });

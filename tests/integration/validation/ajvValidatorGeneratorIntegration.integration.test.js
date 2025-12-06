@@ -23,7 +23,10 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
 
     // Create real dependencies
     const similarityCalculator = new StringSimilarityCalculator({ logger });
-    validatorGenerator = new ValidatorGenerator({ logger, similarityCalculator });
+    validatorGenerator = new ValidatorGenerator({
+      logger,
+      similarityCalculator,
+    });
     dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Create validator with enhanced validation enabled
@@ -86,7 +89,8 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {{property}}: "{{value}}". Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid {{property}}: "{{value}}". Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -156,7 +160,8 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {{property}}: "{{value}}". Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid {{property}}: "{{value}}". Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -328,7 +333,9 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
 
       // Assert - logger should show 2 validators generated (comp1, comp2)
       const infoLogs = logger.info.mock.calls.map((call) => call[0]);
-      expect(infoLogs.some((log) => log.includes('Pre-generated 2 validators'))).toBe(true);
+      expect(
+        infoLogs.some((log) => log.includes('Pre-generated 2 validators'))
+      ).toBe(true);
     });
 
     it('should use pre-generated validators during validation', async () => {
@@ -422,13 +429,17 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'The {{property}} field has an invalid value: "{{value}}". Please use one of: {{validValues}}',
+            invalidEnum:
+              'The {{property}} field has an invalid value: "{{value}}". Please use one of: {{validValues}}',
           },
         },
       };
 
       dataRegistry.store('components', 'test:custom-error', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'test:custom-error');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'test:custom-error'
+      );
 
       const invalidData = { status: 'disabled' };
 
@@ -439,7 +450,9 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
       expect(result.isValid).toBe(false);
       const enumError = result.errors.find((e) => e.type === 'invalidEnum');
       expect(enumError).toBeDefined();
-      expect(enumError.message).toContain('The status field has an invalid value');
+      expect(enumError.message).toContain(
+        'The status field has an invalid value'
+      );
       expect(enumError.message).toContain('active, inactive, pending');
     });
 
@@ -473,7 +486,9 @@ describe('AjvSchemaValidator - ValidatorGenerator Integration', () => {
 
       // Assert
       expect(result.isValid).toBe(false);
-      const requiredError = result.errors.find((e) => e.type === 'missingRequired');
+      const requiredError = result.errors.find(
+        (e) => e.type === 'missingRequired'
+      );
       expect(requiredError).toBeDefined();
       expect(requiredError.message).toContain('Required field age is missing');
     });

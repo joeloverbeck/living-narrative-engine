@@ -24,12 +24,9 @@ export function createTestEntityManager(config) {
   } else {
     // Legacy mode - direct SimpleEntityManager
     if (logger && logger.warn) {
-      logger.warn(
-        'Using SimpleEntityManager directly is deprecated',
-        {
-          hint: 'Set useAdapter: true to use TestEntityManagerAdapter for production API compatibility'
-        }
-      );
+      logger.warn('Using SimpleEntityManager directly is deprecated', {
+        hint: 'Set useAdapter: true to use TestEntityManagerAdapter for production API compatibility',
+      });
     }
 
     // SimpleEntityManager constructor takes array of entities directly
@@ -58,11 +55,8 @@ export function createEntityManagerAdapter(config) {
  * @returns {SimpleEntityManager} Simple manager
  */
 export function createSimpleEntityManager(config) {
-  config.logger.warn(
-    'createSimpleEntityManager is deprecated',
-    {
-      hint: 'Use createEntityManagerAdapter for production API compatibility'
-    }
-  );
+  config.logger.warn('createSimpleEntityManager is deprecated', {
+    hint: 'Use createEntityManagerAdapter for production API compatibility',
+  });
   return createTestEntityManager({ ...config, useAdapter: false });
 }

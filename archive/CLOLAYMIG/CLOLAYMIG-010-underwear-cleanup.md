@@ -57,6 +57,7 @@ white_thigh_high_socks_pink_hearts.entity.json
 Remove these 33 entries from the `entities.definitions` array.
 
 **Entity count after this ticket depends on prior completions:**
+
 - If all previous cleanups complete: 125 - 14 - 10 - 33 = **68 entities** (base-clothing only)
 - This matches the base-clothing layer count
 
@@ -70,10 +71,10 @@ Remove these 33 entries from the `entities.definitions` array.
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
-| `data/mods/clothing/mod-manifest.json` | Remove 33 entries from definitions |
-| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 33 files |
+| File                                                    | Action                             |
+| ------------------------------------------------------- | ---------------------------------- |
+| `data/mods/clothing/mod-manifest.json`                  | Remove 33 entries from definitions |
+| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 33 files                    |
 
 ## Acceptance Criteria
 
@@ -112,6 +113,7 @@ grep -r '"id": "clothing:graphite_wool_briefs"' data/mods/
 ## Post-Completion State
 
 After this ticket:
+
 - **Underwear migration is complete**
 - `underwear` mod: 33 entities
 - All underwear references point to `underwear:*`
@@ -140,6 +142,7 @@ git checkout data/mods/clothing/mod-manifest.json
 ### What Was Actually Changed vs Originally Planned
 
 **Planned Changes - All Completed As Specified:**
+
 1. Deleted all 33 underwear entity files from `data/mods/clothing/entities/definitions/`
 2. Updated `data/mods/clothing/mod-manifest.json` to remove the 33 entity entries from `entities.definitions`
 
@@ -158,6 +161,7 @@ Two test files were referencing underwear items that had been migrated:
 
 **Test Strengthening:**
 Extended `tests/integration/mods/underwear/underwearEntityMigration.integration.test.js`:
+
 - Added new describe block `CLOLAYMIG-010: Clothing Mod Cleanup` with 3 tests:
   - Validates underwear entity files do NOT exist in clothing mod
   - Validates underwear entities are NOT referenced in clothing mod manifest
@@ -165,14 +169,14 @@ Extended `tests/integration/mods/underwear/underwearEntityMigration.integration.
 
 ### Final Verification
 
-| Verification | Expected | Actual |
-|-------------|----------|--------|
-| Underwear mod entity count | 33 | 33 ✓ |
-| Clothing mod entity count | 68 | 68 ✓ |
-| npm run validate | 0 violations | 0 violations ✓ |
-| Underwear tests | Pass | 14 tests pass ✓ |
-| Clothing tests | Pass | 285 tests pass ✓ |
-| Duplicate entity IDs | None | None ✓ |
+| Verification               | Expected     | Actual           |
+| -------------------------- | ------------ | ---------------- |
+| Underwear mod entity count | 33           | 33 ✓             |
+| Clothing mod entity count  | 68           | 68 ✓             |
+| npm run validate           | 0 violations | 0 violations ✓   |
+| Underwear tests            | Pass         | 14 tests pass ✓  |
+| Clothing tests             | Pass         | 285 tests pass ✓ |
+| Duplicate entity IDs       | None         | None ✓           |
 
 ### Discrepancies From Ticket
 

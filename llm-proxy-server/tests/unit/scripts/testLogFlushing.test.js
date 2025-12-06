@@ -141,9 +141,9 @@ describe('test-log-flushing utility functions', () => {
     const module = await loadModule({ fetchImplementation: null });
     const { sendLogs } = module;
 
-    await expect(sendLogs([{ level: 'info', message: 'test' }])).rejects.toThrow(
-      'Global fetch API is not available in this runtime.'
-    );
+    await expect(
+      sendLogs([{ level: 'info', message: 'test' }])
+    ).rejects.toThrow('Global fetch API is not available in this runtime.');
   });
 
   test('checkLogFiles reports existing files and returns true', async () => {
@@ -214,7 +214,11 @@ describe('test-log-flushing utility functions', () => {
     await fs.writeFile(path.join(todayAbsolute, 'proxy.log'), 'ready');
 
     fetchMock.mockImplementation(() =>
-      Promise.resolve({ ok: true, status: 200, json: jest.fn().mockResolvedValue({ status: 'ok' }) })
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ status: 'ok' }),
+      })
     );
 
     const consoleLogSpy = jest
@@ -238,7 +242,9 @@ describe('test-log-flushing utility functions', () => {
     expect(messages.some((message) => message.includes('Batch 3:'))).toBe(true);
     expect(
       messages.some((message) =>
-        message.includes('✅ TEST PASSED: Logs are being flushed to files properly!')
+        message.includes(
+          '✅ TEST PASSED: Logs are being flushed to files properly!'
+        )
       )
     ).toBe(true);
 
@@ -251,9 +257,21 @@ describe('test-log-flushing utility functions', () => {
     const { testLogFlushing } = module;
 
     fetchMock
-      .mockResolvedValueOnce({ ok: true, status: 200, json: jest.fn().mockResolvedValue({ status: 'ok' }) })
-      .mockResolvedValueOnce({ ok: false, status: 500, json: jest.fn().mockResolvedValue({ error: 'nope' }) })
-      .mockResolvedValueOnce({ ok: true, status: 200, json: jest.fn().mockResolvedValue({ status: 'ok' }) });
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ status: 'ok' }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockResolvedValue({ error: 'nope' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ status: 'ok' }),
+      });
 
     const consoleLogSpy = jest
       .spyOn(console, 'log')
@@ -273,11 +291,19 @@ describe('test-log-flushing utility functions', () => {
 
     const messages = consoleLogSpy.mock.calls.map(([message]) => message);
 
-    expect(messages.some((message) => message.includes('❌ Failed to send batch 2'))).toBe(true);
-    expect(messages.some((message) => message.includes('⚠️ No log files found yet...'))).toBe(true);
-    expect(messages.some((message) => message.includes('❌ TEST FAILED: No log files found.'))).toBe(
-      true
-    );
+    expect(
+      messages.some((message) => message.includes('❌ Failed to send batch 2'))
+    ).toBe(true);
+    expect(
+      messages.some((message) =>
+        message.includes('⚠️ No log files found yet...')
+      )
+    ).toBe(true);
+    expect(
+      messages.some((message) =>
+        message.includes('❌ TEST FAILED: No log files found.')
+      )
+    ).toBe(true);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to send logs:',
       'HTTP error! status: 500'
@@ -293,8 +319,12 @@ describe('test-log-flushing utility functions', () => {
 
     const originalEnv = process.env.NODE_ENV;
     const originalArgv = [...process.argv];
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const fetchSpy = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -313,7 +343,10 @@ describe('test-log-flushing utility functions', () => {
 
     globalThis.fetch = fetchSpy;
     process.env.NODE_ENV = 'development';
-    process.argv = ['/usr/bin/node', path.join(process.cwd(), 'test-log-flushing.js')];
+    process.argv = [
+      '/usr/bin/node',
+      path.join(process.cwd(), 'test-log-flushing.js'),
+    ];
 
     try {
       const module = await import('../../../test-log-flushing.js');
@@ -323,7 +356,8 @@ describe('test-log-flushing utility functions', () => {
       expect(timeoutSpy).toHaveBeenCalled();
       expect(
         consoleLogSpy.mock.calls.some(
-          ([message]) => message === '🧪 Starting Windows Terminal Log Flush Test'
+          ([message]) =>
+            message === '🧪 Starting Windows Terminal Log Flush Test'
         )
       ).toBe(true);
     } finally {
@@ -342,11 +376,16 @@ describe('test-log-flushing utility functions', () => {
 
     const originalEnv = process.env.NODE_ENV;
     const originalArgv = [...process.argv];
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
     const timeoutSpy = jest.spyOn(global, 'setTimeout');
 
     process.env.NODE_ENV = 'test';
-    process.argv = ['/usr/bin/node', path.join(process.cwd(), 'test-log-flushing.js')];
+    process.argv = [
+      '/usr/bin/node',
+      path.join(process.cwd(), 'test-log-flushing.js'),
+    ];
 
     try {
       const module = await import('../../../test-log-flushing.js');
@@ -354,8 +393,9 @@ describe('test-log-flushing utility functions', () => {
       expect(module.directExecutionPromise).toBeNull();
       expect(timeoutSpy).not.toHaveBeenCalled();
       expect(
-        consoleLogSpy.mock.calls.some(([message]) =>
-          message === '🧪 Starting Windows Terminal Log Flush Test'
+        consoleLogSpy.mock.calls.some(
+          ([message]) =>
+            message === '🧪 Starting Windows Terminal Log Flush Test'
         )
       ).toBe(false);
     } finally {

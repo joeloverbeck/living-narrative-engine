@@ -7,10 +7,7 @@
   "applicability": {
     "description": "Actor exists and has identity",
     "condition": {
-      "has_component": [
-        {"var": "actor"},
-        "core:identity"
-      ]
+      "has_component": [{ "var": "actor" }, "core:identity"]
     }
   },
 
@@ -21,16 +18,10 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              {"var": "actor"},
-              "items:inventory"
-            ]
+            "has_component": [{ "var": "actor" }, "items:inventory"]
           },
           {
-            "!=": [
-              {"var": "actor.components.items:inventory.capacity"},
-              null
-            ]
+            "!=": [{ "var": "actor.components.items:inventory.capacity" }, null]
           }
         ]
       },
@@ -40,8 +31,8 @@
           "stepType": "conditional",
           "condition": {
             "<": [
-              {"var": "actor.components.items:inventory.items.length"},
-              {"var": "actor.components.items:inventory.capacity"}
+              { "var": "actor.components.items:inventory.items.length" },
+              { "var": "actor.components.items:inventory.capacity" }
             ]
           },
           "thenSteps": [
@@ -83,8 +74,8 @@
       "wrongCode": {
         "condition": {
           "<": [
-            {"var": "actor.components.items:inventory.items.length"},
-            {"var": "actor.components.items:inventory.capacity"}
+            { "var": "actor.components.items:inventory.items.length" },
+            { "var": "actor.components.items:inventory.capacity" }
           ]
         }
       },
@@ -96,8 +87,13 @@
       "wrongCode": {
         "condition": {
           "and": [
-            {"has_component": ["actor", "items:inventory"]},
-            {">": [{"var": "actor.components.items:inventory.items.length"}, 0]}
+            { "has_component": ["actor", "items:inventory"] },
+            {
+              ">": [
+                { "var": "actor.components.items:inventory.items.length" },
+                0
+              ]
+            }
           ]
         }
       },
@@ -120,8 +116,10 @@
       "description": "Check component and property both exist",
       "pattern": {
         "and": [
-          {"has_component": ["actor", "items:inventory"]},
-          {"!=": [{"var": "actor.components.items:inventory.capacity"}, null]}
+          { "has_component": ["actor", "items:inventory"] },
+          {
+            "!=": [{ "var": "actor.components.items:inventory.capacity" }, null]
+          }
         ]
       }
     },
@@ -129,9 +127,16 @@
       "description": "Chain checks for nested properties",
       "pattern": {
         "and": [
-          {"has_component": ["actor", "combat:stats"]},
-          {"!=": [{"var": "actor.components.combat:stats.attributes"}, null]},
-          {"!=": [{"var": "actor.components.combat:stats.attributes.strength"}, null]}
+          { "has_component": ["actor", "combat:stats"] },
+          {
+            "!=": [{ "var": "actor.components.combat:stats.attributes" }, null]
+          },
+          {
+            "!=": [
+              { "var": "actor.components.combat:stats.attributes.strength" },
+              null
+            ]
+          }
         ]
       }
     },
@@ -139,8 +144,8 @@
       "description": "Provide fallback for optional components",
       "pattern": {
         "if": [
-          {"has_component": ["actor", "items:equipped"]},
-          {"var": "actor.components.items:equipped.weaponId"},
+          { "has_component": ["actor", "items:equipped"] },
+          { "var": "actor.components.items:equipped.weaponId" },
           "none"
         ]
       }
@@ -164,8 +169,10 @@
       "description": "Check component AND property not null",
       "condition": {
         "and": [
-          {"has_component": ["actor", "items:inventory"]},
-          {"!=": [{"var": "actor.components.items:inventory.capacity"}, null]}
+          { "has_component": ["actor", "items:inventory"] },
+          {
+            "!=": [{ "var": "actor.components.items:inventory.capacity" }, null]
+          }
         ]
       }
     },
@@ -173,9 +180,11 @@
       "description": "Check component, property exists, AND property has valid value",
       "condition": {
         "and": [
-          {"has_component": ["actor", "items:inventory"]},
-          {"!=": [{"var": "actor.components.items:inventory.capacity"}, null]},
-          {">": [{"var": "actor.components.items:inventory.capacity"}, 0]}
+          { "has_component": ["actor", "items:inventory"] },
+          {
+            "!=": [{ "var": "actor.components.items:inventory.capacity" }, null]
+          },
+          { ">": [{ "var": "actor.components.items:inventory.capacity" }, 0] }
         ]
       }
     }

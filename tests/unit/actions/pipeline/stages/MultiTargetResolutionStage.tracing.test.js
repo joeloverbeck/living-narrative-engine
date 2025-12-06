@@ -98,15 +98,26 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
     mockDeps.targetResolutionCoordinator = {
       coordinateResolution: jest.fn(async (context, trace) => {
         const { actionDef } = context;
-        
+
         // Handle errors in getting resolution order
         let resolutionOrder;
         try {
-          resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(actionDef.targets);
+          resolutionOrder =
+            mockDeps.targetDependencyResolver.getResolutionOrder(
+              actionDef.targets
+            );
         } catch (error) {
-          return { success: true, data: { ...context.data, actionsWithTargets: [], error: error?.message }, continueProcessing: false };
+          return {
+            success: true,
+            data: {
+              ...context.data,
+              actionsWithTargets: [],
+              error: error?.message,
+            },
+            continueProcessing: false,
+          };
         }
-        
+
         const resolvedTargets = {};
         const targetContexts = [];
         const detailedResolutionResults = {};
@@ -118,49 +129,59 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
             targetDef.scope,
             scopeContext
           );
-          
+
           // Log errors if scope resolution fails
           if (!result.success) {
-            const errorDetails = result.errors || result.error || 'Unknown error';
-            mockDeps.logger.error(`Failed to resolve scope '${targetDef.scope}':`, errorDetails);
+            const errorDetails =
+              result.errors || result.error || 'Unknown error';
+            mockDeps.logger.error(
+              `Failed to resolve scope '${targetDef.scope}':`,
+              errorDetails
+            );
           }
 
           if (result.success && result.value) {
-            const candidates = Array.from(result.value).map(entry => {
-              // Normalize entity ID (handle strings and objects with id/itemId)
-              let id;
-              if (typeof entry === 'string') {
-                id = entry;
-              } else if (entry && typeof entry === 'object') {
-                if (typeof entry.id === 'string' && entry.id.trim()) {
-                  id = entry.id.trim();
-                } else if (typeof entry.itemId === 'string' && entry.itemId.trim()) {
-                  id = entry.itemId.trim();
+            const candidates = Array.from(result.value)
+              .map((entry) => {
+                // Normalize entity ID (handle strings and objects with id/itemId)
+                let id;
+                if (typeof entry === 'string') {
+                  id = entry;
+                } else if (entry && typeof entry === 'object') {
+                  if (typeof entry.id === 'string' && entry.id.trim()) {
+                    id = entry.id.trim();
+                  } else if (
+                    typeof entry.itemId === 'string' &&
+                    entry.itemId.trim()
+                  ) {
+                    id = entry.itemId.trim();
+                  } else {
+                    return null;
+                  }
                 } else {
                   return null;
                 }
-              } else {
-                return null;
-              }
-              const entity = mockDeps.entityManager.getEntityInstance(id);
-              if (!entity) {
-                return null;
-              }
-              const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
-              return {
-                id,
-                displayName,
-                entity
-              };
-            }).filter(Boolean);
-            
+                const entity = mockDeps.entityManager.getEntityInstance(id);
+                if (!entity) {
+                  return null;
+                }
+                const displayName =
+                  mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+                return {
+                  id,
+                  displayName,
+                  entity,
+                };
+              })
+              .filter(Boolean);
+
             resolvedTargets[targetKey] = candidates;
-            candidates.forEach(target => {
+            candidates.forEach((target) => {
               targetContexts.push({
                 type: 'entity',
                 entityId: target.id,
                 displayName: target.displayName,
-                placeholder: targetDef.placeholder
+                placeholder: targetDef.placeholder,
               });
             });
           }
@@ -170,21 +191,43 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
             candidatesFound: result?.value?.size || 0,
             candidatesResolved: resolvedTargets[targetKey]?.length || 0,
             failureReason: null,
-            evaluationTimeMs: 0
+            evaluationTimeMs: 0,
           };
-          
+
           // Check for dependent targets with no candidates
-          if (targetDef.contextFrom && resolvedTargets[targetKey]?.length === 0) {
-            detailedResolutionResults[targetKey].failureReason = `No candidates found for target '${targetKey}'`;
-            return { success: true, data: { ...context.data, actionsWithTargets: [], detailedResolutionResults }, continueProcessing: false };
+          if (
+            targetDef.contextFrom &&
+            resolvedTargets[targetKey]?.length === 0
+          ) {
+            detailedResolutionResults[targetKey].failureReason =
+              `No candidates found for target '${targetKey}'`;
+            return {
+              success: true,
+              data: {
+                ...context.data,
+                actionsWithTargets: [],
+                detailedResolutionResults,
+              },
+              continueProcessing: false,
+            };
           }
         }
 
         // Check if we have any valid targets
-        const hasTargets = Object.values(resolvedTargets).some(targets => targets.length > 0);
-        
+        const hasTargets = Object.values(resolvedTargets).some(
+          (targets) => targets.length > 0
+        );
+
         if (!hasTargets) {
-          return { success: true, data: { ...context.data, actionsWithTargets: [], detailedResolutionResults }, continueProcessing: false };
+          return {
+            success: true,
+            data: {
+              ...context.data,
+              actionsWithTargets: [],
+              detailedResolutionResults,
+            },
+            continueProcessing: false,
+          };
         }
 
         return mockDeps.targetResolutionResultBuilder.buildMultiTargetResult(
@@ -195,7 +238,7 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
           actionDef,
           detailedResolutionResults
         );
-      })
+      }),
     };
 
     // Create stage instance with current constructor signature

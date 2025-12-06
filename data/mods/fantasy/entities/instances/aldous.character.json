@@ -1,20 +1,20 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:aldous_instance",
-    "definitionId": "fantasy:aldous",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        },
-        "items:inventory": {
-            "items": [
-                "fantasy:coop_key_instance",
-                "fantasy:containment_vessel_instance"
-            ],
-            "capacity": {
-                "maxWeight": 50.0,
-                "maxItems": 20
-            }
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:aldous_instance",
+  "definitionId": "fantasy:aldous",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
+    },
+    "items:inventory": {
+      "items": [
+        "fantasy:coop_key_instance",
+        "fantasy:containment_vessel_instance"
+      ],
+      "capacity": {
+        "maxWeight": 50.0,
+        "maxItems": 20
+      }
     }
+  }
 }

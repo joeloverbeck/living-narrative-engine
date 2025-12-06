@@ -107,7 +107,9 @@ describe('BodyDescriptionComposer - SkinColor Descriptor', () => {
 
       for (const skinColorValue of testCases) {
         const mockBodyEntity = {
-          hasComponent: jest.fn((componentId) => componentId === 'anatomy:body'),
+          hasComponent: jest.fn(
+            (componentId) => componentId === 'anatomy:body'
+          ),
           getComponentData: jest.fn((componentId) => {
             if (componentId === 'anatomy:body') {
               return {

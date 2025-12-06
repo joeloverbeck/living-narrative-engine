@@ -139,8 +139,12 @@ describe('hand-holding:hold_hand action integration', () => {
       holding_entity_id: 'old_partner',
       consented: false,
     });
-    expect(actorInstance.components['hand-holding:holding_hand']).toBeUndefined();
-    expect(targetInstance.components['hand-holding:holding_hand']).toBeUndefined();
+    expect(
+      actorInstance.components['hand-holding:holding_hand']
+    ).toBeUndefined();
+    expect(
+      targetInstance.components['hand-holding:holding_hand']
+    ).toBeUndefined();
     expect(targetInstance.components['hand-holding:hand_held']).toBeUndefined();
   });
 

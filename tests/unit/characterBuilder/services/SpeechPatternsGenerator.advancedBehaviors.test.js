@@ -240,7 +240,6 @@ describe('SpeechPatternsGenerator advanced behaviours', () => {
     };
 
     for (let i = 0; i < 5; i++) {
-       
       await expect(
         generator.generateSpeechPatterns(character, failingOptions)
       ).rejects.toThrow(

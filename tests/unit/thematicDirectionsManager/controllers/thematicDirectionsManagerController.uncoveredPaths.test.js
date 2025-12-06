@@ -11,12 +11,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import {
-  ThematicDirectionsManagerController,
-} from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
-import {
-  BaseCharacterBuilderControllerTestBase,
-} from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
+import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
+import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import {
   __getInstances as getEditorInstances,
   __resetInstances as resetEditorInstances,
@@ -27,28 +23,25 @@ import {
 } from '../../../../src/shared/characterBuilder/previousItemsDropdown.js';
 
 // Mock InPlaceEditor to expose created instances for validation
-jest.mock(
-  '../../../../src/shared/characterBuilder/inPlaceEditor.js',
-  () => {
-    const instances = [];
-    return {
-      InPlaceEditor: jest.fn().mockImplementation((options) => {
-        const instance = {
-          options,
-          destroy: jest.fn(),
-          triggerSave: (value) => options.onSave(value),
-          runValidator: (value) => options.validator(value),
-        };
-        instances.push(instance);
-        return instance;
-      }),
-      __getInstances: () => instances,
-      __resetInstances: () => {
-        instances.length = 0;
-      },
-    };
-  }
-);
+jest.mock('../../../../src/shared/characterBuilder/inPlaceEditor.js', () => {
+  const instances = [];
+  return {
+    InPlaceEditor: jest.fn().mockImplementation((options) => {
+      const instance = {
+        options,
+        destroy: jest.fn(),
+        triggerSave: (value) => options.onSave(value),
+        runValidator: (value) => options.validator(value),
+      };
+      instances.push(instance);
+      return instance;
+    }),
+    __getInstances: () => instances,
+    __resetInstances: () => {
+      instances.length = 0;
+    },
+  };
+});
 
 // Mock PreviousItemsDropdown to control dropdown behaviour
 jest.mock(
@@ -62,8 +55,7 @@ jest.mock(
           clear: jest.fn(),
           enable: jest.fn(),
           loadItems: jest.fn().mockResolvedValue(undefined),
-          simulateSelection: (value) =>
-            options.onSelectionChange?.(value),
+          simulateSelection: (value) => options.onSelectionChange?.(value),
         };
         instances.push(instance);
         return instance;
@@ -85,8 +77,7 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
     title: 'Brave Hero Saga',
     description:
       'An epic quest that easily surpasses the minimum description length.',
-    coreTension:
-      'Balancing duty with personal desires in a sprawling kingdom.',
+    coreTension: 'Balancing duty with personal desires in a sprawling kingdom.',
     uniqueTwist:
       'The hero can rewind time but loses precious memories each attempt.',
     narrativePotential:
@@ -99,10 +90,7 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
     concept: 'A legendary champion destined to reshape the realm.',
     status: 'active',
     createdAt: new Date('2024-01-01T12:00:00Z').toISOString(),
-    thematicDirections: [
-      { id: 'direction-1' },
-      { id: 'direction-2' },
-    ],
+    thematicDirections: [{ id: 'direction-1' }, { id: 'direction-2' }],
     ...overrides,
   });
 
@@ -160,9 +148,7 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
   });
 
   it('validates fields and saves edits through the InPlaceEditor options', async () => {
-    const dataset = [
-      { direction: buildDirection(), concept: buildConcept() },
-    ];
+    const dataset = [{ direction: buildDirection(), concept: buildConcept() }];
     testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       dataset
     );
@@ -171,8 +157,9 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
 
     const instances = getEditorInstances();
     expect(instances.length).toBeGreaterThan(0);
-    const titleEditor = instances.find((instance) =>
-      instance.options.element.getAttribute('data-field') === 'title'
+    const titleEditor = instances.find(
+      (instance) =>
+        instance.options.element.getAttribute('data-field') === 'title'
     );
     expect(titleEditor).toBeDefined();
 
@@ -204,9 +191,7 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
   });
 
   it('throws a user friendly error when saving a field fails', async () => {
-    const dataset = [
-      { direction: buildDirection(), concept: buildConcept() },
-    ];
+    const dataset = [{ direction: buildDirection(), concept: buildConcept() }];
     testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       dataset
     );
@@ -215,8 +200,9 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
     );
 
     await controller.refreshDropdown();
-    const titleEditor = getEditorInstances().find((instance) =>
-      instance.options.element.getAttribute('data-field') === 'title'
+    const titleEditor = getEditorInstances().find(
+      (instance) =>
+        instance.options.element.getAttribute('data-field') === 'title'
     );
 
     await expect(
@@ -298,7 +284,10 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
 
   it('cleans up orphaned directions and dispatches analytics', async () => {
     const dataset = [
-      { direction: buildDirection({ id: 'direction-1' }), concept: buildConcept() },
+      {
+        direction: buildDirection({ id: 'direction-1' }),
+        concept: buildConcept(),
+      },
       { direction: buildDirection({ id: 'direction-2' }), concept: null },
     ];
     testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
@@ -474,9 +463,7 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
   it('logs cleanup issues when editors cannot be destroyed or removed', async () => {
     jest.useFakeTimers();
 
-    const dataset = [
-      { direction: buildDirection(), concept: buildConcept() },
-    ];
+    const dataset = [{ direction: buildDirection(), concept: buildConcept() }];
     testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       dataset
     );
@@ -499,7 +486,9 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
     jest.useRealTimers();
 
     expect(controller.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to destroy InPlaceEditor instance for key'),
+      expect.stringContaining(
+        'Failed to destroy InPlaceEditor instance for key'
+      ),
       expect.any(Error)
     );
     expect(controller.logger.debug).toHaveBeenCalledWith(
@@ -508,4 +497,3 @@ describe('ThematicDirectionsManagerController uncovered paths', () => {
     );
   });
 });
-

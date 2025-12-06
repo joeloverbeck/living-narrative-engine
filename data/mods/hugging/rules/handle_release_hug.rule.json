@@ -61,7 +61,9 @@
             { "var": "context.actorExistingHuggingComponent" },
             {
               "!=": [
-                { "var": "context.actorExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.actorExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -86,7 +88,9 @@
             { "var": "context.actorExistingBeingHuggedComponent" },
             {
               "!=": [
-                { "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -111,7 +115,9 @@
             { "var": "context.targetExistingHuggingComponent" },
             {
               "!=": [
-                { "var": "context.targetExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.targetExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }
@@ -136,7 +142,9 @@
             { "var": "context.targetExistingBeingHuggedComponent" },
             {
               "!=": [
-                { "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }
@@ -161,7 +169,9 @@
             { "var": "context.actorExistingHuggingComponent" },
             {
               "==": [
-                { "var": "context.actorExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.actorExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -186,7 +196,9 @@
             { "var": "context.actorExistingBeingHuggedComponent" },
             {
               "==": [
-                { "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -211,7 +223,9 @@
             { "var": "context.targetExistingHuggingComponent" },
             {
               "==": [
-                { "var": "context.targetExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.targetExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }
@@ -236,7 +250,9 @@
             { "var": "context.targetExistingBeingHuggedComponent" },
             {
               "==": [
-                { "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }

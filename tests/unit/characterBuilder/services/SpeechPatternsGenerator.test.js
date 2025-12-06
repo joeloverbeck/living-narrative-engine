@@ -500,7 +500,9 @@ describe('SpeechPatternsGenerator', () => {
               `"This is example dialogue number ${i + 1} showing the pattern in action and demonstrating the character's unique way of speaking."`,
               `"This is a second example for pattern ${i + 1} showing variation in the character's speech."`,
             ],
-            contexts: [`When in emotional situation ${i + 1} requiring this specific response`],
+            contexts: [
+              `When in emotional situation ${i + 1} requiring this specific response`,
+            ],
           })),
         characterName: 'Test Character',
         generatedAt: new Date().toISOString(),

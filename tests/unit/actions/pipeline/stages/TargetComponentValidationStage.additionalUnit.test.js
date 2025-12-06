@@ -151,7 +151,9 @@ describe('TargetComponentValidationStage - additional coverage', () => {
         reason: 'Target component validation skipped (disabled in config)',
       })
     );
-    expect(contextUpdateEmitter.applyTargetValidationResults).toHaveBeenCalledWith(
+    expect(
+      contextUpdateEmitter.applyTargetValidationResults
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         validatedItems: expect.any(Array),
       })
@@ -236,10 +238,7 @@ describe('TargetComponentValidationStage - additional coverage', () => {
     const lenientEntry = {
       actionDef: validatedActionDef,
       resolvedTargets: {
-        primary: [
-          { id: 'entity:allowed' },
-          { id: 'entity:removed' },
-        ],
+        primary: [{ id: 'entity:allowed' }, { id: 'entity:removed' }],
       },
       targetDefinitions: validatedActionDef.targetDefinitions,
       targetContexts: [
@@ -287,8 +286,8 @@ describe('TargetComponentValidationStage - additional coverage', () => {
     );
     expect(reporter.reportStageCompletion).toHaveBeenCalled();
 
-    const emitterArgs = contextUpdateEmitter.applyTargetValidationResults.mock
-      .calls[0][0];
+    const emitterArgs =
+      contextUpdateEmitter.applyTargetValidationResults.mock.calls[0][0];
     expect(emitterArgs.validatedItems).toHaveLength(1);
     expect(emitterArgs.metadata.stageUpdates).toEqual([
       expect.objectContaining({
@@ -473,7 +472,9 @@ describe('TargetComponentValidationStage - additional coverage', () => {
         {
           actionDef: {
             id: 'null-resolved',
-            targetDefinitions: { primary: { placeholder: 'primary_placeholder' } },
+            targetDefinitions: {
+              primary: { placeholder: 'primary_placeholder' },
+            },
           },
           resolvedTargets: null,
           targetDefinitions: {
@@ -560,9 +561,9 @@ describe('TargetComponentValidationStage - additional coverage', () => {
 
     expect(normalizeSpy).toHaveBeenCalled();
     expect(rebuildSpy).toHaveBeenCalled();
-    expect(contextUpdateEmitter.applyTargetValidationResults).toHaveBeenCalledWith(
-      expect.objectContaining({ metadata: null })
-    );
+    expect(
+      contextUpdateEmitter.applyTargetValidationResults
+    ).toHaveBeenCalledWith(expect.objectContaining({ metadata: null }));
     expect(result.success).toBe(true);
   });
 
@@ -595,11 +596,18 @@ describe('TargetComponentValidationStage - additional coverage', () => {
 
     const normalizeSpy = jest
       .spyOn(TargetValidationIOAdapter.prototype, 'normalize')
-      .mockReturnValue({ format: 'empty', items: [], metadata: { actor: null } });
+      .mockReturnValue({
+        format: 'empty',
+        items: [],
+        metadata: { actor: null },
+      });
 
     const rebuildSpy = jest
       .spyOn(TargetValidationIOAdapter.prototype, 'rebuild')
-      .mockReturnValue({ data: { candidateActions: [] }, continueProcessing: false });
+      .mockReturnValue({
+        data: { candidateActions: [] },
+        continueProcessing: false,
+      });
 
     const context = {};
 
@@ -660,7 +668,11 @@ describe('TargetComponentValidationStage - additional coverage', () => {
           resolvedTargets: null,
           targetDefinitions: null,
           targetContexts: [
-            { type: 'entity', placeholder: 'primary_placeholder', entityId: 'entity:1' },
+            {
+              type: 'entity',
+              placeholder: 'primary_placeholder',
+              entityId: 'entity:1',
+            },
           ],
         },
       ],
@@ -671,7 +683,11 @@ describe('TargetComponentValidationStage - additional coverage', () => {
     const { validatedItems } =
       contextUpdateEmitter.applyTargetValidationResults.mock.calls[0][0];
     expect(validatedItems[0].targetContexts).toEqual([
-      { type: 'entity', placeholder: 'primary_placeholder', entityId: 'entity:1' },
+      {
+        type: 'entity',
+        placeholder: 'primary_placeholder',
+        entityId: 'entity:1',
+      },
     ]);
   });
 
@@ -732,7 +748,11 @@ describe('TargetComponentValidationStage - additional coverage', () => {
             primary: { placeholder: 'primary_placeholder' },
           },
           targetContexts: [
-            { type: 'entity', placeholder: 'secondary_placeholder', entityId: 'entity:secondary' },
+            {
+              type: 'entity',
+              placeholder: 'secondary_placeholder',
+              entityId: 'entity:secondary',
+            },
           ],
         },
       ],
@@ -744,7 +764,11 @@ describe('TargetComponentValidationStage - additional coverage', () => {
       contextUpdateEmitter.applyTargetValidationResults.mock.calls[0][0];
 
     expect(items[0].targetContexts).toEqual([
-      { type: 'entity', placeholder: 'secondary_placeholder', entityId: 'entity:secondary' },
+      {
+        type: 'entity',
+        placeholder: 'secondary_placeholder',
+        entityId: 'entity:secondary',
+      },
     ]);
   });
 });

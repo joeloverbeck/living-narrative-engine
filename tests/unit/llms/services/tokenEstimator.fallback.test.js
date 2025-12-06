@@ -2,7 +2,14 @@
  * @file Additional unit tests covering fallback behaviors in TokenEstimator
  */
 
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 /**
  * Creates a mock logger implementing the ILogger interface methods used by TokenEstimator.
@@ -36,7 +43,9 @@ describe('TokenEstimator fallback coverage', () => {
       };
     });
 
-    const { TokenEstimator } = await import('../../../../src/llms/services/tokenEstimator.js');
+    const { TokenEstimator } = await import(
+      '../../../../src/llms/services/tokenEstimator.js'
+    );
     const estimator = new TokenEstimator({ logger: mockLogger, encoderLoader });
 
     const text = 'Fallback estimation should use word count';
@@ -70,14 +79,19 @@ describe('TokenEstimator fallback coverage', () => {
         encode: jest.fn((text) => Array.from(text)),
       }));
 
-      const { TokenEstimator } = await import('../../../../src/llms/services/tokenEstimator.js');
+      const { TokenEstimator } = await import(
+        '../../../../src/llms/services/tokenEstimator.js'
+      );
       const encodingSpy = jest
         .spyOn(TokenEstimator.prototype, 'getEncodingForModel')
         .mockReturnValue('non-existent-encoding');
 
       const estimator = new TokenEstimator({ logger: mockLogger });
 
-      const tokens = await estimator.estimateTokens('import fallback', 'text-davinci-003');
+      const tokens = await estimator.estimateTokens(
+        'import fallback',
+        'text-davinci-003'
+      );
 
       expect(tokens).toBeGreaterThan(0);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -92,7 +106,9 @@ describe('TokenEstimator fallback coverage', () => {
   });
 
   it('should throw when encoderLoader is not a function', async () => {
-    const { TokenEstimator } = await import('../../../../src/llms/services/tokenEstimator.js');
+    const { TokenEstimator } = await import(
+      '../../../../src/llms/services/tokenEstimator.js'
+    );
 
     expect(
       () =>

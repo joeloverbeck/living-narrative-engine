@@ -103,7 +103,12 @@ describe('main.js uncovered branches', () => {
       document,
     };
 
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     mockEnsure.mockImplementation(async (doc, opts) => {
       opts.createUIBootstrapper();
@@ -155,10 +160,18 @@ describe('main.js uncovered branches', () => {
       titleElement: document.querySelector('h1'),
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
+    mockSetupDI.mockResolvedValue({
+      success: true,
+      payload: createMainBootstrapContainerMock(),
+    });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
@@ -195,11 +208,19 @@ describe('main.js uncovered branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
     const showLoadGameUI = jest.fn().mockResolvedValue(undefined);
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
+    mockSetupDI.mockResolvedValue({
+      success: true,
+      payload: createMainBootstrapContainerMock(),
+    });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
     mockInitEngine.mockResolvedValue({
@@ -319,7 +340,9 @@ describe('main.js uncovered branches', () => {
       expect(elements).toHaveProperty('errorDiv');
       expect(elements).toHaveProperty('inputElement');
       expect(errorDetails.phase).toBe('Start Game');
-      expect(errorDetails.userMessage).toContain('Critical: GameEngine not initialized');
+      expect(errorDetails.userMessage).toContain(
+        'Critical: GameEngine not initialized'
+      );
       expect(passedLogger).toBeNull();
 
       exerciseDomHelpers(helpers, {

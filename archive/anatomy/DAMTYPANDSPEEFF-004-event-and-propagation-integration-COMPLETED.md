@@ -15,6 +15,7 @@ Ensure all events defined in the spec are emitted with correct payloads during d
 Most of this ticket was already implemented in prior work:
 
 **Already Complete:**
+
 - Event constants are centralized in `src/anatomy/services/damageTypeEffectsService.js` (lines 32-44)
 - `DamageTypeEffectsService` emits all "started" events with correct payloads
 - `BleedingTickSystem`, `BurningTickSystem`, `PoisonTickSystem` all exist and process tick effects
@@ -22,6 +23,7 @@ Most of this ticket was already implemented in prior work:
 - Unknown damage types log warnings and skip effects gracefully
 
 **Gaps Fixed in This Ticket:**
+
 - `BleedingTickSystem` and `BurningTickSystem` "stopped" events were missing `entityId` (spec requirement)
 - Integration test file for event verification was missing
 
@@ -83,6 +85,7 @@ Most of this ticket was already implemented in prior work:
 ### Versus Originally Planned
 
 The original ticket assumed most systems needed to be created from scratch. Upon reassessment:
+
 - **90% was already complete** - event constants, started events, tick systems, propagation context
 - **Actual work was minimal** - ~15 lines of code changes per tick system + test file creation
 - **File extensions corrected** - codebase uses `.js`, not `.ts`

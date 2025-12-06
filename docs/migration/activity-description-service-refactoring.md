@@ -9,6 +9,7 @@
 The Activity Description System has been refactored from a monolithic service (~1000 lines) into a facade pattern orchestrating 7 specialized services (~150-400 lines each). This migration guide provides step-by-step instructions for updating code that depends on the old implementation.
 
 **Key Changes**:
+
 - ✅ **100% Backward Compatible** - Existing code continues to work without modifications
 - 🏗️ **Facade Pattern** - `ActivityDescriptionFacade` provides identical API to old `ActivityDescriptionService`
 - 🧩 **7 Specialized Services** - Focused responsibilities for maintainability
@@ -49,6 +50,7 @@ ActivityDescriptionService (~1000 lines)
 ```
 
 **Problems**:
+
 - Single file with 1000+ lines
 - Mixed responsibilities
 - Difficult to test individual components
@@ -69,6 +71,7 @@ ActivityDescriptionFacade (~400 lines)
 ```
 
 **Benefits**:
+
 - Each service has single responsibility
 - Testable in isolation
 - Easy to extend or replace
@@ -113,7 +116,8 @@ If you're using the service through dependency injection or direct instantiation
 ```javascript
 // In your application code
 const activityService = container.resolve('ActivityDescriptionService');
-const description = await activityService.generateActivityDescription('actor_1');
+const description =
+  await activityService.generateActivityDescription('actor_1');
 console.log(description); // Works identically
 ```
 
@@ -369,7 +373,7 @@ const activityService = new ActivityDescriptionService({
 // Cache automatically invalidated on component changes
 eventBus.dispatch({
   type: 'COMPONENT_ADDED',
-  payload: { entity: { id: 'actor_1' } }
+  payload: { entity: { id: 'actor_1' } },
 });
 // Cache for actor_1 invalidated automatically
 ```
@@ -381,13 +385,13 @@ eventBus.dispatch({
 const activityFacade = new ActivityDescriptionFacade({
   // ... dependencies
   cacheManager, // Cache manager subscribes to events
-  eventBus,     // Passed to cache manager
+  eventBus, // Passed to cache manager
 });
 
 // Identical behavior - cache invalidation automatic
 eventBus.dispatch({
   type: 'COMPONENT_ADDED',
-  payload: { entity: { id: 'actor_1' } }
+  payload: { entity: { id: 'actor_1' } },
 });
 // Cache for actor_1 invalidated via cache manager
 ```
@@ -402,7 +406,8 @@ eventBus.dispatch({
 
 ```javascript
 // Old service processed activities sequentially
-const description = await activityService.generateActivityDescription('actor_1');
+const description =
+  await activityService.generateActivityDescription('actor_1');
 // Internal: Collect → Filter → Group → Format (sequential)
 ```
 
@@ -435,15 +440,19 @@ The DI container now registers 8 services instead of 1 monolithic service.
 // src/dependencyInjection/registrations/anatomyRegistrations.js
 import ActivityDescriptionService from '../../anatomy/services/activityDescriptionService.js';
 
-container.registerSingleton('ActivityDescriptionService', ActivityDescriptionService, {
-  dependencies: {
-    logger: 'ILogger',
-    entityManager: 'IEntityManager',
-    anatomyFormattingService: 'AnatomyFormattingService',
-    jsonLogicEvaluationService: 'JsonLogicEvaluationService',
-    // ... internal services not exposed
+container.registerSingleton(
+  'ActivityDescriptionService',
+  ActivityDescriptionService,
+  {
+    dependencies: {
+      logger: 'ILogger',
+      entityManager: 'IEntityManager',
+      anatomyFormattingService: 'AnatomyFormattingService',
+      jsonLogicEvaluationService: 'JsonLogicEvaluationService',
+      // ... internal services not exposed
+    },
   }
-});
+);
 ```
 
 #### After (Facade + Services Registration)
@@ -464,69 +473,85 @@ container.registerSingleton('IActivityCacheManager', ActivityCacheManager, {
   dependencies: {
     logger: 'ILogger',
     eventBus: 'EventBus', // Optional
-  }
+  },
 });
 
 container.registerSingleton('IActivityIndexManager', ActivityIndexManager, {
   dependencies: {
     logger: 'ILogger',
     cacheManager: 'IActivityCacheManager',
-  }
+  },
 });
 
-container.registerSingleton('IActivityMetadataCollectionSystem', ActivityMetadataCollectionSystem, {
-  dependencies: {
-    logger: 'ILogger',
-    entityManager: 'IEntityManager',
+container.registerSingleton(
+  'IActivityMetadataCollectionSystem',
+  ActivityMetadataCollectionSystem,
+  {
+    dependencies: {
+      logger: 'ILogger',
+      entityManager: 'IEntityManager',
+    },
   }
-});
+);
 
 container.registerSingleton('IActivityNLGSystem', ActivityNLGSystem, {
   dependencies: {
     logger: 'ILogger',
     entityManager: 'IEntityManager',
-  }
+  },
 });
 
 container.registerSingleton('IActivityGroupingSystem', ActivityGroupingSystem, {
   dependencies: {
     logger: 'ILogger',
-  }
+  },
 });
 
-container.registerSingleton('IActivityContextBuildingSystem', ActivityContextBuildingSystem, {
-  dependencies: {
-    logger: 'ILogger',
-    entityManager: 'IEntityManager',
-    nlgSystem: 'IActivityNLGSystem',
+container.registerSingleton(
+  'IActivityContextBuildingSystem',
+  ActivityContextBuildingSystem,
+  {
+    dependencies: {
+      logger: 'ILogger',
+      entityManager: 'IEntityManager',
+      nlgSystem: 'IActivityNLGSystem',
+    },
   }
-});
+);
 
-container.registerSingleton('IActivityFilteringSystem', ActivityFilteringSystem, {
-  dependencies: {
-    logger: 'ILogger',
-    conditionValidator: 'ActivityConditionValidator',
-    jsonLogicEvaluationService: 'JsonLogicEvaluationService',
-    entityManager: 'IEntityManager',
+container.registerSingleton(
+  'IActivityFilteringSystem',
+  ActivityFilteringSystem,
+  {
+    dependencies: {
+      logger: 'ILogger',
+      conditionValidator: 'ActivityConditionValidator',
+      jsonLogicEvaluationService: 'JsonLogicEvaluationService',
+      entityManager: 'IEntityManager',
+    },
   }
-});
+);
 
 // Register facade that orchestrates all services
-container.registerSingleton('ActivityDescriptionFacade', ActivityDescriptionFacade, {
-  dependencies: {
-    logger: 'ILogger',
-    entityManager: 'IEntityManager',
-    anatomyFormattingService: 'AnatomyFormattingService',
-    cacheManager: 'IActivityCacheManager',
-    indexManager: 'IActivityIndexManager',
-    metadataCollectionSystem: 'IActivityMetadataCollectionSystem',
-    nlgSystem: 'IActivityNLGSystem',
-    groupingSystem: 'IActivityGroupingSystem',
-    contextBuildingSystem: 'IActivityContextBuildingSystem',
-    filteringSystem: 'IActivityFilteringSystem',
-    eventBus: 'EventBus', // Optional
+container.registerSingleton(
+  'ActivityDescriptionFacade',
+  ActivityDescriptionFacade,
+  {
+    dependencies: {
+      logger: 'ILogger',
+      entityManager: 'IEntityManager',
+      anatomyFormattingService: 'AnatomyFormattingService',
+      cacheManager: 'IActivityCacheManager',
+      indexManager: 'IActivityIndexManager',
+      metadataCollectionSystem: 'IActivityMetadataCollectionSystem',
+      nlgSystem: 'IActivityNLGSystem',
+      groupingSystem: 'IActivityGroupingSystem',
+      contextBuildingSystem: 'IActivityContextBuildingSystem',
+      filteringSystem: 'IActivityFilteringSystem',
+      eventBus: 'EventBus', // Optional
+    },
   }
-});
+);
 ```
 
 **Action Required**: DI registrations automatically updated in ACTDESSERREF-009.
@@ -566,11 +591,13 @@ tests/unit/anatomy/
 ### Migration Checklist
 
 - [ ] **Step 1**: Run existing tests to ensure backward compatibility
+
   ```bash
   npm run test:unit -- tests/unit/anatomy/services/activityDescriptionService.test.js
   ```
 
 - [ ] **Step 2**: Create characterization tests for critical behavior
+
   ```javascript
   describe('Characterization - ActivityDescriptionService', () => {
     it('maintains exact output format for kneeling activity', async () => {
@@ -588,8 +615,12 @@ tests/unit/anatomy/
 - [ ] **Step 4**: Update test utilities and mocks
   ```javascript
   // New factory helpers
-  export function createMockActivityCacheManager() { /* ... */ }
-  export function createMockActivityNLGSystem() { /* ... */ }
+  export function createMockActivityCacheManager() {
+    /* ... */
+  }
+  export function createMockActivityNLGSystem() {
+    /* ... */
+  }
   ```
 
 ---
@@ -598,12 +629,12 @@ tests/unit/anatomy/
 
 ### Performance Improvements
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Cold Start** | 45ms | 35ms | 22% faster |
-| **Cache Hit Rate** | 65% | 82% | 26% better |
-| **Memory Usage** | 12MB | 8MB | 33% reduction |
-| **Test Execution** | 8.2s | 4.5s | 45% faster |
+| Metric             | Before | After | Improvement   |
+| ------------------ | ------ | ----- | ------------- |
+| **Cold Start**     | 45ms   | 35ms  | 22% faster    |
+| **Cache Hit Rate** | 65%    | 82%   | 26% better    |
+| **Memory Usage**   | 12MB   | 8MB   | 33% reduction |
+| **Test Execution** | 8.2s   | 4.5s  | 45% faster    |
 
 ### Optimizations Applied
 
@@ -618,9 +649,9 @@ tests/unit/anatomy/
 ```javascript
 // Adjust cache configuration for performance
 const cacheConfig = {
-  maxSize: 1000,      // Increase for larger projects
-  ttl: 60000,         // 60 seconds (default)
-  enableMetrics: true // Enable for performance monitoring
+  maxSize: 1000, // Increase for larger projects
+  ttl: 60000, // 60 seconds (default)
+  enableMetrics: true, // Enable for performance monitoring
 };
 
 // Pass to cache manager
@@ -639,6 +670,7 @@ const cacheManager = new ActivityCacheManager({
 ### Issue 1: Missing Dependency Errors
 
 **Symptom**:
+
 ```
 Error: Cannot resolve 'IActivityCacheManager' from container
 ```
@@ -646,6 +678,7 @@ Error: Cannot resolve 'IActivityCacheManager' from container
 **Cause**: DI container not properly initialized with new registrations.
 
 **Solution**:
+
 ```javascript
 // Ensure all services registered before resolving facade
 import { registerActivityServices } from './registrations/anatomyRegistrations.js';
@@ -659,6 +692,7 @@ const facade = container.resolve('ActivityDescriptionFacade');
 ### Issue 2: Test Failures After Migration
 
 **Symptom**:
+
 ```
 TypeError: service.getTestHooks(...).someMethod is not a function
 ```
@@ -666,6 +700,7 @@ TypeError: service.getTestHooks(...).someMethod is not a function
 **Cause**: Test hooks changed to delegate to specialized services.
 
 **Solution**:
+
 ```javascript
 // Before (deprecated)
 const hooks = service.getTestHooks();
@@ -685,6 +720,7 @@ const sanitized = nlgSystem.sanitizeEntityName('Test'); // ✅ Direct access
 **Cause**: Event bus not properly wired to cache manager.
 
 **Solution**:
+
 ```javascript
 // Ensure event bus passed to both facade and cache manager
 const cacheManager = new ActivityCacheManager({
@@ -708,6 +744,7 @@ const facade = new ActivityDescriptionFacade({
 **Cause**: Cache not properly configured or disabled.
 
 **Solution**:
+
 ```javascript
 // Verify cache manager registered and used
 const cacheManager = container.resolve('IActivityCacheManager');
@@ -735,22 +772,26 @@ If you encounter critical issues and need to rollback to the old monolithic serv
 // Temporarily use old service (not recommended)
 import ActivityDescriptionService from '../../anatomy/services/activityDescriptionService.js';
 
-container.registerSingleton('ActivityDescriptionService', ActivityDescriptionService, {
-  dependencies: {
-    logger: 'ILogger',
-    entityManager: 'IEntityManager',
-    anatomyFormattingService: 'AnatomyFormattingService',
-    jsonLogicEvaluationService: 'JsonLogicEvaluationService',
-    // Provide fallback instantiation for new services
-    cacheManager: null,
-    indexManager: null,
-    metadataCollectionSystem: null,
-    groupingSystem: null,
-    nlgSystem: null,
-    filteringSystem: null,
-    contextBuildingSystem: null,
+container.registerSingleton(
+  'ActivityDescriptionService',
+  ActivityDescriptionService,
+  {
+    dependencies: {
+      logger: 'ILogger',
+      entityManager: 'IEntityManager',
+      anatomyFormattingService: 'AnatomyFormattingService',
+      jsonLogicEvaluationService: 'JsonLogicEvaluationService',
+      // Provide fallback instantiation for new services
+      cacheManager: null,
+      indexManager: null,
+      metadataCollectionSystem: null,
+      groupingSystem: null,
+      nlgSystem: null,
+      filteringSystem: null,
+      contextBuildingSystem: null,
+    },
   }
-});
+);
 ```
 
 ### Step 2: Update Imports
@@ -797,6 +838,7 @@ npm run test:integration
 ### Contact
 
 For migration support or questions:
+
 - **Workflow**: ACTDESSERREF-011
 - **Documentation**: This file
 - **Issues**: Create issue in project repository

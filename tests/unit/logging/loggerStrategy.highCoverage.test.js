@@ -1,4 +1,12 @@
-import { beforeAll, afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeAll,
+  afterAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 let consoleInfoSpy;
 let consoleWarnSpy;
@@ -119,25 +127,35 @@ describe('LoggerStrategy near-complete coverage', () => {
       general: { enabled: true, level: 'info' },
     };
 
-    mockConsoleLoggerFactory = jest.fn().mockImplementation(function MockConsoleLogger(level) {
-      const instance = createConsoleLoggerInstance();
-      instance.__initialLevel = level;
-      Object.assign(this, instance);
-      consoleLoggerInstances.push(this);
-    });
+    mockConsoleLoggerFactory = jest
+      .fn()
+      .mockImplementation(function MockConsoleLogger(level) {
+        const instance = createConsoleLoggerInstance();
+        instance.__initialLevel = level;
+        Object.assign(this, instance);
+        consoleLoggerInstances.push(this);
+      });
 
-    mockNoOpLoggerFactory = jest.fn().mockImplementation(function MockNoOpLogger() {
-      const instance = createNoOpLoggerInstance();
-      Object.assign(this, instance);
-      noOpLoggerInstances.push(this);
-    });
+    mockNoOpLoggerFactory = jest
+      .fn()
+      .mockImplementation(function MockNoOpLogger() {
+        const instance = createNoOpLoggerInstance();
+        Object.assign(this, instance);
+        noOpLoggerInstances.push(this);
+      });
 
-    ({ default: LoggerStrategy, LoggerMode } = await import('../../../src/logging/loggerStrategy.js'));
+    ({ default: LoggerStrategy, LoggerMode } = await import(
+      '../../../src/logging/loggerStrategy.js'
+    ));
     ({ LogLevel } = jest.requireMock('../../../src/logging/consoleLogger.js'));
 
     jest.clearAllMocks();
-    consoleLoggerInstances.forEach((instance) => instance.getBuffer.mockReturnValue([]));
-    noOpLoggerInstances.forEach((instance) => instance.getBuffer.mockReturnValue([]));
+    consoleLoggerInstances.forEach((instance) =>
+      instance.getBuffer.mockReturnValue([])
+    );
+    noOpLoggerInstances.forEach((instance) =>
+      instance.getBuffer.mockReturnValue([])
+    );
   });
 
   const createStrategy = (options = {}) => new LoggerStrategy(options);
@@ -154,9 +172,12 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
     expect(strategy.getCurrentLogger()).toBe(providedLogger);
     expect(providedLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[LoggerStrategy] Initialized with mode: console'),
+      expect.stringContaining('[LoggerStrategy] Initialized with mode: console')
     );
-    expect(mockCreateSafeErrorLogger).toHaveBeenCalledWith({ logger: providedLogger, eventBus });
+    expect(mockCreateSafeErrorLogger).toHaveBeenCalledWith({
+      logger: providedLogger,
+      eventBus,
+    });
   });
 
   it('defers safe logger wrapping when event bus is not available yet', () => {
@@ -169,7 +190,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(strategy.getCurrentLogger()).toBe(providedLogger);
     expect(mockCreateSafeErrorLogger).not.toHaveBeenCalled();
     expect(providedLogger.debug).toHaveBeenCalledWith(
-      '[LoggerStrategy] EventBus not available during bootstrap - SafeErrorLogger wrapping deferred',
+      '[LoggerStrategy] EventBus not available during bootstrap - SafeErrorLogger wrapping deferred'
     );
   });
 
@@ -183,7 +204,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     const createdLogger = strategy.getCurrentLogger();
     expect(createdLogger).toBe(consoleLoggerInstances[0]);
     expect(createdLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('[LoggerStrategy] Initialized with mode:'),
+      expect.stringContaining('[LoggerStrategy] Initialized with mode:')
     );
     expect(mockCreateSafeErrorLogger).not.toHaveBeenCalled();
   });
@@ -196,7 +217,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     });
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      '[LoggerStrategy] Invalid configuration provided, using defaults',
+      '[LoggerStrategy] Invalid configuration provided, using defaults'
     );
   });
 
@@ -287,10 +308,16 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(newLogger).toBe(consoleLoggerInstances[0]);
     expect(newLogger.processBatch).toHaveBeenCalledWith(buffer);
     expect(eventBus.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'logger.mode.changed', payload: expect.objectContaining({ from: LoggerMode.TEST, to: LoggerMode.CONSOLE }) }),
+      expect.objectContaining({
+        type: 'logger.mode.changed',
+        payload: expect.objectContaining({
+          from: LoggerMode.TEST,
+          to: LoggerMode.CONSOLE,
+        }),
+      })
     );
     expect(newLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Switched from test to console mode'),
+      expect.stringContaining('Switched from test to console mode')
     );
   });
 
@@ -303,7 +330,8 @@ describe('LoggerStrategy near-complete coverage', () => {
 
     expect(strategy.getMode()).toBe(LoggerMode.NONE);
     expect(noOpLoggerInstances.length).toBeGreaterThanOrEqual(2);
-    const latestNoOpInstance = noOpLoggerInstances[noOpLoggerInstances.length - 1];
+    const latestNoOpInstance =
+      noOpLoggerInstances[noOpLoggerInstances.length - 1];
     expect(strategy.getCurrentLogger()).toBe(latestNoOpInstance);
 
     strategy.setLogLevel('DEBUG');
@@ -314,17 +342,28 @@ describe('LoggerStrategy near-complete coverage', () => {
   it('handles special commands including status, reload, reset, and flush', () => {
     const dependencies = {
       eventBus: { dispatch: jest.fn() },
-      config: { console: { enabled: false }, categories: { ui: { level: 'debug' } } },
+      config: {
+        console: { enabled: false },
+        categories: { ui: { level: 'debug' } },
+      },
     };
     const strategy = createStrategy({ dependencies });
     const logger = strategy.getCurrentLogger();
 
     const status = strategy.setLogLevel('status');
-    expect(logger.info).toHaveBeenCalledWith('[LoggerStrategy] Status:', expect.any(Object));
-    expect(status).toMatchObject({ mode: expect.any(String), logger: expect.any(Object) });
+    expect(logger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Status:',
+      expect.any(Object)
+    );
+    expect(status).toMatchObject({
+      mode: expect.any(String),
+      logger: expect.any(Object),
+    });
 
     strategy.setLogLevel('reload');
-    expect(logger.info).toHaveBeenCalledWith('[LoggerStrategy] Configuration reloaded');
+    expect(logger.info).toHaveBeenCalledWith(
+      '[LoggerStrategy] Configuration reloaded'
+    );
 
     strategy.setLogLevel('flush');
     expect(logger.flush).toHaveBeenCalled();
@@ -370,7 +409,10 @@ describe('LoggerStrategy near-complete coverage', () => {
       categories: { general: { level: 'error' }, ai: { level: 'info' } },
     });
 
-    expect(logger.updateCategories).toHaveBeenCalledWith({ general: { level: 'error' }, ai: { level: 'info' } });
+    expect(logger.updateCategories).toHaveBeenCalledWith({
+      general: { level: 'error' },
+      ai: { level: 'info' },
+    });
     expect(logger.setLogLevel).toHaveBeenCalledWith('WARN');
   });
 
@@ -381,7 +423,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     strategy.setLogLevel({ categories: 'not-an-object' });
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid configuration'),
+      expect.stringContaining('Invalid configuration')
     );
   });
 
@@ -392,14 +434,18 @@ describe('LoggerStrategy near-complete coverage', () => {
     strategy.setLogLevel(Symbol('bad'));
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid setLogLevel input'),
+      expect.stringContaining('Invalid setLogLevel input')
     );
   });
 
   it('wraps console logger when event bus available but leaves logger untouched otherwise', () => {
-    const strategyWithoutEventBus = createStrategy({ mode: LoggerMode.CONSOLE });
+    const strategyWithoutEventBus = createStrategy({
+      mode: LoggerMode.CONSOLE,
+    });
     expect(mockCreateSafeErrorLogger).not.toHaveBeenCalled();
-    expect(strategyWithoutEventBus.getCurrentLogger()).toBe(consoleLoggerInstances[0]);
+    expect(strategyWithoutEventBus.getCurrentLogger()).toBe(
+      consoleLoggerInstances[0]
+    );
 
     const eventBus = { dispatch: jest.fn() };
     const strategyWithEventBus = createStrategy({
@@ -515,13 +561,17 @@ describe('LoggerStrategy near-complete coverage', () => {
     });
 
     strategy.enableDebugNamespace('engine:init');
-    expect(providedLogger.enableDebugNamespace).toHaveBeenCalledWith('engine:init');
+    expect(providedLogger.enableDebugNamespace).toHaveBeenCalledWith(
+      'engine:init'
+    );
     expect(providedLogger.info).toHaveBeenCalledWith(
       '[LoggerStrategy] Debug namespace enabled: engine:init'
     );
 
     strategy.disableDebugNamespace('engine:init');
-    expect(providedLogger.disableDebugNamespace).toHaveBeenCalledWith('engine:init');
+    expect(providedLogger.disableDebugNamespace).toHaveBeenCalledWith(
+      'engine:init'
+    );
     expect(providedLogger.info).toHaveBeenCalledWith(
       '[LoggerStrategy] Debug namespace disabled: engine:init'
     );
@@ -563,7 +613,9 @@ describe('LoggerStrategy near-complete coverage', () => {
     );
 
     strategy.setLogLevel('/debug:enable engine:init');
-    expect(providedLogger.enableDebugNamespace).toHaveBeenCalledWith('engine:init');
+    expect(providedLogger.enableDebugNamespace).toHaveBeenCalledWith(
+      'engine:init'
+    );
 
     strategy.setLogLevel('/debug:disable');
     expect(providedLogger.warn).toHaveBeenCalledWith(
@@ -571,7 +623,9 @@ describe('LoggerStrategy near-complete coverage', () => {
     );
 
     strategy.setLogLevel('/debug:disable engine:init');
-    expect(providedLogger.disableDebugNamespace).toHaveBeenCalledWith('engine:init');
+    expect(providedLogger.disableDebugNamespace).toHaveBeenCalledWith(
+      'engine:init'
+    );
 
     strategy.setLogLevel('/debug:clear');
     expect(providedLogger.clearDebugNamespaces).toHaveBeenCalled();
@@ -656,7 +710,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(logger.setLogLevel).toHaveBeenCalledWith('DEBUG');
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       '[LoggerStrategy] Error in setLogLevel:',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 
@@ -676,7 +730,7 @@ describe('LoggerStrategy near-complete coverage', () => {
 
     strategy.setLogLevel({ mode: 'invalid-mode' });
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid mode: invalid-mode'),
+      expect.stringContaining('Invalid mode: invalid-mode')
     );
 
     logger.error.mockClear();
@@ -684,13 +738,15 @@ describe('LoggerStrategy near-complete coverage', () => {
       categories: { general: { level: 'invalid-level' }, ui: 'not-an-object' },
     });
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid log level for category general: invalid-level'),
+      expect.stringContaining(
+        'Invalid log level for category general: invalid-level'
+      )
     );
 
     logger.error.mockClear();
     strategy.setLogLevel({ logLevel: 'INVALID' });
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid log level: INVALID'),
+      expect.stringContaining('Invalid log level: INVALID')
     );
   });
 
@@ -700,7 +756,7 @@ describe('LoggerStrategy near-complete coverage', () => {
 
     strategy.setLogLevel({ categories: null });
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Categories must be an object'),
+      expect.stringContaining('Categories must be an object')
     );
   });
 
@@ -726,7 +782,7 @@ describe('LoggerStrategy near-complete coverage', () => {
       expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[LoggerStrategy] Failed to dispatch logger creation error:',
-        expect.any(Error),
+        expect.any(Error)
       );
     } finally {
       global.setTimeout = originalSetTimeout;
@@ -743,7 +799,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(strategy.getCurrentLogger()).toBe(noOpLoggerInstances[0]);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       '[LoggerStrategy] Failed to create logger, falling back to console:',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 
@@ -761,7 +817,7 @@ describe('LoggerStrategy near-complete coverage', () => {
     expect(strategy.getCurrentLogger()).toBe(consoleLoggerInstances[0]);
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       '[LoggerStrategy] Failed to wrap logger with SafeErrorLogger:',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 
@@ -772,7 +828,9 @@ describe('LoggerStrategy near-complete coverage', () => {
     defaultConfig.mode = undefined;
 
     try {
-      const strategy = createStrategy({ config: { mode: LoggerMode.DEVELOPMENT } });
+      const strategy = createStrategy({
+        config: { mode: LoggerMode.DEVELOPMENT },
+      });
       expect(strategy.getMode()).toBe(LoggerMode.DEVELOPMENT);
     } finally {
       defaultConfig.mode = previousDefaultMode;
@@ -952,7 +1010,7 @@ describe('LoggerStrategy near-complete coverage', () => {
   it('warns when base configuration contains an unsupported mode', () => {
     createStrategy({ config: { mode: 'broken-mode' } });
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      "[LoggerStrategy] Invalid mode 'broken-mode' in config, will use auto-detection",
+      "[LoggerStrategy] Invalid mode 'broken-mode' in config, will use auto-detection"
     );
   });
 
@@ -968,7 +1026,7 @@ describe('LoggerStrategy near-complete coverage', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       '[LoggerStrategy] Failed to create logger, falling back to console:',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(mockConsoleLoggerFactory).toHaveBeenCalledTimes(2);
     expect(strategy.getCurrentLogger()).toBe(consoleLoggerInstances[1]);
@@ -1040,7 +1098,11 @@ describe('LoggerStrategy near-complete coverage', () => {
       expect(strategy.getMode()).toBe(LoggerMode.TEST);
     } finally {
       if (originalDescriptor) {
-        Object.defineProperty(process.env, 'DEBUG_LOG_MODE', originalDescriptor);
+        Object.defineProperty(
+          process.env,
+          'DEBUG_LOG_MODE',
+          originalDescriptor
+        );
       } else {
         delete process.env.DEBUG_LOG_MODE;
       }
@@ -1115,12 +1177,14 @@ describe('LoggerStrategy near-complete coverage', () => {
     const mockLogger = createNoOpLoggerInstance();
     mockLogger.getBuffer.mockReturnValue([]);
 
-    mockConsoleLoggerFactory.mockImplementation(function ConsoleWithoutSetter() {
-      const instance = createConsoleLoggerInstance();
-      delete instance.setLogLevel;
-      Object.assign(this, instance);
-      consoleLoggerInstances.push(this);
-    });
+    mockConsoleLoggerFactory.mockImplementation(
+      function ConsoleWithoutSetter() {
+        const instance = createConsoleLoggerInstance();
+        delete instance.setLogLevel;
+        Object.assign(this, instance);
+        consoleLoggerInstances.push(this);
+      }
+    );
 
     const strategy = createStrategy({
       mode: LoggerMode.TEST,
@@ -1162,7 +1226,9 @@ describe('LoggerStrategy near-complete coverage', () => {
     const logger = strategy.getCurrentLogger();
     delete logger.error;
 
-    expect(() => strategy.setLogLevel({ categories: 'not-object' })).not.toThrow();
+    expect(() =>
+      strategy.setLogLevel({ categories: 'not-object' })
+    ).not.toThrow();
   });
 
   it('switches to development mode via configuration updates', () => {
@@ -1240,7 +1306,9 @@ describe('LoggerStrategy near-complete coverage', () => {
     const strategy = createStrategy({ dependencies });
 
     const status = strategy.setLogLevel('status');
-    expect(status.config.categories).toEqual(expect.arrayContaining(['general']));
+    expect(status.config.categories).toEqual(
+      expect.arrayContaining(['general'])
+    );
 
     strategy.setLogLevel('reload');
     const reloadedStatus = strategy.setLogLevel('status');

@@ -481,7 +481,9 @@ describe('AnatomyGraphAlgorithms', () => {
       expect(customCacheManager.get).toHaveBeenCalledWith('right-arm-1');
       expect(accessCounts.get('right-arm-1')).toBeGreaterThan(1);
       expect(
-        customCacheManager.get.mock.results.some((call) => call.value === undefined)
+        customCacheManager.get.mock.results.some(
+          (call) => call.value === undefined
+        )
       ).toBe(true);
     });
   });
@@ -639,7 +641,9 @@ describe('AnatomyGraphAlgorithms', () => {
       );
 
       expect(result).toEqual([]);
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('torso-1');
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        'torso-1'
+      );
     });
   });
 

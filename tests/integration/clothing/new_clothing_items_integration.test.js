@@ -132,7 +132,9 @@ describe('New Clothing Items Integration Tests', () => {
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
 
-      expect(entityData.id).toBe('underwear:white_thigh_high_socks_pink_hearts');
+      expect(entityData.id).toBe(
+        'underwear:white_thigh_high_socks_pink_hearts'
+      );
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'underwear',
         equipmentSlots: {

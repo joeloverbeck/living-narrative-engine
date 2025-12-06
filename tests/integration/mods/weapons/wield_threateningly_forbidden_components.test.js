@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder, ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../../common/mods/ModEntityBuilder.js';
 import actionJson from '../../../../data/mods/weapons/actions/wield_threateningly.action.json' assert { type: 'json' };
 
 describe('weapons:wield_threateningly - Forbidden components validation', () => {
@@ -31,7 +34,9 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
     });
 
     it('should include positioning:closeness in forbidden list', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:closeness');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:closeness'
+      );
     });
   });
 
@@ -46,11 +51,11 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
         .asActor()
         .withComponent('items:inventory', {
           items: ['test-sword'],
-          capacity: { maxWeight: 10, maxItems: 5 }
+          capacity: { maxWeight: 10, maxItems: 5 },
         })
         // Actor is in closeness with someone - this should block wield_threateningly
         .withComponent('positioning:closeness', {
-          partners: ['actor2']
+          partners: ['actor2'],
         })
         .build();
 
@@ -68,7 +73,7 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
         .atLocation('room1')
         .asActor()
         .withComponent('positioning:closeness', {
-          partners: ['actor1']
+          partners: ['actor1'],
         })
         .build();
 
@@ -89,7 +94,9 @@ describe('weapons:wield_threateningly - Forbidden components validation', () => 
     it('should have closeness in forbidden list - validates blocking configuration is correct', () => {
       // This test confirms the forbidden_components are configured correctly
       // The blocking behavior is verified in the negative test above
-      expect(actionJson.forbidden_components.actor).toContain('positioning:closeness');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:closeness'
+      );
     });
   });
 });

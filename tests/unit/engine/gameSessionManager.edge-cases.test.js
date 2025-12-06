@@ -2,7 +2,14 @@
  * @file Additional edge case coverage tests for GameSessionManager.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EngineState from '../../../src/engine/engineState.js';
 import {
   createMockLogger,

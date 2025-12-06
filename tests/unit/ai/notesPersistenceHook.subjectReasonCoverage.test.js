@@ -37,12 +37,7 @@ describe('NotesPersistenceHook subject validation edge cases', () => {
       },
     };
 
-    persistNotes(
-      { notes: [inconsistentNote] },
-      actor,
-      logger,
-      dispatcher
-    );
+    persistNotes({ notes: [inconsistentNote] }, actor, logger, dispatcher);
 
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
     const [eventName, payload] = dispatcher.dispatch.mock.calls[0];

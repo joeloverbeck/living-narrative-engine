@@ -17,10 +17,7 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
   let createCloseActorsWithHair;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'affection',
-      ACTION_ID
-    );
+    testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -51,14 +48,8 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
           }
           visited.add(currentId);
 
-          const part = entityManager.getComponent(
-            currentId,
-            'anatomy:part'
-          );
-          if (
-            part?.subType &&
-            part.subType.toLowerCase().includes('hair')
-          ) {
+          const part = entityManager.getComponent(currentId, 'anatomy:part');
+          if (part?.subType && part.subType.toLowerCase().includes('hair')) {
             return true;
           }
 
@@ -116,8 +107,8 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
                 actorEntity.components?.['positioning:kneeling_before']
                   ?.entityId === partnerId;
               const partnerKneelingBefore =
-                partner.components?.['positioning:kneeling_before']?.entityId ===
-                actorId;
+                partner.components?.['positioning:kneeling_before']
+                  ?.entityId === actorId;
 
               const normalPosition =
                 (facingEachOther || actorBehind) &&
@@ -196,7 +187,9 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
     it('matches the expected affection action schema', () => {
       expect(ruffleHairAction).toBeDefined();
       expect(ruffleHairAction.id).toBe(ACTION_ID);
-      expect(ruffleHairAction.template).toBe("ruffle {target}'s hair playfully");
+      expect(ruffleHairAction.template).toBe(
+        "ruffle {target}'s hair playfully"
+      );
       expect(ruffleHairAction.targets).toBe(
         'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
       );
@@ -234,7 +227,12 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target, ...scenario.bodyParts]);
+      testFixture.reset([
+        room,
+        scenario.actor,
+        scenario.target,
+        ...scenario.bodyParts,
+      ]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -251,7 +249,12 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       delete scenario.target.components['positioning:closeness'];
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target, ...scenario.bodyParts]);
+      testFixture.reset([
+        room,
+        scenario.actor,
+        scenario.target,
+        ...scenario.bodyParts,
+      ]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -269,7 +272,12 @@ describe('affection:ruffle_hair_playfully action discovery', () => {
       };
 
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-      testFixture.reset([room, scenario.actor, scenario.target, ...scenario.bodyParts]);
+      testFixture.reset([
+        room,
+        scenario.actor,
+        scenario.target,
+        ...scenario.bodyParts,
+      ]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

@@ -46,7 +46,8 @@ export function measureSamples(fn, options = {}) {
   const sorted = [...timings].sort((a, b) => a - b);
   const mean = timings.reduce((sum, value) => sum + value, 0) / timings.length;
   const variance =
-    timings.reduce((sum, value) => sum + (value - mean) ** 2, 0) / timings.length;
+    timings.reduce((sum, value) => sum + (value - mean) ** 2, 0) /
+    timings.length;
 
   return {
     samples: timings,

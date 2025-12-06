@@ -58,8 +58,9 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
         }
 
         // Filter partners who have sitting_on component
-        const sittingPartners = closeness.partners.filter(partnerId => {
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
+        const sittingPartners = closeness.partners.filter((partnerId) => {
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
           return !!partner?.components?.['positioning:sitting_on'];
         });
 
@@ -67,7 +68,11 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       }
 
       // Fall back to original resolution for other scopes
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
   });
 
@@ -112,7 +117,10 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       // Debug output
       console.log(`\n🎬 DISCOVERED ACTIONS:`);
       console.log(`  Total: ${actions.length}`);
-      console.log(`  Action IDs:`, actions.map((a) => a.id));
+      console.log(
+        `  Action IDs:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert
       const straddleAction = actions.find(
@@ -124,7 +132,10 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
         straddleAction ? 'FOUND ✅' : 'NOT FOUND ❌'
       );
       if (straddleAction) {
-        console.log(`  Targets:`, JSON.stringify(straddleAction.targets, null, 2));
+        console.log(
+          `  Targets:`,
+          JSON.stringify(straddleAction.targets, null, 2)
+        );
       }
 
       expect(straddleAction).toBeDefined();
@@ -215,7 +226,10 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
 
       // Debug output
       console.log(`\n❌ Testing invalid scenario (target not sitting):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert
       const straddleAction = actions.find(
@@ -258,7 +272,10 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
 
       // Debug output
       console.log(`\n❌ Testing invalid scenario (not in closeness circle):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert
       const straddleAction = actions.find(
@@ -305,7 +322,10 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
 
       // Debug output
       console.log(`\n❌ Testing invalid scenario (target lacks closeness):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert
       const straddleAction = actions.find(
@@ -347,7 +367,10 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
 
       // Debug output
       console.log(`\n❌ Testing invalid scenario (non-actor entity):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert
       const straddleAction = actions.find(
@@ -402,8 +425,13 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       // Debug output
-      console.log(`\n❌ Testing edge case (actor sitting - should NOT discover):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `\n❌ Testing edge case (actor sitting - should NOT discover):`
+      );
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert - This should NOT be discovered (actor must be standing to straddle)
       const straddleAction = actions.find(
@@ -448,8 +476,13 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       // Debug output
-      console.log(`\n✅ Testing valid scenario (actor standing, target sitting):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `\n✅ Testing valid scenario (actor standing, target sitting):`
+      );
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert - This SHOULD be discovered (correct scenario for straddling)
       const straddleAction = actions.find(
@@ -500,8 +533,13 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       // Debug output
-      console.log(`\n❌ Testing straddling prevention (actor already straddling):`);
-      console.log(`  Discovered actions:`, actions.map((a) => a.id));
+      console.log(
+        `\n❌ Testing straddling prevention (actor already straddling):`
+      );
+      console.log(
+        `  Discovered actions:`,
+        actions.map((a) => a.id)
+      );
 
       // Assert - Should NOT discover because actor already has straddling_waist component
       const straddleAction = actions.find(
@@ -552,7 +590,9 @@ describe('straddle_waist_facing_away action discovery - Integration Tests', () =
       );
 
       expect(straddleFacingAway).toBeDefined();
-      expect(straddleFacingAway.id).toBe('positioning:straddle_waist_facing_away');
+      expect(straddleFacingAway.id).toBe(
+        'positioning:straddle_waist_facing_away'
+      );
       expect(straddleFacingAway.name).toBe('Straddle Waist (Facing Away)');
     });
   });

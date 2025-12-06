@@ -186,7 +186,10 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
         const isFixedDifficulty = contestType === 'fixed_difficulty';
 
         let targetId = null;
-        if (!isFixedDifficulty && actionDef.chanceBased.targetSkill?.targetRole) {
+        if (
+          !isFixedDifficulty &&
+          actionDef.chanceBased.targetSkill?.targetRole
+        ) {
           // Contested action with explicit target role
           const targetRole = actionDef.chanceBased.targetSkill.targetRole;
           targetId = combination[targetRole]?.[0]?.id;
@@ -204,7 +207,8 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
           try {
             // For modifier context, always pass the primary target from the combination
             // even for fixed-difficulty actions (targetId is for skill resolution only)
-            const primaryTargetForModifiers = combination.primary?.[0]?.id ?? targetId;
+            const primaryTargetForModifiers =
+              combination.primary?.[0]?.id ?? targetId;
 
             const displayResult =
               _options.chanceCalculationService.calculateForDisplay({
@@ -455,9 +459,7 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     }
 
     // Check for any remaining placeholders
-    const remainingPlaceholders = this.#extractPlaceholders(
-      formattedTemplate
-    );
+    const remainingPlaceholders = this.#extractPlaceholders(formattedTemplate);
     const unresolvedPlaceholders = new Set([
       ...remainingPlaceholders,
       ...unresolvedExplicitPlaceholders,
@@ -523,7 +525,11 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     let current = target;
 
     for (const segment of segments) {
-      if (current === null || current === undefined || typeof current !== 'object') {
+      if (
+        current === null ||
+        current === undefined ||
+        typeof current !== 'object'
+      ) {
         return defaultValue;
       }
 
@@ -650,7 +656,11 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       .filter((tag) => tag && tag.trim().length > 0)
       .map((tag) => {
         // Strip leading/trailing brackets if modder accidentally included them
-        const cleanTag = tag.trim().replace(/^\[+/, '').replace(/\]+$/, '').trim();
+        const cleanTag = tag
+          .trim()
+          .replace(/^\[+/, '')
+          .replace(/\]+$/, '')
+          .trim();
         return cleanTag.length > 0 ? `[${cleanTag}]` : '';
       })
       .filter((formatted) => formatted.length > 0)
@@ -883,18 +893,47 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
 
       // Handle truly dependent targets (always generate separate combinations for each target)
       // and independent targets (always expand into separate combinations)
-        if (trulyDependentKeys.length === 1) {
-          // Single dependent key - create separate combinations for each dependent target
-          const dependentKey = trulyDependentKeys[0];
-          const dependentTargets = dependentTargetsByKey.get(dependentKey);
+      if (trulyDependentKeys.length === 1) {
+        // Single dependent key - create separate combinations for each dependent target
+        const dependentKey = trulyDependentKeys[0];
+        const dependentTargets = dependentTargetsByKey.get(dependentKey);
 
-          for (const dependentTarget of dependentTargets) {
-            if (combinations.length >= maxCombinations) break;
+        for (const dependentTarget of dependentTargets) {
+          if (combinations.length >= maxCombinations) break;
 
+          const depCombination = {
+            [primaryKey]: [primaryTarget],
+            [dependentKey]: [dependentTarget],
+          };
+
+          // Add independent targets as-is (they'll be expanded later)
+          for (const indepKey of independentKeys) {
+            depCombination[indepKey] = dependentTargetsByKey.get(indepKey);
+          }
+
+          finalizeCombination(depCombination);
+        }
+      } else if (trulyDependentKeys.length > 1) {
+        // Multiple dependent keys - create cartesian product of all dependent targets
+        const dependentTargetArrays = trulyDependentKeys.map((key) => ({
+          key,
+          targets: dependentTargetsByKey.get(key),
+        }));
+
+        // Generate cartesian product recursively
+        const generateDependentProduct = (index = 0, current = {}) => {
+          if (combinations.length >= maxCombinations) return;
+
+          if (index === dependentTargetArrays.length) {
+            // Create combination with selected dependent targets
             const depCombination = {
               [primaryKey]: [primaryTarget],
-              [dependentKey]: [dependentTarget],
             };
+
+            // Add each selected dependent target
+            for (const depKey of trulyDependentKeys) {
+              depCombination[depKey] = [current[depKey]];
+            }
 
             // Add independent targets as-is (they'll be expanded later)
             for (const indepKey of independentKeys) {
@@ -902,50 +941,21 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
             }
 
             finalizeCombination(depCombination);
+            return;
           }
-        } else if (trulyDependentKeys.length > 1) {
-          // Multiple dependent keys - create cartesian product of all dependent targets
-          const dependentTargetArrays = trulyDependentKeys.map((key) => ({
-            key,
-            targets: dependentTargetsByKey.get(key),
-          }));
 
-          // Generate cartesian product recursively
-          const generateDependentProduct = (index = 0, current = {}) => {
-            if (combinations.length >= maxCombinations) return;
+          const { key, targets } = dependentTargetArrays[index];
+          for (const target of targets) {
+            generateDependentProduct(index + 1, { ...current, [key]: target });
+          }
+        };
 
-            if (index === dependentTargetArrays.length) {
-              // Create combination with selected dependent targets
-              const depCombination = {
-                [primaryKey]: [primaryTarget],
-              };
-
-              // Add each selected dependent target
-              for (const depKey of trulyDependentKeys) {
-                depCombination[depKey] = [current[depKey]];
-              }
-
-              // Add independent targets as-is (they'll be expanded later)
-              for (const indepKey of independentKeys) {
-                depCombination[indepKey] = dependentTargetsByKey.get(indepKey);
-              }
-
-              finalizeCombination(depCombination);
-              return;
-            }
-
-            const { key, targets } = dependentTargetArrays[index];
-            for (const target of targets) {
-              generateDependentProduct(index + 1, { ...current, [key]: target });
-            }
-          };
-
-          generateDependentProduct();
-        } else {
-          // No truly dependent keys, only independent keys
-          finalizeCombination(combination);
-        }
+        generateDependentProduct();
+      } else {
+        // No truly dependent keys, only independent keys
+        finalizeCombination(combination);
       }
+    }
 
     this.#logger.debug('Generated combinations:', {
       count: combinations.length,

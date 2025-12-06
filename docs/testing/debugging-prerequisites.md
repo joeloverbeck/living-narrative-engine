@@ -11,7 +11,7 @@ This guide explains how to debug prerequisite evaluation failures using enhanced
 ```javascript
 beforeEach(async () => {
   fixture = await ModTestFixture.forAction('mod', 'action', null, null, {
-    debugPrerequisites: true // Enable detailed prerequisite logging
+    debugPrerequisites: true, // Enable detailed prerequisite logging
   });
 });
 ```

@@ -41,64 +41,74 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 # Authoring Refinement Methods for Planning Tasks
 
 ## 1. Introduction
-   - What are refinement methods?
-   - When do you need them?
-   - How they work (high-level, non-technical)
+
+- What are refinement methods?
+- When do you need them?
+- How they work (high-level, non-technical)
 
 ## 2. Getting Started
-   - Where refinement methods live in mods
-   - File naming conventions
-   - Basic structure template
-   - Your first refinement method
+
+- Where refinement methods live in mods
+- File naming conventions
+- Basic structure template
+- Your first refinement method
 
 ## 3. Writing Simple Sequential Methods
-   - Step-by-step workflow
-   - Action references
-   - Target bindings
-   - Parameters
-   - Complete example
+
+- Step-by-step workflow
+- Action references
+- Target bindings
+- Parameters
+- Complete example
 
 ## 4. Adding Conditional Logic
-   - When to use conditionals
-   - If-then-else structure
-   - Common condition patterns
-   - Complete example
+
+- When to use conditionals
+- If-then-else structure
+- Common condition patterns
+- Complete example
 
 ## 5. Working with Parameters
-   - Task parameters (what you get from planning)
-   - Using parameters in actions
-   - Transforming parameters
-   - Storing results for later steps
-   - Complete example
+
+- Task parameters (what you get from planning)
+- Using parameters in actions
+- Transforming parameters
+- Storing results for later steps
+- Complete example
 
 ## 6. Multiple Methods per Task
-   - Why multiple methods?
-   - Applicability conditions
-   - Method selection
-   - Fallback behavior
-   - Complete example
+
+- Why multiple methods?
+- Applicability conditions
+- Method selection
+- Fallback behavior
+- Complete example
 
 ## 7. Common Patterns and Templates
-   - Acquisition pattern (get item from somewhere)
-   - Movement pattern (go somewhere and do something)
-   - State accumulation pattern (use results from previous steps)
-   - Conditional acquisition pattern (check before acquiring)
-   - Copy-paste templates
+
+- Acquisition pattern (get item from somewhere)
+- Movement pattern (go somewhere and do something)
+- State accumulation pattern (use results from previous steps)
+- Conditional acquisition pattern (check before acquiring)
+- Copy-paste templates
 
 ## 8. Testing Your Refinement Methods
-   - Manual testing strategies
-   - How to verify methods work
-   - Common test scenarios
-   - Debug logging
+
+- Manual testing strategies
+- How to verify methods work
+- Common test scenarios
+- Debug logging
 
 ## 9. Debugging Common Issues
-   - Method not being selected
-   - Condition always evaluates to false
-   - Parameter not found
-   - Action not executing
-   - Troubleshooting checklist
+
+- Method not being selected
+- Condition always evaluates to false
+- Parameter not found
+- Action not executing
+- Troubleshooting checklist
 
 ## 10. Best Practices
+
     - Keep methods simple
     - Use descriptive names
     - Document complex logic
@@ -106,6 +116,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
     - Performance tips
 
 ## 11. Advanced Topics
+
     - Nested conditionals
     - Complex parameter transformations
     - Performance optimization
@@ -115,6 +126,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 ## Tasks
 
 ### 1. Write Introduction Section
+
 - [ ] Explain what refinement methods are (in simple terms)
 - [ ] Describe when refinement methods are needed
 - [ ] Provide high-level overview of how they work
@@ -123,6 +135,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Use concrete game scenario examples
 
 ### 2. Write Getting Started Section
+
 - [ ] Document file locations (`mods/modId/refinement-methods/`)
 - [ ] Explain file naming conventions
 - [ ] Provide minimal refinement method template
@@ -131,6 +144,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Provide validation checklist
 
 ### 3. Write Simple Sequential Methods Section
+
 - [ ] Provide step-by-step authoring workflow
 - [ ] Explain action references (how to find actions)
 - [ ] Document target bindings (with examples)
@@ -139,6 +153,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Include copy-paste template
 
 ### 4. Write Conditional Logic Section
+
 - [ ] Explain when to use conditionals (in non-technical terms)
 - [ ] Document if-then-else structure with visual diagram
 - [ ] Provide common condition patterns:
@@ -150,6 +165,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Include copy-paste template for conditionals
 
 ### 5. Write Parameters Section
+
 - [ ] Explain what task parameters are
 - [ ] Show how to access parameters (`task.params.item`)
 - [ ] Document parameter use in action bindings
@@ -159,6 +175,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Include common parameter access patterns
 
 ### 6. Write Multiple Methods Section
+
 - [ ] Explain why multiple methods are useful
 - [ ] Document applicability conditions
 - [ ] Explain method selection process (non-technical)
@@ -167,6 +184,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Include template for multiple methods
 
 ### 7. Create Pattern Library
+
 - [ ] Document acquisition pattern (get item, bring it back)
 - [ ] Document movement pattern (go somewhere, do action)
 - [ ] Document state accumulation pattern (use previous results)
@@ -176,6 +194,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Reference working examples from GOAPIMPL-007
 
 ### 8. Write Testing Section
+
 - [ ] Document manual testing workflow
 - [ ] Provide testing checklist:
   - Method gets selected
@@ -187,6 +206,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Document common test cases (success, failure, edge cases)
 
 ### 9. Write Debugging Section
+
 - [ ] List common issues with solutions:
   - Method not selected → Check applicability condition
   - Condition false → Check variable path, log values
@@ -198,6 +218,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Provide "what to check" checklist
 
 ### 10. Write Best Practices Section
+
 - [ ] Keep methods simple (avoid complexity)
 - [ ] Use descriptive method and step names
 - [ ] Document complex conditional logic
@@ -206,6 +227,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Maintainability tips (use patterns, avoid duplication)
 
 ### 11. Write Advanced Topics Section
+
 - [ ] Nested conditionals (when and how)
 - [ ] Complex parameter transformations (computed values)
 - [ ] Performance optimization (condition ordering)
@@ -213,6 +235,7 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Document when to use advanced features vs. keeping it simple
 
 ### 12. Create Worksheets and Checklists
+
 - [ ] Refinement method planning worksheet
 - [ ] Action reference finder
 - [ ] Parameter binding checklist
@@ -221,12 +244,14 @@ Create a comprehensive, accessible authoring guide that enables modders to creat
 - [ ] Place in separate files or appendices
 
 ### 13. Integrate Examples from GOAPIMPL-007
+
 - [ ] Reference complete examples throughout guide
 - [ ] Link to example files
 - [ ] Use example code snippets in explanations
 - [ ] Create cross-reference table (pattern → example)
 
 ### 14. Review and Polish
+
 - [ ] Ensure language is accessible (no jargon)
 - [ ] Check all examples are correct and complete
 - [ ] Verify copy-paste templates work

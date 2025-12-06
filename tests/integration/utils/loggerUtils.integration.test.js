@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import {
   ensureValidLogger,
@@ -64,7 +71,7 @@ describe('loggerUtils integration coverage', () => {
     warnedFallback.debug('Converted to fallback');
     expect(warnSpy).toHaveBeenCalledWith(
       'Invalid: ',
-      'An invalid logger instance was provided. Falling back to console logging with prefix "Invalid".',
+      'An invalid logger instance was provided. Falling back to console logging with prefix "Invalid".'
     );
     expect(debugSpy).toHaveBeenCalledWith('Invalid: ', 'Converted to fallback');
   });
@@ -77,9 +84,11 @@ describe('loggerUtils integration coverage', () => {
     debugSpy.mockClear();
 
     expect(() => initLogger('CriticalService', null)).toThrow(
-      new Error('Missing required dependency: logger.'),
+      new Error('Missing required dependency: logger.')
     );
-    expect(errorSpy).toHaveBeenCalledWith('Missing required dependency: logger.');
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Missing required dependency: logger.'
+    );
 
     errorSpy.mockClear();
     expect(() =>
@@ -87,14 +96,23 @@ describe('loggerUtils integration coverage', () => {
         info() {},
         warn() {},
         error() {},
-      }),
-    ).toThrow(new Error("Invalid or missing method 'debug' on dependency 'logger'."));
-    expect(errorSpy).toHaveBeenCalledWith("Invalid or missing method 'debug' on dependency 'logger'.");
+      })
+    ).toThrow(
+      new Error("Invalid or missing method 'debug' on dependency 'logger'.")
+    );
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Invalid or missing method 'debug' on dependency 'logger'."
+    );
 
     errorSpy.mockClear();
-    const optionalLogger = initLogger('OptionalService', null, { optional: true });
+    const optionalLogger = initLogger('OptionalService', null, {
+      optional: true,
+    });
     optionalLogger.debug('Optional branch executed');
-    expect(debugSpy).toHaveBeenCalledWith('OptionalService: ', 'Optional branch executed');
+    expect(debugSpy).toHaveBeenCalledWith(
+      'OptionalService: ',
+      'Optional branch executed'
+    );
 
     debugSpy.mockClear();
     const validatedLogger = initLogger('StableService', baseLogger);
@@ -102,7 +120,9 @@ describe('loggerUtils integration coverage', () => {
 
     debugSpy.mockClear();
     infoSpy.mockClear();
-    const optionalProvidedLogger = initLogger('OptionalProvided', baseLogger, { optional: true });
+    const optionalProvidedLogger = initLogger('OptionalProvided', baseLogger, {
+      optional: true,
+    });
     optionalProvidedLogger.info('Optional logger supplied');
     expect(infoSpy).toHaveBeenCalledWith('Optional logger supplied');
   });
@@ -149,7 +169,7 @@ describe('loggerUtils integration coverage', () => {
     expect(errorSpy).toHaveBeenCalledWith(
       'MissingFlow: : ',
       'MissingFlow: Issue detected',
-      { code: 500 },
+      { code: 500 }
     );
   });
 
@@ -176,6 +196,9 @@ describe('loggerUtils integration coverage', () => {
     expect(debugSpy).toHaveBeenCalledWith('✅ Finalizing engine');
 
     logError(baseLogger, 'Failure to bootstrap', new Error('boom'));
-    expect(errorSpy).toHaveBeenCalledWith('❌ Failure to bootstrap: boom', expect.any(Error));
+    expect(errorSpy).toHaveBeenCalledWith(
+      '❌ Failure to bootstrap: boom',
+      expect.any(Error)
+    );
   });
 });

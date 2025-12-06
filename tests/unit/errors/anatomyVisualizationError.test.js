@@ -187,9 +187,9 @@ describe('AnatomyVisualizationError', () => {
         severity: 'LOW',
       });
 
-      expect(typeof error.stack === 'string' || error.stack instanceof String).toBe(
-        true
-      );
+      expect(
+        typeof error.stack === 'string' || error.stack instanceof String
+      ).toBe(true);
     } finally {
       Error.captureStackTrace = originalCaptureStackTrace;
     }

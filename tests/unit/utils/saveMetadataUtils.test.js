@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { validateSaveMetadataFields } from '../../../src/utils/saveMetadataUtils.js';
 import { extractSaveName } from '../../../src/utils/savePathUtils.js';
 
@@ -57,7 +51,7 @@ describe('validateSaveMetadataFields', () => {
     expect(extractSaveName).toHaveBeenCalledWith('manual_save_save-2.sav');
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
-        "Essential metadata missing or malformed in save-2"
+        'Essential metadata missing or malformed in save-2'
       )
     );
     expect(logger.warn.mock.calls[0][0]).toContain('"playtimeSeconds":45');
@@ -86,9 +80,7 @@ describe('validateSaveMetadataFields', () => {
     );
 
     expect(extractSaveName).toHaveBeenCalledWith('manual_save_save-3.sav');
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('save-3')
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('save-3'));
     expect(result).toEqual({
       identifier: 'save-3',
       saveName: 'Fallback Save (Bad Metadata)',
@@ -114,9 +106,7 @@ describe('validateSaveMetadataFields', () => {
     );
 
     expect(extractSaveName).not.toHaveBeenCalled();
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('save-4')
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('save-4'));
     expect(result).toEqual({
       identifier: 'save-4',
       saveName: 'Unknown Duration',
@@ -141,9 +131,7 @@ describe('validateSaveMetadataFields', () => {
     );
 
     expect(extractSaveName).not.toHaveBeenCalled();
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('save-5')
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('save-5'));
     expect(result).toEqual({
       identifier: 'save-5',
       saveName: 'Endless Adventure',
@@ -168,9 +156,7 @@ describe('validateSaveMetadataFields', () => {
     );
 
     expect(extractSaveName).not.toHaveBeenCalled();
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('save-6')
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('save-6'));
     expect(result).toEqual({
       identifier: 'save-6',
       saveName: 'Broken Clock',

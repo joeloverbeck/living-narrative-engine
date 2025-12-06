@@ -15,7 +15,11 @@ const createCorruptedRequest = () => {
   req.connection = { remoteAddress: '198.51.100.200' };
   req.socket = { remoteAddress: '198.51.100.200' };
   req.app = { get: () => false };
-  req.rateLimit = { limit: RATE_LIMIT_GENERAL_MAX_REQUESTS, totalHits: 0, resetTime: new Date(Date.now() + 1000) };
+  req.rateLimit = {
+    limit: RATE_LIMIT_GENERAL_MAX_REQUESTS,
+    totalHits: 0,
+    resetTime: new Date(Date.now() + 1000),
+  };
   req.res = createFakeResponse();
   return req;
 };
@@ -64,8 +68,12 @@ describe('Rate limiting middleware corrupted request resilience', () => {
     originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     jest.resetModules();
-    ({ createApiRateLimiter } = await import('../../src/middleware/rateLimiting.js'));
-    ({ RATE_LIMIT_GENERAL_MAX_REQUESTS } = await import('../../src/config/constants.js'));
+    ({ createApiRateLimiter } = await import(
+      '../../src/middleware/rateLimiting.js'
+    ));
+    ({ RATE_LIMIT_GENERAL_MAX_REQUESTS } = await import(
+      '../../src/config/constants.js'
+    ));
   });
 
   afterAll(() => {

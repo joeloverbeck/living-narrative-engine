@@ -70,7 +70,9 @@ describe('PlaceholderResolver', () => {
       const invalidLogger = { log: 123 };
       const ensureSpy = jest.spyOn(loggerUtils, 'ensureValidLogger');
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
       const resolverWithInvalid = new PlaceholderResolver(invalidLogger);
       expect(resolverWithInvalid).toBeInstanceOf(PlaceholderResolver);
       expect(ensureSpy).toHaveBeenCalledWith(

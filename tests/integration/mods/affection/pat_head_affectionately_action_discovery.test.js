@@ -43,9 +43,11 @@ describe('affection:pat_head_affectionately action discovery', () => {
           ? entityManager.getEntityInstance.bind(entityManager)
           : entityManager.getEntity.bind(entityManager);
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from ?? [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from ?? [];
         const actorKneelingBefore =
-          actorEntity.components?.['positioning:kneeling_before']?.entityId ?? null;
+          actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+          null;
 
         const validTargets = closeness.reduce((acc, partnerId) => {
           const partner = getEntity(partnerId);
@@ -54,9 +56,11 @@ describe('affection:pat_head_affectionately action discovery', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from ?? [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ??
+            [];
           const partnerKneelingBefore =
-            partner.components?.['positioning:kneeling_before']?.entityId ?? null;
+            partner.components?.['positioning:kneeling_before']?.entityId ??
+            null;
 
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
@@ -68,7 +72,9 @@ describe('affection:pat_head_affectionately action discovery', () => {
           const partnerKneeling = partnerKneelingBefore === actorEntity.id;
 
           const isValidTarget =
-            ((facingEachOther || actorBehind) && !actorKneeling && !partnerKneeling) ||
+            ((facingEachOther || actorBehind) &&
+              !actorKneeling &&
+              !partnerKneeling) ||
             partnerKneeling;
 
           if (isValidTarget) {
@@ -97,7 +103,9 @@ describe('affection:pat_head_affectionately action discovery', () => {
     it('matches the expected affection action schema', () => {
       expect(patHeadAffectionatelyAction).toBeDefined();
       expect(patHeadAffectionatelyAction.id).toBe(ACTION_ID);
-      expect(patHeadAffectionatelyAction.template).toBe('pat {target} on the head');
+      expect(patHeadAffectionatelyAction.template).toBe(
+        'pat {target} on the head'
+      );
       expect(patHeadAffectionatelyAction.targets).toBe(
         'positioning:close_actors_or_entity_kneeling_before_actor'
       );

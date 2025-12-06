@@ -234,7 +234,9 @@ describe('FixSuggestionEngine', () => {
   });
 
   it('provides scope guidance without location warnings when actor is positioned', () => {
-    const error = new Error('Scope resolution failed - target entity not found');
+    const error = new Error(
+      'Scope resolution failed - target entity not found'
+    );
     const actionDef = createActionDefinition({ scope: 'distant' });
     const actorSnapshot = createActorSnapshot({
       location: 'tower-top',
@@ -256,7 +258,8 @@ describe('FixSuggestionEngine', () => {
     const locationWarnings = suggestions.filter(
       (fix) =>
         fix.type === FIX_TYPES.INVALID_STATE &&
-        fix.details?.suggestion === 'Ensure actor has a valid location component'
+        fix.details?.suggestion ===
+          'Ensure actor has a valid location component'
     );
     expect(locationWarnings).toHaveLength(0);
   });

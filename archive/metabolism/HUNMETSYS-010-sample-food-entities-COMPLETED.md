@@ -9,6 +9,7 @@
 ## Outcome
 
 **What Was Accomplished:**
+
 1. ✅ Corrected ticket assumptions to match actual `fuel_source` component schema
 2. ✅ Created three sample food entity definitions (bread, water, steak)
 3. ✅ Updated mod-manifest.json with entity references
@@ -16,20 +17,24 @@
 5. ✅ Metabolism mod loads with 0 validation violations
 
 **Key Corrections Made:**
+
 - Changed `energy_density` → `energy_content` (correct field name)
 - Added required `fuel_type` field ("food" or "drink")
 - Clarified only 3 fields are required: energy_content, bulk, fuel_type
 - Added items:item, items:portable, items:weight components for proper inventory integration
 
 **Files Created:**
+
 - `data/mods/metabolism/entities/definitions/bread.entity.json`
 - `data/mods/metabolism/entities/definitions/water.entity.json`
 - `data/mods/metabolism/entities/definitions/steak.entity.json`
 
 **Files Modified:**
+
 - `data/mods/metabolism/mod-manifest.json` (added 3 entity definitions)
 
 **Validation Results:**
+
 ```bash
 npm run validate
 # Result: metabolism mod - 0 violations
@@ -43,6 +48,7 @@ Create sample food entity definitions demonstrating different fuel source proper
 ## Context
 
 With the fuel_source component schema created in HUNMETSYS-001, we need concrete example entities that demonstrate:
+
 - High volume, low calories (lettuce)
 - Low volume, high calories (butter)
 - Balanced food (steak)
@@ -55,6 +61,7 @@ These entities serve both as working examples for gameplay and as templates for 
 **IMPORTANT:** The fuel_source component schema uses different field names than initially assumed:
 
 **Actual Schema Fields:**
+
 - `energy_content` (NOT energy_density) - Total calories when fully consumed
 - `bulk` - Volume in buffer (0-100 scale) ✅ CORRECT
 - `fuel_type` - Primary fuel type string (e.g., "food", "drink") - **REQUIRED**
@@ -69,6 +76,7 @@ These entities serve both as working examples for gameplay and as templates for 
 ## Implementation Details
 
 ### bread.entity.json (Balanced Food)
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -99,6 +107,7 @@ These entities serve both as working examples for gameplay and as templates for 
 ```
 
 **Design Rationale:**
+
 - **Energy 200:** Moderate caloric content
 - **Bulk 30:** Fills stomach moderately (30% of 100 capacity)
 - **fuel_type "food":** Primary consumable type
@@ -107,6 +116,7 @@ These entities serve both as working examples for gameplay and as templates for 
 - **Spoilage 15 turns:** Goes stale/moldy after ~15 turns
 
 ### water.entity.json (Liquid Fuel)
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -137,6 +147,7 @@ These entities serve both as working examples for gameplay and as templates for 
 ```
 
 **Design Rationale:**
+
 - **Energy 0:** Water has no calories
 - **Bulk 10:** Takes minimal stomach space
 - **fuel_type "drink":** Liquid consumable
@@ -146,6 +157,7 @@ These entities serve both as working examples for gameplay and as templates for 
 - **Note:** Currently provides no gameplay benefit until thirst system (future)
 
 ### steak.entity.json (High-Quality Protein)
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -176,6 +188,7 @@ These entities serve both as working examples for gameplay and as templates for 
 ```
 
 **Design Rationale:**
+
 - **Energy 300:** High caloric content (protein + fat)
 - **Bulk 40:** Substantial stomach space (40% of capacity)
 - **fuel_type "food":** Primary consumable type
@@ -186,6 +199,7 @@ These entities serve both as working examples for gameplay and as templates for 
 ## Acceptance Criteria
 
 **All Completed:**
+
 - ✅ All three entity files created and validate against entity-definition schema
 - ✅ Entities added to mod manifest in `content.entities.definitions` array
 - ✅ Each entity has core:name and core:description components
@@ -200,6 +214,7 @@ These entities serve both as working examples for gameplay and as templates for 
 ## Testing Results
 
 ### Validation Output
+
 ```bash
 npm run validate
 
@@ -209,12 +224,13 @@ npm run validate
 ```
 
 ### Entity Verification
+
 ```bash
 # All three entities created with correct structure
 ls data/mods/metabolism/entities/definitions/*.entity.json
 # Output:
 # bread.entity.json
-# water.entity.json  
+# water.entity.json
 # steak.entity.json
 
 # fuel_source components properly configured
@@ -225,6 +241,7 @@ jq '.components."metabolism:fuel_source"' data/mods/metabolism/entities/definiti
 ## Invariants Satisfied
 
 **Entity Structure:** ✅
+
 1. All entities have core:name
 2. All entities have core:description
 3. All entities have items:item
@@ -233,11 +250,13 @@ jq '.components."metabolism:fuel_source"' data/mods/metabolism/entities/definiti
 6. All entities have metabolism:fuel_source
 
 **Fuel Source Required Fields:** ✅
+
 1. energy_content >= 0 (present in all)
 2. bulk: 0-100 range (present in all)
 3. fuel_type: non-empty string (present in all)
 
 **Gameplay Balance:** ✅
+
 ```
 Low Bulk (0-20):     Water (10) ✅
 Medium Bulk (20-40): Bread (30) ✅
@@ -259,18 +278,21 @@ High Energy (250+):  Steak (300) ✅
 ## Notes
 
 **Design Considerations:**
+
 - Water demonstrates zero-energy fuel (thirst system prep)
 - Bread demonstrates balanced "staple food" archetype
 - Steak demonstrates high-value but slow-processing food
 - All use realistic spoilage rates for gameplay pacing
 
 **Modding Templates:**
+
 - These entities serve as copy-paste templates
 - Modders can adjust values for custom foods
 - fuel_type and fuel_tags allow custom converters (vampire, robot, etc.)
 - Digestion speed creates strategic variety
 
 **Lessons Learned:**
+
 1. Always verify actual schema fields before writing ticket assumptions
 2. Component schemas may differ from initial design documents
 3. Required vs optional fields distinction is critical

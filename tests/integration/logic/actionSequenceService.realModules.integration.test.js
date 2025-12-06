@@ -126,14 +126,18 @@ describe('ActionSequenceService integration with real modules', () => {
                     {
                       type: 'STORE_LOG',
                       parameters: {
-                        label: { cat: ['loop-', { var: 'context.currentItem' }] },
+                        label: {
+                          cat: ['loop-', { var: 'context.currentItem' }],
+                        },
                       },
                     },
                   ],
                 },
               },
             ],
-            else_actions: [{ type: 'STORE_LOG', parameters: { label: 'else-branch' } }],
+            else_actions: [
+              { type: 'STORE_LOG', parameters: { label: 'else-branch' } },
+            ],
           },
         },
         { type: 'STORE_LOG', parameters: { label: 'end' } },
@@ -155,12 +159,16 @@ describe('ActionSequenceService integration with real modules', () => {
     const debugMessages = baseLogger.entries.debug.map((entry) => entry[0]);
     expect(
       debugMessages.some((message) =>
-        message.includes('ActionSequenceService: Executing sequence with 3 actions')
+        message.includes(
+          'ActionSequenceService: Executing sequence with 3 actions'
+        )
       )
     ).toBe(true);
     expect(
       debugMessages.some((message) =>
-        message.includes('[ActionSequence] Starting sequence: ActionSequenceService (3 actions)')
+        message.includes(
+          '[ActionSequence] Starting sequence: ActionSequenceService (3 actions)'
+        )
       )
     ).toBe(true);
   });
@@ -181,7 +189,9 @@ describe('ActionSequenceService integration with real modules', () => {
 
     expect(evaluationContext.context.executionLog).toEqual(['before-failure']);
     const lastErrorEntry = baseLogger.entries.error.at(-1);
-    expect(lastErrorEntry?.[0]).toContain('ActionSequenceService: Sequence execution failed');
+    expect(lastErrorEntry?.[0]).toContain(
+      'ActionSequenceService: Sequence execution failed'
+    );
     expect(lastErrorEntry?.[1]).toBeInstanceOf(Error);
   });
 
@@ -190,10 +200,12 @@ describe('ActionSequenceService integration with real modules', () => {
 
     await expect(
       service.execute({ notActions: [] }, baseContext)
-    ).rejects.toThrow('ActionSequenceService.execute: sequence must have an actions array');
+    ).rejects.toThrow(
+      'ActionSequenceService.execute: sequence must have an actions array'
+    );
 
-    await expect(
-      service.execute({ actions: [] }, null)
-    ).rejects.toThrow('ActionSequenceService.execute: context is required');
+    await expect(service.execute({ actions: [] }, null)).rejects.toThrow(
+      'ActionSequenceService.execute: context is required'
+    );
   });
 });

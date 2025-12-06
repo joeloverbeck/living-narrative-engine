@@ -7,13 +7,15 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 ## Summary of Changes
 
 ### Files Being Created: 18 total
+
 - 1 mod manifest
 - 4 action files
-- 4 condition files  
+- 4 condition files
 - 4 rule files
 - 5 scope files
 
 ### Files Being Modified: ~20+ total
+
 - `data/game.json` - Add personal-space mod
 - `data/mods/positioning/mod-manifest.json` - Remove migrated content
 - `docs/mods/mod-color-schemes.md` - Update Molten Copper entry
@@ -88,6 +90,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 **File to create:** `data/mods/personal-space/actions/get_close.action.json`
 
 **Changes from original:**
+
 - `id`: `positioning:get_close` → `personal-space:get_close`
 - `targets.primary.scope`: `positioning:actors_in_location_not_wielding` → `personal-space:actors_in_location_not_wielding`
 - `visual`: Update to Molten Copper color scheme
@@ -139,6 +142,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 **File to create:** `data/mods/personal-space/actions/scoot_closer.action.json`
 
 **Changes from original:**
+
 - `id`: `positioning:scoot_closer` → `personal-space:scoot_closer`
 - `targets.primary.scope`: `positioning:furniture_actor_sitting_on` → `personal-space:furniture_actor_sitting_on`
 - `targets.secondary.scope`: `positioning:closest_leftmost_occupant` → `personal-space:closest_leftmost_occupant`
@@ -185,6 +189,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 **File to create:** `data/mods/personal-space/actions/scoot_closer_right.action.json`
 
 **Changes from original:**
+
 - `id`: `positioning:scoot_closer_right` → `personal-space:scoot_closer_right`
 - `targets.primary.scope`: → `personal-space:furniture_actor_sitting_on`
 - `targets.secondary.scope`: → `personal-space:closest_rightmost_occupant`
@@ -231,6 +236,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 **File to create:** `data/mods/personal-space/actions/sit_down_at_distance.action.json`
 
 **Changes from original:**
+
 - `id`: `positioning:sit_down_at_distance` → `personal-space:sit_down_at_distance`
 - `targets.primary.scope`: Keep as `positioning:available_furniture` (shared scope stays in positioning)
 - `targets.secondary.scope`: → `personal-space:actors_sitting_with_space_to_right`
@@ -287,6 +293,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 **File to create:** `data/mods/personal-space/conditions/event-is-action-get-close.condition.json`
 
 **Changes:**
+
 - `id`: `positioning:event-is-action-get-close` → `personal-space:event-is-action-get-close`
 - Logic `actionId` comparison: `positioning:get_close` → `personal-space:get_close`
 
@@ -296,10 +303,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
   "id": "personal-space:event-is-action-get-close",
   "description": "Checks if the triggering event is for the 'personal-space:get_close' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "personal-space:get_close"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "personal-space:get_close"]
   }
 }
 ```
@@ -314,10 +318,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
   "id": "personal-space:event-is-action-scoot-closer",
   "description": "Condition that checks if the event is the scoot_closer action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "personal-space:scoot_closer"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "personal-space:scoot_closer"]
   }
 }
 ```
@@ -367,6 +368,7 @@ This plan details the migration of 4 positioning actions to a new `personal-spac
 **File to create:** `data/mods/personal-space/rules/get_close.rule.json`
 
 **Changes from original:**
+
 - `rule_id`: `positioning_handle_get_close` → `personal_space_handle_get_close`
 - `condition.condition_ref`: `positioning:event-is-action-get-close` → `personal-space:event-is-action-get-close`
 - `comment`: Update to reference `personal-space:get_close`
@@ -453,6 +455,7 @@ The rule body itself does not need changes since it only uses `positioning:` com
 **File to create:** `data/mods/personal-space/rules/handle_scoot_closer.rule.json`
 
 **Changes:**
+
 - `rule_id`: `handle_scoot_closer` → `personal_space_handle_scoot_closer`
 - `condition.condition_ref`: → `personal-space:event-is-action-scoot-closer`
 - `comment`: Update to reference `personal-space:scoot_closer`
@@ -466,6 +469,7 @@ The rule body uses `positioning:` components which stay in positioning mod - no 
 **File to create:** `data/mods/personal-space/rules/handle_scoot_closer_right.rule.json`
 
 **Changes:**
+
 - `rule_id`: `handle_scoot_closer_right` → `personal_space_handle_scoot_closer_right`
 - `condition.condition_ref`: → `personal-space:event-is-action-scoot-closer-right`
 - `comment`: Update to reference `personal-space:scoot_closer_right`
@@ -475,6 +479,7 @@ The rule body uses `positioning:` components which stay in positioning mod - no 
 **File to create:** `data/mods/personal-space/rules/handle_sit_down_at_distance.rule.json`
 
 **Changes:**
+
 - `rule_id`: `handle_sit_down_at_distance` → `personal_space_handle_sit_down_at_distance`
 - `condition.condition_ref`: → `personal-space:event-is-action-sit-down-at-distance`
 - `comment`: Update to reference `personal-space:sit_down_at_distance`
@@ -488,6 +493,7 @@ The rule body uses `positioning:` components which stay in positioning mod - no 
 **File to create:** `data/mods/personal-space/scopes/actors_in_location_not_wielding.scope`
 
 **Changes:**
+
 - Scope name: `positioning:actors_in_location_not_wielding` → `personal-space:actors_in_location_not_wielding`
 - Condition refs remain as `positioning:` since those conditions stay in positioning mod
 
@@ -565,24 +571,28 @@ personal-space:furniture_actor_sitting_on := entities(positioning:allows_sitting
 
 **Changes:**
 Remove from `content.actions`:
+
 - `"get_close.action.json"`
 - `"scoot_closer.action.json"`
 - `"scoot_closer_right.action.json"`
 - `"sit_down_at_distance.action.json"`
 
 Remove from `content.conditions`:
+
 - `"event-is-action-get-close.condition.json"`
 - `"event-is-action-scoot-closer.condition.json"`
 - `"event-is-action-scoot-closer-right.condition.json"`
 - `"event-is-action-sit-down-at-distance.condition.json"`
 
 Remove from `content.rules`:
+
 - `"get_close.rule.json"`
 - `"handle_scoot_closer.rule.json"`
 - `"handle_scoot_closer_right.rule.json"`
 - `"handle_sit_down_at_distance.rule.json"`
 
 Remove from `content.scopes`:
+
 - `"actors_in_location_not_wielding.scope"`
 - `"actors_sitting_with_space_to_right.scope"`
 - `"closest_leftmost_occupant.scope"`
@@ -590,6 +600,7 @@ Remove from `content.scopes`:
 - `"furniture_actor_sitting_on.scope"`
 
 **Keep in positioning** (used by sit_down action):
+
 - `"available_furniture.scope"` - stays
 
 ### Step 6.2: Delete Original Files from Positioning
@@ -597,24 +608,28 @@ Remove from `content.scopes`:
 **Files to delete from `data/mods/positioning/`:**
 
 Actions:
+
 - `actions/get_close.action.json`
 - `actions/scoot_closer.action.json`
 - `actions/scoot_closer_right.action.json`
 - `actions/sit_down_at_distance.action.json`
 
 Conditions:
+
 - `conditions/event-is-action-get-close.condition.json`
 - `conditions/event-is-action-scoot-closer.condition.json`
 - `conditions/event-is-action-scoot-closer-right.condition.json`
 - `conditions/event-is-action-sit-down-at-distance.condition.json`
 
 Rules:
+
 - `rules/get_close.rule.json`
 - `rules/handle_scoot_closer.rule.json`
 - `rules/handle_scoot_closer_right.rule.json`
 - `rules/handle_sit_down_at_distance.rule.json`
 
 Scopes:
+
 - `scopes/actors_in_location_not_wielding.scope`
 - `scopes/actors_sitting_with_space_to_right.scope`
 - `scopes/closest_leftmost_occupant.scope`
@@ -649,22 +664,25 @@ Scopes:
 **Change 1:** Update Quick Reference table (around line 22) - add entry for personal-space:
 
 ```markdown
-| Personal-Space           | Molten Copper      | 11.6    | `#7c2d12`        | Active   |
+| Personal-Space | Molten Copper | 11.6 | `#7c2d12` | Active |
 ```
 
 **Change 2:** Update Section 11.6 Molten Copper entry (around line 660):
 
 Change from:
+
 ```markdown
 #### 11.6 Molten Copper 🟢 AVAILABLE
 ```
 
 To:
+
 ```markdown
 #### 11.6 Molten Copper ✅ IN USE: Personal-Space
 ```
 
 And update use cases:
+
 ```markdown
 - **Use Cases**: Personal space actions, proximity management, seating adjustments, intimate distance
 ```
@@ -682,20 +700,20 @@ And update use cases:
 
 The following test files need to be moved from `tests/integration/mods/positioning/` to `tests/integration/mods/personal-space/`:
 
-| Original File | New Location |
-|---------------|--------------|
-| `sit_down_at_distance_action.test.js` | `personal-space/sit_down_at_distance_action.test.js` |
-| `sit_down_at_distance_action_discovery.test.js` | `personal-space/sit_down_at_distance_action_discovery.test.js` |
+| Original File                                          | New Location                                                          |
+| ------------------------------------------------------ | --------------------------------------------------------------------- |
+| `sit_down_at_distance_action.test.js`                  | `personal-space/sit_down_at_distance_action.test.js`                  |
+| `sit_down_at_distance_action_discovery.test.js`        | `personal-space/sit_down_at_distance_action_discovery.test.js`        |
 | `sitDownAtDistanceSecondaryTarget.integration.test.js` | `personal-space/sitDownAtDistanceSecondaryTarget.integration.test.js` |
-| `scoot_closer_action.test.js` | `personal-space/scoot_closer_action.test.js` |
-| `scoot_closer_action_discovery.test.js` | `personal-space/scoot_closer_action_discovery.test.js` |
-| `scoot_closer_marla_scenario.test.js` | `personal-space/scoot_closer_marla_scenario.test.js` |
-| `scoot_closer_right_action.test.js` | `personal-space/scoot_closer_right_action.test.js` |
-| `scoot_closer_right_action_discovery.test.js` | `personal-space/scoot_closer_right_action_discovery.test.js` |
-| `scoot_closer_right_marla_scenario.test.js` | `personal-space/scoot_closer_right_marla_scenario.test.js` |
-| `actorsSittingWithSpaceToRight.integration.test.js` | `personal-space/actorsSittingWithSpaceToRight.integration.test.js` |
-| `get_close_forbidden_components.test.js` | `personal-space/get_close_forbidden_components.test.js` |
-| `rules/getCloseRule.integration.test.js` | `personal-space/rules/getCloseRule.integration.test.js` |
+| `scoot_closer_action.test.js`                          | `personal-space/scoot_closer_action.test.js`                          |
+| `scoot_closer_action_discovery.test.js`                | `personal-space/scoot_closer_action_discovery.test.js`                |
+| `scoot_closer_marla_scenario.test.js`                  | `personal-space/scoot_closer_marla_scenario.test.js`                  |
+| `scoot_closer_right_action.test.js`                    | `personal-space/scoot_closer_right_action.test.js`                    |
+| `scoot_closer_right_action_discovery.test.js`          | `personal-space/scoot_closer_right_action_discovery.test.js`          |
+| `scoot_closer_right_marla_scenario.test.js`            | `personal-space/scoot_closer_right_marla_scenario.test.js`            |
+| `actorsSittingWithSpaceToRight.integration.test.js`    | `personal-space/actorsSittingWithSpaceToRight.integration.test.js`    |
+| `get_close_forbidden_components.test.js`               | `personal-space/get_close_forbidden_components.test.js`               |
+| `rules/getCloseRule.integration.test.js`               | `personal-space/rules/getCloseRule.integration.test.js`               |
 
 **Changes required in each test file:**
 
@@ -768,31 +786,37 @@ After confirming the migrated tests pass, delete the original test files from `t
 ## Phase 10: Validation
 
 ### Step 10.1: Run Schema Validation
+
 ```bash
 npm run validate
 ```
 
 ### Step 10.2: Run Type Check
+
 ```bash
 npm run typecheck
 ```
 
 ### Step 10.3: Run Unit Tests
+
 ```bash
 npm run test:unit
 ```
 
 ### Step 10.4: Run Integration Tests
+
 ```bash
 npm run test:integration
 ```
 
 ### Step 10.5: Run Scope Linting
+
 ```bash
 npm run scope:lint
 ```
 
 ### Step 10.6: Run ESLint on Modified Files
+
 ```bash
 npx eslint tests/integration/mods/personal-space/
 npx eslint tests/common/mods/ModTestFixture.js
@@ -805,83 +829,83 @@ npx eslint tests/common/mods/scopeResolverHelpers.js
 
 ### Files to CREATE (18 total):
 
-| Path | Type |
-|------|------|
-| `data/mods/personal-space/mod-manifest.json` | Manifest |
-| `data/mods/personal-space/actions/get_close.action.json` | Action |
-| `data/mods/personal-space/actions/scoot_closer.action.json` | Action |
-| `data/mods/personal-space/actions/scoot_closer_right.action.json` | Action |
-| `data/mods/personal-space/actions/sit_down_at_distance.action.json` | Action |
-| `data/mods/personal-space/conditions/event-is-action-get-close.condition.json` | Condition |
-| `data/mods/personal-space/conditions/event-is-action-scoot-closer.condition.json` | Condition |
-| `data/mods/personal-space/conditions/event-is-action-scoot-closer-right.condition.json` | Condition |
+| Path                                                                                      | Type      |
+| ----------------------------------------------------------------------------------------- | --------- |
+| `data/mods/personal-space/mod-manifest.json`                                              | Manifest  |
+| `data/mods/personal-space/actions/get_close.action.json`                                  | Action    |
+| `data/mods/personal-space/actions/scoot_closer.action.json`                               | Action    |
+| `data/mods/personal-space/actions/scoot_closer_right.action.json`                         | Action    |
+| `data/mods/personal-space/actions/sit_down_at_distance.action.json`                       | Action    |
+| `data/mods/personal-space/conditions/event-is-action-get-close.condition.json`            | Condition |
+| `data/mods/personal-space/conditions/event-is-action-scoot-closer.condition.json`         | Condition |
+| `data/mods/personal-space/conditions/event-is-action-scoot-closer-right.condition.json`   | Condition |
 | `data/mods/personal-space/conditions/event-is-action-sit-down-at-distance.condition.json` | Condition |
-| `data/mods/personal-space/rules/get_close.rule.json` | Rule |
-| `data/mods/personal-space/rules/handle_scoot_closer.rule.json` | Rule |
-| `data/mods/personal-space/rules/handle_scoot_closer_right.rule.json` | Rule |
-| `data/mods/personal-space/rules/handle_sit_down_at_distance.rule.json` | Rule |
-| `data/mods/personal-space/scopes/actors_in_location_not_wielding.scope` | Scope |
-| `data/mods/personal-space/scopes/actors_sitting_with_space_to_right.scope` | Scope |
-| `data/mods/personal-space/scopes/closest_leftmost_occupant.scope` | Scope |
-| `data/mods/personal-space/scopes/closest_rightmost_occupant.scope` | Scope |
-| `data/mods/personal-space/scopes/furniture_actor_sitting_on.scope` | Scope |
+| `data/mods/personal-space/rules/get_close.rule.json`                                      | Rule      |
+| `data/mods/personal-space/rules/handle_scoot_closer.rule.json`                            | Rule      |
+| `data/mods/personal-space/rules/handle_scoot_closer_right.rule.json`                      | Rule      |
+| `data/mods/personal-space/rules/handle_sit_down_at_distance.rule.json`                    | Rule      |
+| `data/mods/personal-space/scopes/actors_in_location_not_wielding.scope`                   | Scope     |
+| `data/mods/personal-space/scopes/actors_sitting_with_space_to_right.scope`                | Scope     |
+| `data/mods/personal-space/scopes/closest_leftmost_occupant.scope`                         | Scope     |
+| `data/mods/personal-space/scopes/closest_rightmost_occupant.scope`                        | Scope     |
+| `data/mods/personal-space/scopes/furniture_actor_sitting_on.scope`                        | Scope     |
 
 ### Files to MODIFY (3 total):
 
-| Path | Changes |
-|------|---------|
-| `data/game.json` | Add "personal-space" to mods array |
-| `data/mods/positioning/mod-manifest.json` | Remove migrated content references |
-| `docs/mods/mod-color-schemes.md` | Mark Molten Copper as used by Personal-Space |
+| Path                                      | Changes                                      |
+| ----------------------------------------- | -------------------------------------------- |
+| `data/game.json`                          | Add "personal-space" to mods array           |
+| `data/mods/positioning/mod-manifest.json` | Remove migrated content references           |
+| `docs/mods/mod-color-schemes.md`          | Mark Molten Copper as used by Personal-Space |
 
 ### Files to DELETE from positioning (17 total):
 
-| Path |
-|------|
-| `data/mods/positioning/actions/get_close.action.json` |
-| `data/mods/positioning/actions/scoot_closer.action.json` |
-| `data/mods/positioning/actions/scoot_closer_right.action.json` |
-| `data/mods/positioning/actions/sit_down_at_distance.action.json` |
-| `data/mods/positioning/conditions/event-is-action-get-close.condition.json` |
-| `data/mods/positioning/conditions/event-is-action-scoot-closer.condition.json` |
-| `data/mods/positioning/conditions/event-is-action-scoot-closer-right.condition.json` |
+| Path                                                                                   |
+| -------------------------------------------------------------------------------------- |
+| `data/mods/positioning/actions/get_close.action.json`                                  |
+| `data/mods/positioning/actions/scoot_closer.action.json`                               |
+| `data/mods/positioning/actions/scoot_closer_right.action.json`                         |
+| `data/mods/positioning/actions/sit_down_at_distance.action.json`                       |
+| `data/mods/positioning/conditions/event-is-action-get-close.condition.json`            |
+| `data/mods/positioning/conditions/event-is-action-scoot-closer.condition.json`         |
+| `data/mods/positioning/conditions/event-is-action-scoot-closer-right.condition.json`   |
 | `data/mods/positioning/conditions/event-is-action-sit-down-at-distance.condition.json` |
-| `data/mods/positioning/rules/get_close.rule.json` |
-| `data/mods/positioning/rules/handle_scoot_closer.rule.json` |
-| `data/mods/positioning/rules/handle_scoot_closer_right.rule.json` |
-| `data/mods/positioning/rules/handle_sit_down_at_distance.rule.json` |
-| `data/mods/positioning/scopes/actors_in_location_not_wielding.scope` |
-| `data/mods/positioning/scopes/actors_sitting_with_space_to_right.scope` |
-| `data/mods/positioning/scopes/closest_leftmost_occupant.scope` |
-| `data/mods/positioning/scopes/closest_rightmost_occupant.scope` |
-| `data/mods/positioning/scopes/furniture_actor_sitting_on.scope` |
+| `data/mods/positioning/rules/get_close.rule.json`                                      |
+| `data/mods/positioning/rules/handle_scoot_closer.rule.json`                            |
+| `data/mods/positioning/rules/handle_scoot_closer_right.rule.json`                      |
+| `data/mods/positioning/rules/handle_sit_down_at_distance.rule.json`                    |
+| `data/mods/positioning/scopes/actors_in_location_not_wielding.scope`                   |
+| `data/mods/positioning/scopes/actors_sitting_with_space_to_right.scope`                |
+| `data/mods/positioning/scopes/closest_leftmost_occupant.scope`                         |
+| `data/mods/positioning/scopes/closest_rightmost_occupant.scope`                        |
+| `data/mods/positioning/scopes/furniture_actor_sitting_on.scope`                        |
 
 ### Test Files to MOVE (12 total):
 
-| From | To |
-|------|-----|
-| `tests/integration/mods/positioning/sit_down_at_distance_action.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/sit_down_at_distance_action_discovery.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/sitDownAtDistanceSecondaryTarget.integration.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/scoot_closer_action.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/scoot_closer_action_discovery.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/scoot_closer_marla_scenario.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/scoot_closer_right_action.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/scoot_closer_right_action_discovery.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/scoot_closer_right_marla_scenario.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/actorsSittingWithSpaceToRight.integration.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/get_close_forbidden_components.test.js` | `tests/integration/mods/personal-space/` |
-| `tests/integration/mods/positioning/rules/getCloseRule.integration.test.js` | `tests/integration/mods/personal-space/rules/` |
+| From                                                                                      | To                                             |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `tests/integration/mods/positioning/sit_down_at_distance_action.test.js`                  | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/sit_down_at_distance_action_discovery.test.js`        | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/sitDownAtDistanceSecondaryTarget.integration.test.js` | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/scoot_closer_action.test.js`                          | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/scoot_closer_action_discovery.test.js`                | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/scoot_closer_marla_scenario.test.js`                  | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/scoot_closer_right_action.test.js`                    | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/scoot_closer_right_action_discovery.test.js`          | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/scoot_closer_right_marla_scenario.test.js`            | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/actorsSittingWithSpaceToRight.integration.test.js`    | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/get_close_forbidden_components.test.js`               | `tests/integration/mods/personal-space/`       |
+| `tests/integration/mods/positioning/rules/getCloseRule.integration.test.js`               | `tests/integration/mods/personal-space/rules/` |
 
 ### Test Helper Files to UPDATE:
 
-| Path | Changes |
-|------|---------|
-| `tests/common/mods/ModTestFixture.js` | Update scope references |
-| `tests/common/mods/scopeResolverHelpers.js` | Update scope references |
-| `tests/common/engine/systemLogicTestEnv.js` | Update scope references if needed |
-| `tests/unit/common/mods/scopeResolverHelpers.test.js` | Update test expectations |
-| `tests/integration/common/mods/scopeResolverHelpersIntegration.test.js` | Update scope references |
+| Path                                                                    | Changes                           |
+| ----------------------------------------------------------------------- | --------------------------------- |
+| `tests/common/mods/ModTestFixture.js`                                   | Update scope references           |
+| `tests/common/mods/scopeResolverHelpers.js`                             | Update scope references           |
+| `tests/common/engine/systemLogicTestEnv.js`                             | Update scope references if needed |
+| `tests/unit/common/mods/scopeResolverHelpers.test.js`                   | Update test expectations          |
+| `tests/integration/common/mods/scopeResolverHelpersIntegration.test.js` | Update scope references           |
 
 ---
 

@@ -60,7 +60,11 @@ describe('PropertySchemaValidation Integration', () => {
         description: 'Describes the length of a body part',
       };
 
-      dataRegistry.store('components', 'descriptors:length_category', component);
+      dataRegistry.store(
+        'components',
+        'descriptors:length_category',
+        component
+      );
 
       // Create a recipe with valid property values
       const recipe = {
@@ -106,7 +110,11 @@ describe('PropertySchemaValidation Integration', () => {
         dataSchema: componentDataSchema,
       };
 
-      dataRegistry.store('components', 'descriptors:length_category', component);
+      dataRegistry.store(
+        'components',
+        'descriptors:length_category',
+        component
+      );
 
       // Create a recipe with INVALID property value
       const recipe = {

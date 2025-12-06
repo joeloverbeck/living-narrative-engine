@@ -14,7 +14,7 @@ export function createMockSpeechPatternsArray() {
       type: 'Uses enthusiastic and repetitive expressions when excited',
       examples: [
         "Oh wow, that's amazing! I can't believe this is happening! This is the best day ever!",
-        "This is incredible! I've never seen anything like this before!"
+        "This is incredible! I've never seen anything like this before!",
       ],
       contexts: ['When feeling happy and excited in casual settings'],
     },
@@ -22,7 +22,7 @@ export function createMockSpeechPatternsArray() {
       type: 'Employs formal, measured language to express disagreement',
       examples: [
         'I must express my strong disagreement with this decision. This is completely unacceptable and requires immediate attention.',
-        'I find myself compelled to object to this course of action with the utmost seriousness.'
+        'I find myself compelled to object to this course of action with the utmost seriousness.',
       ],
       contexts: ['When angry in professional or formal settings'],
     },
@@ -30,7 +30,7 @@ export function createMockSpeechPatternsArray() {
       type: 'Uses gentle, reassuring tone when comforting others',
       examples: [
         "It's going to be okay. I understand how you're feeling, and I'm here to help you through this.",
-        "You're not alone in this. We'll get through it together, one step at a time."
+        "You're not alone in this. We'll get through it together, one step at a time.",
       ],
       contexts: ['When offering emotional support in difficult situations'],
     },

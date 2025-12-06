@@ -19,7 +19,10 @@
  * @augments BaseOperationHandler
  */
 
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
@@ -120,9 +123,12 @@ class OpenContainerHandler extends BaseOperationHandler {
     const context = executionContext?.evaluationContext?.context;
     if (!context || typeof context !== 'object') {
       if (log?.debug) {
-        log.debug('OpenContainerHandler: Skipping result variable write due to missing evaluation context', {
-          resultVariable,
-        });
+        log.debug(
+          'OpenContainerHandler: Skipping result variable write due to missing evaluation context',
+          {
+            resultVariable,
+          }
+        );
       }
       return;
     }
@@ -220,7 +226,8 @@ class OpenContainerHandler extends BaseOperationHandler {
           ? container.keyItemId.trim()
           : container.keyItemId;
 
-      const requiresKey = Boolean(container.requiresKey) || Boolean(resolvedKeyValue);
+      const requiresKey =
+        Boolean(container.requiresKey) || Boolean(resolvedKeyValue);
 
       if (requiresKey) {
         const inventory = this.#entityManager.getComponentData(

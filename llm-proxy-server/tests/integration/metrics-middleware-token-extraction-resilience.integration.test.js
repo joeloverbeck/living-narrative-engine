@@ -106,6 +106,8 @@ describe('LLM metrics middleware token extraction resilience', () => {
       (event) => event.level === 'debug'
     );
     expect(debugLogs.length).toBeGreaterThanOrEqual(1);
-    expect(String(debugLogs[0].args[0])).toContain('LLM request metrics recorded');
+    expect(String(debugLogs[0].args[0])).toContain(
+      'LLM request metrics recorded'
+    );
   });
 });

@@ -13,22 +13,22 @@ Create the `LOCK_GRABBING` operation that locks a specified number of grabbing a
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/lockGrabbing.schema.json` | Operation schema |
-| `src/logic/operationHandlers/lockGrabbingHandler.js` | Operation handler |
-| `tests/unit/logic/operationHandlers/lockGrabbingHandler.test.js` | Unit tests |
+| File                                                             | Purpose           |
+| ---------------------------------------------------------------- | ----------------- |
+| `data/schemas/operations/lockGrabbing.schema.json`               | Operation schema  |
+| `src/logic/operationHandlers/lockGrabbingHandler.js`             | Operation handler |
+| `tests/unit/logic/operationHandlers/lockGrabbingHandler.test.js` | Unit tests        |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/schemas/operation.schema.json` | Add `$ref` to lockGrabbing.schema.json in anyOf array |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add `LockGrabbingHandler` token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handler factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Map operation type to handler |
-| `src/utils/preValidationUtils.js` | Add `'LOCK_GRABBING'` to KNOWN_OPERATION_TYPES |
-| `src/configuration/staticConfiguration.js` | Add `'lockGrabbing.schema.json'` to OPERATION_SCHEMA_FILES |
+| File                                                                     | Change                                                     |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `data/schemas/operation.schema.json`                                     | Add `$ref` to lockGrabbing.schema.json in anyOf array      |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add `LockGrabbingHandler` token                            |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handler factory                                   |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Map operation type to handler                              |
+| `src/utils/preValidationUtils.js`                                        | Add `'LOCK_GRABBING'` to KNOWN_OPERATION_TYPES             |
+| `src/configuration/staticConfiguration.js`                               | Add `'lockGrabbing.schema.json'` to OPERATION_SCHEMA_FILES |
 
 ## Out of Scope
 
@@ -54,17 +54,17 @@ All files were created/modified as specified in the ticket. One additional file 
 
 #### Unit Tests (25/25 passing)
 
-| Criterion | Status |
-|-----------|--------|
-| Successfully locks specified count of appendages | ✅ PASS |
-| Associates item_id with locked appendages when provided | ✅ PASS |
-| Returns early with error dispatch when actor_id missing | ✅ PASS |
+| Criterion                                                            | Status  |
+| -------------------------------------------------------------------- | ------- |
+| Successfully locks specified count of appendages                     | ✅ PASS |
+| Associates item_id with locked appendages when provided              | ✅ PASS |
+| Returns early with error dispatch when actor_id missing              | ✅ PASS |
 | Returns early with error dispatch when actor_id invalid (non-string) | ✅ PASS |
-| Returns early with error dispatch when count missing | ✅ PASS |
-| Returns early with error dispatch when count < 1 | ✅ PASS |
-| Dispatches error when not enough free appendages | ✅ PASS |
-| Logs successful lock operation with affected part IDs | ✅ PASS |
-| Works correctly when item_id is omitted | ✅ PASS |
+| Returns early with error dispatch when count missing                 | ✅ PASS |
+| Returns early with error dispatch when count < 1                     | ✅ PASS |
+| Dispatches error when not enough free appendages                     | ✅ PASS |
+| Logs successful lock operation with affected part IDs                | ✅ PASS |
+| Works correctly when item_id is omitted                              | ✅ PASS |
 
 #### Additional Tests Implemented
 
@@ -78,23 +78,23 @@ All files were created/modified as specified in the ticket. One additional file 
 
 #### Validation Results
 
-| Validation | Status |
-|------------|--------|
-| `npm run validate` | ✅ PASS (schema loads and validates) |
-| `npm run test:unit` (handler tests) | ✅ PASS (25/25 tests) |
-| `npx eslint` (modified files) | ✅ PASS (0 errors, warnings only) |
+| Validation                          | Status                               |
+| ----------------------------------- | ------------------------------------ |
+| `npm run validate`                  | ✅ PASS (schema loads and validates) |
+| `npm run test:unit` (handler tests) | ✅ PASS (25/25 tests)                |
+| `npx eslint` (modified files)       | ✅ PASS (0 errors, warnings only)    |
 
 ### Invariants Verification
 
-| Invariant | Verified |
-|-----------|----------|
-| Follows same handler pattern as `LockMovementHandler` | ✅ |
-| Uses SYSTEM_ERROR_OCCURRED_ID for error handling | ✅ |
-| Does not throw exceptions - dispatches errors instead | ✅ |
-| Token naming matches handler class name (no "I" prefix) | ✅ |
-| Schema is referenced in operation.schema.json anyOf | ✅ |
-| Operation type is in preValidationUtils whitelist | ✅ |
-| Schema registered in staticConfiguration.js OPERATION_SCHEMA_FILES | ✅ |
+| Invariant                                                          | Verified |
+| ------------------------------------------------------------------ | -------- |
+| Follows same handler pattern as `LockMovementHandler`              | ✅       |
+| Uses SYSTEM_ERROR_OCCURRED_ID for error handling                   | ✅       |
+| Does not throw exceptions - dispatches errors instead              | ✅       |
+| Token naming matches handler class name (no "I" prefix)            | ✅       |
+| Schema is referenced in operation.schema.json anyOf                | ✅       |
+| Operation type is in preValidationUtils whitelist                  | ✅       |
+| Schema registered in staticConfiguration.js OPERATION_SCHEMA_FILES | ✅       |
 
 ### Files Created
 

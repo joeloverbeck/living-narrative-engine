@@ -139,7 +139,11 @@ class ThrowingWaitTimerService extends TestTimerService {
  * @param timerService
  * @param maxAttempts
  */
-async function waitForProcessingToDrain(processor, timerService, maxAttempts = 25) {
+async function waitForProcessingToDrain(
+  processor,
+  timerService,
+  maxAttempts = 25
+) {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if (timerService.hasPending()) {
       await timerService.triggerAll();
@@ -173,7 +177,9 @@ describe('TraceQueueProcessor integration', () => {
     if (timerService) {
       timerService.clearAll();
     }
-    await Promise.all(activeDatabases.splice(0).map((dbName) => deleteDatabase(dbName)));
+    await Promise.all(
+      activeDatabases.splice(0).map((dbName) => deleteDatabase(dbName))
+    );
   });
 
   const buildExecutionTrace = () => {
@@ -232,12 +238,10 @@ describe('TraceQueueProcessor integration', () => {
       const structuredTrace = buildStructuredTrace();
       const fallbackTrace = { label: 'misc', detail: { value: 42 } };
 
-      expect(
-        processor.enqueue(executionTrace, TracePriority.HIGH)
-      ).toBe(true);
-      expect(
-        processor.enqueue(structuredTrace, TracePriority.NORMAL)
-      ).toBe(true);
+      expect(processor.enqueue(executionTrace, TracePriority.HIGH)).toBe(true);
+      expect(processor.enqueue(structuredTrace, TracePriority.NORMAL)).toBe(
+        true
+      );
       expect(processor.enqueue(fallbackTrace, TracePriority.LOW)).toBe(true);
 
       await waitForProcessingToDrain(processor, timerService);
@@ -315,9 +319,9 @@ describe('TraceQueueProcessor integration', () => {
         true
       );
       expect(parallelProcessor.enqueue(structuredTrace)).toBe(true);
-      expect(parallelProcessor.enqueue(fallbackTrace, TracePriority.CRITICAL)).toBe(
-        true
-      );
+      expect(
+        parallelProcessor.enqueue(fallbackTrace, TracePriority.CRITICAL)
+      ).toBe(true);
 
       await waitForProcessingToDrain(parallelProcessor, parallelTimer);
       const metrics = parallelProcessor.getMetrics();
@@ -386,8 +390,12 @@ describe('TraceQueueProcessor integration', () => {
       warnSpy = jest.spyOn(logger, 'warn');
 
       expect(processor.enqueue(largeTrace, TracePriority.NORMAL)).toBe(true);
-      expect(processor.enqueue(anotherLargeTrace, TracePriority.LOW)).toBe(true);
-      expect(processor.enqueue(additionalLowPriority, TracePriority.LOW)).toBe(true);
+      expect(processor.enqueue(anotherLargeTrace, TracePriority.LOW)).toBe(
+        true
+      );
+      expect(processor.enqueue(additionalLowPriority, TracePriority.LOW)).toBe(
+        true
+      );
       expect(processor.enqueue(extraLowPriority, TracePriority.LOW)).toBe(true);
       expect(processor.enqueue(circularTrace, TracePriority.HIGH)).toBe(false);
 
@@ -477,9 +485,13 @@ describe('TraceQueueProcessor integration', () => {
   });
 
   it('retries transient failures with exponential backoff and persists after recovery', async () => {
-    const { adapter, dbName } = await createStorageAdapter(logger, FlakyIndexedDBAdapter, {
-      failuresBeforeSuccess: 1,
-    });
+    const { adapter, dbName } = await createStorageAdapter(
+      logger,
+      FlakyIndexedDBAdapter,
+      {
+        failuresBeforeSuccess: 1,
+      }
+    );
     activeDatabases.push(dbName);
 
     const retryTimerService = new TestTimerService();
@@ -569,7 +581,10 @@ describe('TraceQueueProcessor integration', () => {
     const warnSpy = jest.spyOn(logger, 'warn');
 
     try {
-      const heavyTrace = { actionId: 'memory:heavy', payload: 'x'.repeat(1_200) };
+      const heavyTrace = {
+        actionId: 'memory:heavy',
+        payload: 'x'.repeat(1_200),
+      };
       expect(processor.enqueue(heavyTrace, TracePriority.NORMAL)).toBe(false);
 
       expect(warnSpy).toHaveBeenCalledWith(
@@ -704,7 +719,8 @@ describe('TraceQueueProcessor integration', () => {
       expect(immediateErrorSpy).toHaveBeenCalled();
       expect(
         immediateErrorSpy.mock.calls.some(
-          ([message]) => message === 'TraceQueueProcessor: Batch processing error'
+          ([message]) =>
+            message === 'TraceQueueProcessor: Batch processing error'
         )
       ).toBe(true);
     } finally {
@@ -756,7 +772,8 @@ describe('TraceQueueProcessor integration', () => {
       expect(delayedErrorSpy).toHaveBeenCalled();
       expect(
         delayedErrorSpy.mock.calls.some(
-          ([message]) => message === 'TraceQueueProcessor: Batch processing error'
+          ([message]) =>
+            message === 'TraceQueueProcessor: Batch processing error'
         )
       ).toBe(true);
     } finally {
@@ -821,9 +838,10 @@ describe('TraceQueueProcessor integration', () => {
 
       let stored = await adapter.getItem('manual-traces');
       expect(stored).toHaveLength(1);
-      expect(
-        stored[0].data.actions['movement:go'].stageOrder
-      ).toEqual(['component_filtering', 'resolution']);
+      expect(stored[0].data.actions['movement:go'].stageOrder).toEqual([
+        'component_filtering',
+        'resolution',
+      ]);
       expect(
         stored[0].data.actions['movement:go'].totalDuration
       ).toBeGreaterThanOrEqual(0);
@@ -911,7 +929,9 @@ describe('TraceQueueProcessor integration', () => {
     });
 
     try {
-      expect(processor.enqueue(structuredTrace, TracePriority.NORMAL)).toBe(true);
+      expect(processor.enqueue(structuredTrace, TracePriority.NORMAL)).toBe(
+        true
+      );
 
       await waitForProcessingToDrain(processor, structuredTimer);
 
@@ -924,7 +944,9 @@ describe('TraceQueueProcessor integration', () => {
         'component_filtering',
         'resolution',
       ]);
-      expect(record.data.actions['craft:forge'].totalDuration).toBeGreaterThan(0);
+      expect(record.data.actions['craft:forge'].totalDuration).toBeGreaterThan(
+        0
+      );
     } finally {
       dateSpy.mockRestore();
       await processor.shutdown();

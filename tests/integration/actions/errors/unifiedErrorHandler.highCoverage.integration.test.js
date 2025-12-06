@@ -9,7 +9,10 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { UnifiedErrorHandler } from '../../../../src/actions/errors/unifiedErrorHandler.js';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
-import { ERROR_PHASES, FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  ERROR_PHASES,
+  FIX_TYPES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 
 class CapturingLogger {
   constructor() {
@@ -57,7 +60,7 @@ class InMemoryEntityManager {
 
   getComponentData(entityId, componentId) {
     const entity = this.entities.get(entityId);
-    return entity ? entity.components[componentId] ?? null : null;
+    return entity ? (entity.components[componentId] ?? null) : null;
   }
 }
 
@@ -195,7 +198,9 @@ describe('UnifiedErrorHandler high coverage integration', () => {
     expect(context.actorId).toBe(actorId);
     expect(context.targetId).toBe(targetId);
     expect(context.phase).toBe(ERROR_PHASES.VALIDATION);
-    expect(context.additionalContext).toEqual(expect.objectContaining(additionalContext));
+    expect(context.additionalContext).toEqual(
+      expect.objectContaining(additionalContext)
+    );
     expect(context.evaluationTrace.steps).toHaveLength(2);
     expect(context.suggestedFixes).toEqual(
       expect.arrayContaining([
@@ -240,24 +245,30 @@ describe('UnifiedErrorHandler high coverage integration', () => {
     expect(discoveryContext.targetId).toBeNull();
     expect(discoveryContext.phase).toBe(ERROR_PHASES.DISCOVERY);
 
-    const executionContext = handler.handleExecutionError(new Error('Command failed'), {
-      actorId,
-      actionDef: actionDefinition,
-      targetId,
-      additionalContext: { step: 'dispatch' },
-    });
+    const executionContext = handler.handleExecutionError(
+      new Error('Command failed'),
+      {
+        actorId,
+        actionDef: actionDefinition,
+        targetId,
+        additionalContext: { step: 'dispatch' },
+      }
+    );
 
     expect(executionContext.targetId).toBe(targetId);
     expect(executionContext.additionalContext).toEqual(
       expect.objectContaining({ stage: 'execution', step: 'dispatch' })
     );
 
-    const processingContext = handler.handleProcessingError(new Error('Interpreter blew up'), {
-      actorId,
-      stage: 'interpretation',
-      actionDef: actionDefinition,
-      additionalContext: { subsystem: 'parser' },
-    });
+    const processingContext = handler.handleProcessingError(
+      new Error('Interpreter blew up'),
+      {
+        actorId,
+        stage: 'interpretation',
+        actionDef: actionDefinition,
+        additionalContext: { subsystem: 'parser' },
+      }
+    );
 
     expect(processingContext.phase).toBe(ERROR_PHASES.EXECUTION);
     expect(processingContext.additionalContext).toEqual(

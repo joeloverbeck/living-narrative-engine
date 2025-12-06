@@ -10,7 +10,11 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
  * @param {boolean} facingAway - Whether actor is facing away
  * @returns {object} Object with room, chair, actor, and target entities
  */
-function setupDismountScenario(actorName = 'Alice', targetName = 'Bob', facingAway = false) {
+function setupDismountScenario(
+  actorName = 'Alice',
+  targetName = 'Bob',
+  facingAway = false
+) {
   const room = new ModEntityBuilder('bedroom').asRoom('Bedroom').build();
 
   const chair = new ModEntityBuilder('test:chair1')
@@ -27,7 +31,7 @@ function setupDismountScenario(actorName = 'Alice', targetName = 'Bob', facingAw
 
   target.components['positioning:sitting_on'] = {
     furniture_id: 'test:chair1',
-    spot_index: 0
+    spot_index: 0,
   };
   target.components['movement:movement_locked'] = {};
 
@@ -40,13 +44,13 @@ function setupDismountScenario(actorName = 'Alice', targetName = 'Bob', facingAw
 
   actor.components['positioning:straddling_waist'] = {
     target_id: 'test:target1',
-    facing_away: facingAway
+    facing_away: facingAway,
   };
   actor.components['movement:movement_locked'] = {};
 
   if (facingAway) {
     actor.components['positioning:facing_away'] = {
-      facing_away_from: ['test:target1']
+      facing_away_from: ['test:target1'],
     };
   }
 
@@ -99,9 +103,13 @@ describe('Dismount from Straddling - Action Execution', () => {
 
       // UNLOCK_MOVEMENT operation handler removes movement lock via its implementation
       // Check that action executed successfully (movement unlock is internal)
-      const successEvent = testFixture.events.find(e => e.eventType === 'core:display_successful_action_result');
+      const successEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_successful_action_result'
+      );
       expect(successEvent).toBeDefined();
-      expect(successEvent.payload.message).toBe('Alice dismounts from straddling Bob.');
+      expect(successEvent.payload.message).toBe(
+        'Alice dismounts from straddling Bob.'
+      );
     });
   });
 
@@ -125,9 +133,13 @@ describe('Dismount from Straddling - Action Execution', () => {
 
       // UNLOCK_MOVEMENT operation handler removes movement lock via its implementation
       // Check that action executed successfully (movement unlock is internal)
-      const successEvent = testFixture.events.find(e => e.eventType === 'core:display_successful_action_result');
+      const successEvent = testFixture.events.find(
+        (e) => e.eventType === 'core:display_successful_action_result'
+      );
       expect(successEvent).toBeDefined();
-      expect(successEvent.payload.message).toBe('Alice dismounts from straddling Bob.');
+      expect(successEvent.payload.message).toBe(
+        'Alice dismounts from straddling Bob.'
+      );
     });
   });
 
@@ -138,7 +150,8 @@ describe('Dismount from Straddling - Action Execution', () => {
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      const target = testFixture.entityManager.getEntityInstance('test:target1');
+      const target =
+        testFixture.entityManager.getEntityInstance('test:target1');
       expect(target.components['positioning:sitting_on']).toBeDefined();
       expect(target.components['movement:movement_locked']).toBeDefined();
     });
@@ -150,12 +163,17 @@ describe('Dismount from Straddling - Action Execution', () => {
       await testFixture.executeAction('test:actor1', 'test:target1');
 
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      const target = testFixture.entityManager.getEntityInstance('test:target1');
+      const target =
+        testFixture.entityManager.getEntityInstance('test:target1');
 
       expect(actor.components['positioning:closeness']).toBeDefined();
-      expect(actor.components['positioning:closeness'].partners).toContain('test:target1');
+      expect(actor.components['positioning:closeness'].partners).toContain(
+        'test:target1'
+      );
       expect(target.components['positioning:closeness']).toBeDefined();
-      expect(target.components['positioning:closeness'].partners).toContain('test:actor1');
+      expect(target.components['positioning:closeness'].partners).toContain(
+        'test:actor1'
+      );
     });
   });
 
@@ -166,7 +184,8 @@ describe('Dismount from Straddling - Action Execution', () => {
       testFixture.reset(Object.values(facingEntities));
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      const facingActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const facingActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(facingActor.components['positioning:facing_away']).toBeUndefined();
 
       // Test facing away case
@@ -174,8 +193,11 @@ describe('Dismount from Straddling - Action Execution', () => {
       testFixture.reset(Object.values(facingAwayEntities));
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      const facingAwayActor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(facingAwayActor.components['positioning:facing_away']).toBeUndefined();
+      const facingAwayActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(
+        facingAwayActor.components['positioning:facing_away']
+      ).toBeUndefined();
     });
   });
 });

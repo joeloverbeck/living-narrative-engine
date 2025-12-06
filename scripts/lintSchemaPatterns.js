@@ -120,7 +120,8 @@ async function lintSchemas(
   path = defaultPath
 ) {
   const operationsDir =
-    operationsDirArg || path.join(__dirname, '..', 'data', 'schemas', 'operations');
+    operationsDirArg ||
+    path.join(__dirname, '..', 'data', 'schemas', 'operations');
 
   const schemaFiles = await getSchemaFiles(operationsDir, fs);
   const violations = [];

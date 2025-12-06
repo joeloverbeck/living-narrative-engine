@@ -18,7 +18,10 @@ import RecipeValidationRunner from '../src/anatomy/validation/RecipeValidationRu
 import AppContainer from '../src/dependencyInjection/appContainer.js';
 import { configureMinimalContainer } from '../src/dependencyInjection/minimalContainerConfig.js';
 import { tokens } from '../src/dependencyInjection/tokens.js';
-import { BODY_DESCRIPTOR_REGISTRY, getAllDescriptorNames } from '../src/anatomy/registries/bodyDescriptorRegistry.js';
+import {
+  BODY_DESCRIPTOR_REGISTRY,
+  getAllDescriptorNames,
+} from '../src/anatomy/registries/bodyDescriptorRegistry.js';
 
 /**
  * Creates validation context with full mod loading
@@ -37,13 +40,16 @@ async function createWizardContext(verbose = false) {
 
   // Override data fetchers for CLI environment
   const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
-  const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js')).default;
+  const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js'))
+    .default;
   container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
   container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
 
   // Resolve core services
   const dataRegistry = container.resolve(tokens.IDataRegistry);
-  const anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
+  const anatomyBlueprintRepository = container.resolve(
+    tokens.IAnatomyBlueprintRepository
+  );
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const slotGenerator = container.resolve(tokens.ISlotGenerator);
   const entityMatcherService = container.resolve(tokens.IEntityMatcherService);
@@ -78,7 +84,11 @@ async function createWizardContext(verbose = false) {
     context = await contentPhase.execute(context);
 
     if (verbose) {
-      console.log(chalk.green(`✅ Loaded ${context.finalModOrder.length} mods successfully\n`));
+      console.log(
+        chalk.green(
+          `✅ Loaded ${context.finalModOrder.length} mods successfully\n`
+        )
+      );
     }
   } catch (error) {
     throw new Error(`Failed to load mods: ${error.message}`);
@@ -109,7 +119,7 @@ async function createWizardContext(verbose = false) {
 function getAvailableBlueprints(dataRegistry) {
   const blueprints = dataRegistry.getAll('anatomyBlueprints') || [];
 
-  return blueprints.map(blueprint => ({
+  return blueprints.map((blueprint) => ({
     // Use _fullId which includes namespace (e.g., 'anatomy:human_female')
     // instead of id which might not include it (e.g., 'human_female')
     id: blueprint._fullId || blueprint.id,
@@ -145,7 +155,10 @@ async function introspectBlueprint(blueprint, context) {
   }
 
   // V2 blueprint - load structure template and generate slots
-  const template = context.dataRegistry.get('anatomyStructureTemplates', blueprint.structureTemplate);
+  const template = context.dataRegistry.get(
+    'anatomyStructureTemplates',
+    blueprint.structureTemplate
+  );
 
   if (!template) {
     return {
@@ -162,7 +175,7 @@ async function introspectBlueprint(blueprint, context) {
   return {
     version: 'V2',
     template: blueprint.structureTemplate,
-    slots: generatedSlots.map(slot => slot.key),
+    slots: generatedSlots.map((slot) => slot.key),
     limbSets: template.topology.limbSets || [],
     appendages: template.topology.appendages || [],
   };
@@ -176,7 +189,7 @@ async function introspectBlueprint(blueprint, context) {
  */
 function getAvailableComponentTags(dataRegistry) {
   const components = dataRegistry.getAll('components') || [];
-  return components.map(c => c.id).sort();
+  return components.map((c) => c.id).sort();
 }
 
 /**
@@ -186,7 +199,11 @@ function getAvailableComponentTags(dataRegistry) {
  */
 async function promptBodyDescriptors() {
   console.log(chalk.cyan('\n📋 Body Descriptors Configuration (Optional)'));
-  console.log(chalk.gray('Body descriptors define physical characteristics like height, build, etc.\n'));
+  console.log(
+    chalk.gray(
+      'Body descriptors define physical characteristics like height, build, etc.\n'
+    )
+  );
 
   const { configureDescriptors } = await inquirer.prompt([
     {
@@ -237,7 +254,8 @@ async function promptBodyDescriptors() {
             type: 'input',
             name: 'value',
             message: `${metadata.displayLabel}:`,
-            validate: (input) => input.trim().length > 0 || 'Value cannot be empty',
+            validate: (input) =>
+              input.trim().length > 0 || 'Value cannot be empty',
           },
         ]);
         descriptors[metadata.schemaProperty] = value.trim();
@@ -257,7 +275,9 @@ async function promptBodyDescriptors() {
  */
 async function promptPatterns(introspection, context) {
   console.log(chalk.cyan('\n🎯 Pattern Configuration'));
-  console.log(chalk.gray('Patterns define how to populate multiple slots at once.\n'));
+  console.log(
+    chalk.gray('Patterns define how to populate multiple slots at once.\n')
+  );
 
   const { usePatterns } = await inquirer.prompt([
     {
@@ -284,9 +304,18 @@ async function promptPatterns(introspection, context) {
         name: 'patternType',
         message: 'Pattern type:',
         choices: [
-          { name: 'matchesGroup (select limb set or appendage type)', value: 'matchesGroup' },
-          { name: 'matchesPattern (wildcard matching)', value: 'matchesPattern' },
-          { name: 'matchesAll (property-based filtering)', value: 'matchesAll' },
+          {
+            name: 'matchesGroup (select limb set or appendage type)',
+            value: 'matchesGroup',
+          },
+          {
+            name: 'matchesPattern (wildcard matching)',
+            value: 'matchesPattern',
+          },
+          {
+            name: 'matchesAll (property-based filtering)',
+            value: 'matchesAll',
+          },
           { name: 'matches (explicit slot list - V1)', value: 'matches' },
         ],
       },
@@ -300,14 +329,20 @@ async function promptPatterns(introspection, context) {
       const choices = [];
 
       if (introspection.limbSets) {
-        introspection.limbSets.forEach(ls => {
-          choices.push({ name: `limbSet:${ls.type} (${ls.count} limbs)`, value: `limbSet:${ls.type}` });
+        introspection.limbSets.forEach((ls) => {
+          choices.push({
+            name: `limbSet:${ls.type} (${ls.count} limbs)`,
+            value: `limbSet:${ls.type}`,
+          });
         });
       }
 
       if (introspection.appendages) {
-        introspection.appendages.forEach(app => {
-          choices.push({ name: `appendage:${app.type} (${app.count} appendages)`, value: `appendage:${app.type}` });
+        introspection.appendages.forEach((app) => {
+          choices.push({
+            name: `appendage:${app.type} (${app.count} appendages)`,
+            value: `appendage:${app.type}`,
+          });
         });
       }
 
@@ -330,7 +365,8 @@ async function promptPatterns(introspection, context) {
             type: 'input',
             name: 'customValue',
             message: 'Enter custom group value (e.g., limbSet:leg):',
-            validate: (input) => input.trim().length > 0 || 'Value cannot be empty',
+            validate: (input) =>
+              input.trim().length > 0 || 'Value cannot be empty',
           },
         ]);
         pattern.matchesGroup = customValue.trim();
@@ -343,12 +379,15 @@ async function promptPatterns(introspection, context) {
           type: 'input',
           name: 'patternValue',
           message: 'Wildcard pattern (e.g., leg_*, *_left, *tentacle*):',
-          validate: (input) => input.trim().length > 0 || 'Pattern cannot be empty',
+          validate: (input) =>
+            input.trim().length > 0 || 'Pattern cannot be empty',
         },
       ]);
       pattern.matchesPattern = patternValue.trim();
     } else if (patternType === 'matchesAll') {
-      console.log(chalk.gray('Property-based filtering (leave empty to skip a property):'));
+      console.log(
+        chalk.gray('Property-based filtering (leave empty to skip a property):')
+      );
 
       const { slotType } = await inquirer.prompt([
         {
@@ -386,10 +425,14 @@ async function promptPatterns(introspection, context) {
           type: 'input',
           name: 'slotList',
           message: 'Comma-separated slot list (e.g., leg_1, leg_2, leg_3):',
-          validate: (input) => input.trim().length > 0 || 'Slot list cannot be empty',
+          validate: (input) =>
+            input.trim().length > 0 || 'Slot list cannot be empty',
         },
       ]);
-      pattern.matches = slotList.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      pattern.matches = slotList
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
     }
 
     // Get part type
@@ -398,7 +441,8 @@ async function promptPatterns(introspection, context) {
         type: 'input',
         name: 'partType',
         message: 'Part type:',
-        validate: (input) => input.trim().length > 0 || 'Part type cannot be empty',
+        validate: (input) =>
+          input.trim().length > 0 || 'Part type cannot be empty',
       },
     ]);
     pattern.partType = partType.trim();
@@ -436,7 +480,8 @@ async function promptPatterns(introspection, context) {
             type: 'input',
             name: 'componentId',
             message: 'Component ID (e.g., anatomy:scaled):',
-            validate: (input) => input.trim().length > 0 || 'Component ID cannot be empty',
+            validate: (input) =>
+              input.trim().length > 0 || 'Component ID cannot be empty',
           },
         ]);
 
@@ -445,7 +490,8 @@ async function promptPatterns(introspection, context) {
             type: 'input',
             name: 'propertyName',
             message: 'Property name:',
-            validate: (input) => input.trim().length > 0 || 'Property name cannot be empty',
+            validate: (input) =>
+              input.trim().length > 0 || 'Property name cannot be empty',
           },
         ]);
 
@@ -454,14 +500,16 @@ async function promptPatterns(introspection, context) {
             type: 'input',
             name: 'propertyValue',
             message: 'Property value:',
-            validate: (input) => input.trim().length > 0 || 'Property value cannot be empty',
+            validate: (input) =>
+              input.trim().length > 0 || 'Property value cannot be empty',
           },
         ]);
 
         if (!pattern.properties[componentId.trim()]) {
           pattern.properties[componentId.trim()] = {};
         }
-        pattern.properties[componentId.trim()][propertyName.trim()] = propertyValue.trim();
+        pattern.properties[componentId.trim()][propertyName.trim()] =
+          propertyValue.trim();
 
         const { addAnother } = await inquirer.prompt([
           {
@@ -491,7 +539,8 @@ async function promptPatterns(introspection, context) {
           type: 'input',
           name: 'preferId',
           message: 'Preferred entity ID (e.g., anatomy:dragon_wing_large):',
-          validate: (input) => input.trim().length > 0 || 'Entity ID cannot be empty',
+          validate: (input) =>
+            input.trim().length > 0 || 'Entity ID cannot be empty',
         },
       ]);
       pattern.preferId = preferId.trim();
@@ -521,7 +570,11 @@ async function promptPatterns(introspection, context) {
 async function runWizard(options) {
   try {
     console.log(chalk.bold.cyan('\n🧙 Interactive Recipe Wizard\n'));
-    console.log(chalk.gray('This wizard will guide you through creating an anatomy recipe.\n'));
+    console.log(
+      chalk.gray(
+        'This wizard will guide you through creating an anatomy recipe.\n'
+      )
+    );
 
     // Initialize context
     const context = await createWizardContext(options.verbose);
@@ -550,11 +603,15 @@ async function runWizard(options) {
     const blueprints = getAvailableBlueprints(context.dataRegistry);
 
     if (blueprints.length === 0) {
-      console.error(chalk.red('\n❌ No blueprints found. Please ensure anatomy mods are loaded.\n'));
+      console.error(
+        chalk.red(
+          '\n❌ No blueprints found. Please ensure anatomy mods are loaded.\n'
+        )
+      );
       process.exit(1);
     }
 
-    const blueprintChoices = blueprints.map(bp => ({
+    const blueprintChoices = blueprints.map((bp) => ({
       name: `${bp.id} (${bp.version}${bp.template ? ' - ' + bp.template : ''})`,
       value: bp.id,
     }));
@@ -569,13 +626,16 @@ async function runWizard(options) {
     ]);
 
     // Load and introspect blueprint
-    const blueprint = await context.anatomyBlueprintRepository.getBlueprint(blueprintId);
+    const blueprint =
+      await context.anatomyBlueprintRepository.getBlueprint(blueprintId);
 
     // Check if blueprint was found
     if (!blueprint) {
-      console.error(chalk.red(`\n❌ Blueprint '${blueprintId}' not found in registry.\n`));
+      console.error(
+        chalk.red(`\n❌ Blueprint '${blueprintId}' not found in registry.\n`)
+      );
       console.error(chalk.yellow('Available blueprints:'));
-      blueprints.forEach(bp => {
+      blueprints.forEach((bp) => {
         console.error(chalk.gray(`  - ${bp.id}`));
       });
       process.exit(1);
@@ -584,15 +644,25 @@ async function runWizard(options) {
     const introspection = await introspectBlueprint(blueprint, context);
 
     // Display blueprint info
-    console.log(chalk.green(`\n✓ Blueprint: ${blueprintId} selected (${introspection.version})`));
+    console.log(
+      chalk.green(
+        `\n✓ Blueprint: ${blueprintId} selected (${introspection.version})`
+      )
+    );
 
     if (introspection.version === 'V2') {
       console.log(chalk.gray('\nBlueprint info:'));
       console.log(chalk.gray(`  Schema version: 2.0`));
-      console.log(chalk.gray(`  Structure template: ${introspection.template}`));
-      console.log(chalk.gray(`  Generated slots: ${introspection.slots.join(', ')}`));
+      console.log(
+        chalk.gray(`  Structure template: ${introspection.template}`)
+      );
+      console.log(
+        chalk.gray(`  Generated slots: ${introspection.slots.join(', ')}`)
+      );
     } else {
-      console.log(chalk.gray(`\nBlueprint slots: ${introspection.slots.join(', ')}`));
+      console.log(
+        chalk.gray(`\nBlueprint slots: ${introspection.slots.join(', ')}`)
+      );
     }
 
     // Step 3: Body Descriptors
@@ -614,11 +684,17 @@ async function runWizard(options) {
     const slots = {};
     if (addSlots) {
       console.log(chalk.cyan('\n⚙️  Individual Slot Configuration'));
-      console.log(chalk.gray('Override specific slots with unique configurations.\n'));
+      console.log(
+        chalk.gray('Override specific slots with unique configurations.\n')
+      );
 
       // For simplicity, we'll skip implementing the full slot override UI
       // Users can edit the generated recipe file manually for complex overrides
-      console.log(chalk.yellow('Note: Individual slot configuration can be added by editing the generated file.\n'));
+      console.log(
+        chalk.yellow(
+          'Note: Individual slot configuration can be added by editing the generated file.\n'
+        )
+      );
     }
 
     // Step 6: Constraints (optional)
@@ -636,7 +712,11 @@ async function runWizard(options) {
       console.log(chalk.gray('Define requirements and exclusions.\n'));
 
       // For simplicity, we'll skip implementing the full constraints UI
-      console.log(chalk.yellow('Note: Constraints can be added by editing the generated file.\n'));
+      console.log(
+        chalk.yellow(
+          'Note: Constraints can be added by editing the generated file.\n'
+        )
+      );
     }
 
     // Build recipe object
@@ -679,7 +759,11 @@ async function runWizard(options) {
       ]);
 
       if (!saveAnyway) {
-        console.log(chalk.yellow('\nRecipe not saved. Please fix the errors and try again.\n'));
+        console.log(
+          chalk.yellow(
+            '\nRecipe not saved. Please fix the errors and try again.\n'
+          )
+        );
         process.exit(1);
       }
     } else {
@@ -687,7 +771,14 @@ async function runWizard(options) {
     }
 
     // Save recipe
-    const recipePath = path.join(process.cwd(), 'data', 'mods', 'anatomy', 'recipes', `${recipeId}.recipe.json`);
+    const recipePath = path.join(
+      process.cwd(),
+      'data',
+      'mods',
+      'anatomy',
+      'recipes',
+      `${recipeId}.recipe.json`
+    );
     const recipeJson = JSON.stringify(recipe, null, 2);
 
     await fs.writeFile(recipePath, recipeJson, 'utf-8');

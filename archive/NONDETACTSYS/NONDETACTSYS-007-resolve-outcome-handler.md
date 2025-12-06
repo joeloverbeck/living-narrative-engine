@@ -8,10 +8,10 @@ Create the `ResolveOutcomeHandler` operation handler that executes the `RESOLVE_
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/resolveOutcomeHandler.js` | Handler implementation |
-| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js` | Unit tests |
+| File                                                               | Purpose                |
+| ------------------------------------------------------------------ | ---------------------- |
+| `src/logic/operationHandlers/resolveOutcomeHandler.js`             | Handler implementation |
+| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js` | Unit tests             |
 
 ## Files to Modify
 
@@ -67,17 +67,26 @@ class ResolveOutcomeHandler {
     }
 
     // Validate services
-    if (!skillResolverService || typeof skillResolverService.getSkillValue !== 'function') {
+    if (
+      !skillResolverService ||
+      typeof skillResolverService.getSkillValue !== 'function'
+    ) {
       throw new Error(
         'ResolveOutcomeHandler requires a valid skillResolverService with getSkillValue method.'
       );
     }
-    if (!probabilityCalculatorService || typeof probabilityCalculatorService.calculate !== 'function') {
+    if (
+      !probabilityCalculatorService ||
+      typeof probabilityCalculatorService.calculate !== 'function'
+    ) {
       throw new Error(
         'ResolveOutcomeHandler requires a valid probabilityCalculatorService with calculate method.'
       );
     }
-    if (!outcomeDeterminerService || typeof outcomeDeterminerService.determine !== 'function') {
+    if (
+      !outcomeDeterminerService ||
+      typeof outcomeDeterminerService.determine !== 'function'
+    ) {
       throw new Error(
         'ResolveOutcomeHandler requires a valid outcomeDeterminerService with determine method.'
       );
@@ -125,10 +134,9 @@ class ResolveOutcomeHandler {
     const targetId = event?.payload?.secondaryId || event?.payload?.targetId;
 
     if (!actorId) {
-      this.#logger.error(
-        'RESOLVE_OUTCOME: Missing actorId in event payload.',
-        { eventPayload: event?.payload }
-      );
+      this.#logger.error('RESOLVE_OUTCOME: Missing actorId in event payload.', {
+        eventPayload: event?.payload,
+      });
       return;
     }
 
@@ -238,29 +246,34 @@ npx eslint src/logic/operationHandlers/resolveOutcomeHandler.js
 ### Required Test Cases
 
 #### Happy Path Tests
+
 1. Opposed skill check with both skills present
 2. Opposed skill check with missing target skill (uses default)
 3. Fixed difficulty check (no target_skill_component)
 4. All formula types (ratio, logistic, linear)
 
 #### Result Object Tests
+
 1. Result contains all expected properties
 2. Result is stored in correct context variable
 3. Breakdown information is included
 
 #### Outcome Distribution Tests (using mocked services)
+
 1. SUCCESS outcome is returned correctly
 2. FAILURE outcome is returned correctly
 3. CRITICAL_SUCCESS outcome is returned correctly
 4. FUMBLE outcome is returned correctly
 
 #### Edge Cases
+
 1. Missing actor from event payload → logs error
 2. Missing target for opposed check → uses default
 3. Invalid formula parameter → falls back to ratio
 4. Zero skill values handled correctly
 
 #### Dependency Validation
+
 1. Missing skillResolverService throws
 2. Missing probabilityCalculatorService throws
 3. Missing outcomeDeterminerService throws
@@ -287,28 +300,28 @@ npx eslint src/logic/operationHandlers/resolveOutcomeHandler.js
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/ifHandler.js` | Complex handler pattern |
-| `src/logic/operationHandlers/setVariableHandler.js` | Context modification pattern |
-| `tests/unit/logic/operationHandlers/ifHandler.test.js` | Handler test pattern |
+| File                                                   | Purpose                      |
+| ------------------------------------------------------ | ---------------------------- |
+| `src/logic/operationHandlers/ifHandler.js`             | Complex handler pattern      |
+| `src/logic/operationHandlers/setVariableHandler.js`    | Context modification pattern |
+| `tests/unit/logic/operationHandlers/ifHandler.test.js` | Handler test pattern         |
 
 ## Outcome
 
 ### What Changed vs Originally Planned
 
-| Aspect | Original Ticket | Actual Implementation |
-|--------|----------------|----------------------|
-| Handler Pattern | Mentioned BaseOperationHandler | Correctly followed SetVariableHandler pattern |
-| Method Signature | `execute(context)` | `execute(params, executionContext)` |
-| Context Storage | Return modified context | In-place modification via `executionContext.evaluationContext.context[result_variable]` |
-| API Parameter | `difficultyModifier` | `difficulty` (matches ProbabilityCalculatorService API) |
+| Aspect           | Original Ticket                | Actual Implementation                                                                   |
+| ---------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
+| Handler Pattern  | Mentioned BaseOperationHandler | Correctly followed SetVariableHandler pattern                                           |
+| Method Signature | `execute(context)`             | `execute(params, executionContext)`                                                     |
+| Context Storage  | Return modified context        | In-place modification via `executionContext.evaluationContext.context[result_variable]` |
+| API Parameter    | `difficultyModifier`           | `difficulty` (matches ProbabilityCalculatorService API)                                 |
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/logic/operationHandlers/resolveOutcomeHandler.js` | Handler implementation (243 lines) |
+| File                                                               | Description                        |
+| ------------------------------------------------------------------ | ---------------------------------- |
+| `src/logic/operationHandlers/resolveOutcomeHandler.js`             | Handler implementation (243 lines) |
 | `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js` | Unit tests (36 tests, all passing) |
 
 ### Test Summary

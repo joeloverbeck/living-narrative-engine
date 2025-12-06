@@ -174,7 +174,9 @@ export class RecipeValidationRunner {
       return config.guards.enabled;
     }
 
-    const envFlag = this.#parseGuardFlag(process?.env?.VALIDATION_PIPELINE_GUARDS);
+    const envFlag = this.#parseGuardFlag(
+      process?.env?.VALIDATION_PIPELINE_GUARDS
+    );
     if (envFlag !== null) {
       return envFlag;
     }

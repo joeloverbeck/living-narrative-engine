@@ -11,10 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:fucking_vaginally"
-    ]
+    "actor": ["positioning:closeness", "positioning:fucking_vaginally"]
   },
   "template": "thrust your penis inside {primary} slowly and tenderly",
   "prerequisites": [

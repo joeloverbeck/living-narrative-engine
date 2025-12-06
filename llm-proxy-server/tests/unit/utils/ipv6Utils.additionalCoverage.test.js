@@ -54,9 +54,8 @@ describe('ipv6Utils additional coverage', () => {
   });
 
   it('handles IPv4-mapped loopback addresses using the parts fallback', async () => {
-    const { parseSpy, classification } = await mockIpv4MappedAddress(
-      '::ffff:127.0.0.1'
-    );
+    const { parseSpy, classification } =
+      await mockIpv4MappedAddress('::ffff:127.0.0.1');
 
     expect(parseSpy).toHaveBeenCalledWith('::ffff:127.0.0.1');
     expect(classification.type).toBe('ipv4-mapped-private');
@@ -78,9 +77,7 @@ describe('ipv6Utils additional coverage', () => {
   });
 
   it('falls back to generic reserved label for unknown reserved range types', async () => {
-    const { __determineReservedRangeFromType } = await import(
-      IPV6_UTILS_PATH
-    );
+    const { __determineReservedRangeFromType } = await import(IPV6_UTILS_PATH);
 
     const result = __determineReservedRangeFromType('hypotheticalRange');
 

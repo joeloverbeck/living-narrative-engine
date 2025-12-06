@@ -218,7 +218,11 @@ class ScopeConditionAnalyzer {
     }
 
     // Validate ID format
-    if (!conditionId || typeof conditionId !== 'string' || !conditionId.includes(':')) {
+    if (
+      !conditionId ||
+      typeof conditionId !== 'string' ||
+      !conditionId.includes(':')
+    ) {
       throw new Error(
         `Invalid condition ID format: "${conditionId}". Expected "modId:conditionId"`
       );

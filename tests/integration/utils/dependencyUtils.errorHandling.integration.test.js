@@ -183,12 +183,13 @@ describe('dependencyUtils error handling integration', () => {
     const logger = new RecordingLogger();
     const facadeFactory = new SimpleFacadeFactory();
 
-    expect(() =>
-      new FacadeRegistry({
-        logger,
-        eventBus: null,
-        facadeFactory,
-      })
+    expect(
+      () =>
+        new FacadeRegistry({
+          logger,
+          eventBus: null,
+          facadeFactory,
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.errorCalls).toEqual(
@@ -234,15 +235,15 @@ describe('dependencyUtils error handling integration', () => {
           },
         },
       },
-        persistence: {
-          entityManager: {},
-          domUiFacade: {},
-          actionIndex: new SimpleActionIndex(),
-          gameDataRepository: new SimpleGameDataRepository(),
-          thoughtListener: new SimpleThoughtListener(),
-          notesListener: new SimpleNotesListener(),
-          spatialIndexManager: new SimpleSpatialIndexManager(),
-        },
+      persistence: {
+        entityManager: {},
+        domUiFacade: {},
+        actionIndex: new SimpleActionIndex(),
+        gameDataRepository: new SimpleGameDataRepository(),
+        thoughtListener: new SimpleThoughtListener(),
+        notesListener: new SimpleNotesListener(),
+        spatialIndexManager: new SimpleSpatialIndexManager(),
+      },
       coreSystems: {
         modsLoader: new SimpleModsLoader(),
         scopeRegistry: new SimpleScopeRegistry(),
@@ -258,11 +259,17 @@ describe('dependencyUtils error handling integration', () => {
     const result = await service.runInitializationSequence('content-world');
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(InitializationError);
-    expect(logger.errorCalls.some(({ message }) => message.includes('content validation failed'))).toBe(true);
+    expect(
+      logger.errorCalls.some(({ message }) =>
+        message.includes('content validation failed')
+      )
+    ).toBe(true);
   });
 
   it('falls back to console logging when the validator logger lacks an error function', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     class BaseService {
       constructor() {
@@ -274,14 +281,17 @@ describe('dependencyUtils error handling integration', () => {
       { dependency: null, name: 'DecoratedDependency' },
     ]);
 
-    expect(() =>
-      new DecoratedService({
-        logger: { warn() {}, info() {} },
-      })
+    expect(
+      () =>
+        new DecoratedService({
+          logger: { warn() {}, info() {} },
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Missing required dependency: DecoratedDependency.'),
+      expect.stringContaining(
+        'Missing required dependency: DecoratedDependency.'
+      )
     );
 
     consoleSpy.mockRestore();
@@ -294,9 +304,11 @@ describe('dependencyUtils error handling integration', () => {
           this.created = true;
         }
       },
-      () => null,
+      () => null
     );
 
-    expect(() => new DecoratedService({ logger: new RecordingLogger() })).not.toThrow();
+    expect(
+      () => new DecoratedService({ logger: new RecordingLogger() })
+    ).not.toThrow();
   });
 });

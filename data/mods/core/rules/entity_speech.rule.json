@@ -39,45 +39,45 @@
               "result_variable": "currentTimestamp"
             }
           },
-      {
-        "type": "DISPATCH_PERCEPTIBLE_EVENT",
-        "comment": "Dispatch a perceptible event for the speech act, to be logged.",
-        "parameters": {
-          "location_id": "{context.speakerPositionComponent.locationId}",
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Dispatch a perceptible event for the speech act, to be logged.",
+            "parameters": {
+              "location_id": "{context.speakerPositionComponent.locationId}",
               "description_text": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
               "perception_type": "speech_local",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
               "involved_entities": [],
-          "contextual_data": {
-            "speechContent": "{event.payload.speechContent}"
-          }
-        }
-      },
-      {
-        "type": "IF",
-        "comment": "Skip UI bubble when suppressDisplay is true (e.g., preview already shown).",
-        "parameters": {
-          "condition": {
-            "not": { "var": "event.payload.suppressDisplay" }
-          },
-          "then_actions": [
-            {
-              "type": "DISPATCH_SPEECH",
-              "comment": "Dispatch core:display_speech event.",
-              "parameters": {
-                "entity_id": "{event.payload.entityId}",
-                "speech_content": "{event.payload.speechContent}",
-                "thoughts": "{event.payload.thoughts?}",
-                "notes": "{event.payload.notes?}",
-                "allow_html": false
+              "contextual_data": {
+                "speechContent": "{event.payload.speechContent}"
               }
             }
-          ]
-        }
+          },
+          {
+            "type": "IF",
+            "comment": "Skip UI bubble when suppressDisplay is true (e.g., preview already shown).",
+            "parameters": {
+              "condition": {
+                "not": { "var": "event.payload.suppressDisplay" }
+              },
+              "then_actions": [
+                {
+                  "type": "DISPATCH_SPEECH",
+                  "comment": "Dispatch core:display_speech event.",
+                  "parameters": {
+                    "entity_id": "{event.payload.entityId}",
+                    "speech_content": "{event.payload.speechContent}",
+                    "thoughts": "{event.payload.thoughts?}",
+                    "notes": "{event.payload.notes?}",
+                    "allow_html": false
+                  }
+                }
+              ]
+            }
+          }
+        ]
       }
-    ]
-  }
-}
+    }
   ]
 }

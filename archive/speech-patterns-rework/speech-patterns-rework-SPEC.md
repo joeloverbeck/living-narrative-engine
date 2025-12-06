@@ -19,6 +19,7 @@ The current speech patterns system stores character dialogue patterns as a simpl
 4. **Limited Expressiveness**: Cannot capture the nuance of when/how different patterns should be used
 
 **Example Current Format** (Vespera Nightwhisper):
+
 ```json
 {
   "core:speech_patterns": {
@@ -34,6 +35,7 @@ The current speech patterns system stores character dialogue patterns as a simpl
 Enhance the speech patterns component to support a structured object format while maintaining backward compatibility with the existing string array format:
 
 **New Structured Format**:
+
 ```json
 {
   "core:speech_patterns": {
@@ -70,6 +72,7 @@ Enhance the speech patterns component to support a structured object format whil
 **File**: `data/mods/core/components/speech_patterns.component.json`
 
 #### Current Schema
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -91,6 +94,7 @@ Enhance the speech patterns component to support a structured object format whil
 ```
 
 #### New Schema (Backward Compatible)
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -169,8 +173,8 @@ function detectPatternFormat(patterns) {
     return 'string'; // Default to legacy for empty arrays
   }
 
-  const hasStrings = patterns.some(p => typeof p === 'string');
-  const hasObjects = patterns.some(p => typeof p === 'object' && p !== null);
+  const hasStrings = patterns.some((p) => typeof p === 'string');
+  const hasObjects = patterns.some((p) => typeof p === 'object' && p !== null);
 
   if (hasStrings && hasObjects) {
     return 'mixed';
@@ -183,6 +187,7 @@ function detectPatternFormat(patterns) {
 #### Handling Mixed Formats
 
 When both formats are present:
+
 1. Process object patterns first (structured output)
 2. Process string patterns second (legacy output)
 3. Apply usage guidance once at the end
@@ -203,6 +208,7 @@ When both formats are present:
 **Method**: `formatSpeechPatterns(entity)` (lines 215-241)
 
 #### Current Implementation
+
 ```javascript
 formatSpeechPatterns(entity) {
   const patterns = entity.getComponent('core:speech_patterns')?.patterns;
@@ -215,6 +221,7 @@ formatSpeechPatterns(entity) {
 ```
 
 #### New Implementation
+
 ```javascript
 formatSpeechPatterns(entity) {
   const patterns = entity.getComponent('core:speech_patterns')?.patterns;
@@ -307,6 +314,7 @@ Absence of patterns is also authentic—not every line needs special features.
 ### Prompt Template Structure
 
 #### Structured Format Output Example
+
 ```xml
 <speech_patterns>
   <!-- Use naturally, not mechanically. Examples show tendencies, not rules. -->
@@ -344,6 +352,7 @@ Absence of patterns is also authentic—not every line needs special features.
 ```
 
 #### Legacy Format Output Example
+
 ```xml
 <speech_patterns>
   - (when performing or manipulating, she lays it on thick) 'Oh meow-y goodness...'
@@ -372,6 +381,7 @@ Absence of patterns is also authentic—not every line needs special features.
 **File**: `src/characterBuilder/prompts/speechPatternsPrompts.js`
 
 ##### Current Response Schema
+
 ```javascript
 const SPEECH_PATTERNS_RESPONSE_SCHEMA = `
 Return 15-25 speech patterns as a JSON array of strings.
@@ -382,6 +392,7 @@ Format: ["(context) 'example'", ...]
 ```
 
 ##### New Response Schema
+
 ```javascript
 const SPEECH_PATTERNS_RESPONSE_SCHEMA = `
 Return 4-8 pattern groups as a JSON array of objects.
@@ -406,6 +417,7 @@ Aim for 15-25 total examples across all groups.
 ##### Prompt Template Modifications
 
 Update `createSpeechPatternsPrompt()` to:
+
 1. Request structured output format
 2. Provide examples of good pattern grouping
 3. Emphasize natural context-based organization
@@ -442,6 +454,7 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 **File**: `src/characterBuilder/services/SpeechPatternsResponseProcessor.js`
 
 ##### Current Processing
+
 ```javascript
 #parseTextResponse(responseText) {
   // Extract JSON array of strings
@@ -451,6 +464,7 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 ```
 
 ##### New Processing
+
 ```javascript
 #parseTextResponse(responseText) {
   const parsed = this.#extractJSON(responseText);
@@ -515,6 +529,7 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 **File**: `speech-patterns-generator.html`
 
 ##### Current Display
+
 ```html
 <ul class="patterns-list">
   <!-- Each pattern as a list item -->
@@ -522,6 +537,7 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 ```
 
 ##### New Display (Structured Format)
+
 ```html
 <div class="speech-patterns">
   <!-- For each pattern group -->
@@ -547,6 +563,7 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 ```
 
 ##### CSS Updates
+
 ```css
 .pattern-group {
   margin-bottom: 1.5rem;
@@ -592,12 +609,14 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 **Problem**: CSS animations causing patterns to disappear after generation.
 
 **Root Cause Investigation Required**:
+
 1. Check for conflicting transition properties
 2. Verify z-index stacking contexts
 3. Examine opacity/visibility animations
 4. Test with animations disabled
 
 **Recommended Fix Pattern**:
+
 ```css
 /* Replace problematic animations with stable transitions */
 .pattern-group {
@@ -622,13 +641,14 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
 **File**: `data/mods/fantasy/entities/definitions/vespera_nightwhisper.character.json`
 
 #### Current Format (18 string patterns)
+
 ```json
 {
   "components": {
     "core:speech_patterns": {
       "patterns": [
         "(when performing or manipulating, she lays it on thick with weaponized cuteness) 'Oh meow-y goodness, surely you wouldn't let a poor kitty go thirsty?'",
-        "(casual speech with feline wordplay) 'Purr-haps you could help a girl out?'",
+        "(casual speech with feline wordplay) 'Purr-haps you could help a girl out?'"
         // ... 16 more string patterns
       ]
     }
@@ -695,7 +715,11 @@ ${SPEECH_PATTERNS_RESPONSE_SCHEMA}`;
         },
         {
           "type": "Fragmented Memory & Possession",
-          "contexts": ["confusion", "identity crisis", "supernatural influence"],
+          "contexts": [
+            "confusion",
+            "identity crisis",
+            "supernatural influence"
+          ],
           "examples": [
             "Sometimes I forget which thoughts are mine and which are... hers.",
             "I remember being angry about that, but I don't remember why I should be.",
@@ -739,16 +763,14 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
     });
 
     it('should detect object format correctly', () => {
-      const patterns = [
-        { type: 'Type 1', examples: ['ex1'] }
-      ];
+      const patterns = [{ type: 'Type 1', examples: ['ex1'] }];
       expect(formatter.detectFormat(patterns)).toBe('object');
     });
 
     it('should detect mixed format correctly', () => {
       const patterns = [
         'string pattern',
-        { type: 'Type 1', examples: ['ex1'] }
+        { type: 'Type 1', examples: ['ex1'] },
       ];
       expect(formatter.detectFormat(patterns)).toBe('mixed');
     });
@@ -766,10 +788,10 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
             {
               type: 'Verbal Tics',
               contexts: ['casual'],
-              examples: ['Example 1', 'Example 2']
-            }
-          ]
-        }
+              examples: ['Example 1', 'Example 2'],
+            },
+          ],
+        },
       });
 
       const output = formatter.formatSpeechPatterns(entity);
@@ -788,15 +810,15 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
             {
               type: 'Type 1',
               contexts: ['casual'],
-              examples: ['Ex 1']
+              examples: ['Ex 1'],
             },
             {
               type: 'Type 2',
               contexts: ['formal'],
-              examples: ['Ex 2']
-            }
-          ]
-        }
+              examples: ['Ex 2'],
+            },
+          ],
+        },
       });
 
       const output = formatter.formatSpeechPatterns(entity);
@@ -811,10 +833,10 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
           patterns: [
             {
               type: 'Type 1',
-              examples: ['Ex 1']
-            }
-          ]
-        }
+              examples: ['Ex 1'],
+            },
+          ],
+        },
       });
 
       const output = formatter.formatSpeechPatterns(entity);
@@ -829,8 +851,8 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
     it('should format string patterns with XML structure', () => {
       const entity = createMockEntity({
         'core:speech_patterns': {
-          patterns: ['pattern 1', 'pattern 2']
-        }
+          patterns: ['pattern 1', 'pattern 2'],
+        },
       });
 
       const output = formatter.formatSpeechPatterns(entity);
@@ -849,11 +871,11 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
           patterns: [
             {
               type: 'Structured',
-              examples: ['Ex 1']
+              examples: ['Ex 1'],
             },
-            'legacy pattern'
-          ]
-        }
+            'legacy pattern',
+          ],
+        },
       });
 
       const output = formatter.formatSpeechPatterns(entity);
@@ -870,16 +892,16 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
         'core:speech_patterns': {
           patterns: [
             "(context) 'example'",
-            "(another context) 'another example'"
-          ]
-        }
+            "(another context) 'another example'",
+          ],
+        },
       });
 
       const output = formatter.formatSpeechPatterns(entity);
 
       expect(output).toBeTruthy();
-      expect(output).toContain("<speech_patterns>");
-      expect(output).toContain("<usage_guidance>");
+      expect(output).toContain('<speech_patterns>');
+      expect(output).toContain('<usage_guidance>');
     });
   });
 });
@@ -893,9 +915,7 @@ describe('CharacterDataFormatter - formatSpeechPatterns', () => {
 describe('SpeechPatternsResponseProcessor', () => {
   describe('Format Detection', () => {
     it('should detect structured format', () => {
-      const response = JSON.stringify([
-        { type: 'Type 1', examples: ['ex1'] }
-      ]);
+      const response = JSON.stringify([{ type: 'Type 1', examples: ['ex1'] }]);
 
       const result = processor.process(response);
 
@@ -917,7 +937,7 @@ describe('SpeechPatternsResponseProcessor', () => {
   describe('Structured Format Validation', () => {
     it('should validate required type field', () => {
       const response = JSON.stringify([
-        { examples: ['ex1'] } // Missing type
+        { examples: ['ex1'] }, // Missing type
       ]);
 
       expect(() => processor.process(response)).toThrow(/missing.*type/i);
@@ -925,24 +945,20 @@ describe('SpeechPatternsResponseProcessor', () => {
 
     it('should validate required examples field', () => {
       const response = JSON.stringify([
-        { type: 'Type 1' } // Missing examples
+        { type: 'Type 1' }, // Missing examples
       ]);
 
       expect(() => processor.process(response)).toThrow(/missing.*examples/i);
     });
 
     it('should require at least one example', () => {
-      const response = JSON.stringify([
-        { type: 'Type 1', examples: [] }
-      ]);
+      const response = JSON.stringify([{ type: 'Type 1', examples: [] }]);
 
       expect(() => processor.process(response)).toThrow(/examples.*empty/i);
     });
 
     it('should allow optional contexts field', () => {
-      const response = JSON.stringify([
-        { type: 'Type 1', examples: ['ex1'] }
-      ]);
+      const response = JSON.stringify([{ type: 'Type 1', examples: ['ex1'] }]);
 
       const result = processor.process(response);
 
@@ -951,7 +967,7 @@ describe('SpeechPatternsResponseProcessor', () => {
 
     it('should validate contexts is an array', () => {
       const response = JSON.stringify([
-        { type: 'Type 1', contexts: 'invalid', examples: ['ex1'] }
+        { type: 'Type 1', contexts: 'invalid', examples: ['ex1'] },
       ]);
 
       expect(() => processor.process(response)).toThrow(/contexts.*array/i);
@@ -961,7 +977,7 @@ describe('SpeechPatternsResponseProcessor', () => {
   describe('Data Normalization', () => {
     it('should trim whitespace from type', () => {
       const response = JSON.stringify([
-        { type: '  Type 1  ', examples: ['ex1'] }
+        { type: '  Type 1  ', examples: ['ex1'] },
       ]);
 
       const result = processor.process(response);
@@ -971,7 +987,7 @@ describe('SpeechPatternsResponseProcessor', () => {
 
     it('should trim whitespace from examples', () => {
       const response = JSON.stringify([
-        { type: 'Type 1', examples: ['  ex1  ', '  ex2  '] }
+        { type: 'Type 1', examples: ['  ex1  ', '  ex2  '] },
       ]);
 
       const result = processor.process(response);
@@ -1001,11 +1017,11 @@ describe('Speech Patterns Integration', () => {
               {
                 type: 'Verbal Tics',
                 contexts: ['casual'],
-                examples: ['Example 1', 'Example 2']
-              }
-            ]
-          }
-        }
+                examples: ['Example 1', 'Example 2'],
+              },
+            ],
+          },
+        },
       };
 
       // Load character
@@ -1025,9 +1041,9 @@ describe('Speech Patterns Integration', () => {
         id: 'test:legacy',
         components: {
           'core:speech_patterns': {
-            patterns: ['(context) \'example\'']
-          }
-        }
+            patterns: ["(context) 'example'"],
+          },
+        },
       };
 
       const character = await entityManager.createEntity(characterData);
@@ -1042,7 +1058,7 @@ describe('Speech Patterns Integration', () => {
     it('should generate structured patterns via AI', async () => {
       const characterContext = {
         name: 'Test Character',
-        personality: 'Witty and sarcastic'
+        personality: 'Witty and sarcastic',
       };
 
       const patterns = await speechPatternsGenerator.generate(characterContext);
@@ -1061,8 +1077,8 @@ describe('Speech Patterns Integration', () => {
         {
           type: 'Verbal Tics',
           contexts: ['casual'],
-          examples: ['Example 1']
-        }
+          examples: ['Example 1'],
+        },
       ];
 
       const result = validateAgainstSchema(
@@ -1078,7 +1094,7 @@ describe('Speech Patterns Integration', () => {
         {
           type: 'Verbal Tics',
           // Missing examples
-        }
+        },
       ];
 
       const result = validateAgainstSchema(
@@ -1108,11 +1124,11 @@ describe('Backward Compatibility', () => {
   it('should format both formats in prompt generation', () => {
     const mixedPatterns = [
       { type: 'New', examples: ['ex1'] },
-      'old format pattern'
+      'old format pattern',
     ];
 
     const entity = createMockEntity({
-      'core:speech_patterns': { patterns: mixedPatterns }
+      'core:speech_patterns': { patterns: mixedPatterns },
     });
 
     const output = formatter.formatSpeechPatterns(entity);
@@ -1123,9 +1139,7 @@ describe('Backward Compatibility', () => {
 
   it('should not break LLM integration with new format', async () => {
     const character = await createTestCharacter({
-      speechPatterns: [
-        { type: 'Test', examples: ['Hello'] }
-      ]
+      speechPatterns: [{ type: 'Test', examples: ['Hello'] }],
     });
 
     const prompt = await promptBuilder.buildCharacterPrompt(character);
@@ -1145,18 +1159,21 @@ describe('Backward Compatibility', () => {
 **Duration**: 1 day
 
 **Deliverables**:
+
 1. Update `speech_patterns.component.json` schema
 2. Implement format detection in `CharacterDataFormatter`
 3. Add backward compatibility tests
 4. Verify existing characters still load
 
 **Success Criteria**:
+
 - Schema validates both formats
 - Format detection works reliably
 - All existing tests pass
 - No breaking changes to existing characters
 
 **Testing**:
+
 - Unit tests for format detection
 - Schema validation tests
 - Load all existing character files
@@ -1168,6 +1185,7 @@ describe('Backward Compatibility', () => {
 **Duration**: 1 day
 
 **Deliverables**:
+
 1. Implement `#formatStructuredPatterns()` method
 2. Implement `#formatLegacyPatterns()` method
 3. Implement `#formatMixedPatterns()` method
@@ -1175,12 +1193,14 @@ describe('Backward Compatibility', () => {
 5. Update prompt building tests
 
 **Success Criteria**:
+
 - Structured patterns render with XML formatting
 - Legacy patterns maintain compatibility
 - Mixed formats handled gracefully
 - Usage guidance appears in all cases
 
 **Testing**:
+
 - Unit tests for each format method
 - Integration test with real character data
 - Visual inspection of generated prompts
@@ -1192,18 +1212,21 @@ describe('Backward Compatibility', () => {
 **Duration**: 0.5 day
 
 **Deliverables**:
+
 1. Convert Vespera Nightwhisper to structured format
 2. Organize into 6 pattern categories
 3. Test in-game with LLM
 4. Document conversion process
 
 **Success Criteria**:
+
 - Vespera's patterns organized logically
 - LLM respects new structure in gameplay
 - No loss of pattern richness
 - Improved dialogue quality (subjective assessment)
 
 **Testing**:
+
 - Load character file successfully
 - Generate dialogue with LLM
 - Compare dialogue quality with legacy format
@@ -1215,6 +1238,7 @@ describe('Backward Compatibility', () => {
 **Duration**: 1.5 days
 
 **Deliverables**:
+
 1. Update `speechPatternsPrompts.js` for structured output
 2. Modify `SpeechPatternsResponseProcessor.js` validation
 3. Update UI display for structured patterns
@@ -1222,12 +1246,14 @@ describe('Backward Compatibility', () => {
 5. Update export functionality
 
 **Success Criteria**:
+
 - Generator produces structured patterns
 - UI displays patterns grouped by type
 - Export works with new format
 - No animation glitches
 
 **Testing**:
+
 - Unit tests for response processing
 - Integration test for full generation flow
 - Manual UI testing
@@ -1240,6 +1266,7 @@ describe('Backward Compatibility', () => {
 **Duration**: 1 day
 
 **Deliverables**:
+
 1. Comprehensive test suite (80%+ coverage)
 2. Update mod documentation
 3. Create migration guide for modders
@@ -1247,12 +1274,14 @@ describe('Backward Compatibility', () => {
 5. Update CLAUDE.md if needed
 
 **Success Criteria**:
+
 - All tests pass
 - 80%+ test coverage maintained
 - Documentation is clear and complete
 - Modders have migration examples
 
 **Testing**:
+
 - Run full test suite (`npm run test:ci`)
 - Manual testing of all workflows
 - Peer review of documentation
@@ -1266,6 +1295,7 @@ describe('Backward Compatibility', () => {
 **Question**: Should `contexts` be an enum of predefined values or free-form strings?
 
 **Options**:
+
 - **A. Free-form strings** (recommended)
   - Pros: Maximum flexibility, modders not restricted
   - Cons: Inconsistent values, no validation
@@ -1289,6 +1319,7 @@ describe('Backward Compatibility', () => {
 **Question**: When exporting from generator, should default be structured or legacy format?
 
 **Options**:
+
 - **A. Structured object format** (recommended)
   - Pros: Future-facing, richer data
   - Cons: Requires conversion for old workflows
@@ -1312,6 +1343,7 @@ describe('Backward Compatibility', () => {
 **Question**: Should we create an automated migration tool for converting existing characters?
 
 **Options**:
+
 - **A. No migration tool** (recommended)
   - Rationale: Both formats work, no urgent need
   - Benefit: Less development time
@@ -1337,6 +1369,7 @@ describe('Backward Compatibility', () => {
 **Current Limits**: 15-25 total examples (informal guideline)
 
 **Options**:
+
 - **A. Keep current total limit only** (recommended)
   - Guideline: 15-25 total examples across all groups
   - No per-group limits
@@ -1360,6 +1393,7 @@ describe('Backward Compatibility', () => {
 **Question**: Should usage guidance be customizable per character or always use default text?
 
 **Options**:
+
 - **A. Fixed default text** (recommended)
   - Pro: Consistency across characters
   - Con: Less flexibility
@@ -1379,18 +1413,21 @@ describe('Backward Compatibility', () => {
 **Question**: What is causing speech patterns to disappear in the generator UI?
 
 **Investigation Required**:
+
 1. Check CSS transition properties on `.patterns-list`
 2. Verify JavaScript DOM manipulation timing
 3. Test with animations disabled
 4. Examine z-index and stacking contexts
 
 **Potential Causes**:
+
 - Height/transform animations on dynamic content
 - Opacity transitions with timing issues
 - DOM replacement during animation
 - CSS specificity conflicts
 
 **Action Items**:
+
 1. Reproduce issue consistently
 2. Use browser DevTools to debug
 3. Isolate problematic CSS
@@ -1405,11 +1442,13 @@ describe('Backward Compatibility', () => {
 **Question**: How strict should object format validation be?
 
 **Fields**:
+
 - `type`: Required, non-empty string
 - `examples`: Required, array with ≥1 string
 - `contexts`: Optional, array of strings (can be empty)
 
 **Options**:
+
 - **A. Strict as described above** (recommended)
   - Clear requirements
   - Fails fast on errors
@@ -1434,28 +1473,33 @@ describe('Backward Compatibility', () => {
 ### Functional Requirements
 
 ✅ **Schema Validation**
+
 - Both formats validate correctly
 - Clear error messages for invalid data
 - No breaking changes to existing characters
 
 ✅ **Format Detection**
+
 - Reliably identifies string/object/mixed formats
 - Handles edge cases (empty arrays, null values)
 - Fails gracefully on unexpected input
 
 ✅ **Prompt Building**
+
 - Structured format renders with proper XML
 - Legacy format maintains compatibility
 - Mixed formats combine sensibly
 - Usage guidance appears consistently
 
 ✅ **Generator Workflow**
+
 - Produces structured output when configured
 - Validates generated patterns
 - Displays patterns in organized UI
 - Exports in correct format
 
 ✅ **Backward Compatibility**
+
 - Existing characters load without modification
 - String array format continues working
 - No performance regressions
@@ -1466,24 +1510,28 @@ describe('Backward Compatibility', () => {
 ### Quality Requirements
 
 ✅ **Test Coverage**
+
 - 80%+ branch coverage
 - 90%+ function/line coverage
 - Unit tests for all new methods
 - Integration tests for workflows
 
 ✅ **Code Quality**
+
 - Follows project conventions
 - Proper dependency injection
 - Clear error handling
 - JSDoc comments for public APIs
 
 ✅ **Documentation**
+
 - Updated mod documentation
 - Migration guide for modders
 - Code examples in docs
 - Inline comments for complex logic
 
 ✅ **Performance**
+
 - Format detection is O(1) (check first element)
 - No significant prompt building slowdown
 - Generator speed unchanged
@@ -1494,18 +1542,21 @@ describe('Backward Compatibility', () => {
 ### User Experience
 
 ✅ **LLM Behavior**
+
 - Patterns used more naturally in context
 - Reduced mechanical cycling through patterns
 - Better understanding of when to use patterns
 - Improved overall dialogue quality
 
 ✅ **Modder Experience**
+
 - Easier to create complex patterns
 - Clear structure and organization
 - Good error messages
 - Helpful documentation
 
 ✅ **Generator UX**
+
 - Patterns display clearly by group
 - No visual glitches or animations issues
 - Export works reliably
@@ -1654,9 +1705,9 @@ Absence of patterns is also authentic—not every line needs special features.
 
 ## Revision History
 
-| Date | Version | Changes | Author |
-|------|---------|---------|--------|
-| 2025-11-24 | 1.0 | Initial specification draft | Claude Code |
+| Date       | Version | Changes                     | Author      |
+| ---------- | ------- | --------------------------- | ----------- |
+| 2025-11-24 | 1.0     | Initial specification draft | Claude Code |
 
 ---
 

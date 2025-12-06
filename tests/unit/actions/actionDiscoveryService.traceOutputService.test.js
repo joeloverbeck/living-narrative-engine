@@ -55,7 +55,9 @@ describe('ActionDiscoveryService tracing configuration edge cases', () => {
       expect.stringContaining('actionTraceFilter missing required methods')
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('actionTraceOutputService missing writeTrace method')
+      expect.stringContaining(
+        'actionTraceOutputService missing writeTrace method'
+      )
     );
   });
 
@@ -64,7 +66,10 @@ describe('ActionDiscoveryService tracing configuration edge cases', () => {
     const traceStub = {
       info: jest.fn(),
       getTracedActions: jest.fn(() => new Set([{ id: 'action-1' }])),
-      getTracingSummary: jest.fn(() => ({ totalStagesTracked: 4, sessionDuration: 12 })),
+      getTracingSummary: jest.fn(() => ({
+        totalStagesTracked: 4,
+        sessionDuration: 12,
+      })),
     };
     const traceContextFactory = jest.fn(() => traceStub);
     const writeError = new Error('storage offline');
@@ -90,7 +95,11 @@ describe('ActionDiscoveryService tracing configuration edge cases', () => {
     );
 
     const actor = { id: 'actor-99' };
-    const result = await actionDiscoveryService.getValidActions(actor, {}, { trace: true });
+    const result = await actionDiscoveryService.getValidActions(
+      actor,
+      {},
+      { trace: true }
+    );
 
     expect(result).toBe(orchestratorResult);
     expect(writeTrace).toHaveBeenCalledWith(traceStub);
@@ -142,10 +151,17 @@ describe('ActionDiscoveryService tracing configuration edge cases', () => {
     );
 
     const actor = { id: 'actor-42' };
-    const baseContext = { getActor: existingGetActor, currentLocation: 'tower' };
-    const result = await actionDiscoveryService.getValidActions(actor, baseContext, {
-      trace: true,
-    });
+    const baseContext = {
+      getActor: existingGetActor,
+      currentLocation: 'tower',
+    };
+    const result = await actionDiscoveryService.getValidActions(
+      actor,
+      baseContext,
+      {
+        trace: true,
+      }
+    );
 
     expect(result).toEqual({ actions: [], errors: [] });
     expect(traceStub.getTracedActions).toHaveBeenCalled();
@@ -157,7 +173,9 @@ describe('ActionDiscoveryService tracing configuration edge cases', () => {
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(`Action discovery completed for actor ${actor.id} with action tracing`),
+      expect.stringContaining(
+        `Action discovery completed for actor ${actor.id} with action tracing`
+      ),
       expect.objectContaining({
         tracedActionCount: 0,
         totalStagesTracked: 0,

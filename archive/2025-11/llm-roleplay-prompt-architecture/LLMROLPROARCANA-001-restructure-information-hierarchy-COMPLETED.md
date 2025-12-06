@@ -13,12 +13,14 @@
 ### What Was Actually Changed vs Originally Planned
 
 **Original Plan (INCORRECT):**
+
 - Create new class methods (`buildSystemConstraints()`, `buildCharacterIdentity()`, etc.)
 - Refactor `assemble()` method with complex logic
 - Restructure `corePromptText.json` hierarchy
 - Large-scale architectural refactoring
 
 **Actual Implementation (CORRECT):**
+
 - ✅ Simple string reordering in `CHARACTER_PROMPT_TEMPLATE` constant
 - ✅ Renamed `<final_instructions>` to `<system_constraints>` for semantic clarity
 - ✅ Moved constraints to beginning of template (constraint-first architecture)
@@ -28,12 +30,14 @@
 ### Files Modified
 
 #### Core Implementation (1 file)
+
 - `src/prompting/templates/characterPromptTemplate.js`
   - Reordered XML sections to place constraints first
   - Added version 2.0 comment and architectural documentation
   - No functional changes to placeholder system
 
 #### Tests Updated (5 files)
+
 - `tests/unit/prompting/characterPromptTemplate.structure.test.js`
 - `tests/e2e/prompting/PromptGenerationPipeline.e2e.test.js`
 - `tests/e2e/prompting/common/promptGenerationTestBed.js`
@@ -44,6 +48,7 @@
 ### New Template Order (Constraint-First Architecture)
 
 **Before (v1.0 - Constraints Last):**
+
 ```
 1. task_definition
 2. character_persona
@@ -59,6 +64,7 @@
 ```
 
 **After (v2.0 - Constraint-First):**
+
 ```
 1. system_constraints ← Critical formatting rules at token 0-1,000
 2. content_policy
@@ -76,18 +82,21 @@
 ### Test Results
 
 **Unit Tests:** ✅ PASS
+
 ```bash
 NODE_ENV=test npx jest tests/unit/prompting/characterPromptTemplate.structure.test.js
 # Result: 4/4 passed
 ```
 
 **Integration Tests:** ✅ PASS
+
 ```bash
 NODE_ENV=test npx jest tests/integration/prompting/
 # Result: 65/65 passed (9 suites)
 ```
 
 **E2E Tests:** ✅ PASS
+
 ```bash
 NODE_ENV=test npx jest tests/e2e/prompting/PromptGenerationPipeline.e2e.test.js
 # Result: 15/15 passed
@@ -116,12 +125,12 @@ The ticket made several incorrect assumptions about the codebase architecture:
 
 ### Success Metrics
 
-| Metric | Baseline | Target | Status |
-|--------|----------|--------|--------|
-| Constraint position | Token 6,000+ | Token 0-1,000 | ✅ Achieved |
-| Implementation risk | High (original plan) | Low (actual) | ✅ Achieved |
-| Test coverage | 100% | 100% | ✅ Maintained |
-| Breaking changes | 0 | 0 | ✅ Achieved |
+| Metric              | Baseline             | Target        | Status        |
+| ------------------- | -------------------- | ------------- | ------------- |
+| Constraint position | Token 6,000+         | Token 0-1,000 | ✅ Achieved   |
+| Implementation risk | High (original plan) | Low (actual)  | ✅ Achieved   |
+| Test coverage       | 100%                 | 100%          | ✅ Maintained |
+| Breaking changes    | 0                    | 0             | ✅ Achieved   |
 
 ### Next Steps (Related Tickets)
 
@@ -151,10 +160,11 @@ The `CHARACTER_PROMPT_TEMPLATE` is exported as a string constant with placeholde
 ### Version Documentation
 
 Added clear version documentation in the template file:
+
 ```javascript
 /**
  * @version 2.0 - Constraint-first architecture (LLMROLPROARCANA-001)
- * 
+ *
  * ARCHITECTURE: Constraint-First Design
  * Places critical formatting and behavior rules at the beginning
  * to mitigate attention decay in long prompts (>6000 tokens)
@@ -164,6 +174,7 @@ Added clear version documentation in the template file:
 ### Test Updates
 
 All tests were updated to:
+
 1. Look for `<system_constraints>` instead of `<final_instructions>`
 2. Verify constraint-first order (constraints before character context)
 3. Maintain backward compatibility checks
@@ -171,6 +182,7 @@ All tests were updated to:
 ## Rollback Plan
 
 If quality degrades (which is unlikely given the simplicity):
+
 1. `git revert` the commit
 2. Tests immediately validate rollback success
 3. No data migration or API changes to worry about

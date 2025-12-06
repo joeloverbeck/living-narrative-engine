@@ -48,6 +48,7 @@ This analysis examines the Living Narrative Engine's player type system and eval
 ```
 
 **Design Notes:**
+
 - Uses JSON Schema enum for strict type validation
 - Requires schema update to add new types
 - No extensibility mechanism for mods to add custom types
@@ -57,6 +58,7 @@ This analysis examines the Living Narrative Engine's player type system and eval
 The system uses multiple detection points with fallback logic:
 
 #### Detection Point 1: ActorAwareStrategyFactory
+
 **Location:** `src/turns/factories/actorAwareStrategyFactory.js:50-76`
 
 ```javascript
@@ -83,12 +85,13 @@ providerResolver = (actor) => {
 
   // 5. Default to human
   return 'human';
-}
+};
 ```
 
 **Design Pattern:** Defensive programming with graceful degradation
 
 #### Detection Point 2: Actor Type Utils
+
 **Location:** `src/utils/actorTypeUtils.js`
 
 Two utility functions provide player type information:
@@ -110,6 +113,7 @@ function determineSpecificPlayerType(actor) {
 **Usage:** Event payload construction, UI logic, logging
 
 #### Detection Point 3: Turn Manager
+
 **Location:** `src/turns/turnManager.js:363-373`
 
 ```javascript
@@ -129,14 +133,14 @@ if (this.#currentActor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
 
 ### 1.3 Affected System Components
 
-| Component | Impact | Files |
-|-----------|--------|-------|
-| **Turn Management** | Determines turn order and event payloads | `turnManager.js`, `roundManager.js` |
-| **Decision Providers** | Routes to appropriate decision logic | `actorAwareStrategyFactory.js`, `*DecisionProvider.js` |
-| **UI Indicators** | Shows processing state by type | `processingIndicatorController.js` |
-| **Event System** | Includes actor type in turn events | `turnManager.js`, event handlers |
-| **Action Selection** | Type-specific action filtering (potential) | `choicePipeline.js` |
-| **Utility Functions** | Type checking across codebase | `actorTypeUtils.js` |
+| Component              | Impact                                     | Files                                                  |
+| ---------------------- | ------------------------------------------ | ------------------------------------------------------ |
+| **Turn Management**    | Determines turn order and event payloads   | `turnManager.js`, `roundManager.js`                    |
+| **Decision Providers** | Routes to appropriate decision logic       | `actorAwareStrategyFactory.js`, `*DecisionProvider.js` |
+| **UI Indicators**      | Shows processing state by type             | `processingIndicatorController.js`                     |
+| **Event System**       | Includes actor type in turn events         | `turnManager.js`, event handlers                       |
+| **Action Selection**   | Type-specific action filtering (potential) | `choicePipeline.js`                                    |
+| **Utility Functions**  | Type checking across codebase              | `actorTypeUtils.js`                                    |
 
 ---
 
@@ -160,9 +164,7 @@ Round-robin or Initiative queue
 
 ```javascript
 const allEntities = Array.from(this.#entityManager.entities);
-const actors = allEntities.filter((e) =>
-  e.hasComponent(ACTOR_COMPONENT_ID)
-);
+const actors = allEntities.filter((e) => e.hasComponent(ACTOR_COMPONENT_ID));
 ```
 
 **Design Implication:** Any entity with `core:actor` component participates in turn order, regardless of player type.
@@ -233,11 +235,11 @@ class DecisionProvider {
 ```javascript
 // Dispatches event and optionally logs to perception_log components
 await handler.execute({
-  location_id: "room_1",
-  description_text: "The movie starts with a fade to black...",
-  perception_type: "visual",
-  actor_id: "tv_entity_1",
-  log_entry: true  // Adds to perception_log components
+  location_id: 'room_1',
+  description_text: 'The movie starts with a fade to black...',
+  perception_type: 'visual',
+  actor_id: 'tv_entity_1',
+  log_entry: true, // Adds to perception_log components
 });
 ```
 
@@ -268,6 +270,7 @@ await handler.execute({
 ```
 
 **Flow for Actor Perception:**
+
 1. Action executes → triggers `DISPATCH_PERCEPTIBLE_EVENT` operation
 2. Handler dispatches `core:perceptible_event` to event bus
 3. If `log_entry: true`, calls `AddPerceptionLogEntryHandler`
@@ -291,6 +294,7 @@ await handler.execute({
 5. **Content Source:** Pre-defined movie script component (e.g., `movie_playback`)
 
 **Key Characteristics:**
+
 - No action selection needed (single predetermined behavior)
 - Scripted output sequence (not AI-generated)
 - Passive entity (doesn't interact, just outputs)
@@ -303,8 +307,10 @@ await handler.execute({
 **Add `simple_ai` to Player Type Enum**
 
 **Changes Required:**
+
 1. Update `player_type.component.json`: Add "simple_ai" to enum
 2. Create `SimpleAIDecisionProvider`:
+
    ```javascript
    class SimpleAIDecisionProvider {
      async decide(actor, context, actions, abortSignal) {
@@ -317,21 +323,24 @@ await handler.execute({
          chosenIndex: 1, // Always first action (scripted output)
          speech: currentEntry.text,
          thoughts: null,
-         notes: null
+         notes: null,
        };
      }
    }
    ```
+
 3. Register in `ActorAwareStrategyFactory`
 4. Update `actorTypeUtils.js` to handle 'simple_ai'
 5. Update `turnManager.js` event type mapping
 
 **Pros:**
+
 - Minimal code changes
 - Follows existing patterns
 - Quick to implement
 
 **Cons:**
+
 - Still forces through action selection pipeline
 - Requires special "output" action definition
 - Not flexible for other passive behavior types
@@ -413,6 +422,7 @@ async decideAction(context) {
 ```
 
 **Pros:**
+
 - Clean separation of concerns
 - No need to add player types for behavior variants
 - Reusable for any scripted entity (NPCs, environmental objects)
@@ -420,6 +430,7 @@ async decideAction(context) {
 - Player type remains for UI/reporting
 
 **Cons:**
+
 - More significant architectural change
 - Requires refactoring GenericTurnStrategy
 - Need new component definitions
@@ -429,17 +440,20 @@ async decideAction(context) {
 **Remove TV from Turn Order**
 
 Instead of making TV an actor:
+
 1. "Play movie" action adds listener to turn system
 2. Listener triggers on `TURN_STARTED` events
 3. Outputs narrative segment as perceptible event
 4. "Stop movie" action removes listener
 
 **Pros:**
+
 - No turn system modifications
 - Event-driven design
 - TV doesn't need to be an actor
 
 **Cons:**
+
 - Listener management complexity
 - Less visible in turn order
 - Harder to coordinate with other actions
@@ -450,17 +464,20 @@ Instead of making TV an actor:
 **Hybrid of Approaches 1 & 2**
 
 Add `passive` player type + behavior components:
+
 - `passive` type indicates non-interactive actor
 - Behavior component determines specific behavior
 - Decision provider checks for behavior component
 - Falls back to skip turn if no behavior
 
 **Pros:**
+
 - Clear semantic meaning (passive vs active)
 - Extensible via behavior components
 - Player type still meaningful for filtering/UI
 
 **Cons:**
+
 - Still requires player type enum update
 - Adds another player type (enum grows)
 
@@ -469,17 +486,20 @@ Add `passive` player type + behavior components:
 **Hybrid: Approach 2 + Minimal Approach 1**
 
 **Phase 1 (Immediate):**
+
 - Add `simple_ai` to player_type enum for semantic clarity
 - Create SimpleAIDecisionProvider that checks for behavior components
 - If no behavior component, skip turn or execute default output
 
 **Phase 2 (Refactoring):**
+
 - Implement behavior component system
 - Refactor GenericTurnStrategy to check behavior components
 - Migrate simple AI to use behavior components
 - Keep `simple_ai` type for UI/filtering purposes
 
 **Rationale:**
+
 - Phase 1 gets functionality working quickly
 - Phase 2 makes architecture more maintainable
 - Incremental approach reduces risk
@@ -494,6 +514,7 @@ Add `passive` player type + behavior components:
 **Issue:** Adding new player type requires changes in multiple locations
 
 **Affected Files:**
+
 1. `data/mods/core/components/player_type.component.json` - Schema enum
 2. `src/turns/factories/actorAwareStrategyFactory.js` - Provider resolver
 3. `src/utils/actorTypeUtils.js` - Type detection utilities
@@ -511,6 +532,7 @@ Add `passive` player type + behavior components:
 **Issue:** All decision providers assume action selection model
 
 **Current Flow:**
+
 ```
 GenericTurnStrategy.decideAction()
     ↓
@@ -522,12 +544,14 @@ turnActionFactory.create(actions[N-1])
 ```
 
 **Problem for Simple AI:**
+
 - TV doesn't need action choices
 - Scripted output doesn't fit selection model
 - Forces creation of dummy actions
 - Adds unnecessary complexity
 
 **Workarounds:**
+
 1. Create single "output" action for simple AI
 2. Hardcode chosenIndex: 1 in SimpleAIDecisionProvider
 3. Skip action validation/execution
@@ -539,17 +563,20 @@ turnActionFactory.create(actions[N-1])
 **Issue:** JSON Schema enum requires modification for new types
 
 **Current:**
+
 ```json
 "enum": ["human", "llm", "goap"]
 ```
 
 **Problems:**
+
 - Can't add types without schema change
 - Mods can't extend player types
 - Validation fails for unknown types
 - No dynamic registration
 
 **Alternative Approaches:**
+
 1. **String type without enum** - Loses validation
 2. **anyOf with additional types** - Complex but extensible
 3. **Separate behavior component** - Types as configuration
@@ -559,17 +586,20 @@ turnActionFactory.create(actions[N-1])
 **Issue:** System assumes all actors make decisions
 
 **Current Design:**
+
 - All actors must participate in action selection
 - No concept of "skip turn" or "automatic behavior"
 - Passive outputs must masquerade as actions
 
 **Use Cases Blocked:**
+
 - Environmental entities (weather, time passage)
 - Scripted NPCs with predetermined behavior
 - Status effect entities (ongoing damage, buffs)
 - Ambient storytelling entities (TV, radio, background events)
 
 **Requirements for Support:**
+
 1. Decision providers that skip action selection
 2. Direct perceptible event dispatch
 3. Component-driven behavior specification
@@ -580,6 +610,7 @@ turnActionFactory.create(actions[N-1])
 **Issue:** Adding player type requires coordinated changes
 
 **Modification Map:**
+
 ```
 Schema → Factory → Utils → Manager → UI → DI → Tests
    ↓        ↓        ↓        ↓       ↓     ↓      ↓
@@ -587,12 +618,14 @@ Schema → Factory → Utils → Manager → UI → DI → Tests
 ```
 
 **Risk Factors:**
+
 - Easy to miss modification points
 - Inconsistent behavior if any point skipped
 - High testing burden (regression across all systems)
 - Merge conflicts in multi-developer scenarios
 
 **Mitigation Strategies:**
+
 1. Checklist documentation
 2. Code generation for boilerplate
 3. Centralized configuration
@@ -631,6 +664,7 @@ Schema → Factory → Utils → Manager → UI → DI → Tests
 ```
 
 **Decision Flow:**
+
 ```javascript
 // Modified ActorAwareStrategyFactory
 create(actorId) {
@@ -649,6 +683,7 @@ create(actorId) {
 ```
 
 **Benefits:**
+
 - Player type remains for UI/filtering
 - Behavior is configurable per-entity
 - No hardcoded coupling
@@ -661,6 +696,7 @@ create(actorId) {
 **Recommended:** ITurnBehavior interface with multiple implementations
 
 **Interface Definition:**
+
 ```javascript
 /**
  * @interface ITurnBehavior
@@ -679,17 +715,23 @@ class ITurnBehavior {
 **Implementations:**
 
 1. **ActionSelectionBehavior** - Current logic
+
    ```javascript
    class ActionSelectionBehavior {
      async executeTurn(actor, context) {
        const actions = await this.#choicePipeline.buildChoices(actor, context);
-       const meta = await this.#decisionProvider.decide(actor, context, actions);
+       const meta = await this.#decisionProvider.decide(
+         actor,
+         context,
+         actions
+       );
        return this.#createTurnAction(actions[meta.chosenIndex - 1], meta);
      }
    }
    ```
 
 2. **ScriptedBehavior** - Simple AI
+
    ```javascript
    class ScriptedBehavior {
      async executeTurn(actor, context) {
@@ -698,7 +740,7 @@ class ITurnBehavior {
 
        await context.dispatchPerceptibleEvent({
          description: entry.text,
-         type: entry.perceptionType
+         type: entry.perceptionType,
        });
 
        this.#advanceScript(actor, script);
@@ -718,6 +760,7 @@ class ITurnBehavior {
    ```
 
 **Modified GenericTurnStrategy:**
+
 ```javascript
 class GenericTurnStrategy {
   async decideAction(context) {
@@ -738,6 +781,7 @@ class GenericTurnStrategy {
 ```
 
 **Benefits:**
+
 - Open/Closed Principle (open for extension)
 - Single Responsibility (each behavior isolated)
 - Easy to test behaviors independently
@@ -799,6 +843,7 @@ class GenericTurnStrategy {
 ```
 
 **Benefits:**
+
 - Data-driven configuration
 - No code changes for new behavior types
 - Easy to serialize/deserialize
@@ -842,10 +887,11 @@ registry.register('scripted', ScriptedBehavior);
 registry.register('passive', PassiveBehavior);
 
 // Mods can add their own
-registry.register('reactive', ReactiveNPCBehavior);  // Custom mod behavior
+registry.register('reactive', ReactiveNPCBehavior); // Custom mod behavior
 ```
 
 **Benefits:**
+
 - Dynamic behavior registration
 - Mods can extend without core changes
 - Discoverable (list available types)
@@ -860,6 +906,7 @@ registry.register('reactive', ReactiveNPCBehavior);  // Custom mod behavior
 **Action Types:**
 
 1. **Selectable Actions** - Current behavior
+
    ```json
    {
      "id": "core:attack",
@@ -869,6 +916,7 @@ registry.register('reactive', ReactiveNPCBehavior);  // Custom mod behavior
    ```
 
 2. **Automatic Actions** - No selection needed
+
    ```json
    {
      "id": "core:scripted_output",
@@ -888,6 +936,7 @@ registry.register('reactive', ReactiveNPCBehavior);  // Custom mod behavior
    ```
 
 **Modified Action Execution:**
+
 ```javascript
 if (action.auto_execute) {
   // Skip decision, execute directly
@@ -922,6 +971,7 @@ if (action.auto_execute) {
    - Clean up deprecated code
 
 **Migration Helper:**
+
 ```javascript
 function migratePlayerTypeToBehavior(entity) {
   if (entity.hasComponent('core:turn_behavior')) {
@@ -930,10 +980,15 @@ function migratePlayerTypeToBehavior(entity) {
 
   const playerType = entity.getComponentData('core:player_type')?.type;
   const behaviorConfig = {
-    'human': { type: 'action_selection', config: { provider: 'human' } },
-    'llm': { type: 'action_selection', config: { provider: 'llm' } },
-    'goap': { type: 'action_selection', config: { provider: 'goap' } },
-    'simple_ai': { type: 'scripted', config: { /* ... */ } }
+    human: { type: 'action_selection', config: { provider: 'human' } },
+    llm: { type: 'action_selection', config: { provider: 'llm' } },
+    goap: { type: 'action_selection', config: { provider: 'goap' } },
+    simple_ai: {
+      type: 'scripted',
+      config: {
+        /* ... */
+      },
+    },
   }[playerType];
 
   entity.addComponent('core:turn_behavior', behaviorConfig);
@@ -949,6 +1004,7 @@ function migratePlayerTypeToBehavior(entity) {
 **Goal:** Get simple AI working with minimal changes
 
 **Tasks:**
+
 1. Update `player_type.component.json` - Add "simple_ai" to enum
 2. Create `src/turns/providers/simpleAIDecisionProvider.js`
 3. Create `data/mods/core/components/scripted_behavior.component.json`
@@ -959,11 +1015,13 @@ function migratePlayerTypeToBehavior(entity) {
 8. Create integration test for TV use case
 
 **Deliverables:**
+
 - Working simple AI implementation
 - TV can output scripted movie narrative
 - Tests pass with new type
 
 **Risks:**
+
 - Still uses action selection pipeline (workaround needed)
 - Not extensible for other behavior types
 
@@ -972,6 +1030,7 @@ function migratePlayerTypeToBehavior(entity) {
 **Goal:** Implement flexible behavior system
 
 **Tasks:**
+
 1. Design `turn_behavior.component.json` schema
 2. Create `ITurnBehavior` interface
 3. Implement behavior classes:
@@ -985,11 +1044,13 @@ function migratePlayerTypeToBehavior(entity) {
 8. Write migration guide for existing actors
 
 **Deliverables:**
+
 - Behavior component system operational
 - Simple AI uses scripted behavior (not decision provider hack)
 - Documentation for adding custom behaviors
 
 **Risks:**
+
 - Larger refactoring may introduce regressions
 - Need comprehensive testing
 
@@ -998,6 +1059,7 @@ function migratePlayerTypeToBehavior(entity) {
 **Goal:** Make system truly extensible for mods
 
 **Tasks:**
+
 1. Implement dynamic behavior registration
 2. Add mod hook for behavior registration
 3. Create behavior configuration validator
@@ -1009,29 +1071,34 @@ function migratePlayerTypeToBehavior(entity) {
 9. Create example mods demonstrating custom behaviors
 
 **Deliverables:**
+
 - Fully decoupled architecture
 - Mods can add behaviors without core changes
 - Deprecated legacy system with migration path
 - Complete documentation
 
 **Risks:**
+
 - Backward compatibility concerns
 - Community adoption of new patterns
 
 ### Testing Strategy
 
 **Phase 1 Tests:**
+
 - Unit: SimpleAIDecisionProvider logic
 - Integration: TV entity in turn system
 - E2E: Full movie playback scenario
 
 **Phase 2 Tests:**
+
 - Unit: Each behavior class independently
 - Integration: Behavior selection and execution
 - Integration: Migration from Phase 1 to Phase 2
 - Regression: Existing player types still work
 
 **Phase 3 Tests:**
+
 - Unit: Behavior registry and factory
 - Integration: Mod-added custom behaviors
 - Integration: Dynamic behavior registration
@@ -1063,15 +1130,18 @@ Adding a simple AI type is **highly feasible** but requires careful architectura
 ### Expected Outcomes
 
 **After Phase 1:**
+
 - TV entities can output scripted movie narratives
 - System works but is not elegant
 
 **After Phase 2:**
+
 - Clean separation of behavior from player type
 - Easy to add new behavior types
 - Reduced code coupling
 
 **After Phase 3:**
+
 - Mods can add custom behaviors without core changes
 - Player type becomes UI/filtering concern only
 - Highly maintainable and extensible architecture
@@ -1131,13 +1201,15 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 export class SimpleAIDecisionProvider extends DelegatingDecisionProvider {
   constructor({ logger, safeEventDispatcher, operationInterpreter }) {
     validateDependency(operationInterpreter, 'operationInterpreter', logger, {
-      requiredMethods: ['execute']
+      requiredMethods: ['execute'],
     });
 
     const delegate = async (actor, context, actions, abortSignal) => {
       // Check for scripted behavior component
       if (!actor.hasComponent('core:scripted_behavior')) {
-        throw new Error(`Simple AI actor ${actor.id} missing scripted_behavior component`);
+        throw new Error(
+          `Simple AI actor ${actor.id} missing scripted_behavior component`
+        );
       }
 
       const script = actor.getComponentData('core:scripted_behavior');
@@ -1154,7 +1226,7 @@ export class SimpleAIDecisionProvider extends DelegatingDecisionProvider {
         description_text: entry.text,
         perception_type: entry.perceptionType || 'visual',
         actor_id: actor.id,
-        log_entry: true
+        log_entry: true,
       });
 
       // Advance script index
@@ -1164,7 +1236,7 @@ export class SimpleAIDecisionProvider extends DelegatingDecisionProvider {
           : Math.min(script.current_index + 1, script.entries.length - 1);
 
         actor.mutateComponent('core:scripted_behavior', {
-          current_index: newIndex
+          current_index: newIndex,
         });
       }
 
@@ -1173,7 +1245,7 @@ export class SimpleAIDecisionProvider extends DelegatingDecisionProvider {
         index: 1,
         speech: null,
         thoughts: null,
-        notes: null
+        notes: null,
       };
     };
 
@@ -1217,7 +1289,7 @@ export class ScriptedBehavior {
       description_text: entry.text,
       perception_type: entry.perceptionType || 'visual',
       actor_id: actor.id,
-      log_entry: true
+      log_entry: true,
     });
 
     // Advance script
@@ -1226,7 +1298,7 @@ export class ScriptedBehavior {
     return {
       kind: 'scripted',
       completed: true,
-      output: entry.text
+      output: entry.text,
     };
   }
 
@@ -1237,14 +1309,11 @@ export class ScriptedBehavior {
     if (script.loop) {
       newIndex = (script.current_index + 1) % script.entries.length;
     } else {
-      newIndex = Math.min(
-        script.current_index + 1,
-        script.entries.length - 1
-      );
+      newIndex = Math.min(script.current_index + 1, script.entries.length - 1);
     }
 
     actor.mutateComponent('core:scripted_behavior', {
-      current_index: newIndex
+      current_index: newIndex,
     });
 
     this.#logger.debug(

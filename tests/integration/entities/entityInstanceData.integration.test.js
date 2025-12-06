@@ -38,7 +38,9 @@ describe('EntityInstanceData integration', () => {
     it('throws when the definition dependency is invalid', () => {
       expect(() => {
         new EntityInstanceData('valid-id', { invalid: true });
-      }).toThrow('EntityInstanceData requires a valid EntityDefinition object.');
+      }).toThrow(
+        'EntityInstanceData requires a valid EntityDefinition object.'
+      );
     });
   });
 
@@ -79,7 +81,9 @@ describe('EntityInstanceData integration', () => {
     });
 
     it('returns undefined when the component is missing from definition and overrides', () => {
-      expect(instance.getComponentData('nonexistent:component')).toBeUndefined();
+      expect(
+        instance.getComponentData('nonexistent:component')
+      ).toBeUndefined();
     });
   });
 

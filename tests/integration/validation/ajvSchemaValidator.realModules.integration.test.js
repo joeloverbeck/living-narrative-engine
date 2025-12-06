@@ -79,10 +79,9 @@ describe('AjvSchemaValidator real-module integration', () => {
     expect(failure.isValid).toBe(false);
     expect(failure.errors?.[0]?.instancePath).toBe('/name');
 
-    const formattedError = validator.formatAjvErrors(
-      failure.errors || [],
-      { name: '' }
-    );
+    const formattedError = validator.formatAjvErrors(failure.errors || [], {
+      name: '',
+    });
     expect(formattedError).toContain('name');
 
     expect(
@@ -92,7 +91,8 @@ describe('AjvSchemaValidator real-module integration', () => {
         {
           skipPreValidation: true,
           validationDebugMessage: 'Validating derived schema',
-          failureMessage: (errors) => `Validation failed with ${errors.length} issues`,
+          failureMessage: (errors) =>
+            `Validation failed with ${errors.length} issues`,
         }
       )
     ).toBe(true);
@@ -123,13 +123,17 @@ describe('AjvSchemaValidator real-module integration', () => {
     expect(missingResult.errors?.[0]?.keyword).toBe('schemaNotFound');
 
     expect(
-      validator.getValidator('schema://living-narrative-engine/missing.schema.json')
+      validator.getValidator(
+        'schema://living-narrative-engine/missing.schema.json'
+      )
     ).toBeUndefined();
 
     expect(validator.validateSchemaRefs('schema://not-found.schema.json')).toBe(
       false
     );
-    expect(validator.isSchemaLoaded('schema://not-found.schema.json')).toBe(false);
+    expect(validator.isSchemaLoaded('schema://not-found.schema.json')).toBe(
+      false
+    );
     expect(
       validator.validateAgainstSchema(
         { foo: 'bar' },
@@ -142,9 +146,11 @@ describe('AjvSchemaValidator real-module integration', () => {
         }
       )
     ).toBe(true);
-    expect(logger.warnMessages.some(({ message }) => message === 'Schema unavailable')).toBe(
-      true
-    );
+    expect(
+      logger.warnMessages.some(
+        ({ message }) => message === 'Schema unavailable'
+      )
+    ).toBe(true);
   });
 
   it('supports preloading and batch schema additions without duplicates', async () => {
@@ -192,14 +198,12 @@ describe('AjvSchemaValidator real-module integration', () => {
     expect(preloadedValidator.isSchemaLoaded(potionSchema.$id)).toBe(true);
 
     await preloadedValidator.addSchemas([weaponSchema, potionSchema]);
-    const duplicateSkipMessage = preloadedLogger.debugMessages.filter(({ message }) =>
-      message.includes('already exists, skipping duplicate')
+    const duplicateSkipMessage = preloadedLogger.debugMessages.filter(
+      ({ message }) => message.includes('already exists, skipping duplicate')
     );
     expect(duplicateSkipMessage.length).toBeGreaterThan(0);
 
-    expect(
-      preloadedValidator.validateSchemaRefs(weaponSchema.$id)
-    ).toBe(true);
+    expect(preloadedValidator.validateSchemaRefs(weaponSchema.$id)).toBe(true);
 
     const validWeapon = preloadedValidator.validate(weaponSchema.$id, {
       id: 'iron-sword',
@@ -212,8 +216,8 @@ describe('AjvSchemaValidator real-module integration', () => {
       potency: -1,
     });
     expect(invalidPotion.isValid).toBe(false);
-    expect(preloadedValidator.formatAjvErrors(invalidPotion.errors || [], null)).toContain(
-      'potency'
-    );
+    expect(
+      preloadedValidator.formatAjvErrors(invalidPotion.errors || [], null)
+    ).toContain('potency');
   });
 });

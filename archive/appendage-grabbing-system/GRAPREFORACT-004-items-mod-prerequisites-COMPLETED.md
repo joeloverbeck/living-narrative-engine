@@ -3,6 +3,7 @@
 ## Summary
 
 Add anatomy-based grabbing prerequisites to 4 items mod actions that require 1 free hand:
+
 - `drink_entirely` - drinking requires a hand to hold the container
 - `drink_from` - drinking requires a hand to hold the container
 - `pick_up_item` - picking up items requires at least one free hand
@@ -16,12 +17,12 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 
 ## Files to Modify
 
-| File | Current State | Change |
-|------|---------------|--------|
-| `data/mods/items/actions/drink_entirely.action.json` | Has `"prerequisites": []` | Populate empty array |
-| `data/mods/items/actions/drink_from.action.json` | Has `"prerequisites": []` | Populate empty array |
-| `data/mods/items/actions/pick_up_item.action.json` | Has `"prerequisites": []` | Populate empty array |
-| `data/mods/items/actions/take_from_container.action.json` | **No prerequisites key** | Add prerequisites key with array |
+| File                                                      | Current State             | Change                           |
+| --------------------------------------------------------- | ------------------------- | -------------------------------- |
+| `data/mods/items/actions/drink_entirely.action.json`      | Has `"prerequisites": []` | Populate empty array             |
+| `data/mods/items/actions/drink_from.action.json`          | Has `"prerequisites": []` | Populate empty array             |
+| `data/mods/items/actions/pick_up_item.action.json`        | Has `"prerequisites": []` | Populate empty array             |
+| `data/mods/items/actions/take_from_container.action.json` | **No prerequisites key**  | Add prerequisites key with array |
 
 ## Detailed Changes
 
@@ -30,6 +31,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 **Current state**: Has `"prerequisites": []` (empty array)
 
 **Change**: Replace empty array with:
+
 ```json
 "prerequisites": [
   {
@@ -46,6 +48,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 **Current state**: Has `"prerequisites": []` (empty array)
 
 **Change**: Replace empty array with:
+
 ```json
 "prerequisites": [
   {
@@ -62,6 +65,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 **Current state**: Has `"prerequisites": []` (empty array)
 
 **Change**: Replace empty array with:
+
 ```json
 "prerequisites": [
   {
@@ -78,6 +82,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 **Current state**: **No prerequisites key exists**
 
 **Change**: Add new prerequisites key after the `forbidden_components` property:
+
 ```json
 "prerequisites": [
   {
@@ -100,16 +105,19 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [ ] `npm run validate` passes without errors
 - [ ] All 4 modified files remain valid against `action.schema.json`
 
 ### Structural Integrity
+
 - [ ] Each action's `prerequisites` array contains exactly 1 prerequisite object
 - [ ] Each prerequisite has both `logic.condition_ref` and `failure_message` properties
 - [ ] The `condition_ref` value is exactly `anatomy:actor-has-free-grabbing-appendage` for all 4 actions
 - [ ] All other action properties remain unchanged
 
 ### Invariants That Must Remain True
+
 - [ ] Action IDs unchanged:
   - `items:drink_entirely`
   - `items:drink_from`
@@ -169,12 +177,12 @@ cat data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.jso
 
 ### Tests Updated
 
-| Test File | Changes Made | Rationale |
-|-----------|--------------|-----------|
-| `tests/integration/mods/items/pickUpItemActionDiscovery.test.js` | Updated assertion to verify prerequisite structure | Test now validates the new prerequisite exists |
-| `tests/integration/mods/items/pickUpItemForbiddenComponents.test.js` | Added hand entity with `anatomy:can_grab` component | Actor needs free grabbing appendage for prerequisite to pass |
-| `tests/integration/mods/items/takeFromContainerActionDiscovery.test.js` | Added hand entity with `anatomy:can_grab` component | Actor needs free grabbing appendage for prerequisite to pass |
-| `tests/integration/mods/items/dropThenPickupCacheStaleness.test.js` | Added hand entities, registered grabbing condition, registered pick_up_item action | Complex test that tests drop→pickup workflow needed complete setup for both actions |
+| Test File                                                               | Changes Made                                                                       | Rationale                                                                           |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `tests/integration/mods/items/pickUpItemActionDiscovery.test.js`        | Updated assertion to verify prerequisite structure                                 | Test now validates the new prerequisite exists                                      |
+| `tests/integration/mods/items/pickUpItemForbiddenComponents.test.js`    | Added hand entity with `anatomy:can_grab` component                                | Actor needs free grabbing appendage for prerequisite to pass                        |
+| `tests/integration/mods/items/takeFromContainerActionDiscovery.test.js` | Added hand entity with `anatomy:can_grab` component                                | Actor needs free grabbing appendage for prerequisite to pass                        |
+| `tests/integration/mods/items/dropThenPickupCacheStaleness.test.js`     | Added hand entities, registered grabbing condition, registered pick_up_item action | Complex test that tests drop→pickup workflow needed complete setup for both actions |
 
 ### Verification
 

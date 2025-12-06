@@ -33,10 +33,7 @@ describe('ActionExecutionTrace additional coverage validations', () => {
       ExecutionPhaseTimer.prototype,
       'endExecution'
     );
-    const addMarkerSpy = jest.spyOn(
-      ExecutionPhaseTimer.prototype,
-      'addMarker'
-    );
+    const addMarkerSpy = jest.spyOn(ExecutionPhaseTimer.prototype, 'addMarker');
     const isActiveSpy = jest.spyOn(ExecutionPhaseTimer.prototype, 'isActive');
 
     // Force the high precision timer to fall back to Date.now for coverage
@@ -87,7 +84,10 @@ describe('ActionExecutionTrace additional coverage validations', () => {
       trace: { circular: true },
       credential: 'secret',
     });
-    trace.captureOperationStart({ type: 'effect', parameters: { foo: 'bar' } }, 0);
+    trace.captureOperationStart(
+      { type: 'effect', parameters: { foo: 'bar' } },
+      0
+    );
     trace.captureOperationResult({ success: true });
 
     const firstError = new Error('first failure');
@@ -149,7 +149,8 @@ describe('ActionExecutionTrace additional coverage validations', () => {
 
     analysisTrace.captureDispatchStart();
     const error = new Error('analysis failure');
-    error.stack = 'Error: analysis failure\n at performAction (engine.js:88:13)';
+    error.stack =
+      'Error: analysis failure\n at performAction (engine.js:88:13)';
     analysisTrace.captureError(error);
 
     const summary = analysisTrace.getErrorSummary();

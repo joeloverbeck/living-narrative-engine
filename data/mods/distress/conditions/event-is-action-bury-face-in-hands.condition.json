@@ -3,9 +3,6 @@
   "id": "distress:event-is-action-bury-face-in-hands",
   "description": "Checks if the triggering event is for the 'distress:bury_face_in_hands' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "distress:bury_face_in_hands"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "distress:bury_face_in_hands"]
   }
 }

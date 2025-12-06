@@ -3,12 +3,23 @@
  * @description Verifies MetricsService behaviour around prom-client configuration toggles.
  */
 
-import { describe, it, expect, jest, afterEach, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  afterEach,
+  beforeEach,
+} from '@jest/globals';
 import * as promClient from 'prom-client';
 import MetricsService from '../../../src/services/metricsService.js';
 
 describe('MetricsService Prometheus configuration', () => {
-  const createLogger = () => ({ info: jest.fn(), debug: jest.fn(), error: jest.fn() });
+  const createLogger = () => ({
+    info: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+  });
 
   beforeEach(() => {
     promClient.register.clear();
@@ -26,7 +37,9 @@ describe('MetricsService Prometheus configuration', () => {
         { name: 'llm_proxy_http_requests_total' },
         { name: 'process_cpu_user_seconds_total' },
       ]);
-    jest.spyOn(promClient, 'collectDefaultMetrics').mockImplementation(() => {});
+    jest
+      .spyOn(promClient, 'collectDefaultMetrics')
+      .mockImplementation(() => {});
 
     const service = new MetricsService({
       logger,
@@ -53,7 +66,9 @@ describe('MetricsService Prometheus configuration', () => {
         { name: 'llm_proxy_http_requests_total' },
         { name: 'llm_proxy_llm_requests_total' },
       ]);
-    jest.spyOn(promClient, 'collectDefaultMetrics').mockImplementation(() => {});
+    jest
+      .spyOn(promClient, 'collectDefaultMetrics')
+      .mockImplementation(() => {});
 
     const service = new MetricsService({
       logger,
@@ -76,8 +91,9 @@ describe('MetricsService Prometheus configuration', () => {
     const service = new MetricsService({ logger, enabled: false });
 
     expect(service.isEnabled()).toBe(false);
-    await expect(service.getMetrics()).resolves.toBe('# Metrics collection is disabled\n');
+    await expect(service.getMetrics()).resolves.toBe(
+      '# Metrics collection is disabled\n'
+    );
     expect(service.getStats()).toEqual({ enabled: false });
   });
 });
-

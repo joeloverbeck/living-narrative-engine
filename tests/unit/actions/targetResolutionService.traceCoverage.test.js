@@ -20,7 +20,9 @@ describe('TargetResolutionService trace and logging coverage', () => {
 
   it('wraps resolution inside a trace span when withSpan is available', () => {
     const unifiedScopeResolver = {
-      resolve: jest.fn().mockReturnValue(ActionResult.success(new Set(['target-1']))),
+      resolve: jest
+        .fn()
+        .mockReturnValue(ActionResult.success(new Set(['target-1']))),
     };
     const logger = createLogger();
     const trace = {
@@ -28,7 +30,10 @@ describe('TargetResolutionService trace and logging coverage', () => {
       info: jest.fn(),
     };
 
-    const service = new TargetResolutionService({ unifiedScopeResolver, logger });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger,
+    });
     const actor = { id: 'actor-1' };
     const context = { currentLocation: 'garden' };
 
@@ -61,9 +66,7 @@ describe('TargetResolutionService trace and logging coverage', () => {
       })
     );
     expect(result.success).toBe(true);
-    expect(result.value).toEqual([
-      ActionTargetContext.forEntity('target-1'),
-    ]);
+    expect(result.value).toEqual([ActionTargetContext.forEntity('target-1')]);
   });
 
   it('emits enhanced debug logs for sit_down action success paths', () => {
@@ -74,7 +77,10 @@ describe('TargetResolutionService trace and logging coverage', () => {
     const logger = createLogger();
     const trace = { info: jest.fn(), withSpan: undefined };
 
-    const service = new TargetResolutionService({ unifiedScopeResolver, logger });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger,
+    });
     const actor = { id: 'actor-9' };
     const discoveryContext = {
       currentLocation: 'lounge',
@@ -154,7 +160,10 @@ describe('TargetResolutionService trace and logging coverage', () => {
     const logger = createLogger();
     const trace = { info: jest.fn(), withSpan: undefined };
 
-    const service = new TargetResolutionService({ unifiedScopeResolver, logger });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger,
+    });
     const actor = { id: 'actor-4' };
     const discoveryContext = { currentLocation: 'hallway', entityManager: {} };
 
@@ -192,7 +201,10 @@ describe('TargetResolutionService trace and logging coverage', () => {
     const logger = createLogger();
     const trace = { info: jest.fn(), withSpan: undefined };
 
-    const service = new TargetResolutionService({ unifiedScopeResolver, logger });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger,
+    });
     const actor = { id: 'actor-empty' };
     const discoveryContext = { currentLocation: 'stage', entityManager: {} };
 
@@ -221,7 +233,10 @@ describe('TargetResolutionService trace and logging coverage', () => {
     const logger = createLogger();
     const trace = { info: jest.fn(), withSpan: undefined };
 
-    const service = new TargetResolutionService({ unifiedScopeResolver, logger });
+    const service = new TargetResolutionService({
+      unifiedScopeResolver,
+      logger,
+    });
     const actor = { id: 'actor-none' };
     const discoveryContext = { currentLocation: 'void', entityManager: {} };
 

@@ -49,9 +49,7 @@ describe('items:read_item action definition', () => {
   it('should use examinable scope for primary targets', () => {
     expect(readItemAction.targets).toBeDefined();
     expect(readItemAction.targets.primary).toBeDefined();
-    expect(readItemAction.targets.primary.scope).toBe(
-      'items:examinable_items'
-    );
+    expect(readItemAction.targets.primary.scope).toBe('items:examinable_items');
     expect(readItemAction.targets.primary.placeholder).toBe('item');
     expect(readItemAction.targets.primary.description).toBe(
       'Readable item to read'
@@ -97,7 +95,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([room, actor, readableItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -134,7 +133,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([room, actor, readableItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor2');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor2');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -143,17 +143,17 @@ describe('items:read_item action definition', () => {
     });
 
     it('should appear when inventory mixes readable and non-readable items', () => {
-      const room = ModEntityScenarios.createRoom('room_mixed', 'Mixed Inventory Study');
+      const room = ModEntityScenarios.createRoom(
+        'room_mixed',
+        'Mixed Inventory Study'
+      );
 
       const actor = new ModEntityBuilder('actor_mixed')
         .withName('Collector')
         .atLocation('room_mixed')
         .asActor()
         .withComponent('items:inventory', {
-          items: [
-            'readable_item_mixed',
-            'non_readable_item_mixed',
-          ],
+          items: ['readable_item_mixed', 'non_readable_item_mixed'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
         .build();
@@ -177,7 +177,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([room, actor, readableItem, nonReadableItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor_mixed');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor_mixed');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -207,7 +208,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([room, actor, readableItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -231,7 +233,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([room, actor]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -262,7 +265,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([room, actor, nonReadableItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -293,7 +297,8 @@ describe('items:read_item action definition', () => {
       testFixture.reset([roomA, roomB, actor, readableItem]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const readActions = availableActions.filter(
         (action) => action.id === 'items:read_item'
       );
@@ -382,9 +387,10 @@ describe('items:read_item action definition', () => {
               continue;
             }
 
-            const hasRequiredComponents = readItemAction.required_components.primary.every(
-              (componentId) => itemEntity.hasComponent(componentId)
-            );
+            const hasRequiredComponents =
+              readItemAction.required_components.primary.every((componentId) =>
+                itemEntity.hasComponent(componentId)
+              );
 
             if (!hasRequiredComponents) {
               continue;
@@ -393,10 +399,7 @@ describe('items:read_item action definition', () => {
             const nameComponent = itemEntity.getComponentData('core:name');
             const itemName =
               nameComponent?.name || nameComponent?.text || candidateId;
-            const command = readItemAction.template.replace(
-              '{item}',
-              itemName
-            );
+            const command = readItemAction.template.replace('{item}', itemName);
 
             actions.push({
               id: readItemAction.id,

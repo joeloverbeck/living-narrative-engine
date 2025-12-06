@@ -28,7 +28,9 @@ function warnOnLiteralActorIds(goalDefinition) {
     return;
   }
 
-  const offenders = literalActorViolations.map((violation) => violation.path).join(', ');
+  const offenders = literalActorViolations
+    .map((violation) => violation.path)
+    .join(', ');
   // eslint-disable-next-line no-console -- intentional test-only guardrail warning
   console.warn(
     `[createTestGoal] Goal ${goalDefinition.id} references literal actor ID(s) (${offenders}) inside has_component. Replace them with the 'actor' alias before running multi-actor suites.`

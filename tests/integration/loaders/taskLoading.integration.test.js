@@ -25,7 +25,9 @@ class NamespacedDataRegistry extends InMemoryDataRegistry {
         return entries;
       }
 
-      const filtered = entries.filter((entry) => entry && entry._modId === modId);
+      const filtered = entries.filter(
+        (entry) => entry && entry._modId === modId
+      );
       return filtered.length > 0 ? filtered : undefined;
     }
 
@@ -232,7 +234,9 @@ describe('Task Loading Integration', () => {
           const taskName = match[1];
           if (mockTaskData[taskName]) {
             // Return a deep clone of the object, not a JSON string
-            return Promise.resolve(JSON.parse(JSON.stringify(mockTaskData[taskName])));
+            return Promise.resolve(
+              JSON.parse(JSON.stringify(mockTaskData[taskName]))
+            );
           }
         }
 
@@ -405,7 +409,9 @@ describe('Task Loading Integration', () => {
         expect(method.$ref).toBeDefined();
 
         // Method ID should follow pattern modId:task_id.method_name
-        expect(method.methodId).toMatch(/^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+\.[a-zA-Z0-9_]+$/);
+        expect(method.methodId).toMatch(
+          /^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+\.[a-zA-Z0-9_]+$/
+        );
 
         // Method's task portion should match task ID
         const [, taskAndMethod] = method.methodId.split(':');
@@ -462,7 +468,10 @@ describe('Task Loading Integration', () => {
         'tasks'
       );
 
-      const coreTask = dataRegistry.get('tasks', 'core:consume_nourishing_item');
+      const coreTask = dataRegistry.get(
+        'tasks',
+        'core:consume_nourishing_item'
+      );
       const coreDescription = coreTask.description;
 
       // Create mock override from another mod
@@ -479,7 +488,10 @@ describe('Task Loading Integration', () => {
       // Simulate override by storing with same ID
       dataRegistry.store('tasks', mockOverrideData.id, mockOverrideData);
 
-      const overriddenTask = dataRegistry.get('tasks', 'core:consume_nourishing_item');
+      const overriddenTask = dataRegistry.get(
+        'tasks',
+        'core:consume_nourishing_item'
+      );
 
       expect(overriddenTask.description).toBe('Modified description from mod');
       expect(overriddenTask.cost).toBe(20);
@@ -511,11 +523,17 @@ describe('Task Loading Integration', () => {
 
       // Validate the structure
       await expect(
-        taskLoader._validateTaskStructure(mockTaskData, 'test_mod', 'test.task.json')
+        taskLoader._validateTaskStructure(
+          mockTaskData,
+          'test_mod',
+          'test.task.json'
+        )
       ).resolves.toBeUndefined();
 
       // Scope reference should be valid
-      expect(taskLoader._isValidScopeReference(mockTaskData.planningScope)).toBe(true);
+      expect(
+        taskLoader._isValidScopeReference(mockTaskData.planningScope)
+      ).toBe(true);
     });
   });
 
@@ -530,7 +548,11 @@ describe('Task Loading Integration', () => {
       };
 
       await expect(
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+        taskLoader._validateTaskStructure(
+          invalidData,
+          'test',
+          'invalid.task.json'
+        )
       ).rejects.toThrow(/planningScope.*must be a valid scope reference/);
     });
 
@@ -544,8 +566,14 @@ describe('Task Loading Integration', () => {
       };
 
       await expect(
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
-      ).rejects.toThrow(/planningScope 'test:missing_scope' references a scope that is not loaded/);
+        taskLoader._validateTaskStructure(
+          invalidData,
+          'test',
+          'invalid.task.json'
+        )
+      ).rejects.toThrow(
+        /planningScope 'test:missing_scope' references a scope that is not loaded/
+      );
     });
 
     it('should throw error for malformed refinement method', async () => {
@@ -563,7 +591,11 @@ describe('Task Loading Integration', () => {
       };
 
       await expect(
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+        taskLoader._validateTaskStructure(
+          invalidData,
+          'test',
+          'invalid.task.json'
+        )
       ).rejects.toThrow(/must follow format 'modId:task_id\.method_name'/);
     });
 
@@ -582,7 +614,11 @@ describe('Task Loading Integration', () => {
       };
 
       await expect(
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+        taskLoader._validateTaskStructure(
+          invalidData,
+          'test',
+          'invalid.task.json'
+        )
       ).rejects.toThrow(/task portion must match task ID base name/);
     });
 
@@ -598,7 +634,11 @@ describe('Task Loading Integration', () => {
       };
 
       await expect(
-        taskLoader._validateTaskStructure(invalidData, 'test', 'invalid.task.json')
+        taskLoader._validateTaskStructure(
+          invalidData,
+          'test',
+          'invalid.task.json'
+        )
       ).rejects.toThrow(/must have a 'type' property/);
     });
   });

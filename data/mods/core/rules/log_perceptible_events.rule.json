@@ -4,7 +4,7 @@
   "comment": "Logs perceptible events directly via ADD_PERCEPTION_LOG_ENTRY. Skips if skipRuleLogging flag is set (e.g., from operations that log directly via handler).",
   "event_type": "core:perceptible_event",
   "condition": {
-    "!": [{"var": "event.payload.contextualData.skipRuleLogging"}]
+    "!": [{ "var": "event.payload.contextualData.skipRuleLogging" }]
   },
   "actions": [
     {

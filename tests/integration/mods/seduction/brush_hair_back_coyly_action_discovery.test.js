@@ -39,7 +39,9 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
       expect(brushHairBackCoylyAction.description).toBe(
         'Run your fingers through your hair and tuck it behind your ear in a coy, flirtatious gesture.'
       );
-      expect(brushHairBackCoylyAction.template).toBe('brush your hair back coyly');
+      expect(brushHairBackCoylyAction.template).toBe(
+        'brush your hair back coyly'
+      );
     });
 
     it('should be a self-targeting action', () => {
@@ -60,7 +62,9 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
       expect(brushHairBackCoylyAction.visual).toBeDefined();
       expect(brushHairBackCoylyAction.visual.backgroundColor).toBe('#f57f17');
       expect(brushHairBackCoylyAction.visual.textColor).toBe('#000000');
-      expect(brushHairBackCoylyAction.visual.hoverBackgroundColor).toBe('#f9a825');
+      expect(brushHairBackCoylyAction.visual.hoverBackgroundColor).toBe(
+        '#f9a825'
+      );
       expect(brushHairBackCoylyAction.visual.hoverTextColor).toBe('#212121');
     });
   });
@@ -109,9 +113,12 @@ describe('seduction:brush_hair_back_coyly action discovery', () => {
     });
 
     it('rejects execution when the actor is currently hugging someone', async () => {
-      const scenario = testFixture.createStandardActorTarget(['Dana', 'Elliot'], {
-        includeRoom: false,
-      });
+      const scenario = testFixture.createStandardActorTarget(
+        ['Dana', 'Elliot'],
+        {
+          includeRoom: false,
+        }
+      );
 
       scenario.actor.components['positioning:hugging'] = {
         embraced_entity_id: scenario.target.id,

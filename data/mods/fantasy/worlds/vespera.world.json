@@ -1,89 +1,89 @@
 {
-    "$schema": "http://example.com/schemas/world.schema.json",
-    "id": "fantasy:vespera",
-    "name": "Vespera Nightwhisper in Mudbrook-on-the-Bend",
-    "description": "A self-contained game world centered around a cat-girl in a mundane town.",
-    "instances": [
-        {
-            "instanceId": "fantasy:mudbrook_on_the_bend_instance"
-        },
-        {
-            "instanceId": "fantasy:mudbrook_municipal_aid_registry_instance"
-        },
-        {
-            "instanceId": "fantasy:back_of_tannery_instance"
-        },
-        {
-            "instanceId": "fantasy:surroundings_of_old_millrace_instance"
-        },
-        {
-            "instanceId": "fantasy:12_kiln_lane_instance"
-        },
-        {
-            "instanceId": "fantasy:12_kiln_lane_yard_instance"
-        },
-        {
-            "instanceId": "fantasy:interior_of_chicken_coop_instance"
-        },
-        {
-            "instanceId": "fantasy:notice_possessed_chickens_instance"
-        },
-        {
-            "instanceId": "fantasy:vespera_hybrid_lute_viol_instance"
-        },
-        {
-            "instanceId": "fantasy:vespera_rapier_instance"
-        },
-        {
-            "instanceId": "fantasy:vespera_main_gauche_instance"
-        },
-        {
-            "instanceId": "fantasy:coop_key_instance"
-        },
-        {
-            "instanceId": "fantasy:containment_vessel_instance"
-        },
-        {
-            "instanceId": "fantasy:smoking_pipe_instance"
-        },
-        {
-            "instanceId": "fantasy:chicken_coop_door_instance"
-        },
-        {
-            "instanceId": "fantasy:bertram_the_muddy_instance"
-        },
-        {
-            "instanceId": "fantasy:aldous_instance"
-        },
-        {
-            "instanceId": "fantasy:threadscar_melissa_instance"
-        },
-        {
-            "instanceId": "fantasy:vespera_nightwhisper_instance"
-        },
-        {
-            "instanceId": "fantasy:rill_instance"
-        },
-        {
-            "instanceId": "fantasy:large_speckled_hen_instance"
-        },
-        {
-            "instanceId": "fantasy:copper_backed_rooster_instance"
-        },
-        {
-            "instanceId": "fantasy:kink_necked_black_pullet_instance"
-        },
-        {
-            "instanceId": "fantasy:slate_blue_bantam_instance"
-        },
-        {
-            "instanceId": "fantasy:white_faced_buff_hen_instance"
-        },
-        {
-            "instanceId": "fantasy:threadscar_melissa_longsword_instance"
-        },
-        {
-            "instanceId": "fantasy:rill_practice_stick_instance"
-        }
-    ]
+  "$schema": "http://example.com/schemas/world.schema.json",
+  "id": "fantasy:vespera",
+  "name": "Vespera Nightwhisper in Mudbrook-on-the-Bend",
+  "description": "A self-contained game world centered around a cat-girl in a mundane town.",
+  "instances": [
+    {
+      "instanceId": "fantasy:mudbrook_on_the_bend_instance"
+    },
+    {
+      "instanceId": "fantasy:mudbrook_municipal_aid_registry_instance"
+    },
+    {
+      "instanceId": "fantasy:back_of_tannery_instance"
+    },
+    {
+      "instanceId": "fantasy:surroundings_of_old_millrace_instance"
+    },
+    {
+      "instanceId": "fantasy:12_kiln_lane_instance"
+    },
+    {
+      "instanceId": "fantasy:12_kiln_lane_yard_instance"
+    },
+    {
+      "instanceId": "fantasy:interior_of_chicken_coop_instance"
+    },
+    {
+      "instanceId": "fantasy:notice_possessed_chickens_instance"
+    },
+    {
+      "instanceId": "fantasy:vespera_hybrid_lute_viol_instance"
+    },
+    {
+      "instanceId": "fantasy:vespera_rapier_instance"
+    },
+    {
+      "instanceId": "fantasy:vespera_main_gauche_instance"
+    },
+    {
+      "instanceId": "fantasy:coop_key_instance"
+    },
+    {
+      "instanceId": "fantasy:containment_vessel_instance"
+    },
+    {
+      "instanceId": "fantasy:smoking_pipe_instance"
+    },
+    {
+      "instanceId": "fantasy:chicken_coop_door_instance"
+    },
+    {
+      "instanceId": "fantasy:bertram_the_muddy_instance"
+    },
+    {
+      "instanceId": "fantasy:aldous_instance"
+    },
+    {
+      "instanceId": "fantasy:threadscar_melissa_instance"
+    },
+    {
+      "instanceId": "fantasy:vespera_nightwhisper_instance"
+    },
+    {
+      "instanceId": "fantasy:rill_instance"
+    },
+    {
+      "instanceId": "fantasy:large_speckled_hen_instance"
+    },
+    {
+      "instanceId": "fantasy:copper_backed_rooster_instance"
+    },
+    {
+      "instanceId": "fantasy:kink_necked_black_pullet_instance"
+    },
+    {
+      "instanceId": "fantasy:slate_blue_bantam_instance"
+    },
+    {
+      "instanceId": "fantasy:white_faced_buff_hen_instance"
+    },
+    {
+      "instanceId": "fantasy:threadscar_melissa_longsword_instance"
+    },
+    {
+      "instanceId": "fantasy:rill_practice_stick_instance"
+    }
+  ]
 }

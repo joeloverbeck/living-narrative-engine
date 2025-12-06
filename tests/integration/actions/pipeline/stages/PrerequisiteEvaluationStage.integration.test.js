@@ -6,7 +6,9 @@ import { ActionErrorContextBuilder } from '../../../../../src/actions/errors/act
 import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
 import ActionAwareStructuredTrace from '../../../../../src/actions/tracing/actionAwareStructuredTrace.js';
 import ActionTraceFilter from '../../../../../src/actions/tracing/actionTraceFilter.js';
-import ConsoleLogger, { LogLevel } from '../../../../../src/logging/consoleLogger.js';
+import ConsoleLogger, {
+  LogLevel,
+} from '../../../../../src/logging/consoleLogger.js';
 
 class FakeEntityManager {
   constructor() {
@@ -46,7 +48,10 @@ class FakeEntityManager {
 
   hasComponent(entityId, componentType) {
     const entity = this.getEntityInstance(entityId);
-    return Object.prototype.hasOwnProperty.call(entity.components, componentType);
+    return Object.prototype.hasOwnProperty.call(
+      entity.components,
+      componentType
+    );
   }
 }
 
@@ -299,8 +304,9 @@ class StageIntegrationHarness {
 
         trace.captureEvaluationContext?.(context);
 
-        const logicExpression =
-          behavior.logicExpression || { var: 'actor.components.core:stats.mana' };
+        const logicExpression = behavior.logicExpression || {
+          var: 'actor.components.core:stats.mana',
+        };
 
         const logicContext = behavior.logicContext || context;
 
@@ -309,14 +315,12 @@ class StageIntegrationHarness {
             ? behavior.jsonLogicResult
             : result;
 
-        const logicSteps =
-          behavior.jsonLogicSteps ||
-          [
-            {
-              step: 'mock-evaluation',
-              result: jsonLogicResult,
-            },
-          ];
+        const logicSteps = behavior.jsonLogicSteps || [
+          {
+            step: 'mock-evaluation',
+            result: jsonLogicResult,
+          },
+        ];
 
         trace.captureJsonLogicTrace?.(
           logicExpression,
@@ -424,7 +428,9 @@ describe('PrerequisiteEvaluationStage integration', () => {
     });
 
     harness.configureActionBehavior('core:ritual_object', {
-      jsonLogicExpression: { '<=': [{ var: 'actor.components.core:stats.mana' }, 100] },
+      jsonLogicExpression: {
+        '<=': [{ var: 'actor.components.core:stats.mana' }, 100],
+      },
     });
 
     const candidateActions = [
@@ -500,9 +506,9 @@ describe('PrerequisiteEvaluationStage integration', () => {
     const tracedActions = trace.getTracedActions();
     const castSpellTrace = tracedActions.get('core:cast_spell');
     expect(castSpellTrace).toBeDefined();
-    expect(castSpellTrace.stages.prerequisite_evaluation.data.evaluationPassed).toBe(
-      true
-    );
+    expect(
+      castSpellTrace.stages.prerequisite_evaluation.data.evaluationPassed
+    ).toBe(true);
     expect(
       castSpellTrace.stages.prerequisite_evaluation.data.evaluationDetails
         .hasJsonLogicTraces
@@ -527,9 +533,9 @@ describe('PrerequisiteEvaluationStage integration', () => {
       castSpellTrace.stages.prerequisite_evaluation.data.evaluationDetails
         .evaluationContext.contextError
     ).toBe('Failed to serialize context safely');
-    expect(
-      castSpellTrace.stages.stage_performance.data.itemsProcessed
-    ).toBe(candidateActions.length);
+    expect(castSpellTrace.stages.stage_performance.data.itemsProcessed).toBe(
+      candidateActions.length
+    );
 
     const ritualTrace = tracedActions.get('core:ritual_object');
     expect(ritualTrace).toBeDefined();
@@ -547,20 +553,20 @@ describe('PrerequisiteEvaluationStage integration', () => {
     ).toBe(1);
 
     const lowManaTrace = tracedActions.get('core:low_mana');
-    expect(lowManaTrace.stages.prerequisite_evaluation.data.evaluationPassed).toBe(
-      false
-    );
+    expect(
+      lowManaTrace.stages.prerequisite_evaluation.data.evaluationPassed
+    ).toBe(false);
     expect(
       lowManaTrace.stages.prerequisite_evaluation.data.evaluationReason
     ).toBe('One or more prerequisites failed');
 
     const inspectTrace = tracedActions.get('core:inspect');
-    expect(inspectTrace.stages.prerequisite_evaluation.data.hasPrerequisites).toBe(
-      false
-    );
-    expect(inspectTrace.stages.prerequisite_evaluation.data.evaluationReason).toBe(
-      'No prerequisites defined'
-    );
+    expect(
+      inspectTrace.stages.prerequisite_evaluation.data.hasPrerequisites
+    ).toBe(false);
+    expect(
+      inspectTrace.stages.prerequisite_evaluation.data.evaluationReason
+    ).toBe('No prerequisites defined');
   });
 
   it('gracefully handles trace capture failures and logging exceptions', async () => {
@@ -618,12 +624,7 @@ describe('PrerequisiteEvaluationStage integration', () => {
           ['core:no_prereq', 1],
         ]),
       ],
-      [
-        'stage_performance',
-        new Map([
-          ['core:object_style', 1],
-        ]),
-      ],
+      ['stage_performance', new Map([['core:object_style', 1]])],
     ]);
 
     const tracePlan = {
@@ -671,7 +672,9 @@ describe('PrerequisiteEvaluationStage integration', () => {
     expect(result.data.prerequisiteErrors).toHaveLength(1);
     expect(result.data.prerequisiteErrors[0].actionId).toBe('core:volatile');
 
-    const warnings = harness.logger.getEntries('warn').map((entry) => entry.message);
+    const warnings = harness.logger
+      .getEntries('warn')
+      .map((entry) => entry.message);
     expect(warnings).toContain(
       'Failed to capture pre-evaluation data for tracing'
     );

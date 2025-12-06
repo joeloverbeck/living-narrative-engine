@@ -11,14 +11,19 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
 const shouldFail = process.env.GOAP_GOAL_PATH_LINT === '1';
-const goalFiles = await glob('data/**/*.goal.json', { cwd: projectRoot, nodir: true });
+const goalFiles = await glob('data/**/*.goal.json', {
+  cwd: projectRoot,
+  nodir: true,
+});
 
 if (goalFiles.length === 0) {
   console.log('✅ No goal files found to validate.');
   process.exit(0);
 }
 
-console.log(`🔍 Validating ${goalFiles.length} goal definition(s) for canonical PlanningStateView paths...`);
+console.log(
+  `🔍 Validating ${goalFiles.length} goal definition(s) for canonical PlanningStateView paths...`
+);
 
 const violations = [];
 
@@ -31,7 +36,9 @@ for (const relativePath of goalFiles) {
       continue;
     }
     const validation = validateGoalPaths(goalDefinition.goalState, {
-      goalId: goalDefinition.id ?? path.basename(relativePath, path.extname(relativePath)),
+      goalId:
+        goalDefinition.id ??
+        path.basename(relativePath, path.extname(relativePath)),
     });
     if (!validation.isValid) {
       violations.push({
@@ -60,9 +67,13 @@ violations.forEach((violation, index) => {
 });
 
 if (shouldFail) {
-  console.error('\n❌ GOAP_GOAL_PATH_LINT=1 — failing validation due to invalid goal paths.');
+  console.error(
+    '\n❌ GOAP_GOAL_PATH_LINT=1 — failing validation due to invalid goal paths.'
+  );
   process.exit(1);
 }
 
-console.log('\n⚠️ GOAP_GOAL_PATH_LINT is not enabled, so violations were reported but not treated as fatal.');
+console.log(
+  '\n⚠️ GOAP_GOAL_PATH_LINT is not enabled, so violations were reported but not treated as fatal.'
+);
 process.exit(0);

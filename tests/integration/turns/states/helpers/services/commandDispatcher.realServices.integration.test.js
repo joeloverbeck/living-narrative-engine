@@ -138,7 +138,13 @@ function createCommandDispatcherHarness({ onDispatch } = {}) {
 describe('CommandDispatcher integration with real services', () => {
   it('dispatches actions successfully and preserves turn context', async () => {
     const harness = createCommandDispatcherHarness();
-    const { dispatcher, commandProcessor, actionErrorContextBuilder, entityManager, logger } = harness;
+    const {
+      dispatcher,
+      commandProcessor,
+      actionErrorContextBuilder,
+      entityManager,
+      logger,
+    } = harness;
 
     const actor = entityManager.getEntityInstance('hero-1');
     const turnContext = { getActor: () => actor };
@@ -180,7 +186,9 @@ describe('CommandDispatcher integration with real services', () => {
   });
 
   it('handles dispatch failures by building actionable error context', async () => {
-    const dispatchError = new Error("Missing component 'core:position' on actor hero-1");
+    const dispatchError = new Error(
+      "Missing component 'core:position' on actor hero-1"
+    );
     dispatchError.name = 'ComponentNotFoundError';
 
     const harness = createCommandDispatcherHarness({
@@ -189,7 +197,8 @@ describe('CommandDispatcher integration with real services', () => {
       },
     });
 
-    const { dispatcher, actionErrorContextBuilder, entityManager, logger } = harness;
+    const { dispatcher, actionErrorContextBuilder, entityManager, logger } =
+      harness;
     const actor = entityManager.getEntityInstance('hero-1');
     const turnContext = { getActor: () => actor };
     const turnAction = {
@@ -215,12 +224,18 @@ describe('CommandDispatcher integration with real services', () => {
       expect.objectContaining({ stage: 'command_processing_dispatch' })
     );
     expect(context.environmentContext).toEqual(
-      expect.objectContaining({ stateName: 'CommandPhase', commandString: 'go north' })
+      expect.objectContaining({
+        stateName: 'CommandPhase',
+        commandString: 'go north',
+      })
     );
     expect(context.suggestedFixes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          details: expect.objectContaining({ componentId: 'core:position', actorId: 'hero-1' }),
+          details: expect.objectContaining({
+            componentId: 'core:position',
+            actorId: 'hero-1',
+          }),
         }),
       ])
     );
@@ -241,11 +256,12 @@ describe('CommandDispatcher integration with real services', () => {
 
   it('validates dispatch context integrity across scenarios', () => {
     const invalidHarness = createCommandDispatcherHarness();
-    const invalidResult = invalidHarness.dispatcher.validateContextAfterDispatch({
-      turnContext: null,
-      expectedActorId: 'hero-1',
-      stateName: 'PostDispatchCheck',
-    });
+    const invalidResult =
+      invalidHarness.dispatcher.validateContextAfterDispatch({
+        turnContext: null,
+        expectedActorId: 'hero-1',
+        stateName: 'PostDispatchCheck',
+      });
     expect(invalidResult).toBe(false);
     expect(
       invalidHarness.logger.warnEntries.some(([message]) =>
@@ -255,11 +271,12 @@ describe('CommandDispatcher integration with real services', () => {
 
     const mismatchHarness = createCommandDispatcherHarness();
     const mismatchContext = { getActor: () => ({ id: 'someone-else' }) };
-    const mismatchResult = mismatchHarness.dispatcher.validateContextAfterDispatch({
-      turnContext: mismatchContext,
-      expectedActorId: 'hero-1',
-      stateName: 'PostDispatchCheck',
-    });
+    const mismatchResult =
+      mismatchHarness.dispatcher.validateContextAfterDispatch({
+        turnContext: mismatchContext,
+        expectedActorId: 'hero-1',
+        stateName: 'PostDispatchCheck',
+      });
     expect(mismatchResult).toBe(false);
     expect(
       mismatchHarness.logger.warnEntries.some(([message]) =>

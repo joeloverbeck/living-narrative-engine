@@ -152,7 +152,9 @@ describe('EventBus', () => {
       // Create a handler that dispatches another event (recursion)
       const recursiveHandler = jest.fn(async (event) => {
         if (event.payload.depth < 3) {
-          await bus.dispatch('test:recursive', { depth: event.payload.depth + 1 });
+          await bus.dispatch('test:recursive', {
+            depth: event.payload.depth + 1,
+          });
         }
       });
 
@@ -246,8 +248,8 @@ describe('EventBus', () => {
 
         // Verify auto-reset was NOT triggered
         const debugCalls = logger.debug.mock.calls;
-        const autoResetCall = debugCalls.find(call =>
-          call[0] && call[0].includes('Auto-reset triggered')
+        const autoResetCall = debugCalls.find(
+          (call) => call[0] && call[0].includes('Auto-reset triggered')
         );
         expect(autoResetCall).toBeUndefined();
       } finally {

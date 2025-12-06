@@ -88,12 +88,16 @@ const createLogger = () => {
     warn: [],
     error: [],
   };
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((value) =>
+          typeof value === 'string' ? value : JSON.stringify(value)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
   return {
     messages,
     debug: capture('debug'),
@@ -217,7 +221,10 @@ describe('BodyGraphService fallback coverage integration', () => {
 
     await service.buildAdjacencyCache('noRecipeActor');
     const anatomyData = await service.getAnatomyData('noRecipeActor');
-    expect(anatomyData).toEqual({ recipeId: null, rootEntityId: 'noRecipeActor' });
+    expect(anatomyData).toEqual({
+      recipeId: null,
+      rootEntityId: 'noRecipeActor',
+    });
 
     const validation = service.validateCache();
     expect(validation.valid).toBe(true);

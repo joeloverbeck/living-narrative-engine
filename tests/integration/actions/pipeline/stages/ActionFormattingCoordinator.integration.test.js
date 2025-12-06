@@ -3,12 +3,7 @@
  * @see src/actions/pipeline/stages/actionFormatting/ActionFormattingCoordinator.js
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { ActionFormattingCoordinator } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingCoordinator.js';
 import { ActionFormattingDecider } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingDecider.js';
 import { FormattingAccumulator } from '../../../../../src/actions/pipeline/stages/actionFormatting/FormattingAccumulator.js';
@@ -97,7 +92,8 @@ const buildActionIndex = () => ({
   getCandidateActions: () => [],
 });
 
-const buildDispatcher = () => createMockValidatedEventDispatcherForIntegration();
+const buildDispatcher = () =>
+  createMockValidatedEventDispatcherForIntegration();
 
 const buildEnvironment = () => {
   const logger = createMockLogger();
@@ -143,7 +139,10 @@ const buildEnvironment = () => {
 
   const targetNormalizationService = new TargetNormalizationService({ logger });
   const baseFormatter = new ActionCommandFormatter();
-  const multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+  const multiTargetFormatter = new MultiTargetActionFormatter(
+    baseFormatter,
+    logger
+  );
   const fallbackFormatter = new LegacyFallbackFormatter({
     commandFormatter: baseFormatter,
     entityManager,
@@ -303,9 +302,7 @@ describe('ActionFormattingCoordinator integration', () => {
         actionsWithTargets: [
           {
             actionDef: actionDefinition,
-            targetContexts: [
-              createTargetContext({ placeholder: 'target' }),
-            ],
+            targetContexts: [createTargetContext({ placeholder: 'target' })],
             targetDefinitions: {
               primary: { placeholder: 'primary' },
             },
@@ -351,9 +348,9 @@ describe('ActionFormattingCoordinator integration', () => {
     expect(result.actions).toHaveLength(1);
     expect(result.errors).toHaveLength(1);
     expect(env.instrumentation.actionFailedEvents.length).toBeGreaterThan(0);
-    expect(
-      env.instrumentation.actionFailedEvents[0].payload.reason
-    ).toBe('validation-failed');
+    expect(env.instrumentation.actionFailedEvents[0].payload.reason).toBe(
+      'validation-failed'
+    );
   });
 
   it('handles legacy fallback errors while still emitting partial results', async () => {
@@ -365,7 +362,13 @@ describe('ActionFormattingCoordinator integration', () => {
           error.target = { entityId: 'target-2' };
           throw error;
         }
-        return super.format(actionDef, targetContext, entityManager, options, deps);
+        return super.format(
+          actionDef,
+          targetContext,
+          entityManager,
+          options,
+          deps
+        );
       }
     })();
 
@@ -386,7 +389,10 @@ describe('ActionFormattingCoordinator integration', () => {
               template: 'Interact with {target}',
             }),
             targetContexts: [
-              createTargetContext({ entityId: 'target-1', placeholder: 'target' }),
+              createTargetContext({
+                entityId: 'target-1',
+                placeholder: 'target',
+              }),
               createTargetContext({
                 entityId: 'target-2',
                 placeholder: 'target',
@@ -475,9 +481,7 @@ describe('ActionFormattingCoordinator integration', () => {
           }),
         ],
         resolvedTargets: {
-          primary: [
-            { id: 'target-1', displayName: 'Target One' },
-          ],
+          primary: [{ id: 'target-1', displayName: 'Target One' }],
         },
         targetDefinitions: {
           primary: { placeholder: 'primary' },
@@ -622,8 +626,8 @@ describe('ActionFormattingCoordinator integration', () => {
     expect(result.actions).toHaveLength(0);
     expect(result.errors).toHaveLength(1);
     expect(env.instrumentation.actionFailedEvents).toHaveLength(1);
-    expect(
-      env.instrumentation.actionFailedEvents[0].payload.reason
-    ).toBe('missing-target-contexts');
+    expect(env.instrumentation.actionFailedEvents[0].payload.reason).toBe(
+      'missing-target-contexts'
+    );
   });
 });

@@ -18,7 +18,12 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = new ModActionTestFixture('physical-control', ACTION_ID, null, null);
+    testFixture = new ModActionTestFixture(
+      'physical-control',
+      ACTION_ID,
+      null,
+      null
+    );
     await testFixture.initialize();
 
     configureActionDiscovery = () => {
@@ -159,7 +164,9 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       const { actor } = setupScenario();
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).toContain(ACTION_ID);
@@ -169,7 +176,9 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       const { actor } = setupScenario({ addRestraining: false });
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -179,7 +188,9 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       const { actor } = setupScenario({ omitTarget: true });
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -189,7 +200,9 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       const { actor } = setupScenario({ addBeingRestrained: false });
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -199,7 +212,9 @@ describe('physical-control:let_go_of_restrained_target action discovery', () => 
       const { actor, target } = setupScenario({ extraActorsCount: 2 });
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const action = availableActions.find(({ id }) => id === ACTION_ID);
 
       expect(action).toBeDefined();

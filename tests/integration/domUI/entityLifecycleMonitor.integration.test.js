@@ -142,8 +142,12 @@ describe('EntityLifecycleMonitor integration', () => {
 
   it('renders lifecycle activity and surfaces component tooltips with real services', async () => {
     const actorId = 'actor-123';
-    await entityManager.addComponent(actorId, NAME_COMPONENT_ID, { text: 'Alpha' });
-    await entityManager.addComponent(actorId, 'core:description', { text: 'Heroic figure' });
+    await entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
+      text: 'Alpha',
+    });
+    await entityManager.addComponent(actorId, 'core:description', {
+      text: 'Heroic figure',
+    });
 
     monitor = new EntityLifecycleMonitor({
       logger,
@@ -193,7 +197,9 @@ describe('EntityLifecycleMonitor integration', () => {
     expect(componentAddedEntry.textContent).toContain(
       'Component updated: core:description on Alpha (actor-123)'
     );
-    const tooltip = componentAddedEntry.querySelector('.component-data-tooltip');
+    const tooltip = componentAddedEntry.querySelector(
+      '.component-data-tooltip'
+    );
     expect(tooltip).not.toBeNull();
     expect(tooltip.textContent).toContain('"Heroic figure"');
 
@@ -212,7 +218,9 @@ describe('EntityLifecycleMonitor integration', () => {
 
   it('limits rendered history, clears output, and unsubscribes on dispose', async () => {
     const actorId = 'entity-for-limit-test';
-    await entityManager.addComponent(actorId, NAME_COMPONENT_ID, { text: 'Delta' });
+    await entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
+      text: 'Delta',
+    });
 
     monitor = new EntityLifecycleMonitor({
       logger,
@@ -270,9 +278,12 @@ describe('EntityLifecycleMonitor integration', () => {
 
     expect(eventDispatcher.subscribeCalls).toHaveLength(0);
     expect(
-      logger.entries.some((entry) =>
-        entry.level === 'warn' &&
-        entry.message.includes("Container element '#entity-lifecycle-monitor' not found")
+      logger.entries.some(
+        (entry) =>
+          entry.level === 'warn' &&
+          entry.message.includes(
+            "Container element '#entity-lifecycle-monitor' not found"
+          )
       )
     ).toBe(true);
 

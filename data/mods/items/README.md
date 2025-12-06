@@ -5,6 +5,7 @@ Complete items, inventory, and container system for Living Narrative Engine.
 ## Overview
 
 The items mod provides a modular ECS-based system for item management with:
+
 - **Modular Components**: Marker and data components that combine to create items
 - **Multi-Target Actions**: Discovery-time combination generation
 - **Container System**: Locked/unlocked storage with capacity limits
@@ -15,6 +16,7 @@ The items mod provides a modular ECS-based system for item management with:
 ### Marker Components
 
 **items:item** - Identifies an entity as an item
+
 ```json
 {
   "items:item": {}
@@ -22,6 +24,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 **items:portable** - Indicates item can be carried
+
 ```json
 {
   "items:portable": {}
@@ -29,6 +32,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 **items:openable** - Indicates entity can be opened/closed
+
 ```json
 {
   "items:openable": {}
@@ -38,6 +42,7 @@ The items mod provides a modular ECS-based system for item management with:
 ### Data Components
 
 **core:weight** - Physical weight attribute
+
 ```json
 {
   "core:weight": {
@@ -47,6 +52,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 **items:readable** - Text content for reading
+
 ```json
 {
   "items:readable": {
@@ -56,6 +62,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 **items:inventory** - Item collection for actors
+
 ```json
 {
   "items:inventory": {
@@ -69,6 +76,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 **items:container** - Storage for items
+
 ```json
 {
   "items:container": {
@@ -87,6 +95,7 @@ The items mod provides a modular ECS-based system for item management with:
 ## Creating Items
 
 ### Basic Portable Item
+
 ```json
 {
   "id": "my-item-1",
@@ -106,6 +115,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 ### Readable Item
+
 ```json
 {
   "id": "letter-1",
@@ -128,6 +138,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 ### Container
+
 ```json
 {
   "id": "chest-1",
@@ -147,6 +158,7 @@ The items mod provides a modular ECS-based system for item management with:
 ```
 
 ### Locked Container with Key
+
 ```json
 {
   "id": "treasure-chest-1",
@@ -218,21 +230,28 @@ The items mod provides the following scopes for action discovery:
 ## Integration Notes
 
 ### Multi-Target Pattern
+
 Actions use `generateCombinations: true` and `contextFrom: "primary"` to create all valid action combinations at discovery time. This means when an actor can give items, the system automatically generates separate actions for each (recipient, item) combination.
 
 ### Capacity Validation
+
 Both inventories and containers enforce weight and item count limits using dedicated handlers:
+
 - `VALIDATE_INVENTORY_CAPACITY`: Checks if actor can carry more items
 - `VALIDATE_CONTAINER_CAPACITY`: Checks if container can hold more items
 
 ### Perception Logging
+
 All actions create perception log entries for narrative coherence. The system tracks:
+
 - Who performed the action
 - What items were involved
 - Where the action took place
 
 ### Operation Handlers
+
 The items system uses the following operation handlers:
+
 - `TRANSFER_ITEM`: Move item between inventories
 - `DROP_ITEM_AT_LOCATION`: Remove from inventory, add to location
 - `PICK_UP_ITEM_FROM_LOCATION`: Remove from location, add to inventory
@@ -247,6 +266,7 @@ Note: `examine_item` and `read_item` are free actions that don't require operati
 ## Testing
 
 Run tests with:
+
 ```bash
 # Unit tests for operation handlers
 npm run test:unit -- tests/unit/logic/operationHandlers/
@@ -266,6 +286,7 @@ npm run test:ci
 ## Example Scenarios
 
 ### Simple Item Exchange
+
 ```javascript
 // Actor 1 gives a revolver to Actor 2
 // Prerequisites: Actor 1 has revolver, both actors in same location
@@ -278,6 +299,7 @@ npm run test:ci
 ```
 
 ### Container Workflow
+
 ```javascript
 // 1. Open locked chest with key
 {

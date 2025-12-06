@@ -81,7 +81,9 @@ describe('ExecutionPlaceholderResolver - real module integration', () => {
     const { sources, fallback } = resolver.buildSources(executionContext);
 
     expect(sources).toHaveLength(3);
-    expect(sources[0]).toEqual({ context: { immediate: 'immediate-context-value' } });
+    expect(sources[0]).toEqual({
+      context: { immediate: 'immediate-context-value' },
+    });
     expect(sources[1].actor).toBe(executionContext.actor);
     expect(fallback).toEqual({
       actor: { name: 'Alex' },
@@ -117,15 +119,21 @@ describe('ExecutionPlaceholderResolver - real module integration', () => {
 
     const debugMessages = logger.entries.debug.map(({ message }) => message);
     expect(
-      debugMessages.some((msg) =>
-        typeof msg === 'string' &&
-        msg.includes('Resolved full string placeholder {target.name} to: Riley')
+      debugMessages.some(
+        (msg) =>
+          typeof msg === 'string' &&
+          msg.includes(
+            'Resolved full string placeholder {target.name} to: Riley'
+          )
       )
     ).toBe(true);
     expect(
-      debugMessages.some((msg) =>
-        typeof msg === 'string' &&
-        msg.includes('Resolved full string placeholder {context.nested.mood} to: melancholic')
+      debugMessages.some(
+        (msg) =>
+          typeof msg === 'string' &&
+          msg.includes(
+            'Resolved full string placeholder {context.nested.mood} to: melancholic'
+          )
       )
     ).toBe(true);
 
@@ -135,9 +143,13 @@ describe('ExecutionPlaceholderResolver - real module integration', () => {
         mood: '{context.nested.mood}',
       },
     };
-    const skipped = resolver.resolveFromContext(templateWithSkip, executionContext, {
-      skipKeys: new Set(['nested']),
-    });
+    const skipped = resolver.resolveFromContext(
+      templateWithSkip,
+      executionContext,
+      {
+        skipKeys: new Set(['nested']),
+      }
+    );
 
     expect(skipped.summary).toBe('Actor Alex');
     expect(skipped.nested).toEqual(templateWithSkip.nested);
@@ -187,7 +199,9 @@ describe('ExecutionPlaceholderResolver - real module integration', () => {
 
     const warnings = logger.entries.warn.map(({ message }) => message);
     expect(warnings).toHaveLength(2);
-    expect(warnings[0]).toContain('Failed to extract path from placeholder at trace/blank');
+    expect(warnings[0]).toContain(
+      'Failed to extract path from placeholder at trace/blank'
+    );
     expect(warnings[1]).toContain(
       'Cannot resolve placeholder path "actor" at trace/no-context'
     );

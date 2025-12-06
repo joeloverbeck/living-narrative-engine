@@ -9,8 +9,8 @@
       "stepType": "conditional",
       "condition": {
         "and": [
-          {"!=": [{"var": "task.params.targetItem"}, null]},
-          {"!=": [{"var": "task.params.targetItem"}, ""]}
+          { "!=": [{ "var": "task.params.targetItem" }, null] },
+          { "!=": [{ "var": "task.params.targetItem" }, ""] }
         ]
       },
       "trueBranch": [
@@ -18,7 +18,7 @@
           "description": "Validate item entity exists",
           "stepType": "conditional",
           "condition": {
-            "entity-exists": [{"var": "task.params.targetItem"}]
+            "entity-exists": [{ "var": "task.params.targetItem" }]
           },
           "trueBranch": [
             {
@@ -26,8 +26,18 @@
               "stepType": "conditional",
               "condition": {
                 "and": [
-                  {"entity-has-component": [{"var": "task.params.targetItem"}, "items:item"]},
-                  {"entity-has-component": [{"var": "task.params.targetItem"}, "items:pickupable"]}
+                  {
+                    "entity-has-component": [
+                      { "var": "task.params.targetItem" },
+                      "items:item"
+                    ]
+                  },
+                  {
+                    "entity-has-component": [
+                      { "var": "task.params.targetItem" },
+                      "items:pickupable"
+                    ]
+                  }
                 ]
               },
               "trueBranch": [
@@ -36,8 +46,8 @@
                   "stepType": "conditional",
                   "condition": {
                     "<": [
-                      {"var": "actor.inventory.length"},
-                      {"var": "actor.inventory.maxSize"}
+                      { "var": "actor.inventory.length" },
+                      { "var": "actor.inventory.maxSize" }
                     ]
                   },
                   "trueBranch": [
@@ -55,7 +65,12 @@
                       "description": "Validate pickup succeeded",
                       "stepType": "conditional",
                       "condition": {
-                        "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+                        "==": [
+                          {
+                            "var": "refinement.localState.pickupResult.success"
+                          },
+                          true
+                        ]
                       },
                       "trueBranch": [
                         {
@@ -144,7 +159,7 @@
   "validationScenarios": [
     {
       "scenario": "Valid parameters",
-      "params": {"targetItem": "apple_7"},
+      "params": { "targetItem": "apple_7" },
       "expectedResult": "Success - item picked up and consumed",
       "stepsExecuted": 5
     },
@@ -156,32 +171,32 @@
     },
     {
       "scenario": "Null parameter",
-      "params": {"targetItem": null},
+      "params": { "targetItem": null },
       "expectedResult": "Fail - 'Required parameter targetItem is missing'",
       "stepsExecuted": 1
     },
     {
       "scenario": "Entity doesn't exist",
-      "params": {"targetItem": "nonexistent_999"},
+      "params": { "targetItem": "nonexistent_999" },
       "expectedResult": "Fail - 'Item entity does not exist in game world'",
       "stepsExecuted": 2
     },
     {
       "scenario": "Missing required component",
-      "params": {"targetItem": "wall_decoration_3"},
+      "params": { "targetItem": "wall_decoration_3" },
       "expectedResult": "Fail - 'Item missing required components'",
       "stepsExecuted": 3
     },
     {
       "scenario": "Inventory full",
-      "params": {"targetItem": "apple_7"},
-      "actorState": {"inventory": {"length": 10, "maxSize": 10}},
+      "params": { "targetItem": "apple_7" },
+      "actorState": { "inventory": { "length": 10, "maxSize": 10 } },
       "expectedResult": "Fail - 'Actor inventory is full'",
       "stepsExecuted": 4
     },
     {
       "scenario": "Pickup action fails",
-      "params": {"targetItem": "locked_item_5"},
+      "params": { "targetItem": "locked_item_5" },
       "expectedResult": "Fail - 'Pickup action failed despite passing validation'",
       "stepsExecuted": 5
     }
@@ -196,13 +211,21 @@
     "pattern2": {
       "name": "Just-in-time validation with replan",
       "description": "Validate parameters right before use, trigger replanning on failure",
-      "advantages": ["Flexible", "Can adapt to runtime changes", "Less upfront validation"],
+      "advantages": [
+        "Flexible",
+        "Can adapt to runtime changes",
+        "Less upfront validation"
+      ],
       "disadvantages": ["May waste work", "Slower failure detection"]
     },
     "pattern3": {
       "name": "Tiered validation with fallbacks",
       "description": "Validate parameters, attempt alternative approaches on failure",
-      "advantages": ["Resilient", "Can recover from errors", "Multiple paths to success"],
+      "advantages": [
+        "Resilient",
+        "Can recover from errors",
+        "Multiple paths to success"
+      ],
       "disadvantages": ["Complex logic", "Harder to debug"]
     }
   },

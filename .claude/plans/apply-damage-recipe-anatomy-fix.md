@@ -17,6 +17,7 @@
 **Answer: In `ApplyDamageHandler.execute()`, before calling `#selectRandomPart()`**
 
 Rationale:
+
 - `#selectRandomPart()` is synchronous; making it async would require changing its signature
 - The `execute()` method is already async, so adding an await is natural
 - Adding anatomy generation to `bodyGraphService.getAllParts()` would violate single responsibility and create unexpected side effects
@@ -27,6 +28,7 @@ Rationale:
 **Answer: Pre-generate in `execute()` before calling `#selectRandomPart()`**
 
 Rationale:
+
 - `execute()` is already async
 - Adding `await anatomyGenerationService.generateAnatomyIfNeeded(entityId)` before `#selectRandomPart()` keeps `#selectRandomPart()` unchanged
 - `generateAnatomyIfNeeded()` is idempotent - it returns `false` if anatomy already exists, so it's safe to call unconditionally
@@ -34,6 +36,7 @@ Rationale:
 ### 3. What's the minimal change approach?
 
 **Answer: Three changes:**
+
 1. Add `AnatomyGenerationService` as a new dependency to `ApplyDamageHandler`
 2. Update DI registration to inject `AnatomyGenerationService`
 3. Add a single `await` call in `execute()` before the `#selectRandomPart()` call
@@ -55,12 +58,14 @@ if (!partId) {
 ```
 
 **Pros:**
+
 - Minimal code change
 - `generateAnatomyIfNeeded()` is idempotent (safe to call even if anatomy exists)
 - Follows existing pattern used throughout the codebase
 - No changes to `#selectRandomPart()` or `bodyGraphService`
 
 **Cons:**
+
 - Adds one dependency to `ApplyDamageHandler`
 - Slight performance overhead on first damage to recipe-based entities (anatomy generation)
 
@@ -79,6 +84,7 @@ Would violate single responsibility and create unexpected side effects in a read
 File: `src/logic/operationHandlers/applyDamageHandler.js`
 
 Add after line 49 (after `#deathCheckService`):
+
 ```javascript
 #anatomyGenerationService;
 ```
@@ -88,15 +94,16 @@ Add after line 49 (after `#deathCheckService`):
 File: `src/logic/operationHandlers/applyDamageHandler.js`
 
 Modify constructor signature (line 51):
+
 ```javascript
-constructor({ 
-  logger, 
-  entityManager, 
-  safeEventDispatcher, 
-  jsonLogicService, 
-  bodyGraphService, 
-  damageTypeEffectsService, 
-  damagePropagationService, 
+constructor({
+  logger,
+  entityManager,
+  safeEventDispatcher,
+  jsonLogicService,
+  bodyGraphService,
+  damageTypeEffectsService,
+  damagePropagationService,
   deathCheckService,
   anatomyGenerationService // NEW
 }) {
@@ -105,6 +112,7 @@ constructor({
 ### Step 3: Add dependency validation to super() call
 
 Add to the `super()` call validation object:
+
 ```javascript
 anatomyGenerationService: {
   value: anatomyGenerationService,
@@ -115,6 +123,7 @@ anatomyGenerationService: {
 ### Step 4: Assign the private field
 
 After the existing assignments at the end of constructor:
+
 ```javascript
 this.#anatomyGenerationService = anatomyGenerationService;
 ```
@@ -124,29 +133,41 @@ this.#anatomyGenerationService = anatomyGenerationService;
 File: `src/logic/operationHandlers/applyDamageHandler.js`
 
 Find this block (around lines 286-293):
+
 ```javascript
 if (!partId) {
   // Auto-resolve if missing or failed to resolve
   partId = this.#selectRandomPart(entityId, log);
   if (!partId) {
-     safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Could not resolve target part', { entityId }, log);
-     return;
+    safeDispatchError(
+      this.#dispatcher,
+      'APPLY_DAMAGE: Could not resolve target part',
+      { entityId },
+      log
+    );
+    return;
   }
 }
 ```
 
 Change to:
+
 ```javascript
 if (!partId) {
   // Ensure anatomy is generated before selecting random part
   // (handles recipe-based entities that haven't been instantiated yet)
   await this.#anatomyGenerationService.generateAnatomyIfNeeded(entityId);
-  
+
   // Auto-resolve if missing or failed to resolve
   partId = this.#selectRandomPart(entityId, log);
   if (!partId) {
-     safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Could not resolve target part', { entityId }, log);
-     return;
+    safeDispatchError(
+      this.#dispatcher,
+      'APPLY_DAMAGE: Could not resolve target part',
+      { entityId },
+      log
+    );
+    return;
   }
 }
 ```
@@ -156,6 +177,7 @@ if (!partId) {
 File: `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
 
 Find the `ApplyDamageHandler` factory (around lines 215-228):
+
 ```javascript
 [
   tokens.ApplyDamageHandler,
@@ -175,6 +197,7 @@ Find the `ApplyDamageHandler` factory (around lines 215-228):
 ```
 
 Add the new dependency:
+
 ```javascript
 [
   tokens.ApplyDamageHandler,
@@ -199,6 +222,7 @@ Add the new dependency:
 File: `tests/unit/logic/operationHandlers/applyDamageHandler.test.js`
 
 Add mock for `anatomyGenerationService` in test setup:
+
 ```javascript
 const mockAnatomyGenerationService = {
   generateAnatomyIfNeeded: jest.fn().mockResolvedValue(true),
@@ -208,12 +232,13 @@ const mockAnatomyGenerationService = {
 Add to handler instantiation in tests.
 
 Add new test case for the fix:
+
 ```javascript
 describe('recipe-based anatomy generation', () => {
   it('should generate anatomy before selecting random part when entity has only recipeId', async () => {
     // Setup: entity has anatomy:body with recipeId but no body.root
-    mockEntityManager.hasComponent.mockImplementation((id, comp) => 
-      comp === 'anatomy:body'
+    mockEntityManager.hasComponent.mockImplementation(
+      (id, comp) => comp === 'anatomy:body'
     );
     mockEntityManager.getComponentData.mockImplementation((id, comp) => {
       if (comp === 'anatomy:body') {
@@ -221,22 +246,24 @@ describe('recipe-based anatomy generation', () => {
       }
       return null;
     });
-    
+
     // After generation, body should have parts
-    mockAnatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(async () => {
-      // Simulate anatomy generation populating body
-      mockEntityManager.getComponentData.mockImplementation((id, comp) => {
-        if (comp === 'anatomy:body') {
-          return { 
-            recipeId: 'anatomy:human_male',
-            body: { root: 'torso-entity-id', parts: {} }
-          };
-        }
-        return null;
-      });
-      return true;
-    });
-    
+    mockAnatomyGenerationService.generateAnatomyIfNeeded.mockImplementation(
+      async () => {
+        // Simulate anatomy generation populating body
+        mockEntityManager.getComponentData.mockImplementation((id, comp) => {
+          if (comp === 'anatomy:body') {
+            return {
+              recipeId: 'anatomy:human_male',
+              body: { root: 'torso-entity-id', parts: {} },
+            };
+          }
+          return null;
+        });
+        return true;
+      }
+    );
+
     // ... execute and verify
   });
 });
@@ -247,16 +274,20 @@ describe('recipe-based anatomy generation', () => {
 File: `tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js`
 
 Add test case for recipe-based entities:
+
 ```javascript
 it('should apply damage to entity with recipe-based anatomy (no pre-generated body)', async () => {
   // Create entity with only recipeId (no body.root)
   const entity = await fixture.createEntityWithRecipeOnlyAnatomy();
-  
+
   // Execute damage action
   await fixture.executeSwingAction(actorId, entity.id);
-  
+
   // Verify anatomy was generated and damage was applied
-  const bodyComponent = fixture.entityManager.getComponentData(entity.id, 'anatomy:body');
+  const bodyComponent = fixture.entityManager.getComponentData(
+    entity.id,
+    'anatomy:body'
+  );
   expect(bodyComponent.body).toBeDefined();
   expect(bodyComponent.body.root).toBeDefined();
 });
@@ -265,6 +296,7 @@ it('should apply damage to entity with recipe-based anatomy (no pre-generated bo
 ## Error Handling Considerations
 
 The `generateAnatomyIfNeeded()` method has built-in error handling:
+
 - Returns `false` if entity not found
 - Returns `false` if no recipeId
 - Returns `false` if anatomy already generated
@@ -276,14 +308,20 @@ For our use case, if generation fails, we should log and fall back to the existi
 
 ```javascript
 if (!partId) {
-   safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Could not resolve target part', { entityId }, log);
-   return;
+  safeDispatchError(
+    this.#dispatcher,
+    'APPLY_DAMAGE: Could not resolve target part',
+    { entityId },
+    log
+  );
+  return;
 }
 ```
 
 ## Backward Compatibility
 
 This change is fully backward compatible:
+
 - Entities with already-generated anatomy (has `body.root`) - `generateAnatomyIfNeeded()` returns `false` immediately (no-op)
 - Entities with direct anatomy (has `body.root`) - works unchanged
 - Recipe-based entities - now get anatomy generated on first damage
@@ -295,12 +333,12 @@ This change is fully backward compatible:
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/logic/operationHandlers/applyDamageHandler.js` | Add dependency, call `generateAnatomyIfNeeded()` |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add `anatomyGenerationService` to factory |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | Add mock, add test cases |
-| `tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js` | Add integration test for recipe-based anatomy |
+| File                                                                                | Change                                           |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `src/logic/operationHandlers/applyDamageHandler.js`                                 | Add dependency, call `generateAnatomyIfNeeded()` |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js`            | Add `anatomyGenerationService` to factory        |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js`                     | Add mock, add test cases                         |
+| `tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js` | Add integration test for recipe-based anatomy    |
 
 ## Critical Files for Implementation
 

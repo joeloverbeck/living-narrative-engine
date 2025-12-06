@@ -3,13 +3,7 @@
  * @description Verifies that RuleLoader correctly warns and strips prefixed rule IDs
  */
 
-import {
-  describe,
-  it,
-  expect,
-  jest,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import RuleLoader from '../../../src/loaders/ruleLoader.js';
 import {
   createMockPathResolver,
@@ -228,7 +222,9 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
 
       // Verify warning was logged
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('rule_id \'items:handle_aim_item\' in handle_aim_item.rule.json already prefixed. Stripping prefix.')
+        expect.stringContaining(
+          "rule_id 'items:handle_aim_item' in handle_aim_item.rule.json already prefixed. Stripping prefix."
+        )
       );
 
       // Verify the rule was stored with the correct ID (without duplicate prefix)
@@ -252,7 +248,9 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
             rule_id: 'items:handle_aim_item',
             event_type: 'core:attempt_action',
             condition: { condition_ref: 'items:event-is-action-aim-item' },
-            actions: [{ type: 'LOG', parameters: { message: 'test', level: 'debug' } }],
+            actions: [
+              { type: 'LOG', parameters: { message: 'test', level: 'debug' } },
+            ],
           },
         },
         {
@@ -262,7 +260,9 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
             rule_id: 'items:handle_lower_aim',
             event_type: 'core:attempt_action',
             condition: { condition_ref: 'items:event-is-action-lower-aim' },
-            actions: [{ type: 'LOG', parameters: { message: 'test', level: 'debug' } }],
+            actions: [
+              { type: 'LOG', parameters: { message: 'test', level: 'debug' } },
+            ],
           },
         },
       ];
@@ -288,7 +288,7 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
         id: modId,
         version: '1.0.0',
         content: {
-          rules: rules.map(r => r.filename),
+          rules: rules.map((r) => r.filename),
         },
       };
 
@@ -304,10 +304,14 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
 
       // Verify warnings were logged for both rules
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('rule_id \'items:handle_aim_item\' in handle_aim_item.rule.json already prefixed. Stripping prefix.')
+        expect.stringContaining(
+          "rule_id 'items:handle_aim_item' in handle_aim_item.rule.json already prefixed. Stripping prefix."
+        )
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('rule_id \'items:handle_lower_aim\' in handle_lower_aim.rule.json already prefixed. Stripping prefix.')
+        expect.stringContaining(
+          "rule_id 'items:handle_lower_aim' in handle_lower_aim.rule.json already prefixed. Stripping prefix."
+        )
       );
     });
 
@@ -321,7 +325,9 @@ describe('RuleLoader - Prefixed Rule ID Handling', () => {
         rule_id: 'handle_something', // No prefix
         event_type: 'core:attempt_action',
         condition: { condition_ref: 'items:event-is-action-something' },
-        actions: [{ type: 'LOG', parameters: { message: 'test', level: 'debug' } }],
+        actions: [
+          { type: 'LOG', parameters: { message: 'test', level: 'debug' } },
+        ],
       };
 
       mockFetcher = createMockDataFetcher({

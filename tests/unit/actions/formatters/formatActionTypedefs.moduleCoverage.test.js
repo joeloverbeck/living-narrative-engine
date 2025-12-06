@@ -1,7 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 import * as formatActionTypedefs from '../../../../src/actions/formatters/formatActionTypedefs.js';
 
-const MODULE_PATH = '../../../../src/actions/formatters/formatActionTypedefs.js';
+const MODULE_PATH =
+  '../../../../src/actions/formatters/formatActionTypedefs.js';
 const MODULE_SUFFIX = '/src/actions/formatters/formatActionTypedefs.js';
 
 describe('formatActionTypedefs module coverage', () => {
@@ -9,19 +10,21 @@ describe('formatActionTypedefs module coverage', () => {
     expect(formatActionTypedefs.__formatActionTypedefs).toBe(true);
     const descriptor = Object.getOwnPropertyDescriptor(
       formatActionTypedefs,
-      '__formatActionTypedefs',
+      '__formatActionTypedefs'
     );
 
     expect(descriptor).toEqual(
       expect.objectContaining({
         enumerable: true,
         value: true,
-      }),
+      })
     );
   });
 
   it('only exposes the documented sentinel on the namespace object', () => {
-    expect(Object.keys(formatActionTypedefs)).toEqual(['__formatActionTypedefs']);
+    expect(Object.keys(formatActionTypedefs)).toEqual([
+      '__formatActionTypedefs',
+    ]);
   });
 
   it('remains stable when loaded via dynamic import', async () => {
@@ -38,7 +41,7 @@ describe('formatActionTypedefs module coverage', () => {
     }
 
     const entry = Object.entries(coverage).find(([filePath]) =>
-      filePath.endsWith(MODULE_SUFFIX),
+      filePath.endsWith(MODULE_SUFFIX)
     );
 
     expect(entry).toBeDefined();

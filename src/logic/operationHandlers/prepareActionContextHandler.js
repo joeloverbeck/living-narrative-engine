@@ -47,10 +47,10 @@ class PrepareActionContextHandler extends BaseOperationHandler {
     // @ts-ignore - ExecutionContext type resolution issue
     const { evaluationContext } = executionContext;
     const { event } = evaluationContext;
-    
+
     /** @type {{ perception_type?: string, include_secondary?: boolean, secondary_name_variable?: string }} */
     const params = parameters || {};
-    
+
     const {
       perception_type = 'action_target_general',
       include_secondary = false,
@@ -98,9 +98,7 @@ class PrepareActionContextHandler extends BaseOperationHandler {
     // @ts-ignore - Payload structure is dynamic
     if (include_secondary && event.payload.secondaryId) {
       // @ts-ignore - Payload structure is dynamic
-      const secondaryName = this.#resolveEntityName(
-        event.payload.secondaryId
-      );
+      const secondaryName = this.#resolveEntityName(event.payload.secondaryId);
       contextVars[secondary_name_variable] = secondaryName;
     }
 

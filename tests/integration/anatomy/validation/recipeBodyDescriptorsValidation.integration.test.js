@@ -22,19 +22,30 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     await configureMinimalContainer(container);
 
     // Override data fetchers for Node environment
-    const NodeDataFetcher = (await import('../../../../scripts/utils/nodeDataFetcher.js')).default;
-    const NodeTextDataFetcher = (await import('../../../../scripts/utils/nodeTextDataFetcher.js')).default;
+    const NodeDataFetcher = (
+      await import('../../../../scripts/utils/nodeDataFetcher.js')
+    ).default;
+    const NodeTextDataFetcher = (
+      await import('../../../../scripts/utils/nodeTextDataFetcher.js')
+    ).default;
     container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
-    container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
+    container.register(
+      tokens.ITextDataFetcher,
+      () => new NodeTextDataFetcher()
+    );
 
     // Resolve core services
     dataRegistry = container.resolve(tokens.IDataRegistry);
-    const anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
+    const anatomyBlueprintRepository = container.resolve(
+      tokens.IAnatomyBlueprintRepository
+    );
     const schemaValidator = container.resolve(tokens.ISchemaValidator);
     const slotGenerator = container.resolve(tokens.ISlotGenerator);
 
     // Load essential mods
-    const { createLoadContext } = await import('../../../../src/loaders/LoadContext.js');
+    const { createLoadContext } = await import(
+      '../../../../src/loaders/LoadContext.js'
+    );
     let context = createLoadContext({
       worldName: 'test-world',
       requestedMods: ['core', 'descriptors', 'anatomy', 'fantasy'],
@@ -102,7 +113,8 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     // Should have error about invalid hairDensity value
     const hairDensityError = report.errors.find(
-      (e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE' && e.field === 'hairDensity'
+      (e) =>
+        e.type === 'INVALID_BODY_DESCRIPTOR_VALUE' && e.field === 'hairDensity'
     );
 
     expect(hairDensityError).toBeDefined();
@@ -117,7 +129,9 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
       'very-hairy',
       'furred',
     ]);
-    expect(hairDensityError.fix).toContain('hairless, sparse, light, moderate, hairy, very-hairy, furred');
+    expect(hairDensityError.fix).toContain(
+      'hairless, sparse, light, moderate, hairy, very-hairy, furred'
+    );
   });
 
   it('should pass validation when recipe has valid bodyDescriptors', async () => {
@@ -141,9 +155,13 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     // Should pass validation
     expect(report.isValid).toBe(true);
-    const bodyDescriptorsCheck = report.passed.find((p) => p.check === 'body_descriptors');
+    const bodyDescriptorsCheck = report.passed.find(
+      (p) => p.check === 'body_descriptors'
+    );
     expect(bodyDescriptorsCheck).toBeDefined();
-    expect(bodyDescriptorsCheck.message).toContain('5 body descriptor(s) valid');
+    expect(bodyDescriptorsCheck.message).toContain(
+      '5 body descriptor(s) valid'
+    );
   });
 
   it('should provide helpful error messages for multiple invalid descriptors', async () => {
@@ -179,13 +197,16 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     // Check for hairDensity error
     const hairDensityError = report.errors.find(
-      (e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE' && e.field === 'hairDensity'
+      (e) =>
+        e.type === 'INVALID_BODY_DESCRIPTOR_VALUE' && e.field === 'hairDensity'
     );
     expect(hairDensityError).toBeDefined();
     expect(hairDensityError.value).toBe('fluffy');
 
     // Check for unknown field error
-    const unknownError = report.errors.find((e) => e.type === 'UNKNOWN_BODY_DESCRIPTOR');
+    const unknownError = report.errors.find(
+      (e) => e.type === 'UNKNOWN_BODY_DESCRIPTOR'
+    );
     expect(unknownError).toBeDefined();
     expect(unknownError.field).toBe('unknownField');
   });
@@ -196,12 +217,19 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     expect(anatomyBodyComponent).toBeDefined();
 
     const descriptorsSchema =
-      anatomyBodyComponent.dataSchema?.properties?.body?.properties?.descriptors;
+      anatomyBodyComponent.dataSchema?.properties?.body?.properties
+        ?.descriptors;
     expect(descriptorsSchema).toBeDefined();
     expect(descriptorsSchema.properties).toBeDefined();
 
     // Verify expected fields exist in schema
-    const expectedFields = ['height', 'build', 'hairDensity', 'composition', 'skinColor'];
+    const expectedFields = [
+      'height',
+      'build',
+      'hairDensity',
+      'composition',
+      'skinColor',
+    ];
     for (const field of expectedFields) {
       expect(descriptorsSchema.properties[field]).toBeDefined();
     }
@@ -226,7 +254,9 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     // Should pass with all valid descriptors
     expect(report.isValid).toBe(true);
-    const bodyDescriptorsCheck = report.passed.find((p) => p.check === 'body_descriptors');
+    const bodyDescriptorsCheck = report.passed.find(
+      (p) => p.check === 'body_descriptors'
+    );
     expect(bodyDescriptorsCheck).toBeDefined();
   });
 });

@@ -1,8 +1,13 @@
-import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
-import AlertRouter from '../../../src/alerting/alertRouter.js';
 import {
-  SYSTEM_WARNING_OCCURRED_ID,
-} from '../../../src/constants/eventIds.js';
+  describe,
+  expect,
+  it,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import AlertRouter from '../../../src/alerting/alertRouter.js';
+import { SYSTEM_WARNING_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 /** @type {Console['error']} */
 let originalConsoleError;
@@ -26,12 +31,14 @@ describe('AlertRouter additional coverage scenarios', () => {
       }),
     };
 
-    expect(() => new AlertRouter({ safeEventDispatcher: dispatcher })).not.toThrow();
+    expect(
+      () => new AlertRouter({ safeEventDispatcher: dispatcher })
+    ).not.toThrow();
 
     expect(dispatcher.subscribe).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       'AlertRouter subscription error:',
-      subscribeError,
+      subscribeError
     );
   });
 
@@ -53,12 +60,12 @@ describe('AlertRouter additional coverage scenarios', () => {
       listeners[SYSTEM_WARNING_OCCURRED_ID]({
         name: SYSTEM_WARNING_OCCURRED_ID,
         payload: { message: 'queued while failing' },
-      }),
+      })
     ).not.toThrow();
 
     expect(console.error).toHaveBeenCalledWith(
       'AlertRouter error:',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 });

@@ -33,17 +33,11 @@
       "length": "short"
     },
     "descriptors:professional_markers": {
-      "markers": [
-        "tool-calluses",
-        "chemical-staining"
-      ],
+      "markers": ["tool-calluses", "chemical-staining"],
       "profession": "potter"
     },
     "descriptors:skin_condition": {
-      "conditions": [
-        "scarred",
-        "work-worn"
-      ]
+      "conditions": ["scarred", "work-worn"]
     },
     "descriptors:texture": {
       "texture": "rough"

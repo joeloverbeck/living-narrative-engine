@@ -10,6 +10,7 @@
 The coverage mapping component allows clothing items to cover additional body regions beyond their primary equipment slot. It uses a `coveragePriority` field to determine which layer is visible when multiple items cover the same body region.
 
 Currently, the coverage priority scoring system is:
+
 - `outer`: 100 (highest visibility)
 - `base`: 200
 - `underwear`: 300
@@ -19,6 +20,7 @@ Currently, the coverage priority scoring system is:
 **CRITICAL DISCREPANCY IDENTIFIED**: The `clothing:wearable` component schema (data/mods/clothing/components/wearable.component.json:10) and `clothing:slot_metadata` component schema ALREADY include "armor" in their layer enums. However, the `clothing:coverage_mapping` component schema does NOT include "armor" in its coveragePriority enum.
 
 This creates an **inconsistency** where:
+
 - An item can have `"layer": "armor"` in its wearable component (VALID)
 - But cannot have `"coveragePriority": "armor"` in its coverage_mapping component (INVALID)
 
@@ -70,6 +72,7 @@ Add "armor" to the coveragePriority enum:
 ## Recommended Coverage Priority Order
 
 After this change, the coverage priority hierarchy will be:
+
 1. `outer`: 100 (highest visibility)
 2. `armor`: 150 (NEW - armor has priority between outer and base)
 3. `base`: 200
@@ -93,6 +96,7 @@ This change allows armor entities to declare coverage priority explicitly:
 ```
 
 This ensures that:
+
 - Armor overrides regular clothing (base layer) coverage
 - Armor can be hidden by outer garments (cloaks, robes)
 - Armor is visible in action descriptions when appropriate
@@ -102,11 +106,13 @@ This ensures that:
 After making the change:
 
 1. **Validate JSON syntax**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/clothing/components/coverage_mapping.component.json'))"
    ```
 
 2. **Run schema validation**
+
    ```bash
    npm run validate
    ```
@@ -207,6 +213,7 @@ As noted in the ticket, ARMSYSANA-004 will update the SlotAccessResolver to add 
 ## Notes
 
 While this change is marked as "optional", it is **highly recommended** because:
+
 1. It **fixes schema inconsistency** with wearable and slot_metadata components
 2. It provides semantic clarity for armor coverage
 3. It allows armor to have its own distinct priority tier
@@ -214,5 +221,6 @@ While this change is marked as "optional", it is **highly recommended** because:
 5. It aligns with the philosophy of armor as a distinct clothing category
 
 Without this change:
+
 - Armor entities would need to use "outer" or "base" as their coverage priority (less semantically clear)
 - Schema validation would reject `"coveragePriority": "armor"` even though `"layer": "armor"` is valid in wearable component

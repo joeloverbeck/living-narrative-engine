@@ -163,7 +163,10 @@ describe('ActivityFilteringSystem - Migrated Tests (Phase 3 Batch 1)', () => {
 
       const activity = {
         conditions: {
-          requiredComponents: ['positioning:kneeling', 'positioning:facing_target'],
+          requiredComponents: [
+            'positioning:kneeling',
+            'positioning:facing_target',
+          ],
         },
       };
 
@@ -210,9 +213,7 @@ describe('ActivityFilteringSystem - Migrated Tests (Phase 3 Batch 1)', () => {
     it('should hide activities when forbidden components are present', () => {
       const entity = createStandardEntity({
         id: 'actor1',
-        additionalComponents: new Map([
-          ['positioning:lying_down', {}],
-        ]),
+        additionalComponents: new Map([['positioning:lying_down', {}]]),
       });
 
       const activity = {
@@ -315,7 +316,10 @@ describe('ActivityFilteringSystem - Migrated Tests (Phase 3 Batch 1)', () => {
 
     it('should build correct logic context with entity and target data', () => {
       const entity = createStandardEntity({ id: 'actor1', name: 'John' });
-      const targetEntity = createStandardEntity({ id: 'target1', name: 'Alice' });
+      const targetEntity = createStandardEntity({
+        id: 'target1',
+        name: 'Alice',
+      });
 
       const entityMap = new Map([
         ['actor1', entity],
@@ -414,7 +418,10 @@ describe('ActivityFilteringSystem - Migrated Tests (Phase 3 Batch 1)', () => {
     it('should handle empty forbidden components array', () => {
       const entity = createStandardEntity();
       const hooks = filteringSystem.getTestHooks();
-      const result = hooks.conditionValidator.hasForbiddenComponents(entity, []);
+      const result = hooks.conditionValidator.hasForbiddenComponents(
+        entity,
+        []
+      );
 
       expect(result).toBe(false);
     });

@@ -51,8 +51,14 @@ describe('AlertRouter catch block coverage', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
 
     router.queue = [
-      { name: SYSTEM_WARNING_OCCURRED_ID, payload: { message: 'Warn players' } },
-      { name: SYSTEM_ERROR_OCCURRED_ID, payload: { message: 'Critical failure' } },
+      {
+        name: SYSTEM_WARNING_OCCURRED_ID,
+        payload: { message: 'Warn players' },
+      },
+      {
+        name: SYSTEM_ERROR_OCCURRED_ID,
+        payload: { message: 'Critical failure' },
+      },
       { name: SYSTEM_WARNING_OCCURRED_ID, payload: {} },
     ];
 
@@ -68,7 +74,8 @@ describe('AlertRouter catch block coverage', () => {
     ).toBe(true);
     expect(
       errorSpy.mock.calls.some(
-        (call) => call[0] === 'AlertRouter flush error:' && call[1] instanceof Error
+        (call) =>
+          call[0] === 'AlertRouter flush error:' && call[1] instanceof Error
       )
     ).toBe(true);
     expect(router.queue).toEqual([]);
@@ -90,7 +97,8 @@ describe('AlertRouter catch block coverage', () => {
 
     expect(
       errorSpy.mock.calls.some(
-        (call) => call[0] === 'AlertRouter flush error:' && call[1] instanceof Error
+        (call) =>
+          call[0] === 'AlertRouter flush error:' && call[1] instanceof Error
       )
     ).toBe(true);
     expect(router.queue).toEqual([]);

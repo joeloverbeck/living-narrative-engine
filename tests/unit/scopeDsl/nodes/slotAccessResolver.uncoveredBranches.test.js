@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import createSlotAccessResolver from '../../../../src/scopeDsl/nodes/slotAccessResolver.js';
 import * as priorityCalculator from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
@@ -74,12 +81,17 @@ describe('slotAccessResolver uncovered branches', () => {
     });
 
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (component === 'clothing:coverage_mapping' && entityId === 'cloak-coverage') {
-        return { covers: ['torso_upper'] };
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (
+          component === 'clothing:coverage_mapping' &&
+          entityId === 'cloak-coverage'
+        ) {
+          return { covers: ['torso_upper'] };
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     const structuredTrace = createStructuredTrace();
 
@@ -211,9 +223,10 @@ describe('slotAccessResolver uncovered branches', () => {
       'final_selection',
       expect.objectContaining({ candidateCount: expect.any(Number) })
     );
-    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
-      ([operation]) => operation === 'final_selection'
-    );
+    const finalSelectionCallIndex =
+      structuredTrace.startSpan.mock.calls.findIndex(
+        ([operation]) => operation === 'final_selection'
+      );
     expect(finalSelectionCallIndex).toBeGreaterThan(-1);
     const finalSelectionSpan =
       structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
@@ -228,12 +241,14 @@ describe('slotAccessResolver uncovered branches', () => {
 
   it('adds string component data to the result set', () => {
     dispatcher.resolve.mockReturnValue(new Set(['actor-1']));
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (entityId === 'actor-1' && component === 'torso_upper') {
-        return 'component-layer';
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (entityId === 'actor-1' && component === 'torso_upper') {
+          return 'component-layer';
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     const result = resolver.resolve(createNode('torso_upper'), { dispatcher });
 
@@ -312,12 +327,14 @@ describe('slotAccessResolver uncovered branches', () => {
   it('adds array and object component data through addToResultSet', () => {
     dispatcher.resolve.mockReturnValue(new Set(['actor-1', 'actor-2']));
 
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (component !== 'torso_upper') return null;
-      if (entityId === 'actor-1') return ['layer-a', 'layer-b'];
-      if (entityId === 'actor-2') return { color: 'black' };
-      return null;
-    });
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (component !== 'torso_upper') return null;
+        if (entityId === 'actor-1') return ['layer-a', 'layer-b'];
+        if (entityId === 'actor-2') return { color: 'black' };
+        return null;
+      }
+    );
 
     const result = resolver.resolve(createNode('torso_upper'), { dispatcher });
 
@@ -331,34 +348,43 @@ describe('slotAccessResolver uncovered branches', () => {
   });
 
   it('returns empty results without emitting errors when errorHandler is absent', () => {
-    const resolverWithoutHandler = createSlotAccessResolver({ entitiesGateway });
+    const resolverWithoutHandler = createSlotAccessResolver({
+      entitiesGateway,
+    });
     dispatcher.resolve.mockReturnValue(new Set([createClothingAccess()]));
 
-    const result = resolverWithoutHandler.resolve(createNode(null), { dispatcher });
+    const result = resolverWithoutHandler.resolve(createNode(null), {
+      dispatcher,
+    });
 
     expect(result.size).toBe(0);
   });
 
   it('bypasses error handling branches when no handler is configured', () => {
-    const resolverWithoutHandler = createSlotAccessResolver({ entitiesGateway });
+    const resolverWithoutHandler = createSlotAccessResolver({
+      entitiesGateway,
+    });
 
     dispatcher.resolve.mockReturnValue(new Set([createClothingAccess()]));
     expect(
-      resolverWithoutHandler.resolve(createNode('unknown_slot'), { dispatcher }).size
+      resolverWithoutHandler.resolve(createNode('unknown_slot'), { dispatcher })
+        .size
     ).toBe(0);
 
     dispatcher.resolve.mockReturnValue(
       new Set([createClothingAccess({ equipped: null })])
     );
     expect(
-      resolverWithoutHandler.resolve(createNode('torso_upper'), { dispatcher }).size
+      resolverWithoutHandler.resolve(createNode('torso_upper'), { dispatcher })
+        .size
     ).toBe(0);
 
     dispatcher.resolve.mockReturnValue(
       new Set([createClothingAccess({ mode: 'unsupported' })])
     );
     expect(
-      resolverWithoutHandler.resolve(createNode('torso_upper'), { dispatcher }).size
+      resolverWithoutHandler.resolve(createNode('torso_upper'), { dispatcher })
+        .size
     ).toBe(0);
   });
 
@@ -377,15 +403,20 @@ describe('slotAccessResolver uncovered branches', () => {
 
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
-    const result = resolverWithCoverageDisabled.resolve(createNode('torso_upper'), {
-      dispatcher,
-    });
+    const result = resolverWithCoverageDisabled.resolve(
+      createNode('torso_upper'),
+      {
+        dispatcher,
+      }
+    );
 
     expect(result.size).toBe(0);
   });
 
   it('handles missing structured trace when no candidates are found', () => {
-    const clothingAccess = createClothingAccess({ equipped: { torso_upper: {} } });
+    const clothingAccess = createClothingAccess({
+      equipped: { torso_upper: {} },
+    });
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
     const result = resolver.resolve(createNode('torso_upper'), { dispatcher });
@@ -394,7 +425,9 @@ describe('slotAccessResolver uncovered branches', () => {
   });
 
   it('skips adding span events when structured trace lacks an active span', () => {
-    const clothingAccess = createClothingAccess({ equipped: { torso_upper: {} } });
+    const clothingAccess = createClothingAccess({
+      equipped: { torso_upper: {} },
+    });
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
     const structuredTrace = createStructuredTrace(null);
 
@@ -431,9 +464,10 @@ describe('slotAccessResolver uncovered branches', () => {
 
     expect(result.has('jacket')).toBe(true);
 
-    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
-      ([operation]) => operation === 'final_selection'
-    );
+    const finalSelectionCallIndex =
+      structuredTrace.startSpan.mock.calls.findIndex(
+        ([operation]) => operation === 'final_selection'
+      );
     const finalSelectionSpan =
       structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
 
@@ -463,9 +497,10 @@ describe('slotAccessResolver uncovered branches', () => {
 
     expect(result.has('single-jacket')).toBe(true);
 
-    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
-      ([operation]) => operation === 'final_selection'
-    );
+    const finalSelectionCallIndex =
+      structuredTrace.startSpan.mock.calls.findIndex(
+        ([operation]) => operation === 'final_selection'
+      );
     const finalSelectionSpan =
       structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
 
@@ -502,9 +537,10 @@ describe('slotAccessResolver uncovered branches', () => {
 
     expect(result.has('coat')).toBe(true);
 
-    const finalSelectionCallIndex = structuredTrace.startSpan.mock.calls.findIndex(
-      ([operation]) => operation === 'final_selection'
-    );
+    const finalSelectionCallIndex =
+      structuredTrace.startSpan.mock.calls.findIndex(
+        ([operation]) => operation === 'final_selection'
+      );
     const finalSelectionSpan =
       structuredTrace.startSpan.mock.results[finalSelectionCallIndex].value;
 

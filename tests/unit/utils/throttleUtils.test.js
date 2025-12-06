@@ -21,7 +21,9 @@ describe('throttleUtils.generateKey', () => {
   });
 
   test('supports falsy status codes and undefined detail object', () => {
-    expect(generateKey('Zero status', { statusCode: 0 })).toBe('Zero status::0::');
+    expect(generateKey('Zero status', { statusCode: 0 })).toBe(
+      'Zero status::0::'
+    );
     expect(generateKey('No details')).toBe('No details::::');
   });
 });

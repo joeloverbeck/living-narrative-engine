@@ -16,9 +16,7 @@
   "prerequisites": [
     {
       "logic": {
-        "hasOtherActorsAtLocation": [
-          "actor"
-        ]
+        "hasOtherActorsAtLocation": ["actor"]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

@@ -68,7 +68,9 @@ describe('ActionExecutionTrace uncovered edge cases', () => {
     trace.captureError(new Error('json failure'));
 
     const json = trace.toJSON();
-    expect(json.turnAction.parameters).toEqual(baseParams.turnAction.parameters);
+    expect(json.turnAction.parameters).toEqual(
+      baseParams.turnAction.parameters
+    );
     expect(json.errorData.type).toBe('Error');
 
     const summary = trace.toSummary();
@@ -145,7 +147,8 @@ describe('ActionExecutionTrace uncovered edge cases', () => {
     analysisTrace.captureDispatchStart();
     analysisTrace.captureEventPayload({ key: 'value' });
     const error = new Error('analysis failure');
-    error.stack = 'Error: analysis failure\n    at execute (/project/src/engine.js:20:5)';
+    error.stack =
+      'Error: analysis failure\n    at execute (/project/src/engine.js:20:5)';
     analysisTrace.captureError(error);
 
     const summary = analysisTrace.getErrorSummary();

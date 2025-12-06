@@ -117,11 +117,9 @@ describe('BodyPartDescriptionBuilder real modules integration', () => {
       'descriptors:length_category': { length: 'elongated' },
     };
 
-    const entity = createEntityWithComponentData(
-      'tentacle-1',
-      componentMap,
-      ['descriptors:hair_style']
-    );
+    const entity = createEntityWithComponentData('tentacle-1', componentMap, [
+      'descriptors:hair_style',
+    ]);
 
     const description = builder.buildDescription(entity);
     expect(description).toBe('deep crimson, spiral, elongated');

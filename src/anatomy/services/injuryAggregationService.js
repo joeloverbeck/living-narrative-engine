@@ -146,8 +146,7 @@ class InjuryAggregationService extends BaseService {
     );
 
     // Calculate weighted overall health
-    const overallHealthPercentage =
-      this.#calculateOverallHealth(allPartInfos);
+    const overallHealthPercentage = this.#calculateOverallHealth(allPartInfos);
 
     /** @type {InjurySummaryDTO} */
     const summary = {
@@ -390,7 +389,10 @@ class InjuryAggregationService extends BaseService {
   #getPartHealthData(partEntityId) {
     try {
       if (
-        !this.#entityManager.hasComponent(partEntityId, PART_HEALTH_COMPONENT_ID)
+        !this.#entityManager.hasComponent(
+          partEntityId,
+          PART_HEALTH_COMPONENT_ID
+        )
       ) {
         return null;
       }
@@ -427,7 +429,11 @@ class InjuryAggregationService extends BaseService {
         healthCalculationWeight: partData?.health_calculation_weight ?? 1,
       };
     } catch {
-      return { subType: 'unknown', orientation: null, healthCalculationWeight: 1 };
+      return {
+        subType: 'unknown',
+        orientation: null,
+        healthCalculationWeight: 1,
+      };
     }
   }
 
@@ -440,7 +446,12 @@ class InjuryAggregationService extends BaseService {
    */
   #getVitalOrganData(partEntityId) {
     try {
-      if (!this.#entityManager.hasComponent(partEntityId, VITAL_ORGAN_COMPONENT_ID)) {
+      if (
+        !this.#entityManager.hasComponent(
+          partEntityId,
+          VITAL_ORGAN_COMPONENT_ID
+        )
+      ) {
         return null;
       }
       const data = this.#entityManager.getComponentData(

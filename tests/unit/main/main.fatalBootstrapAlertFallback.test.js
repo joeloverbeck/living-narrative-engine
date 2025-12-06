@@ -86,9 +86,9 @@ describe('main.js fatal bootstrap fallback behaviour', () => {
     });
 
     await jest.isolateModulesAsync(async () => {
-      const {
-        StartupErrorHandler,
-      } = await import('../../../src/utils/startupErrorHandler.js');
+      const { StartupErrorHandler } = await import(
+        '../../../src/utils/startupErrorHandler.js'
+      );
       const originalDisplayFatal =
         StartupErrorHandler.prototype.displayFatalStartupError;
       const displaySpy = jest

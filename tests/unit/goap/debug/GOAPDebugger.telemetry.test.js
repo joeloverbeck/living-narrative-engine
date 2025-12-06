@@ -13,7 +13,13 @@ function createEffectFailureTelemetry() {
 
   const task = {
     id: 'core:invalid_effect',
-    planningEffects: [{ operation: 'MODIFY_COMPONENT', component: 'core:hunger', modifier: { decrement: 10 } }],
+    planningEffects: [
+      {
+        operation: 'MODIFY_COMPONENT',
+        component: 'core:hunger',
+        modifier: { decrement: 10 },
+      },
+    ],
     boundParams: {},
   };
 
@@ -43,7 +49,9 @@ function createEffectFailureTelemetry() {
  * @param controllerOverrides
  */
 function createDebugger(controllerOverrides = {}) {
-  const telemetry = controllerOverrides.effectFailureTelemetry ?? createEffectFailureTelemetry();
+  const telemetry =
+    controllerOverrides.effectFailureTelemetry ??
+    createEffectFailureTelemetry();
 
   const controller = {
     getActivePlan: jest.fn().mockReturnValue(null),
@@ -62,9 +70,11 @@ function createDebugger(controllerOverrides = {}) {
       global: { actorId: 'global', totalEvents: 0, missingPayloads: 0 },
     }),
     getGoalPathDiagnostics: jest.fn().mockReturnValue(null),
-    getEffectFailureTelemetry: jest.fn().mockImplementation((actorId) =>
-      actorId === ACTOR_ID ? telemetry : null
-    ),
+    getEffectFailureTelemetry: jest
+      .fn()
+      .mockImplementation((actorId) =>
+        actorId === ACTOR_ID ? telemetry : null
+      ),
     getDiagnosticsContractVersion: jest
       .fn()
       .mockReturnValue(GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.version),
@@ -146,7 +156,8 @@ describe('GOAPDebugger effect failure telemetry', () => {
     );
     expect(report.diagnosticsMeta.effectFailureTelemetry).toEqual(
       expect.objectContaining({
-        sectionId: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.effectFailureTelemetry.id,
+        sectionId:
+          GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.effectFailureTelemetry.id,
         available: true,
         stale: false,
       })

@@ -223,7 +223,9 @@ describe('ActionFormattingStage integration coverage', () => {
     expect(statuses).toEqual(
       expect.arrayContaining(['started', 'formatting', 'completed'])
     );
-    const summary = traceRecords.find((entry) => entry.id === '__stage_summary');
+    const summary = traceRecords.find(
+      (entry) => entry.id === '__stage_summary'
+    );
     expect(summary).toBeDefined();
     expect(summary?.payload.statistics.total).toBe(5);
 
@@ -256,9 +258,7 @@ describe('ActionFormattingStage integration coverage', () => {
       )
     ).toBe(true);
     expect(
-      logger.warnMessages.some((entry) =>
-        entry[0].includes("core:wave-known")
-      )
+      logger.warnMessages.some((entry) => entry[0].includes('core:wave-known'))
     ).toBe(false);
   });
 

@@ -104,12 +104,7 @@ function buildService(options = {}) {
   });
   const fsReader = new NodeFileSystemReader();
 
-  const service = new ApiKeyService(
-    logger,
-    fsReader,
-    appConfig,
-    cacheService
-  );
+  const service = new ApiKeyService(logger, fsReader, appConfig, cacheService);
 
   return { service, logger };
 }

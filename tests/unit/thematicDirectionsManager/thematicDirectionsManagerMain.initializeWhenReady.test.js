@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 let mockAutoInitFlag;
 let mockBootstrapImpl;
@@ -8,14 +15,17 @@ let mockBootstrapInstance;
 let addEventListenerSpy;
 let originalReadyStateDescriptor;
 
-jest.mock('../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js', () => {
-  return {
-    ThematicDirectionsManagerController: jest.fn(() => {
-      mockControllerHook?.();
-      return {};
-    }),
-  };
-});
+jest.mock(
+  '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js',
+  () => {
+    return {
+      ThematicDirectionsManagerController: jest.fn(() => {
+        mockControllerHook?.();
+        return {};
+      }),
+    };
+  }
+);
 
 jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
   tokens: {
@@ -23,7 +33,9 @@ jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
     CharacterBuilderService: Symbol('CharacterBuilderService'),
     ISafeEventDispatcher: Symbol('ISafeEventDispatcher'),
     ISchemaValidator: Symbol('ISchemaValidator'),
-    ThematicDirectionsManagerController: Symbol('ThematicDirectionsManagerController'),
+    ThematicDirectionsManagerController: Symbol(
+      'ThematicDirectionsManagerController'
+    ),
   },
 }));
 
@@ -40,7 +52,8 @@ jest.mock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
   }),
 }));
 
-const modulePath = '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js';
+const modulePath =
+  '../../../src/thematicDirectionsManager/thematicDirectionsManagerMain.js';
 
 /**
  *
@@ -74,7 +87,11 @@ describe('thematicDirectionsManagerMain initializeWhenReady', () => {
   afterEach(() => {
     addEventListenerSpy.mockRestore();
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     }
     delete globalThis.__LNE_FORCE_AUTO_INIT__;
     jest.resetModules();

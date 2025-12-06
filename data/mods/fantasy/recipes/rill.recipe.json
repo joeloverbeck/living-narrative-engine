@@ -1,147 +1,129 @@
 {
-    "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
-    "recipeId": "fantasy:rill_recipe",
-    "blueprintId": "anatomy:human_female",
-    "bodyDescriptors": {
-        "height": "average",
-        "skinColor": "light-to-medium with faint freckles",
-        "composition": "lean",
-        "smell": "sweat, damp wool, dishwater-soap"
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "fantasy:rill_recipe",
+  "blueprintId": "anatomy:human_female",
+  "bodyDescriptors": {
+    "height": "average",
+    "skinColor": "light-to-medium with faint freckles",
+    "composition": "lean",
+    "smell": "sweat, damp wool, dishwater-soap"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy:human_female_torso_slim"
     },
-    "slots": {
-        "torso": {
-            "partType": "torso",
-            "preferId": "anatomy:human_female_torso_slim"
-        },
-        "head": {
-            "partType": "head",
-            "properties": {
-                "descriptors:facial_aesthetic": {
-                    "value": "attractive"
-                }
-            }
-        },
-        "hair": {
-            "partType": "hair",
-            "properties": {
-                "descriptors:color_basic": {
-                    "color": "brown"
-                },
-                "descriptors:length_hair": {
-                    "length": "medium"
-                },
-                "descriptors:hair_style": {
-                    "style": "ponytail"
-                }
-            }
-        },
-        "nose": {
-            "partType": "nose",
-            "preferId": "anatomy:humanoid_nose"
-        },
-        "left_breast": {
-            "partType": "breast",
-            "preferId": "anatomy:human_breast_c_cup_soft"
-        },
-        "right_breast": {
-            "partType": "breast",
-            "preferId": "anatomy:human_breast_c_cup_soft"
-        },
-        "left_ass": {
-            "partType": "ass_cheek",
-            "preferId": "anatomy:human_ass_cheek_firm"
-        },
-        "right_ass": {
-            "partType": "ass_cheek",
-            "preferId": "anatomy:human_ass_cheek_firm"
-        },
-        "vagina": {
-            "partType": "vagina",
-            "preferId": "anatomy:human_vagina_tight_smooth"
+    "head": {
+      "partType": "head",
+      "properties": {
+        "descriptors:facial_aesthetic": {
+          "value": "attractive"
         }
+      }
     },
-    "patterns": [
-        {
-            "matches": [
-                "left_arm",
-                "right_arm"
-            ],
-            "partType": "arm",
-            "preferId": "anatomy:humanoid_arm_lean"
+    "hair": {
+      "partType": "hair",
+      "properties": {
+        "descriptors:color_basic": {
+          "color": "brown"
         },
-        {
-            "matches": [
-                "left_leg",
-                "right_leg"
-            ],
-            "partType": "leg",
-            "preferId": "anatomy:human_leg_long_lean"
+        "descriptors:length_hair": {
+          "length": "medium"
         },
-        {
-            "matches": [
-                "left_hand",
-                "right_hand"
-            ],
-            "partType": "hand",
-            "preferId": "anatomy:humanoid_hand_rough"
-        },
-        {
-            "matches": [
-                "left_foot",
-                "right_foot"
-            ],
-            "partType": "foot",
-            "preferId": "anatomy:human_foot"
-        },
-        {
-            "matches": [
-                "left_ear",
-                "right_ear"
-            ],
-            "partType": "ear",
-            "preferId": "anatomy:humanoid_ear"
-        },
-        {
-            "matches": [
-                "left_eye",
-                "right_eye"
-            ],
-            "partType": "eye",
-            "preferId": "anatomy:human_eye_brown"
+        "descriptors:hair_style": {
+          "style": "ponytail"
         }
-    ],
-    "clothingEntities": [
-        {
-            "entityId": "underwear:linen_chest_wrap",
-            "equip": true
-        },
-        {
-            "entityId": "underwear:linen_drawers",
-            "equip": true
-        },
-        {
-            "entityId": "base-clothing:work_tunic_mud_brown",
-            "equip": true
-        },
-        {
-            "entityId": "base-clothing:narrow_trousers_wool_linen_charcoal_brown",
-            "equip": true
-        },
-        {
-            "entityId": "base-clothing:old_ankle_boots_cracked_leather",
-            "equip": true
-        },
-        {
-            "entityId": "armor:linen_forearm_wraps",
-            "equip": true
-        },
-        {
-            "entityId": "accessories:leather_belt_iron_buckle",
-            "equip": true
-        },
-        {
-            "entityId": "accessories:twine_hair_tie",
-            "equip": true
-        }
-    ]
+      }
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy:humanoid_nose"
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "left_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm"
+    },
+    "right_ass": {
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm"
+    },
+    "vagina": {
+      "partType": "vagina",
+      "preferId": "anatomy:human_vagina_tight_smooth"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_lean"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_long_lean"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy:humanoid_hand_rough"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": ["left_ear", "right_ear"],
+      "partType": "ear",
+      "preferId": "anatomy:humanoid_ear"
+    },
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_brown"
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "underwear:linen_chest_wrap",
+      "equip": true
+    },
+    {
+      "entityId": "underwear:linen_drawers",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:work_tunic_mud_brown",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:narrow_trousers_wool_linen_charcoal_brown",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:old_ankle_boots_cracked_leather",
+      "equip": true
+    },
+    {
+      "entityId": "armor:linen_forearm_wraps",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:leather_belt_iron_buckle",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:twine_hair_tie",
+      "equip": true
+    }
+  ]
 }

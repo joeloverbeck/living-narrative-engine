@@ -9,7 +9,7 @@ describe('actionTypes module placeholder exports', () => {
     expect(actionTypesModule.ActionTypes).toEqual({});
     const descriptor = Object.getOwnPropertyDescriptor(
       actionTypesModule,
-      'ActionTypes',
+      'ActionTypes'
     );
     expect(descriptor).toMatchObject({ enumerable: true, configurable: true });
   });

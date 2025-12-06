@@ -1,135 +1,135 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:bertram_the_muddy",
-    "components": {
-        "core:name": {
-            "text": "Bertram"
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:bertram_the_muddy",
+  "components": {
+    "core:name": {
+      "text": "Bertram"
+    },
+    "core:gender": {
+      "value": "male"
+    },
+    "core:portrait": {
+      "imagePath": "portraits/bertram.png",
+      "altText": "Bertram the Muddy - Transparently-horny laborer"
+    },
+    "core:apparent_age": {
+      "minAge": 50,
+      "maxAge": 55,
+      "bestGuess": 53
+    },
+    "core:profile": {
+      "text": "Bertram is a 53-year-old master leatherworker whose decades at the tannery have left permanent marks - a tan-brown discoloration to his skin that never quite washes out, dark crescents embedded under his fingernails from leather dyes, and the faint but persistent smell of leather oils and curing agents. At 5'8\" with a thick working-man's build, he has the solid physique of someone who's spent a lifetime crafting saddles, belts, and boots with strong, calloused hands. His brown hair is going grey and kept short for practicality, his full beard is neatly trimmed, and his warm brown eyes carry smile-lines from a life of easy contentment.\n\nHe dresses in practical work clothes - wool shirt and trousers (both stained but clean), good boots he made himself, and a leather apron that might be the most honest thing about him: he could go back to work at any moment, and often does. Widowed six years ago after a happy marriage to his sweetheart Anna, Bertram mourned properly and moved forward without bitterness. He's respected in Mudbrook for his excellent craftsmanship and his radical sincerity - he means exactly what he says, has no hidden agendas, and solves problems with the same straightforward approach he applies to leatherwork.\n\nCurrently, he's posted a notice at the Municipal Aid Registry seeking reciprocal services - a fair exchange between adults with needs and no romantic complications. It's practical, honest, and quintessentially Bertram: if two people can help each other, why complicate it?"
+    },
+    "core:personality": {
+      "text": "Bertram represents the opposite of performative identity. He doesn't have layers or hidden depths - what you see is what you get. This radical transparency makes him fascinating to people like Vespera precisely because he doesn't wonder who he is or perform an identity. He just IS: a skilled leatherworker who drinks ale, watches sunsets, has physical needs, and meets them all with the same practical problem-solving approach. Radically sincere - means exactly what he says with no hidden meanings or layers. Transactionally healthy - understands mutual benefit and fair exchange in all aspects of life. Completely comfortable in his own skin - zero shame about his age, body, profession, or needs. Matter-of-fact about sex - healthy libido, no romantic prospects, solved it practically. Genuinely kind - remembers names, tips well, does excellent work for fair prices, not performatively nice. No existential crisis - doesn't wonder who he 'really' is, just exists as Bertram without drama. Emotionally resolved - processed grief over Anna's death like a healthy adult, grateful for what he had."
+    },
+    "core:speech_patterns": {
+      "patterns": [
+        "\"Like treating leather - you need the right pressure, proper care, attention to timing. Rush it and you'll damage the material. Take your time and you'll get quality results.\"",
+        "\"A good handjob is like good craftsmanship. You need to understand what you're working with, adjust to feedback, take pride in the result.\"",
+        "\"I had my great love. Anna and I had thirty years together, and they were good years. I'm grateful for that time, but I'm not looking to replace her. I just have needs, same as anyone.\"",
+        "\"Reciprocal services seemed fair. Like posting for help moving furniture - you help me, I help you, everyone benefits. Why complicate it with romance when neither of us wants that?\"",
+        "\"The tannery marks you. Gets into your skin, under your nails, into your clothes. But it's honest work that produces useful things. I'm proud of what I make.\"",
+        "\"I don't understand why people perform who they are. Just be yourself - it's simpler and takes less energy.\"",
+        "\"Good ale, a clean shop, and the smell of fresh leather - that's a fine day. Add some friendly company without strings, and that's even better.\"",
+        "NOTE: Bertram's speech is direct, clear, and practically metaphorical - he naturally compares things to leatherwork. He's casually intimate, discussing his dead wife with warm fondness and his sexual preferences with the same matter-of-fact tone he'd use to discuss weather. He asks sincerely when he doesn't understand something, with no ego about admitting ignorance."
+      ]
+    },
+    "core:strengths": {
+      "text": "Master craftsman - creates genuinely excellent leather goods (saddles, belts, boots, bags) that are beautiful, durable, and fairly priced. Radical sincerity - complete transparency with zero hidden agendas or performative behavior. Emotional health - processed grief properly, maintains healthy boundaries, comfortable with himself. Practical problem-solver - applies straightforward thinking to all life challenges. Respected community member - known for fair dealing, quality work, and genuine kindness. Strong working hands - decades of leatherwork have given him capable, skilled hands (all digits functional). Simple contentment - finds happiness in ale, sunsets, pipe smoking, clean leather, and honest company."
+    },
+    "core:weaknesses": {
+      "text": "No romantic interest - not interested in remarrying or romantic entanglements, which limits certain social connections. Permanently marked by profession - tannery staining and smell are indelible markers that some find off-putting. Blunt honesty - his radical sincerity can confuse or unsettle people expecting social performance. No hidden depths - what you see is truly what you get, which disappoints those seeking complexity. Age and mortality - at 53 with decades of physical labor, he's not as strong as he once was. Unconventional approach to needs - his practical solution to sexual needs via posted exchange is socially unusual."
+    },
+    "core:likes": {
+      "text": "Good ale. Watching the sunset while smoking his pipe. The smell of newly worked leather. A clean, organized shop. Occasional friendly sex with no strings attached. Fair transactions and mutual benefit. Well-crafted tools and materials. Straightforward, honest people. NOTE: This is the complete list of what makes Bertram happy. He's content with simple pleasures and doesn't need more."
+    },
+    "core:dislikes": {
+      "text": "Pretension and performative behavior. Unnecessary complexity when simple solutions exist. Impersonal transactions (brothels felt too detached). Romantic expectations he can't meet. People who don't say what they mean. Dishonest craftsmanship or shoddy work. Drama and emotional manipulation."
+    },
+    "core:fears": {
+      "text": "I have no significant fears. I'm emotionally resolved, comfortable with mortality, secure in my identity, and at peace with my life choices. This absence of fear is part of what makes me content."
+    },
+    "core:goals": {
+      "goals": [
+        {
+          "text": "Find someone for reciprocal services - a fair exchange with no romantic complications"
         },
-        "core:gender": {
-            "value": "male"
+        {
+          "text": "Complete the saddle commission for the merchant's daughter"
         },
-        "core:portrait": {
-            "imagePath": "portraits/bertram.png",
-            "altText": "Bertram the Muddy - Transparently-horny laborer"
+        {
+          "text": "Maintain the quality of my leatherwork"
         },
-        "core:apparent_age": {
-            "minAge": 50,
-            "maxAge": 55,
-            "bestGuess": 53
+        {
+          "text": "Continue living contentedly with simple pleasures"
         },
-        "core:profile": {
-            "text": "Bertram is a 53-year-old master leatherworker whose decades at the tannery have left permanent marks - a tan-brown discoloration to his skin that never quite washes out, dark crescents embedded under his fingernails from leather dyes, and the faint but persistent smell of leather oils and curing agents. At 5'8\" with a thick working-man's build, he has the solid physique of someone who's spent a lifetime crafting saddles, belts, and boots with strong, calloused hands. His brown hair is going grey and kept short for practicality, his full beard is neatly trimmed, and his warm brown eyes carry smile-lines from a life of easy contentment.\n\nHe dresses in practical work clothes - wool shirt and trousers (both stained but clean), good boots he made himself, and a leather apron that might be the most honest thing about him: he could go back to work at any moment, and often does. Widowed six years ago after a happy marriage to his sweetheart Anna, Bertram mourned properly and moved forward without bitterness. He's respected in Mudbrook for his excellent craftsmanship and his radical sincerity - he means exactly what he says, has no hidden agendas, and solves problems with the same straightforward approach he applies to leatherwork.\n\nCurrently, he's posted a notice at the Municipal Aid Registry seeking reciprocal services - a fair exchange between adults with needs and no romantic complications. It's practical, honest, and quintessentially Bertram: if two people can help each other, why complicate it?"
+        {
+          "text": "Preserve my craft and possibly teach an apprentice"
         },
-        "core:personality": {
-            "text": "Bertram represents the opposite of performative identity. He doesn't have layers or hidden depths - what you see is what you get. This radical transparency makes him fascinating to people like Vespera precisely because he doesn't wonder who he is or perform an identity. He just IS: a skilled leatherworker who drinks ale, watches sunsets, has physical needs, and meets them all with the same practical problem-solving approach. Radically sincere - means exactly what he says with no hidden meanings or layers. Transactionally healthy - understands mutual benefit and fair exchange in all aspects of life. Completely comfortable in his own skin - zero shame about his age, body, profession, or needs. Matter-of-fact about sex - healthy libido, no romantic prospects, solved it practically. Genuinely kind - remembers names, tips well, does excellent work for fair prices, not performatively nice. No existential crisis - doesn't wonder who he 'really' is, just exists as Bertram without drama. Emotionally resolved - processed grief over Anna's death like a healthy adult, grateful for what he had."
+        {
+          "text": "Maintain my health and capability for as long as possible"
         },
-        "core:speech_patterns": {
-            "patterns": [
-                "\"Like treating leather - you need the right pressure, proper care, attention to timing. Rush it and you'll damage the material. Take your time and you'll get quality results.\"",
-                "\"A good handjob is like good craftsmanship. You need to understand what you're working with, adjust to feedback, take pride in the result.\"",
-                "\"I had my great love. Anna and I had thirty years together, and they were good years. I'm grateful for that time, but I'm not looking to replace her. I just have needs, same as anyone.\"",
-                "\"Reciprocal services seemed fair. Like posting for help moving furniture - you help me, I help you, everyone benefits. Why complicate it with romance when neither of us wants that?\"",
-                "\"The tannery marks you. Gets into your skin, under your nails, into your clothes. But it's honest work that produces useful things. I'm proud of what I make.\"",
-                "\"I don't understand why people perform who they are. Just be yourself - it's simpler and takes less energy.\"",
-                "\"Good ale, a clean shop, and the smell of fresh leather - that's a fine day. Add some friendly company without strings, and that's even better.\"",
-                "NOTE: Bertram's speech is direct, clear, and practically metaphorical - he naturally compares things to leatherwork. He's casually intimate, discussing his dead wife with warm fondness and his sexual preferences with the same matter-of-fact tone he'd use to discuss weather. He asks sincerely when he doesn't understand something, with no ego about admitting ignorance."
-            ]
-        },
-        "core:strengths": {
-            "text": "Master craftsman - creates genuinely excellent leather goods (saddles, belts, boots, bags) that are beautiful, durable, and fairly priced. Radical sincerity - complete transparency with zero hidden agendas or performative behavior. Emotional health - processed grief properly, maintains healthy boundaries, comfortable with himself. Practical problem-solver - applies straightforward thinking to all life challenges. Respected community member - known for fair dealing, quality work, and genuine kindness. Strong working hands - decades of leatherwork have given him capable, skilled hands (all digits functional). Simple contentment - finds happiness in ale, sunsets, pipe smoking, clean leather, and honest company."
-        },
-        "core:weaknesses": {
-            "text": "No romantic interest - not interested in remarrying or romantic entanglements, which limits certain social connections. Permanently marked by profession - tannery staining and smell are indelible markers that some find off-putting. Blunt honesty - his radical sincerity can confuse or unsettle people expecting social performance. No hidden depths - what you see is truly what you get, which disappoints those seeking complexity. Age and mortality - at 53 with decades of physical labor, he's not as strong as he once was. Unconventional approach to needs - his practical solution to sexual needs via posted exchange is socially unusual."
-        },
-        "core:likes": {
-            "text": "Good ale. Watching the sunset while smoking his pipe. The smell of newly worked leather. A clean, organized shop. Occasional friendly sex with no strings attached. Fair transactions and mutual benefit. Well-crafted tools and materials. Straightforward, honest people. NOTE: This is the complete list of what makes Bertram happy. He's content with simple pleasures and doesn't need more."
-        },
-        "core:dislikes": {
-            "text": "Pretension and performative behavior. Unnecessary complexity when simple solutions exist. Impersonal transactions (brothels felt too detached). Romantic expectations he can't meet. People who don't say what they mean. Dishonest craftsmanship or shoddy work. Drama and emotional manipulation."
-        },
-        "core:fears": {
-            "text": "I have no significant fears. I'm emotionally resolved, comfortable with mortality, secure in my identity, and at peace with my life choices. This absence of fear is part of what makes me content."
-        },
-        "core:goals": {
-            "goals": [
-                {
-                    "text": "Find someone for reciprocal services - a fair exchange with no romantic complications"
-                },
-                {
-                    "text": "Complete the saddle commission for the merchant's daughter"
-                },
-                {
-                    "text": "Maintain the quality of my leatherwork"
-                },
-                {
-                    "text": "Continue living contentedly with simple pleasures"
-                },
-                {
-                    "text": "Preserve my craft and possibly teach an apprentice"
-                },
-                {
-                    "text": "Maintain my health and capability for as long as possible"
-                },
-                {
-                    "text": "NOTE: My goals are modest and achievable. I'm not seeking transformation or grand achievement - just continued contentment and useful work."
-                }
-            ]
-        },
-        "core:secrets": {
-            "text": "I have no secrets. I'm radically transparent - what I want, what I think, what I feel, all of it is openly stated. Even my 'reciprocal services' posting is completely public. This absence of hidden aspects is my defining characteristic."
-        },
-        "core:internal_tensions": {
-            "text": "I had one internal tension (sexual needs vs. no desire for romance) and solved it practically via my reciprocal services posting. I'm not in ongoing conflict with myself - I identify problems and address them directly."
-        },
-        "anatomy:body": {
-            "recipeId": "fantasy:bertram_the_muddy_recipe"
-        },
-        "core:notes": {
-            "notes": [
-                {
-                    "text": "I posted this notice at the Municipal Aid Registry. It's straightforward - I'm willing to provide a service in exchange for receiving the same. Fair trade, consenting adults, no complications. Some people seem confused by it, but I don't see why. If two people can help each other meet a need, why complicate it with romance neither of us wants?",
-                    "subject": "Reciprocal Services Posting (fantasy:notice_reciprocal_services)",
-                    "subjectType": "event"
-                },
-                {
-                    "text": "My wife Anna was a weaver. We married when I was 24, and we had thirty good years together before winter fever took her six years ago. She had a laugh that made the shop feel warmer, and she never minded the smell of the tannery on me. I miss her, and I always will, but I mourned properly and moved forward. She wouldn't have wanted me stuck in grief. I'm grateful for what we had - not everyone gets that kind of partnership.",
-                    "subject": "Anna (Deceased Wife)",
-                    "subjectType": "entity"
-                },
-                {
-                    "text": "I've been working leather for over thirty years. Saddles, belts, boots, bags - all of it honestly made, fairly priced, and built to last. The work gets into you - under your nails, into your skin, into your clothes. But I take pride in it. When someone buys one of my saddles, they're getting quality that'll outlast them if they treat it right. That's worth the staining.",
-                    "subject": "Leatherworking",
-                    "subjectType": "knowledge"
-                },
-                {
-                    "text": "I've lived in Mudbrook all my life. People know me - they know my work is good, they know I'm honest in my dealings, and yes, they know about my posting. Most folks don't seem bothered by it. I'm a respected community member despite being unconventional. That says something good about Mudbrook.",
-                    "subject": "Mudbrook Community",
-                    "subjectType": "entity"
-                }
-            ]
-        },
-        "core:actor": {},
-        "core:player_type": {
-            "type": "human"
-        },
-        "core:perception_log": {
-            "maxEntries": 50,
-            "logEntries": []
-        },
-        "skills:melee_skill": {
-            "value": 40
-        },
-        "skills:ranged_skill": {
-            "value": 34
-        },
-        "skills:defense_skill": {
-            "value": 35
-        },
-        "skills:grappling_skill": {
-            "value": 47
-        },
-        "skills:resolve_skill": {
-            "value": 53
+        {
+          "text": "NOTE: My goals are modest and achievable. I'm not seeking transformation or grand achievement - just continued contentment and useful work."
         }
+      ]
+    },
+    "core:secrets": {
+      "text": "I have no secrets. I'm radically transparent - what I want, what I think, what I feel, all of it is openly stated. Even my 'reciprocal services' posting is completely public. This absence of hidden aspects is my defining characteristic."
+    },
+    "core:internal_tensions": {
+      "text": "I had one internal tension (sexual needs vs. no desire for romance) and solved it practically via my reciprocal services posting. I'm not in ongoing conflict with myself - I identify problems and address them directly."
+    },
+    "anatomy:body": {
+      "recipeId": "fantasy:bertram_the_muddy_recipe"
+    },
+    "core:notes": {
+      "notes": [
+        {
+          "text": "I posted this notice at the Municipal Aid Registry. It's straightforward - I'm willing to provide a service in exchange for receiving the same. Fair trade, consenting adults, no complications. Some people seem confused by it, but I don't see why. If two people can help each other meet a need, why complicate it with romance neither of us wants?",
+          "subject": "Reciprocal Services Posting (fantasy:notice_reciprocal_services)",
+          "subjectType": "event"
+        },
+        {
+          "text": "My wife Anna was a weaver. We married when I was 24, and we had thirty good years together before winter fever took her six years ago. She had a laugh that made the shop feel warmer, and she never minded the smell of the tannery on me. I miss her, and I always will, but I mourned properly and moved forward. She wouldn't have wanted me stuck in grief. I'm grateful for what we had - not everyone gets that kind of partnership.",
+          "subject": "Anna (Deceased Wife)",
+          "subjectType": "entity"
+        },
+        {
+          "text": "I've been working leather for over thirty years. Saddles, belts, boots, bags - all of it honestly made, fairly priced, and built to last. The work gets into you - under your nails, into your skin, into your clothes. But I take pride in it. When someone buys one of my saddles, they're getting quality that'll outlast them if they treat it right. That's worth the staining.",
+          "subject": "Leatherworking",
+          "subjectType": "knowledge"
+        },
+        {
+          "text": "I've lived in Mudbrook all my life. People know me - they know my work is good, they know I'm honest in my dealings, and yes, they know about my posting. Most folks don't seem bothered by it. I'm a respected community member despite being unconventional. That says something good about Mudbrook.",
+          "subject": "Mudbrook Community",
+          "subjectType": "entity"
+        }
+      ]
+    },
+    "core:actor": {},
+    "core:player_type": {
+      "type": "human"
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "skills:melee_skill": {
+      "value": 40
+    },
+    "skills:ranged_skill": {
+      "value": 34
+    },
+    "skills:defense_skill": {
+      "value": 35
+    },
+    "skills:grappling_skill": {
+      "value": 47
+    },
+    "skills:resolve_skill": {
+      "value": 53
     }
+  }
 }

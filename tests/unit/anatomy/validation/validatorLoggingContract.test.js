@@ -280,21 +280,19 @@ describe('Validator logging contract', () => {
     },
   ];
 
-  it.each(validatorCases)('logs %s check failures consistently', async ({
-    name,
-    create,
-    recipe,
-    options,
-  }) => {
-    const logger = createLogger();
-    const validator = create(logger);
-    const builder = new ValidationResultBuilder(recipe.recipeId);
+  it.each(validatorCases)(
+    'logs %s check failures consistently',
+    async ({ name, create, recipe, options }) => {
+      const logger = createLogger();
+      const validator = create(logger);
+      const builder = new ValidationResultBuilder(recipe.recipeId);
 
-    await validator.performValidation(recipe, options ?? {}, builder);
+      await validator.performValidation(recipe, options ?? {}, builder);
 
-    expect(logger.error).toHaveBeenCalledWith(
-      `${name} check failed`,
-      expect.any(Error)
-    );
-  });
+      expect(logger.error).toHaveBeenCalledWith(
+        `${name} check failed`,
+        expect.any(Error)
+      );
+    }
+  );
 });

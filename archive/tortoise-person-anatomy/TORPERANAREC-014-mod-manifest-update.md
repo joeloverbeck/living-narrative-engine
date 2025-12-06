@@ -1,18 +1,22 @@
 # TORPERANAREC-014: Update Anatomy Mod Manifest ✅ COMPLETED
 
 ## Objective
+
 Add all new tortoise-person files to the anatomy mod manifest.
 
 ## Dependencies
+
 - **REQUIRES**: TORPERANAREC-001 (structure template created)
 - **REQUIRES**: TORPERANAREC-002 (blueprint created)
 - **REQUIRES**: TORPERANAREC-003 through TORPERANAREC-011 (all 11 entity definitions created)
 - **REQUIRES**: TORPERANAREC-013 (recipe created)
 
 ## Files Modified
+
 - **MODIFIED**: `data/mods/anatomy/mod-manifest.json`
 
 ## Out of Scope
+
 - Do NOT modify other sections of the manifest (components, actions, etc.)
 - Do NOT remove existing entries
 - Do NOT change manifest metadata (id, version, name, etc.)
@@ -58,6 +62,7 @@ Added to existing arrays:
 ## Acceptance Criteria
 
 ### Tests that passed:
+
 - ✅ `npm run validate` - Schema validation passes
 - ✅ Manifest validates against mod-manifest schema
 - ✅ All referenced files exist at specified paths
@@ -66,6 +71,7 @@ Added to existing arrays:
 - ✅ Recipe validation test passes
 
 ### Invariants maintained:
+
 - ✅ No existing manifest entries removed
 - ✅ No existing manifest entries modified
 - ✅ Manifest structure unchanged (same top-level keys)
@@ -77,6 +83,7 @@ Added to existing arrays:
 - ✅ Total additions: 14 new file references
 
 ## Definition of Done
+
 - ✅ 1 structure template added to manifest (filename only)
 - ✅ 1 blueprint added to manifest (filename only)
 - ✅ 11 entity definitions added to manifest (filename only)
@@ -95,13 +102,15 @@ Added to existing arrays:
 **Ticket Correction**: Before implementation, the ticket was corrected to reflect the actual manifest format. This prevented what would have been a breaking change.
 
 **Actual Changes**:
+
 1. Updated `data/mods/anatomy/mod-manifest.json` with 14 new entries (all using filename-only format)
 2. All entries inserted in alphabetical order within their respective arrays
 3. No other changes to manifest structure or metadata
 
 **Test Results**:
+
 - ✅ Schema validation: PASSED
-- ✅ 11/11 entity validation tests: PASSED  
+- ✅ 11/11 entity validation tests: PASSED
 - ✅ 1/1 recipe validation test: PASSED
 - ⚠️ Integration test (`tortoisePerson.integration.test.js`): Failed due to recipe loading issue (pre-existing, unrelated to manifest changes)
 

@@ -130,9 +130,7 @@
         "smoking_pipe.entity.json",
         "treasure_chest.entity.json"
       ],
-      "instances": [
-        "red_lipstick.entity.json"
-      ]
+      "instances": ["red_lipstick.entity.json"]
     }
   }
 }

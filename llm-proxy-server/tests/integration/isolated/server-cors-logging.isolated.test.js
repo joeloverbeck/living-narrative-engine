@@ -4,7 +4,14 @@
  * @see tests/integration/server-lifecycle.integration.test.js
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import path from 'node:path';
 import { createProxyServer } from '../../../src/core/server.js';
 
@@ -43,7 +50,10 @@ describe('Server CORS Configuration Logging (Isolated)', () => {
     process.env.NODE_ENV = 'test';
 
     // Set path to test LLM config file (relative to project root)
-    process.env.LLM_CONFIG_PATH = path.resolve(process.cwd(), 'tests/fixtures/test-llm-configs.json');
+    process.env.LLM_CONFIG_PATH = path.resolve(
+      process.cwd(),
+      'tests/fixtures/test-llm-configs.json'
+    );
   });
 
   afterEach(async () => {
@@ -82,7 +92,9 @@ describe('Server CORS Configuration Logging (Isolated)', () => {
     await serverController.start();
 
     expect(mockLogger.info).toHaveBeenCalledWith(
-      expect.stringContaining('LLM Proxy Server: Configuring CORS for 1 origin(s)')
+      expect.stringContaining(
+        'LLM Proxy Server: Configuring CORS for 1 origin(s)'
+      )
     );
   });
 
@@ -92,7 +104,8 @@ describe('Server CORS Configuration Logging (Isolated)', () => {
     // at module load time. In the current test environment, the cached value
     // from the .env file (which has 1 origin) is used regardless of what we
     // set here. The production code is correct - this is a test isolation limitation.
-    process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080,http://127.0.0.1:8080';
+    process.env.PROXY_ALLOWED_ORIGIN =
+      'http://localhost:8080,http://127.0.0.1:8080';
 
     serverController = createProxyServer({ logger: mockLogger });
     await serverController.start();

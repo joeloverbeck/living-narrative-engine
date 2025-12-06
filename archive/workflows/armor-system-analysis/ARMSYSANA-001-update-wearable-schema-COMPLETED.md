@@ -10,6 +10,7 @@
 The Living Narrative Engine's anatomy system is already prepared for armor as a distinct clothing layer. The infrastructure exists in the anatomy blueprints and slot definitions, but the clothing system needs minimal updates to fully support armor entities.
 
 The anatomy system has already defined "armor" as a layer in multiple locations:
+
 - Slot metadata component (`data/mods/clothing/components/slot_metadata.component.json:29`)
 - Humanoid slot library (`data/mods/anatomy/libraries/humanoid.slot-library.json`)
 - All major humanoid and non-human blueprints
@@ -93,6 +94,7 @@ AND
 ## Expected Layer Hierarchy
 
 After this change, the layer hierarchy will be (innermost to outermost):
+
 1. underwear - Undergarments
 2. base - Regular clothing (shirts, pants)
 3. armor - Protective equipment (cuirass, chainmail, plate)
@@ -104,11 +106,13 @@ After this change, the layer hierarchy will be (innermost to outermost):
 After making the change:
 
 1. **Validate JSON syntax**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/clothing/components/wearable.component.json'))"
    ```
 
 2. **Run schema validation**
+
    ```bash
    npm run validate
    ```

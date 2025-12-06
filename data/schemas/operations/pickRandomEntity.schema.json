@@ -16,19 +16,13 @@
           "properties": {
             "location_id": {
               "description": "Location to search for entities",
-              "oneOf": [
-                { "type": "string" },
-                { "type": "object" }
-              ]
+              "oneOf": [{ "type": "string" }, { "type": "object" }]
             },
             "exclude_entities": {
               "description": "Array of entity IDs to exclude from selection",
               "type": "array",
               "items": {
-                "oneOf": [
-                  { "type": "string" },
-                  { "type": "object" }
-                ]
+                "oneOf": [{ "type": "string" }, { "type": "object" }]
               },
               "default": []
             },

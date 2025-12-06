@@ -11,9 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "clothing:equipment"
-    ]
+    "actor": ["clothing:equipment"]
   },
   "forbidden_components": {
     "actor": [

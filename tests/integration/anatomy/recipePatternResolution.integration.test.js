@@ -78,7 +78,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:leg_segment': {
           id: 'test:leg_segment',
           components: {
-            'anatomy:body_part': { partType: 'leg_segment', name: 'Leg Segment' },
+            'anatomy:body_part': {
+              partType: 'leg_segment',
+              name: 'Leg Segment',
+            },
             'anatomy:part': { subType: 'leg_segment' },
             'test:spider_leg': {},
           },
@@ -96,8 +99,11 @@ describe('Recipe Pattern Resolution Integration', () => {
       expect(result.entities).toBeDefined();
 
       // Verify all 8 leg segments were created (4 limb sets × 2 segments)
-      const legEntities = result.entities.filter(id => {
-        const partComp = entityManager.getComponentData(id, 'anatomy:body_part');
+      const legEntities = result.entities.filter((id) => {
+        const partComp = entityManager.getComponentData(
+          id,
+          'anatomy:body_part'
+        );
         return partComp?.partType === 'leg_segment';
       });
 
@@ -183,7 +189,7 @@ describe('Recipe Pattern Resolution Integration', () => {
       expect(result.rootId).toBeDefined();
 
       // Verify only left legs were created (2 limb sets × 2 segments = 4)
-      const leftLegs = result.entities.filter(id => {
+      const leftLegs = result.entities.filter((id) => {
         const hasTag = entityManager.hasComponent(id, 'test:left_leg');
         return hasTag;
       });
@@ -271,7 +277,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:special_arm': {
           id: 'test:special_arm',
           components: {
-            'anatomy:body_part': { partType: 'special_arm', name: 'Special Arm' },
+            'anatomy:body_part': {
+              partType: 'special_arm',
+              name: 'Special Arm',
+            },
             'anatomy:part': { subType: 'special_arm' },
             'test:special': {},
           },
@@ -279,7 +288,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:arm_segment': {
           id: 'test:arm_segment',
           components: {
-            'anatomy:body_part': { partType: 'arm_segment', name: 'Arm Segment' },
+            'anatomy:body_part': {
+              partType: 'arm_segment',
+              name: 'Arm Segment',
+            },
             'anatomy:part': { subType: 'arm_segment' },
             'test:v1_arm': {},
           },
@@ -287,7 +299,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:horse_leg_segment': {
           id: 'test:horse_leg_segment',
           components: {
-            'anatomy:body_part': { partType: 'horse_leg_segment', name: 'Horse Leg' },
+            'anatomy:body_part': {
+              partType: 'horse_leg_segment',
+              name: 'Horse Leg',
+            },
             'anatomy:part': { subType: 'horse_leg_segment' },
             'test:horse_leg': {},
           },
@@ -304,26 +319,29 @@ describe('Recipe Pattern Resolution Integration', () => {
       expect(result.rootId).toBeDefined();
 
       // Verify special arm (explicit definition - highest priority)
-      const specialArms = result.entities.filter(id =>
+      const specialArms = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:special')
       );
       expect(specialArms.length).toBe(1);
 
       // Verify V1 pattern arms
-      const v1Arms = result.entities.filter(id =>
+      const v1Arms = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:v1_arm')
       );
       expect(v1Arms.length).toBe(1); // arm_right
 
       // Verify V2 pattern horse legs (2 legs - bilateral arrangement)
-      const horseLegs = result.entities.filter(id =>
+      const horseLegs = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:horse_leg')
       );
       expect(horseLegs.length).toBe(2);
 
       // Verify arm_left_lower used V2 pattern (not explicitly defined)
-      const leftLowerArm = result.entities.find(id => {
-        const partComp = entityManager.getComponentData(id, 'anatomy:body_part');
+      const leftLowerArm = result.entities.find((id) => {
+        const partComp = entityManager.getComponentData(
+          id,
+          'anatomy:body_part'
+        );
         // This would need socket info to verify - simplified check
         return (
           partComp?.partType === 'arm_segment' &&
@@ -435,18 +453,18 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:gryphon_legs'
       );
 
-      const leftLegs = result.entities.filter(id =>
+      const leftLegs = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:left_leg')
       );
 
       expect(leftLegs.length).toBeLessThanOrEqual(1);
 
-      const hindLegs = result.entities.filter(id => {
+      const hindLegs = result.entities.filter((id) => {
         const part = entityManager.getComponentData(id, 'anatomy:body_part');
         return part?.partType === 'hind_leg';
       });
 
-      hindLegs.forEach(id => {
+      hindLegs.forEach((id) => {
         expect(entityManager.hasComponent(id, 'test:left_leg')).toBe(false);
       });
     });
@@ -506,7 +524,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:tentacle_segment': {
           id: 'test:tentacle_segment',
           components: {
-            'anatomy:body_part': { partType: 'tentacle_segment', name: 'Tentacle' },
+            'anatomy:body_part': {
+              partType: 'tentacle_segment',
+              name: 'Tentacle',
+            },
             'anatomy:part': { subType: 'tentacle_segment' },
             'test:tentacle': {},
           },
@@ -523,7 +544,7 @@ describe('Recipe Pattern Resolution Integration', () => {
       expect(result.rootId).toBeDefined();
 
       // Verify all tentacle segments (3 appendages × 3 segments = 9)
-      const tentacles = result.entities.filter(id =>
+      const tentacles = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:tentacle')
       );
 
@@ -594,7 +615,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:front_leg_segment': {
           id: 'test:front_leg_segment',
           components: {
-            'anatomy:body_part': { partType: 'leg_segment', name: 'Front Leg Segment' },
+            'anatomy:body_part': {
+              partType: 'leg_segment',
+              name: 'Front Leg Segment',
+            },
             'anatomy:part': { subType: 'leg_segment' },
             'test:front_leg': {},
           },
@@ -602,7 +626,10 @@ describe('Recipe Pattern Resolution Integration', () => {
         'test:back_leg_segment': {
           id: 'test:back_leg_segment',
           components: {
-            'anatomy:body_part': { partType: 'leg_segment', name: 'Back Leg Segment' },
+            'anatomy:body_part': {
+              partType: 'leg_segment',
+              name: 'Back Leg Segment',
+            },
             'anatomy:part': { subType: 'leg_segment' },
             'test:back_leg': {},
           },
@@ -619,10 +646,10 @@ describe('Recipe Pattern Resolution Integration', () => {
       expect(result.rootId).toBeDefined();
 
       // Should have both front and back legs based on orientation patterns
-      const frontLegs = result.entities.filter(id =>
+      const frontLegs = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:front_leg')
       );
-      const backLegs = result.entities.filter(id =>
+      const backLegs = result.entities.filter((id) =>
         entityManager.hasComponent(id, 'test:back_leg')
       );
 

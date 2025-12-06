@@ -39,6 +39,7 @@
 ### Detected Unregistered Files (informational)
 
 The validation found 3 unregistered files in the codebase:
+
 - `anatomy/lookups/part_health_thresholds.json`
 - `descriptors/components/plumage_sheen.component.json`
 - `metabolism/lookups/hunger_thresholds.json`
@@ -57,12 +58,14 @@ These are warnings only and do not fail validation.
 4. **Test file path corrected** - Uses existing validator test structure
 
 ## Files Modified
+
 - `cli/validation/manifestFileExistenceValidator.js` (Extended with `validateUnregisteredFiles` method)
 - `cli/validation/modValidationOrchestrator.js` (Added Phase 6 for unregistered files validation)
 - `tests/unit/validation/manifestFileExistenceValidator.unregistered.test.js` (New unit test file)
 - `tests/integration/validation/manifestFileExistence.integration.test.js` (Extended with unregistered file tests)
 
 ## Out of Scope
+
 - Fixing existing manifest violations.
 - Changing `ModLoader`.
 - Modifying `mod-manifest.json` files.
@@ -71,16 +74,18 @@ These are warnings only and do not fail validation.
 ## Acceptance Criteria
 
 ### Specific Tests
+
 - **Unit Test (`tests/unit/cli/validation/manifestFileExistenceValidator.unregistered.test.js`):**
-    - Mock file system with a file in `data/mods/testmod/actions/` that is NOT in `mod-manifest.json`.
-    - Verify validator returns an error/warning for that file.
-    - Mock file system where all files are registered. Verify validator passes.
-    - Verify exclusions (`.DS_Store`, `thumbs.db`) are ignored.
+  - Mock file system with a file in `data/mods/testmod/actions/` that is NOT in `mod-manifest.json`.
+  - Verify validator returns an error/warning for that file.
+  - Mock file system where all files are registered. Verify validator passes.
+  - Verify exclusions (`.DS_Store`, `thumbs.db`) are ignored.
 - **Integration Test (extend `manifestFileExistence.integration.test.js`):**
-    - Run validation via orchestrator.
-    - Verify command output includes unregistered file detection.
+  - Run validation via orchestrator.
+  - Verify command output includes unregistered file detection.
 
 ### Invariants
+
 - Validator must not crash if `mod-manifest.json` is missing.
 - Validator must only check `data/mods` directory.
 - Validator must respect `exclusions` (like `.DS_Store`, `thumbs.db`, `.gitkeep`, etc.).
@@ -89,10 +94,11 @@ These are warnings only and do not fail validation.
 ## Content Categories to Scan
 
 Based on `mod-manifest.schema.json`:
+
 - `actions/`, `components/`, `conditions/`, `damageTypes/`, `events/`, `goals/`, `macros/`, `rules/`, `worlds/`
 - `blueprints/`, `recipes/`, `anatomyFormatting/`, `libraries/`, `lookups/`, `parts/`, `structure-templates/`
-- `scopes/` (*.scope files)
+- `scopes/` (\*.scope files)
 - `entities/definitions/`, `entities/instances/`
-- `refinement-methods/` (*.refinement.json)
-- `tasks/` (*.task.json)
+- `refinement-methods/` (\*.refinement.json)
+- `tasks/` (\*.task.json)
 - `portraits/` (image files)

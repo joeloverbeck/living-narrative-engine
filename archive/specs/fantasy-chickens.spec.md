@@ -16,6 +16,7 @@ The following descriptor modifications have been made to support these chickens:
 ### New Component Created
 
 **`data/mods/descriptors/components/plumage_sheen.component.json`**
+
 - ID: `descriptors:plumage_sheen`
 - Enum values: `matte`, `glossy`, `iridescent`, `metallic`, `oily-sheen`
 - Registered in `data/mods/anatomy/anatomy-formatting/default.json`
@@ -23,10 +24,12 @@ The following descriptor modifications have been made to support these chickens:
 ### Extended Existing Components
 
 **`pattern.component.json`** - Added:
+
 - `speckled` - Salt-and-pepper or spotted patterns
 - `mottled` - Irregular blotchy patterns
 
 **`color_extended.component.json`** - Added:
+
 - `buff` - Warm tan/cream color (like buff Orpington chickens)
 - `chalky-white` - Dull, powdery white
 - `copper` - Metallic copper coloring
@@ -35,6 +38,7 @@ The following descriptor modifications have been made to support these chickens:
 - `slate-blue` - Blue-gray slate coloring
 
 **`size_category.component.json`** - Added:
+
 - `bantam` - Miniature chicken size
 
 ---
@@ -461,13 +465,13 @@ npm run validate:body-descriptors
 
 ## Summary Table
 
-| Chicken | Recipe ID | Blueprint | Build | Height | Key Features |
-|---------|-----------|-----------|-------|--------|--------------|
-| Large Speckled Hen | `fantasy:large_speckled_hen` | `anatomy:hen` | stocky | short | Salt-and-pepper speckled, thick comb, swollen wattles |
-| Kink-Necked Black Pullet | `fantasy:kink_necked_black_pullet` | `anatomy:hen` | slim | petite | Glossy black with green iridescence, kinked neck |
-| Copper-Backed Rooster | `fantasy:copper_backed_rooster` | `anatomy:rooster` | barrel-chested | short | Metallic copper sheen, rust-red hackles, impressive sickle tail |
-| White-Faced Buff Hen | `fantasy:white_faced_buff_hen` | `anatomy:hen` | stocky | petite | Buff body, chalky white face |
-| Slate-Blue Bantam | `fantasy:slate_blue_bantam` | `anatomy:hen` | frail | tiny | Slate-blue feathers, dark bright eyes, bantam sized |
+| Chicken                  | Recipe ID                          | Blueprint         | Build          | Height | Key Features                                                    |
+| ------------------------ | ---------------------------------- | ----------------- | -------------- | ------ | --------------------------------------------------------------- |
+| Large Speckled Hen       | `fantasy:large_speckled_hen`       | `anatomy:hen`     | stocky         | short  | Salt-and-pepper speckled, thick comb, swollen wattles           |
+| Kink-Necked Black Pullet | `fantasy:kink_necked_black_pullet` | `anatomy:hen`     | slim           | petite | Glossy black with green iridescence, kinked neck                |
+| Copper-Backed Rooster    | `fantasy:copper_backed_rooster`    | `anatomy:rooster` | barrel-chested | short  | Metallic copper sheen, rust-red hackles, impressive sickle tail |
+| White-Faced Buff Hen     | `fantasy:white_faced_buff_hen`     | `anatomy:hen`     | stocky         | petite | Buff body, chalky white face                                    |
+| Slate-Blue Bantam        | `fantasy:slate_blue_bantam`        | `anatomy:hen`     | frail          | tiny   | Slate-blue feathers, dark bright eyes, bantam sized             |
 
 ## Common Traits
 

@@ -435,7 +435,9 @@ describe('RebuildLeaderListCacheHandler', () => {
 
     test('should ignore followers with invalid or missing leaderId data', async () => {
       const leader = makeMockEntity('leader1');
-      const follower1 = makeMockActorFollower('follower1', { leaderId: 'leader1' });
+      const follower1 = makeMockActorFollower('follower1', {
+        leaderId: 'leader1',
+      });
       const followerInvalid1 = makeMockActorFollower('invalid1', {
         leaderId: null,
       });
@@ -484,8 +486,12 @@ describe('RebuildLeaderListCacheHandler', () => {
       // Arrange
       const leader1 = makeMockEntity('leader1');
       const leader2 = makeMockEntity('leader2');
-      const follower1 = makeMockActorFollower('follower1', { leaderId: 'leader1' });
-      const follower2 = makeMockActorFollower('follower2', { leaderId: 'leader2' });
+      const follower1 = makeMockActorFollower('follower1', {
+        leaderId: 'leader1',
+      });
+      const follower2 = makeMockActorFollower('follower2', {
+        leaderId: 'leader2',
+      });
       const error = new Error('EntityManager failed');
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([

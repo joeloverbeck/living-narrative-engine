@@ -11,12 +11,12 @@ Update the `handle_wield_threateningly.rule.json` to add the `positioning:wieldi
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `data/mods/weapons/rules/handle_wield_threateningly.rule.json` | MODIFY | Add component management and description regeneration |
-| `data/mods/weapons/mod-manifest.json` | MODIFY | Add positioning dependency for wielding component |
-| `tests/integration/mods/weapons/wieldThreateninglyRuleValidation.test.js` | MODIFY | Update action count expectation from 8 to 11 |
-| `tests/integration/mods/weapons/wieldingComponentWorkflow.integration.test.js` | CREATE | Integration tests for wielding component addition |
+| File                                                                           | Action | Description                                           |
+| ------------------------------------------------------------------------------ | ------ | ----------------------------------------------------- |
+| `data/mods/weapons/rules/handle_wield_threateningly.rule.json`                 | MODIFY | Add component management and description regeneration |
+| `data/mods/weapons/mod-manifest.json`                                          | MODIFY | Add positioning dependency for wielding component     |
+| `tests/integration/mods/weapons/wieldThreateninglyRuleValidation.test.js`      | MODIFY | Update action count expectation from 8 to 11          |
+| `tests/integration/mods/weapons/wieldingComponentWorkflow.integration.test.js` | CREATE | Integration tests for wielding component addition     |
 
 ## Out of Scope
 
@@ -118,6 +118,7 @@ Add three new operations after the existing `SET_VARIABLE` for `targetId` (line 
 ### Specific Tests That Must Pass
 
 After WIECOM-007 creates integration tests:
+
 - First wield: Actor has no component → wielding sword → Component exists with `['sword-id']`
 - Second wield: Actor has `['sword-id']` → wield dagger → Component has `['sword-id', 'dagger-id']`
 - Duplicate wield: Actor has `['sword-id']` → wield sword again → Component still `['sword-id']` (no duplicate due to `push_unique`)
@@ -146,6 +147,7 @@ npm run validate
 ## Reference Files
 
 Study these for operation syntax:
+
 - `data/mods/deference/rules/kneel_before.rule.json` - ADD_COMPONENT pattern
 - `data/mods/positioning/rules/handle_sit_down.rule.json` - QUERY_COMPONENT and IF patterns
 - `data/mods/clothing/rules/handle_remove_clothing.rule.json` - MODIFY_ARRAY_FIELD pattern (if exists)

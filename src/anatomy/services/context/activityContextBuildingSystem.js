@@ -101,12 +101,17 @@ class ActivityContextBuildingSystem {
     let partners = [];
     try {
       const actorEntity = this.#entityManager.getEntityInstance(actorId);
-      const closenessData = actorEntity?.getComponentData?.('positioning:closeness');
+      const closenessData = actorEntity?.getComponentData?.(
+        'positioning:closeness'
+      );
       partners = Array.isArray(closenessData?.partners)
         ? [...closenessData.partners]
         : [];
     } catch (error) {
-      this.#logger.warn(`Failed to retrieve closeness data for ${actorId}`, error);
+      this.#logger.warn(
+        `Failed to retrieve closeness data for ${actorId}`,
+        error
+      );
       partners = [];
     }
 
@@ -162,13 +167,19 @@ class ActivityContextBuildingSystem {
       adjusted.contextualTone = 'intense';
 
       if (typeof adjusted.adverb === 'string') {
-        adjusted.adverb = this.#nlgSystem.mergeAdverb(adjusted.adverb, 'fiercely');
+        adjusted.adverb = this.#nlgSystem.mergeAdverb(
+          adjusted.adverb,
+          'fiercely'
+        );
       } else if (adjusted.type === 'dedicated') {
         adjusted.adverb = 'fiercely';
       }
 
       if (typeof adjusted.template === 'string') {
-        adjusted.template = this.#nlgSystem.injectSoftener(adjusted.template, 'fiercely');
+        adjusted.template = this.#nlgSystem.injectSoftener(
+          adjusted.template,
+          'fiercely'
+        );
       }
     }
 
@@ -209,7 +220,8 @@ class ActivityContextBuildingSystem {
   getTestHooks() {
     return {
       buildActivityContext: (...args) => this.buildActivityContext(...args),
-      determineActivityIntensity: (...args) => this.determineActivityIntensity(...args),
+      determineActivityIntensity: (...args) =>
+        this.determineActivityIntensity(...args),
       applyContextualTone: (...args) => this.applyContextualTone(...args),
       getClosenessPartners: (actorId) => this.#getClosenessPartners(actorId),
     };

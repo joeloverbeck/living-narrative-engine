@@ -17,7 +17,10 @@ describe('DescriptorCoverageValidator', () => {
     logger = testBed.mockLogger;
   });
 
-  const createValidator = ({ entityDefinitions = [], dataRegistryOverrides = {} } = {}) => {
+  const createValidator = ({
+    entityDefinitions = [],
+    dataRegistryOverrides = {},
+  } = {}) => {
     const dataRegistry = {
       getAll: jest.fn().mockReturnValue(entityDefinitions),
       ...dataRegistryOverrides,
@@ -34,7 +37,10 @@ describe('DescriptorCoverageValidator', () => {
   describe('constructor', () => {
     it('initializes with descriptor validator defaults', () => {
       const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
-      const validator = new DescriptorCoverageValidator({ logger, dataRegistry });
+      const validator = new DescriptorCoverageValidator({
+        logger,
+        dataRegistry,
+      });
 
       expect(validator.name).toBe('descriptor-coverage');
       expect(validator.priority).toBe(40);
@@ -44,7 +50,9 @@ describe('DescriptorCoverageValidator', () => {
     it('validates data registry dependency', () => {
       expect(
         () => new DescriptorCoverageValidator({ logger, dataRegistry: {} })
-      ).toThrow("Invalid or missing method 'getAll' on dependency 'IDataRegistry'.");
+      ).toThrow(
+        "Invalid or missing method 'getAll' on dependency 'IDataRegistry'."
+      );
     });
   });
 
@@ -119,7 +127,9 @@ describe('DescriptorCoverageValidator', () => {
 
       expect(dataRegistry.getAll).not.toHaveBeenCalled();
       expect(result.suggestions).toHaveLength(1);
-      expect(result.suggestions[0].reason).toBe('No descriptor components in properties');
+      expect(result.suggestions[0].reason).toBe(
+        'No descriptor components in properties'
+      );
     });
 
     it('respects descriptors from preferred entity when slot lacks them', async () => {
@@ -160,7 +170,10 @@ describe('DescriptorCoverageValidator', () => {
       const result = await validator.validate(recipe);
 
       expect(result.suggestions).toHaveLength(1);
-      expect(result.suggestions[0].location).toEqual({ type: 'slot', name: 'wing' });
+      expect(result.suggestions[0].location).toEqual({
+        type: 'slot',
+        name: 'wing',
+      });
     });
 
     it('handles recipes without slots by recording passed message', async () => {
@@ -170,14 +183,19 @@ describe('DescriptorCoverageValidator', () => {
       const result = await validator.validate(recipe);
 
       expect(result.suggestions).toHaveLength(0);
-      expect(result.passed).toEqual([{ message: 'All slots have descriptor components' }]);
+      expect(result.passed).toEqual([
+        { message: 'All slots have descriptor components' },
+      ]);
     });
 
     it('treats non-array registry responses as empty collections', async () => {
       const errorRegistry = {
         getAll: jest.fn().mockReturnValue('not-an-array'),
       };
-      const validator = new DescriptorCoverageValidator({ logger, dataRegistry: errorRegistry });
+      const validator = new DescriptorCoverageValidator({
+        logger,
+        dataRegistry: errorRegistry,
+      });
       const recipe = createRecipe({
         slots: {
           tail: {
@@ -199,7 +217,10 @@ describe('DescriptorCoverageValidator', () => {
           throw registryError;
         }),
       };
-      const validator = new DescriptorCoverageValidator({ logger, dataRegistry });
+      const validator = new DescriptorCoverageValidator({
+        logger,
+        dataRegistry,
+      });
       const recipe = createRecipe({
         slots: {
           horn: {

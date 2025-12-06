@@ -66,9 +66,10 @@ class ContextMerger {
 
       // Preserve trace if available - use nullish coalescing to handle null/undefined
       // If overlay has explicit non-null trace, use it; otherwise use base trace
-      trace: overlayCtx.trace !== null && overlayCtx.trace !== undefined
-        ? overlayCtx.trace
-        : baseCtx.trace,
+      trace:
+        overlayCtx.trace !== null && overlayCtx.trace !== undefined
+          ? overlayCtx.trace
+          : baseCtx.trace,
     };
 
     // Validate final merged context

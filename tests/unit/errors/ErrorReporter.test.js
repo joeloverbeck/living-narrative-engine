@@ -2,7 +2,14 @@
  * @file ErrorReporter.test.js - Unit tests for ErrorReporter
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ErrorReporter from '../../../src/errors/ErrorReporter.js';
 import BaseError from '../../../src/errors/baseError.js';
@@ -47,7 +54,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       criticalErrors: 9999,
       errorRate: 9999,
       specificError: 9999,
-      failureRate: 1
+      failureRate: 1,
     };
 
     return deepMerge(cloned, overrides);
@@ -55,7 +62,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
   const mockConfig = (overrides = {}) => {
     const config = buildTestConfig(overrides);
-    configSpy = jest.spyOn(errorConfigModule, 'getErrorConfig').mockImplementation(() => config);
+    configSpy = jest
+      .spyOn(errorConfigModule, 'getErrorConfig')
+      .mockImplementation(() => config);
     return config;
   };
 
@@ -64,7 +73,10 @@ describe('ErrorReporter - Error Reporting Service', () => {
     jest.useFakeTimers();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
+    mockEventBus = testBed.createMock('MockEventBus', [
+      'dispatch',
+      'subscribe',
+    ]);
   });
 
   afterEach(() => {
@@ -85,7 +97,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should create reporter with default configuration', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
-        eventBus: mockEventBus
+        eventBus: mockEventBus,
       });
 
       expect(errorReporter).toBeInstanceOf(ErrorReporter);
@@ -95,7 +107,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(() => {
         new ErrorReporter({
           logger: null,
-          eventBus: mockEventBus
+          eventBus: mockEventBus,
         });
       }).toThrow();
     });
@@ -104,7 +116,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(() => {
         new ErrorReporter({
           logger: mockLogger,
-          eventBus: null
+          eventBus: null,
         });
       }).toThrow();
     });
@@ -114,18 +126,24 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        enabled: true
+        enabled: true,
       });
 
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith('ERROR_OCCURRED', expect.any(Function));
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith('SYSTEM_ERROR_OCCURRED', expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'ERROR_OCCURRED',
+        expect.any(Function)
+      );
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'SYSTEM_ERROR_OCCURRED',
+        expect.any(Function)
+      );
     });
 
     it('should not register listeners when disabled', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        enabled: false
+        enabled: false,
       });
 
       expect(mockEventBus.subscribe).not.toHaveBeenCalled();
@@ -136,7 +154,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: null,
-        enabled: true
+        enabled: true,
       });
 
       expect(mockEventBus.subscribe).not.toHaveBeenCalled();
@@ -150,12 +168,16 @@ describe('ErrorReporter - Error Reporting Service', () => {
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
         batchSize: 3,
-        flushInterval: 5000
+        flushInterval: 5000,
       });
     });
 
     it('should report BaseError instances', () => {
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC, { field: 'test' });
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        { field: 'test' }
+      );
 
       errorReporter.report(error, { operation: 'test' });
 
@@ -191,7 +213,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Sending error batch'),
         expect.objectContaining({
-          batchSize: 3
+          batchSize: 3,
         })
       );
     });
@@ -200,7 +222,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       const disabledReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        enabled: false
+        enabled: false,
       });
 
       const error = new Error('Test error');
@@ -219,7 +241,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
         batchSize: 5,
-        flushInterval: 10000
+        flushInterval: 10000,
       });
     });
 
@@ -233,7 +255,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Sending error batch'),
         expect.objectContaining({
-          batchSize: 1
+          batchSize: 1,
         })
       );
     });
@@ -255,7 +277,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Sending error batch'),
         expect.objectContaining({
-          batchSize: 1
+          batchSize: 1,
         })
       );
     });
@@ -274,7 +296,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         'Failed to send error batch',
         expect.objectContaining({
           error: 'Network error',
-          batchSize: 1
+          batchSize: 1,
         })
       );
 
@@ -287,7 +309,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
     });
 
@@ -322,10 +344,15 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should generate error report', () => {
       // Create a custom error class with overridden severity
       class CriticalError extends BaseError {
-        get severity() { return 'critical'; }
+        get severity() {
+          return 'critical';
+        }
       }
 
-      const error1 = new CriticalError('Critical error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error1 = new CriticalError(
+        'Critical error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
       const error2 = new Error('Regular error');
 
       errorReporter.report(error1);
@@ -343,12 +370,17 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should provide recommendations based on errors', () => {
       // Create a custom error class with overridden severity
       class CriticalError extends BaseError {
-        get severity() { return 'critical'; }
+        get severity() {
+          return 'critical';
+        }
       }
 
       // Report multiple critical errors
       for (let i = 0; i < 3; i++) {
-        const error = new CriticalError(`Critical error ${i}`, ErrorCodes.INVALID_DATA_GENERIC);
+        const error = new CriticalError(
+          `Critical error ${i}`,
+          ErrorCodes.INVALID_DATA_GENERIC
+        );
         errorReporter.report(error);
       }
 
@@ -356,7 +388,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       const recommendations = report.recommendations;
 
       expect(recommendations).toBeInstanceOf(Array);
-      expect(recommendations.some(r => r.priority === 'high')).toBe(true);
+      expect(recommendations.some((r) => r.priority === 'high')).toBe(true);
     });
   });
 
@@ -365,19 +397,24 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
     });
 
     it('should send alert for critical error threshold', () => {
       // Create a custom error class with overridden severity
       class CriticalError extends BaseError {
-        get severity() { return 'critical'; }
+        get severity() {
+          return 'critical';
+        }
       }
 
       // Report 5 critical errors (threshold)
       for (let i = 0; i < 5; i++) {
-        const error = new CriticalError(`Critical ${i}`, ErrorCodes.INVALID_DATA_GENERIC);
+        const error = new CriticalError(
+          `Critical ${i}`,
+          ErrorCodes.INVALID_DATA_GENERIC
+        );
         errorReporter.report(error);
       }
 
@@ -386,8 +423,10 @@ describe('ErrorReporter - Error Reporting Service', () => {
           type: 'ERROR_ALERT',
           payload: expect.objectContaining({
             severity: 'critical',
-            message: expect.stringContaining('Critical error threshold exceeded')
-          })
+            message: expect.stringContaining(
+              'Critical error threshold exceeded'
+            ),
+          }),
         })
       );
     });
@@ -404,8 +443,8 @@ describe('ErrorReporter - Error Reporting Service', () => {
           type: 'ERROR_ALERT',
           payload: expect.objectContaining({
             severity: 'warning',
-            message: expect.stringContaining('High error rate')
-          })
+            message: expect.stringContaining('High error rate'),
+          }),
         })
       );
     });
@@ -423,8 +462,8 @@ describe('ErrorReporter - Error Reporting Service', () => {
           type: 'ERROR_ALERT',
           payload: expect.objectContaining({
             severity: 'warning',
-            message: expect.stringContaining('Repeated error')
-          })
+            message: expect.stringContaining('Repeated error'),
+          }),
         })
       );
     });
@@ -438,15 +477,15 @@ describe('ErrorReporter - Error Reporting Service', () => {
           payload: expect.objectContaining({
             severity: 'critical',
             message: 'Custom alert',
-            details: { custom: 'data' }
-          })
+            details: { custom: 'data' },
+          }),
         })
       );
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Error alert: Custom alert',
         expect.objectContaining({
-          severity: 'critical'
+          severity: 'critical',
         })
       );
     });
@@ -457,21 +496,21 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
     });
 
     it('should handle ERROR_OCCURRED events', () => {
       const errorHandler = mockEventBus.subscribe.mock.calls.find(
-        call => call[0] === 'ERROR_OCCURRED'
+        (call) => call[0] === 'ERROR_OCCURRED'
       )[1];
 
       const error = new Error('Event error');
       errorHandler({
         payload: {
           error,
-          context: { source: 'event' }
-        }
+          context: { source: 'event' },
+        },
       });
 
       // Verify error was processed (check through analytics)
@@ -481,15 +520,15 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
     it('should handle SYSTEM_ERROR_OCCURRED events', () => {
       const errorHandler = mockEventBus.subscribe.mock.calls.find(
-        call => call[0] === 'SYSTEM_ERROR_OCCURRED'
+        (call) => call[0] === 'SYSTEM_ERROR_OCCURRED'
       )[1];
 
       const error = new Error('System error');
       errorHandler({
         payload: {
           error,
-          context: { source: 'system' }
-        }
+          context: { source: 'system' },
+        },
       });
 
       // Verify error was processed
@@ -499,12 +538,12 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
     it('should handle events with error as direct payload', () => {
       const errorHandler = mockEventBus.subscribe.mock.calls.find(
-        call => call[0] === 'ERROR_OCCURRED'
+        (call) => call[0] === 'ERROR_OCCURRED'
       )[1];
 
       const error = new Error('Direct error');
       errorHandler({
-        payload: error
+        payload: error,
       });
 
       // Verify error was processed
@@ -519,7 +558,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        flushInterval: 5000
+        flushInterval: 5000,
       });
 
       const error = new Error('Pending error');
@@ -541,7 +580,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        flushInterval: 5000
+        flushInterval: 5000,
       });
 
       const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
@@ -556,7 +595,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       errorReporter.destroy();
@@ -577,7 +616,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 2
+        batchSize: 2,
       });
     });
 
@@ -657,9 +696,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
           sampling: {
             enabled: true,
             rate: 0,
-            alwaysReport: []
-          }
-        }
+            alwaysReport: [],
+          },
+        },
       });
 
       jest.spyOn(Math, 'random').mockReturnValue(0.9);
@@ -668,7 +707,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        enabled: true
+        enabled: true,
       });
 
       const sampledError = new Error('Sampled out error');
@@ -676,7 +715,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
       expect(mockLogger.debug).toHaveBeenCalledWith('Error sampled out', {
         errorType: sampledError.constructor.name,
-        severity: sampledError.severity
+        severity: sampledError.severity,
       });
       expect(errorReporter.getAnalytics().totalReported).toBe(0);
     });
@@ -687,7 +726,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       const firstError = new Error('First failure');
@@ -703,7 +742,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(analytics.totalReported).toBe(2);
       expect(analytics.errorsBySeverity).toEqual({
         warning: 1,
-        critical: 1
+        critical: 1,
       });
       expect(analytics.topErrors[0]).toMatchObject({ type: 'Error', count: 2 });
     });
@@ -714,9 +753,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
           sampling: {
             enabled: true,
             rate: 0,
-            alwaysReport: ['critical']
-          }
-        }
+            alwaysReport: ['critical'],
+          },
+        },
       });
 
       jest.spyOn(Math, 'random').mockReturnValue(0.95);
@@ -725,7 +764,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        enabled: true
+        enabled: true,
       });
 
       const criticalError = new Error('Critical failure');
@@ -743,13 +782,15 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: '',
-        enabled: true
+        enabled: true,
       });
 
       errorReporter.report(new Error('Offline report'));
       await errorReporter.flush();
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Would send 1 errors to reporting service');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Would send 1 errors to reporting service'
+      );
     });
 
     it('should keep a rolling window of the last 100 trend entries', () => {
@@ -759,7 +800,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 1000
+        batchSize: 1000,
       });
 
       const baseTime = new Date('2024-01-01T00:00:00Z').getTime();
@@ -787,7 +828,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 1000
+        batchSize: 1000,
       });
 
       const now = new Date('2024-08-01T12:00:00Z').getTime();
@@ -821,7 +862,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 1000
+        batchSize: 1000,
       });
 
       const baseTime = new Date('2024-05-01T00:00:00Z').getTime();
@@ -835,18 +876,23 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
       const report = errorReporter.generateErrorReport();
 
-      expect(report.trends).toEqual(expect.objectContaining({ status: 'increasing' }));
+      expect(report.trends).toEqual(
+        expect.objectContaining({ status: 'increasing' })
+      );
       expect(report.recommendations).toEqual(
         expect.arrayContaining([
-          { priority: 'high', message: expect.stringContaining('critical errors') },
           {
-            priority: 'medium',
-            message: expect.stringContaining('Investigate root cause of Error')
+            priority: 'high',
+            message: expect.stringContaining('critical errors'),
           },
           {
             priority: 'medium',
-            message: expect.stringContaining('Error rate increasing')
-          }
+            message: expect.stringContaining('Investigate root cause of Error'),
+          },
+          {
+            priority: 'medium',
+            message: expect.stringContaining('Error rate increasing'),
+          },
         ])
       );
     });
@@ -858,7 +904,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 1000
+        batchSize: 1000,
       });
 
       const baseTime = new Date('2024-06-01T00:00:00Z').getTime();
@@ -872,7 +918,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
       const report = errorReporter.generateErrorReport();
 
-      expect(report.trends).toEqual(expect.objectContaining({ status: 'decreasing' }));
+      expect(report.trends).toEqual(
+        expect.objectContaining({ status: 'decreasing' })
+      );
     });
 
     it('should capture server context when browser globals are unavailable', () => {
@@ -887,10 +935,12 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 1000
+        batchSize: 1000,
       });
 
-      errorReporter.report(new Error('Server-side failure'), { origin: 'server-test' });
+      errorReporter.report(new Error('Server-side failure'), {
+        origin: 'server-test',
+      });
 
       expect(errorReporter.getAnalytics().totalReported).toBe(1);
 
@@ -909,11 +959,18 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
-      const systemHandler = subscriptions.find(({ event }) => event === 'SYSTEM_ERROR_OCCURRED').handler;
-      systemHandler({ payload: { error: new Error('Subsystem failure'), context: { scope: 'system' } } });
+      const systemHandler = subscriptions.find(
+        ({ event }) => event === 'SYSTEM_ERROR_OCCURRED'
+      ).handler;
+      systemHandler({
+        payload: {
+          error: new Error('Subsystem failure'),
+          context: { scope: 'system' },
+        },
+      });
 
       expect(errorReporter.getAnalytics().totalReported).toBe(1);
     });
@@ -929,10 +986,12 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
-      const systemHandler = subscriptions.find(({ event }) => event === 'SYSTEM_ERROR_OCCURRED').handler;
+      const systemHandler = subscriptions.find(
+        ({ event }) => event === 'SYSTEM_ERROR_OCCURRED'
+      ).handler;
       systemHandler({ payload: new Error('Direct system payload') });
 
       expect(errorReporter.getAnalytics().totalReported).toBe(1);
@@ -945,7 +1004,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
         logger: mockLogger,
         eventBus: mockEventBus,
         endpoint: 'http://example.com/errors',
-        batchSize: 1000
+        batchSize: 1000,
       });
 
       const baseTime = new Date('2024-07-01T00:00:00Z').getTime();
@@ -959,7 +1018,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
       const report = errorReporter.generateErrorReport();
 
-      expect(report.trends).toEqual(expect.objectContaining({ status: 'insufficient_data' }));
+      expect(report.trends).toEqual(
+        expect.objectContaining({ status: 'insufficient_data' })
+      );
     });
 
     it('should avoid repeated error alerts when threshold not met', () => {
@@ -969,15 +1030,15 @@ describe('ErrorReporter - Error Reporting Service', () => {
             criticalErrors: 9999,
             errorRate: 9999,
             specificError: 5,
-            failureRate: 1
-          }
-        }
+            failureRate: 1,
+          },
+        },
       });
 
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       const occasionalError = new Error('Occasional issue');
@@ -989,8 +1050,8 @@ describe('ErrorReporter - Error Reporting Service', () => {
       expect(mockEventBus.dispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
-            message: expect.stringContaining('Repeated error')
-          })
+            message: expect.stringContaining('Repeated error'),
+          }),
         })
       );
     });
@@ -998,14 +1059,14 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should respect stack trace configuration when disabled', () => {
       mockConfig({
         reporting: {
-          includeStackTrace: false
-        }
+          includeStackTrace: false,
+        },
       });
 
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       errorReporter.report(new Error('Stack disabled test'));
@@ -1016,7 +1077,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should capture browser context when environment mode is not test', () => {
       mockConfig();
 
-      const envSpy = jest.spyOn(environmentUtils, 'getEnvironmentMode').mockReturnValue('development');
+      const envSpy = jest
+        .spyOn(environmentUtils, 'getEnvironmentMode')
+        .mockReturnValue('development');
       const originalWindow = global.window;
       const originalNavigator = global.navigator;
 
@@ -1026,7 +1089,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       errorReporter.report(new Error('Browser mode error'));
@@ -1041,7 +1104,9 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should fall back to server url when browser location is unavailable', () => {
       mockConfig();
 
-      const envSpy = jest.spyOn(environmentUtils, 'getEnvironmentMode').mockReturnValue('development');
+      const envSpy = jest
+        .spyOn(environmentUtils, 'getEnvironmentMode')
+        .mockReturnValue('development');
       const originalWindow = global.window;
 
       global.window = { location: {} };
@@ -1049,7 +1114,7 @@ describe('ErrorReporter - Error Reporting Service', () => {
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       errorReporter.report(new Error('Missing href'));
@@ -1063,15 +1128,19 @@ describe('ErrorReporter - Error Reporting Service', () => {
     it('should fall back to server identifiers when browser context is absent', () => {
       mockConfig();
 
-      const envSpy = jest.spyOn(environmentUtils, 'getEnvironmentMode').mockReturnValue('development');
-      const urlSpy = jest.spyOn(ErrorReporter, 'resolveCurrentUrl').mockReturnValue(undefined);
+      const envSpy = jest
+        .spyOn(environmentUtils, 'getEnvironmentMode')
+        .mockReturnValue('development');
+      const urlSpy = jest
+        .spyOn(ErrorReporter, 'resolveCurrentUrl')
+        .mockReturnValue(undefined);
       const originalNavigator = global.navigator;
       global.navigator = undefined;
 
       errorReporter = new ErrorReporter({
         logger: mockLogger,
         eventBus: mockEventBus,
-        endpoint: 'http://example.com/errors'
+        endpoint: 'http://example.com/errors',
       });
 
       errorReporter.report(new Error('Missing browser context'));
@@ -1085,22 +1154,35 @@ describe('ErrorReporter - Error Reporting Service', () => {
 
     it('should expose URL resolution helper for direct evaluation', () => {
       expect(
-        ErrorReporter.resolveCurrentUrl({ window: { location: { href: 'https://app.example' } } })
+        ErrorReporter.resolveCurrentUrl({
+          window: { location: { href: 'https://app.example' } },
+        })
       ).toBe('https://app.example');
 
       expect(
-        ErrorReporter.resolveCurrentUrl({ location: { href: 'https://fallback.example' } })
+        ErrorReporter.resolveCurrentUrl({
+          location: { href: 'https://fallback.example' },
+        })
       ).toBe('https://fallback.example');
 
-      expect(ErrorReporter.resolveCurrentUrl({ window: { location: {} }, location: {} })).toBeUndefined();
+      expect(
+        ErrorReporter.resolveCurrentUrl({
+          window: { location: {} },
+          location: {},
+        })
+      ).toBeUndefined();
     });
 
     it('should expose user agent resolution helper for direct evaluation', () => {
       expect(
-        ErrorReporter.resolveUserAgent({ navigator: { userAgent: 'BrowserAgent/2.0' } })
+        ErrorReporter.resolveUserAgent({
+          navigator: { userAgent: 'BrowserAgent/2.0' },
+        })
       ).toBe('BrowserAgent/2.0');
 
-      expect(ErrorReporter.resolveUserAgent({ navigator: { userAgent: '' } })).toBe('server');
+      expect(
+        ErrorReporter.resolveUserAgent({ navigator: { userAgent: '' } })
+      ).toBe('server');
       expect(ErrorReporter.resolveUserAgent({})).toBe('server');
     });
   });

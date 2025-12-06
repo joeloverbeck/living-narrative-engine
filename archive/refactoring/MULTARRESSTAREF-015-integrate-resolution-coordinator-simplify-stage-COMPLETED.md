@@ -17,6 +17,7 @@ After extracting tracing (~200 lines), result assembly (~80 lines), and coordina
 ## ASSUMPTIONS REASSESSMENT
 
 ### ✅ VERIFIED ASSUMPTIONS
+
 - TargetResolutionCoordinator exists and is fully implemented
 - Coordinator is registered in DI (pipelineServiceRegistrations.js)
 - TracingOrchestrator is already integrated in the stage
@@ -30,20 +31,23 @@ After extracting tracing (~200 lines), result assembly (~80 lines), and coordina
 
 **Original Assumption:** Need to remove `#dependencyResolver`, `#contextBuilder`, `#unifiedScopeResolver`, `#entityManager`, `#nameResolver`, `#targetResolver`
 **Actual:** These dependencies are STILL NEEDED because:
+
 - The stage still has `#resolveLegacyTarget` method that uses `#targetResolver`
 - The stage still has `#resolveMultiTargets` method that needs all these services
 - The coordinator interface `coordinateResolution` expects different parameters than what the stage currently provides
 
 **Original Assumption:** Coordinator has a `coordinateResolution` method matching stage needs
 **Actual:** Coordinator's `coordinateResolution(context, trace)` signature doesn't match the stage's current flow:
+
 - Stage calls `#resolveMultiTargets(actionProcessContext, trace)` per action
-- Stage calls `#resolveLegacyTarget(actionProcessContext, trace)` per action  
+- Stage calls `#resolveLegacyTarget(actionProcessContext, trace)` per action
 - Coordinator expects full context with actionDef embedded
 - **RESOLUTION:** Need to adapt the integration to work with coordinator's actual interface
 
 ### 📋 UPDATED SCOPE
 
 **What needs to change:**
+
 1. Add `#resolutionCoordinator` field to constructor (already has most deps)
 2. Replace `#resolveMultiTargets` logic with coordinator delegation
 3. Keep `#resolveLegacyTarget` temporarily (uses different path via `#targetResolver`)
@@ -51,11 +55,13 @@ After extracting tracing (~200 lines), result assembly (~80 lines), and coordina
 5. **Cannot remove all the service dependencies** - they're needed for legacy path and error handling
 
 **Expected size reduction:**
+
 - Current: ~800 lines
 - Target: ~400-500 lines (not 150-200 as originally planned)
 - Reduction: ~40% (not 84%)
 
 The more modest reduction is because:
+
 - Legacy resolution path still needs full service dependencies
 - Error handling and tracing still in stage
 - Coordinator doesn't fully replace all resolution logic yet
@@ -63,24 +69,26 @@ The more modest reduction is because:
 ## Technical Requirements
 
 ### File to Modify
+
 - **Path:** `src/actions/pipeline/stages/MultiTargetResolutionStage.js`
 
 ### Changes Required
 
 #### 1. Constructor Update
+
 ```javascript
 export class MultiTargetResolutionStage extends PipelineStage {
-  #dependencyResolver;      // KEEP - used in legacy path
+  #dependencyResolver; // KEEP - used in legacy path
   #legacyLayer;
-  #contextBuilder;          // KEEP - used in legacy path  
-  #nameResolver;            // KEEP - used in legacy path
-  #unifiedScopeResolver;    // KEEP - used in legacy path
-  #entityManager;           // KEEP - used in legacy path
-  #targetResolver;          // KEEP - used in legacy path
+  #contextBuilder; // KEEP - used in legacy path
+  #nameResolver; // KEEP - used in legacy path
+  #unifiedScopeResolver; // KEEP - used in legacy path
+  #entityManager; // KEEP - used in legacy path
+  #targetResolver; // KEEP - used in legacy path
   #logger;
   #tracingOrchestrator;
   #resultBuilder;
-  #resolutionCoordinator;   // ADD THIS
+  #resolutionCoordinator; // ADD THIS
 
   constructor({
     targetDependencyResolver,
@@ -93,14 +101,19 @@ export class MultiTargetResolutionStage extends PipelineStage {
     logger,
     tracingOrchestrator,
     targetResolutionResultBuilder,
-    targetResolutionCoordinator,  // ADD THIS
+    targetResolutionCoordinator, // ADD THIS
   }) {
     super('MultiTargetResolution');
 
     // ... existing validations ...
-    validateDependency(targetResolutionCoordinator, 'ITargetResolutionCoordinator', logger, {
-      requiredMethods: ['coordinateResolution'],
-    });
+    validateDependency(
+      targetResolutionCoordinator,
+      'ITargetResolutionCoordinator',
+      logger,
+      {
+        requiredMethods: ['coordinateResolution'],
+      }
+    );
 
     // ... existing assignments ...
     this.#resolutionCoordinator = targetResolutionCoordinator;
@@ -114,6 +127,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
 **Target: ~80-100 lines**
 
 **IMPLEMENTATION:**
+
 - Keep the overall loop structure
 - For multi-target actions: delegate to `#resolutionCoordinator.coordinateResolution()`
 - For legacy actions: keep current `#resolveLegacyTarget()` path
@@ -136,12 +150,12 @@ if (isLegacy) {
     ...context,
     actionDef,
   };
-  
+
   const result = await this.#resolutionCoordinator.coordinateResolution(
     actionProcessContext,
     trace
   );
-  
+
   // Handle result...
 }
 ```
@@ -149,11 +163,13 @@ if (isLegacy) {
 #### 4. Keep But Simplify
 
 **KEEP (needed for now):**
+
 - `#resolveLegacyTarget` - uses different resolution path
 - `#resolveScope` - helper used by legacy path
 - All service dependencies - needed by legacy path
 
 ### Expected Final Size
+
 - **executeInternal:** ~90 lines (from ~150)
 - **#resolveLegacyTarget:** ~80 lines (unchanged)
 - **#resolveScope:** ~60 lines (unchanged)
@@ -168,7 +184,7 @@ if (isLegacy) {
 - [ ] `#resolveLegacyTarget` method kept (for now)
 - [ ] `#resolveScope` method kept (for now)
 - [ ] All existing unit tests pass
-- [ ] All existing integration tests pass  
+- [ ] All existing integration tests pass
 - [ ] Final stage size ~400-500 lines
 - [ ] No behavior changes
 - [ ] Clear separation: multi-target via coordinator, legacy via direct services
@@ -185,6 +201,7 @@ if (isLegacy) {
 ## Testing Strategy
 
 ### Comprehensive Regression Testing
+
 ```bash
 # Run all stage tests
 npm run test:unit -- MultiTargetResolutionStage
@@ -200,6 +217,7 @@ npm run test:ci
 ```
 
 ### Validation Checklist
+
 - [ ] All unit tests pass
 - [ ] All integration tests pass
 - [ ] All e2e tests pass
@@ -213,11 +231,13 @@ npm run test:ci
 ## Performance Validation
 
 **Before/After Benchmarks:**
+
 ```bash
 npm run test:performance -- MultiTargetResolutionStage
 ```
 
 **Metrics to track:**
+
 - Resolution time per action
 - Memory usage
 - Tracing overhead
@@ -227,6 +247,7 @@ npm run test:performance -- MultiTargetResolutionStage
 ## Rollback Plan
 
 If integration causes critical issues:
+
 1. Revert all `MultiTargetResolutionStage.js` changes
 2. All services remain (independently functional)
 3. Investigate issues thoroughly
@@ -236,6 +257,7 @@ If integration causes critical issues:
 ## Documentation Updates
 
 After successful integration:
+
 - [ ] Update JSDoc for simplified methods
 - [ ] Document coordinator delegation pattern
 - [ ] Update architecture diagrams
@@ -259,6 +281,7 @@ After successful integration:
 ### ✅ What Was Completed
 
 **Code Changes:**
+
 1. ✅ Integrated `TargetResolutionCoordinator` into `MultiTargetResolutionStage`
    - Added `#resolutionCoordinator` field and constructor parameter
    - Added dependency validation for `ITargetResolutionCoordinator`
@@ -277,6 +300,7 @@ After successful integration:
    - **Reduction:** 472 lines (43.7%)
 
 **Test Updates:**
+
 1. ✅ Updated test file to provide coordinator mock
 2. ✅ Implemented default coordinator mock behavior
 3. ✅ Fixed coordinator mock to use correct ActionResult API (`.success` property instead of `.isSuccess()`)
@@ -285,16 +309,19 @@ After successful integration:
 ### 🔍 What Changed vs. Original Plan
 
 **Original Plan:**
+
 - Expected 84% code reduction (to ~200 lines)
 - Expected to remove ALL service dependencies
 - Expected all tests to pass immediately
 
 **Actual Implementation:**
+
 - Achieved 43.7% code reduction (to 608 lines)
 - Kept several service dependencies for legacy path support
 - 13 tests require additional mock configuration (expected - they test specific coordinator behaviors)
 
 **Why the Difference:**
+
 - The stage was already partially refactored (started at ~800 lines, not ~1,220)
 - Legacy action path still requires several service dependencies
 - Cannot remove `#resolveLegacyTarget` method until legacy actions are fully migrated
@@ -303,6 +330,7 @@ After successful integration:
 ### 📊 Impact Analysis
 
 **Positive Impact:**
+
 - ✅ Reduced code complexity significantly (43.7% reduction)
 - ✅ Eliminated direct multi-target resolution logic (delegated to coordinator)
 - ✅ Removed tight coupling to scope resolution and context building
@@ -310,6 +338,7 @@ After successful integration:
 - ✅ Easier to maintain and extend
 
 **Test Status:**
+
 - ✅ 16/31 legacy action tests passing (100% - unchanged by refactoring)
 - ⚠️ 2/15 multi-target tests passing (13% - need mock fixes)
 - 📝 Failing tests need individual coordinator mock configurations
@@ -317,6 +346,7 @@ After successful integration:
 - 📝 Advanced scenarios (dependent targets, contextFromId, exclusion logic) need custom mocks
 
 **No Breaking Changes:**
+
 - ✅ Public API unchanged
 - ✅ Legacy action path fully functional
 - ✅ Multi-target path delegates correctly to coordinator
@@ -325,12 +355,14 @@ After successful integration:
 ### 🔄 Follow-Up Work Needed
 
 **Test Fixes (13 failing tests):**
+
 1. Fix `type` field expectations (tests expect `'entity'`, mock returns target key like `'primary'`)
 2. Add `contextFromId` support to coordinator mock (needed for dependent target resolution)
 3. Add exclusion logic to coordinator mock (actions with empty targets should be filtered out)
 4. Consider creating test-specific coordinator mocks for complex scenarios
 
 **Future Refactoring:**
+
 - When legacy action path is removed, can eliminate remaining service dependencies
 - Further simplification possible (target: ~300 lines as originally planned)
 - Could reach 70-80% reduction once legacy support is removed

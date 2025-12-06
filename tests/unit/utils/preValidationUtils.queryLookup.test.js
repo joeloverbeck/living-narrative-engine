@@ -147,7 +147,8 @@ describe('preValidationUtils - QUERY_LOOKUP operation type', () => {
           "Handles the 'music:set_aggressive_mood_on_instrument' action.",
         event_type: 'core:attempt_action',
         condition: {
-          condition_ref: 'music:event-is-action-set-aggressive-mood-on-instrument',
+          condition_ref:
+            'music:event-is-action-set-aggressive-mood-on-instrument',
         },
         actions: [
           {

@@ -312,11 +312,19 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     // Character input validation
     if (this._getElement('characterDefinition')) {
       const characterDefinition = this._getElement('characterDefinition');
-      this.#eventListenerRegistry.addEventListener(characterDefinition, 'input', () => {
-        this.#handleCharacterInput();
-      });
+      this.#eventListenerRegistry.addEventListener(
+        characterDefinition,
+        'input',
+        () => {
+          this.#handleCharacterInput();
+        }
+      );
 
-      this.#eventListenerRegistry.addEventListener(characterDefinition, 'blur', validationHandler);
+      this.#eventListenerRegistry.addEventListener(
+        characterDefinition,
+        'blur',
+        validationHandler
+      );
     }
 
     // Generate button
@@ -338,9 +346,13 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     // Format selector change handler
     if (this._getElement('exportFormat')) {
       const exportFormat = this._getElement('exportFormat');
-      this.#eventListenerRegistry.addEventListener(exportFormat, 'change', () => {
-        this.#updateTemplateVisibility();
-      });
+      this.#eventListenerRegistry.addEventListener(
+        exportFormat,
+        'change',
+        () => {
+          this.#updateTemplateVisibility();
+        }
+      );
     }
 
     // Initialize export controls
@@ -472,9 +484,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         return false;
       }
     } catch (parseError) {
-      this.#showValidationError([
-        'JSON Syntax Error: ' + parseError.message,
-      ]);
+      this.#showValidationError(['JSON Syntax Error: ' + parseError.message]);
       this.#characterDefinition = null;
       this.#updateUIState();
       return false;
@@ -1186,7 +1196,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
             <div id="pattern-${index}-content" class="pattern-content">
                 ${
-                  pattern.htmlSafeContexts && pattern.htmlSafeContexts.length > 0
+                  pattern.htmlSafeContexts &&
+                  pattern.htmlSafeContexts.length > 0
                     ? `
                     <div class="pattern-contexts" role="note">
                         <span class="context-label">Contexts:</span>

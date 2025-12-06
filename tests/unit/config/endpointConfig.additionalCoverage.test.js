@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const MODULE_PATH = '../../../src/config/endpointConfig.js';
 
@@ -48,7 +55,9 @@ describe('EndpointConfig additional coverage', () => {
     const fetchMock = jest.fn().mockResolvedValue({ ok: true });
     global.fetch = fetchMock;
 
-    const { getEndpointConfig, resetEndpointConfig } = await import(MODULE_PATH);
+    const { getEndpointConfig, resetEndpointConfig } = await import(
+      MODULE_PATH
+    );
     resetEndpointConfig();
     const config = getEndpointConfig();
 
@@ -70,21 +79,31 @@ describe('EndpointConfig additional coverage', () => {
       .mockResolvedValueOnce(fallbackResponse);
     global.fetch = fetchMock;
 
-    const { getEndpointConfig, resetEndpointConfig } = await import(MODULE_PATH);
+    const { getEndpointConfig, resetEndpointConfig } = await import(
+      MODULE_PATH
+    );
     resetEndpointConfig();
     const config = getEndpointConfig();
 
     const result = await config.testConnectivity();
 
     expect(result).toBe(true);
-    expect(fetchMock).toHaveBeenNthCalledWith(1, 'http://localhost:3001/health', {
-      method: 'GET',
-      timeout: 5000,
-    });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, 'http://localhost:3001/api/debug-log', {
-      method: 'OPTIONS',
-      timeout: 5000,
-    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:3001/health',
+      {
+        method: 'GET',
+        timeout: 5000,
+      }
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'http://localhost:3001/api/debug-log',
+      {
+        method: 'OPTIONS',
+        timeout: 5000,
+      }
+    );
   });
 
   it('returns false when both connectivity attempts fail', async () => {
@@ -94,7 +113,9 @@ describe('EndpointConfig additional coverage', () => {
       .mockRejectedValueOnce(new Error('debug error'));
     global.fetch = fetchMock;
 
-    const { getEndpointConfig, resetEndpointConfig } = await import(MODULE_PATH);
+    const { getEndpointConfig, resetEndpointConfig } = await import(
+      MODULE_PATH
+    );
     resetEndpointConfig();
     const config = getEndpointConfig();
 
@@ -109,7 +130,9 @@ describe('EndpointConfig additional coverage', () => {
     delete process.env.PROXY_PORT;
     delete process.env.PROXY_USE_HTTPS;
 
-    const { default: EndpointConfig, resetEndpointConfig } = await import(MODULE_PATH);
+    const { default: EndpointConfig, resetEndpointConfig } = await import(
+      MODULE_PATH
+    );
     resetEndpointConfig();
 
     const config = EndpointConfig.forEnvironment('production');
@@ -121,7 +144,9 @@ describe('EndpointConfig additional coverage', () => {
   it('reuses existing port when configuring test environment', async () => {
     process.env.PROXY_PORT = '4555';
 
-    const { default: EndpointConfig, resetEndpointConfig } = await import(MODULE_PATH);
+    const { default: EndpointConfig, resetEndpointConfig } = await import(
+      MODULE_PATH
+    );
     resetEndpointConfig();
 
     const config = EndpointConfig.forEnvironment('test');
@@ -131,7 +156,9 @@ describe('EndpointConfig additional coverage', () => {
   });
 
   it('throws when configuring an unknown environment', async () => {
-    const { default: EndpointConfig, resetEndpointConfig } = await import(MODULE_PATH);
+    const { default: EndpointConfig, resetEndpointConfig } = await import(
+      MODULE_PATH
+    );
     resetEndpointConfig();
 
     expect(() => EndpointConfig.forEnvironment('staging')).toThrow(

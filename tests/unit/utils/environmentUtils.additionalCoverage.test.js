@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import * as environmentUtilsModule from '../../../src/utils/environmentUtils.js';
 
 const {
@@ -141,7 +148,6 @@ describe('environmentUtils additional coverage', () => {
 
     const value = getEnvironmentVariable('EMPTY_KEY', 'global-default');
     expect(value).toBe('global-default');
-
   });
 
   it('uses the global default inside an isolated module when env values are empty', async () => {
@@ -162,7 +168,6 @@ describe('environmentUtils additional coverage', () => {
       expect(mod.getEnvironmentVariable('EMPTY_KEY', 'isolated-default')).toBe(
         'isolated-default'
       );
-
     });
   });
 
@@ -276,7 +281,12 @@ describe('environmentUtils additional coverage', () => {
     };
 
     const usage = getMemoryUsage();
-    expect(usage).toEqual({ heapUsed: 0, heapTotal: 0, heapLimit: 0, external: 0 });
+    expect(usage).toEqual({
+      heapUsed: 0,
+      heapTotal: 0,
+      heapLimit: 0,
+      external: 0,
+    });
   });
 
   it('handles environment variable failures safely', () => {
@@ -313,11 +323,9 @@ describe('environmentUtils additional coverage', () => {
   it('returns false when a fresh module experiences an environment lookup failure', async () => {
     await jest.isolateModulesAsync(async () => {
       const mod = await import('../../../src/utils/environmentUtils.js');
-      jest
-        .spyOn(mod, 'getEnvironmentVariable')
-        .mockImplementation(() => {
-          throw new Error('isolated');
-        });
+      jest.spyOn(mod, 'getEnvironmentVariable').mockImplementation(() => {
+        throw new Error('isolated');
+      });
       expect(mod.hasEnvironmentVariable('ANY')).toBe(false);
     });
   });
@@ -412,7 +420,9 @@ describe('environmentUtils additional coverage', () => {
 
       try {
         globalThis.require = jest.fn(() => {
-          throw new Error('v8 should not be required when node flag is missing');
+          throw new Error(
+            'v8 should not be required when node flag is missing'
+          );
         });
 
         globalThis.process = {

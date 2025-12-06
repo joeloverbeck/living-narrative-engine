@@ -291,12 +291,10 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       mockJsonFormatter.format.mockReturnValue('{"test": "json"}');
 
       let syntheticNow = 0;
-      const nowSpy = jest
-        .spyOn(performance, 'now')
-        .mockImplementation(() => {
-          syntheticNow += 0.001;
-          return syntheticNow;
-        });
+      const nowSpy = jest.spyOn(performance, 'now').mockImplementation(() => {
+        syntheticNow += 0.001;
+        return syntheticNow;
+      });
 
       const startTime = performance.now();
       await outputService.writeTrace(trace);

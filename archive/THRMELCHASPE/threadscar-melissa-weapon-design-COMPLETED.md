@@ -21,11 +21,13 @@ This specification documents the design and implementation of a signature weapon
 **Combat Philosophy**: "Composer of death rather than butcher" - artistry in violence
 
 **Weapons**:
+
 - **Theatrical rapier** (1.2 kg) - thrust-focused, silver charms that jingle
 - **Main-gauche parrying dagger** (0.5 kg) - precision, concealment
 - **Total weight**: 1.7 kg
 
 **Characteristics**:
+
 - Decorated, musical motifs (staff lines etched on blade)
 - Precision over brutality
 - Clean lines, perfect balance
@@ -40,6 +42,7 @@ This specification documents the design and implementation of a signature weapon
 **Combat Philosophy**: "Economy of motion, minimal wasted energy, maximum effect"
 
 **Physical Build**:
+
 - 5'11", "built like a siege weapon"
 - Dense muscle, decades of scars
 - Direct, economical movement
@@ -65,6 +68,7 @@ This specification documents the design and implementation of a signature weapon
 **Name**: "Melissa's battle-scarred longsword" (NOT theatrical, NOT fancy)
 
 **Core Principles**:
+
 - Function over form
 - Visible age but perfect maintenance
 - No decorations or aesthetic flourishes
@@ -76,6 +80,7 @@ This specification documents the design and implementation of a signature weapon
 ## Physical Specifications
 
 ### Dimensions
+
 - **Weight**: 1.8 kg (heavier than Vespera's weapons combined)
 - **Blade Length**: ~100-110 cm
 - **Handle**: Two-handed grip, worn leather wrapping
@@ -84,18 +89,21 @@ This specification documents the design and implementation of a signature weapon
 ### Condition Markers
 
 **Evidence of Age**:
+
 - Multiple nicks in blade edge from decades of use
 - Pitted steel showing countless sharpening sessions
 - Handle leather dark with sweat and oil from 40+ years of grips
 - Crossguard slightly bent from specific incident (the "Threadscar" fight?)
 
 **Evidence of Maintenance**:
+
 - Edge razor-sharp despite visible wear
 - No rust or corrosion (perfect upkeep)
 - Recent oiling visible on blade
 - Systematic sharpening pattern showing methodical care
 
 **Aesthetic**:
+
 - NO decorations
 - NO engravings
 - NO aesthetic pretense
@@ -106,18 +114,18 @@ This specification documents the design and implementation of a signature weapon
 
 ## Character Comparison Matrix
 
-| Attribute | Vespera Nightwhisper | Threadscar Melissa |
-|-----------|---------------------|-------------------|
-| **Age** | 25-27 | 42 |
-| **Experience** | Talented but younger | 40+ years veteran |
-| **Fighting Style** | Elegant duelist | Pragmatic brutalist |
-| **Weapon Aesthetic** | Theatrical, musical | Battle-worn, functional |
-| **Combat Philosophy** | Art/performance | Survival/efficiency |
-| **Weapon Count** | 2 (rapier + dagger) | 1 (longsword) |
-| **Total Weight** | 1.7 kg | 1.8 kg |
-| **Emotional Relationship** | Performance tool | Maintained companion |
-| **Movement Style** | Fluid, dancing | Economical, purposeful |
-| **Core Weakness** | Emotional vulnerability | Physical aging |
+| Attribute                  | Vespera Nightwhisper    | Threadscar Melissa      |
+| -------------------------- | ----------------------- | ----------------------- |
+| **Age**                    | 25-27                   | 42                      |
+| **Experience**             | Talented but younger    | 40+ years veteran       |
+| **Fighting Style**         | Elegant duelist         | Pragmatic brutalist     |
+| **Weapon Aesthetic**       | Theatrical, musical     | Battle-worn, functional |
+| **Combat Philosophy**      | Art/performance         | Survival/efficiency     |
+| **Weapon Count**           | 2 (rapier + dagger)     | 1 (longsword)           |
+| **Total Weight**           | 1.7 kg                  | 1.8 kg                  |
+| **Emotional Relationship** | Performance tool        | Maintained companion    |
+| **Movement Style**         | Fluid, dancing          | Economical, purposeful  |
+| **Core Weakness**          | Emotional vulnerability | Physical aging          |
 
 ---
 
@@ -126,9 +134,11 @@ This specification documents the design and implementation of a signature weapon
 ### Files Created
 
 #### 1. Weapon Definition
+
 **Path**: `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json`
 
 **Components**:
+
 ```json
 {
   "id": "fantasy:threadscar_melissa_longsword",
@@ -148,6 +158,7 @@ This specification documents the design and implementation of a signature weapon
 ```
 
 #### 2. Weapon Instance
+
 **Path**: `data/mods/fantasy/entities/instances/threadscar_melissa_longsword.entity.json`
 
 ```json
@@ -161,9 +172,11 @@ This specification documents the design and implementation of a signature weapon
 ### Files Modified
 
 #### 3. Character Inventory
+
 **Path**: `data/mods/fantasy/entities/instances/threadscar_melissa.character.json`
 
 **Change**: Added weapon to inventory
+
 ```json
 "items:inventory": {
   "items": ["fantasy:threadscar_melissa_longsword_instance"],
@@ -172,17 +185,21 @@ This specification documents the design and implementation of a signature weapon
 ```
 
 #### 4. World Integration
+
 **Path**: `data/mods/fantasy/worlds/vespera.world.json`
 
 **Change**: Added weapon instance to world
+
 ```json
 { "instanceId": "fantasy:threadscar_melissa_longsword_instance" }
 ```
 
 #### 5. Mod Manifest
+
 **Path**: `data/mods/fantasy/mod-manifest.json`
 
 **Changes**:
+
 - Added to `entities.definitions[]`: `"threadscar_melissa_longsword.entity.json"`
 - Added to `entities.instances[]`: `"threadscar_melissa_longsword.entity.json"`
 
@@ -193,12 +210,14 @@ This specification documents the design and implementation of a signature weapon
 ### Thematic Contrast
 
 **Vespera's Philosophy**:
+
 - Violence as artistic material
 - Performance even in combat
 - "Musical accompaniment to the blade's dance"
 - "Composer of death rather than a butcher"
 
 **Melissa's Philosophy**:
+
 - "Economy of motion, minimal wasted energy"
 - Function over form
 - "I maintain things. That's how I show care"
@@ -217,6 +236,7 @@ The longsword represents:
 ### Character Depth Integration
 
 **From Melissa's Profile**:
+
 - "I maintain things. That's how I show care—through maintenance, function, reliability"
 - "Same leather jacket for twelve years... I trust what I know. What's proven"
 - "I sharpen blades every day. Doesn't need it daily. But routine maintains function"
@@ -239,6 +259,7 @@ The longsword isn't just equipment—it's the physical manifestation of her surv
 ### Character Interactions
 
 **Vespera + Melissa Together**:
+
 - Young artist vs Old professional
 - Performance vs Function
 - Chasing transcendence vs Accepting mortality
@@ -290,18 +311,21 @@ All required integration points completed:
 ## Validation Checklist
 
 ### JSON Schema Validation
+
 - ✅ Definition file follows entity-definition schema
 - ✅ Instance file follows entity-instance schema
 - ✅ All required components present
 - ✅ Component data matches schema requirements
 
 ### Integration Validation
+
 - ✅ Weapon in character inventory
 - ✅ Weapon instance in world
 - ✅ Manifest includes both definition and instance files
 - ✅ Weight within inventory capacity (1.8 kg < 50.0 kg)
 
 ### Narrative Validation
+
 - ✅ Description authentic to character
 - ✅ Thematic contrast with Vespera established
 - ✅ Functional details support character philosophy
@@ -314,6 +338,7 @@ All required integration points completed:
 ### Why This Works
 
 **Authenticity to Character**:
+
 1. No theatrical elements - Melissa doesn't perform
 2. Visible wear - Honest about 40+ years of use
 3. Perfect maintenance - Despite age, still razor-sharp (her discipline)
@@ -321,6 +346,7 @@ All required integration points completed:
 5. Heavy enough to matter - Aging consideration in combat
 
 **Narrative Richness**:
+
 1. Silent storyteller - Every mark has history she won't share
 2. Identity anchor - "Who am I without this weapon?"
 3. Contrast device - Makes Vespera's theatricality more vivid
@@ -328,6 +354,7 @@ All required integration points completed:
 5. Legacy potential - Could be passed to trained successor
 
 **Mechanical Soundness**:
+
 1. Follows exact pattern - Matches Vespera's weapon structure
 2. Realistic weight - Heavier than rapier/dagger but still manageable
 3. Component complete - All required markers present
@@ -344,6 +371,7 @@ The implementation is complete, validated, and ready for use in the game world.
 ---
 
 **Next Steps** (if needed):
+
 1. Create character interaction scenes showcasing weapon contrast
 2. Develop "Threadscar incident" backstory (crossguard bend)
 3. Design potential weapon legacy quest line

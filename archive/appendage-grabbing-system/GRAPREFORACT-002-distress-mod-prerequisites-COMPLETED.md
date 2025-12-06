@@ -3,6 +3,7 @@
 ## Summary
 
 Add anatomy-based grabbing prerequisites to 2 distress mod actions:
+
 - `bury_face_in_hands` - requires **2 free appendages** (both hands to cover face)
 - `clutch_onto_upper_clothing` - requires **1 free appendage** (single hand clutch)
 
@@ -14,10 +15,10 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 
 ## Files to Modify
 
-| File | Change | Appendages Required |
-|------|--------|---------------------|
-| `data/mods/distress/actions/bury_face_in_hands.action.json` | Populate empty `prerequisites` array | 2 |
-| `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` | Populate empty `prerequisites` array | 1 |
+| File                                                                | Change                               | Appendages Required |
+| ------------------------------------------------------------------- | ------------------------------------ | ------------------- |
+| `data/mods/distress/actions/bury_face_in_hands.action.json`         | Populate empty `prerequisites` array | 2                   |
+| `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` | Populate empty `prerequisites` array | 1                   |
 
 ## Detailed Changes
 
@@ -26,6 +27,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 **Current state**: Has `"prerequisites": []` (empty array)
 
 **Change**: Replace empty array with:
+
 ```json
 "prerequisites": [
   {
@@ -44,6 +46,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 **Current state**: Has `"prerequisites": []` (empty array)
 
 **Change**: Replace empty array with:
+
 ```json
 "prerequisites": [
   {
@@ -61,10 +64,10 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 
 The following existing tests contain assumptions about empty prerequisites that must be updated:
 
-| File | Change Required |
-|------|-----------------|
-| `tests/integration/mods/distress/bury_face_in_hands_action_discovery.test.js` | Update test at line ~60 expecting empty prerequisites to expect 1 prerequisite |
-| `tests/integration/mods/distress/clutch_onto_upper_clothing_discovery.test.js` | Add grabbing mock to discovery test to ensure prerequisite passes |
+| File                                                                           | Change Required                                                                |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `tests/integration/mods/distress/bury_face_in_hands_action_discovery.test.js`  | Update test at line ~60 expecting empty prerequisites to expect 1 prerequisite |
+| `tests/integration/mods/distress/clutch_onto_upper_clothing_discovery.test.js` | Add grabbing mock to discovery test to ensure prerequisite passes              |
 
 ## Out of Scope
 
@@ -77,10 +80,12 @@ The following existing tests contain assumptions about empty prerequisites that 
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [ ] `npm run validate` passes without errors
 - [ ] Both modified files remain valid against `action.schema.json`
 
 ### Structural Integrity
+
 - [ ] `bury_face_in_hands.action.json` prerequisites array contains exactly 1 prerequisite object
 - [ ] `clutch_onto_upper_clothing.action.json` prerequisites array contains exactly 1 prerequisite object
 - [ ] Each prerequisite has both `logic.condition_ref` and `failure_message` properties
@@ -89,6 +94,7 @@ The following existing tests contain assumptions about empty prerequisites that 
 - [ ] All other action properties remain unchanged
 
 ### Invariants That Must Remain True
+
 - [ ] Action IDs unchanged: `distress:bury_face_in_hands`, `distress:clutch_onto_upper_clothing`
 - [ ] Target configurations unchanged
 - [ ] Template strings unchanged

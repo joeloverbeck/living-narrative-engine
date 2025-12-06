@@ -28,8 +28,12 @@ describe('positioning:step_back action discovery', () => {
     it('should have correct forbidden components structure', () => {
       expect(stepBackAction.forbidden_components).toBeDefined();
       expect(stepBackAction.forbidden_components.actor).toBeInstanceOf(Array);
-      expect(stepBackAction.forbidden_components.actor).toContain('positioning:bending_over');
-      expect(stepBackAction.forbidden_components.actor).toContain('positioning:biting_neck');
+      expect(stepBackAction.forbidden_components.actor).toContain(
+        'positioning:bending_over'
+      );
+      expect(stepBackAction.forbidden_components.actor).toContain(
+        'positioning:biting_neck'
+      );
     });
 
     it('should NOT appear when actor has fucking_anally component', () => {
@@ -44,7 +48,9 @@ describe('positioning:step_back action discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
       expect(ids).not.toContain('positioning:step_back');

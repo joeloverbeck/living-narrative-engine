@@ -233,7 +233,9 @@ describe('Operation Registry Workflow E2E', () => {
       // The error is thrown synchronously during handler lookup, before any async operation
       expect(() =>
         operationInterpreter.execute(unknownOperation, context)
-      ).toThrow(/Cannot execute operation.*NON_EXISTENT_OPERATION.*handler not found/);
+      ).toThrow(
+        /Cannot execute operation.*NON_EXISTENT_OPERATION.*handler not found/
+      );
     });
 
     it('should handle handler execution errors gracefully', async () => {

@@ -3,7 +3,11 @@ import BaseError from './baseError.js';
 export class UnknownAstNodeError extends BaseError {
   constructor(nodeType) {
     const context = { nodeType };
-    super(`Unknown AST node type: ${nodeType}`, 'UNKNOWN_AST_NODE_ERROR', context);
+    super(
+      `Unknown AST node type: ${nodeType}`,
+      'UNKNOWN_AST_NODE_ERROR',
+      context
+    );
     this.name = 'UnknownAstNodeError';
     // Backward compatibility
     this.nodeType = nodeType;

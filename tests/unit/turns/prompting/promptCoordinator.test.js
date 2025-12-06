@@ -122,19 +122,22 @@ describe('PromptCoordinator.prompt', () => {
       suggestedAction: suggestion,
     });
 
-    expect(promptOutputPort.prompt).toHaveBeenCalledWith(actor.id, [
+    expect(promptOutputPort.prompt).toHaveBeenCalledWith(
+      actor.id,
+      [
+        {
+          index: composite.index,
+          actionId: composite.actionId,
+          commandString: composite.commandString,
+          params: composite.params,
+          description: composite.description,
+          visual: composite.visual,
+        },
+      ],
       {
-        index: composite.index,
-        actionId: composite.actionId,
-        commandString: composite.commandString,
-        params: composite.params,
-        description: composite.description,
-        visual: composite.visual,
-      },
-    ],
-    {
-      suggestedAction: suggestion,
-    });
+        suggestedAction: suggestion,
+      }
+    );
   });
 
   it('cancelCurrentPrompt invokes session.cancel when active', async () => {

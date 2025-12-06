@@ -115,7 +115,12 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
@@ -160,7 +165,12 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     // Create mock container with resolve method
     const mockEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
@@ -205,7 +215,12 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -226,7 +241,10 @@ describe('main.js failure branches', () => {
     mockSetupDI.mockResolvedValue({ success: true, payload: mockContainer });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     const configError = new Error('config fail');
-    mockInitGlobalConfig.mockResolvedValue({ success: false, error: configError });
+    mockInitGlobalConfig.mockResolvedValue({
+      success: false,
+      error: configError,
+    });
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -241,7 +259,9 @@ describe('main.js failure branches', () => {
     const [elements, details, passedLogger] = mockDisplayFatal.mock.calls[0];
     expect(elements.outputDiv).toBe(uiElements.outputDiv);
     expect(details.errorObject).toBe(configError);
-    expect(details.phase).toBe('Bootstrap Orchestration - Global Configuration Initialization');
+    expect(details.phase).toBe(
+      'Bootstrap Orchestration - Global Configuration Initialization'
+    );
     expect(passedLogger).toBe(logger);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),
@@ -259,7 +279,12 @@ describe('main.js failure branches', () => {
       titleElement: null,
       document,
     };
-    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+    const logger = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+    };
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -295,7 +320,9 @@ describe('main.js failure branches', () => {
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
     const [, details, passedLogger] = mockDisplayFatal.mock.calls[0];
     expect(details.errorObject).toBe(engineError);
-    expect(details.phase).toBe('Bootstrap Orchestration - Game Engine Initialization');
+    expect(details.phase).toBe(
+      'Bootstrap Orchestration - Game Engine Initialization'
+    );
     expect(passedLogger).toBe(logger);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),

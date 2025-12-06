@@ -26,7 +26,10 @@ export class ActionIndexValidationError extends BaseError {
    * @param {string|null} [options.thoughts] - LLM-generated thoughts to preserve.
    * @param {Array|null} [options.notes] - LLM-generated notes to preserve.
    */
-  constructor(message, { index, actionsLength, speech = null, thoughts = null, notes = null }) {
+  constructor(
+    message,
+    { index, actionsLength, speech = null, thoughts = null, notes = null }
+  ) {
     super(message, 'ACTION_INDEX_VALIDATION_ERROR', {
       index,
       actionsLength,

@@ -47,9 +47,14 @@ class ModifierCollectorService {
     validateDependency(entityManager, 'IEntityManager', logger, {
       requiredMethods: ['getComponentData', 'hasComponent'],
     });
-    validateDependency(modifierContextBuilder, 'ModifierContextBuilder', logger, {
-      requiredMethods: ['buildContext'],
-    });
+    validateDependency(
+      modifierContextBuilder,
+      'ModifierContextBuilder',
+      logger,
+      {
+        requiredMethods: ['buildContext'],
+      }
+    );
 
     this.#entityManager = entityManager;
     this.#modifierContextBuilder = modifierContextBuilder;
@@ -69,7 +74,13 @@ class ModifierCollectorService {
    * @param {object} [params.actionConfig] - Action's chanceBased configuration
    * @returns {ModifierCollection}
    */
-  collectModifiers({ actorId, primaryTargetId, secondaryTargetId, tertiaryTargetId, actionConfig }) {
+  collectModifiers({
+    actorId,
+    primaryTargetId,
+    secondaryTargetId,
+    tertiaryTargetId,
+    actionConfig,
+  }) {
     this.#logger.debug(
       `ModifierCollectorService: Collecting modifiers for actor=${actorId}, primary=${primaryTargetId}`
     );
@@ -123,7 +134,13 @@ class ModifierCollectorService {
    * @param {Array<object>} params.modifierConfigs - Modifier configurations from action
    * @returns {Modifier[]}
    */
-  #collectActionModifiers({ actorId, primaryTargetId, secondaryTargetId, tertiaryTargetId, modifierConfigs }) {
+  #collectActionModifiers({
+    actorId,
+    primaryTargetId,
+    secondaryTargetId,
+    tertiaryTargetId,
+    modifierConfigs,
+  }) {
     if (!modifierConfigs || modifierConfigs.length === 0) {
       return [];
     }
@@ -142,7 +159,10 @@ class ModifierCollectorService {
     for (const config of modifierConfigs) {
       try {
         // Evaluate the JSON Logic condition
-        const conditionResult = this.#evaluateCondition(config.condition, context);
+        const conditionResult = this.#evaluateCondition(
+          config.condition,
+          context
+        );
 
         if (conditionResult) {
           // Modifier is active - build the Modifier object

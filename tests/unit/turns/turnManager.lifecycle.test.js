@@ -213,10 +213,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
     });
 
     it('should reset round state flags when stopping the manager', async () => {
-      const resetFlagsSpy = jest.spyOn(
-        RoundManager.prototype,
-        'resetFlags'
-      );
+      const resetFlagsSpy = jest.spyOn(RoundManager.prototype, 'resetFlags');
       try {
         await testBed.turnManager.start();
         resetFlagsSpy.mockClear();

@@ -56,7 +56,13 @@
         "description": "Unix timestamp when the propagation occurred"
       }
     },
-    "required": ["ownerEntityId", "sourcePartId", "targetPartId", "damageAmount", "timestamp"],
+    "required": [
+      "ownerEntityId",
+      "sourcePartId",
+      "targetPartId",
+      "damageAmount",
+      "timestamp"
+    ],
     "additionalProperties": false
   }
 }

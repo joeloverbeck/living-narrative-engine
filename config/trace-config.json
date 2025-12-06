@@ -3,9 +3,7 @@
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": false,
-    "tracedActions": [
-      "violence:peck_target"
-    ],
+    "tracedActions": ["violence:peck_target"],
     "outputDirectory": "./traces/pecking",
     "verbosity": "verbose",
     "includeComponentData": true,
@@ -13,10 +11,7 @@
     "includeTargets": true,
     "maxTraceFiles": 100,
     "rotationPolicy": "count",
-    "outputFormats": [
-      "json",
-      "text"
-    ],
+    "outputFormats": ["json", "text"],
     "textFormatOptions": {
       "enableColors": false,
       "lineWidth": 120,
@@ -68,9 +63,7 @@
       "includePerformanceMetrics": true,
       "includeCandidateDetails": true,
       "includePhaseBreakdown": true,
-      "outputFormats": [
-        "text"
-      ],
+      "outputFormats": ["text"],
       "textFormatOptions": {
         "enableColors": false,
         "includeTimestamps": true,

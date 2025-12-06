@@ -26,7 +26,9 @@ describe('damage_capabilities Component', () => {
 
   describe('Component structure', () => {
     test('should have correct component id', () => {
-      expect(damageCapabilitiesComponent.id).toBe('damage-types:damage_capabilities');
+      expect(damageCapabilitiesComponent.id).toBe(
+        'damage-types:damage_capabilities'
+      );
     });
 
     test('should have description', () => {
@@ -40,11 +42,15 @@ describe('damage_capabilities Component', () => {
     });
 
     test('should require entries array', () => {
-      expect(damageCapabilitiesComponent.dataSchema.required).toContain('entries');
+      expect(damageCapabilitiesComponent.dataSchema.required).toContain(
+        'entries'
+      );
     });
 
     test('should enforce minItems: 1 on entries array', () => {
-      expect(damageCapabilitiesComponent.dataSchema.properties.entries.minItems).toBe(1);
+      expect(
+        damageCapabilitiesComponent.dataSchema.properties.entries.minItems
+      ).toBe(1);
     });
   });
 
@@ -58,9 +64,7 @@ describe('damage_capabilities Component', () => {
 
     test('should accept valid data with single entry', () => {
       const data = {
-        entries: [
-          { name: 'slashing', amount: 4 },
-        ],
+        entries: [{ name: 'slashing', amount: 4 }],
       };
       expect(validateData(data)).toBe(true);
     });
@@ -82,7 +86,11 @@ describe('damage_capabilities Component', () => {
             name: 'slashing',
             amount: 5,
             penetration: 0.3,
-            bleed: { enabled: true, severity: 'moderate', baseDurationTurns: 3 },
+            bleed: {
+              enabled: true,
+              severity: 'moderate',
+              baseDurationTurns: 3,
+            },
           },
         ],
       };

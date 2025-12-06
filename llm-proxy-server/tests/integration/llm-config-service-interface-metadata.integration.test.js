@@ -110,11 +110,18 @@ describe('ILlmConfigService metadata contract integration', () => {
   }
 
   test('runtime metadata mirrors the live service implementation', async () => {
-    const configPath = await writeConfigFile('metadata-source.json', buildExampleConfig());
+    const configPath = await writeConfigFile(
+      'metadata-source.json',
+      buildExampleConfig()
+    );
     envManager.setEnvironment({ LLM_CONFIG_PATH: configPath });
 
     const appConfig = getAppConfigService(loggerBundle.logger);
-    const service = new LlmConfigService(fsReader, loggerBundle.logger, appConfig);
+    const service = new LlmConfigService(
+      fsReader,
+      loggerBundle.logger,
+      appConfig
+    );
 
     await expect(service.initialize()).resolves.toBeUndefined();
 
@@ -122,7 +129,9 @@ describe('ILlmConfigService metadata contract integration', () => {
     expect(ILlmConfigServiceMetadata.name).toBe('ILlmConfigService');
     expect(ILlmConfigServiceMetadata.description.length).toBeGreaterThan(0);
 
-    const declaredMethods = ILlmConfigServiceMetadata.methods.map((method) => method.name);
+    const declaredMethods = ILlmConfigServiceMetadata.methods.map(
+      (method) => method.name
+    );
     expect(declaredMethods).toEqual([
       'initialize',
       'isOperational',
@@ -145,7 +154,9 @@ describe('ILlmConfigService metadata contract integration', () => {
     expect(getByIdContract?.returns).toContain('LLMModelConfig');
 
     expect(service.isOperational()).toBe(true);
-    expect(path.basename(service.getResolvedConfigPath() ?? '')).toBe('metadata-source.json');
+    expect(path.basename(service.getResolvedConfigPath() ?? '')).toBe(
+      'metadata-source.json'
+    );
     expect(service.getInitializationErrorDetails()).toBeNull();
 
     const configs = service.getLlmConfigs();
@@ -159,14 +170,21 @@ describe('ILlmConfigService metadata contract integration', () => {
   });
 
   test('metadata-driven invocation stays consistent with service behaviour', async () => {
-    const configPath = await writeConfigFile('metadata-behaviour.json', buildExampleConfig());
+    const configPath = await writeConfigFile(
+      'metadata-behaviour.json',
+      buildExampleConfig()
+    );
     envManager.setEnvironment({
       LLM_CONFIG_PATH: configPath,
       PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES: '/secure/secrets',
     });
 
     const appConfig = getAppConfigService(loggerBundle.logger);
-    const service = new LlmConfigService(fsReader, loggerBundle.logger, appConfig);
+    const service = new LlmConfigService(
+      fsReader,
+      loggerBundle.logger,
+      appConfig
+    );
     await service.initialize();
 
     const runtimeSnapshot = {};
@@ -185,9 +203,13 @@ describe('ILlmConfigService metadata contract integration', () => {
     }
 
     expect(runtimeSnapshot.isOperational).toBe(true);
-    expect(runtimeSnapshot.getResolvedConfigPath).toBe(path.resolve(configPath));
+    expect(runtimeSnapshot.getResolvedConfigPath).toBe(
+      path.resolve(configPath)
+    );
     expect(runtimeSnapshot.getInitializationErrorDetails).toBeNull();
-    expect(runtimeSnapshot.getLlmConfigs?.configs['remote-model']).toBeDefined();
+    expect(
+      runtimeSnapshot.getLlmConfigs?.configs['remote-model']
+    ).toBeDefined();
     expect(runtimeSnapshot.getLlmById).toMatchObject({
       configId: 'remote-model',
       endpointUrl: 'https://api.openai.example/v1',

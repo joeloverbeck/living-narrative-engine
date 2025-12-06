@@ -25,9 +25,11 @@ const createLogger = () => {
 
   const render = (value) =>
     typeof value === 'string' ? value : JSON.stringify(value);
-  const capture = (level) => (...args) => {
-    messages[level].push(args.map(render).join(' '));
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      messages[level].push(args.map(render).join(' '));
+    };
 
   return {
     messages,
@@ -104,7 +106,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -117,7 +120,10 @@ const buildAnatomyDataset = () => ({
       structure: {
         rootPartId: 'torso',
         parts: {
-          torso: { children: ['leftArm', 'rightArm', 'head', 'faultyLimb'], partType: 'torso' },
+          torso: {
+            children: ['leftArm', 'rightArm', 'head', 'faultyLimb'],
+            partType: 'torso',
+          },
           leftArm: { children: ['leftHand'], partType: 'arm' },
           leftHand: { children: [], partType: 'hand' },
           rightArm: { children: ['rightHand'], partType: 'arm' },
@@ -252,9 +258,7 @@ describe('AnatomySocketIndex integration with BodyGraphService', () => {
     await socketIndex.buildIndex('actor');
 
     const actorSockets = await socketIndex.getEntitySockets('actor');
-    expect(actorSockets).toEqual([
-      { id: 'actor:core', orientation: 'center' },
-    ]);
+    expect(actorSockets).toEqual([{ id: 'actor:core', orientation: 'center' }]);
 
     const leftArmSockets = await socketIndex.getEntitySockets('leftArm');
     expect(leftArmSockets).toEqual([
@@ -269,7 +273,8 @@ describe('AnatomySocketIndex integration with BodyGraphService', () => {
       )
     ).toBe(true);
 
-    const entitiesWithSockets = await socketIndex.getEntitiesWithSockets('actor');
+    const entitiesWithSockets =
+      await socketIndex.getEntitiesWithSockets('actor');
     expect(entitiesWithSockets).toEqual(
       expect.arrayContaining([
         'actor',
@@ -349,9 +354,9 @@ describe('AnatomySocketIndex integration with BodyGraphService', () => {
 
   it('validates input arguments for public APIs', async () => {
     await expect(socketIndex.buildIndex('')).rejects.toThrow('rootEntityId');
-    await expect(
-      socketIndex.findEntityWithSocket('actor', '')
-    ).rejects.toThrow('socketId');
+    await expect(socketIndex.findEntityWithSocket('actor', '')).rejects.toThrow(
+      'socketId'
+    );
     await expect(socketIndex.getEntitySockets('')).rejects.toThrow('entityId');
     await expect(socketIndex.getEntitiesWithSockets('')).rejects.toThrow(
       'rootEntityId'

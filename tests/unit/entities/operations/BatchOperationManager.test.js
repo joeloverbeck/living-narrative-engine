@@ -1127,7 +1127,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
 
         expect(result.failures).toHaveLength(2);
         expect(result.totalProcessed).toBe(2);
-        expect(result.failures.every(({ error }) => error === failure)).toBe(true);
+        expect(result.failures.every(({ error }) => error === failure)).toBe(
+          true
+        );
         expect(mockDeps.logger.error).toHaveBeenCalledWith(
           expect.stringContaining('Batch creation failed for batch 1'),
           failure
@@ -1178,9 +1180,13 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
 
         expect(result.failures).toHaveLength(2);
         expect(result.totalProcessed).toBe(2);
-        expect(result.failures.every(({ error }) => error === failure)).toBe(true);
+        expect(result.failures.every(({ error }) => error === failure)).toBe(
+          true
+        );
         expect(mockDeps.logger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Batch component addition failed for batch 1'),
+          expect.stringContaining(
+            'Batch component addition failed for batch 1'
+          ),
           failure
         );
       });
@@ -1204,7 +1210,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
         ).rejects.toBe(failure);
 
         expect(mockDeps.logger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Batch component addition failed for batch 1'),
+          expect.stringContaining(
+            'Batch component addition failed for batch 1'
+          ),
           failure
         );
       });
@@ -1220,7 +1228,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
 
         expect(result.failures).toHaveLength(2);
         expect(result.totalProcessed).toBe(2);
-        expect(result.failures.every(({ error }) => error === failure)).toBe(true);
+        expect(result.failures.every(({ error }) => error === failure)).toBe(
+          true
+        );
         expect(mockDeps.logger.error).toHaveBeenCalledWith(
           expect.stringContaining('Batch removal failed for batch 1'),
           failure
@@ -1249,9 +1259,9 @@ describe('BatchOperationManager - Error Handling and Edge Cases', () => {
     it('should treat rejected promises from allSettled as failures', async () => {
       const originalAllSettled = Promise.allSettled;
       const rejection = new Error('promise rejected');
-      Promise.allSettled = jest.fn().mockResolvedValueOnce([
-        { status: 'rejected', reason: rejection },
-      ]);
+      Promise.allSettled = jest
+        .fn()
+        .mockResolvedValueOnce([{ status: 'rejected', reason: rejection }]);
 
       const entitySpecs = [{ definitionId: 'test:entity', opts: {} }];
       const result = await manager.batchCreateEntities(entitySpecs, {

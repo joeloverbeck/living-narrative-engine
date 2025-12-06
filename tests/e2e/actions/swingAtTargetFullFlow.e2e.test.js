@@ -165,7 +165,12 @@ const installRealHandlers = ({
       outcome: forcedOutcome,
       roll: forcedOutcome === 'FUMBLE' ? 100 : 1,
       threshold: 50,
-      margin: forcedOutcome === 'SUCCESS' ? -49 : forcedOutcome === 'CRITICAL_SUCCESS' ? -49 : 50,
+      margin:
+        forcedOutcome === 'SUCCESS'
+          ? -49
+          : forcedOutcome === 'CRITICAL_SUCCESS'
+            ? -49
+            : 50,
       isCritical: forcedOutcome === 'CRITICAL_SUCCESS',
       modifiers: [],
     }),
@@ -196,13 +201,10 @@ describe('swing_at_target full flow (critical e2e)', () => {
   let effectService;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
     jest.spyOn(Math, 'random').mockReturnValue(0); // Deterministic part selection

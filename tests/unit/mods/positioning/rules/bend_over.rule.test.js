@@ -6,7 +6,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
-import { createRuleTestEnvironment, validateRuleStructure } from '../../../../common/rules/ruleTestUtilities.js';
+import {
+  createRuleTestEnvironment,
+  validateRuleStructure,
+} from '../../../../common/rules/ruleTestUtilities.js';
 
 describe('positioning:bend_over rule', () => {
   let rule;
@@ -29,9 +32,9 @@ describe('positioning:bend_over rule', () => {
         'positioning:event-is-action-bend-over': {
           id: 'positioning:event-is-action-bend-over',
           logic: {
-            '==': [{ var: 'event.payload.actionId' }, 'positioning:bend_over']
-          }
-        }
+            '==': [{ var: 'event.payload.actionId' }, 'positioning:bend_over'],
+          },
+        },
       },
       macros: {
         'core:logSuccessAndEndTurn': {
@@ -46,22 +49,22 @@ describe('positioning:bend_over rule', () => {
                   perceptionType: '{context.perceptionType}',
                   message: '{context.logMessage}',
                   actorId: '{event.payload.actorId}',
-                  targetId: '{context.targetId}'
-                }
-              }
+                  targetId: '{context.targetId}',
+                },
+              },
             },
             {
               type: 'DISPATCH_EVENT',
               parameters: {
                 event_type: 'core:turn_ended',
                 payload: {
-                  entityId: '{event.payload.actorId}'
-                }
-              }
-            }
-          ]
-        }
-      }
+                  entityId: '{event.payload.actorId}',
+                },
+              },
+            },
+          ],
+        },
+      },
     });
   });
 
@@ -87,7 +90,9 @@ describe('positioning:bend_over rule', () => {
 
     it('should reference positioning:event-is-action-bend-over condition', () => {
       expect(rule.condition).toBeDefined();
-      expect(rule.condition.condition_ref).toBe('positioning:event-is-action-bend-over');
+      expect(rule.condition.condition_ref).toBe(
+        'positioning:event-is-action-bend-over'
+      );
     });
 
     it('should have actions array with expected structure', () => {
@@ -96,7 +101,9 @@ describe('positioning:bend_over rule', () => {
     });
 
     it('should have correct JSON schema reference', () => {
-      expect(rule.$schema).toBe('schema://living-narrative-engine/rule.schema.json');
+      expect(rule.$schema).toBe(
+        'schema://living-narrative-engine/rule.schema.json'
+      );
     });
 
     it('should pass rule structure validation', () => {
@@ -136,8 +143,12 @@ describe('positioning:bend_over rule', () => {
       const componentAction = rule.actions[3];
       expect(componentAction.type).toBe('ADD_COMPONENT');
       expect(componentAction.parameters.entity_ref).toBe('actor');
-      expect(componentAction.parameters.component_type).toBe('positioning:bending_over');
-      expect(componentAction.parameters.value.surface_id).toBe('{event.payload.targetId}');
+      expect(componentAction.parameters.component_type).toBe(
+        'positioning:bending_over'
+      );
+      expect(componentAction.parameters.value.surface_id).toBe(
+        '{event.payload.targetId}'
+      );
     });
 
     it('should lock movement while bending over', () => {
@@ -150,7 +161,9 @@ describe('positioning:bend_over rule', () => {
       const logAction = rule.actions[7];
       expect(logAction.type).toBe('SET_VARIABLE');
       expect(logAction.parameters.variable_name).toBe('logMessage');
-      expect(logAction.parameters.value).toBe('{context.actorName} bends over {context.surfaceName}.');
+      expect(logAction.parameters.value).toBe(
+        '{context.actorName} bends over {context.surfaceName}.'
+      );
     });
 
     it('should set perception type for action feedback', () => {
@@ -164,7 +177,9 @@ describe('positioning:bend_over rule', () => {
       const locationAction = rule.actions[9];
       expect(locationAction.type).toBe('SET_VARIABLE');
       expect(locationAction.parameters.variable_name).toBe('locationId');
-      expect(locationAction.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(locationAction.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
     });
 
     it('should capture target ID from event payload', () => {
@@ -182,11 +197,13 @@ describe('positioning:bend_over rule', () => {
 
   describe('rule condition behavior', () => {
     it('should only trigger for bend_over actions', () => {
-      const condition = testEnv.dataRegistry.getConditionDefinition('positioning:event-is-action-bend-over');
+      const condition = testEnv.dataRegistry.getConditionDefinition(
+        'positioning:event-is-action-bend-over'
+      );
       expect(condition).toBeDefined();
       expect(condition.logic['==']).toEqual([
         { var: 'event.payload.actionId' },
-        'positioning:bend_over'
+        'positioning:bend_over',
       ]);
     });
 
@@ -196,12 +213,14 @@ describe('positioning:bend_over rule', () => {
         payload: {
           actionId: 'positioning:bend_over',
           actorId: 'test:actor',
-          targetId: 'test:surface'
-        }
+          targetId: 'test:surface',
+        },
       };
 
       const result = await testEnv.jsonLogic.evaluate(
-        testEnv.dataRegistry.getConditionDefinition('positioning:event-is-action-bend-over').logic,
+        testEnv.dataRegistry.getConditionDefinition(
+          'positioning:event-is-action-bend-over'
+        ).logic,
         { event: testEvent }
       );
 
@@ -214,12 +233,14 @@ describe('positioning:bend_over rule', () => {
         payload: {
           actionId: 'positioning:sit_down',
           actorId: 'test:actor',
-          targetId: 'test:furniture'
-        }
+          targetId: 'test:furniture',
+        },
       };
 
       const result = await testEnv.jsonLogic.evaluate(
-        testEnv.dataRegistry.getConditionDefinition('positioning:event-is-action-bend-over').logic,
+        testEnv.dataRegistry.getConditionDefinition(
+          'positioning:event-is-action-bend-over'
+        ).logic,
         { event: testEvent }
       );
 
@@ -231,16 +252,22 @@ describe('positioning:bend_over rule', () => {
     it('should define correct string templates for dynamic values', () => {
       // Verify templates exist in actions
       const componentAction = rule.actions[3];
-      expect(componentAction.parameters.value.surface_id).toBe('{event.payload.targetId}');
+      expect(componentAction.parameters.value.surface_id).toBe(
+        '{event.payload.targetId}'
+      );
 
       const logAction = rule.actions[7];
-      expect(logAction.parameters.value).toBe('{context.actorName} bends over {context.surfaceName}.');
+      expect(logAction.parameters.value).toBe(
+        '{context.actorName} bends over {context.surfaceName}.'
+      );
 
       const lockAction = rule.actions[4];
       expect(lockAction.parameters.actor_id).toBe('{event.payload.actorId}');
 
       const locationAction = rule.actions[9];
-      expect(locationAction.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(locationAction.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
 
       const targetAction = rule.actions[10];
       expect(targetAction.parameters.value).toBe('{event.payload.targetId}');
@@ -252,10 +279,10 @@ describe('positioning:bend_over rule', () => {
         '{event.payload.actorId}',
         '{context.actorName}',
         '{context.surfaceName}',
-        '{context.actorPosition.locationId}'
+        '{context.actorPosition.locationId}',
       ];
 
-      templates.forEach(template => {
+      templates.forEach((template) => {
         expect(template).toMatch(/^\{[a-zA-Z][a-zA-Z0-9_.]*\}$/);
       });
     });
@@ -263,25 +290,32 @@ describe('positioning:bend_over rule', () => {
 
   describe('entity reference handling', () => {
     it('should correctly reference actor entity', () => {
-      const actorReferences = rule.actions.filter(action =>
-        action.parameters?.entity_ref === 'actor'
+      const actorReferences = rule.actions.filter(
+        (action) => action.parameters?.entity_ref === 'actor'
       );
 
       expect(actorReferences).toHaveLength(4); // GET_NAME, QUERY_COMPONENT, ADD_COMPONENT, REGENERATE_DESCRIPTION
 
-      actorReferences.forEach(action => {
-        expect(['GET_NAME', 'QUERY_COMPONENT', 'ADD_COMPONENT', 'REGENERATE_DESCRIPTION']).toContain(action.type);
+      actorReferences.forEach((action) => {
+        expect([
+          'GET_NAME',
+          'QUERY_COMPONENT',
+          'ADD_COMPONENT',
+          'REGENERATE_DESCRIPTION',
+        ]).toContain(action.type);
       });
     });
 
     it('should correctly reference target entity', () => {
-      const targetReferences = rule.actions.filter(action =>
-        action.parameters?.entity_ref === 'target'
+      const targetReferences = rule.actions.filter(
+        (action) => action.parameters?.entity_ref === 'target'
       );
 
       expect(targetReferences).toHaveLength(2); // GET_NAME for surface + REGENERATE_DESCRIPTION refresh
       expect(targetReferences[0].type).toBe('GET_NAME');
-      expect(targetReferences[0].parameters.result_variable).toBe('surfaceName');
+      expect(targetReferences[0].parameters.result_variable).toBe(
+        'surfaceName'
+      );
       expect(targetReferences[1].type).toBe('REGENERATE_DESCRIPTION');
     });
   });
@@ -293,7 +327,9 @@ describe('positioning:bend_over rule', () => {
     });
 
     it('should have macro definition available in test environment', () => {
-      const macro = testEnv.dataRegistry.getMacroDefinition('core:logSuccessAndEndTurn');
+      const macro = testEnv.dataRegistry.getMacroDefinition(
+        'core:logSuccessAndEndTurn'
+      );
       expect(macro).toBeDefined();
       expect(macro.actions).toBeDefined();
       expect(Array.isArray(macro.actions)).toBe(true);
@@ -302,15 +338,21 @@ describe('positioning:bend_over rule', () => {
 
   describe('positioning component integration', () => {
     it('should add bending_over component with required structure', () => {
-      const componentAction = rule.actions.find(action => action.type === 'ADD_COMPONENT');
+      const componentAction = rule.actions.find(
+        (action) => action.type === 'ADD_COMPONENT'
+      );
 
-      expect(componentAction.parameters.component_type).toBe('positioning:bending_over');
+      expect(componentAction.parameters.component_type).toBe(
+        'positioning:bending_over'
+      );
       expect(componentAction.parameters.value).toHaveProperty('surface_id');
       expect(typeof componentAction.parameters.value.surface_id).toBe('string');
     });
 
     it('should query core:position component correctly', () => {
-      const queryAction = rule.actions.find(action => action.type === 'QUERY_COMPONENT');
+      const queryAction = rule.actions.find(
+        (action) => action.type === 'QUERY_COMPONENT'
+      );
 
       expect(queryAction.parameters.component_type).toBe('core:position');
       expect(queryAction.parameters.result_variable).toBe('actorPosition');
@@ -319,8 +361,8 @@ describe('positioning:bend_over rule', () => {
 
   describe('logging and feedback', () => {
     it('should prepare appropriate log message', () => {
-      const logAction = rule.actions.find(action =>
-        action.parameters?.variable_name === 'logMessage'
+      const logAction = rule.actions.find(
+        (action) => action.parameters?.variable_name === 'logMessage'
       );
 
       expect(logAction.parameters.value).toContain('{context.actorName}');
@@ -329,8 +371,8 @@ describe('positioning:bend_over rule', () => {
     });
 
     it('should set correct perception type', () => {
-      const perceptionAction = rule.actions.find(action =>
-        action.parameters?.variable_name === 'perceptionType'
+      const perceptionAction = rule.actions.find(
+        (action) => action.parameters?.variable_name === 'perceptionType'
       );
 
       expect(perceptionAction.parameters.value).toBe('action_self_general');
@@ -338,8 +380,8 @@ describe('positioning:bend_over rule', () => {
 
     it('should capture required context variables for logging', () => {
       const contextVariables = rule.actions
-        .filter(action => action.type === 'SET_VARIABLE')
-        .map(action => action.parameters.variable_name);
+        .filter((action) => action.type === 'SET_VARIABLE')
+        .map((action) => action.parameters.variable_name);
 
       expect(contextVariables).toContain('logMessage');
       expect(contextVariables).toContain('perceptionType');

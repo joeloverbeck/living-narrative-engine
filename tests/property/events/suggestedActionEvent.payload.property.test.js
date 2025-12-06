@@ -169,19 +169,24 @@ describe('core:suggested_action payload schema (property)', () => {
     };
 
     fc.assert(
-      fc.property(payloadArb, disallowedNoteKeyArb, nullableStringArb, (payload, extraKey, extraValue) => {
-        const baseNotes =
-          payload.notes === null || payload.notes.length === 0
-            ? [fallbackNote]
-            : payload.notes;
+      fc.property(
+        payloadArb,
+        disallowedNoteKeyArb,
+        nullableStringArb,
+        (payload, extraKey, extraValue) => {
+          const baseNotes =
+            payload.notes === null || payload.notes.length === 0
+              ? [fallbackNote]
+              : payload.notes;
 
-        const mutatedNotes = baseNotes.map((note, idx) =>
-          idx === 0 ? { ...note, [extraKey]: extraValue } : note
-        );
-        const mutatedPayload = { ...payload, notes: mutatedNotes };
+          const mutatedNotes = baseNotes.map((note, idx) =>
+            idx === 0 ? { ...note, [extraKey]: extraValue } : note
+          );
+          const mutatedPayload = { ...payload, notes: mutatedNotes };
 
-        expect(validatePayload(mutatedPayload)).toBe(false);
-      }),
+          expect(validatePayload(mutatedPayload)).toBe(false);
+        }
+      ),
       { numRuns: 50 }
     );
   });

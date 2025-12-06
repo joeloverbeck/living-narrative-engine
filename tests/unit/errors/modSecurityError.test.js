@@ -61,42 +61,57 @@ describe('ModSecurityError', () => {
 
   describe('generateIncidentReport()', () => {
     it.each([
-      [SecurityLevel.CRITICAL, [
-        'Log security incident',
-        'Review mod source',
-        'Quarantine mod immediately',
-        'Perform security audit',
-        'Notify security team',
-      ], true],
-      [SecurityLevel.HIGH, [
-        'Log security incident',
-        'Review mod source',
-        'Block mod loading',
-        'Investigate mod author',
-      ], true],
-      [SecurityLevel.MEDIUM, [
-        'Log security incident',
-        'Review mod source',
-        'Flag mod for review',
-      ], false],
-      [SecurityLevel.LOW, [
-        'Log security incident',
-        'Review mod source',
-      ], false],
-    ])('produces incident report with recommended actions for %s level', (level, expectedActions, notify) => {
-      const error = createError(level, { module: 'demo-mod' });
+      [
+        SecurityLevel.CRITICAL,
+        [
+          'Log security incident',
+          'Review mod source',
+          'Quarantine mod immediately',
+          'Perform security audit',
+          'Notify security team',
+        ],
+        true,
+      ],
+      [
+        SecurityLevel.HIGH,
+        [
+          'Log security incident',
+          'Review mod source',
+          'Block mod loading',
+          'Investigate mod author',
+        ],
+        true,
+      ],
+      [
+        SecurityLevel.MEDIUM,
+        ['Log security incident', 'Review mod source', 'Flag mod for review'],
+        false,
+      ],
+      [
+        SecurityLevel.LOW,
+        ['Log security incident', 'Review mod source'],
+        false,
+      ],
+    ])(
+      'produces incident report with recommended actions for %s level',
+      (level, expectedActions, notify) => {
+        const error = createError(level, { module: 'demo-mod' });
 
-      const report = error.generateIncidentReport();
+        const report = error.generateIncidentReport();
 
-      expect(report).toMatchObject({
-        incidentType: 'SECURITY_VIOLATION',
-        severity: level,
-        message: 'Security violation detected',
-        requiresNotification: notify,
-      });
-      expect(report.timestamp).toBe(error.timestamp);
-      expect(report.context).toMatchObject({ module: 'demo-mod', securityLevel: level });
-      expect(report.recommendedActions).toEqual(expectedActions);
-    });
+        expect(report).toMatchObject({
+          incidentType: 'SECURITY_VIOLATION',
+          severity: level,
+          message: 'Security violation detected',
+          requiresNotification: notify,
+        });
+        expect(report.timestamp).toBe(error.timestamp);
+        expect(report.context).toMatchObject({
+          module: 'demo-mod',
+          securityLevel: level,
+        });
+        expect(report.recommendedActions).toEqual(expectedActions);
+      }
+    );
   });
 });

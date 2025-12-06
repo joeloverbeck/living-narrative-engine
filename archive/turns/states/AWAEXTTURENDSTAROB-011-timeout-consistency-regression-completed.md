@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-011: Add Timeout Consistency Regression Tests
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-011
 - **Phase:** 2 - Standard Patterns
 - **Priority:** Medium
@@ -15,6 +16,7 @@ Create regression tests that verify timeout values match provider responses exac
 ## Files to Create
 
 ### New Test File
+
 - `tests/unit/turns/states/awaitingExternalTurnEndState.timeoutConsistency.test.js` (NEW)
 
 **Rationale**: Per project guidelines, tests should be in `tests/unit/` or `tests/integration/`, not `tests/regression/` (which is not run by any test runner). This is a unit test as it tests the state class in isolation with mocks.
@@ -22,8 +24,16 @@ Create regression tests that verify timeout values match provider responses exac
 ## Test Structure Required
 
 ### File Organization
+
 ```javascript
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
 
@@ -83,10 +93,13 @@ describe('AwaitingExternalTurnEndState - Timeout Consistency Regression', () => 
 ## Required Test Cases (Minimum 4)
 
 ### Test 1: Production Provider → Exactly 30,000ms
+
 ```javascript
 it('should use exactly 30,000ms timeout with production provider', async () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const mockSetTimeout = jest.fn((fn, ms) => 'timeout-id');
 
   // Act
@@ -108,10 +121,13 @@ it('should use exactly 30,000ms timeout with production provider', async () => {
 ```
 
 ### Test 2: Development Provider → Exactly 3,000ms
+
 ```javascript
 it('should use exactly 3,000ms timeout with development provider', async () => {
   // Arrange
-  const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+  const developmentProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+  });
   const mockSetTimeout = jest.fn((fn, ms) => 'timeout-id');
 
   // Act
@@ -132,10 +148,13 @@ it('should use exactly 3,000ms timeout with development provider', async () => {
 ```
 
 ### Test 3: Explicit Override → Provider Ignored
+
 ```javascript
 it('should use exact explicit timeout and ignore provider', async () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const mockSetTimeout = jest.fn((fn, ms) => 'timeout-id');
 
   // Act
@@ -157,6 +176,7 @@ it('should use exact explicit timeout and ignore provider', async () => {
 ```
 
 ### Test 4: Cleanup in All Exit Paths
+
 ```javascript
 it('should clear timeout in all exit paths', async () => {
   // Arrange
@@ -224,6 +244,7 @@ it('should clear timeout in all exit paths', async () => {
 ## Out of Scope
 
 ### Must NOT Include
+
 - Integration tests (Ticket 010)
 - Property-based tests (Phase 3)
 - Performance tests
@@ -231,6 +252,7 @@ it('should clear timeout in all exit paths', async () => {
 - Provider-specific tests (Ticket 009)
 
 ### Must NOT Change
+
 - Production code
 - Other regression tests
 - Test utilities
@@ -238,6 +260,7 @@ it('should clear timeout in all exit paths', async () => {
 ## Acceptance Criteria
 
 ### AC1: All 4 Test Cases Pass
+
 ```javascript
 // GIVEN: Regression test suite with 4 test cases
 // WHEN: npm run test:regression -- timeoutConsistency.regression.test.js
@@ -248,6 +271,7 @@ it('should clear timeout in all exit paths', async () => {
 ```
 
 ### AC2: Exact Timeout Values Verified
+
 ```javascript
 // GIVEN: Tests 1-3 checking exact timeout values
 // WHEN: setTimeout mock inspected
@@ -259,6 +283,7 @@ it('should clear timeout in all exit paths', async () => {
 ```
 
 ### AC3: Override Precedence Verified
+
 ```javascript
 // GIVEN: Test 3 with provider + explicit timeout
 // WHEN: State created
@@ -269,6 +294,7 @@ it('should clear timeout in all exit paths', async () => {
 ```
 
 ### AC4: All Exit Paths Clean Up
+
 ```javascript
 // GIVEN: Test 4 with 3 cleanup paths
 // WHEN: Each path executed
@@ -279,6 +305,7 @@ it('should clear timeout in all exit paths', async () => {
 ```
 
 ### AC5: Prevents Regression
+
 ```javascript
 // GIVEN: Any future code changes
 // WHEN: Timeout value calculation modified
@@ -292,16 +319,19 @@ it('should clear timeout in all exit paths', async () => {
 ## Invariants
 
 ### Timeout Value Invariants (Must Verify)
+
 1. **Exact Matching**: Timeout exactly matches configuration (no rounding)
 2. **Override Precedence**: Explicit > provider > default
 3. **No Calculation Errors**: No off-by-one, no float rounding
 
 ### Resource Cleanup Invariants (Must Verify)
+
 1. **Universal Cleanup**: Timeout cleared in ALL exit paths
 2. **Error Resilience**: Cleanup happens even if errors occur
 3. **No Orphans**: No timers left after state destroyed
 
 ### Regression Prevention (Must Enforce)
+
 1. **Value Consistency**: Tests fail if timeout values drift
 2. **Path Completeness**: Tests fail if cleanup path missed
 3. **Precedence Stability**: Tests fail if override logic breaks
@@ -309,6 +339,7 @@ it('should clear timeout in all exit paths', async () => {
 ## Testing Commands
 
 ### Development
+
 ```bash
 # Run unit test file
 npm run test:unit -- awaitingExternalTurnEndState.timeoutConsistency.test.js
@@ -324,6 +355,7 @@ npm run test:unit -- awaitingExternalTurnEndState.timeoutConsistency.test.js --w
 ```
 
 ### Validation
+
 ```bash
 # Verify fast execution
 time npm run test:unit -- awaitingExternalTurnEndState.timeoutConsistency.test.js
@@ -339,6 +371,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### Exact Value Testing Pattern
+
 ```javascript
 // Use exact numbers, not ranges
 expect(mockSetTimeout).toHaveBeenCalledWith(
@@ -353,6 +386,7 @@ expect(mockSetTimeout).toHaveBeenCalledWith(
 ```
 
 ### Exit Path Testing Pattern
+
 ```javascript
 // Create separate instances for each path
 const paths = [
@@ -360,10 +394,10 @@ const paths = [
   'timeout fires',
   'exitState',
   'destroy',
-  'error during handling'
+  'error during handling',
 ];
 
-paths.forEach(path => {
+paths.forEach((path) => {
   // Create new state
   // Exercise path
   // Verify cleanup
@@ -372,6 +406,7 @@ paths.forEach(path => {
 ```
 
 ### Self-Clearing Timeout Pattern
+
 ```javascript
 // Timeout fires (via jest.advanceTimersByTime)
 // Callback runs and clears its own ID
@@ -403,6 +438,7 @@ paths.forEach(path => {
 **Status**: Completed successfully with ticket corrections applied.
 
 **Changes Made**:
+
 1. **Ticket Corrections** (Assumptions Reassessment):
    - Fixed incorrect constructor signature assumptions in all test examples
    - Changed test file location from `tests/regression/` to `tests/unit/` (per project guidelines: no test runner uses `tests/regression/`)
@@ -421,12 +457,14 @@ paths.forEach(path => {
    - All tests pass in < 1.2 seconds
 
 **Discrepancies from Original Plan**:
+
 - Original plan assumed 5 cleanup paths, but actual implementation has 3 distinct paths
 - Original plan placed tests in non-existent `tests/regression/` folder
 - Original plan had incorrect constructor signature (flat object vs handler + options)
 - Original plan used wrong import path for TestEnvironmentProvider
 
 **Validation**:
+
 ```bash
 npm run test:unit -- awaitingExternalTurnEndState.timeoutConsistency.test.js
 # Result: 4 tests passed in 1.169s

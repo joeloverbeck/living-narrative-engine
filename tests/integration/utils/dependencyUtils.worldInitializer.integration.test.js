@@ -3,16 +3,21 @@
  *       to ensure dependency validation paths are fully covered in realistic setups.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import InitializationService from '../../../src/initializers/services/initializationService.js';
 import {
   WorldInitializationError,
   SystemInitializationError,
 } from '../../../src/errors/InitializationError.js';
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 
 /**
  * Builds a minimal but valid dependency graph for WorldInitializer instances.
@@ -86,7 +91,9 @@ describe('dependencyUtils integration via service initializers', () => {
 
     const dependencies = createWorldInitializerDeps({ logger: partialLogger });
 
-    expect(() => new WorldInitializer(dependencies)).toThrow(WorldInitializationError);
+    expect(() => new WorldInitializer(dependencies)).toThrow(
+      WorldInitializationError
+    );
 
     // The fallback branch avoids calling logger.error, so the stub should remain untouched.
     expect(partialLogger.warn).not.toHaveBeenCalled();

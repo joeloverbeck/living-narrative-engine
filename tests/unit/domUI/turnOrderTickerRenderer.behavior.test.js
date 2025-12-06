@@ -1,9 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TurnOrderTickerRenderer } from '../../../src/domUI/turnOrderTickerRenderer.js';
 import { PARTICIPATION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 const createDomElementFactory = () => ({
-  create: jest.fn(tag => document.createElement(tag)),
+  create: jest.fn((tag) => document.createElement(tag)),
   div: jest.fn((classNames) => {
     const el = document.createElement('div');
     if (classNames) {
@@ -11,7 +18,7 @@ const createDomElementFactory = () => ({
         ? classNames
         : String(classNames)
             .split(' ')
-            .map(cls => cls.trim())
+            .map((cls) => cls.trim())
             .filter(Boolean);
       el.classList.add(...classes);
     }
@@ -24,7 +31,7 @@ const createDomElementFactory = () => ({
         ? classNames
         : String(classNames)
             .split(' ')
-            .map(cls => cls.trim())
+            .map((cls) => cls.trim())
             .filter(Boolean);
       el.classList.add(...classes);
     }
@@ -42,7 +49,7 @@ const createDomElementFactory = () => ({
         ? classNames
         : String(classNames)
             .split(' ')
-            .map(cls => cls.trim())
+            .map((cls) => cls.trim())
             .filter(Boolean);
       el.classList.add(...classes);
     }
@@ -68,11 +75,12 @@ const createRenderer = (overrides = {}) => {
   queueElement.scrollTo = jest.fn();
 
   const documentContext = {
-    query: jest.fn(selector => container.querySelector(selector)),
-    create: jest.fn(tag => document.createElement(tag)),
+    query: jest.fn((selector) => container.querySelector(selector)),
+    create: jest.fn((tag) => document.createElement(tag)),
   };
 
-  const domElementFactory = overrides.domElementFactory ?? createDomElementFactory();
+  const domElementFactory =
+    overrides.domElementFactory ?? createDomElementFactory();
 
   const validatedEventDispatcher = {
     dispatch: jest.fn(),
@@ -87,7 +95,7 @@ const createRenderer = (overrides = {}) => {
   };
 
   const entityDisplayDataProvider = {
-    getEntityName: jest.fn(id => `Actor ${id}`),
+    getEntityName: jest.fn((id) => `Actor ${id}`),
     getEntityPortraitPath: jest.fn(() => null),
   };
 
@@ -106,7 +114,7 @@ const createRenderer = (overrides = {}) => {
 };
 
 const renderActors = (renderer, ids) => {
-  renderer.render(ids.map(id => ({ id })));
+  renderer.render(ids.map((id) => ({ id })));
 };
 
 describe('TurnOrderTickerRenderer advanced behaviors', () => {
@@ -131,7 +139,7 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
 
     ({ renderer, logger, domElementFactory, queueElement } = createRenderer());
 
-    Object.values(logger).forEach(mock => mock.mockClear());
+    Object.values(logger).forEach((mock) => mock.mockClear());
   });
 
   afterEach(() => {
@@ -143,16 +151,19 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
       throw new Error('factory failure');
     });
 
-    renderer.render([
-      { id: 'broken-actor' },
-      { id: 'healthy-actor' },
-    ]);
+    renderer.render([{ id: 'broken-actor' }, { id: 'healthy-actor' }]);
 
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to create actor element, continuing with others',
-      expect.objectContaining({ actorId: 'broken-actor', index: 0, error: 'factory failure' })
+      expect.objectContaining({
+        actorId: 'broken-actor',
+        index: 0,
+        error: 'factory failure',
+      })
     );
-    expect(queueElement.querySelector('[data-entity-id="healthy-actor"]')).not.toBeNull();
+    expect(
+      queueElement.querySelector('[data-entity-id="healthy-actor"]')
+    ).not.toBeNull();
   });
 
   it('logs when clearCurrentHighlight runs without a queue element', () => {
@@ -160,20 +171,38 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
 
     renderer.updateCurrentActor('actor-1');
 
-    expect(logger.debug).toHaveBeenCalledWith('clearCurrentHighlight: No actor queue element available');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'clearCurrentHighlight: No actor queue element available'
+    );
   });
 
   it('scrolls actors into view when they fall outside the viewport', () => {
     renderActors(renderer, ['actor-1', 'actor-2']);
 
-    const actorElement = queueElement.querySelector('[data-entity-id="actor-2"]');
-    queueElement.getBoundingClientRect = jest.fn(() => ({ left: 0, right: 100, top: 0, bottom: 50 }));
-    actorElement.getBoundingClientRect = jest.fn(() => ({ left: 200, right: 250, top: 0, bottom: 50 }));
+    const actorElement = queueElement.querySelector(
+      '[data-entity-id="actor-2"]'
+    );
+    queueElement.getBoundingClientRect = jest.fn(() => ({
+      left: 0,
+      right: 100,
+      top: 0,
+      bottom: 50,
+    }));
+    actorElement.getBoundingClientRect = jest.fn(() => ({
+      left: 200,
+      right: 250,
+      top: 0,
+      bottom: 50,
+    }));
     actorElement.scrollIntoView = jest.fn();
 
     renderer.updateCurrentActor('actor-2');
 
-    expect(actorElement.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    expect(actorElement.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
     expect(logger.debug).toHaveBeenCalledWith(
       'scrollToActor: Scrolled actor into view',
       expect.objectContaining({ entityId: 'actor-2' })
@@ -183,9 +212,21 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
   it('logs scroll failures as non-critical issues', () => {
     renderActors(renderer, ['actor-1', 'actor-2']);
 
-    const actorElement = queueElement.querySelector('[data-entity-id="actor-2"]');
-    queueElement.getBoundingClientRect = jest.fn(() => ({ left: 0, right: 100, top: 0, bottom: 50 }));
-    actorElement.getBoundingClientRect = jest.fn(() => ({ left: 200, right: 250, top: 0, bottom: 50 }));
+    const actorElement = queueElement.querySelector(
+      '[data-entity-id="actor-2"]'
+    );
+    queueElement.getBoundingClientRect = jest.fn(() => ({
+      left: 0,
+      right: 100,
+      top: 0,
+      bottom: 50,
+    }));
+    actorElement.getBoundingClientRect = jest.fn(() => ({
+      left: 200,
+      right: 250,
+      top: 0,
+      bottom: 50,
+    }));
     actorElement.scrollIntoView = () => {
       throw new Error('scroll failure');
     };
@@ -243,7 +284,9 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
     renderActors(renderer, ['actor-1']);
     logger.error.mockClear();
 
-    const actorElement = queueElement.querySelector('[data-entity-id="actor-1"]');
+    const actorElement = queueElement.querySelector(
+      '[data-entity-id="actor-1"]'
+    );
     const originalRemove = actorElement.remove;
     actorElement.remove = () => {
       throw new Error('remove failure');
@@ -256,7 +299,10 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
 
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to remove actor from ticker',
-        expect.objectContaining({ error: 'remove failure', entityId: 'actor-1' })
+        expect.objectContaining({
+          error: 'remove failure',
+          entityId: 'actor-1',
+        })
       );
     } finally {
       actorElement.remove = originalRemove;
@@ -313,7 +359,9 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
     jest.advanceTimersByTime(1000);
 
     expect(document.body.querySelector('.sr-only')).toBeNull();
-    expect(logger.debug).toHaveBeenCalledWith('Screen reader announcement removed');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Screen reader announcement removed'
+    );
   });
 
   it('logs when announcement creation fails', () => {
@@ -403,9 +451,11 @@ describe('TurnOrderTickerRenderer advanced behaviors', () => {
 
   it('logs errors from handleTurnStarted', () => {
     const error = new Error('highlight failure');
-    const spy = jest.spyOn(renderer, 'updateCurrentActor').mockImplementation(() => {
-      throw error;
-    });
+    const spy = jest
+      .spyOn(renderer, 'updateCurrentActor')
+      .mockImplementation(() => {
+        throw error;
+      });
 
     renderer.__testHandleTurnStarted({
       payload: { entityId: 'actor-1', entityType: 'player' },

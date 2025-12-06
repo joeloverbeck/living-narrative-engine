@@ -1,20 +1,26 @@
 # TORPERANAREC-005: Create Tortoise Head Entity
 
 ## Objective
+
 Create the head entity with sockets for eyes and beak mounting.
 
 ## Assumption Corrections
+
 **Updated 2025-11-23**: Corrected descriptor enum values to match actual component schemas:
+
 - Changed `shape` from "blunt" → "domed" (valid per `descriptors:shape_general`)
 - Changed `color` from "grey-green" → "sickly-gray-green" (valid per `descriptors:color_extended`)
 
 ## Dependencies
+
 - None (entity definitions can be created independently)
 
 ## Files to Touch
+
 - **CREATE**: `data/mods/anatomy/entities/definitions/tortoise_head.entity.json`
 
 ## Out of Scope
+
 - Do NOT modify existing entity definitions
 - Do NOT create eye or beak entities (handled in TORPERANAREC-006)
 - Do NOT create other tortoise entity files (handled in separate tickets)
@@ -31,7 +37,6 @@ Create entity definition with:
 3. **Description**: "Reptilian head with beak mount and eye sockets"
 
 4. **Components**:
-
    - **anatomy:part**:
      - subType: "tortoise_head"
 
@@ -62,12 +67,14 @@ Create entity definition with:
 ## Acceptance Criteria
 
 ### Tests that must pass:
+
 1. `npm run validate` - Schema validation passes
 2. Entity validates against `entity-definition.schema.json`
 3. All component IDs exist in the system
 4. JSON is well-formed and parseable
 
 ### Invariants that must remain true:
+
 1. No existing entity definitions are modified
 2. Socket IDs exactly match recipe pattern expectations: "left_eye", "right_eye", "beak_mount"
 3. Socket allowedTypes match entity types: ["tortoise_eye"], ["tortoise_beak"]
@@ -77,11 +84,13 @@ Create entity definition with:
 7. Socket count is exactly 3 (2 eyes + 1 beak)
 
 ## Validation Commands
+
 ```bash
 npm run validate
 ```
 
 ## Definition of Done
+
 - [x] File created with correct schema reference
 - [x] Entity ID follows naming convention
 - [x] All components properly structured
@@ -91,12 +100,15 @@ npm run validate
 - [x] File committed with descriptive message
 
 ## Status
+
 **COMPLETED** - 2025-11-23
 
 ## Outcome
+
 Successfully created the tortoise_head entity with the following changes:
 
 ### Files Created:
+
 1. **Entity Definition**: `data/mods/anatomy/entities/definitions/tortoise_head.entity.json`
    - Implements all required components (anatomy:part, anatomy:sockets, core:name, descriptors)
    - Includes 3 sockets: left_eye, right_eye, beak_mount
@@ -107,12 +119,14 @@ Successfully created the tortoise_head entity with the following changes:
    - All tests passing
 
 ### Adjustments vs Original Plan:
+
 - **Descriptor Corrections**: Updated ticket assumptions to use valid enum values
   - Shape: "blunt" → "domed" (not in schema)
   - Color: "grey-green" → "sickly-gray-green" (not in schema)
 - **Test Coverage**: Added comprehensive integration tests (not originally specified but necessary)
 
 ### Validation:
+
 - ✅ All validation passes (`npm run validate`)
 - ✅ JSON well-formed and parseable
 - ✅ All 16 integration tests pass

@@ -38,10 +38,10 @@ When you write new goals or tasks, prefer the `actor.components.core_stats.healt
 
 `GoapController` validates the planner against a shared contract defined in `src/goap/planner/goapPlannerContractDefinition.js`. Every runtime implementation and test double must expose the following API:
 
-| Method | Signature | Notes |
-| --- | --- | --- |
-| `plan` | `plan(actorId, goal, initialState, options)` | Returns `{ tasks: [...] }` when a plan exists, or `null` after recording a failure snapshot. The GOAP debugger surfaces this metadata in the **Dependency Contracts** section. |
-| `getLastFailure` | `getLastFailure()` | Returns `{ code, reason, details? }` describing the last `plan()` attempt, or `null` if none. Always returns a shallow copy so callers can mutate without affecting cached diagnostics. |
+| Method           | Signature                                    | Notes                                                                                                                                                                                   |
+| ---------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plan`           | `plan(actorId, goal, initialState, options)` | Returns `{ tasks: [...] }` when a plan exists, or `null` after recording a failure snapshot. The GOAP debugger surfaces this metadata in the **Dependency Contracts** section.          |
+| `getLastFailure` | `getLastFailure()`                           | Returns `{ code, reason, details? }` describing the last `plan()` attempt, or `null` if none. Always returns a shallow copy so callers can mutate without affecting cached diagnostics. |
 
 Tests should import `createGoapPlannerMock` + `expectGoapPlannerMock` from `tests/common/mocks/` to stay aligned with this table.
 
@@ -159,13 +159,13 @@ The planner binds item = medikit_23 or item = bread_7 during search.
 The planning effect can use that concrete entity:
 
 "planning_effects": [
-  {
-    "op": "decrease",
-    "path": "actor.state.hunger",
-    "amount": {
-      "var": "item.components.food:nutrition_value"
-    }
-  }
+{
+"op": "decrease",
+"path": "actor.state.hunger",
+"amount": {
+"var": "item.components.food:nutrition_value"
+}
+}
 ]
 
 structural_gates: to decide if this task belongs in the actor's task library at all (musician, biology:can_eat, knows instruments exist, etc.). Structural gates are a coarse "is this action even relevant in principle?" It's different from the prerequisites, forbidden_components and required_components of executable-time actions, which only filter by what is possible right then and there. The structural level needs knowledge-based existence queries that say: "Is it even possible to resolve a valid target for this action at some point, given what this actor knows?"
@@ -179,7 +179,6 @@ Planning scope: a regular scopeDsl file, like the ones used extensively in execu
 ## Preventing omniscience
 
 Planning with scopes that encompass the entire game world would cause omniscience unless gated. For example, if a scope is items:nourishing_items_in_map, the scope would return nourishing items that the actor doesn't even know about. The solution for this is to implement a new 'core:known_to' component in core, as we as a 'core:visible' component in core. The idea is the following: when a turn starts with an actor in a location, we ensure that all visible entities other than the acting actor include the acting actor's id in their 'core:known_to' component array (and if the 'core:known_to' component doesn't exist on the entity, it should be added). The modders should be careful to add a 'core:visible' equals false to objects that start for example in closed containers. All planning scopes then should be gated by the entities that the acting actor knows, as in items:known_nourishing_items . The acting actor may remember an apple it saw somewhere, but not a pear it didn't see in another location.
-
 
 ### Two levels of target selection: planning vs execution
 
@@ -318,7 +317,7 @@ The numeric constraint planning system consists of four key components:
 
 - **NumericConstraintEvaluator** (`src/goap/planner/numericConstraintEvaluator.js`): Evaluates numeric constraints (>, <, >=, <=, ==) and calculates the distance from current values to goal satisfaction
 - **GoalDistanceHeuristic** (`src/goap/planner/goalDistanceHeuristic.js`): Combines component-based distance (missing/unwanted components) with numeric constraint distance for comprehensive goal evaluation
-- **GoapPlanner** (`src/goap/planner/goapPlanner.js`): Checks if tasks reduce numeric distance to goals during A* search
+- **GoapPlanner** (`src/goap/planner/goapPlanner.js`): Checks if tasks reduce numeric distance to goals during A\* search
 - **PlanningEffectsSimulator** (`src/goap/planner/planningEffectsSimulator.js`): Simulates `MODIFY_COMPONENT` effects with type safety for fast state prediction during planning
 
 ### Distance Calculation
@@ -365,6 +364,7 @@ Numeric goals often require multiple task applications to satisfy. The planner s
 ```
 
 **Multi-Action Example:**
+
 ```javascript
 // Planning State: actor has health = 10
 // Goal: health >= 80
@@ -385,6 +385,7 @@ The `GoalDistanceHeuristic` provides two modes for estimating the cost to reach 
 2. **Enhanced Mode**: Analyzes task effects to estimate the number of task applications needed
 
 Enhanced mode calculation:
+
 ```javascript
 // Goal: hunger <= 10, Current: 100
 // Best task: eat_food (decreases hunger by 60)
@@ -415,10 +416,7 @@ Numeric goals use JSON Logic expressions with `var` references to component fiel
 ```json
 {
   "goalState": {
-    "<=": [
-      { "var": "actor.components.core:needs.hunger" },
-      30
-    ]
+    "<=": [{ "var": "actor.components.core:needs.hunger" }, 30]
   }
 }
 ```
@@ -439,7 +437,7 @@ To maintain performance:
 - Use `structural_gates` to limit task library size
 - Set reasonable `maxCost` and `maxActions` limits on goals
 - Prefer larger effect magnitudes to reduce required task applications
-- Use enhanced heuristic mode for better A* guidance
+- Use enhanced heuristic mode for better A\* guidance
 
 See `docs/goap/numeric-constraints-guide.md` for modder-facing documentation and best practices.
 

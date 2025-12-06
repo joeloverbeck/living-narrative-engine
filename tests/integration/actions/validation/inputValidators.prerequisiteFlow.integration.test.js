@@ -125,7 +125,9 @@ describe('validateActionInputs integration via prerequisite evaluation', () => {
 
     expect(
       debugMessages.some((message) =>
-        message.includes('Validated inputs - Action: core:salute, Actor: hero-1')
+        message.includes(
+          'Validated inputs - Action: core:salute, Actor: hero-1'
+        )
       )
     ).toBe(true);
     expect(
@@ -158,18 +160,20 @@ describe('validateActionInputs integration via prerequisite evaluation', () => {
 
     const errorEntries = logger.getMessages('error');
     expect(
-      errorEntries.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes('Failed to build evaluation context')
+      errorEntries.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes('Failed to build evaluation context')
       )
     ).toBe(true);
     expect(
-      errorEntries.some(([message, context]) =>
-        typeof message === 'string' &&
-        message.includes(
-          'ActionValidationContextBuilder.buildContext: Action definition must have a valid id property'
-        ) &&
-        context?.actorId === 'hero-1'
+      errorEntries.some(
+        ([message, context]) =>
+          typeof message === 'string' &&
+          message.includes(
+            'ActionValidationContextBuilder.buildContext: Action definition must have a valid id property'
+          ) &&
+          context?.actorId === 'hero-1'
       )
     ).toBe(true);
 

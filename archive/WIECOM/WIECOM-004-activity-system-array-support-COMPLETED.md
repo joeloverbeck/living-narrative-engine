@@ -12,8 +12,8 @@ Modify `activityMetadataCollectionSystem.js` to support array-based target roles
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                                       | Action | Description                                             |
+| ---------------------------------------------------------- | ------ | ------------------------------------------------------- |
 | `src/anatomy/services/activityMetadataCollectionSystem.js` | MODIFY | Add array target role support in `#parseInlineMetadata` |
 
 ## Out of Scope
@@ -130,6 +130,7 @@ The current implementation only handles single string targets:
 ### Specific Tests That Must Pass
 
 After WIECOM-007 creates tests:
+
 - Single-target components continue to work unchanged
 - Array target with `targetRoleIsArray: true` returns `{ isMultiTarget: true, targetEntityIds: [...] }`
 - Empty arrays return `{ isMultiTarget: true, targetEntityIds: [] }`

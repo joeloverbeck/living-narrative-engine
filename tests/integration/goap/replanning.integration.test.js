@@ -290,13 +290,16 @@ describe('GOAP Replanning - Integration', () => {
 
         // Verify: System detected goal is no longer relevant
         // Should either select different goal or return null (idle)
-        const goalSelected = events2.find((e) => e.type === GOAP_EVENTS.GOAL_SELECTED);
+        const goalSelected = events2.find(
+          (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
+        );
 
         // If goal selected, should be different OR no goal selected (idle)
         if (goalSelected) {
           // Either new goal or no planning (goal no longer relevant)
           expect(
-            goalSelected.payload.goalId !== 'test:hunger_goal' || result2 === null
+            goalSelected.payload.goalId !== 'test:hunger_goal' ||
+              result2 === null
           ).toBe(true);
         } else {
           // No goal selected = idle state (acceptable)
@@ -611,7 +614,9 @@ describe('GOAP Replanning - Integration', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events1 = setup.eventBus.getEvents();
-      const plan1 = events1.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const plan1 = events1.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       if (plan1) {
         // Verify: Chose primary method
@@ -625,7 +630,9 @@ describe('GOAP Replanning - Integration', () => {
         await setup.controller.decideTurn(actor, world);
 
         const events2 = setup.eventBus.getEvents();
-        const plan2 = events2.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+        const plan2 = events2.find(
+          (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+        );
 
         if (plan2) {
           // Verify: Switched to alternative method

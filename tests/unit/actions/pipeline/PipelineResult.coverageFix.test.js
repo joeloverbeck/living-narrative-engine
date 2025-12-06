@@ -43,7 +43,10 @@ describe('PipelineResult - targeted coverage', () => {
   });
 
   it('wraps single errors and stops processing on failure', () => {
-    const result = PipelineResult.failure({ message: 'fatal' }, { retry: false });
+    const result = PipelineResult.failure(
+      { message: 'fatal' },
+      { retry: false }
+    );
 
     expect(result.success).toBe(false);
     expect(result.errors).toEqual([{ message: 'fatal' }]);
@@ -65,7 +68,9 @@ describe('PipelineResult - targeted coverage', () => {
       errors: [{ message: 'warning' }],
       data: { fromBase: true },
     });
-    const next = PipelineResult.failure([{ message: 'stop' }], { fromNext: true });
+    const next = PipelineResult.failure([{ message: 'stop' }], {
+      fromNext: true,
+    });
 
     const merged = base.merge(next);
 
@@ -143,7 +148,9 @@ describe('PipelineResult - targeted coverage', () => {
       data: { stage: 'initial' },
       errors: [{ message: 'previous warning' }],
     });
-    const followUp = jest.fn(() => ActionResult.success({ nextStage: 'final' }));
+    const followUp = jest.fn(() =>
+      ActionResult.success({ nextStage: 'final' })
+    );
 
     const chained = base.chainActionResult(followUp);
 

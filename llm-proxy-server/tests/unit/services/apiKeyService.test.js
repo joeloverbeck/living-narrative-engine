@@ -215,7 +215,9 @@ describe('ApiKeyService', () => {
       expect(result.errorDetails.details.reason).toContain(
         "Environment variable 'MISSING_ENV' was not set or empty."
       );
-      expect(result.errorDetails.details.reason).toContain("File 'missing.key'");
+      expect(result.errorDetails.details.reason).toContain(
+        "File 'missing.key'"
+      );
     });
 
     test('merges error sources even when file reader does not provide details', async () => {
@@ -485,10 +487,7 @@ describe('ApiKeyService', () => {
     test('constructs combined failure reason when both sources fail without detailed errors', async () => {
       delete process.env.NULL_DETAIL_ENV;
 
-      const createErrorDetailsSpy = jest.spyOn(
-        service,
-        '_createErrorDetails'
-      );
+      const createErrorDetailsSpy = jest.spyOn(service, '_createErrorDetails');
 
       jest
         .spyOn(service, '_readApiKeyFromFile')
@@ -771,10 +770,7 @@ describe('ApiKeyService', () => {
       );
 
       const sanitizedPath = path.join('/var/keys', 'api.key');
-      expect(fsReader.readFile).toHaveBeenCalledWith(
-        sanitizedPath,
-        'utf-8'
-      );
+      expect(fsReader.readFile).toHaveBeenCalledWith(sanitizedPath, 'utf-8');
       expect(cacheService.set).toHaveBeenCalledWith(
         `api_key:file:${sanitizedPath}`,
         'trailing-space-key',
@@ -1046,7 +1042,9 @@ describe('ApiKeyService', () => {
       );
 
       expect(createSpy).toHaveBeenCalledTimes(3);
-      expect(createSpy.mock.calls[2][1]).toBe('api_key_retrieval_unknown_error');
+      expect(createSpy.mock.calls[2][1]).toBe(
+        'api_key_retrieval_unknown_error'
+      );
       expect(result.apiKey).toBeNull();
       expect(result.errorDetails).toEqual(
         expect.objectContaining({ stage: 'api_key_retrieval_unknown_error' })
@@ -1055,7 +1053,6 @@ describe('ApiKeyService', () => {
         expect.stringContaining('unexpected state for llmId')
       );
     });
-
   });
 
   describe('Security: API Key Logging Verification', () => {

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import CommandProcessingWorkflow from '../../../../../src/turns/states/helpers/commandProcessingWorkflow.js';
 import { ProcessingExceptionHandler } from '../../../../../src/turns/states/helpers/processingExceptionHandler.js';
 import EndTurnSuccessStrategy from '../../../../../src/turns/strategies/endTurnSuccessStrategy.js';
@@ -305,7 +312,10 @@ function createTurnContextEnvironment({
   const entityManager = new TestEntityManager(actor);
   const turnEndPort = new TestTurnEndPort();
   const strategy = {
-    decideAction: async () => ({ actionDefinitionId: 'test', commandString: 'test' }),
+    decideAction: async () => ({
+      actionDefinitionId: 'test',
+      commandString: 'test',
+    }),
   };
 
   const handler = new TestHandler(logger, dispatcher);
@@ -393,8 +403,8 @@ describe('CommandProcessingWorkflow integration', () => {
       ...(exceptionHandler
         ? { exceptionHandler }
         : useDefaultExceptionHandler
-        ? {}
-        : { exceptionHandler: new ProcessingExceptionHandler(state) }),
+          ? {}
+          : { exceptionHandler: new ProcessingExceptionHandler(state) }),
       commandDispatcher,
       resultInterpreter,
       directiveExecutor,
@@ -430,7 +440,10 @@ describe('CommandProcessingWorkflow integration', () => {
   it('routes failure directive to the EndTurnFailureStrategy', async () => {
     const failureError = new Error('directive failure');
     const { workflow, turnContext, state } = buildWorkflow({
-      commandProcessorImpl: async () => ({ success: false, error: failureError }),
+      commandProcessorImpl: async () => ({
+        success: false,
+        error: failureError,
+      }),
       interpreterImpl: async () => TurnDirective.END_TURN_FAILURE,
       strategyMap: {
         [TurnDirective.END_TURN_FAILURE]: new EndTurnFailureStrategy(),
@@ -597,8 +610,8 @@ describe('CommandProcessingWorkflow integration', () => {
       commandProcessor: new TestCommandProcessor(async () => {
         throw new Error('dispatch failure');
       }),
-      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
-        TurnDirective.END_TURN_SUCCESS
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(
+        async () => TurnDirective.END_TURN_SUCCESS
       ),
       directiveStrategyResolver: new TestDirectiveResolver({
         [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
@@ -606,14 +619,10 @@ describe('CommandProcessingWorkflow integration', () => {
       exceptionHandler: new ProcessingExceptionHandler(state),
     });
 
-    await workflow.processCommand(
-      failingTurnContext.turnContext,
-      actor,
-      {
-        actionDefinitionId: 'test:action',
-        commandString: 'failing end turn',
-      }
-    );
+    await workflow.processCommand(failingTurnContext.turnContext, actor, {
+      actionDefinitionId: 'test:action',
+      commandString: 'failing end turn',
+    });
 
     expect(failingTurnContext.handler.resetCalls).toHaveLength(1);
     expect(failingTurnContext.handler.transitionCalls).toHaveLength(1);
@@ -641,7 +650,9 @@ describe('CommandProcessingWorkflow integration', () => {
       { detail: 'sample' }
     );
 
-    expect(workflow._exceptionHandler).toBeInstanceOf(ProcessingExceptionHandler);
+    expect(workflow._exceptionHandler).toBeInstanceOf(
+      ProcessingExceptionHandler
+    );
     expect(context).toEqual(
       expect.objectContaining({
         phase: 'command_processing_default',
@@ -653,7 +664,10 @@ describe('CommandProcessingWorkflow integration', () => {
   });
 
   it('reports interpretation errors through the provided exception handler', async () => {
-    const handleSpy = jest.spyOn(ProcessingExceptionHandler.prototype, 'handle');
+    const handleSpy = jest.spyOn(
+      ProcessingExceptionHandler.prototype,
+      'handle'
+    );
     const errorContextSpy = jest.spyOn(
       CommandProcessingWorkflow.prototype,
       '_createErrorContext'
@@ -713,8 +727,8 @@ describe('CommandProcessingWorkflow integration', () => {
         success: true,
         detail: 'context changed',
       })),
-      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
-        TurnDirective.END_TURN_SUCCESS
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(
+        async () => TurnDirective.END_TURN_SUCCESS
       ),
       directiveStrategyResolver: new TestDirectiveResolver({
         [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),
@@ -765,9 +779,9 @@ describe('CommandProcessingWorkflow integration', () => {
 
     expect(state.isProcessing).toBe(false);
     expect(state.finishCalls).toBeGreaterThan(0);
-    expect(
-      workflow._directiveExecutor.handler.getCurrentState()
-    ).not.toBe(state);
+    expect(workflow._directiveExecutor.handler.getCurrentState()).not.toBe(
+      state
+    );
   });
 
   it('logs when the fallback directive strategy transitions to a new state', async () => {
@@ -785,9 +799,11 @@ describe('CommandProcessingWorkflow integration', () => {
 
     const workflow = new CommandProcessingWorkflow({
       state,
-      commandProcessor: new TestCommandProcessor(async () => ({ success: true })),
-      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
-        TurnDirective.END_TURN_SUCCESS
+      commandProcessor: new TestCommandProcessor(async () => ({
+        success: true,
+      })),
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(
+        async () => TurnDirective.END_TURN_SUCCESS
       ),
       directiveStrategyResolver: new TestDirectiveResolver({
         [TurnDirective.END_TURN_SUCCESS]: strategy,
@@ -802,15 +818,19 @@ describe('CommandProcessingWorkflow integration', () => {
 
     expect(state.finishCalls).toBeGreaterThan(0);
     expect(
-      logger.calls.debug.some(([message]) =>
-        message.includes('Directive strategy executed for actor') &&
-        message.includes('state changed')
+      logger.calls.debug.some(
+        ([message]) =>
+          message.includes('Directive strategy executed for actor') &&
+          message.includes('state changed')
       )
     ).toBe(true);
   });
 
   it('normalizes non-Error exceptions from directive execution', async () => {
-    const handleSpy = jest.spyOn(ProcessingExceptionHandler.prototype, 'handle');
+    const handleSpy = jest.spyOn(
+      ProcessingExceptionHandler.prototype,
+      'handle'
+    );
     const errorContextSpy = jest.spyOn(
       CommandProcessingWorkflow.prototype,
       '_createErrorContext'
@@ -868,9 +888,11 @@ describe('CommandProcessingWorkflow integration', () => {
 
     const workflow = new CommandProcessingWorkflow({
       state,
-      commandProcessor: new TestCommandProcessor(async () => ({ success: true })),
-      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(async () =>
-        TurnDirective.END_TURN_SUCCESS
+      commandProcessor: new TestCommandProcessor(async () => ({
+        success: true,
+      })),
+      commandOutcomeInterpreter: new TestCommandOutcomeInterpreter(
+        async () => TurnDirective.END_TURN_SUCCESS
       ),
       directiveStrategyResolver: new TestDirectiveResolver({
         [TurnDirective.END_TURN_SUCCESS]: new EndTurnSuccessStrategy(),

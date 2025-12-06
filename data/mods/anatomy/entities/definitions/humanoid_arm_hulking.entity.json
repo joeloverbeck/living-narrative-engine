@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "wrist",
-          "allowedTypes": [
-            "hand"
-          ],
+          "allowedTypes": ["hand"],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]

@@ -129,10 +129,7 @@ describe('ValidationReport', () => {
 
   describe('errors', () => {
     it('should return array of errors', () => {
-      const errors = [
-        { message: 'Error 1' },
-        { message: 'Error 2' },
-      ];
+      const errors = [{ message: 'Error 1' }, { message: 'Error 2' }];
 
       const results = {
         recipeId: 'test:recipe',
@@ -172,10 +169,7 @@ describe('ValidationReport', () => {
 
   describe('warnings', () => {
     it('should return array of warnings', () => {
-      const warnings = [
-        { message: 'Warning 1' },
-        { message: 'Warning 2' },
-      ];
+      const warnings = [{ message: 'Warning 1' }, { message: 'Warning 2' }];
 
       const results = {
         recipeId: 'test:recipe',

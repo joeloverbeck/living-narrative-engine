@@ -40,16 +40,18 @@ describe('RecipeUsageValidator', () => {
     });
 
     it('throws when data registry is missing getAll', () => {
-      expect(() => new RecipeUsageValidator({ logger, dataRegistry: {} })).toThrow(
+      expect(
+        () => new RecipeUsageValidator({ logger, dataRegistry: {} })
+      ).toThrow(
         "Invalid or missing method 'getAll' on dependency 'IDataRegistry'."
       );
     });
 
     it('throws when logger is missing', () => {
       const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
-      expect(() => new RecipeUsageValidator({ logger: null, dataRegistry })).toThrow(
-        'Missing required dependency: ILogger.'
-      );
+      expect(
+        () => new RecipeUsageValidator({ logger: null, dataRegistry })
+      ).toThrow('Missing required dependency: ILogger.');
     });
   });
 
@@ -69,12 +71,12 @@ describe('RecipeUsageValidator', () => {
         type: 'RECIPE_UNUSED',
         severity: 'warning',
         check: 'recipe_usage',
-        suggestion: 'Verify that the recipeId matches what entity definitions expect',
+        suggestion:
+          'Verify that the recipeId matches what entity definitions expect',
       });
       expect(warning.details).toEqual({
         recipeId: 'core:unused',
-        hint:
-          'Entity definitions should have: "anatomy:body": { "recipeId": "core:unused" }',
+        hint: 'Entity definitions should have: "anatomy:body": { "recipeId": "core:unused" }',
       });
       expect(result.recipeUsage).toEqual({
         check: 'recipe_usage',
@@ -133,15 +135,23 @@ describe('RecipeUsageValidator', () => {
     it('handles entity definitions with null recipeId', async () => {
       const recipe = createRecipe('core:target');
       const { validator } = createValidator([
-        { id: 'core:nullRecipe', components: { 'anatomy:body': { recipeId: null } } },
-        { id: 'core:valid', components: { 'anatomy:body': { recipeId: 'core:target' } } },
+        {
+          id: 'core:nullRecipe',
+          components: { 'anatomy:body': { recipeId: null } },
+        },
+        {
+          id: 'core:valid',
+          components: { 'anatomy:body': { recipeId: 'core:target' } },
+        },
       ]);
 
       const result = await validator.validate(recipe);
 
       expect(result.passed).toHaveLength(1);
       expect(result.recipeUsage.details.totalCount).toBe(1);
-      expect(result.recipeUsage.details.referencingEntities).toEqual(['core:valid']);
+      expect(result.recipeUsage.details.referencingEntities).toEqual([
+        'core:valid',
+      ]);
     });
 
     it('treats non-array registry responses as empty collections', async () => {
@@ -167,7 +177,10 @@ describe('RecipeUsageValidator', () => {
       const validator = new RecipeUsageValidator({ logger, dataRegistry });
 
       const result = await validator.validate(recipe);
-      expect(logger.error).toHaveBeenCalledWith('recipe-usage check failed', error);
+      expect(logger.error).toHaveBeenCalledWith(
+        'recipe-usage check failed',
+        error
+      );
       expect(result.warnings).toHaveLength(0);
       expect(result.passed).toHaveLength(0);
       expect(result.recipeUsage).toBeUndefined();

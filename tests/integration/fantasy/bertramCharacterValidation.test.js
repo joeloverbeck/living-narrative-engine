@@ -15,7 +15,7 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
     // Load character definition
     const defPath = join(
       FANTASY_MOD_PATH,
-      'entities/definitions/bertram_the_muddy.character.json',
+      'entities/definitions/bertram_the_muddy.character.json'
     );
     const defContent = await readFile(defPath, 'utf-8');
     definitionData = JSON.parse(defContent);
@@ -23,7 +23,7 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
     // Load character instance
     const instPath = join(
       FANTASY_MOD_PATH,
-      'entities/instances/bertram_the_muddy.character.json',
+      'entities/instances/bertram_the_muddy.character.json'
     );
     const instContent = await readFile(instPath, 'utf-8');
     instanceData = JSON.parse(instContent);
@@ -70,7 +70,7 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
 
     it('should reference the correct recipe', () => {
       expect(definitionData.components['anatomy:body'].recipeId).toBe(
-        'fantasy:bertram_the_muddy_recipe',
+        'fantasy:bertram_the_muddy_recipe'
       );
     });
 
@@ -118,15 +118,13 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
   describe('Character Instance', () => {
     it('should have correct instance ID', () => {
       expect(instanceData.instanceId).toBe(
-        'fantasy:bertram_the_muddy_instance',
+        'fantasy:bertram_the_muddy_instance'
       );
     });
 
     it('should reference the correct definition', () => {
       expect(instanceData.definitionId).toBe('fantasy:bertram_the_muddy');
     });
-
-
 
     it('should start with only his smoking pipe in unequipped inventory', () => {
       const inventory =
@@ -160,7 +158,7 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
     it('should preserve transactional wisdom in goals', () => {
       const notes = definitionData.components['core:notes'].notes;
       const reciprocalNote = notes.find((n) =>
-        n.subject.includes('Reciprocal'),
+        n.subject.includes('Reciprocal')
       );
       expect(reciprocalNote).toBeDefined();
       expect(reciprocalNote.text.toLowerCase()).toContain('fair');
@@ -170,7 +168,7 @@ describe('Bertram the Muddy Character - Integration Validation', () => {
     it('should preserve professional pride in notes', () => {
       const notes = definitionData.components['core:notes'].notes;
       const leatherworkNote = notes.find((n) =>
-        n.subject.includes('Leatherwork'),
+        n.subject.includes('Leatherwork')
       );
       expect(leatherworkNote).toBeDefined();
       expect(leatherworkNote.text).toContain('pride');

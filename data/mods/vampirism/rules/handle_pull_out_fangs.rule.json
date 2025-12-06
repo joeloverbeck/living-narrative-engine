@@ -72,7 +72,9 @@
             { "var": "context.targetBeingBittenComponent" },
             {
               "==": [
-                { "var": "context.targetBeingBittenComponent.biting_entity_id" },
+                {
+                  "var": "context.targetBeingBittenComponent.biting_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }

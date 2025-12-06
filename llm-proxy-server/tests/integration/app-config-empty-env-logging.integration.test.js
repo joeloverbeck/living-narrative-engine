@@ -5,7 +5,14 @@
  *              scenario while using real configuration loading logic.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import {
   getAppConfigService,
@@ -67,10 +74,10 @@ describe('AppConfigService empty environment value logging integration', () => {
     expect(debugMessages).toEqual(
       expect.arrayContaining([
         expect.stringContaining(
-          "AppConfigService: LLM_CONFIG_PATH found in environment but is empty."
+          'AppConfigService: LLM_CONFIG_PATH found in environment but is empty.'
         ),
         expect.stringContaining(
-          "AppConfigService: PROXY_ALLOWED_ORIGIN found in environment but is empty."
+          'AppConfigService: PROXY_ALLOWED_ORIGIN found in environment but is empty.'
         ),
         expect.stringContaining(
           'AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES found in environment but is empty.'

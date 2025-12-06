@@ -2,7 +2,7 @@
  * @file Concurrent Event Dispatch E2E Test
  * @description End-to-end test for concurrent event dispatch scenarios in the Living Narrative Engine.
  * Tests race conditions, event ordering, handler safety, and system stability under concurrent load.
- * 
+ *
  * Priority 3 implementation from events system E2E test coverage analysis:
  * - Multiple simultaneous dispatches from different sources
  * - Race condition detection and prevention
@@ -13,7 +13,14 @@
  * @jest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import {
@@ -69,14 +76,16 @@ class ConcurrentTestCoordinator {
    */
   createConcurrentDispatchers(count, eventType, payloadGenerator) {
     const dispatchers = [];
-    
+
     for (let i = 0; i < count; i++) {
       dispatchers.push(() => {
-        const payload = payloadGenerator ? payloadGenerator(i) : { index: i, timestamp: Date.now() };
+        const payload = payloadGenerator
+          ? payloadGenerator(i)
+          : { index: i, timestamp: Date.now() };
         return this.eventBus.dispatch(eventType, payload);
       });
     }
-    
+
     return dispatchers;
   }
 
@@ -88,13 +97,13 @@ class ConcurrentTestCoordinator {
   async executeConcurrently(dispatchers) {
     const startTime = performance.now();
     this.dispatchCount = dispatchers.length;
-    
+
     // Execute all dispatchers simultaneously using Promise.all
-    const results = await Promise.all(dispatchers.map(d => d()));
-    
+    const results = await Promise.all(dispatchers.map((d) => d()));
+
     const endTime = performance.now();
     const durationMs = endTime - startTime;
-    
+
     return {
       results,
       durationMs,
@@ -113,7 +122,7 @@ class ConcurrentTestCoordinator {
     this.eventBus.subscribe(eventType, async (event) => {
       const currentValue = this.sharedState.counter;
       // Simulate some processing time
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 5));
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 5));
       this.sharedState.counter = currentValue + 1;
       this.sharedState.concurrentModifications.push({
         type: 'counter',
@@ -127,7 +136,7 @@ class ConcurrentTestCoordinator {
     this.eventBus.subscribe(eventType, async (event) => {
       const beforeLength = this.sharedState.list.length;
       // Simulate processing
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 3));
+      await new Promise((resolve) => setTimeout(resolve, Math.random() * 3));
       this.sharedState.list.push(event.payload?.index || 'item');
       this.sharedState.concurrentModifications.push({
         type: 'list',
@@ -158,16 +167,16 @@ class ConcurrentTestCoordinator {
    */
   setupVariableTimeHandlers(eventType) {
     const handlerTypes = ['fast', 'medium', 'slow', 'async', 'sync'];
-    
-    handlerTypes.forEach(type => {
+
+    handlerTypes.forEach((type) => {
       this.eventBus.subscribe(eventType, async (event) => {
         const executionId = `${type}_${event.payload?.index}_${Date.now()}`;
-        
+
         // Track handler start
         if (!this.handlerExecutions.has(type)) {
           this.handlerExecutions.set(type, []);
         }
-        
+
         const executions = this.handlerExecutions.get(type);
         executions.push({
           id: executionId,
@@ -181,13 +190,13 @@ class ConcurrentTestCoordinator {
             // Immediate execution
             break;
           case 'medium':
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, 10));
             break;
           case 'slow':
-            await new Promise(resolve => setTimeout(resolve, 25));
+            await new Promise((resolve) => setTimeout(resolve, 25));
             break;
           case 'async':
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
             break;
           case 'sync':
             // Synchronous CPU-bound work
@@ -199,7 +208,7 @@ class ConcurrentTestCoordinator {
         }
 
         // Track handler completion
-        const execution = executions.find(e => e.id === executionId);
+        const execution = executions.find((e) => e.id === executionId);
         if (execution) {
           execution.endTime = Date.now();
           execution.duration = execution.endTime - execution.startTime;
@@ -228,7 +237,8 @@ class ConcurrentTestCoordinator {
     // Check list for duplicates
     const uniqueItems = new Set(this.sharedState.list);
     if (uniqueItems.size < this.sharedState.list.length) {
-      analysis.duplicateOperations = this.sharedState.list.length - uniqueItems.size;
+      analysis.duplicateOperations =
+        this.sharedState.list.length - uniqueItems.size;
     }
 
     // Check for out-of-order executions
@@ -240,10 +250,12 @@ class ConcurrentTestCoordinator {
     }
 
     // Check map consistency
-    const expectedMapSize = Math.min(this.dispatchCount, new Set(
-      Array.from({ length: this.dispatchCount }, (_, i) => `key_${i}`)
-    ).size);
-    
+    const expectedMapSize = Math.min(
+      this.dispatchCount,
+      new Set(Array.from({ length: this.dispatchCount }, (_, i) => `key_${i}`))
+        .size
+    );
+
     if (this.sharedState.map.size !== expectedMapSize) {
       analysis.consistencyErrors.push({
         type: 'map_size',
@@ -267,7 +279,7 @@ class ConcurrentTestCoordinator {
     };
 
     // Group events by type
-    this.eventTimings.forEach(event => {
+    this.eventTimings.forEach((event) => {
       if (!orderingAnalysis.eventGroups.has(event.type)) {
         orderingAnalysis.eventGroups.set(event.type, []);
       }
@@ -279,12 +291,16 @@ class ConcurrentTestCoordinator {
       for (let i = 1; i < events.length; i++) {
         const delta = events[i].highResTime - events[i - 1].highResTime;
         orderingAnalysis.timingDeltas.push(delta);
-        
+
         // Check if events arrived out of order based on payload index
-        if (events[i].payload?.index !== undefined && 
-            events[i - 1].payload?.index !== undefined) {
-          if (events[i].payload.index < events[i - 1].payload.index && 
-              events[i].timestamp < events[i - 1].timestamp) {
+        if (
+          events[i].payload?.index !== undefined &&
+          events[i - 1].payload?.index !== undefined
+        ) {
+          if (
+            events[i].payload.index < events[i - 1].payload.index &&
+            events[i].timestamp < events[i - 1].timestamp
+          ) {
             orderingAnalysis.outOfOrderEvents++;
           }
         }
@@ -313,7 +329,7 @@ class ConcurrentTestCoordinator {
           expected: this.dispatchCount,
           actual: executions.length,
         });
-        
+
         if (executions.length < this.dispatchCount) {
           safety.skippedHandlers += this.dispatchCount - executions.length;
         } else {
@@ -322,7 +338,9 @@ class ConcurrentTestCoordinator {
       }
 
       // Check for duplicate event indices
-      const eventIndices = executions.map(e => e.eventIndex).filter(i => i !== undefined);
+      const eventIndices = executions
+        .map((e) => e.eventIndex)
+        .filter((i) => i !== undefined);
       const uniqueIndices = new Set(eventIndices);
       if (uniqueIndices.size < eventIndices.length) {
         safety.doubleExecutions += eventIndices.length - uniqueIndices.size;
@@ -353,7 +371,7 @@ describe('Concurrent Event Dispatch E2E', () => {
   beforeEach(() => {
     // Create fresh instances for each test
     logger = new ConsoleLogger();
-    
+
     // For concurrent dispatch testing, we focus on the core EventBus functionality
     // without the complexity of schema validation which isn't needed for concurrency testing
     eventBus = new EventBus({ logger });
@@ -375,13 +393,13 @@ describe('Concurrent Event Dispatch E2E', () => {
       const dispatchCount = 10;
       const eventType = ENTITY_CREATED_ID;
       const receivedEvents = [];
-      
+
       eventBus.subscribe(eventType, (event) => {
         receivedEvents.push(event);
       });
 
       const dispatchers = coordinator.createConcurrentDispatchers(
-        dispatchCount, 
+        dispatchCount,
         eventType,
         (i) => ({ entityId: `entity_${i}`, timestamp: Date.now() })
       );
@@ -392,12 +410,12 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Assert
       expect(receivedEvents.length).toBe(dispatchCount);
       expect(results.dispatchCount).toBe(dispatchCount);
-      
+
       // Verify all entities were created
-      const entityIds = receivedEvents.map(e => e.payload.entityId);
+      const entityIds = receivedEvents.map((e) => e.payload.entityId);
       const uniqueEntityIds = new Set(entityIds);
       expect(uniqueEntityIds.size).toBe(dispatchCount);
-      
+
       // Verify performance is reasonable (< 200ms for 10 events in browser)
       expect(results.durationMs).toBeLessThan(200);
     });
@@ -407,14 +425,14 @@ describe('Concurrent Event Dispatch E2E', () => {
       const dispatchCount = 50;
       const eventTypes = [
         ENTITY_CREATED_ID,
-        COMPONENT_ADDED_ID, 
+        COMPONENT_ADDED_ID,
         ACTION_DECIDED_ID,
         ENTITY_SPOKE_ID,
         TURN_STARTED_ID,
       ];
-      
+
       const eventCounts = new Map();
-      eventTypes.forEach(type => {
+      eventTypes.forEach((type) => {
         eventCounts.set(type, 0);
         eventBus.subscribe(type, () => {
           eventCounts.set(type, eventCounts.get(type) + 1);
@@ -430,15 +448,18 @@ describe('Concurrent Event Dispatch E2E', () => {
 
       // Act
       const startTime = performance.now();
-      await Promise.all(dispatchers.map(d => d()));
+      await Promise.all(dispatchers.map((d) => d()));
       const endTime = performance.now();
 
       // Assert
-      const totalEvents = Array.from(eventCounts.values()).reduce((a, b) => a + b, 0);
+      const totalEvents = Array.from(eventCounts.values()).reduce(
+        (a, b) => a + b,
+        0
+      );
       expect(totalEvents).toBe(dispatchCount);
-      
+
       // Each event type should have received equal share (10 each)
-      eventTypes.forEach(type => {
+      eventTypes.forEach((type) => {
         expect(eventCounts.get(type)).toBe(10);
       });
 
@@ -453,27 +474,32 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Arrange - use smaller batch that doesn't trigger recursion limits
       const dispatchCount = 8; // Keep under recursion limit
       const eventType = 'test:browser_processing';
-      
+
       coordinator.setupRaceConditionHandlers(eventType);
-      const dispatchers = coordinator.createConcurrentDispatchers(dispatchCount, eventType);
+      const dispatchers = coordinator.createConcurrentDispatchers(
+        dispatchCount,
+        eventType
+      );
 
       // Act
       await coordinator.executeConcurrently(dispatchers);
-      
+
       // Wait for all async handlers to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       const analysis = coordinator.analyzeRaceConditions();
 
       // Assert - async handlers with delays can still cause update timing issues
       // Even in single-threaded environment due to async scheduling
       // The key test is that all events are processed without crashes
       expect(coordinator.sharedState.counter).toBeGreaterThan(0);
-      expect(coordinator.sharedState.counter).toBeLessThanOrEqual(dispatchCount);
+      expect(coordinator.sharedState.counter).toBeLessThanOrEqual(
+        dispatchCount
+      );
 
       // List operations are more reliable (simple appends)
       expect(coordinator.sharedState.list.length).toBe(dispatchCount);
-      
+
       // Map operations are synchronous and reliable
       expect(coordinator.sharedState.map.size).toBe(dispatchCount);
     });
@@ -484,7 +510,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       const dispatchCount = 50;
       const eventType = 'test:batch_processing';
       let processedCount = 0;
-      
+
       testEventBus.subscribe(eventType, (event) => {
         processedCount++;
       });
@@ -504,13 +530,13 @@ describe('Concurrent Event Dispatch E2E', () => {
       }
 
       // Act - execute all dispatchers concurrently
-      await Promise.all(dispatchers.map(d => d()));
-      
+      await Promise.all(dispatchers.map((d) => d()));
+
       // Disable batch mode
       testEventBus.setBatchMode(false);
-      
+
       // Small delay to ensure all handlers complete
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Assert - batch mode allows higher volumes
       expect(processedCount).toBe(dispatchCount);
@@ -524,15 +550,15 @@ describe('Concurrent Event Dispatch E2E', () => {
       let sequentialCounter = 0;
       const sequentialList = [];
       const sequentialMap = new Map();
-      
+
       // Setup handlers - all operations are sequential in browser event loop
       testEventBus.subscribe(eventType, (event) => {
         // Sequential increment (no race conditions in single-threaded environment)
         sequentialCounter++;
-        
+
         // Sequential list append
         sequentialList.push(event.payload.index);
-        
+
         // Sequential map set
         sequentialMap.set(`key_${event.payload.index}`, Date.now());
       });
@@ -540,20 +566,22 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Create dispatchers directly
       const dispatchers = [];
       for (let i = 0; i < dispatchCount; i++) {
-        dispatchers.push(() => testEventBus.dispatch(eventType, { index: i, timestamp: Date.now() }));
+        dispatchers.push(() =>
+          testEventBus.dispatch(eventType, { index: i, timestamp: Date.now() })
+        );
       }
 
       // Act - execute all dispatchers concurrently
-      await Promise.all(dispatchers.map(d => d()));
-      
+      await Promise.all(dispatchers.map((d) => d()));
+
       // Small delay to ensure all sync handlers complete
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Assert - all operations succeed in single-threaded environment
       expect(sequentialCounter).toBe(dispatchCount);
       expect(sequentialList.length).toBe(dispatchCount);
       expect(sequentialMap.size).toBe(dispatchCount);
-      
+
       // Verify all indices are present
       const indices = new Set(sequentialList);
       expect(indices.size).toBe(dispatchCount);
@@ -566,7 +594,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       const sourcesCount = 5;
       const eventsPerSource = 10;
       const eventsBySource = new Map();
-      
+
       // Setup listener to track events by source
       eventBus.subscribe('*', (event) => {
         const source = event.payload?.source;
@@ -585,7 +613,7 @@ describe('Concurrent Event Dispatch E2E', () => {
           allDispatchers.push(async () => {
             // Add small delay to interleave dispatches
             if (seq > 0) {
-              await new Promise(resolve => setTimeout(resolve, 0));
+              await new Promise((resolve) => setTimeout(resolve, 0));
             }
             return eventBus.dispatch(ENTITY_SPOKE_ID, {
               source,
@@ -598,14 +626,16 @@ describe('Concurrent Event Dispatch E2E', () => {
 
       // Act - shuffle and execute concurrently
       const shuffled = allDispatchers.sort(() => Math.random() - 0.5);
-      await Promise.all(shuffled.map(d => d()));
+      await Promise.all(shuffled.map((d) => d()));
 
       // Assert - focus on all events being processed rather than strict ordering
       eventsBySource.forEach((events, source) => {
         expect(events.length).toBe(eventsPerSource);
-        
+
         // Verify all expected sequences are present (not necessarily in order)
-        const sequences = events.map(e => e.payload.sequence).sort((a, b) => a - b);
+        const sequences = events
+          .map((e) => e.payload.sequence)
+          .sort((a, b) => a - b);
         for (let i = 0; i < eventsPerSource; i++) {
           expect(sequences).toContain(i);
         }
@@ -616,7 +646,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Arrange
       const eventCount = 20;
       const receivedEvents = [];
-      
+
       eventBus.subscribe(TURN_STARTED_ID, (event) => {
         receivedEvents.push(event);
       });
@@ -625,7 +655,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       const dispatchers = [];
       for (let i = 0; i < eventCount; i++) {
         const timestamp = Date.now() - (eventCount - i) * 10; // Reverse timestamp order
-        dispatchers.push(() => 
+        dispatchers.push(() =>
           eventBus.dispatch(TURN_STARTED_ID, {
             index: i,
             timestamp,
@@ -635,13 +665,13 @@ describe('Concurrent Event Dispatch E2E', () => {
       }
 
       // Act
-      await Promise.all(dispatchers.map(d => d()));
+      await Promise.all(dispatchers.map((d) => d()));
 
       // Assert
       expect(receivedEvents.length).toBe(eventCount);
-      
+
       // Events should be received in dispatch order, not timestamp order
-      const indices = receivedEvents.map(e => e.payload.index);
+      const indices = receivedEvents.map((e) => e.payload.index);
       expect(Math.max(...indices)).toBe(eventCount - 1);
       expect(Math.min(...indices)).toBe(0);
     });
@@ -652,16 +682,19 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Arrange
       const dispatchCount = 25;
       const eventType = COMPONENT_ADDED_ID;
-      
+
       coordinator.setupVariableTimeHandlers(eventType);
-      const dispatchers = coordinator.createConcurrentDispatchers(dispatchCount, eventType);
+      const dispatchers = coordinator.createConcurrentDispatchers(
+        dispatchCount,
+        eventType
+      );
 
       // Act
       await coordinator.executeConcurrently(dispatchers);
-      
+
       // Wait for slow handlers to complete
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
       const safety = coordinator.verifyHandlerSafety();
 
       // Assert
@@ -669,13 +702,13 @@ describe('Concurrent Event Dispatch E2E', () => {
       expect(safety.doubleExecutions).toBe(0);
       expect(safety.skippedHandlers).toBe(0);
       expect(safety.handlersWithIssues).toHaveLength(0);
-      
+
       // Verify each handler type executed exactly dispatchCount times
       coordinator.handlerExecutions.forEach((executions, type) => {
         expect(executions.length).toBe(dispatchCount);
-        
+
         // All executions should have completed
-        executions.forEach(exec => {
+        executions.forEach((exec) => {
           expect(exec.endTime).toBeDefined();
           expect(exec.duration).toBeGreaterThanOrEqual(0);
         });
@@ -699,13 +732,13 @@ describe('Concurrent Event Dispatch E2E', () => {
 
       // Async handler with await
       eventBus.subscribe(eventType, async (event) => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
         handlerResults.async.push(event.payload.index);
       });
 
       // Promise-returning handler
       eventBus.subscribe(eventType, (event) => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           setTimeout(() => {
             handlerResults.promise.push(event.payload.index);
             resolve();
@@ -713,23 +746,30 @@ describe('Concurrent Event Dispatch E2E', () => {
         });
       });
 
-      const dispatchers = coordinator.createConcurrentDispatchers(dispatchCount, eventType);
+      const dispatchers = coordinator.createConcurrentDispatchers(
+        dispatchCount,
+        eventType
+      );
 
       // Act
       const startTime = Date.now();
       await coordinator.executeConcurrently(dispatchers);
-      
+
       // Wait for all async handlers
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
       const duration = Date.now() - startTime;
 
       // Assert
       expect(handlerResults.sync.length).toBe(dispatchCount);
       expect(handlerResults.async.length).toBe(dispatchCount);
       expect(handlerResults.promise.length).toBe(dispatchCount);
-      
+
       // All handlers should see all events
-      [handlerResults.sync, handlerResults.async, handlerResults.promise].forEach(results => {
+      [
+        handlerResults.sync,
+        handlerResults.async,
+        handlerResults.promise,
+      ].forEach((results) => {
         const sorted = [...results].sort((a, b) => a - b);
         for (let i = 0; i < dispatchCount; i++) {
           expect(sorted[i]).toBe(i);
@@ -756,7 +796,9 @@ describe('Concurrent Event Dispatch E2E', () => {
       eventBus.subscribe(eventType, (event) => {
         if (event.payload.index % 2 === 0) {
           failureCount.count++;
-          throw new Error(`Deliberate failure for index ${event.payload.index}`);
+          throw new Error(
+            `Deliberate failure for index ${event.payload.index}`
+          );
         }
         successfulExecutions.push(event.payload.index);
       });
@@ -766,13 +808,16 @@ describe('Concurrent Event Dispatch E2E', () => {
         successfulExecutions.push(event.payload.index * 100);
       });
 
-      const dispatchers = coordinator.createConcurrentDispatchers(dispatchCount, eventType);
+      const dispatchers = coordinator.createConcurrentDispatchers(
+        dispatchCount,
+        eventType
+      );
 
       // Act
       await coordinator.executeConcurrently(dispatchers);
 
       // Wait a bit more for all async handlers to complete
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Assert
       // First handler: all 10 events
@@ -781,9 +826,9 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Total: 25 successful executions
       expect(successfulExecutions.length).toBeGreaterThanOrEqual(20); // At least first + third handlers
       expect(failureCount.count).toBe(5); // Failed on 5 even indices
-      
+
       // Verify other handlers weren't affected by failures
-      const multipleOf100 = successfulExecutions.filter(x => x >= 100);
+      const multipleOf100 = successfulExecutions.filter((x) => x >= 100);
       expect(multipleOf100.length).toBeGreaterThanOrEqual(8); // Should have most events from third handler
     });
   });
@@ -794,12 +839,12 @@ describe('Concurrent Event Dispatch E2E', () => {
       const initialEventCount = 5;
       const cascadeDepth = 3;
       let totalDispatches = 0;
-      
+
       // Setup cascading handlers
       eventBus.subscribe(ENTITY_CREATED_ID, async (event) => {
         totalDispatches++;
         const depth = event.payload.depth || 0;
-        
+
         if (depth < cascadeDepth) {
           // Each entity triggers component add
           await eventBus.dispatch(COMPONENT_ADDED_ID, {
@@ -813,7 +858,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       eventBus.subscribe(COMPONENT_ADDED_ID, async (event) => {
         totalDispatches++;
         const depth = event.payload.depth || 0;
-        
+
         if (depth < cascadeDepth) {
           // Component might trigger another entity creation
           await eventBus.dispatch(ENTITY_CREATED_ID, {
@@ -826,7 +871,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       // Create initial concurrent dispatches
       const dispatchers = [];
       for (let i = 0; i < initialEventCount; i++) {
-        dispatchers.push(() => 
+        dispatchers.push(() =>
           eventBus.dispatch(ENTITY_CREATED_ID, {
             entityId: `initial_entity_${i}`,
             depth: 0,
@@ -835,27 +880,29 @@ describe('Concurrent Event Dispatch E2E', () => {
       }
 
       // Act
-      await Promise.all(dispatchers.map(d => d()));
-      
+      await Promise.all(dispatchers.map((d) => d()));
+
       // Wait for cascades to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Assert
       // With cascade depth 3 and alternating entity/component events:
       // Each initial entity creates a cascade of depth 3
       // This should not trigger recursion warnings for legitimate cascades
       expect(totalDispatches).toBeGreaterThan(initialEventCount);
-      expect(totalDispatches).toBeLessThanOrEqual(initialEventCount * Math.pow(2, cascadeDepth + 1));
+      expect(totalDispatches).toBeLessThanOrEqual(
+        initialEventCount * Math.pow(2, cascadeDepth + 1)
+      );
     });
 
     it('should handle batch mode correctly with concurrent dispatches', async () => {
       // Arrange
       const concurrentBatches = 3;
       const eventsPerBatch = 30;
-      
+
       // Track batch mode states
       const batchModeActive = [];
-      
+
       // Create batch operations
       const batchOperations = [];
       for (let batch = 0; batch < concurrentBatches; batch++) {
@@ -867,9 +914,9 @@ describe('Concurrent Event Dispatch E2E', () => {
             timeoutMs: 5000,
             context: `batch_${batch}`,
           });
-          
+
           batchModeActive.push(true);
-          
+
           // Dispatch many events in batch
           const dispatchers = [];
           for (let i = 0; i < eventsPerBatch; i++) {
@@ -880,9 +927,9 @@ describe('Concurrent Event Dispatch E2E', () => {
               })
             );
           }
-          
+
           await Promise.all(dispatchers);
-          
+
           // Disable batch mode
           eventBus.setBatchMode(false);
           batchModeActive.push(false);
@@ -891,21 +938,27 @@ describe('Concurrent Event Dispatch E2E', () => {
 
       // Act
       const startTime = Date.now();
-      await Promise.all(batchOperations.map(op => op()));
+      await Promise.all(batchOperations.map((op) => op()));
       const duration = Date.now() - startTime;
 
       // Assert
       // All batch modes should have been enabled and disabled
-      expect(batchModeActive.filter(b => b === true).length).toBe(concurrentBatches);
-      expect(batchModeActive.filter(b => b === false).length).toBe(concurrentBatches);
-      
+      expect(batchModeActive.filter((b) => b === true).length).toBe(
+        concurrentBatches
+      );
+      expect(batchModeActive.filter((b) => b === false).length).toBe(
+        concurrentBatches
+      );
+
       // Should complete efficiently even with concurrent batch operations
       expect(duration).toBeLessThan(1000);
-      
+
       // Verify events were dispatched (coordinator may not track all internal events)
       // We primarily care that batch mode worked without errors
       const totalExpectedEvents = concurrentBatches * eventsPerBatch;
-      expect(coordinator.eventTimings.length).toBeGreaterThanOrEqual(Math.floor(totalExpectedEvents * 0.5));
+      expect(coordinator.eventTimings.length).toBeGreaterThanOrEqual(
+        Math.floor(totalExpectedEvents * 0.5)
+      );
     });
   });
 
@@ -916,7 +969,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       const eventType = 'test:subscription_race';
       const activeSubscriptions = new Set();
       const executedHandlers = [];
-      
+
       // Create subscribe/unsubscribe operations
       const operations = [];
       for (let i = 0; i < operationCount; i++) {
@@ -925,7 +978,8 @@ describe('Concurrent Event Dispatch E2E', () => {
           operations.push(async () => {
             const handlers = Array.from(activeSubscriptions);
             if (handlers.length > 0) {
-              const handler = handlers[Math.floor(Math.random() * handlers.length)];
+              const handler =
+                handlers[Math.floor(Math.random() * handlers.length)];
               const result = eventBus.unsubscribe(eventType, handler);
               if (result) {
                 activeSubscriptions.delete(handler);
@@ -936,8 +990,8 @@ describe('Concurrent Event Dispatch E2E', () => {
           // Subscribe operation
           operations.push(async () => {
             const handler = (event) => {
-              executedHandlers.push({ 
-                handlerId: i, 
+              executedHandlers.push({
+                handlerId: i,
                 eventData: event.payload,
               });
             };
@@ -958,13 +1012,13 @@ describe('Concurrent Event Dispatch E2E', () => {
 
       // Act - shuffle and execute concurrently
       const shuffled = operations.sort(() => Math.random() - 0.5);
-      await Promise.all(shuffled.map(op => op()));
+      await Promise.all(shuffled.map((op) => op()));
 
       // Assert
       // System should remain stable
       expect(activeSubscriptions.size).toBeGreaterThanOrEqual(0);
       expect(executedHandlers.length).toBeGreaterThanOrEqual(0);
-      
+
       // No errors should have been thrown
       // All operations should have completed
     });
@@ -974,7 +1028,7 @@ describe('Concurrent Event Dispatch E2E', () => {
       const iterations = 5;
       const eventsPerIteration = 100;
       const handlerCounts = [];
-      
+
       // Act
       for (let iter = 0; iter < iterations; iter++) {
         // Create many temporary handlers
@@ -995,7 +1049,7 @@ describe('Concurrent Event Dispatch E2E', () => {
         // Concurrent dispatches
         const dispatchers = [];
         for (let i = 0; i < eventsPerIteration; i++) {
-          dispatchers.push(() => 
+          dispatchers.push(() =>
             eventBus.dispatch(ENTITY_SPOKE_ID, {
               iteration: iter,
               index: i,
@@ -1003,11 +1057,11 @@ describe('Concurrent Event Dispatch E2E', () => {
             })
           );
         }
-        
-        await Promise.all(dispatchers.map(d => d()));
+
+        await Promise.all(dispatchers.map((d) => d()));
 
         // Cleanup handlers
-        tempHandlers.forEach(handler => {
+        tempHandlers.forEach((handler) => {
           eventBus.unsubscribe(ENTITY_SPOKE_ID, handler);
         });
 
@@ -1031,5 +1085,4 @@ describe('Concurrent Event Dispatch E2E', () => {
       expect(finalHandlerCount).toBeLessThan(5); // Should have minimal residual handlers
     });
   });
-
 });

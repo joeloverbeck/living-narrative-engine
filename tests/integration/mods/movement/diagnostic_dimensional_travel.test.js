@@ -110,10 +110,12 @@ describe('Diagnostic: Dimensional Travel Action Discovery', () => {
       const actorEntity = { id: observerId };
 
       // Check what components the entity manager thinks the actor has
-      const allComponents = fixture.entityManager.getAllComponentTypesForEntity(observerId);
+      const allComponents =
+        fixture.entityManager.getAllComponentTypesForEntity(observerId);
       console.log('EntityManager reports actor has components:', allComponents);
 
-      const candidates = fixture.testEnv.actionIndex.getCandidateActions(actorEntity);
+      const candidates =
+        fixture.testEnv.actionIndex.getCandidateActions(actorEntity);
       console.log('Candidates for observer:', candidates);
       console.log('Candidates length:', candidates.length);
     }

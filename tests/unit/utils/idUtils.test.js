@@ -58,7 +58,9 @@ describe('extractBaseIdFromFilename', () => {
   });
 
   it('returns empty string when file is only an extension', () => {
-    expect(extractBaseIdFromFilename('path/.gitignore', ['.gitignore'])).toBe('');
+    expect(extractBaseIdFromFilename('path/.gitignore', ['.gitignore'])).toBe(
+      ''
+    );
   });
 });
 

@@ -5,15 +5,10 @@
   "description": "Display your fangs menacingly at a target to establish dominance or intimidate",
   "targets": "core:actors_in_location",
   "required_components": {
-    "actor": [
-      "vampirism:is_vampire"
-    ]
+    "actor": ["vampirism:is_vampire"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:biting_neck",
-      "positioning:giving_blowjob"
-    ]
+    "actor": ["positioning:biting_neck", "positioning:giving_blowjob"]
   },
   "template": "bare your fangs menacingly at {target}",
   "visual": {

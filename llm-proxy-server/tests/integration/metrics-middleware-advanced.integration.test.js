@@ -183,13 +183,18 @@ describe('Metrics middleware advanced integration coverage', () => {
     const app = withMetricsApp({
       metricsService,
       configure: (expressApp) => {
-        expressApp.get('/api/users/12345/v2/items/abcdef123456', (_req, res) => {
-          res.status(429).json({ error: 'Too many requests' });
-        });
+        expressApp.get(
+          '/api/users/12345/v2/items/abcdef123456',
+          (_req, res) => {
+            res.status(429).json({ error: 'Too many requests' });
+          }
+        );
       },
     });
 
-    await request(app).get('/api/users/12345/v2/items/abcdef123456').expect(429);
+    await request(app)
+      .get('/api/users/12345/v2/items/abcdef123456')
+      .expect(429);
 
     expect(httpSpy).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -238,7 +243,10 @@ describe('Metrics middleware advanced integration coverage', () => {
 
     await request(app)
       .post('/api/llm-request')
-      .send({ variant: 'openrouter', llmId: 'openrouter/anthropic/claude-3-haiku' })
+      .send({
+        variant: 'openrouter',
+        llmId: 'openrouter/anthropic/claude-3-haiku',
+      })
       .expect(200);
 
     await request(app)

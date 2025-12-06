@@ -3,17 +3,21 @@
 **Status**: ✅ COMPLETED
 
 ## Summary
+
 Create a new service that retrieves mod-level action metadata (actionPurpose, actionConsiderWhen) from mod manifests stored in the data registry.
 
 ## Prerequisites
+
 - ENHACTINFFORLLM-001 must be completed (schema changes)
 
 ## Files to Touch
+
 - `src/prompting/modActionMetadataProvider.js` (NEW FILE)
 
 > **CORRECTED**: The original ticket specified `src/prompting/services/modActionMetadataProvider.js`, but the `src/prompting/` directory does not use a `services/` subdirectory pattern. Other similar files (like `promptStaticContentService.js`, `promptTemplateService.js`) are placed directly in `src/prompting/`.
 
 ## Out of Scope
+
 - DO NOT modify `AIPromptContentProvider.js` (that's ENHACTINFFORLLM-004)
 - DO NOT modify DI registrations (that's ENHACTINFFORLLM-003)
 - DO NOT modify any schema files
@@ -22,6 +26,7 @@ Create a new service that retrieves mod-level action metadata (actionPurpose, ac
 ## Implementation Details
 
 ### Directory Structure
+
 ~~Create new directory if it doesn't exist: `src/prompting/services/`~~
 
 **CORRECTED**: No new directory needed. File goes directly in `src/prompting/`.
@@ -77,10 +82,9 @@ class ModActionMetadataProvider {
   getMetadataForMod(modId) {
     // 1. Validate input
     if (!modId || typeof modId !== 'string') {
-      this.#logger.warn(
-        'ModActionMetadataProvider: Invalid modId provided',
-        { modId }
-      );
+      this.#logger.warn('ModActionMetadataProvider: Invalid modId provided', {
+        modId,
+      });
       return null;
     }
 
@@ -137,17 +141,20 @@ export { ModActionMetadataProvider };
 ```
 
 > **CORRECTED** import paths:
+>
 > - `validateDependency` import changed from `'../../utils/dependencyUtils.js'` to `'../utils/dependencyUtils.js'`
 > - JSDoc type paths changed from `'../../data/interfaces/IDataRegistry.js'` to `'../interfaces/coreServices.js'` (the correct location for type definitions)
 
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 - File compiles without errors: `npm run typecheck`
 - ESLint passes: `npx eslint src/prompting/services/modActionMetadataProvider.js`
 - No circular dependency issues: `npm run depcruise:check` (if available)
 
 ### Invariants That Must Remain True
+
 1. Service follows existing DI patterns (constructor injection)
 2. Service validates dependencies using `validateDependency`
 3. Service uses private fields (`#`) consistently with codebase style
@@ -157,6 +164,7 @@ export { ModActionMetadataProvider };
 7. Logs appropriately at debug/warn levels
 
 ## Verification Steps
+
 1. Run `npm run typecheck`
 2. Run `npx eslint src/prompting/modActionMetadataProvider.js`
 3. Verify file structure matches existing services in codebase
@@ -169,11 +177,11 @@ export { ModActionMetadataProvider };
 
 ### What Changed vs. Originally Planned
 
-| Aspect | Original Plan | Actual Implementation |
-|--------|---------------|----------------------|
-| File location | `src/prompting/services/modActionMetadataProvider.js` | `src/prompting/modActionMetadataProvider.js` |
-| `validateDependency` import | `'../../utils/dependencyUtils.js'` | `'../utils/dependencyUtils.js'` |
-| JSDoc type paths | `'../../data/interfaces/IDataRegistry.js'` | `'../interfaces/coreServices.js'` |
+| Aspect                      | Original Plan                                         | Actual Implementation                        |
+| --------------------------- | ----------------------------------------------------- | -------------------------------------------- |
+| File location               | `src/prompting/services/modActionMetadataProvider.js` | `src/prompting/modActionMetadataProvider.js` |
+| `validateDependency` import | `'../../utils/dependencyUtils.js'`                    | `'../utils/dependencyUtils.js'`              |
+| JSDoc type paths            | `'../../data/interfaces/IDataRegistry.js'`            | `'../interfaces/coreServices.js'`            |
 
 ### Corrections Made
 

@@ -25,10 +25,14 @@ export function normalizeValidationResult(
     recipePath: explicitRecipePath,
   } = options;
 
-  const recipeId = recipe?.recipeId ?? pipelineResult?.recipeId ?? 'unknown-recipe';
+  const recipeId =
+    recipe?.recipeId ?? pipelineResult?.recipeId ?? 'unknown-recipe';
   const inferredRecipePath =
     explicitRecipePath ?? pipelineResult?.recipePath ?? recipe?.recipePath;
-  const defaults = ValidationResultBuilder.success(recipeId, inferredRecipePath);
+  const defaults = ValidationResultBuilder.success(
+    recipeId,
+    inferredRecipePath
+  );
 
   const emitDiagnostic = (issue, level = 'warn', extra = {}) => {
     const payload = {
@@ -44,7 +48,8 @@ export function normalizeValidationResult(
 
     if (
       monitoringCoordinator &&
-      typeof monitoringCoordinator.incrementValidationPipelineHealth === 'function'
+      typeof monitoringCoordinator.incrementValidationPipelineHealth ===
+        'function'
     ) {
       monitoringCoordinator.incrementValidationPipelineHealth(issue);
     }

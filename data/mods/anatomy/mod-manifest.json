@@ -283,16 +283,9 @@
       "tortoise_person.recipe.json",
       "writhing_observer.recipe.json"
     ],
-    "anatomyFormatting": [
-      "default.json"
-    ],
-    "libraries": [
-      "humanoid.slot-library.json"
-    ],
-    "parts": [
-      "feline_core.part.json",
-      "humanoid_core.part.json"
-    ],
+    "anatomyFormatting": ["default.json"],
+    "libraries": ["humanoid.slot-library.json"],
+    "parts": ["feline_core.part.json", "humanoid_core.part.json"],
     "events": [
       "anatomy_generated.event.json",
       "bleeding_started.event.json",

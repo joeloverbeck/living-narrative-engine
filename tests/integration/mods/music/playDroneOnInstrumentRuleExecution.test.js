@@ -75,7 +75,9 @@ describe('music:play_drone_on_instrument - Rule Execution', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('grave');
       expect(perceptibleEvent.payload.descriptionText).toContain('drone');
       expect(perceptibleEvent.payload.descriptionText).toContain('pipe organ');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/holds a.*drone on/);
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /holds a.*drone on/
+      );
     });
 
     it('should dispatch action success event', async () => {

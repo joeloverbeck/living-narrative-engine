@@ -84,16 +84,23 @@ describe('LLM pending gate integration', () => {
     resolvePrompt({ chosenIndex: 2 });
     await runPromise;
 
-    expect(ctx.setAwaitingExternalEvent).toHaveBeenNthCalledWith(1, true, 'actor-1');
-    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'actor-1');
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenNthCalledWith(
+      1,
+      true,
+      'actor-1'
+    );
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(
+      false,
+      'actor-1'
+    );
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
       expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 }),
       expect.objectContaining({ allowSchemaNotFound: true })
     );
-    expect(
-      safeDispatcher.dispatch.mock.calls.map((call) => call[0])
-    ).toContain(DISPLAY_SPEECH_ID);
+    expect(safeDispatcher.dispatch.mock.calls.map((call) => call[0])).toContain(
+      DISPLAY_SPEECH_ID
+    );
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       DISPLAY_SPEECH_ID,
       expect.objectContaining({

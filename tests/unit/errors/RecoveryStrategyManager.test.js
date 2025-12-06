@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import RecoveryStrategyManager from '../../../src/errors/RecoveryStrategyManager.js';
 import BaseError from '../../../src/errors/baseError.js';
@@ -15,16 +22,24 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockCircuitBreaker = testBed.createMock('MockCircuitBreaker', ['execute', 'executeSync']);
-    mockMonitoringCoordinator = testBed.createMock('MockMonitoringCoordinator', ['getCircuitBreaker']);
-    mockMonitoringCoordinator.getCircuitBreaker.mockReturnValue(mockCircuitBreaker);
+    mockCircuitBreaker = testBed.createMock('MockCircuitBreaker', [
+      'execute',
+      'executeSync',
+    ]);
+    mockMonitoringCoordinator = testBed.createMock(
+      'MockMonitoringCoordinator',
+      ['getCircuitBreaker']
+    );
+    mockMonitoringCoordinator.getCircuitBreaker.mockReturnValue(
+      mockCircuitBreaker
+    );
 
     // Default circuit breaker behavior - execute the function it receives
     mockCircuitBreaker.execute.mockImplementation(async (fn) => await fn());
 
     recoveryManager = new RecoveryStrategyManager({
       logger: mockLogger,
-      monitoringCoordinator: mockMonitoringCoordinator
+      monitoringCoordinator: mockMonitoringCoordinator,
     });
   });
 
@@ -42,14 +57,14 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       expect(() => {
         new RecoveryStrategyManager({
           logger: null,
-          monitoringCoordinator: mockMonitoringCoordinator
+          monitoringCoordinator: mockMonitoringCoordinator,
         });
       }).toThrow();
     });
 
     it('should work without monitoringCoordinator', () => {
       const manager = new RecoveryStrategyManager({
-        logger: mockLogger
+        logger: mockLogger,
       });
       expect(manager).toBeInstanceOf(RecoveryStrategyManager);
     });
@@ -58,7 +73,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       expect(() => {
         new RecoveryStrategyManager({
           logger: mockLogger,
-          monitoringCoordinator: { invalidInterface: true }
+          monitoringCoordinator: { invalidInterface: true },
         });
       }).toThrow();
     });
@@ -69,35 +84,43 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const strategy = {
         maxRetries: 5,
         backoff: 'linear',
-        timeout: 3000
+        timeout: 3000,
       };
 
       recoveryManager.registerStrategy('TestError', strategy);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered recovery strategy for TestError');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered recovery strategy for TestError'
+      );
     });
 
     it('should use default values for missing strategy properties', () => {
       const partialStrategy = {
-        maxRetries: 2
+        maxRetries: 2,
       };
 
       recoveryManager.registerStrategy('PartialError', partialStrategy);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered recovery strategy for PartialError');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered recovery strategy for PartialError'
+      );
     });
 
     it('should register fallback values', () => {
       recoveryManager.registerFallback('testOperation', 'fallback-value');
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered fallback for testOperation');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered fallback for testOperation'
+      );
     });
 
     it('should register fallback functions', () => {
       const fallbackFn = jest.fn().mockReturnValue('dynamic-fallback');
       recoveryManager.registerFallback('dynamicOperation', fallbackFn);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered fallback for dynamicOperation');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered fallback for dynamicOperation'
+      );
     });
   });
 
@@ -106,12 +129,14 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const operation = jest.fn().mockResolvedValue('success');
 
       const result = await recoveryManager.executeWithRecovery(operation, {
-        operationName: 'testOp'
+        operationName: 'testOp',
       });
 
       expect(result).toBe('success');
       expect(operation).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Operation testOp succeeded on attempt 1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Operation testOp succeeded on attempt 1'
+      );
     });
 
     it('should handle operation failure without circuit breaker', async () => {
@@ -123,7 +148,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
           operationName: 'failOp',
           useCircuitBreaker: false,
           useFallback: false,
-          maxRetries: 1
+          maxRetries: 1,
         })
       ).rejects.toThrow('Test failure');
 
@@ -136,25 +161,31 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
 
       const result = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'cbOp',
-        useCircuitBreaker: true
+        useCircuitBreaker: true,
       });
 
       expect(result).toBe('cb-success');
-      expect(mockMonitoringCoordinator.getCircuitBreaker).toHaveBeenCalledWith('cbOp', {});
+      expect(mockMonitoringCoordinator.getCircuitBreaker).toHaveBeenCalledWith(
+        'cbOp',
+        {}
+      );
       expect(mockCircuitBreaker.execute).toHaveBeenCalled();
     });
 
     it('should disable circuit breaker when monitoringCoordinator is null', async () => {
       const managerWithoutMonitoring = new RecoveryStrategyManager({
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       const operation = jest.fn().mockResolvedValue('no-cb-success');
 
-      const result = await managerWithoutMonitoring.executeWithRecovery(operation, {
-        operationName: 'noCbOp',
-        useCircuitBreaker: true
-      });
+      const result = await managerWithoutMonitoring.executeWithRecovery(
+        operation,
+        {
+          operationName: 'noCbOp',
+          useCircuitBreaker: true,
+        }
+      );
 
       expect(result).toBe('no-cb-success');
       expect(operation).toHaveBeenCalledTimes(1);
@@ -164,7 +195,8 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
   describe('Retry Logic', () => {
     it('should retry on retriable errors', async () => {
       const error = new Error('ECONNREFUSED');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockRejectedValueOnce(error)
         .mockResolvedValue('retry-success');
@@ -172,12 +204,14 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const result = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'retryOp',
         maxRetries: 3,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       expect(result).toBe('retry-success');
       expect(operation).toHaveBeenCalledTimes(3);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Operation retryOp succeeded on attempt 3');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Operation retryOp succeeded on attempt 3'
+      );
     });
 
     it('should not retry on non-retriable errors', async () => {
@@ -195,14 +229,17 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
           operationName: 'validationOp',
           maxRetries: 3,
           useCircuitBreaker: false,
-          useFallback: false
+          useFallback: false,
         })
       ).rejects.toThrow('Invalid input');
 
       expect(operation).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith('Non-retriable error for validationOp', {
-        error: 'Invalid input'
-      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Non-retriable error for validationOp',
+        {
+          error: 'Invalid input',
+        }
+      );
     });
 
     it('should respect BaseError recoverable property', async () => {
@@ -220,22 +257,35 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         }
       }
 
-      const recoverableError = new RecoverableTestError('Recoverable error', 'TEST_ERROR', {});
-      const nonRecoverableError = new NonRecoverableTestError('Non-recoverable error', 'FATAL_ERROR', {});
+      const recoverableError = new RecoverableTestError(
+        'Recoverable error',
+        'TEST_ERROR',
+        {}
+      );
+      const nonRecoverableError = new NonRecoverableTestError(
+        'Non-recoverable error',
+        'FATAL_ERROR',
+        {}
+      );
 
-      const retriableOperation = jest.fn()
+      const retriableOperation = jest
+        .fn()
         .mockRejectedValueOnce(recoverableError)
         .mockResolvedValue('recovered');
 
-      const nonRetriableOperation = jest.fn()
+      const nonRetriableOperation = jest
+        .fn()
         .mockRejectedValue(nonRecoverableError);
 
       // Test recoverable error
-      const result = await recoveryManager.executeWithRecovery(retriableOperation, {
-        operationName: 'recoverableOp',
-        maxRetries: 2,
-        useCircuitBreaker: false
-      });
+      const result = await recoveryManager.executeWithRecovery(
+        retriableOperation,
+        {
+          operationName: 'recoverableOp',
+          maxRetries: 2,
+          useCircuitBreaker: false,
+        }
+      );
       expect(result).toBe('recovered');
 
       // Test non-recoverable error
@@ -244,7 +294,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
           operationName: 'nonRecoverableOp',
           maxRetries: 2,
           useCircuitBreaker: false,
-          useFallback: false
+          useFallback: false,
         })
       ).rejects.toThrow('Non-recoverable error');
 
@@ -261,15 +311,18 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
           operationName: 'exhaustOp',
           maxRetries: 2,
           useCircuitBreaker: false,
-          useFallback: false
+          useFallback: false,
         })
       ).rejects.toThrow('ETIMEDOUT');
 
       expect(operation).toHaveBeenCalledTimes(2);
-      expect(mockLogger.error).toHaveBeenCalledWith('All retry attempts failed for exhaustOp', {
-        attempts: 2,
-        lastError: 'ETIMEDOUT'
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'All retry attempts failed for exhaustOp',
+        {
+          attempts: 2,
+          lastError: 'ETIMEDOUT',
+        }
+      );
     });
   });
 
@@ -284,7 +337,8 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
 
     it('should use exponential backoff', async () => {
       const error = new Error('ECONNREFUSED');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockRejectedValueOnce(error)
         .mockResolvedValue('backoff-success');
@@ -293,7 +347,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'exponentialOp',
         maxRetries: 3,
         backoff: 'exponential',
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       // Fast forward through retry delays
@@ -306,7 +360,8 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
 
     it('should use linear backoff', async () => {
       const error = new Error('timeout');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('linear-success');
 
@@ -314,7 +369,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'linearOp',
         maxRetries: 2,
         backoff: 'linear',
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       await jest.runAllTimersAsync();
@@ -326,7 +381,8 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
 
     it('should use constant backoff', async () => {
       const error = new Error('ENOTFOUND');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('constant-success');
 
@@ -334,7 +390,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'constantOp',
         maxRetries: 2,
         backoff: 'constant',
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       await jest.runAllTimersAsync();
@@ -345,7 +401,8 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
 
     it('should default to exponential backoff when strategy is unknown', async () => {
       const error = new Error('ETIMEDOUT');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('default-backoff-success');
 
@@ -353,7 +410,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'unknownBackoffOp',
         maxRetries: 2,
         backoff: 'mystery',
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       await jest.runAllTimersAsync();
@@ -368,7 +425,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
     it('should timeout slow operations', async () => {
       // Use a real timer test with a very short timeout
       const slowOperation = jest.fn().mockImplementation(() => {
-        return new Promise(resolve => setTimeout(resolve, 100)); // 100ms operation
+        return new Promise((resolve) => setTimeout(resolve, 100)); // 100ms operation
       });
 
       await expect(
@@ -376,20 +433,20 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
           operationName: 'slowOp',
           timeout: 50, // 50ms timeout
           useCircuitBreaker: false,
-          useFallback: false
+          useFallback: false,
         })
       ).rejects.toThrow('Operation timed out after 50ms');
     }, 1000);
 
     it('should complete fast operations within timeout', async () => {
       const fastOperation = jest.fn().mockImplementation(() => {
-        return new Promise(resolve => setTimeout(() => resolve('fast'), 10));
+        return new Promise((resolve) => setTimeout(() => resolve('fast'), 10));
       });
 
       const result = await recoveryManager.executeWithRecovery(fastOperation, {
         operationName: 'fastOp',
         timeout: 100,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       expect(result).toBe('fast');
@@ -407,11 +464,13 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'fallbackOp',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe('fallback-value');
-      expect(mockLogger.info).toHaveBeenCalledWith('Executing fallback for fallbackOp');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Executing fallback for fallbackOp'
+      );
     });
 
     it('should use registered fallback function', async () => {
@@ -425,7 +484,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'dynamicFallbackOp',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe('dynamic-result');
@@ -438,7 +497,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const strategyFallback = jest.fn().mockResolvedValue('strategy-fallback');
 
       recoveryManager.registerStrategy('StrategyError', {
-        fallback: strategyFallback
+        fallback: strategyFallback,
       });
 
       const result = await recoveryManager.executeWithRecovery(operation, {
@@ -446,11 +505,14 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         errorType: 'StrategyError',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe('strategy-fallback');
-      expect(strategyFallback).toHaveBeenCalledWith(error, 'strategyFallbackOp');
+      expect(strategyFallback).toHaveBeenCalledWith(
+        error,
+        'strategyFallbackOp'
+      );
     });
 
     it('should use generic fallback for fetch operations', async () => {
@@ -461,7 +523,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'fetchData',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBeNull();
@@ -475,7 +537,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'listItems',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toEqual([]);
@@ -489,7 +551,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'countItems',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe(0);
@@ -503,7 +565,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'validateInput',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe(false);
@@ -517,7 +579,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         operationName: 'generateReport',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toEqual({});
@@ -530,7 +592,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const strategyFallback = jest.fn().mockRejectedValue(fallbackError);
 
       recoveryManager.registerStrategy('FailingFallbackError', {
-        fallback: strategyFallback
+        fallback: strategyFallback,
       });
 
       const result = await recoveryManager.executeWithRecovery(operation, {
@@ -538,13 +600,16 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         errorType: 'FailingFallbackError',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBeNull(); // Should fall back to generic fallback
-      expect(mockLogger.error).toHaveBeenCalledWith('Fallback failed for failingFallbackOp', {
-        error: 'Fallback failed'
-      });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Fallback failed for failingFallbackOp',
+        {
+          error: 'Fallback failed',
+        }
+      );
     });
 
     it('should use default configuration fallback when strategy has none', async () => {
@@ -561,11 +626,13 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         errorType: 'DefaultFallbackError',
         maxRetries: 1,
         useCircuitBreaker: false,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe('config-fallback');
-      expect(mockLogger.warn).toHaveBeenCalledWith('Using default fallback for render');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Using default fallback for render'
+      );
       expect(fallbackSpy).toHaveBeenCalledWith(null, 'render');
     });
   });
@@ -586,24 +653,27 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const result1 = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'cacheOp',
         cacheResult: true,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       // Second call within cache window
       const result2 = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'cacheOp',
         cacheResult: true,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       expect(result1).toBe('cached-result');
       expect(result2).toBe('cached-result');
       expect(operation).toHaveBeenCalledTimes(1); // Only called once due to cache
-      expect(mockLogger.debug).toHaveBeenCalledWith('Returning cached result for cacheOp');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Returning cached result for cacheOp'
+      );
     });
 
     it('should expire cache after timeout', async () => {
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockResolvedValueOnce('first-result')
         .mockResolvedValueOnce('second-result');
 
@@ -611,7 +681,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const result1 = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'expireOp',
         cacheResult: true,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       // Fast forward beyond cache expiry (1 minute)
@@ -621,7 +691,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const result2 = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'expireOp',
         cacheResult: true,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       expect(result1).toBe('first-result');
@@ -631,7 +701,9 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
 
     it('should clear cache manually', () => {
       recoveryManager.clearCache();
-      expect(mockLogger.debug).toHaveBeenCalledWith('Recovery strategy cache cleared');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Recovery strategy cache cleared'
+      );
     });
   });
 
@@ -646,12 +718,14 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       const result = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'cbFailOp',
         useCircuitBreaker: true,
-        useFallback: true
+        useFallback: true,
       });
 
       expect(result).toBe('cb-fallback');
       expect(mockCircuitBreaker.execute).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith('Executing fallback for cbFailOp');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Executing fallback for cbFailOp'
+      );
     });
 
     it('should throw error when circuit breaker fails and no fallback', async () => {
@@ -662,7 +736,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         recoveryManager.executeWithRecovery(() => 'should-not-execute', {
           operationName: 'cbNoFallbackOp',
           useCircuitBreaker: true,
-          useFallback: false
+          useFallback: false,
         })
       ).rejects.toThrow('Circuit breaker failure');
     });
@@ -679,7 +753,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
         registeredStrategies: 1,
         registeredFallbacks: 1,
         cacheSize: 0,
-        circuitBreakers: 0
+        circuitBreakers: 0,
       });
     });
 
@@ -689,7 +763,7 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
       await recoveryManager.executeWithRecovery(operation, {
         operationName: 'metricOp',
         cacheResult: true,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       const metrics = recoveryManager.getMetrics();
@@ -708,26 +782,30 @@ describe('RecoveryStrategyManager - Core Recovery Logic', () => {
           operationName: 'codeOp',
           maxRetries: 3,
           useCircuitBreaker: false,
-          useFallback: false
+          useFallback: false,
         })
       ).rejects.toThrow('Test error');
 
       expect(operation).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith('Non-retriable error for codeOp', {
-        error: 'Test error'
-      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Non-retriable error for codeOp',
+        {
+          error: 'Test error',
+        }
+      );
     });
 
     it('should classify unknown errors as retriable', async () => {
       const error = new Error('Unknown error type');
-      const operation = jest.fn()
+      const operation = jest
+        .fn()
         .mockRejectedValueOnce(error)
         .mockResolvedValue('unknown-recovery');
 
       const result = await recoveryManager.executeWithRecovery(operation, {
         operationName: 'unknownOp',
         maxRetries: 2,
-        useCircuitBreaker: false
+        useCircuitBreaker: false,
       });
 
       expect(result).toBe('unknown-recovery');

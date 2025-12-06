@@ -10,7 +10,6 @@
 import { describe, it, expect } from '@jest/globals';
 
 describe('Expected AI Action Validation Compliance', () => {
-
   describe('Expected positioning action filtering for AI', () => {
     it('should filter invalid positioning actions from AI choices', () => {
       // EXPECTED BEHAVIOR:

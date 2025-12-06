@@ -67,26 +67,26 @@
           {
             "type": "FOR_EACH",
             "comment": "Apply damage to the fumble victim (the entity that was accidentally hit)",
-          "parameters": {
-            "collection": "context.throwableDamage",
-            "item_variable": "dmgEntry",
-            "actions": [
-              {
-                "type": "APPLY_DAMAGE",
-                "parameters": {
-                  "entity_ref": { "var": "context.fumbleVictim" },
-                  "damage_entry": { "var": "context.dmgEntry" }
+            "parameters": {
+              "collection": "context.throwableDamage",
+              "item_variable": "dmgEntry",
+              "actions": [
+                {
+                  "type": "APPLY_DAMAGE",
+                  "parameters": {
+                    "entity_ref": { "var": "context.fumbleVictim" },
+                    "damage_entry": { "var": "context.dmgEntry" }
+                  }
+                },
+                {
+                  "type": "REGENERATE_DESCRIPTION",
+                  "parameters": {
+                    "entity_ref": { "var": "context.fumbleVictim" }
+                  }
                 }
-              },
-              {
-                "type": "REGENERATE_DESCRIPTION",
-                "parameters": {
-                  "entity_ref": { "var": "context.fumbleVictim" }
-                }
-              }
-            ]
+              ]
+            }
           }
-        }
         ],
         "else_actions": [
           {

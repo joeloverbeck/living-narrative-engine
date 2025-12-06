@@ -18,9 +18,11 @@ describe('GameEngineLoadAdapter synchronous behaviour', () => {
 
   it('rejects when the engine throws synchronously', async () => {
     const boom = new Error('sync failure');
-    const engine = { loadGame: jest.fn(() => {
-      throw boom;
-    }) };
+    const engine = {
+      loadGame: jest.fn(() => {
+        throw boom;
+      }),
+    };
     const adapter = new GameEngineLoadAdapter(engine);
 
     await expect(adapter.load('slot-9')).rejects.toBe(boom);

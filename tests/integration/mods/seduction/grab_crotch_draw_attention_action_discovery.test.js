@@ -101,13 +101,12 @@ function loadScenario(
 
 describe('seduction:grab_crotch_draw_attention action discovery', () => {
   let testFixture;
-    beforeEach(async () => {
+  beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('seduction', ACTION_ID);
-      });
+  });
 
   afterEach(() => {
     if (testFixture) {
-      
       testFixture.cleanup();
     }
   });
@@ -119,7 +118,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: true,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).toHaveAction(ACTION_ID);
     });
@@ -130,7 +129,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: true,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
@@ -141,7 +140,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: false,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });
@@ -152,7 +151,7 @@ describe('seduction:grab_crotch_draw_attention action discovery', () => {
         includeTorsoLowerClothing: false,
       });
 
-            const availableActions = testFixture.discoverActions(actorId);
+      const availableActions = testFixture.discoverActions(actorId);
 
       expect(availableActions).not.toHaveAction(ACTION_ID);
     });

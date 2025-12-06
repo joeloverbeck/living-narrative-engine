@@ -221,8 +221,12 @@ describe('ConditionLoader integration', () => {
       }),
     });
 
-    const { loader, registry, logger, schemaValidator: validator } =
-      createConditionLoader(fileMap, { schemaValidator });
+    const {
+      loader,
+      registry,
+      logger,
+      schemaValidator: validator,
+    } = createConditionLoader(fileMap, { schemaValidator });
 
     const manifest = {
       content: {
@@ -298,14 +302,12 @@ describe('ConditionLoader integration', () => {
       ],
     ]);
 
-    const { loader, registry, schemaValidator } = createConditionLoader(fileMap);
+    const { loader, registry, schemaValidator } =
+      createConditionLoader(fileMap);
 
     const manifest = {
       content: {
-        conditions: [
-          'original.condition.json',
-          'duplicate.condition.json',
-        ],
+        conditions: ['original.condition.json', 'duplicate.condition.json'],
       },
     };
 
@@ -320,7 +322,9 @@ describe('ConditionLoader integration', () => {
     expect(result.count).toBe(1);
     expect(result.errors).toBe(1);
     expect(result.failures).toHaveLength(1);
-    expect(result.failures[0]).toMatchObject({ file: 'duplicate.condition.json' });
+    expect(result.failures[0]).toMatchObject({
+      file: 'duplicate.condition.json',
+    });
     expect(result.failures[0].error).toBeInstanceOf(DuplicateContentError);
 
     expect(registry.getAll('conditions')).toHaveLength(1);

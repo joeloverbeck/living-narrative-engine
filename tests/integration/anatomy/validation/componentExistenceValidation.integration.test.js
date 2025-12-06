@@ -347,9 +347,9 @@ describe('ComponentExistenceValidation Integration', () => {
 
       const issues = await validationRule.validate(context);
 
-      expect(issues.every((issue) => issue.ruleId === 'component-existence')).toBe(
-        true
-      );
+      expect(
+        issues.every((issue) => issue.ruleId === 'component-existence')
+      ).toBe(true);
     });
   });
 
@@ -377,11 +377,14 @@ describe('ComponentExistenceValidation Integration', () => {
 
     it('should handle recipe with all component types', async () => {
       // Store all required components
-      ['anatomy:part', 'anatomy:scaled', 'anatomy:winged', 'anatomy:clawed'].forEach(
-        (id) => {
-          dataRegistry.store('components', id, { id });
-        }
-      );
+      [
+        'anatomy:part',
+        'anatomy:scaled',
+        'anatomy:winged',
+        'anatomy:clawed',
+      ].forEach((id) => {
+        dataRegistry.store('components', id, { id });
+      });
 
       const recipe = {
         id: 'anatomy:complete',

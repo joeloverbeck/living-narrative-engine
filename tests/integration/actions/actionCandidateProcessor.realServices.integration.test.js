@@ -261,9 +261,8 @@ describe('ActionCandidateProcessor with real collaborators', () => {
   };
 
   it('processes actions end-to-end with prerequisite evaluation and formatting', () => {
-    scopeResolver.setBehavior(
-      'core:other_actors',
-      () => ActionResult.success(new Set(['companion']))
+    scopeResolver.setBehavior('core:other_actors', () =>
+      ActionResult.success(new Set(['companion']))
     );
 
     const result = processAction();
@@ -285,7 +284,9 @@ describe('ActionCandidateProcessor with real collaborators', () => {
       trace.events.some(
         (event) =>
           event.type === 'info' &&
-          event.message.includes("Scope for action 'social:greet_companion' resolved")
+          event.message.includes(
+            "Scope for action 'social:greet_companion' resolved"
+          )
       )
     ).toBe(true);
   });
@@ -295,9 +296,8 @@ describe('ActionCandidateProcessor with real collaborators', () => {
       friendly: false,
     });
 
-    scopeResolver.setBehavior(
-      'core:other_actors',
-      () => ActionResult.success(new Set(['companion']))
+    scopeResolver.setBehavior('core:other_actors', () =>
+      ActionResult.success(new Set(['companion']))
     );
 
     const result = processAction();
@@ -355,13 +355,14 @@ describe('ActionCandidateProcessor with real collaborators', () => {
     expect(result.value.cause).toBe('resolution-error');
     expect(result.value.errors).toHaveLength(1);
     expect(result.value.errors[0].phase).toBe(ERROR_PHASES.VALIDATION);
-    expect(result.value.errors[0].environmentContext.scope).toBe('core:other_actors');
+    expect(result.value.errors[0].environmentContext.scope).toBe(
+      'core:other_actors'
+    );
   });
 
   it('skips formatting when no targets are resolved', () => {
-    scopeResolver.setBehavior(
-      'core:other_actors',
-      () => ActionResult.success(new Set())
+    scopeResolver.setBehavior('core:other_actors', () =>
+      ActionResult.success(new Set())
     );
 
     const result = processAction();
@@ -372,9 +373,8 @@ describe('ActionCandidateProcessor with real collaborators', () => {
   });
 
   it('collects formatting errors while continuing processing', () => {
-    scopeResolver.setBehavior(
-      'core:other_actors',
-      () => ActionResult.success(new Set(['companion']))
+    scopeResolver.setBehavior('core:other_actors', () =>
+      ActionResult.success(new Set(['companion']))
     );
 
     const failingDisplayName = () => {
@@ -406,7 +406,9 @@ describe('ActionCandidateProcessor with real collaborators', () => {
     expect(result.value.errors).toHaveLength(1);
     expect(
       logger.warnLogs.some((entry) =>
-        entry[0].includes("Failed to format command for action 'social:greet_companion'")
+        entry[0].includes(
+          "Failed to format command for action 'social:greet_companion'"
+        )
       )
     ).toBe(true);
     expect(dispatcher.events).not.toHaveLength(0);

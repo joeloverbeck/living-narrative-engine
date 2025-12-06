@@ -7,6 +7,7 @@ The two runtime warnings from `ProcessingCommandState` are **NOT bugs** but rath
 ## Warning Details
 
 ### Warning 1: "Destroyed during active processing"
+
 **Location**: `src/turns/states/processingCommandState.js:388-390`
 
 ```javascript
@@ -20,6 +21,7 @@ if (this.isProcessing) {
 **Trigger**: State's `destroy()` method called while `isProcessing` flag is `true`.
 
 ### Warning 2: "processing flag became false after dispatch"
+
 **Location**: `src/turns/states/helpers/commandProcessingWorkflow.js:210-213`
 
 ```javascript
@@ -69,13 +71,15 @@ ProcessingCommandState._processCommandInternal()
 **The core issue**: `finishProcessing()` is called in multiple places:
 
 1. **Normal flow** (`_executeDirectiveStrategy`, line 373):
+
    ```javascript
    await strategy.execute(activeTurnCtx, directiveType, result);
    // ... state checks ...
-   finishProcessing(this._state);  // ← First call
+   finishProcessing(this._state); // ← First call
    ```
 
 2. **Safety net** (`processCommand` finally block, lines 515-524):
+
    ```javascript
    finally {
      if (this._state.isProcessing && this._state._handler.getCurrentState() === this._state) {
@@ -86,13 +90,14 @@ ProcessingCommandState._processCommandInternal()
    ```
 
 3. **On exit** (`exitState`, line 359):
+
    ```javascript
-   finishProcessing(this);  // ← Third call (cleanup)
+   finishProcessing(this); // ← Third call (cleanup)
    ```
 
 4. **On destroy** (`destroy` via `finishProcessing` utility):
    ```javascript
-   finishProcessing(this);  // ← Fourth call (cleanup)
+   finishProcessing(this); // ← Fourth call (cleanup)
    ```
 
 ### Timing Issue Leading to Warning 2
@@ -108,6 +113,7 @@ ProcessingCommandState._processCommandInternal()
 7. **Line 210 check**: `if (!this._state.isProcessing)` → **WARNING TRIGGERED**
 
 **Alternative scenario**:
+
 - The `finally` block runs between dispatch and the check (async timing)
 - Or a directive strategy completes synchronously and clears the flag
 
@@ -175,19 +181,21 @@ Both warnings are **defensive programming checks** that detect legitimate edge c
 **Action**: Change warnings to `debug` level for handled edge cases
 
 **Rationale**:
+
 - Situations ARE being handled correctly
 - Warnings suggest problems that don't exist
 - Debug level preserves diagnostics without alarming users
 
 **Changes**:
+
 ```javascript
 // Warning 1 (processingCommandState.js:388)
-- logger.warn(`Destroyed during active processing...`);
-+ logger.debug(`Destroyed during active processing (handled)...`);
+-logger.warn(`Destroyed during active processing...`);
++logger.debug(`Destroyed during active processing (handled)...`);
 
 // Warning 2 (commandProcessingWorkflow.js:210)
-- logger.warn(`processing flag became false after dispatch...`);
-+ logger.debug(`Processing flag cleared after dispatch (handled)...`);
+-logger.warn(`processing flag became false after dispatch...`);
++logger.debug(`Processing flag cleared after dispatch (handled)...`);
 ```
 
 ### Option 2: Add Context-Aware Warning Levels
@@ -195,10 +203,12 @@ Both warnings are **defensive programming checks** that detect legitimate edge c
 **Action**: Only warn when situation is unexpected, debug otherwise
 
 **Rationale**:
+
 - Distinguish between "edge case handled" vs "unexpected state"
 - Preserve warnings for actual problems
 
 **Changes**:
+
 ```javascript
 // Check if state change was expected (e.g., turn end event)
 const isExpectedStateChange = /* detect if turn ending */;
@@ -219,16 +229,19 @@ logger[logLevel](`Destroyed during active processing...`);
 ### Recommended Approach: Option 1 (Severity Reduction)
 
 **Phase 1**: Update logging levels
+
 - Change both warnings to `debug` level
 - Add clarifying text "(handled)" to messages
 - Update tests to check for debug logs instead
 
 **Phase 2**: Enhanced documentation
+
 - Document the edge cases that trigger these situations
 - Explain why they're expected and handled
 - Add to developer documentation
 
 **Phase 3**: Monitoring
+
 - Run in production with debug level
 - Monitor for any actual processing issues
 - Verify edge cases are truly handled correctly
@@ -236,10 +249,12 @@ logger[logLevel](`Destroyed during active processing...`);
 ## Files Modified
 
 ### Source Code Changes
+
 - `src/turns/states/processingCommandState.js` (line 388-390)
 - `src/turns/states/helpers/commandProcessingWorkflow.js` (line 210-213)
 
 ### Test Updates
+
 - `tests/integration/turns/processingStateDestroyDuringActive.integration.test.js`
 - `tests/integration/turns/processingFlagClearedDuringDispatch.integration.test.js`
 - `tests/integration/turns/turnEndProcessingRaceCondition.integration.test.js`

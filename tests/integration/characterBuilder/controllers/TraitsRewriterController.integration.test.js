@@ -198,11 +198,18 @@ const createCoreDependencies = () => {
 
   const characterBuilderService = new MinimalCharacterBuilderService(logger);
 
-  return { logger, schemaValidator, eventBus: safeDispatcher, characterBuilderService };
+  return {
+    logger,
+    schemaValidator,
+    eventBus: safeDispatcher,
+    characterBuilderService,
+  };
 };
 
 const createControllerInfrastructure = (core) => {
-  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({ logger: core.logger });
+  const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
+    logger: core.logger,
+  });
   const eventListenerRegistry = new EventListenerRegistry({
     logger: core.logger,
     asyncUtilities: {
@@ -261,8 +268,13 @@ const createControllerInfrastructure = (core) => {
 const buildController = async () => {
   renderTraitsRewriterDom();
   const core = createCoreDependencies();
-  const generatorSetup = createGenerator({ logger: core.logger, eventBus: core.eventBus });
-  const displayEnhancer = new TraitsRewriterDisplayEnhancer({ logger: core.logger });
+  const generatorSetup = createGenerator({
+    logger: core.logger,
+    eventBus: core.eventBus,
+  });
+  const displayEnhancer = new TraitsRewriterDisplayEnhancer({
+    logger: core.logger,
+  });
   const infrastructure = createControllerInfrastructure(core);
 
   const controller = new TraitsRewriterController({
@@ -272,7 +284,8 @@ const buildController = async () => {
     characterBuilderService: core.characterBuilderService,
     traitsRewriterGenerator: generatorSetup.generator,
     traitsRewriterDisplayEnhancer: displayEnhancer,
-    controllerLifecycleOrchestrator: infrastructure.controllerLifecycleOrchestrator,
+    controllerLifecycleOrchestrator:
+      infrastructure.controllerLifecycleOrchestrator,
     domElementManager: infrastructure.domElementManager,
     eventListenerRegistry: infrastructure.eventListenerRegistry,
     asyncUtilitiesToolkit: infrastructure.asyncUtilitiesToolkit,
@@ -293,7 +306,9 @@ const buildController = async () => {
     clearButton: document.getElementById('clear-input-button'),
     characterNameDisplay: document.getElementById('character-name-display'),
     traitsSections: document.getElementById('traits-sections'),
-    rewrittenTraitsContainer: document.getElementById('rewritten-traits-container'),
+    rewrittenTraitsContainer: document.getElementById(
+      'rewritten-traits-container'
+    ),
     emptyState: document.getElementById('empty-state'),
     generationError: document.getElementById('generation-error'),
     errorMessage: document.querySelector('.error-message'),
@@ -358,9 +373,9 @@ describe('TraitsRewriterController (integration)', () => {
     expect(elements.characterNameDisplay.textContent).toBe('Ava Redwood');
     const sections = elements.traitsSections.querySelectorAll('.trait-section');
     expect(sections.length).toBeGreaterThan(0);
-    expect(
-      sections[0].querySelector('.trait-content').textContent
-    ).toContain('I narrate my story');
+    expect(sections[0].querySelector('.trait-content').textContent).toContain(
+      'I narrate my story'
+    );
 
     expect(elements.exportJsonButton.style.display).toBe('block');
     expect(elements.exportTextButton.style.display).toBe('block');
@@ -414,7 +429,9 @@ describe('TraitsRewriterController (integration)', () => {
     );
     expect(elements.rewriteButton.disabled).toBe(true);
 
-    await setCharacterDefinition(elements.characterDefinition, { unrelated: true });
+    await setCharacterDefinition(elements.characterDefinition, {
+      unrelated: true,
+    });
     expect(elements.characterInputError.textContent).toContain(
       'must include a "components" property'
     );

@@ -13,7 +13,9 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
       'sex-anal-penetration',
       'sex-anal-penetration:insert_multiple_fingers_into_asshole'
     );
-    testFixture.testEnv.actionIndex.buildIndex([insertMultipleFingersIntoAssholeActionJson]);
+    testFixture.testEnv.actionIndex.buildIndex([
+      insertMultipleFingersIntoAssholeActionJson,
+    ]);
   });
 
   afterEach(() => {
@@ -39,11 +41,15 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
     });
 
     it('should have no anatomy prerequisites for actor', () => {
-      expect(insertMultipleFingersIntoAssholeActionJson.prerequisites).toEqual([]);
+      expect(insertMultipleFingersIntoAssholeActionJson.prerequisites).toEqual(
+        []
+      );
     });
 
     it('should require positioning:closeness component on actor', () => {
-      expect(insertMultipleFingersIntoAssholeActionJson.required_components).toEqual({
+      expect(
+        insertMultipleFingersIntoAssholeActionJson.required_components
+      ).toEqual({
         actor: ['positioning:closeness'],
       });
     });
@@ -55,39 +61,60 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
 
       // CRITICAL: createCloseActors calls reset() which replaces action index with empty one
       // Must re-register the action after reset
-      testFixture.testEnv.actionIndex.buildIndex([insertMultipleFingersIntoAssholeActionJson]);
+      testFixture.testEnv.actionIndex.buildIndex([
+        insertMultipleFingersIntoAssholeActionJson,
+      ]);
 
       // Register scopes AFTER reset() so they use the current entityManager
       ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 
       // Manual scope override for sex-anal-penetration scope (avoids DSL/manual conflict)
-      const originalResolveSync = testFixture.testEnv.unifiedScopeResolver.resolveSync.bind(testFixture.testEnv.unifiedScopeResolver);
-      testFixture.testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind') {
+      const originalResolveSync =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync.bind(
+          testFixture.testEnv.unifiedScopeResolver
+        );
+      testFixture.testEnv.unifiedScopeResolver.resolveSync = (
+        scopeName,
+        context
+      ) => {
+        if (
+          scopeName ===
+          'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind'
+        ) {
           const actorId = context?.actor?.id;
           if (!actorId) return { success: true, value: new Set() };
 
-          const actor = testFixture.testEnv.entityManager.getEntityInstance(actorId);
-          const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+          const actor =
+            testFixture.testEnv.entityManager.getEntityInstance(actorId);
+          const closenessPartners =
+            actor?.components?.['positioning:closeness']?.partners;
 
-          if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+          if (
+            !Array.isArray(closenessPartners) ||
+            closenessPartners.length === 0
+          ) {
             return { success: true, value: new Set() };
           }
 
           const validPartners = closenessPartners.filter((partnerId) => {
-            const partner = testFixture.testEnv.entityManager.getEntityInstance(partnerId);
+            const partner =
+              testFixture.testEnv.entityManager.getEntityInstance(partnerId);
             if (!partner) return false;
 
             // Check if partner has asshole
-            const hasParts = partner.components?.['anatomy:body_part_types']?.types || [];
+            const hasParts =
+              partner.components?.['anatomy:body_part_types']?.types || [];
             if (!hasParts.includes('asshole')) return false;
 
             // Check if asshole is uncovered
-            const socketCoverage = partner.components?.['clothing:socket_coverage']?.sockets || {};
+            const socketCoverage =
+              partner.components?.['clothing:socket_coverage']?.sockets || {};
             if (socketCoverage.asshole?.covered) return false;
 
             // Check if partner is facing away from actor OR lying down
-            const facingAway = partner.components?.['positioning:facing_away']?.facing_away_from || [];
+            const facingAway =
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from || [];
             const isLyingDown = partner.components?.['positioning:lying_down'];
 
             return facingAway.includes(actorId) || isLyingDown;
@@ -115,18 +142,28 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
         { sockets: {} }
       );
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
+      expect(ids).toContain(
+        'sex-anal-penetration:insert_multiple_fingers_into_asshole'
+      );
     });
 
     it('should NOT be discovered when actors are not close', async () => {
       const scenario = testFixture.createCloseActors(['Alice', 'Bob']);
 
       // Remove closeness components
-      testFixture.testEnv.entityManager.removeComponent(scenario.actor.id, 'positioning:closeness');
-      testFixture.testEnv.entityManager.removeComponent(scenario.target.id, 'positioning:closeness');
+      testFixture.testEnv.entityManager.removeComponent(
+        scenario.actor.id,
+        'positioning:closeness'
+      );
+      testFixture.testEnv.entityManager.removeComponent(
+        scenario.target.id,
+        'positioning:closeness'
+      );
 
       // Setup target with exposed asshole facing away
       testFixture.testEnv.entityManager.addComponent(
@@ -145,10 +182,14 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
         { sockets: {} }
       );
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
+      expect(ids).not.toContain(
+        'sex-anal-penetration:insert_multiple_fingers_into_asshole'
+      );
     });
 
     it("should NOT be discovered when target's asshole is covered", async () => {
@@ -172,10 +213,14 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
         { sockets: { asshole: { covered: true } } }
       );
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
+      expect(ids).not.toContain(
+        'sex-anal-penetration:insert_multiple_fingers_into_asshole'
+      );
     });
 
     it('should NOT be discovered when target does not have asshole body part', async () => {
@@ -198,10 +243,14 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
         { sockets: {} }
       );
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
+      expect(ids).not.toContain(
+        'sex-anal-penetration:insert_multiple_fingers_into_asshole'
+      );
     });
 
     it('should NOT be discovered when actor has fucking_anally component', async () => {
@@ -231,10 +280,14 @@ describe('sex-anal-penetration:insert_multiple_fingers_into_asshole action disco
         { being_fucked_entity_id: 'other_entity', initiated: true }
       );
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
-      expect(ids).not.toContain('sex-anal-penetration:insert_multiple_fingers_into_asshole');
+      expect(ids).not.toContain(
+        'sex-anal-penetration:insert_multiple_fingers_into_asshole'
+      );
     });
   });
 });

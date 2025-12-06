@@ -136,9 +136,17 @@ describe('SpatialIndexSynchronizer', () => {
     });
 
     it('should clear the index and manually add entities when buildIndex is unavailable', () => {
-      const validEntity = createMockEntity('entity-1', { locationId: 'castle' });
-      const invalidIdEntity = { id: '   ', getComponentData: jest.fn(() => ({ locationId: 'ignored' })) };
-      const noComponentEntity = { id: 'entity-2', getComponentData: 'not-a-function' };
+      const validEntity = createMockEntity('entity-1', {
+        locationId: 'castle',
+      });
+      const invalidIdEntity = {
+        id: '   ',
+        getComponentData: jest.fn(() => ({ locationId: 'ignored' })),
+      };
+      const noComponentEntity = {
+        id: 'entity-2',
+        getComponentData: 'not-a-function',
+      };
       const numericIdEntity = {
         id: 123,
         getComponentData: jest.fn(() => ({ locationId: 'numeric-land' })),
@@ -164,10 +172,7 @@ describe('SpatialIndexSynchronizer', () => {
       });
 
       expect(spatialIndex.clearIndex).toHaveBeenCalledTimes(1);
-      expect(spatialIndex.addEntity).toHaveBeenCalledWith(
-        'entity-1',
-        'castle'
-      );
+      expect(spatialIndex.addEntity).toHaveBeenCalledWith('entity-1', 'castle');
       expect(spatialIndex.addEntity).toHaveBeenCalledTimes(1);
     });
 
@@ -185,9 +190,7 @@ describe('SpatialIndexSynchronizer', () => {
       };
 
       const entityManager = {
-        getEntitiesWithComponent: jest
-          .fn()
-          .mockReturnValue(iterableResult),
+        getEntitiesWithComponent: jest.fn().mockReturnValue(iterableResult),
       };
 
       initializeSynchronizer({
@@ -199,10 +202,7 @@ describe('SpatialIndexSynchronizer', () => {
         POSITION_COMPONENT_ID
       );
       expect(spatialIndex.clearIndex).toHaveBeenCalledTimes(1);
-      expect(spatialIndex.addEntity).toHaveBeenCalledWith(
-        'entity-5',
-        'fields'
-      );
+      expect(spatialIndex.addEntity).toHaveBeenCalledWith('entity-5', 'fields');
     });
 
     it('should support component queries even when clearIndex is not provided', () => {
@@ -218,9 +218,7 @@ describe('SpatialIndexSynchronizer', () => {
       };
 
       const entityManager = {
-        getEntitiesWithComponent: jest
-          .fn()
-          .mockReturnValue(iterableResult),
+        getEntitiesWithComponent: jest.fn().mockReturnValue(iterableResult),
       };
 
       initializeSynchronizer({

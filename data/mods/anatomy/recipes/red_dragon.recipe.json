@@ -9,9 +9,7 @@
   "slots": {
     "head": {
       "partType": "dragon_head",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:size_category": {
           "size": "massive"
@@ -29,17 +27,13 @@
     {
       "matchesGroup": "limbSet:leg",
       "partType": "dragon_leg",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {}
     },
     {
       "matchesGroup": "limbSet:wing",
       "partType": "dragon_wing",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:length_category": {
           "length": "immense"
@@ -49,19 +43,14 @@
     {
       "matchesGroup": "appendage:tail",
       "partType": "dragon_tail",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {}
     }
   ],
   "constraints": {
     "requires": [
       {
-        "partTypes": [
-          "dragon_wing",
-          "dragon_tail"
-        ]
+        "partTypes": ["dragon_wing", "dragon_tail"]
       }
     ]
   }

@@ -44,8 +44,6 @@
       "sidekick_backup.png"
     ],
     "rules": [],
-    "worlds": [
-      "isekai.world.json"
-    ]
+    "worlds": ["isekai.world.json"]
   }
 }

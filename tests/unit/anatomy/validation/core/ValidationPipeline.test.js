@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ValidationPipeline from '../../../../../src/anatomy/validation/core/ValidationPipeline.js';
 import ValidationResultBuilder from '../../../../../src/anatomy/validation/core/ValidationResultBuilder.js';
 
@@ -17,13 +24,14 @@ const createValidator = (
     name,
     priority,
     failFast,
-    validate: jest.fn(async () =>
-      result ?? {
-        errors: [],
-        warnings: [],
-        suggestions: [],
-        passed: [],
-      }
+    validate: jest.fn(
+      async () =>
+        result ?? {
+          errors: [],
+          warnings: [],
+          suggestions: [],
+          passed: [],
+        }
     ),
   };
 };
@@ -52,9 +60,7 @@ describe('ValidationPipeline', () => {
       priority: 5,
       result: {
         errors: [],
-        warnings: [
-          { type: 'WARN_A', message: 'warn', severity: 'warning' },
-        ],
+        warnings: [{ type: 'WARN_A', message: 'warn', severity: 'warning' }],
         suggestions: [{ type: 'SUG', message: 'suggestion' }],
         passed: [{ message: 'validator-a', check: 'validator-a' }],
       },
@@ -72,9 +78,7 @@ describe('ValidationPipeline', () => {
       executionOrder.push('validator-a');
       return {
         errors: [],
-        warnings: [
-          { type: 'WARN_A', message: 'warn', severity: 'warning' },
-        ],
+        warnings: [{ type: 'WARN_A', message: 'warn', severity: 'warning' }],
         suggestions: [{ type: 'SUG', message: 'suggestion' }],
         passed: [{ message: 'validator-a', check: 'validator-a' }],
       };
@@ -233,9 +237,9 @@ describe('ValidationPipeline', () => {
       "ValidationPipeline: Validator 'validator-a' threw an exception",
       expect.any(Error)
     );
-    expect(result.errors.some((issue) => issue.type === 'VALIDATION_ERROR')).toBe(
-      true
-    );
+    expect(
+      result.errors.some((issue) => issue.type === 'VALIDATION_ERROR')
+    ).toBe(true);
     expect(validatorB.validate).toHaveBeenCalledTimes(1);
   });
 
@@ -350,7 +354,10 @@ describe('ValidationPipeline', () => {
     );
     expect(result.suggestions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: 'REGULAR_SUG', message: 'keep as suggestion' }),
+        expect.objectContaining({
+          type: 'REGULAR_SUG',
+          message: 'keep as suggestion',
+        }),
       ])
     );
   });

@@ -31,7 +31,10 @@ describe('sex-anal-penetration:insert_finger_into_asshole Action Integration', (
     });
 
     it('should correctly interpolate actor and target names', async () => {
-      const scenario = testFixture.createStandardActorTarget(['Samantha', 'Derek']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Samantha',
+        'Derek',
+      ]);
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 

@@ -92,9 +92,12 @@ describe('seduction:stretch_sexily action discovery', () => {
     });
 
     it('rejects execution when the actor is currently hugging someone', async () => {
-      const scenario = testFixture.createStandardActorTarget(['Dana', 'Elliot'], {
-        includeRoom: false,
-      });
+      const scenario = testFixture.createStandardActorTarget(
+        ['Dana', 'Elliot'],
+        {
+          includeRoom: false,
+        }
+      );
 
       scenario.actor.components['positioning:hugging'] = {
         embraced_entity_id: scenario.target.id,

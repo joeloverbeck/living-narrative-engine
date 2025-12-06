@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals';
+import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
 import { BaseTurnHandler } from '../../../../src/turns/handlers/baseTurnHandler.js';
 import { ITurnStateFactory } from '../../../../src/turns/interfaces/ITurnStateFactory.js';
@@ -56,7 +50,7 @@ function defineTestHelpers() {
       handler,
       commandString,
       turnAction,
-      directiveResolver,
+      directiveResolver
     ) {
       const state = new TestTurnState(handler);
       state._processingInfo = {
@@ -143,10 +137,10 @@ function defineTestHelpers() {
         .mockImplementation(() => {});
 
       expect(() => new AbstractTurnState()).toThrow(
-        'AbstractTurnState Constructor: BaseTurnHandler (handler) must be provided.',
+        'AbstractTurnState Constructor: BaseTurnHandler (handler) must be provided.'
       );
       expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('AbstractTurnState Constructor'),
+        expect.stringContaining('AbstractTurnState Constructor')
       );
     });
 
@@ -160,10 +154,10 @@ function defineTestHelpers() {
       const state = new AbstractTurnState(handler);
 
       expect(() => state._getTurnContext()).toThrow(
-        `${state.getStateName()}: _handler is invalid or missing getTurnContext method.`,
+        `${state.getStateName()}: _handler is invalid or missing getTurnContext method.`
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('_handler is invalid'),
+        expect.stringContaining('_handler is invalid')
       );
     });
 
@@ -177,7 +171,9 @@ function defineTestHelpers() {
 
       expect(result).toBeNull();
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Attempted to access ITurnContext via _getTurnContext()'),
+        expect.stringContaining(
+          'Attempted to access ITurnContext via _getTurnContext()'
+        )
       );
     });
 
@@ -208,11 +204,11 @@ function defineTestHelpers() {
 
       expect(ctx).toBeNull();
       expect(handler.resetStateAndResources).toHaveBeenCalledWith(
-        'ensure-failure',
+        'ensure-failure'
       );
       expect(handler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('_handler is invalid'),
+        expect.stringContaining('_handler is invalid')
       );
     });
 
@@ -228,7 +224,7 @@ function defineTestHelpers() {
 
       expect(ctx).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('No ITurnContext available'),
+        expect.stringContaining('No ITurnContext available')
       );
       expect(resetSpy).toHaveBeenCalledWith('missing-context');
     });
@@ -265,7 +261,7 @@ function defineTestHelpers() {
 
       expect(result).toBeNull();
       expect(resetSpy).toHaveBeenCalledWith(
-        `missing-methods-${state.getStateName()}`,
+        `missing-methods-${state.getStateName()}`
       );
     });
 
@@ -280,7 +276,7 @@ function defineTestHelpers() {
       const result = await state._ensureContextWithMethods(
         'end-turn-missing-method',
         ['requestAwaitingInputStateTransition'],
-        { endTurnOnFail: true },
+        { endTurnOnFail: true }
       );
 
       expect(result).toBeNull();
@@ -295,7 +291,7 @@ function defineTestHelpers() {
       state._logStateTransition('enter', 'actor-1', 'IdleState');
 
       expect(logger.debug).toHaveBeenCalledWith(
-        `${state.getStateName()}: Entered. Actor: actor-1. Previous state: IdleState.`,
+        `${state.getStateName()}: Entered. Actor: actor-1. Previous state: IdleState.`
       );
     });
 
@@ -318,7 +314,7 @@ function defineTestHelpers() {
       state._logStateTransition('exit', 'fallback-actor', 'NextState');
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('(Fallback log)'),
+        expect.stringContaining('(Fallback log)')
       );
       loggerSpy.mockRestore();
     });
@@ -353,7 +349,7 @@ function defineTestHelpers() {
       logger.warn.mockClear();
 
       await expect(state.startTurn(handler, { id: 'hero' })).rejects.toThrow(
-        `Method 'startTurn()' is not applicable for state ${state.getStateName()}.`,
+        `Method 'startTurn()' is not applicable for state ${state.getStateName()}.`
       );
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("Method 'startTurn(actorId: hero)'")
@@ -366,10 +362,10 @@ function defineTestHelpers() {
       logger.warn.mockClear();
 
       await expect(state.startTurn(handler, null)).rejects.toThrow(
-        `Method 'startTurn()' is not applicable for state ${state.getStateName()}.`,
+        `Method 'startTurn()' is not applicable for state ${state.getStateName()}.`
       );
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(`actorId: ${UNKNOWN_ACTOR_ID}`),
+        expect.stringContaining(`actorId: ${UNKNOWN_ACTOR_ID}`)
       );
     });
 
@@ -379,12 +375,12 @@ function defineTestHelpers() {
       logger.error.mockClear();
 
       await expect(
-        state.handleSubmittedCommand(handler, 'look around', { id: 'hero' }),
+        state.handleSubmittedCommand(handler, 'look around', { id: 'hero' })
       ).rejects.toThrow(
-        `Method 'handleSubmittedCommand(command: "look around", entity: hero, contextActor: actor-1)' must be implemented by concrete state ${state.getStateName()}.`,
+        `Method 'handleSubmittedCommand(command: "look around", entity: hero, contextActor: actor-1)' must be implemented by concrete state ${state.getStateName()}.`
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("handleSubmittedCommand"),
+        expect.stringContaining('handleSubmittedCommand')
       );
     });
 
@@ -396,7 +392,7 @@ function defineTestHelpers() {
       await state.handleTurnEndedEvent(handler, { entityId: 'hero' });
 
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('handleTurnEndedEvent(payloadActorId: hero)'),
+        expect.stringContaining('handleTurnEndedEvent(payloadActorId: hero)')
       );
     });
 
@@ -411,16 +407,16 @@ function defineTestHelpers() {
           handler,
           { id: 'stranger' },
           { outcome: 'fail' },
-          'look',
-        ),
+          'look'
+        )
       ).rejects.toThrow(
-        `Method 'processCommandResult(actorId: actor-1, command: "look")' must be implemented by concrete state ${state.getStateName()}.`,
+        `Method 'processCommandResult(actorId: actor-1, command: "look")' must be implemented by concrete state ${state.getStateName()}.`
       );
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('does not match context actor'),
+        expect.stringContaining('does not match context actor')
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('processCommandResult'),
+        expect.stringContaining('processCommandResult')
       );
     });
 
@@ -435,11 +431,11 @@ function defineTestHelpers() {
           handler,
           { id: contextActor.id },
           { outcome: 'success' },
-          'look',
-        ),
+          'look'
+        )
       ).rejects.toThrow();
       expect(logger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('does not match context actor'),
+        expect.stringContaining('does not match context actor')
       );
     });
 
@@ -450,15 +446,15 @@ function defineTestHelpers() {
       logger.error.mockClear();
 
       await expect(
-        state.handleDirective(handler, { id: 'outsider' }, 'END_TURN', null),
+        state.handleDirective(handler, { id: 'outsider' }, 'END_TURN', null)
       ).rejects.toThrow(
-        `Method 'handleDirective(actorId: actor-1, directive: END_TURN)' must be implemented by concrete state ${state.getStateName()}.`,
+        `Method 'handleDirective(actorId: actor-1, directive: END_TURN)' must be implemented by concrete state ${state.getStateName()}.`
       );
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('handleDirective called with actor outsider'),
+        expect.stringContaining('handleDirective called with actor outsider')
       );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('handleDirective(actorId: actor-1'),
+        expect.stringContaining('handleDirective(actorId: actor-1')
       );
     });
 
@@ -473,11 +469,11 @@ function defineTestHelpers() {
           handler,
           { id: contextActor.id },
           'CONTINUE',
-          null,
-        ),
+          null
+        )
       ).rejects.toThrow();
       expect(logger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('does not match context actor'),
+        expect.stringContaining('does not match context actor')
       );
     });
 
@@ -489,7 +485,7 @@ function defineTestHelpers() {
       await state.destroy(handler);
 
       expect(contextLogger.debug).toHaveBeenCalledWith(
-        `${state.getStateName()}: Received destroy call. No state-specific cleanup by default in AbstractTurnState.`,
+        `${state.getStateName()}: Received destroy call. No state-specific cleanup by default in AbstractTurnState.`
       );
     });
 

@@ -87,7 +87,8 @@ export function buildBreatheTeasinglyOnPenisLyingCloseScenario(options = {}) {
   const PRIMARY_ID = BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_PRIMARY_ID;
   const ROOM_ID = BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_ROOM_ID;
   const FURNITURE_ID = BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_FURNITURE_ID;
-  const FURNITURE_ID_ALT = BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_FURNITURE_ID_ALT;
+  const FURNITURE_ID_ALT =
+    BREATHE_TEASINGLY_ON_PENIS_LYING_CLOSE_FURNITURE_ID_ALT;
 
   const primaryTorsoId = `${PRIMARY_ID}_torso`;
   const primaryGroinId = `${PRIMARY_ID}_groin`;
@@ -243,9 +244,14 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
       const actorLying = actor?.components?.['positioning:lying_down'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
-      if (!actorLying || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+      if (
+        !actorLying ||
+        !Array.isArray(closenessPartners) ||
+        closenessPartners.length === 0
+      ) {
         return { success: true, value: new Set() };
       }
 
@@ -285,8 +291,12 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
         }
 
         // Check if partner is fucking the actor vaginally
-        const partnerFuckingVaginally = partner.components?.['positioning:fucking_vaginally'];
-        if (partnerFuckingVaginally && partnerFuckingVaginally.targetId === actorId) {
+        const partnerFuckingVaginally =
+          partner.components?.['positioning:fucking_vaginally'];
+        if (
+          partnerFuckingVaginally &&
+          partnerFuckingVaginally.targetId === actorId
+        ) {
           return false;
         }
 

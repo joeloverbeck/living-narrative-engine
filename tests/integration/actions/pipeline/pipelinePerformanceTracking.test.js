@@ -529,7 +529,9 @@ describe('Pipeline Performance Tracking Integration (ACTTRA-018)', () => {
       let timestamp = 1000;
       performance.now = jest.fn(() => (timestamp += 60));
 
-      trace.captureActionData('component_filtering', actionId, { passed: true });
+      trace.captureActionData('component_filtering', actionId, {
+        passed: true,
+      });
       trace.captureActionData('prerequisite_evaluation', actionId, {
         evaluated: true,
       });
@@ -547,7 +549,9 @@ describe('Pipeline Performance Tracking Integration (ACTTRA-018)', () => {
       let timestamp = 2000;
       performance.now = jest.fn(() => (timestamp += 40));
 
-      trace.captureActionData('component_filtering', actionId, { passed: true });
+      trace.captureActionData('component_filtering', actionId, {
+        passed: true,
+      });
       trace.captureActionData('prerequisite_evaluation', actionId, {
         evaluated: true,
       });

@@ -174,9 +174,9 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
       const interval = httpAgentService.getNextCleanupIntervalPreview();
 
       expect(interval).toBe(45000);
-      expect(
-        httpAgentService.getEnhancedStats().adaptiveCleanup.enabled
-      ).toBe(false);
+      expect(httpAgentService.getEnhancedStats().adaptiveCleanup.enabled).toBe(
+        false
+      );
     });
 
     it('supports temporarily overriding adaptive cleanup behaviour for diagnostics', () => {
@@ -186,8 +186,7 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
         maxCleanupIntervalMs: 900000,
       });
 
-      const adaptiveInterval =
-        httpAgentService.getNextCleanupIntervalPreview();
+      const adaptiveInterval = httpAgentService.getNextCleanupIntervalPreview();
       expect(adaptiveInterval).toBe(234000);
 
       const forcedFixedInterval =
@@ -198,9 +197,9 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
 
       const statsAfterPreview = httpAgentService.getEnhancedStats();
       expect(statsAfterPreview.adaptiveCleanup.enabled).toBe(true);
-      expect(statsAfterPreview.adaptiveCleanup.adjustments).toBeGreaterThanOrEqual(
-        1
-      );
+      expect(
+        statsAfterPreview.adaptiveCleanup.adjustments
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -857,9 +856,9 @@ describe('HttpAgentService - Adaptive Cleanup', () => {
 
       const statsAfterCleanup = httpAgentService.getEnhancedStats();
       expect(statsAfterCleanup.requestRate).toBe(1);
-      expect(statsAfterCleanup.adaptiveCleanup.cleanupOperations).toBeGreaterThan(
-        0
-      );
+      expect(
+        statsAfterCleanup.adaptiveCleanup.cleanupOperations
+      ).toBeGreaterThan(0);
     });
   });
 

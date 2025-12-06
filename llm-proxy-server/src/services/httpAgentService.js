@@ -57,7 +57,9 @@ class HttpAgentService {
     // Default configuration for agents
     this.#config = {
       keepAlive:
-        config.keepAlive !== undefined ? config.keepAlive : HTTP_AGENT_KEEP_ALIVE,
+        config.keepAlive !== undefined
+          ? config.keepAlive
+          : HTTP_AGENT_KEEP_ALIVE,
       maxSockets: config.maxSockets || HTTP_AGENT_MAX_SOCKETS,
       maxFreeSockets: config.maxFreeSockets || HTTP_AGENT_MAX_FREE_SOCKETS,
       timeout: config.timeout || HTTP_AGENT_TIMEOUT, // 120 seconds default

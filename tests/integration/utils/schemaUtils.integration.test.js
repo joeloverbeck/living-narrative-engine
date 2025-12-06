@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
-import { registerSchema, registerInlineSchema } from '../../../src/utils/schemaUtils.js';
+import {
+  registerSchema,
+  registerInlineSchema,
+} from '../../../src/utils/schemaUtils.js';
 
 class RecordingLogger {
   constructor() {
@@ -57,7 +60,8 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
       required: ['id'],
     };
 
-    const schemaId = 'schema://living-narrative-engine/tests/schema-utils/active.schema.json';
+    const schemaId =
+      'schema://living-narrative-engine/tests/schema-utils/active.schema.json';
 
     await registerSchema(validator, firstSchema, schemaId, logger);
 
@@ -78,7 +82,8 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
   });
 
   it('registerInlineSchema logs success when provided and keeps the validator usable', async () => {
-    const schemaId = 'schema://living-narrative-engine/tests/schema-utils/inline.schema.json';
+    const schemaId =
+      'schema://living-narrative-engine/tests/schema-utils/inline.schema.json';
     const schema = {
       type: 'object',
       properties: {
@@ -97,7 +102,8 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
     const bad = validator.validate(schemaId, { payload: 'oops' });
     expect(bad.isValid).toBe(false);
 
-    const noMessageSchemaId = 'schema://living-narrative-engine/tests/schema-utils/inline-no-message.schema.json';
+    const noMessageSchemaId =
+      'schema://living-narrative-engine/tests/schema-utils/inline-no-message.schema.json';
     await registerInlineSchema(validator, schema, noMessageSchemaId, logger);
     const inlineMessages = logger.debugCalls.filter(
       ([message]) => message === 'inline schema registered'
@@ -122,7 +128,8 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
     const [message, context, originalError] = logger.errorCalls.at(-1);
     expect(message).toBe('failed to register schema');
     expect(context).toMatchObject({
-      error: 'AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.',
+      error:
+        'AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.',
     });
     expect(originalError).toBeInstanceOf(Error);
     expect(originalError.message).toContain('Invalid or empty schemaId');
@@ -139,7 +146,9 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
           error: 'pre-provided context message',
         },
       })
-    ).rejects.toThrow('AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.');
+    ).rejects.toThrow(
+      'AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.'
+    );
 
     const [message, context, originalError] = logger.errorCalls.at(-1);
     expect(message).toBe('captured failure');
@@ -148,7 +157,9 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
       error: 'pre-provided context message',
     });
     expect(originalError).toBeInstanceOf(Error);
-    expect(originalError.message).toContain('Invalid or empty schemaId provided');
+    expect(originalError.message).toContain(
+      'Invalid or empty schemaId provided'
+    );
   });
 
   it('registerInlineSchema leaves logging to the validator when no error log message is provided', async () => {
@@ -157,7 +168,9 @@ describe('schemaUtils integration with AjvSchemaValidator', () => {
 
     await expect(
       registerInlineSchema(validator, failingSchema, '', logger)
-    ).rejects.toThrow('AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.');
+    ).rejects.toThrow(
+      'AjvSchemaValidator: Invalid or empty schemaId provided. Expected a non-empty string.'
+    );
 
     expect(logger.errorCalls.length).toBe(initialErrorCount + 1);
     const [message] = logger.errorCalls.at(-1);

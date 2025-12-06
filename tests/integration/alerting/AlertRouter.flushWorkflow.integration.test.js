@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -91,8 +98,12 @@ describe('AlertRouter flush workflow integration', () => {
     jest.advanceTimersByTime(5000);
     await Promise.resolve();
 
-    expect(warnSpy.mock.calls.map((call) => call[0])).toContain('delayed warning');
-    expect(errorSpy.mock.calls.map((call) => call[0])).toContain('delayed error');
+    expect(warnSpy.mock.calls.map((call) => call[0])).toContain(
+      'delayed warning'
+    );
+    expect(errorSpy.mock.calls.map((call) => call[0])).toContain(
+      'delayed error'
+    );
     expect(alertRouter.queue).toEqual([]);
     expect(alertRouter.flushTimer).toBeNull();
 
@@ -103,7 +114,9 @@ describe('AlertRouter flush workflow integration', () => {
     jest.advanceTimersByTime(5000);
     await Promise.resolve();
 
-    expect(errorSpy.mock.calls.map((call) => call[0])).toContain('solo error dispatch');
+    expect(errorSpy.mock.calls.map((call) => call[0])).toContain(
+      'solo error dispatch'
+    );
   });
 
   it('forwards queued events to UI channels once notifyUIReady is invoked', async () => {
@@ -161,7 +174,8 @@ describe('AlertRouter flush workflow integration', () => {
     expect(
       errorSpy.mock.calls.some(
         ([msg, err]) =>
-          msg === 'AlertRouter flush error:' && err instanceof Error &&
+          msg === 'AlertRouter flush error:' &&
+          err instanceof Error &&
           err.message.includes('Missing or invalid')
       )
     ).toBe(true);
@@ -192,7 +206,9 @@ describe('AlertRouter flush workflow integration', () => {
       unsubscribe: jest.fn(),
     };
 
-    expect(() => new AlertRouter({ safeEventDispatcher: failingDispatcher })).not.toThrow();
+    expect(
+      () => new AlertRouter({ safeEventDispatcher: failingDispatcher })
+    ).not.toThrow();
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter subscription error:',
       expect.objectContaining({ message: 'subscribe failure' })

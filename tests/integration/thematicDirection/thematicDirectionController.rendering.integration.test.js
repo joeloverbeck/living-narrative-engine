@@ -92,9 +92,7 @@ describe('ThematicDirectionController rendering integration', () => {
         conceptId,
         directions,
       })),
-      getThematicDirectionsByConceptId: jest
-        .fn()
-        .mockResolvedValue([]),
+      getThematicDirectionsByConceptId: jest.fn().mockResolvedValue([]),
       initialize: jest.fn().mockResolvedValue(undefined),
       close: jest.fn(),
     };
@@ -229,9 +227,7 @@ describe('ThematicDirectionController rendering integration', () => {
     expect(mockElements.conceptDirectionsCount.textContent).toContain(
       '12 existing directions'
     );
-    expect(mockElements.conceptDirectionsCount.innerHTML).toContain(
-      'warning'
-    );
+    expect(mockElements.conceptDirectionsCount.innerHTML).toContain('warning');
     expect(mockElements.generateBtn.disabled).toBe(false);
   });
 
@@ -253,7 +249,9 @@ describe('ThematicDirectionController rendering integration', () => {
       },
     ];
 
-    directionGenerator.generateDirections.mockResolvedValue(generatedDirections);
+    directionGenerator.generateDirections.mockResolvedValue(
+      generatedDirections
+    );
 
     expect(documentRef.getElementById('concept-selector')).toBeDefined();
     expect(typeof documentRef.getElementById).toBe('function');
@@ -285,17 +283,15 @@ describe('ThematicDirectionController rendering integration', () => {
     expect(generationCalled).toBe(true);
 
     let directionsRendered = await waitForCall(
-      () =>
-        mockElements.directionsResults.innerHTML.includes('direction-card'),
+      () => mockElements.directionsResults.innerHTML.includes('direction-card'),
       1500,
       25
     );
 
     if (!directionsRendered) {
       controller._displayResults(concept, generatedDirections);
-      directionsRendered = mockElements.directionsResults.innerHTML.includes(
-        'direction-card'
-      );
+      directionsRendered =
+        mockElements.directionsResults.innerHTML.includes('direction-card');
     }
 
     expect(directionsRendered).toBe(true);
@@ -305,7 +301,9 @@ describe('ThematicDirectionController rendering integration', () => {
       concept.concept,
       { llmConfigId: undefined }
     );
-    expect(mockElements.directionsResults.innerHTML).toContain('direction-card');
+    expect(mockElements.directionsResults.innerHTML).toContain(
+      'direction-card'
+    );
     expect(mockElements.directionsResults.innerHTML).toContain('#1');
     expect(mockElements.directionsResults.innerHTML).toContain('Themes');
     expect(mockElements.directionsResults.innerHTML).toContain('Tone');

@@ -84,7 +84,11 @@ describe('LayerCompatibilityService', () => {
 
   describe('Armor Layer Support', () => {
     it('should recognize armor as valid layer in ordering', async () => {
-      const isValid = await service.validateLayerOrdering('entity1', 'armor', {});
+      const isValid = await service.validateLayerOrdering(
+        'entity1',
+        'armor',
+        {}
+      );
       expect(isValid).toBe(true);
     });
 

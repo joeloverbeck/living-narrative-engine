@@ -504,7 +504,9 @@ describe('AwaitingExternalTurnEndState - Configuration Properties', () => {
           (invalidTimeout) => {
             // Test with explicit timeout - validation happens on getTimeoutMs()
             expect(() => {
-              const config = new TimeoutConfiguration({ timeoutMs: invalidTimeout });
+              const config = new TimeoutConfiguration({
+                timeoutMs: invalidTimeout,
+              });
               config.getTimeoutMs(); // Trigger lazy validation
             }).toThrow(InvalidArgumentError);
 

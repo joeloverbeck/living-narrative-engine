@@ -6,7 +6,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 
 // Import action definitions
 import removeClothingAction from '../../../../data/mods/clothing/actions/remove_clothing.action.json';
@@ -34,7 +37,10 @@ describe('actions forbidden when doing complex performance', () => {
 
   beforeEach(async () => {
     // Use positioning mod as it's central and other actions will work too
-    testFixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+    testFixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:sit_down'
+    );
   });
 
   afterEach(() => {
@@ -95,9 +101,9 @@ describe('actions forbidden when doing complex performance', () => {
 
     it('grab_crotch_draw_attention should have positioning:doing_complex_performance as forbidden component', () => {
       expect(grabCrotchDrawAttentionAction.forbidden_components).toBeDefined();
-      expect(grabCrotchDrawAttentionAction.forbidden_components.actor).toContain(
-        'positioning:doing_complex_performance'
-      );
+      expect(
+        grabCrotchDrawAttentionAction.forbidden_components.actor
+      ).toContain('positioning:doing_complex_performance');
     });
 
     it('stretch_sexily should have positioning:doing_complex_performance as forbidden component', () => {
@@ -161,7 +167,7 @@ describe('actions forbidden when doing complex performance', () => {
           .atLocation('room1')
           .asActor()
           .withComponent('clothing:equipment', {
-            equipped_items: ['shirt1']
+            equipped_items: ['shirt1'],
           })
           .withComponent('positioning:doing_complex_performance', {})
           .build();
@@ -172,14 +178,15 @@ describe('actions forbidden when doing complex performance', () => {
           .withComponent('items:item', {})
           .withComponent('clothing:clothing', {
             slot: 'torso_upper',
-            layer: 1
+            layer: 1,
           })
           .build();
 
         testFixture.reset([room, actor, shirt]);
         testFixture.testEnv.actionIndex.buildIndex([removeClothingAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('clothing:remove_clothing');
@@ -200,7 +207,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor]);
         testFixture.testEnv.actionIndex.buildIndex([buryFaceInHandsAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('distress:bury_face_in_hands');
@@ -218,7 +226,7 @@ describe('actions forbidden when doing complex performance', () => {
           .withComponent('items:inventory', {
             items: ['book1'],
             max_weight: 100,
-            current_weight: 5
+            current_weight: 5,
           })
           .withComponent('positioning:doing_complex_performance', {})
           .build();
@@ -229,14 +237,15 @@ describe('actions forbidden when doing complex performance', () => {
           .withComponent('items:portable', { weight: 5 })
           .withComponent('core:description', {
             short: 'a leather-bound book',
-            long: 'A hefty tome bound in worn leather.'
+            long: 'A hefty tome bound in worn leather.',
           })
           .build();
 
         testFixture.reset([room, actor, book]);
         testFixture.testEnv.actionIndex.buildIndex([dropItemAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('items:drop_item');
@@ -258,14 +267,15 @@ describe('actions forbidden when doing complex performance', () => {
           .withComponent('items:item', {})
           .withComponent('core:description', {
             short: 'a ceramic vase',
-            long: 'An ornate ceramic vase with floral patterns.'
+            long: 'An ornate ceramic vase with floral patterns.',
           })
           .build();
 
         testFixture.reset([room, actor, vase]);
         testFixture.testEnv.actionIndex.buildIndex([examineItemAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('items:examine_item');
@@ -287,7 +297,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor]);
         testFixture.testEnv.actionIndex.buildIndex([brushHairBackCoylyAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('seduction:brush_hair_back_coyly');
@@ -307,7 +318,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor]);
         testFixture.testEnv.actionIndex.buildIndex([drawAttentionToAssAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('seduction:draw_attention_to_ass');
@@ -325,9 +337,12 @@ describe('actions forbidden when doing complex performance', () => {
           .build();
 
         testFixture.reset([room, actor]);
-        testFixture.testEnv.actionIndex.buildIndex([drawAttentionToBreastsAction]);
+        testFixture.testEnv.actionIndex.buildIndex([
+          drawAttentionToBreastsAction,
+        ]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('seduction:draw_attention_to_breasts');
@@ -345,9 +360,12 @@ describe('actions forbidden when doing complex performance', () => {
           .build();
 
         testFixture.reset([room, actor]);
-        testFixture.testEnv.actionIndex.buildIndex([grabCrotchDrawAttentionAction]);
+        testFixture.testEnv.actionIndex.buildIndex([
+          grabCrotchDrawAttentionAction,
+        ]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('seduction:grab_crotch_draw_attention');
@@ -366,7 +384,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor]);
         testFixture.testEnv.actionIndex.buildIndex([stretchSexilyAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('seduction:stretch_sexily');
@@ -391,14 +410,15 @@ describe('actions forbidden when doing complex performance', () => {
           .withComponent('movement:direction', {
             source: 'room1',
             destination: 'room2',
-            description: 'To the north'
+            description: 'To the north',
           })
           .build();
 
         testFixture.reset([room1, room2, actor, direction]);
         testFixture.testEnv.actionIndex.buildIndex([goAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('movement:go');
@@ -425,7 +445,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor, target]);
         testFixture.testEnv.actionIndex.buildIndex([getCloseAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('personal-space:get_close');
@@ -450,7 +471,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor, target]);
         testFixture.testEnv.actionIndex.buildIndex([kneelBeforeAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('deference:kneel_before');
@@ -475,7 +497,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor, target]);
         testFixture.testEnv.actionIndex.buildIndex([placeYourselfBehindAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('positioning:place_yourself_behind');
@@ -496,14 +519,15 @@ describe('actions forbidden when doing complex performance', () => {
           .atLocation('room1')
           .withComponent('positioning:furniture', {
             capacity: 1,
-            occupied_by: []
+            occupied_by: [],
           })
           .build();
 
         testFixture.reset([room, actor, chair]);
         testFixture.testEnv.actionIndex.buildIndex([sitDownAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('positioning:sit_down');
@@ -528,7 +552,8 @@ describe('actions forbidden when doing complex performance', () => {
         testFixture.reset([room, actor, target]);
         testFixture.testEnv.actionIndex.buildIndex([turnYourBackAction]);
 
-        const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+        const availableActions =
+          testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
         expect(ids).not.toContain('positioning:turn_your_back');

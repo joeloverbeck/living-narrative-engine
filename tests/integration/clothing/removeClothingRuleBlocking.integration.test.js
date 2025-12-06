@@ -31,10 +31,10 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
         'clothing:equipment': {
           equipped: {
             torso_lower: { accessories: ['belt1'] },
-            legs: { base: ['pants1'] }
-          }
-        }
-      }
+            legs: { base: ['pants1'] },
+          },
+        },
+      },
     };
 
     const belt = {
@@ -44,16 +44,18 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
         'core:position': { locationId: 'room1' },
         'clothing:wearable': {
           layer: 'accessories',
-          equipmentSlots: { primary: 'torso_lower' }
+          equipmentSlots: { primary: 'torso_lower' },
         },
         'clothing:blocks_removal': {
-          blockedSlots: [{
-            slot: 'legs',
-            layers: ['base'],
-            blockType: 'must_remove_first'
-          }]
-        }
-      }
+          blockedSlots: [
+            {
+              slot: 'legs',
+              layers: ['base'],
+              blockType: 'must_remove_first',
+            },
+          ],
+        },
+      },
     };
 
     const pants = {
@@ -63,9 +65,9 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
         'core:position': { locationId: 'room1' },
         'clothing:wearable': {
           layer: 'base',
-          equipmentSlots: { primary: 'legs' }
-        }
-      }
+          equipmentSlots: { primary: 'legs' },
+        },
+      },
     };
 
     fixture.reset([actor, belt, pants]);
@@ -76,17 +78,21 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
       actorId: 'actor1',
       actionId: 'clothing:remove_clothing',
       targetId: 'pants1',
-      originalInput: 'remove pants'
+      originalInput: 'remove pants',
     });
 
     // Assert: Should have action_execution_failed event, not perceptible_event
-    const failedEvent = fixture.events.find(e => e.eventType === 'core:action_execution_failed');
+    const failedEvent = fixture.events.find(
+      (e) => e.eventType === 'core:action_execution_failed'
+    );
     expect(failedEvent).toBeDefined();
     expect(failedEvent.payload.reason).toBe('removal_blocked');
     expect(failedEvent.payload.message).toContain('blocked');
 
     // Should NOT have perceptible event (action didn't succeed)
-    const perceptibleEvent = fixture.events.find(e => e.eventType === 'core:perceptible_event');
+    const perceptibleEvent = fixture.events.find(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
     expect(perceptibleEvent).toBeUndefined();
   });
 
@@ -99,10 +105,10 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
         'core:position': { locationId: 'room1' },
         'clothing:equipment': {
           equipped: {
-            torso_upper: { base: ['shirt1'] }
-          }
-        }
-      }
+            torso_upper: { base: ['shirt1'] },
+          },
+        },
+      },
     };
 
     const shirt = {
@@ -112,9 +118,9 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
         'core:position': { locationId: 'room1' },
         'clothing:wearable': {
           layer: 'base',
-          equipmentSlots: { primary: 'torso_upper' }
-        }
-      }
+          equipmentSlots: { primary: 'torso_upper' },
+        },
+      },
     };
 
     fixture.reset([actor, shirt]);
@@ -125,11 +131,13 @@ describe('Remove Clothing Rule - Blocking Integration', () => {
       actorId: 'actor1',
       actionId: 'clothing:remove_clothing',
       targetId: 'shirt1',
-      originalInput: 'remove shirt'
+      originalInput: 'remove shirt',
     });
 
     // Assert: Should have perceptible_event (success)
-    const perceptibleEvent = fixture.events.find(e => e.eventType === 'core:perceptible_event');
+    const perceptibleEvent = fixture.events.find(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toContain('John');
     expect(perceptibleEvent.payload.descriptionText).toContain('shirt');
@@ -158,8 +166,8 @@ describe('Remove Others Clothing Rule - Blocking Integration', () => {
       id: 'actor1',
       components: {
         'core:name': { text: 'John' },
-        'core:position': { locationId: 'room1' }
-      }
+        'core:position': { locationId: 'room1' },
+      },
     };
 
     const target = {
@@ -170,10 +178,10 @@ describe('Remove Others Clothing Rule - Blocking Integration', () => {
         'clothing:equipment': {
           equipped: {
             torso_lower: { accessories: ['belt1'] },
-            legs: { base: ['pants1'] }
-          }
-        }
-      }
+            legs: { base: ['pants1'] },
+          },
+        },
+      },
     };
 
     const belt = {
@@ -183,16 +191,18 @@ describe('Remove Others Clothing Rule - Blocking Integration', () => {
         'core:position': { locationId: 'room1' },
         'clothing:wearable': {
           layer: 'accessories',
-          equipmentSlots: { primary: 'torso_lower' }
+          equipmentSlots: { primary: 'torso_lower' },
         },
         'clothing:blocks_removal': {
-          blockedSlots: [{
-            slot: 'legs',
-            layers: ['base'],
-            blockType: 'must_remove_first'
-          }]
-        }
-      }
+          blockedSlots: [
+            {
+              slot: 'legs',
+              layers: ['base'],
+              blockType: 'must_remove_first',
+            },
+          ],
+        },
+      },
     };
 
     const pants = {
@@ -202,9 +212,9 @@ describe('Remove Others Clothing Rule - Blocking Integration', () => {
         'core:position': { locationId: 'room1' },
         'clothing:wearable': {
           layer: 'base',
-          equipmentSlots: { primary: 'legs' }
-        }
-      }
+          equipmentSlots: { primary: 'legs' },
+        },
+      },
     };
 
     fixture.reset([actor, target, belt, pants]);
@@ -216,11 +226,13 @@ describe('Remove Others Clothing Rule - Blocking Integration', () => {
       actionId: 'clothing:remove_others_clothing',
       primaryId: 'target1',
       secondaryId: 'pants1',
-      originalInput: "remove Jane's pants"
+      originalInput: "remove Jane's pants",
     });
 
     // Assert
-    const failedEvent = fixture.events.find(e => e.eventType === 'core:action_execution_failed');
+    const failedEvent = fixture.events.find(
+      (e) => e.eventType === 'core:action_execution_failed'
+    );
     expect(failedEvent).toBeDefined();
     expect(failedEvent.payload.reason).toBe('removal_blocked');
   });

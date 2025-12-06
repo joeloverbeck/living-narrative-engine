@@ -108,7 +108,8 @@ describe('Character Concepts Manager - lifecycle integration', () => {
       ...controllerDependencies,
     });
 
-    const originalAddEventListener = controller._addEventListener.bind(controller);
+    const originalAddEventListener =
+      controller._addEventListener.bind(controller);
     conceptTextKeydownHandler = undefined;
     controller._addEventListener = function (elementId, eventName, handler) {
       if (elementId === 'conceptText' && eventName === 'keydown') {
@@ -156,7 +157,9 @@ describe('Character Concepts Manager - lifecycle integration', () => {
 
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
-    controller._handleRemoteDataChange('concept-updated', { id: 'concept-existing' });
+    controller._handleRemoteDataChange('concept-updated', {
+      id: 'concept-existing',
+    });
 
     process.env.NODE_ENV = 'integration';
     controller._closeConceptModal();
@@ -174,7 +177,9 @@ describe('Character Concepts Manager - lifecycle integration', () => {
     controller = null;
 
     expect(channel.closed).toBe(true);
-    expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(callsBeforeDestroy);
+    expect(clearTimeoutSpy.mock.calls.length).toBeGreaterThan(
+      callsBeforeDestroy
+    );
 
     clearTimeoutSpy.mockRestore();
   });
@@ -188,7 +193,10 @@ describe('Character Concepts Manager - lifecycle integration', () => {
     searchInput.value = 'explorer';
 
     const clearSearchSpy = jest.spyOn(controller, '_clearSearch');
-    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+    const escapeEvent = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+    });
     searchInput.dispatchEvent(escapeEvent);
     expect(clearSearchSpy).toHaveBeenCalledTimes(1);
 
@@ -198,7 +206,10 @@ describe('Character Concepts Manager - lifecycle integration', () => {
     const focusSpy = jest
       .spyOn(refreshedCard, 'focus')
       .mockImplementation(() => {});
-    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    const enterEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+    });
     searchInput.dispatchEvent(enterEvent);
     expect(focusSpy).toHaveBeenCalledTimes(1);
     expect(conceptTextKeydownHandler).toBeInstanceOf(Function);
@@ -221,14 +232,12 @@ describe('Character Concepts Manager - lifecycle integration', () => {
     const conceptText = document.getElementById('concept-text');
     const charCount = document.getElementById('char-count');
     const saveButton = document.getElementById('save-concept-btn');
-    conceptText.value = 'A detailed character concept that clearly exceeds fifty characters.';
+    conceptText.value =
+      'A detailed character concept that clearly exceeds fifty characters.';
     const inputEvent = new Event('input', { bubbles: true });
     conceptText.dispatchEvent(inputEvent);
-    expect(charCount.textContent).toBe(
-      `${conceptText.value.length}/6000`
-    );
+    expect(charCount.textContent).toBe(`${conceptText.value.length}/6000`);
     expect(saveButton.disabled).toBe(false);
-
 
     const deleteModal = document.getElementById('delete-confirmation-modal');
     deleteModal.style.display = 'block';

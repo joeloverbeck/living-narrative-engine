@@ -226,24 +226,27 @@ export async function registerLoaders(container) {
   // === Validation Services ===
   registrar.singletonFactory(
     tokens.IStringSimilarityCalculator,
-    (c) => new StringSimilarityCalculator({
-      logger: c.resolve(tokens.ILogger)
-    })
+    (c) =>
+      new StringSimilarityCalculator({
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   registrar.singletonFactory(
     tokens.IValidatorGenerator,
-    (c) => new ValidatorGenerator({
-      logger: c.resolve(tokens.ILogger),
-      similarityCalculator: c.resolve(tokens.IStringSimilarityCalculator)
-    })
+    (c) =>
+      new ValidatorGenerator({
+        logger: c.resolve(tokens.ILogger),
+        similarityCalculator: c.resolve(tokens.IStringSimilarityCalculator),
+      })
   );
 
   registrar.singletonFactory(
     tokens.HandlerCompletenessValidator,
-    (c) => new HandlerCompletenessValidator({
-      logger: c.resolve(tokens.ILogger)
-    })
+    (c) =>
+      new HandlerCompletenessValidator({
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   // === Individual Content & Data Loaders (unchanged) ===

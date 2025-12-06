@@ -27,7 +27,13 @@
         "description": "Unix timestamp when the dying state began"
       }
     },
-    "required": ["entityId", "entityName", "turnsRemaining", "causeOfDying", "timestamp"],
+    "required": [
+      "entityId",
+      "entityName",
+      "turnsRemaining",
+      "causeOfDying",
+      "timestamp"
+    ],
     "additionalProperties": false
   }
 }

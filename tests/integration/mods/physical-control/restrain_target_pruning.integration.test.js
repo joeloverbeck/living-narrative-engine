@@ -115,17 +115,24 @@ describe('physical-control:restrain_target target pruning', () => {
       'actor:free-3',
     ]);
 
-    const keptContexts =
-      result.data.actionsWithTargets[0].targetContexts.map(
-        (ctx) => ctx.entityId
-      );
-    expect(keptContexts).toEqual(['actor:free-1', 'actor:free-2', 'actor:free-3']);
+    const keptContexts = result.data.actionsWithTargets[0].targetContexts.map(
+      (ctx) => ctx.entityId
+    );
+    expect(keptContexts).toEqual([
+      'actor:free-1',
+      'actor:free-2',
+      'actor:free-3',
+    ]);
   });
 
   it('prunes targets missing required components without invalidating other candidates', async () => {
     const componentMap = {
       'actor:grappler': ['core:actor', 'skills:grappling_skill'],
-      'actor:eligible': ['core:actor', 'skills:grappling_skill', 'traits:eligible'],
+      'actor:eligible': [
+        'core:actor',
+        'skills:grappling_skill',
+        'traits:eligible',
+      ],
       'actor:ineligible-1': ['core:actor', 'skills:grappling_skill'],
       'actor:ineligible-2': ['core:actor', 'skills:grappling_skill'],
     };

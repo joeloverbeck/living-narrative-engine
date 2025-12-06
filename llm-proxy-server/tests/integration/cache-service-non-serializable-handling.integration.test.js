@@ -148,10 +148,14 @@ describe('CacheService integration for serialization fallbacks', () => {
     expect(secondResult.apiKey).toHaveLength(180);
 
     const infoMessagesAfterSecond = getInfoMessages();
-    const newEvictionMessages = infoMessagesAfterSecond.slice(infoCountBeforeSecond);
+    const newEvictionMessages = infoMessagesAfterSecond.slice(
+      infoCountBeforeSecond
+    );
     expect(
-      newEvictionMessages.some((message) =>
-        message.includes('CacheService: Evicted') && message.includes('entries to free')
+      newEvictionMessages.some(
+        (message) =>
+          message.includes('CacheService: Evicted') &&
+          message.includes('entries to free')
       )
     ).toBe(true);
 
@@ -161,10 +165,14 @@ describe('CacheService integration for serialization fallbacks', () => {
     const invalidatedFromPattern = cacheService.invalidatePattern(/^api_key:/);
     expect(invalidatedFromPattern).toBeGreaterThanOrEqual(1);
 
-    const invalidationMessages = getInfoMessages().slice(infoCountBeforeInvalidation);
+    const invalidationMessages = getInfoMessages().slice(
+      infoCountBeforeInvalidation
+    );
     expect(
-      invalidationMessages.some((message) =>
-        message.includes('CacheService: Invalidated') && message.includes('^api_key:')
+      invalidationMessages.some(
+        (message) =>
+          message.includes('CacheService: Invalidated') &&
+          message.includes('^api_key:')
       )
     ).toBe(true);
 
@@ -187,8 +195,10 @@ describe('CacheService integration for serialization fallbacks', () => {
       infoCountBeforeCircularInvalidation
     );
     expect(
-      circularMessages.some((message) =>
-        message.includes('CacheService: Invalidated') && message.includes('^circular:')
+      circularMessages.some(
+        (message) =>
+          message.includes('CacheService: Invalidated') &&
+          message.includes('^circular:')
       )
     ).toBe(true);
   });

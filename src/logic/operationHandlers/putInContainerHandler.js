@@ -72,7 +72,8 @@ class PutInContainerHandler extends BaseOperationHandler {
       return null;
     }
 
-    const { actorEntity, containerEntity, itemEntity, result_variable } = params;
+    const { actorEntity, containerEntity, itemEntity, result_variable } =
+      params;
 
     if (typeof actorEntity !== 'string' || !actorEntity.trim()) {
       safeDispatchError(

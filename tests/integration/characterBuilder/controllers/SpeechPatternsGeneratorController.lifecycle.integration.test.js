@@ -3,7 +3,14 @@
  * @description Tests controller lifecycle, DOM caching, event listeners, and destroy cleanup
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import { UI_STATES } from '../../../../src/shared/characterBuilder/uiStateManager.js';
 
@@ -15,7 +22,8 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
 
   beforeEach(() => {
     // Setup DOM environment
-    dom = new JSDOM(`
+    dom = new JSDOM(
+      `
       <!DOCTYPE html>
       <html>
         <body>
@@ -41,10 +49,12 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
           </div>
         </body>
       </html>
-    `, {
-      url: 'http://localhost',
-      runScripts: 'outside-only',
-    });
+    `,
+      {
+        url: 'http://localhost',
+        runScripts: 'outside-only',
+      }
+    );
 
     document = dom.window.document;
     window = dom.window;
@@ -199,7 +209,7 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
   describe('Event Listener Registration and Cleanup', () => {
     it('should handle input change events', () => {
       const coreTraitsInput = document.getElementById('core-traits-input');
-      
+
       coreTraitsInput.value = 'Brave, determined';
       const inputEvent = new window.Event('input', { bubbles: true });
       coreTraitsInput.dispatchEvent(inputEvent);
@@ -226,7 +236,7 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
       const clickHandler = jest.fn();
 
       generateButton.addEventListener('click', clickHandler);
-      
+
       // Simulate destroy by removing listener
       generateButton.removeEventListener('click', clickHandler);
 
@@ -271,8 +281,16 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
 
       generateButton.addEventListener('click', generateHandler);
       clearButton.addEventListener('click', clearHandler);
-      listeners.push({ element: generateButton, event: 'click', handler: generateHandler });
-      listeners.push({ element: clearButton, event: 'click', handler: clearHandler });
+      listeners.push({
+        element: generateButton,
+        event: 'click',
+        handler: generateHandler,
+      });
+      listeners.push({
+        element: clearButton,
+        event: 'click',
+        handler: clearHandler,
+      });
 
       // Cleanup all listeners
       listeners.forEach(({ element, event, handler }) => {
@@ -289,7 +307,7 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
 
     it('should clear any pending timeouts on destroy', () => {
       const timeoutIds = [];
-      
+
       // Schedule timeouts
       timeoutIds.push(window.setTimeout(() => {}, 1000));
       timeoutIds.push(window.setTimeout(() => {}, 2000));
@@ -355,7 +373,9 @@ describe('SpeechPatternsGeneratorController - Lifecycle Integration', () => {
       };
 
       generateButton.addEventListener('click', handler);
-      generateButton.dispatchEvent(new window.Event('click', { bubbles: true }));
+      generateButton.dispatchEvent(
+        new window.Event('click', { bubbles: true })
+      );
 
       expect(eventLog).toHaveLength(1);
       expect(eventLog[0].type).toBe('click');

@@ -92,7 +92,11 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
             command: 'multi-command-1',
             targets: {
               primary: [
-                { id: 'target-a', displayName: 'Target A', contextFromId: 'ctx-1' },
+                {
+                  id: 'target-a',
+                  displayName: 'Target A',
+                  contextFromId: 'ctx-1',
+                },
               ],
             },
           },
@@ -177,7 +181,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('normalizes contexts without placeholders and groups repeated placeholders', async () => {
-      const { strategy, commandFormatter, fallbackFormatter } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -225,7 +230,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
         traceSource: 'ActionFormattingStage.execute',
       });
 
-      const [, extractedTargets] = commandFormatter.formatMultiTarget.mock.calls[0];
+      const [, extractedTargets] =
+        commandFormatter.formatMultiTarget.mock.calls[0];
       expect(extractedTargets.primary).toHaveLength(2);
       expect(extractedTargets.primary.map((entry) => entry.id)).toEqual([
         'target-a',
@@ -236,11 +242,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('uses fallback when formatter fails and marks statistics', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -287,7 +290,9 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
       expect(fallbackFormatter.formatWithFallback).toHaveBeenCalledWith(
         expect.objectContaining({
           actionDefinition: expect.objectContaining({ id: 'multi-fallback' }),
-          targetContext: expect.objectContaining({ entityId: 'target-fallback' }),
+          targetContext: expect.objectContaining({
+            entityId: 'target-fallback',
+          }),
           resolvedTargets: expect.any(Object),
         })
       );
@@ -310,11 +315,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('falls back with empty params when the resolved target lacks an entity id', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -462,7 +464,10 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
         createError,
       } = createStrategy();
 
-      commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: 'cmd' });
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'cmd',
+      });
       targetNormalizationService.normalize.mockReturnValue({
         error: 'normalize failure',
       });
@@ -476,9 +481,7 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
               name: 'Normalize',
               targets: { primary: {} },
             },
-            targetContexts: [
-              { entityId: 'target-x', placeholder: 'primary' },
-            ],
+            targetContexts: [{ entityId: 'target-x', placeholder: 'primary' }],
           },
         ],
         trace: undefined,
@@ -563,12 +566,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('surfaces fallback failures through createError', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -626,12 +625,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('propagates fallback failures without an entity id when tracing multi-target actions', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -683,12 +678,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('propagates fallback failures with tracing enabled', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -736,11 +727,7 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
 
   describe('Traced Mode - Edge cases', () => {
     it('handles formatter absence by delegating entirely to the fallback', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy({
+      const { strategy, commandFormatter, fallbackFormatter } = createStrategy({
         commandFormatter: {
           format: jest.fn(),
           formatMultiTarget: undefined,
@@ -850,11 +837,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
 
   describe('Standard Mode - Formatting', () => {
     it('formats multi-target commands on the standard path', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        targetNormalizationService,
-      } = createStrategy();
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: true,
@@ -918,11 +902,8 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('falls back successfully on the standard path when formatter fails', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -960,11 +941,7 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
     });
 
     it('surfaces fallback failures on the standard path without formatter support', async () => {
-      const {
-        strategy,
-        fallbackFormatter,
-        createError,
-      } = createStrategy({
+      const { strategy, fallbackFormatter, createError } = createStrategy({
         commandFormatter: {
           format: jest.fn(),
           formatMultiTarget: undefined,
@@ -1039,7 +1016,9 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
       });
 
       expect(outcome.formattedCommands).toHaveLength(1);
-      expect(outcome.formattedCommands[0].command).toBe('simple-string-command');
+      expect(outcome.formattedCommands[0].command).toBe(
+        'simple-string-command'
+      );
     });
 
     it('processes object command data with targets property', async () => {
@@ -1132,7 +1111,9 @@ describe('LegacyStrategy - Multi-Target Formatting', () => {
       });
 
       expect(outcome.formattedCommands).toHaveLength(1);
-      expect(outcome.formattedCommands[0].command).toBe('object-without-targets');
+      expect(outcome.formattedCommands[0].command).toBe(
+        'object-without-targets'
+      );
       // Should use default targets from actionSpecificTargets
       expect(targetNormalizationService.normalize).toHaveBeenCalledWith({
         resolvedTargets: expect.objectContaining({

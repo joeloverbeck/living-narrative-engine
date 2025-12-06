@@ -32,7 +32,9 @@ describe('thematic-direction-main fallback error handling', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const unexpectedFailure = new Error('unexpected thematic direction failure');
+    const unexpectedFailure = new Error(
+      'unexpected thematic direction failure'
+    );
 
     await jest.isolateModulesAsync(async () => {
       const module = await import('../../src/thematic-direction-main.js');

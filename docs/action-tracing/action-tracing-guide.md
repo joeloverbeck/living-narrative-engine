@@ -112,11 +112,11 @@ The action tracing system is configured in `config/trace-config.json`:
 
 You can specify actions to trace using different patterns:
 
-| Pattern       | Description                  | Example                    |
-| ------------- | ---------------------------- | -------------------------- |
+| Pattern       | Description                  | Example                        |
+| ------------- | ---------------------------- | ------------------------------ |
 | `"action:id"` | Trace specific action        | `"movement:go"`                |
-| `"mod:*"`     | Trace all actions from a mod | `"core:*"`                 |
-| `"*"`         | Trace all actions            | `"*"`                      |
+| `"mod:*"`     | Trace all actions from a mod | `"core:*"`                     |
+| `"*"`         | Trace all actions            | `"*"`                          |
 | Array         | Trace multiple actions       | `["movement:go", "core:take"]` |
 
 ### Verbosity Levels
@@ -839,7 +839,7 @@ Examples:
 | `*`            | All actions          | Traces everything                      |
 | `mod:*`        | All actions from mod | `core:*` matches all core actions      |
 | `mod:prefix_*` | Actions with prefix  | `core:combat_*` matches combat actions |
-| `["a", "b"]`   | Multiple specific    | `["movement:go", "core:take"]`             |
+| `["a", "b"]`   | Multiple specific    | `["movement:go", "core:take"]`         |
 
 ### Output Directory Structure
 

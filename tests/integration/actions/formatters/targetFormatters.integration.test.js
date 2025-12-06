@@ -43,10 +43,10 @@ describe('targetFormatters integration', () => {
     expect(result).toEqual({
       ok: false,
       error:
-        "formatActionCommand: Target context type is 'entity' but entityId is missing for action movement:approach. Template: \"Approach {target}\"",
+        'formatActionCommand: Target context type is \'entity\' but entityId is missing for action movement:approach. Template: "Approach {target}"',
     });
     expect(logger.warn).toHaveBeenCalledWith(
-      "formatActionCommand: Target context type is 'entity' but entityId is missing for action movement:approach. Template: \"Approach {target}\""
+      'formatActionCommand: Target context type is \'entity\' but entityId is missing for action movement:approach. Template: "Approach {target}"'
     );
     expect(entityManager.getEntityInstance).not.toHaveBeenCalled();
     expect(displayNameFn).not.toHaveBeenCalled();
@@ -58,17 +58,13 @@ describe('targetFormatters integration', () => {
     entityManager.getEntityInstance.mockReturnValue(entity);
     displayNameFn.mockReturnValue('Shadow Operative');
 
-    const result = formatEntityTarget(
-      'Neutralize {enemy}',
-      context,
-      {
-        actionId: 'stealth:neutralize',
-        entityManager,
-        displayNameFn,
-        logger,
-        debug: true,
-      }
-    );
+    const result = formatEntityTarget('Neutralize {enemy}', context, {
+      actionId: 'stealth:neutralize',
+      entityManager,
+      displayNameFn,
+      logger,
+      debug: true,
+    });
 
     expect(result).toEqual({ ok: true, value: 'Neutralize Shadow Operative' });
     expect(entityManager.getEntityInstance).toHaveBeenCalledWith('npc-42');
@@ -114,7 +110,7 @@ describe('targetFormatters integration', () => {
       ' -> No target type, using template as is.'
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      "formatActionCommand: Action mindfulness:breathe has target_domain 'none' but template \"Take a deep breath {target}\" contains placeholders."
+      'formatActionCommand: Action mindfulness:breathe has target_domain \'none\' but template "Take a deep breath {target}" contains placeholders.'
     );
   });
 

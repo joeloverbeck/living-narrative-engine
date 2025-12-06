@@ -3,6 +3,7 @@
 ## Executive Summary
 
 This specification defines a fully data-driven modifier system for chance-based (non-deterministic) actions. The system allows modders to declare conditional modifiers entirely through JSON data files, where each modifier:
+
 - Specifies a condition based on component presence or property values
 - Applies a difficulty modifier (flat or percentage)
 - Displays a tag in the action template when active
@@ -34,6 +35,7 @@ This specification defines a fully data-driven modifier system for chance-based 
 The codebase already has partial infrastructure for modifiers:
 
 **Schema** (`data/schemas/action.schema.json`, lines 35-54):
+
 ```json
 "chanceModifier": {
   "type": "object",
@@ -58,29 +60,32 @@ The codebase already has partial infrastructure for modifiers:
 ```
 
 **Service Stub** (`src/combat/services/ModifierCollectorService.js`):
+
 - Has `#collectActionModifiers()` method returning empty array
 - Comment: "In Phase 5, this evaluates JSON Logic conditions on each modifier"
 - Dependencies ready: `entityManager`, `logger`
 
 **Available JSON Logic Operators** (`src/logic/jsonLogicCustomOperators.js`):
+
 - `has_component`: Check if entity has a component
 - `get_component_value`: Get component property value
 - Standard comparison operators (`==`, `>=`, `<=`, etc.)
 
 ### 1.2 Gap Analysis
 
-| Gap | Required Solution |
-|-----|-------------------|
-| No `tag` property for display text | Add `tag` to schema |
-| No modifier type distinction | Add `type`: `"flat"` or `"percentage"` |
-| No per-target role support | Add `targetRole` property |
-| No `entity.location` context | Build context with location data |
-| No tag injection in templates | Add `{tags}` placeholder support |
-| Stub implementation | Implement condition evaluation |
+| Gap                                | Required Solution                      |
+| ---------------------------------- | -------------------------------------- |
+| No `tag` property for display text | Add `tag` to schema                    |
+| No modifier type distinction       | Add `type`: `"flat"` or `"percentage"` |
+| No per-target role support         | Add `targetRole` property              |
+| No `entity.location` context       | Build context with location data       |
+| No tag injection in templates      | Add `{tags}` placeholder support       |
+| Stub implementation                | Implement condition evaluation         |
 
 ### 1.3 Current Chance-Based Actions
 
 Four actions currently use the chance system:
+
 - `physical-control:restrain_target`
 - `physical-control:break_free_from_restraint`
 - `weapons:swing_at_target`
@@ -96,29 +101,29 @@ None currently use the `modifiers` array.
 
 Modifiers must be able to check:
 
-| Source | Description | Example Use Case |
-|--------|-------------|------------------|
-| **Actor** | The entity performing the action | Actor has combat buff |
-| **Primary Target** | First/main target | Target is restrained |
-| **Secondary Target** | Second target (if applicable) | Secondary target is ally |
-| **Tertiary Target** | Third target (if applicable) | Tertiary target has item |
-| **Location** | Where the actor is located | Dark environment penalty |
+| Source               | Description                      | Example Use Case         |
+| -------------------- | -------------------------------- | ------------------------ |
+| **Actor**            | The entity performing the action | Actor has combat buff    |
+| **Primary Target**   | First/main target                | Target is restrained     |
+| **Secondary Target** | Second target (if applicable)    | Secondary target is ally |
+| **Tertiary Target**  | Third target (if applicable)     | Tertiary target has item |
+| **Location**         | Where the actor is located       | Dark environment penalty |
 
 ### 2.2 Condition Types
 
-| Check Type | Description | Example |
-|------------|-------------|---------|
-| **Component Presence** | Entity has a specific component | Target has `positioning:being_restrained` |
-| **Property Value Comparison** | Component property matches value | Actor's `skills:melee_skill.value >= 50` |
-| **Location Component** | Location has specific component | Location has `environment:darkness` |
-| **Location Property** | Location component property value | Location's `environment:terrain.surface == "slippery"` |
+| Check Type                    | Description                       | Example                                                |
+| ----------------------------- | --------------------------------- | ------------------------------------------------------ |
+| **Component Presence**        | Entity has a specific component   | Target has `positioning:being_restrained`              |
+| **Property Value Comparison** | Component property matches value  | Actor's `skills:melee_skill.value >= 50`               |
+| **Location Component**        | Location has specific component   | Location has `environment:darkness`                    |
+| **Location Property**         | Location component property value | Location's `environment:terrain.surface == "slippery"` |
 
 ### 2.3 Modifier Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| **Flat** | Add/subtract fixed amount | `+10` or `-15` |
-| **Percentage** | Multiply final chance | `+10%` (1.1x) or `-20%` (0.8x) |
+| Type           | Description               | Example                        |
+| -------------- | ------------------------- | ------------------------------ |
+| **Flat**       | Add/subtract fixed amount | `+10` or `-15`                 |
+| **Percentage** | Multiply final chance     | `+10%` (1.1x) or `-20%` (0.8x) |
 
 ### 2.4 Display Requirements
 
@@ -181,12 +186,12 @@ Replace the current `chanceModifier` definition with:
 
 ### 3.2 Schema Constraints
 
-| Field | Constraint | Rationale |
-|-------|------------|-----------|
-| `tag` | 1-30 characters | Prevent UI overflow |
-| `value` | Number (integer for flat) | Allow decimals for percentage precision |
-| `targetRole` | Optional | Documentation only, not enforced |
-| `stackId` | Optional | Only needed for advanced stacking rules |
+| Field        | Constraint                | Rationale                               |
+| ------------ | ------------------------- | --------------------------------------- |
+| `tag`        | 1-30 characters           | Prevent UI overflow                     |
+| `value`      | Number (integer for flat) | Allow decimals for percentage precision |
+| `targetRole` | Optional                  | Documentation only, not enforced        |
+| `stackId`    | Optional                  | Only needed for advanced stacking rules |
 
 ---
 
@@ -234,7 +239,10 @@ The JSON Logic evaluation context provides access to all relevant entities:
 Location is resolved from the actor's `core:position` component:
 
 ```javascript
-const locationId = entityManager.getComponentData(actorId, 'core:position')?.locationId;
+const locationId = entityManager.getComponentData(
+  actorId,
+  'core:position'
+)?.locationId;
 ```
 
 If no location can be resolved, `entity.location` is `null` and location-based conditions fail gracefully (return false).
@@ -242,16 +250,15 @@ If no location can be resolved, `entity.location` is `null` and location-based c
 ### 4.3 Component Access Patterns
 
 **Check if entity has component:**
+
 ```json
 {
-  "has_component": [
-    { "var": "entity.primary" },
-    "positioning:being_restrained"
-  ]
+  "has_component": [{ "var": "entity.primary" }, "positioning:being_restrained"]
 }
 ```
 
 **Get component property value:**
+
 ```json
 {
   "get_component_value": [
@@ -263,6 +270,7 @@ If no location can be resolved, `entity.location` is `null` and location-based c
 ```
 
 **Compare property value:**
+
 ```json
 {
   ">=": [
@@ -309,10 +317,7 @@ If no location can be resolved, `entity.location` is `null` and location-based c
 ```json
 {
   "condition": {
-    "has_component": [
-      { "var": "entity.actor" },
-      "buffs:adrenaline_surge"
-    ]
+    "has_component": [{ "var": "entity.actor" }, "buffs:adrenaline_surge"]
   },
   "type": "flat",
   "value": 10,
@@ -381,10 +386,7 @@ If no location can be resolved, `entity.location` is `null` and location-based c
 ```json
 {
   "condition": {
-    "has_component": [
-      { "var": "entity.location" },
-      "environment:darkness"
-    ]
+    "has_component": [{ "var": "entity.location" }, "environment:darkness"]
   },
   "type": "flat",
   "value": -10,
@@ -427,10 +429,7 @@ If no location can be resolved, `entity.location` is `null` and location-based c
 ```json
 {
   "condition": {
-    "has_component": [
-      { "var": "entity.secondary" },
-      "status:allied"
-    ]
+    "has_component": [{ "var": "entity.secondary" }, "status:allied"]
   },
   "type": "flat",
   "value": 5,
@@ -447,10 +446,7 @@ If no location can be resolved, `entity.location` is `null` and location-based c
 ```json
 {
   "condition": {
-    "has_component": [
-      { "var": "entity.actor" },
-      "buffs:battle_focus"
-    ]
+    "has_component": [{ "var": "entity.actor" }, "buffs:battle_focus"]
   },
   "type": "percentage",
   "value": 20,
@@ -469,10 +465,7 @@ If no location can be resolved, `entity.location` is `null` and location-based c
   "condition": {
     "and": [
       {
-        "has_component": [
-          { "var": "entity.primary" },
-          "positioning:fallen"
-        ]
+        "has_component": [{ "var": "entity.primary" }, "positioning:fallen"]
       },
       {
         "not": {
@@ -531,27 +524,30 @@ Action templates should include the `{tags}` placeholder:
 
 ### 6.2 Formatting Rules
 
-| Rule | Description |
-|------|-------------|
-| **Format** | Each tag wrapped in square brackets: `[tag text]` |
-| **Separator** | Single space between tags |
-| **Prefix** | Single space before first tag (if any) |
-| **Empty** | If no modifiers apply, `{tags}` resolves to empty string |
-| **Order** | Tags appear in modifier array order (top to bottom) |
+| Rule          | Description                                              |
+| ------------- | -------------------------------------------------------- |
+| **Format**    | Each tag wrapped in square brackets: `[tag text]`        |
+| **Separator** | Single space between tags                                |
+| **Prefix**    | Single space before first tag (if any)                   |
+| **Empty**     | If no modifiers apply, `{tags}` resolves to empty string |
+| **Order**     | Tags appear in modifier array order (top to bottom)      |
 
 ### 6.3 Output Examples
 
 **No modifiers active:**
+
 ```
 restrain Vespera Nightwhisper (55% chance)
 ```
 
 **One modifier active:**
+
 ```
 restrain Vespera Nightwhisper (70% chance) [target restrained]
 ```
 
 **Multiple modifiers active:**
+
 ```
 restrain Vespera Nightwhisper (75% chance) [target restrained] [dark] [slippery]
 ```
@@ -586,10 +582,7 @@ If a template lacks the `{tags}` placeholder but the action has active modifiers
   "prerequisites": [
     {
       "condition": {
-        "!=": [
-          { "var": "entity.actor.id" },
-          { "var": "entity.target.id" }
-        ]
+        "!=": [{ "var": "entity.actor.id" }, { "var": "entity.target.id" }]
       },
       "failureMessage": "Cannot restrain yourself"
     }
@@ -637,10 +630,7 @@ If a template lacks the `{tags}` placeholder but the action has active modifiers
       },
       {
         "condition": {
-          "has_component": [
-            { "var": "entity.primary" },
-            "positioning:fallen"
-          ]
+          "has_component": [{ "var": "entity.primary" }, "positioning:fallen"]
         },
         "type": "flat",
         "value": 15,
@@ -701,10 +691,7 @@ If a template lacks the `{tags}` placeholder but the action has active modifiers
       },
       {
         "condition": {
-          "has_component": [
-            { "var": "entity.actor" },
-            "buffs:combat_focus"
-          ]
+          "has_component": [{ "var": "entity.actor" }, "buffs:combat_focus"]
         },
         "type": "percentage",
         "value": 10,
@@ -796,25 +783,25 @@ Action Definition (JSON)
 
 ### 8.2 Service Responsibilities
 
-| Service | Responsibility |
-|---------|----------------|
-| **ModifierContextBuilder** (NEW) | Build evaluation context with all entity and location data |
-| **ModifierCollectorService** (MODIFY) | Evaluate conditions, collect modifiers, extract tags |
-| **ProbabilityCalculatorService** (EXISTS) | Apply modifiers to chance calculation |
-| **ChanceCalculationService** (MINOR) | Pass `activeTags` through result |
-| **MultiTargetActionFormatter** (MODIFY) | Support `{tags}` placeholder |
+| Service                                   | Responsibility                                             |
+| ----------------------------------------- | ---------------------------------------------------------- |
+| **ModifierContextBuilder** (NEW)          | Build evaluation context with all entity and location data |
+| **ModifierCollectorService** (MODIFY)     | Evaluate conditions, collect modifiers, extract tags       |
+| **ProbabilityCalculatorService** (EXISTS) | Apply modifiers to chance calculation                      |
+| **ChanceCalculationService** (MINOR)      | Pass `activeTags` through result                           |
+| **MultiTargetActionFormatter** (MODIFY)   | Support `{tags}` placeholder                               |
 
 ### 8.3 Key Files to Modify
 
-| File | Changes |
-|------|---------|
-| `data/schemas/action.schema.json` | Extend `chanceModifier` definition |
-| `src/combat/services/ModifierCollectorService.js` | Implement condition evaluation |
-| `src/combat/services/ModifierContextBuilder.js` | NEW: Build evaluation context |
-| `src/actions/formatters/MultiTargetActionFormatter.js` | Add `{tags}` support |
-| `src/logic/contextAssembler.js` | Add helper for modifier context |
-| `src/combat/services/ChanceCalculationService.js` | Pass tags in result |
-| `src/dependencyInjection/registrations/combatRegistrations.js` | Register new service |
+| File                                                           | Changes                            |
+| -------------------------------------------------------------- | ---------------------------------- |
+| `data/schemas/action.schema.json`                              | Extend `chanceModifier` definition |
+| `src/combat/services/ModifierCollectorService.js`              | Implement condition evaluation     |
+| `src/combat/services/ModifierContextBuilder.js`                | NEW: Build evaluation context      |
+| `src/actions/formatters/MultiTargetActionFormatter.js`         | Add `{tags}` support               |
+| `src/logic/contextAssembler.js`                                | Add helper for modifier context    |
+| `src/combat/services/ChanceCalculationService.js`              | Pass tags in result                |
+| `src/dependencyInjection/registrations/combatRegistrations.js` | Register new service               |
 
 ---
 
@@ -822,36 +809,39 @@ Action Definition (JSON)
 
 ### 9.1 Edge Cases
 
-| Case | Handling |
-|------|----------|
+| Case                             | Handling                                                             |
+| -------------------------------- | -------------------------------------------------------------------- |
 | **Target is null** (self-action) | `entity.primary/secondary/tertiary` is null, conditions return false |
-| **Location not resolved** | `entity.location` is null, location conditions return false |
-| **Component doesn't exist** | `has_component` returns false, `get_component_value` returns null |
-| **Property doesn't exist** | `get_component_value` returns null, comparisons fail |
-| **Invalid condition** | Log warning, skip modifier (fail gracefully) |
-| **Extreme modifier values** | Probability clamped to bounds (min/max) |
-| **Empty modifiers array** | No tags displayed, base chance unchanged |
-| **Duplicate tags** | Show all tags (even duplicates) |
+| **Location not resolved**        | `entity.location` is null, location conditions return false          |
+| **Component doesn't exist**      | `has_component` returns false, `get_component_value` returns null    |
+| **Property doesn't exist**       | `get_component_value` returns null, comparisons fail                 |
+| **Invalid condition**            | Log warning, skip modifier (fail gracefully)                         |
+| **Extreme modifier values**      | Probability clamped to bounds (min/max)                              |
+| **Empty modifiers array**        | No tags displayed, base chance unchanged                             |
+| **Duplicate tags**               | Show all tags (even duplicates)                                      |
 
 ### 9.2 Value Constraints
 
-| Constraint | Value | Rationale |
-|------------|-------|-----------|
-| Tag max length | 30 chars | Prevent UI overflow |
-| Modifier flat range | -100 to +100 | Prevent extreme swings |
+| Constraint                | Value         | Rationale                                  |
+| ------------------------- | ------------- | ------------------------------------------ |
+| Tag max length            | 30 chars      | Prevent UI overflow                        |
+| Modifier flat range       | -100 to +100  | Prevent extreme swings                     |
 | Modifier percentage range | -90% to +200% | Allow significant but not breaking changes |
-| Max modifiers per action | 20 | Performance consideration |
+| Max modifiers per action  | 20            | Performance consideration                  |
 
 ### 9.3 Stacking Rules
 
 **Flat modifiers with same `stackId`:**
+
 - Only the highest positive or lowest negative value applies
 - If mixed signs, both highest positive and lowest negative apply
 
 **Percentage modifiers with same `stackId`:**
+
 - Multiply together (e.g., +10% and +20% = 1.1 × 1.2 = 1.32)
 
 **Modifiers without `stackId`:**
+
 - All stack additively (flat) or multiplicatively (percentage)
 
 ---
@@ -861,12 +851,14 @@ Action Definition (JSON)
 ### 10.1 Unit Test Categories
 
 **Condition Evaluation:**
+
 - Component presence: exists vs doesn't exist
 - Property value: matches vs doesn't match
 - Entity types: actor, primary, secondary, tertiary, location
 - Combined conditions: AND, OR, NOT
 
 **Modifier Collection:**
+
 - Single modifier applies
 - Multiple modifiers apply
 - No modifiers apply
@@ -874,6 +866,7 @@ Action Definition (JSON)
 - Stacking rules with `stackId`
 
 **Tag Extraction:**
+
 - Tags collected correctly
 - Order preserved
 - Empty tags handled
@@ -895,12 +888,12 @@ Action Definition (JSON)
 
 ### 10.4 Test File Locations
 
-| Category | Location |
-|----------|----------|
-| Unit: ModifierCollectorService | `tests/unit/combat/services/ModifierCollectorService.test.js` |
-| Unit: ModifierContextBuilder | `tests/unit/combat/services/ModifierContextBuilder.test.js` |
-| Integration: Full Pipeline | `tests/integration/mods/*/modifierEvaluation.test.js` |
-| Schema Validation | `tests/integration/validation/modifierSchemaValidation.test.js` |
+| Category                       | Location                                                        |
+| ------------------------------ | --------------------------------------------------------------- |
+| Unit: ModifierCollectorService | `tests/unit/combat/services/ModifierCollectorService.test.js`   |
+| Unit: ModifierContextBuilder   | `tests/unit/combat/services/ModifierContextBuilder.test.js`     |
+| Integration: Full Pipeline     | `tests/integration/mods/*/modifierEvaluation.test.js`           |
+| Schema Validation              | `tests/integration/validation/modifierSchemaValidation.test.js` |
 
 ---
 
@@ -909,12 +902,14 @@ Action Definition (JSON)
 ### 11.1 Existing Actions
 
 All existing actions continue to work unchanged:
+
 - Actions without `modifiers` array: No change needed
 - Templates without `{tags}`: Tags appended after chance if needed
 
 ### 11.2 Adding Modifiers to Existing Actions
 
 When ready to add modifiers to existing chance-based actions:
+
 1. Add `modifiers` array with new format entries
 2. Update `template` to include `{tags}` placeholder
 3. Test that modifiers evaluate and display correctly
@@ -930,6 +925,7 @@ Note: No migration needed - this is a greenfield implementation. No existing act
 Checks if an entity has a specific component.
 
 **Syntax:**
+
 ```json
 {
   "has_component": [
@@ -940,12 +936,10 @@ Checks if an entity has a specific component.
 ```
 
 **Example:**
+
 ```json
 {
-  "has_component": [
-    { "var": "entity.primary" },
-    "positioning:being_restrained"
-  ]
+  "has_component": [{ "var": "entity.primary" }, "positioning:being_restrained"]
 }
 ```
 
@@ -954,6 +948,7 @@ Checks if an entity has a specific component.
 Gets a property value from an entity's component.
 
 **Syntax:**
+
 ```json
 {
   "get_component_value": [
@@ -965,6 +960,7 @@ Gets a property value from an entity's component.
 ```
 
 **Example:**
+
 ```json
 {
   "get_component_value": [
@@ -980,6 +976,7 @@ Gets a property value from an entity's component.
 Access a context variable.
 
 **Entity References:**
+
 - `entity.actor` - The performing entity
 - `entity.primary` - Primary target
 - `entity.secondary` - Secondary target
@@ -997,6 +994,7 @@ modifiedChance = baseChance + totalFlatModifiers
 ```
 
 **Example:**
+
 - Base chance: 50%
 - Flat modifiers: +10, -5, +15
 - Total flat: +20
@@ -1009,6 +1007,7 @@ finalChance = modifiedChance × (1 + percentageModifier/100)
 ```
 
 **Example:**
+
 - Modified chance: 70%
 - Percentage modifiers: +20%, -10%
 - Multiplier: 1.20 × 0.90 = 1.08
@@ -1025,14 +1024,14 @@ finalChance = modifiedChance × (1 + percentageModifier/100)
 
 ## Appendix C: Glossary
 
-| Term | Definition |
-|------|------------|
-| **Action** | A game action defined in JSON that can be performed by entities |
-| **Chance-based** | Action with success probability determined by skills and modifiers |
-| **Component** | Data attached to an entity (ECS pattern) |
-| **Flat modifier** | Direct addition/subtraction to chance |
-| **JSON Logic** | Rule engine for evaluating conditions in JSON format |
-| **Percentage modifier** | Multiplier applied to chance |
-| **Scope** | Query that returns entities matching criteria |
-| **Tag** | Display text shown when modifier is active |
-| **Target role** | Entity position: primary, secondary, tertiary |
+| Term                    | Definition                                                         |
+| ----------------------- | ------------------------------------------------------------------ |
+| **Action**              | A game action defined in JSON that can be performed by entities    |
+| **Chance-based**        | Action with success probability determined by skills and modifiers |
+| **Component**           | Data attached to an entity (ECS pattern)                           |
+| **Flat modifier**       | Direct addition/subtraction to chance                              |
+| **JSON Logic**          | Rule engine for evaluating conditions in JSON format               |
+| **Percentage modifier** | Multiplier applied to chance                                       |
+| **Scope**               | Query that returns entities matching criteria                      |
+| **Tag**                 | Display text shown when modifier is active                         |
+| **Target role**         | Entity position: primary, secondary, tertiary                      |

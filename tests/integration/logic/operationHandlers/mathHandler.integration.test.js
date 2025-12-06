@@ -115,10 +115,7 @@ describe('MathHandler integration coverage', () => {
             },
             {
               operator: 'divide',
-              operands: [
-                { var: 'context.values.d' },
-                3,
-              ],
+              operands: [{ var: 'context.values.d' }, 3],
             },
           ],
         },
@@ -179,7 +176,9 @@ describe('MathHandler integration coverage', () => {
     expect(executionContext.evaluationContext.context.divZero).toBeNull();
     expect(executionContext.evaluationContext.context.modZero).toBeNull();
     expect(executionContext.evaluationContext.context.unknownOp).toBeNull();
-    expect(executionContext.evaluationContext.context.invalidOperand).toBeNull();
+    expect(
+      executionContext.evaluationContext.context.invalidOperand
+    ).toBeNull();
     const warningMessages = logger.warnMessages.map(({ message }) => message);
     expect(warningMessages).toEqual(
       expect.arrayContaining([
@@ -187,7 +186,9 @@ describe('MathHandler integration coverage', () => {
         expect.stringContaining('Modulo by zero'),
         expect.stringContaining("Unknown operator 'power'"),
         expect.stringContaining('operands must resolve to numbers'),
-        expect.stringContaining('expression did not resolve to a numeric result'),
+        expect.stringContaining(
+          'expression did not resolve to a numeric result'
+        ),
       ])
     );
   });
@@ -206,10 +207,7 @@ describe('MathHandler integration coverage', () => {
         result_variable: 'errorCase',
         expression: {
           operator: 'add',
-          operands: [
-            { var: 'context.trouble.value' },
-            1,
-          ],
+          operands: [{ var: 'context.trouble.value' }, 1],
         },
       },
       executionContext
@@ -218,8 +216,8 @@ describe('MathHandler integration coverage', () => {
     await flushAsync();
 
     expect(receivedEvents.length).toBeGreaterThanOrEqual(1);
-    const errorEvent = receivedEvents.find(
-      (event) => event.payload.message.includes('MATH: Error resolving variable operand')
+    const errorEvent = receivedEvents.find((event) =>
+      event.payload.message.includes('MATH: Error resolving variable operand')
     );
     expect(errorEvent).toBeDefined();
     expect(executionContext.evaluationContext.context.errorCase).toBeNull();
@@ -230,7 +228,10 @@ describe('MathHandler integration coverage', () => {
 
     handler.execute(null, executionContext);
     handler.execute(
-      { result_variable: '  ', expression: { operator: 'add', operands: [1, 1] } },
+      {
+        result_variable: '  ',
+        expression: { operator: 'add', operands: [1, 1] },
+      },
       executionContext
     );
     handler.execute(
@@ -255,6 +256,8 @@ describe('MathHandler integration coverage', () => {
         'MATH: "expression" must be an object.',
       ])
     );
-    expect(receivedEvents.some((event) => event.type === SYSTEM_ERROR_OCCURRED_ID)).toBe(true);
+    expect(
+      receivedEvents.some((event) => event.type === SYSTEM_ERROR_OCCURRED_ID)
+    ).toBe(true);
   });
 });

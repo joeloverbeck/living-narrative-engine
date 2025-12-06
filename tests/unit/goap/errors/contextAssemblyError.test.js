@@ -48,9 +48,12 @@ describe('ContextAssemblyError', () => {
       const details = {
         actorId: 'actor-123',
         contextType: 'planning',
-        missingData: 'actor position'
+        missingData: 'actor position',
       };
-      const error = new ContextAssemblyError('Context assembly failed', details);
+      const error = new ContextAssemblyError(
+        'Context assembly failed',
+        details
+      );
       expect(error.message).toBe('Context assembly failed');
       expect(error.details).toEqual(details);
     });
@@ -72,7 +75,7 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-123',
         contextType: 'refinement',
         missingData: 'target entity',
-        reason: 'Target not found in world state'
+        reason: 'Target not found in world state',
       };
       const error = new ContextAssemblyError('Test message', details);
       expect(error.details).toEqual(details);
@@ -102,7 +105,7 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-123',
         contextType: 'planning',
         missingData: 'actor position',
-        reason: 'No position component'
+        reason: 'No position component',
       };
       const error = new ContextAssemblyError('Test message', details);
 
@@ -118,7 +121,7 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-123',
         contextType: 'refinement',
         customField: 'custom value',
-        anotherField: 'another value'
+        anotherField: 'another value',
       };
       const error = new ContextAssemblyError('Test message', details);
 
@@ -150,9 +153,12 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-123',
         contextType: 'planning',
         missingData: 'position',
-        reason: 'No position component'
+        reason: 'No position component',
       };
-      const error = new ContextAssemblyError('Context assembly failed', details);
+      const error = new ContextAssemblyError(
+        'Context assembly failed',
+        details
+      );
       const json = error.toJSON();
 
       expect(json).toHaveProperty('name', 'ContextAssemblyError');
@@ -187,7 +193,9 @@ describe('ContextAssemblyError', () => {
     it('should have ISO format timestamp', () => {
       const error = new ContextAssemblyError('Test message');
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should generate correlation ID automatically', () => {
@@ -199,7 +207,11 @@ describe('ContextAssemblyError', () => {
 
     it('should use custom correlation ID if provided', () => {
       const correlationId = 'custom-id-123';
-      const error = new ContextAssemblyError('Test message', {}, { correlationId });
+      const error = new ContextAssemblyError(
+        'Test message',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -210,7 +222,7 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-npc-01',
         contextType: 'planning',
         missingData: 'actor position',
-        reason: 'Actor has no positioning:position component'
+        reason: 'Actor has no positioning:position component',
       };
       const error = new ContextAssemblyError(
         'Failed to assemble planning context for actor-npc-01',
@@ -228,7 +240,7 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-player',
         contextType: 'refinement',
         missingData: 'target entity',
-        reason: 'Target entity not found in world state'
+        reason: 'Target entity not found in world state',
       };
       const error = new ContextAssemblyError(
         'Failed to assemble refinement context',
@@ -245,7 +257,7 @@ describe('ContextAssemblyError', () => {
         actorId: 'actor-guard',
         contextType: 'condition',
         missingData: 'world state snapshot',
-        reason: 'World state not provided to condition evaluator'
+        reason: 'World state not provided to condition evaluator',
       };
       const error = new ContextAssemblyError(
         'Failed to assemble condition context',

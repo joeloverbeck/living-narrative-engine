@@ -11,19 +11,11 @@
     }
   },
   "required_components": {
-    "actor": [
-      "music:is_musician"
-    ],
-    "primary": [
-      "items:item",
-      "music:is_instrument"
-    ]
+    "actor": ["music:is_musician"],
+    "primary": ["items:item", "music:is_instrument"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:being_restrained"
-    ]
+    "actor": ["positioning:closeness", "positioning:being_restrained"]
   },
   "prerequisites": [],
   "template": "set tender mood on {instrument}",

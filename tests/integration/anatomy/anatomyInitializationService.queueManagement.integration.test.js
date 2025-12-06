@@ -81,7 +81,10 @@ class ConfigurableGenerationService {
       this.callWaiters.delete(entityId);
     }
 
-    const behavior = this.behaviors.get(entityId) ?? { mode: 'return', result: false };
+    const behavior = this.behaviors.get(entityId) ?? {
+      mode: 'return',
+      result: false,
+    };
 
     if (behavior.delay) {
       await delay(behavior.delay);
@@ -123,12 +126,14 @@ class ConfigurableGenerationService {
 
 const createLogger = () => {
   const messages = { debug: [], info: [], warn: [], error: [] };
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg)))
+        .join(' ');
+      messages[level].push(rendered);
+    };
   return {
     messages,
     debug: capture('debug'),
@@ -163,26 +168,44 @@ describe('AnatomyInitializationService queue orchestration', () => {
   });
 
   it('processes queued events sequentially and resolves waiting helpers', async () => {
-    generationService.setBehavior('entity-1', { mode: 'return', result: true, delay: 10 });
-    generationService.setBehavior('entity-2', { mode: 'return', result: false, delay: 5 });
+    generationService.setBehavior('entity-1', {
+      mode: 'return',
+      result: true,
+      delay: 10,
+    });
+    generationService.setBehavior('entity-2', {
+      mode: 'return',
+      result: false,
+      delay: 5,
+    });
     generationService.setBehavior('entity-3', { mode: 'manual' });
 
     service.initialize();
 
-    await eventDispatcher.dispatch(ENTITY_CREATED_ID, { instanceId: 'entity-1' });
-    await eventDispatcher.dispatch(ENTITY_CREATED_ID, { instanceId: 'entity-2' });
-    await eventDispatcher.dispatch(ENTITY_CREATED_ID, { instanceId: 'entity-3' });
+    await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-1',
+    });
+    await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-2',
+    });
+    await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'entity-3',
+    });
     await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
       instanceId: 'reconstructed',
       wasReconstructed: true,
     });
-    await eventDispatcher.dispatch(ENTITY_CREATED_ID, { definitionId: 'missing-instance' });
+    await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      definitionId: 'missing-instance',
+    });
 
     expect(service.hasPendingGenerations()).toBe(true);
     expect(service.getPendingGenerationCount()).toBeGreaterThan(0);
 
     await generationService.waitForCall('entity-1');
-    await expect(service.waitForEntityGeneration('entity-1', 500)).resolves.toBe(true);
+    await expect(
+      service.waitForEntityGeneration('entity-1', 500)
+    ).resolves.toBe(true);
 
     await generationService.waitForCall('entity-3');
     const failingPromise = service.waitForEntityGeneration('entity-3', 200);
@@ -202,10 +225,14 @@ describe('AnatomyInitializationService queue orchestration', () => {
     ]);
     expect(generationService.calls).not.toContain('reconstructed');
 
-    expect(logger.messages.warn.some((msg) => msg.includes('missing instanceId'))).toBe(true);
+    expect(
+      logger.messages.warn.some((msg) => msg.includes('missing instanceId'))
+    ).toBe(true);
     expect(
       logger.messages.info.some((msg) =>
-        msg.includes("AnatomyInitializationService: Generated anatomy for entity 'entity-1'")
+        msg.includes(
+          "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
+        )
       )
     ).toBe(true);
     expect(
@@ -219,8 +246,14 @@ describe('AnatomyInitializationService queue orchestration', () => {
 
   it('handles waiting timeouts, manual queue control, and teardown', async () => {
     generationService.setBehavior('stalled', { mode: 'manual' });
-    generationService.setBehavior('manual-queue', { mode: 'return', result: false });
-    generationService.setBehavior('blueprint-ok', { mode: 'return', result: true });
+    generationService.setBehavior('manual-queue', {
+      mode: 'return',
+      result: false,
+    });
+    generationService.setBehavior('blueprint-ok', {
+      mode: 'return',
+      result: true,
+    });
     generationService.setBehavior('blueprint-fail', {
       mode: 'error',
       error: new Error('blueprint failure'),
@@ -229,14 +262,16 @@ describe('AnatomyInitializationService queue orchestration', () => {
     service.initialize();
     service.initialize();
 
-    await eventDispatcher.dispatch(ENTITY_CREATED_ID, { instanceId: 'stalled' });
+    await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'stalled',
+    });
     await generationService.waitForCall('stalled');
 
     expect(await service.waitForEntityGeneration('unknown')).toBe(false);
 
-    await expect(service.waitForEntityGeneration('stalled', 30)).rejects.toThrow(
-      /Timeout waiting for anatomy generation/
-    );
+    await expect(
+      service.waitForEntityGeneration('stalled', 30)
+    ).rejects.toThrow(/Timeout waiting for anatomy generation/);
     await expect(service.waitForAllGenerationsToComplete(30)).rejects.toThrow(
       /Timeout waiting for anatomy generation/
     );
@@ -252,7 +287,9 @@ describe('AnatomyInitializationService queue orchestration', () => {
     });
     await service.__TEST_ONLY__processQueue({ ensureProcessingFlag: true });
 
-    await expect(service.generateAnatomy('blueprint-ok', 'core:humanoid')).resolves.toBe(true);
+    await expect(
+      service.generateAnatomy('blueprint-ok', 'core:humanoid')
+    ).resolves.toBe(true);
     await expect(
       service.generateAnatomy('blueprint-fail', 'core:problem')
     ).rejects.toThrow('blueprint failure');
@@ -265,11 +302,15 @@ describe('AnatomyInitializationService queue orchestration', () => {
       )
     ).toBe(true);
 
-    await eventDispatcher.dispatch(ENTITY_CREATED_ID, { instanceId: 'post-destroy' });
+    await eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: 'post-destroy',
+    });
     await flushMicrotasks();
     expect(generationService.calls).not.toContain('post-destroy');
 
-    expect(logger.messages.warn.some((msg) => msg.includes('Already initialized'))).toBe(true);
+    expect(
+      logger.messages.warn.some((msg) => msg.includes('Already initialized'))
+    ).toBe(true);
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
   });

@@ -2,7 +2,8 @@ import { describe, expect, it } from '@jest/globals';
 import { AnatomyDataError } from '../../../src/errors/anatomyDataError.js';
 import { AnatomyVisualizationError } from '../../../src/errors/anatomyVisualizationError.js';
 
-const collectSuggestions = (...args) => AnatomyDataError._getSuggestions(...args);
+const collectSuggestions = (...args) =>
+  AnatomyDataError._getSuggestions(...args);
 
 describe('AnatomyDataError', () => {
   it('decorates the base anatomy visualization error with contextual details', () => {
@@ -109,22 +110,22 @@ describe('AnatomyDataError', () => {
     expect(AnatomyDataError._getUserMessage('anatomy:part', 'entity-12')).toBe(
       'Some anatomy parts could not be loaded properly.'
     );
-    expect(
-      AnatomyDataError._getUserMessage('anatomy:joint', 'entity-12')
-    ).toBe('Anatomy joint connections could not be processed.');
-    expect(
-      AnatomyDataError._getUserMessage('custom:data', 'entity-12')
-    ).toBe('Could not process custom:data data for anatomy visualization.');
+    expect(AnatomyDataError._getUserMessage('anatomy:joint', 'entity-12')).toBe(
+      'Anatomy joint connections could not be processed.'
+    );
+    expect(AnatomyDataError._getUserMessage('custom:data', 'entity-12')).toBe(
+      'Could not process custom:data data for anatomy visualization.'
+    );
   });
 
   it('builds recovery suggestions from validation hints and data type', () => {
-    expect(
-      collectSuggestions('anatomy:body', 'required part missing')
-    ).toEqual([
-      'Check that all required anatomy fields are present',
-      "Ensure the entity has a valid anatomy:body component",
-      'Check that the root anatomy part is defined',
-    ]);
+    expect(collectSuggestions('anatomy:body', 'required part missing')).toEqual(
+      [
+        'Check that all required anatomy fields are present',
+        'Ensure the entity has a valid anatomy:body component',
+        'Check that the root anatomy part is defined',
+      ]
+    );
 
     expect(collectSuggestions('anatomy:joint', 'format error')).toEqual([
       'Verify anatomy data follows the correct format',

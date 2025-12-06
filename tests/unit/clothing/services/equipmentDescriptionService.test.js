@@ -1026,31 +1026,39 @@ describe('EquipmentDescriptionService', () => {
         },
       });
 
-      mockEntityManager.getComponentData.mockImplementation((requestedId, componentId) => {
-        if (requestedId === entityId && componentId === 'clothing:slot_metadata') {
-          return {
-            slotMappings: {
-              torso_upper: {
-                coveredSockets: ['left_breast', 'right_breast'],
+      mockEntityManager.getComponentData.mockImplementation(
+        (requestedId, componentId) => {
+          if (
+            requestedId === entityId &&
+            componentId === 'clothing:slot_metadata'
+          ) {
+            return {
+              slotMappings: {
+                torso_upper: {
+                  coveredSockets: ['left_breast', 'right_breast'],
+                },
               },
-            },
-          };
-        }
+            };
+          }
 
-        if (requestedId === entityId && componentId === 'anatomy:body') {
-          return {
-            body: {
-              parts: ['torso', 'left_breast', 'right_breast'],
-            },
-          };
-        }
+          if (requestedId === entityId && componentId === 'anatomy:body') {
+            return {
+              body: {
+                parts: ['torso', 'left_breast', 'right_breast'],
+              },
+            };
+          }
 
-        if (componentId === 'anatomy:part' && requestedId.includes('breast')) {
-          return { subType: 'breast' };
-        }
+          if (
+            componentId === 'anatomy:part' &&
+            requestedId.includes('breast')
+          ) {
+            return { subType: 'breast' };
+          }
 
-        return null;
-      });
+          return null;
+        }
+      );
 
       mockDescriptorFormatter.formatDescriptors.mockReturnValue('');
 
@@ -1114,7 +1122,9 @@ describe('EquipmentDescriptionService', () => {
       const result = await service.generateEquipmentDescription(entityId);
 
       // Assert
-      expect(result).toBe('Wearing: Torso is fully exposed. The breasts are exposed.');
+      expect(result).toBe(
+        'Wearing: Torso is fully exposed. The breasts are exposed.'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to get equipped items for entity character_1',
         retrievalError

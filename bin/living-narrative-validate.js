@@ -3,7 +3,7 @@
 /**
  * @file NPX executable wrapper for the mod validation CLI tool
  * @description Enables global installation and usage via npx
- * 
+ *
  * Usage:
  *   npx living-narrative-validate [OPTIONS]
  *   ln-validate [OPTIONS]  (shorthand alias)

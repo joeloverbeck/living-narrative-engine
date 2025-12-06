@@ -14,7 +14,7 @@ class ResourceExhaustionError extends ModSecurityError {
     super(message, SecurityLevel.HIGH, {
       ...context,
       resourceType,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
     this.name = 'ResourceExhaustionError';
     this.resourceType = resourceType;
@@ -33,10 +33,10 @@ class ResourceMonitor {
   #startMemory;
   #peakMemory;
   #isMonitoring;
-  
+
   /**
    * Creates a new ResourceMonitor instance
-   * 
+   *
    * @param {object} dependencies - Dependencies
    * @param {object} dependencies.config - Resource configuration
    * @param {import('../utils/loggerUtils.js').ILogger} [dependencies.logger] - Optional logger
@@ -44,15 +44,15 @@ class ResourceMonitor {
   constructor({ config, logger = console }) {
     this.#config = config || {};
     this.#logger = logger;
-    
+
     // Set configuration with defaults
     this.maxMemoryUsage = this.#config.maxMemoryUsage || 512 * 1024 * 1024; // 512MB
     this.maxProcessingTime = this.#config.maxProcessingTime || 30000; // 30 seconds
     this.maxConcurrentOperations = this.#config.maxConcurrentOperations || 10;
     this.memoryCheckInterval = this.#config.memoryCheckInterval || 1000; // 1 second
     this.memoryWarningThreshold = this.#config.memoryWarningThreshold || 0.75;
-    this.memoryCriticalThreshold = this.#config.memoryCriticalThreshold || 0.90;
-    
+    this.memoryCriticalThreshold = this.#config.memoryCriticalThreshold || 0.9;
+
     // Initialize tracking structures
     this.#currentOperations = new Map();
     this.#operationTimers = new Map();
@@ -61,7 +61,7 @@ class ResourceMonitor {
     this.#peakMemory = 0;
     this.#isMonitoring = false;
   }
-  
+
   /**
    * Starts resource monitoring
    */
@@ -69,19 +69,19 @@ class ResourceMonitor {
     if (this.#isMonitoring) {
       return;
     }
-    
+
     this.#isMonitoring = true;
     this.#startMemory = this.#getMemoryUsage();
     this.#peakMemory = this.#startMemory;
-    
+
     // Start periodic memory checks
     this.#memoryCheckInterval = setInterval(() => {
       this.#checkMemoryUsage();
     }, this.memoryCheckInterval);
-    
+
     this.#logger.debug('Resource monitoring started');
   }
-  
+
   /**
    * Stops resource monitoring
    */
@@ -89,34 +89,34 @@ class ResourceMonitor {
     if (!this.#isMonitoring) {
       return;
     }
-    
+
     this.#isMonitoring = false;
-    
+
     // Clear memory check interval
     if (this.#memoryCheckInterval) {
       clearInterval(this.#memoryCheckInterval);
       this.#memoryCheckInterval = null;
     }
-    
+
     // Clear all operation timers
     for (const timer of this.#operationTimers.values()) {
       clearTimeout(timer);
     }
     this.#operationTimers.clear();
     this.#currentOperations.clear();
-    
+
     const finalMemory = this.#getMemoryUsage();
     this.#logger.debug('Resource monitoring stopped', {
       startMemory: this.#startMemory,
       peakMemory: this.#peakMemory,
       finalMemory,
-      memoryGrowth: finalMemory - this.#startMemory
+      memoryGrowth: finalMemory - this.#startMemory,
     });
   }
-  
+
   /**
    * Checks current resource limits
-   * 
+   *
    * @throws {ResourceExhaustionError} If limits are exceeded
    */
   checkResourceLimits() {
@@ -128,11 +128,11 @@ class ResourceMonitor {
         {
           currentOperations: this.#currentOperations.size,
           maxOperations: this.maxConcurrentOperations,
-          activeOperations: Array.from(this.#currentOperations.keys())
+          activeOperations: Array.from(this.#currentOperations.keys()),
         }
       );
     }
-    
+
     // Check memory usage
     const currentMemory = this.#getMemoryUsage();
     if (currentMemory > this.maxMemoryUsage) {
@@ -142,15 +142,15 @@ class ResourceMonitor {
         {
           currentMemory,
           maxMemory: this.maxMemoryUsage,
-          memoryGrowth: currentMemory - this.#startMemory
+          memoryGrowth: currentMemory - this.#startMemory,
         }
       );
     }
   }
-  
+
   /**
    * Creates an operation guard with automatic cleanup
-   * 
+   *
    * @param {string} operationId - Unique operation identifier
    * @param {object} [options] - Operation options
    * @param {number} [options.timeout] - Custom timeout for this operation
@@ -159,40 +159,40 @@ class ResourceMonitor {
   createOperationGuard(operationId, options = {}) {
     // Check if we can start a new operation
     this.checkResourceLimits();
-    
+
     // Register the operation
     const startTime = Date.now();
     this.#currentOperations.set(operationId, {
       id: operationId,
       startTime,
-      options
+      options,
     });
-    
+
     // Set timeout for operation
     const timeout = options.timeout || this.maxProcessingTime;
     const timer = setTimeout(() => {
       this.#handleOperationTimeout(operationId);
     }, timeout);
-    
+
     this.#operationTimers.set(operationId, timer);
-    
+
     this.#logger.debug(`Operation started: ${operationId}`, {
       currentOperations: this.#currentOperations.size,
-      timeout
+      timeout,
     });
-    
+
     // Return guard object
     return {
       operationId,
       startTime,
-      
+
       /**
        * Cleans up the operation
        */
       cleanup: () => {
         this.#cleanupOperation(operationId);
       },
-      
+
       /**
        * Checks if operation is still valid
        *
@@ -201,7 +201,7 @@ class ResourceMonitor {
       isActive: () => {
         return this.#currentOperations.has(operationId);
       },
-      
+
       /**
        * Gets operation duration
        *
@@ -209,19 +209,19 @@ class ResourceMonitor {
        */
       getDuration: () => {
         return Date.now() - startTime;
-      }
+      },
     };
   }
-  
+
   /**
    * Gets current resource usage statistics
-   * 
+   *
    * @returns {object} Resource usage stats
    */
   getResourceStats() {
     const currentMemory = this.#getMemoryUsage();
     const memoryPercentage = currentMemory / this.maxMemoryUsage;
-    
+
     return {
       memory: {
         current: currentMemory,
@@ -231,22 +231,24 @@ class ResourceMonitor {
         formatted: {
           current: this.#formatBytes(currentMemory),
           peak: this.#formatBytes(this.#peakMemory),
-          limit: this.#formatBytes(this.maxMemoryUsage)
-        }
+          limit: this.#formatBytes(this.maxMemoryUsage),
+        },
       },
       operations: {
         current: this.#currentOperations.size,
         limit: this.maxConcurrentOperations,
-        active: Array.from(this.#currentOperations.entries()).map(([id, op]) => ({
-          id,
-          duration: Date.now() - op.startTime,
-          startTime: new Date(op.startTime).toISOString()
-        }))
+        active: Array.from(this.#currentOperations.entries()).map(
+          ([id, op]) => ({
+            id,
+            duration: Date.now() - op.startTime,
+            startTime: new Date(op.startTime).toISOString(),
+          })
+        ),
       },
-      status: this.#getResourceStatus(memoryPercentage)
+      status: this.#getResourceStatus(memoryPercentage),
     };
   }
-  
+
   /**
    * Resets resource tracking
    */
@@ -257,37 +259,39 @@ class ResourceMonitor {
     }
     this.#operationTimers.clear();
     this.#currentOperations.clear();
-    
+
     // Reset memory tracking
     this.#startMemory = this.#getMemoryUsage();
     this.#peakMemory = this.#startMemory;
-    
+
     this.#logger.debug('Resource monitor reset');
   }
-  
+
   /**
    * Checks memory usage periodically
-   * 
+   *
    * @private
    */
   #checkMemoryUsage() {
     const currentMemory = this.#getMemoryUsage();
     this.#peakMemory = Math.max(this.#peakMemory, currentMemory);
-    
+
     const memoryPercentage = currentMemory / this.maxMemoryUsage;
-    
+
     // Check critical threshold
     if (memoryPercentage >= this.memoryCriticalThreshold) {
       this.#logger.error('Critical memory usage detected', {
         current: this.#formatBytes(currentMemory),
         limit: this.#formatBytes(this.maxMemoryUsage),
-        percentage: (memoryPercentage * 100).toFixed(2) + '%'
+        percentage: (memoryPercentage * 100).toFixed(2) + '%',
       });
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
-        this.#logger.info('Forced garbage collection due to critical memory usage');
+        this.#logger.info(
+          'Forced garbage collection due to critical memory usage'
+        );
       }
     }
     // Check warning threshold
@@ -295,14 +299,14 @@ class ResourceMonitor {
       this.#logger.warn('High memory usage detected', {
         current: this.#formatBytes(currentMemory),
         limit: this.#formatBytes(this.maxMemoryUsage),
-        percentage: (memoryPercentage * 100).toFixed(2) + '%'
+        percentage: (memoryPercentage * 100).toFixed(2) + '%',
       });
     }
   }
-  
+
   /**
    * Handles operation timeout
-   * 
+   *
    * @private
    * @param {string} operationId - Operation that timed out
    */
@@ -311,17 +315,17 @@ class ResourceMonitor {
     if (!operation) {
       return; // Already cleaned up
     }
-    
+
     const duration = Date.now() - operation.startTime;
-    
+
     this.#logger.error(`Operation timeout: ${operationId}`, {
       duration,
-      maxDuration: this.maxProcessingTime
+      maxDuration: this.maxProcessingTime,
     });
-    
+
     // Clean up the operation
     this.#cleanupOperation(operationId);
-    
+
     // Throw timeout error
     throw new ResourceExhaustionError(
       `Operation '${operationId}' exceeded maximum processing time: ${duration}ms > ${this.maxProcessingTime}ms`,
@@ -329,14 +333,14 @@ class ResourceMonitor {
       {
         operationId,
         duration,
-        maxDuration: this.maxProcessingTime
+        maxDuration: this.maxProcessingTime,
       }
     );
   }
-  
+
   /**
    * Cleans up an operation
-   * 
+   *
    * @private
    * @param {string} operationId - Operation to clean up
    */
@@ -345,27 +349,27 @@ class ResourceMonitor {
     if (!operation) {
       return; // Already cleaned up
     }
-    
+
     // Clear timeout
     const timer = this.#operationTimers.get(operationId);
     if (timer) {
       clearTimeout(timer);
       this.#operationTimers.delete(operationId);
     }
-    
+
     // Remove operation
     this.#currentOperations.delete(operationId);
-    
+
     const duration = Date.now() - operation.startTime;
     this.#logger.debug(`Operation completed: ${operationId}`, {
       duration,
-      remainingOperations: this.#currentOperations.size
+      remainingOperations: this.#currentOperations.size,
     });
   }
-  
+
   /**
    * Gets current memory usage
-   * 
+   *
    * @private
    * @returns {number} Memory usage in bytes
    */
@@ -383,38 +387,45 @@ class ResourceMonitor {
       return this.#currentOperations.size * 1024 * 1024;
     }
   }
-  
+
   /**
    * Formats bytes to human-readable string
-   * 
+   *
    * @private
    * @param {number} bytes - Bytes to format
    * @returns {string} Formatted string
    */
   #formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  
+
   /**
    * Gets resource status based on usage
-   * 
+   *
    * @private
    * @param {number} memoryPercentage - Memory usage percentage
    * @returns {string} Status indicator
    */
   #getResourceStatus(memoryPercentage) {
-    const operationPercentage = this.#currentOperations.size / this.maxConcurrentOperations;
-    
-    if (memoryPercentage >= this.memoryCriticalThreshold || operationPercentage >= 0.9) {
+    const operationPercentage =
+      this.#currentOperations.size / this.maxConcurrentOperations;
+
+    if (
+      memoryPercentage >= this.memoryCriticalThreshold ||
+      operationPercentage >= 0.9
+    ) {
       return 'CRITICAL';
     }
-    if (memoryPercentage >= this.memoryWarningThreshold || operationPercentage >= 0.75) {
+    if (
+      memoryPercentage >= this.memoryWarningThreshold ||
+      operationPercentage >= 0.75
+    ) {
       return 'WARNING';
     }
     if (memoryPercentage >= 0.5 || operationPercentage >= 0.5) {

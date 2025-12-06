@@ -4,7 +4,10 @@ import { ActionErrorContextBuilder } from '../../../../src/actions/errors/action
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import { TraceContext } from '../../../../src/actions/tracing/traceContext.js';
-import { FIX_TYPES, ERROR_PHASES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  FIX_TYPES,
+  ERROR_PHASES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import { TestDataFactory } from '../../../common/actions/testDataFactory.js';
 
@@ -111,15 +114,21 @@ describe('UnifiedErrorHandler full-stack integration', () => {
 
   it('produces rich execution error context with real collaborators', () => {
     const { handler, actions, logger } = harness;
-    const executionAction = actions.find((action) => action.id === 'movement:go');
+    const executionAction = actions.find(
+      (action) => action.id === 'movement:go'
+    );
 
     const trace = new TraceContext();
     trace.info('Actor components loaded', 'ComponentFilteringStage', {
       input: { actorId: 'hero-1' },
     });
-    trace.failure("Missing component 'core:position'", 'TargetComponentValidator', {
-      output: { missing: 'core:position' },
-    });
+    trace.failure(
+      "Missing component 'core:position'",
+      'TargetComponentValidator',
+      {
+        output: { missing: 'core:position' },
+      }
+    );
 
     const missingComponentError = new Error(
       "Missing component 'core:position' on actor hero-1"
@@ -177,11 +186,14 @@ describe('UnifiedErrorHandler full-stack integration', () => {
 
     const discoveryTrace = new TraceContext();
     discoveryTrace.info('Discovery trace entry', 'DiscoveryStage');
-    const tracedDiscovery = handler.handleDiscoveryError(new Error('Trace flow'), {
-      actorId: 'hero-1',
-      actionDef: { id: 'core:look', name: 'Look' },
-      trace: discoveryTrace,
-    });
+    const tracedDiscovery = handler.handleDiscoveryError(
+      new Error('Trace flow'),
+      {
+        actorId: 'hero-1',
+        actionDef: { id: 'core:look', name: 'Look' },
+        trace: discoveryTrace,
+      }
+    );
     expect(tracedDiscovery.evaluationTrace.steps.length).toBeGreaterThan(0);
 
     const validationError = new Error('Targets invalid');
@@ -243,15 +255,17 @@ describe('UnifiedErrorHandler full-stack integration', () => {
       details: 'user facing',
     });
 
-    const auxiliaryLog = logger.errorEntries.find((entry) =>
-      entry.details?.subsystem
+    const auxiliaryLog = logger.errorEntries.find(
+      (entry) => entry.details?.subsystem
     );
     expect(auxiliaryLog?.details?.subsystem).toBe('integration-test');
   });
 
   it('honours optional parameters across the API surface', () => {
     const { handler, actions } = harness;
-    const executionAction = actions.find((action) => action.id === 'movement:go');
+    const executionAction = actions.find(
+      (action) => action.id === 'movement:go'
+    );
 
     const executionWithoutTarget = handler.handleExecutionError(
       new Error('Execution without target'),

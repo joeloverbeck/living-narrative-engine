@@ -763,7 +763,9 @@ describe('AddPerceptionLogEntryHandler', () => {
 
     test('should exclude specified actors from location broadcast', async () => {
       const entry = makeEntry('exclude_alpha');
-      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B, ACTOR_C]));
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_A, ACTOR_B, ACTOR_C])
+      );
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
       em.addComponent.mockResolvedValue(true);
@@ -779,7 +781,7 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       // Should only update ACTOR_B and ACTOR_C (not ACTOR_A)
       expect(em.addComponent).toHaveBeenCalledTimes(2);
-      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      const updatedActors = em.addComponent.mock.calls.map((call) => call[0]);
       expect(updatedActors).toContain(ACTOR_B);
       expect(updatedActors).toContain(ACTOR_C);
       expect(updatedActors).not.toContain(ACTOR_A);
@@ -800,7 +802,7 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       // Should update all actors
       expect(em.addComponent).toHaveBeenCalledTimes(2);
-      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      const updatedActors = em.addComponent.mock.calls.map((call) => call[0]);
       expect(updatedActors).toContain(ACTOR_A);
       expect(updatedActors).toContain(ACTOR_B);
     });
@@ -840,7 +842,9 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       // Should log warning about both parameters
       expect(log.warn).toHaveBeenCalledWith(
-        expect.stringContaining('recipientIds and excludedActorIds both provided')
+        expect.stringContaining(
+          'recipientIds and excludedActorIds both provided'
+        )
       );
 
       // Should NOT query location (using explicit recipients)
@@ -870,14 +874,20 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       // Should update all actual actors (exclusions ignored if not present)
       expect(em.addComponent).toHaveBeenCalledTimes(2);
-      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      const updatedActors = em.addComponent.mock.calls.map((call) => call[0]);
       expect(updatedActors).toContain(ACTOR_A);
       expect(updatedActors).toContain(ACTOR_B);
     });
 
     test('should filter excluded actors from location entities correctly', async () => {
       const entry = makeEntry('filter_test');
-      const allActors = new Set([ACTOR_A, ACTOR_B, ACTOR_C, 'actor:delta', 'actor:echo']);
+      const allActors = new Set([
+        ACTOR_A,
+        ACTOR_B,
+        ACTOR_C,
+        'actor:delta',
+        'actor:echo',
+      ]);
       em.getEntitiesInLocation.mockReturnValue(allActors);
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
@@ -891,7 +901,7 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       // Should update exactly 3 actors (5 total - 2 excluded)
       expect(em.addComponent).toHaveBeenCalledTimes(3);
-      const updatedActors = em.addComponent.mock.calls.map(call => call[0]);
+      const updatedActors = em.addComponent.mock.calls.map((call) => call[0]);
       expect(updatedActors).toContain(ACTOR_B);
       expect(updatedActors).toContain('actor:delta');
       expect(updatedActors).toContain('actor:echo');
@@ -901,7 +911,9 @@ describe('AddPerceptionLogEntryHandler', () => {
 
     test('should work with batch optimization when excluding actors', async () => {
       const entry = makeEntry('batch_with_exclusion');
-      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_A, ACTOR_B, ACTOR_C]));
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_A, ACTOR_B, ACTOR_C])
+      );
       em.hasComponent.mockReturnValue(true);
       em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
 
@@ -927,7 +939,7 @@ describe('AddPerceptionLogEntryHandler', () => {
 
       const specs = em.batchAddComponentsOptimized.mock.calls[0][0];
       expect(specs).toHaveLength(2);
-      expect(specs.find(s => s.instanceId === ACTOR_A)).toBeUndefined();
+      expect(specs.find((s) => s.instanceId === ACTOR_A)).toBeUndefined();
     });
 
     test('should handle string excluded_actor_ids parameter', async () => {

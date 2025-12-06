@@ -46,7 +46,9 @@ describe('vampirism:{action} - Action Discovery', () => {
     const room = ModEntityScenarios.createRoom('room1', 'Test Room');
     testFixture.reset([room, scenario.actor, scenario.target]);
 
-    const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    const availableActions = testFixture.testEnv.getAvailableActions(
+      scenario.actor.id
+    );
     const ids = availableActions.map((action) => action.id);
 
     expect(ids).toContain(ACTION_ID);
@@ -57,9 +59,11 @@ describe('vampirism:{action} - Action Discovery', () => {
 ## Vampirism-Specific Components
 
 ### Marker Components
+
 - **`vampirism:is_vampire`**: Identifies an entity as a vampire (required for most vampirism actions)
 
 ### Positioning Components (from positioning mod)
+
 - **`positioning:biting_neck`**: Actor is currently biting a target's neck
   - `bitten_entity_id`: Entity being bitten
   - `initiated`: Whether the bite was initiated
@@ -112,6 +116,7 @@ expect(ids).not.toContain(ACTION_ID);
 ## Action-Specific Scopes
 
 ### Bite Actions
+
 - **`bite_neck_carefully`**: Uses `positioning:close_actors_facing_each_other_or_behind_target`
   - Requires closeness and proper facing/positioning
   - Requires `vampirism:is_vampire` marker
@@ -121,6 +126,7 @@ expect(ids).not.toContain(ACTION_ID);
   - Requires `vampirism:is_vampire` marker
 
 ### Blood Actions
+
 - **`drink_blood`**: Uses `positioning:actor_being_bitten_by_me`
   - Requires reciprocal bite relationship (biting_neck ↔ being_bitten_in_neck)
   - Requires existing bite to be established
@@ -134,12 +140,14 @@ expect(ids).not.toContain(ACTION_ID);
 ### 2025-10-26: Legacy Pattern Migration (TEAOUTTHR-005)
 
 **Migrated Files:**
+
 - `drink_blood_action_discovery.test.js`
 - `bite_neck_carefully_action_discovery.test.js`
 - `lunge_bite_neck_violently_action_discovery.test.js`
 - `pull_out_fangs_action_discovery.test.js`
 
 **Changes Applied:**
+
 - ✅ Removed `createActionDiscoveryBed` legacy pattern
 - ✅ Removed `SimpleEntityManager` usage
 - ✅ Replaced mock-based scope resolution with `ScopeResolverHelpers`
@@ -149,6 +157,7 @@ expect(ids).not.toContain(ACTION_ID);
 - ✅ Aligned with current testing standards (see [Migration from Legacy Patterns](../../../docs/testing/mod-testing-guide.md#migration-from-legacy-patterns))
 
 **Impact:**
+
 - Reduced boilerplate by ~40-50 lines per file (~180 lines total)
 - Improved maintainability and consistency with other mods
 - Eliminated manual mock implementations
@@ -167,16 +176,19 @@ Based on violence mod migration (TEAOUTTHR-004), specifically `tear_out_throat_a
 ## Test Execution
 
 ### Run Individual Test
+
 ```bash
 NODE_ENV=test npx jest tests/integration/mods/vampirism/drink_blood_action_discovery.test.js --no-coverage --verbose
 ```
 
 ### Run All Vampirism Tests
+
 ```bash
 NODE_ENV=test npx jest tests/integration/mods/vampirism/ --no-coverage --silent
 ```
 
 ### Run With Coverage
+
 ```bash
 NODE_ENV=test npx jest tests/integration/mods/vampirism/ --coverage
 ```

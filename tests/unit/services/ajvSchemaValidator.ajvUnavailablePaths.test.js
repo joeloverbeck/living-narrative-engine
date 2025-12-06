@@ -14,7 +14,10 @@ describe('AjvSchemaValidator when Ajv instance becomes unavailable', () => {
 
   it('logs and rethrows when addSchema is called without an Ajv instance', async () => {
     await expect(
-      validator.addSchema({ $id: 'schema://missing', type: 'object' }, 'schema://missing')
+      validator.addSchema(
+        { $id: 'schema://missing', type: 'object' },
+        'schema://missing'
+      )
     ).rejects.toThrow('AjvSchemaValidator: Ajv instance not available.');
 
     expect(logger.error).toHaveBeenCalledWith(

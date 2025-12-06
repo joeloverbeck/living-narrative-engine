@@ -11,10 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:being_fucked_vaginally"
-    ]
+    "actor": ["positioning:closeness", "positioning:being_fucked_vaginally"]
   },
   "forbidden_components": {
     "actor": ["positioning:sitting_on"],

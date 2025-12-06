@@ -19,11 +19,9 @@ const mockTokens = {
   VisualizationComposer: 'VisualizationComposer',
   ClothingManagementService: 'ClothingManagementService',
 };
-const mockAnatomyVisualizerUIConstructor = jest
-  .fn()
-  .mockImplementation(() => ({
-    initialize: mockVisualizerInitialize,
-  }));
+const mockAnatomyVisualizerUIConstructor = jest.fn().mockImplementation(() => ({
+  initialize: mockVisualizerInitialize,
+}));
 
 jest.mock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
   __esModule: true,
@@ -33,10 +31,13 @@ jest.mock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
   })),
 }));
 
-jest.mock('../../src/dependencyInjection/registrations/visualizerRegistrations.js', () => ({
-  __esModule: true,
-  registerVisualizerComponents: mockRegisterVisualizerComponents,
-}));
+jest.mock(
+  '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
+  () => ({
+    __esModule: true,
+    registerVisualizerComponents: mockRegisterVisualizerComponents,
+  })
+);
 
 jest.mock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
   __esModule: true,
@@ -137,7 +138,10 @@ describe('anatomy-visualizer initialize', () => {
         container
       );
 
-      return { container, services: { logger, registry, entityManager, eventDispatcher } };
+      return {
+        container,
+        services: { logger, registry, entityManager, eventDispatcher },
+      };
     });
 
     const { initialize } = await import('../../src/anatomy-visualizer.js');
@@ -157,7 +161,9 @@ describe('anatomy-visualizer initialize', () => {
     expect(container.resolve).toHaveBeenCalledWith(
       mockTokens.VisualizerStateController
     );
-    expect(container.resolve).toHaveBeenCalledWith(mockTokens.VisualizationComposer);
+    expect(container.resolve).toHaveBeenCalledWith(
+      mockTokens.VisualizationComposer
+    );
     expect(container.resolve).toHaveBeenCalledWith(
       mockTokens.ClothingManagementService
     );
@@ -228,7 +234,10 @@ describe('anatomy-visualizer initialize', () => {
         { logger, registry, entityManager, eventDispatcher },
         container
       );
-      return { container, services: { logger, registry, entityManager, eventDispatcher } };
+      return {
+        container,
+        services: { logger, registry, entityManager, eventDispatcher },
+      };
     });
 
     const { initialize } = await import('../../src/anatomy-visualizer.js');
@@ -295,7 +304,10 @@ describe('anatomy-visualizer initialize', () => {
         { logger, registry, entityManager, eventDispatcher },
         container
       );
-      return { container, services: { logger, registry, entityManager, eventDispatcher } };
+      return {
+        container,
+        services: { logger, registry, entityManager, eventDispatcher },
+      };
     });
 
     const { initialize } = await import('../../src/anatomy-visualizer.js');
@@ -343,7 +355,10 @@ describe('anatomy-visualizer initialize', () => {
         { logger, registry, entityManager, eventDispatcher },
         container
       );
-      return { container, services: { logger, registry, entityManager, eventDispatcher } };
+      return {
+        container,
+        services: { logger, registry, entityManager, eventDispatcher },
+      };
     });
 
     await import('../../src/anatomy-visualizer.js');
@@ -351,7 +366,10 @@ describe('anatomy-visualizer initialize', () => {
     await flushPromises();
     await flushPromises();
 
-    expect(addEventListenerSpy).not.toHaveBeenCalledWith('DOMContentLoaded', expect.anything());
+    expect(addEventListenerSpy).not.toHaveBeenCalledWith(
+      'DOMContentLoaded',
+      expect.anything()
+    );
     expect(mockBootstrap).toHaveBeenCalledTimes(1);
     expect(mockAnatomyVisualizerUIConstructor).toHaveBeenCalledTimes(1);
 

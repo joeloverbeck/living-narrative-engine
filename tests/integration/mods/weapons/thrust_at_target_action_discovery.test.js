@@ -29,7 +29,9 @@ describe('thrust_at_target action definition', () => {
     });
 
     it('should have template with chance placeholder', () => {
-      expect(actionJson.template).toBe('thrust {weapon} at {target} ({chance}% chance)');
+      expect(actionJson.template).toBe(
+        'thrust {weapon} at {target} ({chance}% chance)'
+      );
     });
 
     it('should include {chance} in template for probability display', () => {
@@ -40,11 +42,15 @@ describe('thrust_at_target action definition', () => {
   describe('Required Components', () => {
     it('should require actor to have positioning:wielding component', () => {
       expect(actionJson.required_components).toBeDefined();
-      expect(actionJson.required_components.actor).toContain('positioning:wielding');
+      expect(actionJson.required_components.actor).toContain(
+        'positioning:wielding'
+      );
     });
 
     it('should require primary target to have weapons:weapon component', () => {
-      expect(actionJson.required_components.primary).toContain('weapons:weapon');
+      expect(actionJson.required_components.primary).toContain(
+        'weapons:weapon'
+      );
     });
 
     it('should require primary target to have damage-types:damage_capabilities component', () => {
@@ -56,31 +62,45 @@ describe('thrust_at_target action definition', () => {
 
   describe('Forbidden Components', () => {
     it('should forbid actor with positioning:hugging', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:hugging');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:hugging'
+      );
     });
 
     it('should forbid actor with positioning:giving_blowjob', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:giving_blowjob');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:giving_blowjob'
+      );
     });
 
     it('should forbid actor with positioning:doing_complex_performance', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:doing_complex_performance');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:doing_complex_performance'
+      );
     });
 
     it('should forbid actor with positioning:bending_over', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:bending_over');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:bending_over'
+      );
     });
 
     it('should forbid actor with positioning:being_restrained', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:being_restrained');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:being_restrained'
+      );
     });
 
     it('should forbid actor with positioning:restraining', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:restraining');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:restraining'
+      );
     });
 
     it('should forbid actor with positioning:fallen', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:fallen');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:fallen'
+      );
     });
   });
 
@@ -91,7 +111,9 @@ describe('thrust_at_target action definition', () => {
     });
 
     it('should use wielded_piercing_weapons scope for primary target', () => {
-      expect(actionJson.targets.primary.scope).toBe('weapons:wielded_piercing_weapons');
+      expect(actionJson.targets.primary.scope).toBe(
+        'weapons:wielded_piercing_weapons'
+      );
     });
 
     it('should use "weapon" placeholder for primary target', () => {
@@ -103,7 +125,9 @@ describe('thrust_at_target action definition', () => {
     });
 
     it('should use actors_in_location scope for secondary target', () => {
-      expect(actionJson.targets.secondary.scope).toBe('core:actors_in_location');
+      expect(actionJson.targets.secondary.scope).toBe(
+        'core:actors_in_location'
+      );
     });
 
     it('should use "target" placeholder for secondary target', () => {
@@ -128,12 +152,16 @@ describe('thrust_at_target action definition', () => {
 
     it('should reference skills:melee_skill for actor skill', () => {
       expect(actionJson.chanceBased.actorSkill).toBeDefined();
-      expect(actionJson.chanceBased.actorSkill.component).toBe('skills:melee_skill');
+      expect(actionJson.chanceBased.actorSkill.component).toBe(
+        'skills:melee_skill'
+      );
     });
 
     it('should reference skills:defense_skill for target skill', () => {
       expect(actionJson.chanceBased.targetSkill).toBeDefined();
-      expect(actionJson.chanceBased.targetSkill.component).toBe('skills:defense_skill');
+      expect(actionJson.chanceBased.targetSkill.component).toBe(
+        'skills:defense_skill'
+      );
     });
 
     it('should use value property for skills', () => {
@@ -165,7 +193,9 @@ describe('thrust_at_target action definition', () => {
 
   describe('Schema Compliance', () => {
     it('should reference correct schema', () => {
-      expect(actionJson.$schema).toBe('schema://living-narrative-engine/action.schema.json');
+      expect(actionJson.$schema).toBe(
+        'schema://living-narrative-engine/action.schema.json'
+      );
     });
 
     it('should have all required action properties', () => {
@@ -217,13 +247,17 @@ describe('event-is-action-thrust-at-target condition', () => {
     });
 
     it('should reference event.payload.actionId', () => {
-      expect(conditionJson.logic['=='][0]).toEqual({ var: 'event.payload.actionId' });
+      expect(conditionJson.logic['=='][0]).toEqual({
+        var: 'event.payload.actionId',
+      });
     });
   });
 
   describe('Schema Compliance', () => {
     it('should reference correct schema', () => {
-      expect(conditionJson.$schema).toBe('schema://living-narrative-engine/condition.schema.json');
+      expect(conditionJson.$schema).toBe(
+        'schema://living-narrative-engine/condition.schema.json'
+      );
     });
   });
 });

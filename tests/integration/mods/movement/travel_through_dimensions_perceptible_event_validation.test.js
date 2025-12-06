@@ -30,11 +30,9 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
     it('should dispatch departure perception with valid descriptionText field', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const departureEvent = fixture.events.find(
         (e) =>
@@ -52,11 +50,9 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
     it('should dispatch arrival perception with valid descriptionText field', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const arrivalEvent = fixture.events.find(
         (e) =>
@@ -72,11 +68,9 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
     it('should not include "message" field in perceptible event payload', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const perceptibleEvents = fixture.events.filter(
         (e) => e.eventType === 'core:perceptible_event'
@@ -92,11 +86,9 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
     it('should include all required fields in perceptible event payload', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const perceptibleEvents = fixture.events.filter(
         (e) => e.eventType === 'core:perceptible_event'
@@ -126,11 +118,9 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
     it('should only include allowed fields in perceptible event payload', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const perceptibleEvents = fixture.events.filter(
         (e) => e.eventType === 'core:perceptible_event'

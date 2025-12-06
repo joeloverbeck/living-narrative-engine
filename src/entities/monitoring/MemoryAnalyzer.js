@@ -4,7 +4,10 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency, assertPresent } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -92,7 +95,7 @@ export default class MemoryAnalyzer extends BaseService {
     // Prepare data for linear regression
     const n = samples.length;
     const timeOffset = samples[0].timestamp;
-    const points = samples.map(s => ({
+    const points = samples.map((s) => ({
       x: (s.timestamp - timeOffset) / 1000, // Convert to seconds
       y: s.heapUsed / 1048576, // Convert to MB
     }));
@@ -125,10 +128,13 @@ export default class MemoryAnalyzer extends BaseService {
     const intercept = meanY - slope * meanX;
 
     // Calculate R-squared
-    const yPredicted = points.map(p => slope * p.x + intercept);
-    const ssRes = points.reduce((sum, p, i) => sum + Math.pow(p.y - yPredicted[i], 2), 0);
+    const yPredicted = points.map((p) => slope * p.x + intercept);
+    const ssRes = points.reduce(
+      (sum, p, i) => sum + Math.pow(p.y - yPredicted[i], 2),
+      0
+    );
     const ssTot = points.reduce((sum, p) => sum + Math.pow(p.y - meanY, 2), 0);
-    const rSquared = ssTot === 0 ? 0 : 1 - (ssRes / ssTot);
+    const rSquared = ssTot === 0 ? 0 : 1 - ssRes / ssTot;
 
     // Calculate volatility (standard deviation of residuals)
     const residuals = points.map((p, i) => p.y - yPredicted[i]);
@@ -145,7 +151,8 @@ export default class MemoryAnalyzer extends BaseService {
       trend = 'growing';
     } else if (slope < -slopeThreshold) {
       trend = 'shrinking';
-    } else if (volatility > meanY * 0.2) { // Volatility > 20% of mean
+    } else if (volatility > meanY * 0.2) {
+      // Volatility > 20% of mean
       trend = 'volatile';
     }
 
@@ -203,7 +210,10 @@ export default class MemoryAnalyzer extends BaseService {
   #detectLinearPattern(samples) {
     const trend = this.analyzeTrend(samples);
 
-    if (trend.trend === 'growing' && trend.rSquared > this.#config.patternConfidenceThreshold) {
+    if (
+      trend.trend === 'growing' &&
+      trend.rSquared > this.#config.patternConfidenceThreshold
+    ) {
       return {
         type: 'linear',
         severity: Math.min(10, trend.slope / 10), // 10MB/min = severity 1
@@ -226,14 +236,17 @@ export default class MemoryAnalyzer extends BaseService {
    */
   #detectExponentialPattern(samples) {
     // Convert to log scale and check for linear pattern
-    const logSamples = samples.map(s => ({
+    const logSamples = samples.map((s) => ({
       timestamp: s.timestamp,
       heapUsed: Math.log(Math.max(1, s.heapUsed)),
     }));
 
     const logTrend = this.analyzeTrend(logSamples);
 
-    if (logTrend.trend === 'growing' && logTrend.rSquared > this.#config.patternConfidenceThreshold) {
+    if (
+      logTrend.trend === 'growing' &&
+      logTrend.rSquared > this.#config.patternConfidenceThreshold
+    ) {
       const doublingTime = Math.log(2) / logTrend.slope;
       return {
         type: 'exponential',
@@ -320,16 +333,20 @@ export default class MemoryAnalyzer extends BaseService {
         peakIntervals.push(peaks[i].index - peaks[i - 1].index);
       }
 
-      const avgInterval = peakIntervals.reduce((sum, i) => sum + i, 0) / peakIntervals.length;
-      const intervalVariance = peakIntervals.reduce(
-        (sum, i) => sum + Math.pow(i - avgInterval, 2),
-        0
-      ) / peakIntervals.length;
+      const avgInterval =
+        peakIntervals.reduce((sum, i) => sum + i, 0) / peakIntervals.length;
+      const intervalVariance =
+        peakIntervals.reduce(
+          (sum, i) => sum + Math.pow(i - avgInterval, 2),
+          0
+        ) / peakIntervals.length;
 
       // Low variance indicates regular pattern
       if (Math.sqrt(intervalVariance) / avgInterval < 0.3) {
-        const avgPeak = peaks.reduce((sum, p) => sum + p.value, 0) / peaks.length;
-        const avgValley = valleys.reduce((sum, v) => sum + v.value, 0) / valleys.length;
+        const avgPeak =
+          peaks.reduce((sum, p) => sum + p.value, 0) / peaks.length;
+        const avgValley =
+          valleys.reduce((sum, v) => sum + v.value, 0) / valleys.length;
         const amplitude = avgPeak - avgValley;
 
         return {
@@ -340,7 +357,7 @@ export default class MemoryAnalyzer extends BaseService {
             cycleCount: peaks.length,
             averagePeriod: avgInterval,
             amplitude,
-            regularity: 1 - (Math.sqrt(intervalVariance) / avgInterval),
+            regularity: 1 - Math.sqrt(intervalVariance) / avgInterval,
           },
         };
       }
@@ -401,10 +418,11 @@ export default class MemoryAnalyzer extends BaseService {
     const patterns = this.detectPatterns(samples);
 
     // Calculate statistics
-    const heapValues = samples.map(s => s.heapUsed);
+    const heapValues = samples.map((s) => s.heapUsed);
     const statistics = {
       sampleCount: samples.length,
-      timeSpan: (samples[samples.length - 1].timestamp - samples[0].timestamp) / 60000, // Minutes
+      timeSpan:
+        (samples[samples.length - 1].timestamp - samples[0].timestamp) / 60000, // Minutes
       // Use reduce to avoid stack overflow with large arrays
       minHeap: heapValues.reduce((min, v) => Math.min(min, v), Infinity),
       maxHeap: heapValues.reduce((max, v) => Math.max(max, v), -Infinity),
@@ -413,7 +431,11 @@ export default class MemoryAnalyzer extends BaseService {
     };
 
     // Generate recommendations
-    const recommendations = this.#generateRecommendations(trend, patterns, statistics);
+    const recommendations = this.#generateRecommendations(
+      trend,
+      patterns,
+      statistics
+    );
 
     // Calculate risk score
     const riskScore = this.#calculateRiskScore(trend, patterns, statistics);
@@ -441,45 +463,64 @@ export default class MemoryAnalyzer extends BaseService {
     // Trend-based recommendations
     if (trend.trend === 'growing') {
       if (trend.slope > 10) {
-        recommendations.push('URGENT: Rapid memory growth detected. Investigate immediately.');
+        recommendations.push(
+          'URGENT: Rapid memory growth detected. Investigate immediately.'
+        );
       } else if (trend.slope > 5) {
         recommendations.push('Monitor closely: Steady memory growth detected.');
       } else {
-        recommendations.push('Minor memory growth detected. Schedule investigation.');
+        recommendations.push(
+          'Minor memory growth detected. Schedule investigation.'
+        );
       }
     }
 
     // Pattern-based recommendations
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       switch (pattern.type) {
         case 'linear':
-          recommendations.push('Implement periodic memory cleanup or resource pooling.');
+          recommendations.push(
+            'Implement periodic memory cleanup or resource pooling.'
+          );
           break;
         case 'exponential':
-          recommendations.push('Critical: Exponential growth indicates severe leak. Immediate action required.');
+          recommendations.push(
+            'Critical: Exponential growth indicates severe leak. Immediate action required.'
+          );
           break;
         case 'step':
-          recommendations.push('Investigate operations causing memory jumps. Consider caching strategy.');
+          recommendations.push(
+            'Investigate operations causing memory jumps. Consider caching strategy.'
+          );
           break;
         case 'sawtooth':
-          recommendations.push('GC cycles detected. Consider tuning garbage collection parameters.');
+          recommendations.push(
+            'GC cycles detected. Consider tuning garbage collection parameters.'
+          );
           break;
       }
     });
 
     // Statistics-based recommendations
     const heapGrowth = statistics.currentHeap - statistics.minHeap;
-    const growthPercent = statistics.minHeap > 0 ? (heapGrowth / statistics.minHeap) : 0;
+    const growthPercent =
+      statistics.minHeap > 0 ? heapGrowth / statistics.minHeap : 0;
 
     if (growthPercent > 1) {
-      recommendations.push('Memory has more than doubled. Review resource management.');
+      recommendations.push(
+        'Memory has more than doubled. Review resource management.'
+      );
     }
 
     if (statistics.timeSpan < 5) {
-      recommendations.push('Extend monitoring period for more accurate analysis.');
+      recommendations.push(
+        'Extend monitoring period for more accurate analysis.'
+      );
     }
 
-    return recommendations.length > 0 ? recommendations : ['Memory usage appears stable.'];
+    return recommendations.length > 0
+      ? recommendations
+      : ['Memory usage appears stable.'];
   }
 
   /**
@@ -501,13 +542,14 @@ export default class MemoryAnalyzer extends BaseService {
     }
 
     // Pattern contribution (0-40 points)
-    patterns.forEach(pattern => {
+    patterns.forEach((pattern) => {
       score += Math.min(40, pattern.severity * 4);
     });
 
     // Statistics contribution (0-20 points)
     const heapGrowth = statistics.currentHeap - statistics.minHeap;
-    const growthPercent = statistics.minHeap > 0 ? (heapGrowth / statistics.minHeap) : 0;
+    const growthPercent =
+      statistics.minHeap > 0 ? heapGrowth / statistics.minHeap : 0;
     score += Math.min(20, growthPercent * 20);
 
     return Math.min(100, Math.round(score));

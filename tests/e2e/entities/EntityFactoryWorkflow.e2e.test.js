@@ -14,7 +14,14 @@
  * - Factory error scenarios and recovery mechanisms
  */
 
-import { describe, it, expect, beforeAll, afterEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterEach,
+  afterAll,
+} from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Entity Factory E2E Workflow', () => {
@@ -43,8 +50,10 @@ describe('Entity Factory E2E Workflow', () => {
     it('should initialize factory services with proper dependency resolution', async () => {
       // Arrange
       // Import factory classes for validation
-      const EntityFactory = (await import('../../../src/entities/factories/entityFactory.js')).default;
-      
+      const EntityFactory = (
+        await import('../../../src/entities/factories/entityFactory.js')
+      ).default;
+
       // Create a definition first
       const definitionId = 'test:factory_init';
       await testBed.ensureEntityDefinitionExists(definitionId, {
@@ -53,7 +62,7 @@ describe('Entity Factory E2E Workflow', () => {
           'core:name': { text: 'Factory Init Test' },
         },
       });
-      
+
       // Act - Create factory instance with dependencies
       const factory = new EntityFactory({
         validator: testBed.validator,
@@ -67,7 +76,7 @@ describe('Entity Factory E2E Workflow', () => {
       expect(factory).toBeDefined();
       expect(typeof factory.create).toBe('function');
       expect(typeof factory.reconstruct).toBe('function');
-      
+
       // Test that factory can create an entity
       // Note: EntityFactory.create() signature is: (definitionId, options, registry, repository, definition)
       // Create a mock repository with the required has() method
@@ -75,16 +84,16 @@ describe('Entity Factory E2E Workflow', () => {
         has: (id) => false, // For testing, assume no duplicates exist
         add: (entity) => {},
         get: (id) => null,
-        remove: (id) => {}
+        remove: (id) => {},
       };
-      
+
       const entity = factory.create(
         definitionId,
         { instanceId: 'factory_init_test' },
         testBed.registry,
         mockRepository
       );
-      
+
       expect(entity).toBeDefined();
       expect(entity.id).toBe('factory_init_test');
       // Entity objects store definition ID internally but don't expose getDefinitionId()
@@ -98,7 +107,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:coordinated_entity';
       const instanceId = 'coordinated_test_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId, {
         id: definitionId,
         components: {
@@ -109,37 +118,43 @@ describe('Entity Factory E2E Workflow', () => {
 
       // Act - Create entity through entity manager (uses factory internally)
       const startTime = performance.now();
-      const entity = await testBed.entityManager.createEntityInstance(definitionId, {
-        instanceId,
-      });
+      const entity = await testBed.entityManager.createEntityInstance(
+        definitionId,
+        {
+          instanceId,
+        }
+      );
       const endTime = performance.now();
       const creationTime = endTime - startTime;
 
       // Assert coordination between factories worked - verify the entity was created correctly
       expect(entity).toBeDefined();
       expect(entity.entityId || entity.id).toBe(instanceId);
-      
+
       // Verify the entity has the expected components from the definition
       expect(entity.hasComponent('core:name')).toBe(true);
       expect(entity.hasComponent('core:description')).toBe(true);
-      
+
       const nameData = entity.getComponentData('core:name');
       const descriptionData = entity.getComponentData('core:description');
       expect(nameData.text).toBe('Test Entity');
       expect(descriptionData.text).toBe('Factory coordination test');
-      
+
       // Verify entity was registered in the entity manager
-      const retrievedEntity = testBed.entityManager.getEntityInstance(instanceId);
+      const retrievedEntity =
+        testBed.entityManager.getEntityInstance(instanceId);
       expect(retrievedEntity).toBeDefined();
       expect(retrievedEntity.id).toBe(instanceId);
-      
+
       // Performance validation (<100ms target)
       expect(creationTime).toBeLessThan(100);
     });
 
     it('should properly manage factory lifecycle and cleanup resources', async () => {
       // Arrange
-      const EntityFactory = (await import('../../../src/entities/factories/entityFactory.js')).default;
+      const EntityFactory = (
+        await import('../../../src/entities/factories/entityFactory.js')
+      ).default;
       const factoryInstances = [];
       const memoryBefore = process.memoryUsage().heapUsed;
 
@@ -152,9 +167,9 @@ describe('Entity Factory E2E Workflow', () => {
           cloner: (obj) => JSON.parse(JSON.stringify(obj)),
           defaultPolicy: { defaultComponentIds: [] },
         });
-        
+
         factoryInstances.push(factory);
-        
+
         // Use factory to create entities
         const definitionId = `test:lifecycle_entity_${i}`;
         await testBed.ensureEntityDefinitionExists(definitionId, {
@@ -163,39 +178,39 @@ describe('Entity Factory E2E Workflow', () => {
             'core:name': { text: `Lifecycle Entity ${i}` },
           },
         });
-        
+
         // Create mock repository for this test
         const mockRepository = {
           has: (id) => false,
           add: (entity) => {},
           get: (id) => null,
-          remove: (id) => {}
+          remove: (id) => {},
         };
-        
+
         const entity = factory.create(
           definitionId,
           { instanceId: `lifecycle_entity_${i}` },
           testBed.registry,
           mockRepository
         );
-        
+
         expect(entity).toBeDefined();
       }
 
       // Clean up references
       factoryInstances.length = 0;
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
       }
 
       const memoryAfter = process.memoryUsage().heapUsed;
-      
+
       // Assert - Memory should not grow excessively
       const memoryGrowth = memoryAfter - memoryBefore;
       const memoryGrowthMB = memoryGrowth / (1024 * 1024);
-      
+
       // Memory growth should be reasonable (< 10MB for 10 factories)
       expect(memoryGrowthMB).toBeLessThan(10);
     });
@@ -206,7 +221,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:validated_entity';
       const instanceId = 'validated_001';
-      
+
       // Create definition with components that require validation
       await testBed.ensureEntityDefinitionExists(definitionId, {
         id: definitionId,
@@ -259,7 +274,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Assert validation occurred and entity was created correctly
       expect(entity).toBeDefined();
       expect(entity.id).toBe(instanceId);
-      
+
       // Verify components were validated and applied
       const statsComponent = entity.getComponentData('core:stats');
       expect(statsComponent).toEqual({
@@ -268,7 +283,7 @@ describe('Entity Factory E2E Workflow', () => {
         mana: 75,
         maxMana: 150,
       });
-      
+
       // Verify position component from definition
       const positionComponent = entity.getComponentData('core:position');
       expect(positionComponent).toEqual({
@@ -280,7 +295,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Arrange - Create interdependent components
       const definitionId = 'test:cascade_entity';
       const instanceId = 'cascade_001';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId, {
         id: definitionId,
         components: {
@@ -327,17 +342,11 @@ describe('Entity Factory E2E Workflow', () => {
             slots: {
               type: 'object',
               properties: {
-                weapon: { 
-                  oneOf: [
-                    { type: 'null' },
-                    { type: 'string' },
-                  ],
+                weapon: {
+                  oneOf: [{ type: 'null' }, { type: 'string' }],
                 },
                 armor: {
-                  oneOf: [
-                    { type: 'null' },
-                    { type: 'string' },
-                  ],
+                  oneOf: [{ type: 'null' }, { type: 'string' }],
                 },
               },
             },
@@ -369,11 +378,11 @@ describe('Entity Factory E2E Workflow', () => {
 
       // Assert cascade validation succeeded
       expect(entity).toBeDefined();
-      
+
       const inventory = entity.getComponentData('test:inventory');
       expect(inventory.items).toHaveLength(2);
       expect(inventory.maxWeight).toBe(150);
-      
+
       const equipment = entity.getComponentData('test:equipment');
       expect(equipment.slots.weapon).toBe('sword');
       expect(equipment.slots.armor).toBeNull();
@@ -383,7 +392,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Arrange
       const definitionId = 'test:default_injection';
       const instanceId = 'injection_001';
-      
+
       // Create a definition with some components
       await testBed.ensureEntityDefinitionExists(definitionId, {
         id: definitionId,
@@ -393,7 +402,9 @@ describe('Entity Factory E2E Workflow', () => {
       });
 
       // Mock default policy to inject additional components
-      const EntityFactory = (await import('../../../src/entities/factories/entityFactory.js')).default;
+      const EntityFactory = (
+        await import('../../../src/entities/factories/entityFactory.js')
+      ).default;
       const factory = new EntityFactory({
         validator: testBed.validator,
         logger: testBed.logger,
@@ -456,9 +467,9 @@ describe('Entity Factory E2E Workflow', () => {
         has: (id) => false,
         add: (entity) => {},
         get: (id) => null,
-        remove: (id) => {}
+        remove: (id) => {},
       };
-      
+
       const beforeCreation = Date.now();
       const entity = factory.create(
         definitionId,
@@ -471,29 +482,29 @@ describe('Entity Factory E2E Workflow', () => {
       // Assert default components were injected
       expect(entity).toBeDefined();
       expect(entity.id).toBe(instanceId);
-      
+
       // Check explicitly defined component
       expect(entity.hasComponent('core:name')).toBe(true);
       const nameData = entity.getComponentData('core:name');
       expect(nameData.text).toBe('Test Entity');
-      
+
       // Check if injected default components were added (they might not be if factory doesn't implement this feature)
       // This test validates that IF the factory supports default injection, it works correctly
       // If not supported, we just verify the core functionality works
       const hasTimestamp = entity.hasComponent('core:timestamp');
       const hasMetadata = entity.hasComponent('core:metadata');
-      
+
       if (hasTimestamp) {
         const timestampData = entity.getComponentData('core:timestamp');
         expect(timestampData.created).toBeGreaterThanOrEqual(beforeCreation);
         expect(timestampData.created).toBeLessThanOrEqual(afterCreation);
       }
-      
+
       if (hasMetadata) {
         const metadataData = entity.getComponentData('core:metadata');
         expect(metadataData).toBeDefined();
       }
-      
+
       // At minimum, verify the explicitly defined component exists
       expect(entity.hasComponent('core:name')).toBe(true);
     });
@@ -508,7 +519,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Arrange
       const nonExistentDefinitionId = 'test:non_existent_definition';
       const fallbackDefinitionId = 'test:fallback_definition';
-      
+
       // Only create the fallback definition
       await testBed.ensureEntityDefinitionExists(fallbackDefinitionId, {
         id: fallbackDefinitionId,
@@ -519,10 +530,13 @@ describe('Entity Factory E2E Workflow', () => {
 
       // Act & Assert - Attempt to create entity with non-existent definition
       try {
-        await testBed.entityManager.createEntityInstance(nonExistentDefinitionId, {
-          instanceId: 'should_fail',
-        });
-        
+        await testBed.entityManager.createEntityInstance(
+          nonExistentDefinitionId,
+          {
+            instanceId: 'should_fail',
+          }
+        );
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
@@ -532,10 +546,13 @@ describe('Entity Factory E2E Workflow', () => {
       }
 
       // Verify system remains stable after lookup failure
-      const validEntity = await testBed.entityManager.createEntityInstance(fallbackDefinitionId, {
-        instanceId: 'fallback_001',
-      });
-      
+      const validEntity = await testBed.entityManager.createEntityInstance(
+        fallbackDefinitionId,
+        {
+          instanceId: 'fallback_001',
+        }
+      );
+
       expect(validEntity).toBeDefined();
       expect(validEntity.id).toBe('fallback_001');
     });
@@ -549,7 +566,7 @@ describe('Entity Factory E2E Workflow', () => {
     it('should handle and translate factory validation errors appropriately', async () => {
       // Arrange
       const definitionId = 'test:invalid_entity';
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId, {
         id: definitionId,
         components: {
@@ -585,7 +602,7 @@ describe('Entity Factory E2E Workflow', () => {
             },
           },
         });
-        
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
@@ -594,7 +611,7 @@ describe('Entity Factory E2E Workflow', () => {
         // Check for validation-related error
         const errorMessage = error.message.toLowerCase();
         expect(errorMessage).toMatch(/validation|validate|invalid|strict/);
-        
+
         // Verify error contains helpful information
         expect(error.message.toLowerCase()).toMatch(/strict|component|invalid/);
       }
@@ -609,15 +626,17 @@ describe('Entity Factory E2E Workflow', () => {
           },
         },
       });
-      
+
       expect(validEntity).toBeDefined();
       expect(validEntity.id).toBe('valid_after_error');
     });
 
     it('should handle factory initialization failures and provide recovery', async () => {
       // Arrange - Create factory with invalid dependencies
-      const EntityFactory = (await import('../../../src/entities/factories/entityFactory.js')).default;
-      
+      const EntityFactory = (
+        await import('../../../src/entities/factories/entityFactory.js')
+      ).default;
+
       // Act & Assert - Try to create factory with missing validator
       try {
         new EntityFactory({
@@ -627,14 +646,16 @@ describe('Entity Factory E2E Workflow', () => {
           cloner: (obj) => JSON.parse(JSON.stringify(obj)),
           defaultPolicy: {},
         });
-        
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
         // Should throw dependency validation error
         expect(error).toBeDefined();
         // Should contain reference to the missing dependency
-        expect(error.message.toLowerCase()).toMatch(/validator|ischemavalidator|dependency/);
+        expect(error.message.toLowerCase()).toMatch(
+          /validator|ischemavalidator|dependency/
+        );
       }
 
       // Try with missing logger
@@ -646,7 +667,7 @@ describe('Entity Factory E2E Workflow', () => {
           cloner: (obj) => JSON.parse(JSON.stringify(obj)),
           defaultPolicy: {},
         });
-        
+
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
@@ -663,14 +684,16 @@ describe('Entity Factory E2E Workflow', () => {
         cloner: (obj) => JSON.parse(JSON.stringify(obj)),
         defaultPolicy: { defaultComponentIds: [] },
       });
-      
+
       expect(validFactory).toBeDefined();
       expect(typeof validFactory.create).toBe('function');
     });
 
     it('should handle entity reconstruction errors with proper error context', async () => {
       // Arrange
-      const EntityFactory = (await import('../../../src/entities/factories/entityFactory.js')).default;
+      const EntityFactory = (
+        await import('../../../src/entities/factories/entityFactory.js')
+      ).default;
       const factory = new EntityFactory({
         validator: testBed.validator,
         logger: testBed.logger,
@@ -680,13 +703,13 @@ describe('Entity Factory E2E Workflow', () => {
       });
 
       // Act & Assert - Try to reconstruct with invalid data
-      
+
       // Create mock repository for reconstruction tests
       const mockRepository = {
         has: (id) => false,
         add: (entity) => {},
         get: (id) => null,
-        remove: (id) => {}
+        remove: (id) => {},
       };
 
       // Test null serialized data
@@ -736,7 +759,7 @@ describe('Entity Factory E2E Workflow', () => {
       // Test invalid component data
       const definitionId = 'test:reconstruct_entity';
       await testBed.ensureEntityDefinitionExists(definitionId);
-      
+
       try {
         factory.reconstruct(
           {
@@ -767,7 +790,7 @@ describe('Entity Factory E2E Workflow', () => {
         testBed.registry,
         mockRepository
       );
-      
+
       expect(validEntity).toBeDefined();
       expect(validEntity.id).toBe('valid_reconstruct');
     });
@@ -777,7 +800,7 @@ describe('Entity Factory E2E Workflow', () => {
       const definitionId = 'test:cascade_failure';
       const failureScenarios = [];
       const recoveryAttempts = [];
-      
+
       await testBed.ensureEntityDefinitionExists(definitionId, {
         id: definitionId,
         components: {
@@ -789,8 +812,15 @@ describe('Entity Factory E2E Workflow', () => {
       const scenarios = [
         { instanceId: '', error: 'empty instanceId' }, // Empty ID
         { instanceId: null, error: 'null instanceId' }, // Null ID
-        { instanceId: 'duplicate_id', duplicate: true, error: 'duplicate entity' }, // Duplicate
-        { componentOverrides: { 'invalid:component': {} }, error: 'invalid component' }, // Invalid component
+        {
+          instanceId: 'duplicate_id',
+          duplicate: true,
+          error: 'duplicate entity',
+        }, // Duplicate
+        {
+          componentOverrides: { 'invalid:component': {} },
+          error: 'invalid component',
+        }, // Invalid component
       ];
 
       // Act - Execute failure scenarios
@@ -802,27 +832,30 @@ describe('Entity Factory E2E Workflow', () => {
               instanceId: scenario.instanceId,
             });
           }
-          
+
           // Attempt operation that should fail
           await testBed.createTestEntity(definitionId, {
             instanceId: scenario.instanceId,
             componentOverrides: scenario.componentOverrides,
           });
-          
+
           failureScenarios.push({ scenario, failed: false });
         } catch (error) {
-          failureScenarios.push({ 
-            scenario, 
-            failed: true, 
+          failureScenarios.push({
+            scenario,
+            failed: true,
             error: error.message,
           });
-          
+
           // Attempt recovery
           try {
-            const recoveryEntity = await testBed.createTestEntity(definitionId, {
-              instanceId: `recovery_${Date.now()}_${Math.random()}`,
-            });
-            
+            const recoveryEntity = await testBed.createTestEntity(
+              definitionId,
+              {
+                instanceId: `recovery_${Date.now()}_${Math.random()}`,
+              }
+            );
+
             recoveryAttempts.push({
               scenario: scenario.error,
               recovered: true,
@@ -839,20 +872,22 @@ describe('Entity Factory E2E Workflow', () => {
       }
 
       // Assert all scenarios failed as expected
-      expect(failureScenarios.filter(s => s.failed).length).toBeGreaterThanOrEqual(3);
-      
+      expect(
+        failureScenarios.filter((s) => s.failed).length
+      ).toBeGreaterThanOrEqual(3);
+
       // Assert all recovery attempts succeeded
-      const successfulRecoveries = recoveryAttempts.filter(r => r.recovered);
+      const successfulRecoveries = recoveryAttempts.filter((r) => r.recovered);
       expect(successfulRecoveries.length).toBe(recoveryAttempts.length);
-      
+
       // Verify system remains fully functional
       const finalValidation = await testBed.createTestEntity(definitionId, {
         instanceId: 'final_validation_entity',
       });
-      
+
       expect(finalValidation).toBeDefined();
       expect(finalValidation.id).toBe('final_validation_entity');
-      
+
       // Check event system still works
       const events = testBed.getEventsByType('core:entity_created');
       expect(events.length).toBeGreaterThan(0);

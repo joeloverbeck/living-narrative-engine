@@ -156,34 +156,16 @@ describe('FOR_EACH collection parameter type validation', () => {
 
       // The handler throws TypeError with a helpful message explaining the issue
       await expect(
-        handleForEach(
-          node,
-          ctx,
-          logger,
-          mockInterpreter,
-          executeActionSequence
-        )
+        handleForEach(node, ctx, logger, mockInterpreter, executeActionSequence)
       ).rejects.toThrow(TypeError);
 
       // Verify the error message is helpful and includes a fix suggestion
       await expect(
-        handleForEach(
-          node,
-          ctx,
-          logger,
-          mockInterpreter,
-          executeActionSequence
-        )
+        handleForEach(node, ctx, logger, mockInterpreter, executeActionSequence)
       ).rejects.toThrow(/collection.*must be.*string path.*not.*JSON Logic/i);
 
       await expect(
-        handleForEach(
-          node,
-          ctx,
-          logger,
-          mockInterpreter,
-          executeActionSequence
-        )
+        handleForEach(node, ctx, logger, mockInterpreter, executeActionSequence)
       ).rejects.toThrow(/Use: "context\.weaponDamage\.entries" instead/);
 
       // Should NOT have executed any actions
@@ -258,7 +240,9 @@ describe('FOR_EACH collection parameter type validation', () => {
       );
 
       expect(logger.warn).toHaveBeenCalled();
-      expect(logger.warn.mock.calls[0][0]).toContain('did not resolve to an array');
+      expect(logger.warn.mock.calls[0][0]).toContain(
+        'did not resolve to an array'
+      );
       expect(executeActionSequence).not.toHaveBeenCalled();
     });
 
@@ -327,8 +311,7 @@ describe('Weapons melee macros FOR_EACH validation', () => {
   const findOutcomeBranch = (outcome) =>
     swingAtTargetRule.actions.find(
       (op) =>
-        op.type === 'IF' &&
-        op.parameters?.condition?.['==']?.[1] === outcome
+        op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
     );
 
   describe('Rule delegates to macros', () => {

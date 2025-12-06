@@ -113,8 +113,8 @@ export class LoadFailureValidator extends BaseValidator {
             typeof error?.message === 'string'
               ? error.message
               : error !== undefined
-              ? String(error)
-              : 'Unknown error';
+                ? String(error)
+                : 'Unknown error';
 
           builder.addError(
             'ENTITY_LOAD_FAILURE',

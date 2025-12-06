@@ -83,7 +83,9 @@ describe('Planning Events Diagnostic', () => {
 
     const goal = createTestGoal({
       id: 'test:heal_self',
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -95,7 +97,9 @@ describe('Planning Events Diagnostic', () => {
       entities: {},
     };
 
-    console.log('1. Executing decideTurn with goal: health >= 80, current: 10\n');
+    console.log(
+      '1. Executing decideTurn with goal: health >= 80, current: 10\n'
+    );
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
@@ -104,7 +108,7 @@ describe('Planning Events Diagnostic', () => {
 
     console.log('3. Event types:');
     const eventCounts = {};
-    events.forEach(e => {
+    events.forEach((e) => {
       eventCounts[e.type] = (eventCounts[e.type] || 0) + 1;
     });
     Object.entries(eventCounts).forEach(([type, count]) => {
@@ -119,15 +123,21 @@ describe('Planning Events Diagnostic', () => {
       }
     });
 
-    const planningCompleted = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
-    const planningFailed = events.some(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+    const planningCompleted = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
+    const planningFailed = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+    );
 
     console.log(`\n5. Planning result:`);
     console.log(`   PLANNING_COMPLETED: ${planningCompleted}`);
     console.log(`   PLANNING_FAILED: ${planningFailed}`);
 
     if (planningFailed) {
-      const failureEvent = events.find(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+      const failureEvent = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+      );
       console.log(`\n6. Failure details:`);
       console.log(`   Reason:`, failureEvent?.payload?.reason);
     }

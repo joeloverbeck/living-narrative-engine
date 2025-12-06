@@ -101,11 +101,7 @@ export async function extractHierarchicalSockets(
   // 4. For blueprints without structure template, extract child sockets
   //    from entities attached to slots that have child slots with parent refs
   if (!structureTemplate && dataRegistry && blueprint) {
-    await extractSlotChildSockets(
-      blueprint,
-      hierarchicalSockets,
-      dataRegistry
-    );
+    await extractSlotChildSockets(blueprint, hierarchicalSockets, dataRegistry);
   }
 
   return hierarchicalSockets;
@@ -234,7 +230,11 @@ async function extractStructureTemplateSockets(
  * @returns {Promise<void>}
  * @private
  */
-async function extractLimbSetSockets(limbSet, hierarchicalSockets, dataRegistry) {
+async function extractLimbSetSockets(
+  limbSet,
+  hierarchicalSockets,
+  dataRegistry
+) {
   const socketPattern = limbSet?.socketPattern;
   if (!socketPattern) {
     return;
@@ -549,7 +549,11 @@ function resolveSlotDefinition(slotConfig, library) {
  * @returns {Promise<void>}
  * @private
  */
-async function extractComposedSlots(blueprint, hierarchicalSockets, dataRegistry) {
+async function extractComposedSlots(
+  blueprint,
+  hierarchicalSockets,
+  dataRegistry
+) {
   const composeInstructions = blueprint?.compose;
   if (!Array.isArray(composeInstructions)) {
     return;
@@ -578,7 +582,9 @@ async function extractComposedSlots(blueprint, hierarchicalSockets, dataRegistry
     if (part.library) {
       library = await getSlotLibrary(dataRegistry, part.library);
       // DEBUG: Log library loading
-      console.log(`[DEBUG socketExtractor] Library ${part.library}: ${library ? 'LOADED' : 'NOT FOUND'}`);
+      console.log(
+        `[DEBUG socketExtractor] Library ${part.library}: ${library ? 'LOADED' : 'NOT FOUND'}`
+      );
     }
 
     // First pass: collect all resolved slots and register them as valid parents

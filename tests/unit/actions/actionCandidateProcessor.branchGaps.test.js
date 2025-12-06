@@ -68,7 +68,11 @@ describe('ActionCandidateProcessor branch coverage gaps', () => {
     const result = processor.process(actionDef, actorEntity, context);
 
     expect(result.success).toBe(true);
-    expect(result.value).toEqual({ actions: [], errors: [], cause: 'no-targets' });
+    expect(result.value).toEqual({
+      actions: [],
+      errors: [],
+      cause: 'no-targets',
+    });
     expect(mocks.prerequisiteEvaluationService.evaluate).not.toHaveBeenCalled();
     expect(mocks.targetResolutionService.resolveTargets).toHaveBeenCalledWith(
       'none',

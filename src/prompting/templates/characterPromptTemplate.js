@@ -7,14 +7,14 @@
 /**
  * Standard character prompt template - Version 2.0
  * Uses placeholder syntax {variableName} for substitution
- * 
+ *
  * ARCHITECTURE: Constraint-First Design
  * Places critical formatting and behavior rules at the beginning
  * to mitigate attention decay in long prompts (>6000 tokens)
- * 
+ *
  * Section Order (by design):
  * 1. System Constraints - Critical output format and behavior rules
- * 2. Content Policy - Mature content guidelines  
+ * 2. Content Policy - Mature content guidelines
  * 3. Task Definition - What the character needs to do
  * 4. Character Identity - Persona, portrayal guidelines, goals
  * 5. World State - Location, entities, perception

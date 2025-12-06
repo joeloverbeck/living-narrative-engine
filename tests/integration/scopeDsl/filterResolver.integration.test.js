@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import createFilterResolver from '../../../src/scopeDsl/nodes/filterResolver.js';
 import ScopeDslErrorHandler from '../../../src/scopeDsl/core/scopeDslErrorHandler.js';
 import { ScopeDslError } from '../../../src/scopeDsl/errors/scopeDslError.js';
@@ -60,7 +54,7 @@ function createFilterResolverHarness({
           'core:actor': { name: 'Hero' },
         },
       },
-    ],
+    ]
   );
 
   const jsonLogicEval = new JsonLogicEvaluationService({ logger });
@@ -200,8 +194,9 @@ describe('filterResolver integration coverage', () => {
     expect(firstResult.has('item:legendary-tonic')).toBe(true);
     expect(
       Array.from(firstResult).some(
-        (value) => typeof value === 'object' && value?.id === 'item:crafted-relic',
-      ),
+        (value) =>
+          typeof value === 'object' && value?.id === 'item:crafted-relic'
+      )
     ).toBe(true);
     expect(firstResult.has('item:common-shield')).toBe(false);
     expect(firstResult.has(42)).toBe(false);
@@ -213,12 +208,12 @@ describe('filterResolver integration coverage', () => {
       'info',
       expect.stringContaining('Applying filter to'),
       'ScopeEngine.resolveFilter',
-      expect.any(Object),
+      expect.any(Object)
     );
     expect(trace.addLog).toHaveBeenCalledWith(
       'info',
       expect.stringContaining('Filter application complete'),
-      'ScopeEngine.resolveFilter',
+      'ScopeEngine.resolveFilter'
     );
     expect(resultWithoutTrace.has('item:legendary-tonic')).toBe(true);
   });
@@ -290,7 +285,7 @@ describe('filterResolver integration coverage', () => {
         actorEntity: null,
         dispatcher: { resolve: () => new Set() },
         runtimeCtx: {},
-      }),
+      })
     ).toThrow(/actorEntity is undefined/);
   });
 
@@ -337,7 +332,7 @@ describe('filterResolver integration coverage', () => {
         actorEntity: { id: 123 },
         dispatcher: { resolve: () => new Set() },
         runtimeCtx: {},
-      }),
+      })
     ).toThrow(/invalid ID/);
   });
 
@@ -352,8 +347,8 @@ describe('filterResolver integration coverage', () => {
           actorEntity,
           dispatcher: { resolve: () => new Set() },
           runtimeCtx,
-        },
-      ),
+        }
+      )
     ).toThrow(ScopeDslError);
   });
 
@@ -371,12 +366,12 @@ describe('filterResolver integration coverage', () => {
           actorEntity,
           dispatcher: { resolve: () => new Set() },
           runtimeCtx,
-        },
-      ),
+        }
+      )
     ).toThrow(/missing parent node/);
   });
 
-  it("surfaces condition_ref resolution errors through the error handler", () => {
+  it('surfaces condition_ref resolution errors through the error handler', () => {
     const entities = baseEntities;
     const logger = createTestLogger();
     const jsonLogicEval = new JsonLogicEvaluationService({ logger });
@@ -394,10 +389,12 @@ describe('filterResolver integration coverage', () => {
       evaluate: (logic, context) => {
         if (logic.forceConditionRefFailure) {
           throw new Error(
-            "Could not resolve condition_ref 'missing_condition'. Definition or its logic property not found.",
+            "Could not resolve condition_ref 'missing_condition'. Definition or its logic property not found."
           );
         }
-        return scopeEngine._createLogicEvaluator(runtimeCtx).evaluate(logic, context);
+        return scopeEngine
+          ._createLogicEvaluator(runtimeCtx)
+          .evaluate(logic, context);
       },
     };
 
@@ -418,8 +415,8 @@ describe('filterResolver integration coverage', () => {
       filterResolver.resolve(node, {
         actorEntity: runtimeCtx.entityManager.getEntityInstance('actor:hero'),
         dispatcher: { resolve: () => new Set(['item:legendary-blade']) },
-      runtimeCtx,
-    }),
+        runtimeCtx,
+      })
     ).toThrow(ScopeDslError);
   });
 
@@ -439,10 +436,12 @@ describe('filterResolver integration coverage', () => {
       evaluate: (logic, context) => {
         if (logic.forceConditionRefFailure) {
           throw new Error(
-            "Could not resolve condition_ref 'missing_condition'. Definition or its logic property not found.",
+            "Could not resolve condition_ref 'missing_condition'. Definition or its logic property not found."
           );
         }
-        return scopeEngine._createLogicEvaluator(runtimeCtx).evaluate(logic, context);
+        return scopeEngine
+          ._createLogicEvaluator(runtimeCtx)
+          .evaluate(logic, context);
       },
     };
 
@@ -463,8 +462,8 @@ describe('filterResolver integration coverage', () => {
           actorEntity: runtimeCtx.entityManager.getEntityInstance('actor:hero'),
           dispatcher: { resolve: () => new Set(['item:legendary-blade']) },
           runtimeCtx,
-        },
-      ),
+        }
+      )
     ).toThrow(/Filter logic evaluation failed/);
   });
 });

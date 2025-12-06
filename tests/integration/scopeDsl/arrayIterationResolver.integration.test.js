@@ -92,9 +92,9 @@ describe('ArrayIterationResolver integration coverage', () => {
 
   describe('dependency validation', () => {
     it('validates error handler contract when provided', () => {
-      expect(() =>
-        createArrayIterationResolver({ errorHandler: {} })
-      ).toThrow(InvalidArgumentError);
+      expect(() => createArrayIterationResolver({ errorHandler: {} })).toThrow(
+        InvalidArgumentError
+      );
     });
 
     it('validates clothing accessibility service contract when provided', () => {
@@ -117,7 +117,7 @@ describe('ArrayIterationResolver integration coverage', () => {
           dispatcher: createStaticDispatcher(new Set()),
           trace: new RecordingTrace(),
         })
-      ).toThrow("ArrayIterationResolver: actorEntity is missing from context");
+      ).toThrow('ArrayIterationResolver: actorEntity is missing from context');
 
       expect(errorHandler.getErrorBuffer()).toHaveLength(1);
       const [record] = errorHandler.getErrorBuffer();
@@ -129,11 +129,18 @@ describe('ArrayIterationResolver integration coverage', () => {
       const errorHandler = new RecordingErrorHandler();
       const resolver = createArrayIterationResolver({ errorHandler });
       const trace = new RecordingTrace();
-      const node = { type: 'ArrayIterationStep', parent: { type: 'Source', id: 'src:node' } };
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Source', id: 'src:node' },
+      };
 
       const parentResults = new Set([
         ['item:hat', null, 'item:scarf'],
-        { __isClothingAccessObject: true, entityId: 'entity:clothed', mode: 'topmost' },
+        {
+          __isClothingAccessObject: true,
+          entityId: 'entity:clothed',
+          mode: 'topmost',
+        },
         null,
         undefined,
         'entity:direct',
@@ -145,10 +152,18 @@ describe('ArrayIterationResolver integration coverage', () => {
         trace,
       });
 
-      expect(Array.from(result)).toEqual(['item:hat', 'item:scarf', 'entity:direct']);
+      expect(Array.from(result)).toEqual([
+        'item:hat',
+        'item:scarf',
+        'entity:direct',
+      ]);
 
-      expect(trace.steps[0]).toContain('No clothing accessibility service available');
-      expect(trace.steps.pop()).toBe('ArrayIterationResolver flattened 0 elements');
+      expect(trace.steps[0]).toContain(
+        'No clothing accessibility service available'
+      );
+      expect(trace.steps.pop()).toBe(
+        'ArrayIterationResolver flattened 0 elements'
+      );
 
       const records = errorHandler.getErrorBuffer();
       expect(records).toHaveLength(1);
@@ -162,14 +177,21 @@ describe('ArrayIterationResolver integration coverage', () => {
       const resolver = createArrayIterationResolver({ errorHandler });
       const trace = new RecordingTrace();
 
-      const nestedNode = { type: 'ArrayIterationStep', parent: { type: 'ArrayIterationStep' } };
+      const nestedNode = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'ArrayIterationStep' },
+      };
       const nestedResults = resolver.resolve(nestedNode, {
-        dispatcher: createStaticDispatcher(new Set(['entity:nested-1', 'entity:nested-2'])),
+        dispatcher: createStaticDispatcher(
+          new Set(['entity:nested-1', 'entity:nested-2'])
+        ),
         actorEntity,
         trace,
       });
 
-      expect(new Set(nestedResults)).toEqual(new Set(['entity:nested-1', 'entity:nested-2']));
+      expect(new Set(nestedResults)).toEqual(
+        new Set(['entity:nested-1', 'entity:nested-2'])
+      );
 
       const entityStepNode = {
         type: 'ArrayIterationStep',
@@ -224,7 +246,11 @@ describe('ArrayIterationResolver integration coverage', () => {
       const result = resolver.resolve(clothingNode, {
         dispatcher: createStaticDispatcher(
           new Set([
-            { __isClothingAccessObject: true, entityId: 'entity:hero', mode: 'custom-mode' },
+            {
+              __isClothingAccessObject: true,
+              entityId: 'entity:hero',
+              mode: 'custom-mode',
+            },
           ])
         ),
         actorEntity,
@@ -239,14 +265,21 @@ describe('ArrayIterationResolver integration coverage', () => {
         context: 'removal',
         sortByPriority: true,
       });
-      expect(trace.steps).toContain('Retrieved 2 accessible items for mode: custom-mode');
+      expect(trace.steps).toContain(
+        'Retrieved 2 accessible items for mode: custom-mode'
+      );
       expect(errorHandler.getErrorBuffer()).toHaveLength(0);
     });
 
     it('enforces clothing access array limits and records overflow errors', () => {
-      const clothingItems = Array.from({ length: 10001 }, (_, index) => `item:${index}`);
+      const clothingItems = Array.from(
+        { length: 10001 },
+        (_, index) => `item:${index}`
+      );
       const errorHandler = new RecordingErrorHandler();
-      const clothingService = new RecordingClothingAccessibilityService(() => clothingItems);
+      const clothingService = new RecordingClothingAccessibilityService(
+        () => clothingItems
+      );
       const resolver = createArrayIterationResolver({
         clothingAccessibilityService: clothingService,
         errorHandler,
@@ -257,7 +290,11 @@ describe('ArrayIterationResolver integration coverage', () => {
       const result = resolver.resolve(node, {
         dispatcher: createStaticDispatcher(
           new Set([
-            { __isClothingAccessObject: true, entityId: 'entity:limit', mode: 'topmost' },
+            {
+              __isClothingAccessObject: true,
+              entityId: 'entity:limit',
+              mode: 'topmost',
+            },
           ])
         ),
         actorEntity,
@@ -267,7 +304,9 @@ describe('ArrayIterationResolver integration coverage', () => {
       expect(result.size).toBe(10000);
       const [overflowRecord] = errorHandler.getErrorBuffer();
       expect(overflowRecord.code).toBe(ErrorCodes.MEMORY_LIMIT);
-      expect(trace.steps.pop()).toBe('ArrayIterationResolver flattened 10001 elements');
+      expect(trace.steps.pop()).toBe(
+        'ArrayIterationResolver flattened 10001 elements'
+      );
     });
 
     it('propagates clothing accessibility errors through ScopeDslErrorHandler', () => {
@@ -290,7 +329,11 @@ describe('ArrayIterationResolver integration coverage', () => {
         resolver.resolve(node, {
           dispatcher: createStaticDispatcher(
             new Set([
-              { __isClothingAccessObject: true, entityId: 'entity:error', mode: 'topmost' },
+              {
+                __isClothingAccessObject: true,
+                entityId: 'entity:error',
+                mode: 'topmost',
+              },
             ])
           ),
           actorEntity,
@@ -315,7 +358,10 @@ describe('ArrayIterationResolver integration coverage', () => {
       });
       const resolver = createArrayIterationResolver({ errorHandler });
       const node = { type: 'ArrayIterationStep', parent: { type: 'Source' } };
-      const largeArray = Array.from({ length: 10002 }, (_, index) => `value:${index}`);
+      const largeArray = Array.from(
+        { length: 10002 },
+        (_, index) => `value:${index}`
+      );
 
       const outcome = resolver.resolve(node, {
         dispatcher: createStaticDispatcher(new Set([largeArray])),

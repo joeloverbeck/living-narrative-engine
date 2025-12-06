@@ -158,11 +158,7 @@ function isKnownJsonLogicOperator(operator) {
  * @returns {boolean} True when the value should be treated as JSON Logic.
  */
 function hasValidJsonLogicShape(candidate) {
-  if (
-    !candidate ||
-    typeof candidate !== 'object' ||
-    Array.isArray(candidate)
-  ) {
+  if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) {
     return false;
   }
 

@@ -164,9 +164,8 @@ export class TargetNormalizationService {
       );
     }
 
-    const primaryTargetContext = this.#resolvePrimaryFromResolvedTargets(
-      resolvedTargets
-    );
+    const primaryTargetContext =
+      this.#resolvePrimaryFromResolvedTargets(resolvedTargets);
 
     const params = this.#buildParams({
       targetIds,
@@ -174,15 +173,16 @@ export class TargetNormalizationService {
       isMultiTarget: isMultiTarget || Object.keys(targetIds).length > 1,
     });
 
-    const targetExtractionResult = TargetExtractionResult.fromResolvedParameters(
-      {
-        isMultiTarget: Boolean(
-          params.isMultiTarget || Object.keys(targetIds).length > 1
-        ),
-        targetIds,
-      },
-      this.#logger
-    );
+    const targetExtractionResult =
+      TargetExtractionResult.fromResolvedParameters(
+        {
+          isMultiTarget: Boolean(
+            params.isMultiTarget || Object.keys(targetIds).length > 1
+          ),
+          targetIds,
+        },
+        this.#logger
+      );
 
     return {
       targetIds,
@@ -199,7 +199,8 @@ export class TargetNormalizationService {
    * @returns {TargetNormalizationResult} Target normalisation result
    */
   #normalizeFromTargetContexts({ targetContexts }) {
-    const primaryTargetContext = this.#resolvePrimaryFromContexts(targetContexts);
+    const primaryTargetContext =
+      this.#resolvePrimaryFromContexts(targetContexts);
 
     const targetExtractionResult = primaryTargetContext?.entityId
       ? TargetExtractionResult.fromResolvedParameters(

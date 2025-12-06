@@ -61,7 +61,9 @@ describe('Multi-Target Migration Unit Tests', () => {
 
       // Verify the modern format structure
       expect(followAction.targets.primary).toBeDefined();
-      expect(followAction.targets.primary.scope).toBe('companionship:potential_leaders');
+      expect(followAction.targets.primary.scope).toBe(
+        'companionship:potential_leaders'
+      );
       expect(followAction.targets.primary.placeholder).toBe('target');
     });
 

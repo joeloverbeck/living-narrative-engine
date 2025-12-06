@@ -139,7 +139,9 @@ describe('ConsoleLogger - Debug Namespace Functionality', () => {
   describe('constructor options', () => {
     it('should initialize with enabled namespaces from options', () => {
       const namespaces = new Set(['engine:init', 'ai:memory']);
-      logger = new ConsoleLogger(LogLevel.DEBUG, { enabledNamespaces: namespaces });
+      logger = new ConsoleLogger(LogLevel.DEBUG, {
+        enabledNamespaces: namespaces,
+      });
 
       const enabled = logger.getEnabledNamespaces();
       expect(enabled).toContain('engine:init');
@@ -152,7 +154,9 @@ describe('ConsoleLogger - Debug Namespace Functionality', () => {
     });
 
     it('should handle invalid enabledNamespaces option', () => {
-      logger = new ConsoleLogger(LogLevel.DEBUG, { enabledNamespaces: 'invalid' });
+      logger = new ConsoleLogger(LogLevel.DEBUG, {
+        enabledNamespaces: 'invalid',
+      });
       expect(logger.getEnabledNamespaces()).toHaveLength(0);
     });
 

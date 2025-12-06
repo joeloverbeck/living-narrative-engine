@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const MODULE_PATH = '../../../src/speech-patterns-generator-main.js';
 
@@ -71,7 +78,10 @@ describe('speech-patterns-generator main entrypoint integration', () => {
         getAvailableLlmOptions: jest
           .fn()
           .mockResolvedValue([
-            { configId: 'integration-llm', displayName: 'Integration Friendly LLM' },
+            {
+              configId: 'integration-llm',
+              displayName: 'Integration Friendly LLM',
+            },
           ]),
       };
 
@@ -89,7 +99,11 @@ describe('speech-patterns-generator main entrypoint integration', () => {
             SpeechPatternsGeneratorController
           );
           expect(config.includeModLoading).toBe(true);
-          return { controller: { id: 'controller' }, container, bootstrapTime: 7 };
+          return {
+            controller: { id: 'controller' },
+            container,
+            bootstrapTime: 7,
+          };
         });
 
       await importEntrypointWithForcedAutoInit();
@@ -198,9 +212,11 @@ describe('speech-patterns-generator main entrypoint integration', () => {
 
       llmAdapter = {
         getCurrentActiveLlmId: jest.fn().mockResolvedValue('mystery-llm'),
-        getAvailableLlmOptions: jest.fn().mockResolvedValue([
-          { configId: 'another-llm', displayName: 'Another' },
-        ]),
+        getAvailableLlmOptions: jest
+          .fn()
+          .mockResolvedValue([
+            { configId: 'another-llm', displayName: 'Another' },
+          ]),
       };
 
       container = {
@@ -251,9 +267,11 @@ describe('speech-patterns-generator main entrypoint integration', () => {
 
       llmAdapter = {
         getCurrentActiveLlmId: jest.fn().mockResolvedValue('llm-without-name'),
-        getAvailableLlmOptions: jest.fn().mockResolvedValue([
-          { configId: 'llm-without-name', displayName: '' },
-        ]),
+        getAvailableLlmOptions: jest
+          .fn()
+          .mockResolvedValue([
+            { configId: 'llm-without-name', displayName: '' },
+          ]),
       };
 
       container = {

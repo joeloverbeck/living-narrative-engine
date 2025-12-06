@@ -78,7 +78,7 @@ describe('Recipe BodyDescriptors Full Workflow Integration', () => {
       expect(bodyComponent.body).toBeDefined();
 
       // Debug: log the actual component structure
-       
+
       console.log(
         'ACTUAL anatomy:body component:',
         JSON.stringify(bodyComponent, null, 2)

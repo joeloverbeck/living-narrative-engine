@@ -56,10 +56,12 @@ describe('Entity Factory Performance Tests', () => {
           'core:name': { text: 'Performance Test' },
           'core:position': { locationId: 'perf_location' },
           'test:complex': {
-            data: Array(100).fill(0).map((_, i) => ({
-              id: `item_${i}`,
-              value: Math.random() * 100,
-            })),
+            data: Array(100)
+              .fill(0)
+              .map((_, i) => ({
+                id: `item_${i}`,
+                value: Math.random() * 100,
+              })),
           },
         },
       });
@@ -109,7 +111,9 @@ describe('Entity Factory Performance Tests', () => {
       performanceMetrics.totalTime = overallEnd - overallStart;
 
       // Calculate metrics
-      const avgCreationTime = performanceMetrics.creationTimes.reduce((a, b) => a + b, 0) / entityCount;
+      const avgCreationTime =
+        performanceMetrics.creationTimes.reduce((a, b) => a + b, 0) /
+        entityCount;
       const maxCreationTime = Math.max(...performanceMetrics.creationTimes);
       const minCreationTime = Math.min(...performanceMetrics.creationTimes);
 
@@ -145,7 +149,9 @@ describe('Entity Factory Performance Tests', () => {
             level1: {
               level2: {
                 level3: {
-                  data: Array(50).fill(0).map((_, i) => `value_${i}`),
+                  data: Array(50)
+                    .fill(0)
+                    .map((_, i) => `value_${i}`),
                 },
               },
             },
@@ -157,9 +163,12 @@ describe('Entity Factory Performance Tests', () => {
       for (let i = 0; i < entityCount; i++) {
         const lookupStart = performance.now();
 
-        const entity = await testBed.entityManager.createEntityInstance(definitionId, {
-          instanceId: `cached_entity_${i}`,
-        });
+        const entity = await testBed.entityManager.createEntityInstance(
+          definitionId,
+          {
+            instanceId: `cached_entity_${i}`,
+          }
+        );
 
         const lookupEnd = performance.now();
         const lookupTime = lookupEnd - lookupStart;
@@ -170,7 +179,8 @@ describe('Entity Factory Performance Tests', () => {
 
       // Analyze caching effectiveness
       const cachedLookupTimes = lookupTimes.slice(1);
-      const avgCachedTime = cachedLookupTimes.reduce((a, b) => a + b, 0) / cachedLookupTimes.length;
+      const avgCachedTime =
+        cachedLookupTimes.reduce((a, b) => a + b, 0) / cachedLookupTimes.length;
 
       // Assert caching is effective
       // Note: We don't compare avgCachedTime to firstLookupTime because:
@@ -218,31 +228,46 @@ describe('Entity Factory Performance Tests', () => {
       );
 
       // Act - Create entity with original definition
-      await testBed.ensureEntityDefinitionExists(definitionId, originalDefinition);
+      await testBed.ensureEntityDefinitionExists(
+        definitionId,
+        originalDefinition
+      );
 
-      const entity1 = await testBed.entityManager.createEntityInstance(definitionId, {
-        instanceId: 'cache_test_1',
-      });
+      const entity1 = await testBed.entityManager.createEntityInstance(
+        definitionId,
+        {
+          instanceId: 'cache_test_1',
+        }
+      );
 
       expect(entity1).toBeDefined();
 
       // Get the cached definition indirectly through entity
-      const entity1Name = testBed.entityManager.getEntityInstance('cache_test_1')
+      const entity1Name = testBed.entityManager
+        .getEntityInstance('cache_test_1')
         .getComponentData('core:name');
       expect(entity1Name.text).toBe('Original Name');
 
       // Update the definition in registry
-      testBed.registry.store('entityDefinitions', definitionId, updatedDefinition);
+      testBed.registry.store(
+        'entityDefinitions',
+        definitionId,
+        updatedDefinition
+      );
 
       // Create new entity with updated definition
-      const entity2 = await testBed.entityManager.createEntityInstance(definitionId, {
-        instanceId: 'cache_test_2',
-      });
+      const entity2 = await testBed.entityManager.createEntityInstance(
+        definitionId,
+        {
+          instanceId: 'cache_test_2',
+        }
+      );
 
       expect(entity2).toBeDefined();
 
       // Verify new entity - cache invalidation behavior depends on implementation
-      const entity2Instance = testBed.entityManager.getEntityInstance('cache_test_2');
+      const entity2Instance =
+        testBed.entityManager.getEntityInstance('cache_test_2');
       const entity2Name = entity2Instance.getComponentData('core:name');
       const entity2Version = entity2Instance.getComponentData('core:version');
 
@@ -324,8 +349,10 @@ describe('Entity Factory Performance Tests', () => {
       }
 
       // Calculate metrics
-      const avgColdLookup = lookupMetrics.coldLookups.reduce((a, b) => a + b, 0) / 10;
-      const avgWarmLookup = lookupMetrics.warmLookups.reduce((a, b) => a + b, 0) / 10;
+      const avgColdLookup =
+        lookupMetrics.coldLookups.reduce((a, b) => a + b, 0) / 10;
+      const avgWarmLookup =
+        lookupMetrics.warmLookups.reduce((a, b) => a + b, 0) / 10;
 
       // Assert functional cache correctness and absolute performance
       // NOTE: We do NOT compare cold vs warm lookup times because:
@@ -347,7 +374,11 @@ describe('Entity Factory Performance Tests', () => {
 
     it('should verify cache effectiveness through functional cache statistics', async () => {
       // Arrange - Create definitions for cache testing
-      const testDefinitions = ['test:cache_stat_1', 'test:cache_stat_2', 'test:cache_stat_3'];
+      const testDefinitions = [
+        'test:cache_stat_1',
+        'test:cache_stat_2',
+        'test:cache_stat_3',
+      ];
 
       for (const defId of testDefinitions) {
         await testBed.ensureEntityDefinitionExists(defId, {
@@ -366,50 +397,75 @@ describe('Entity Factory Performance Tests', () => {
 
       let initialCacheSize = 0;
 
-      if (monitoringCoordinator && typeof monitoringCoordinator.getStats === 'function') {
+      if (
+        monitoringCoordinator &&
+        typeof monitoringCoordinator.getStats === 'function'
+      ) {
         const initialStats = monitoringCoordinator.getStats();
         initialCacheSize = initialStats?.cacheStats?.size || 0;
       }
 
       // Act - Create entities (first access should populate cache)
       for (let i = 0; i < testDefinitions.length; i++) {
-        const entity = await testBed.entityManager.createEntityInstance(testDefinitions[i], {
-          instanceId: `cache_stat_entity_first_${i}`,
-        });
+        const entity = await testBed.entityManager.createEntityInstance(
+          testDefinitions[i],
+          {
+            instanceId: `cache_stat_entity_first_${i}`,
+          }
+        );
         expect(entity).toBeDefined();
       }
 
       // Get cache size after first access
       let cacheSizeAfterFirstAccess = initialCacheSize;
-      if (monitoringCoordinator && typeof monitoringCoordinator.getStats === 'function') {
+      if (
+        monitoringCoordinator &&
+        typeof monitoringCoordinator.getStats === 'function'
+      ) {
         const statsAfterFirst = monitoringCoordinator.getStats();
         cacheSizeAfterFirstAccess = statsAfterFirst?.cacheStats?.size || 0;
       }
 
       // Create more entities with same definitions (should reuse cache)
       for (let i = 0; i < testDefinitions.length; i++) {
-        const entity = await testBed.entityManager.createEntityInstance(testDefinitions[i], {
-          instanceId: `cache_stat_entity_second_${i}`,
-        });
+        const entity = await testBed.entityManager.createEntityInstance(
+          testDefinitions[i],
+          {
+            instanceId: `cache_stat_entity_second_${i}`,
+          }
+        );
         expect(entity).toBeDefined();
       }
 
       // Get final cache size
       let finalCacheSize = cacheSizeAfterFirstAccess;
-      if (monitoringCoordinator && typeof monitoringCoordinator.getStats === 'function') {
+      if (
+        monitoringCoordinator &&
+        typeof monitoringCoordinator.getStats === 'function'
+      ) {
         const finalStats = monitoringCoordinator.getStats();
         finalCacheSize = finalStats?.cacheStats?.size || 0;
       }
 
       // Assert cache behavior
       // Always verify entities were created successfully (core functional correctness)
-      expect(testBed.entityManager.getEntityInstance('cache_stat_entity_first_0')).toBeDefined();
-      expect(testBed.entityManager.getEntityInstance('cache_stat_entity_second_0')).toBeDefined();
-      expect(testBed.entityManager.getEntityInstance('cache_stat_entity_first_1')).toBeDefined();
-      expect(testBed.entityManager.getEntityInstance('cache_stat_entity_second_1')).toBeDefined();
+      expect(
+        testBed.entityManager.getEntityInstance('cache_stat_entity_first_0')
+      ).toBeDefined();
+      expect(
+        testBed.entityManager.getEntityInstance('cache_stat_entity_second_0')
+      ).toBeDefined();
+      expect(
+        testBed.entityManager.getEntityInstance('cache_stat_entity_first_1')
+      ).toBeDefined();
+      expect(
+        testBed.entityManager.getEntityInstance('cache_stat_entity_second_1')
+      ).toBeDefined();
 
       // Log cache statistics if available (monitoring may not be enabled in all test environments)
-      const hasMonitoring = monitoringCoordinator && typeof monitoringCoordinator.getStats === 'function';
+      const hasMonitoring =
+        monitoringCoordinator &&
+        typeof monitoringCoordinator.getStats === 'function';
 
       // Verify cache behavior when monitoring is available
       // NOTE: These assertions are skipped if monitoring is unavailable, but core functional
@@ -425,7 +481,9 @@ describe('Entity Factory Performance Tests', () => {
           Cache Grew After First Access: ${cacheGrew ? 'YES' : 'NO'}
           Cache Stable After Reuse: ${cacheStable ? 'YES' : 'NO'}`);
       } else {
-        testBed.logger.info('Cache statistics not available - functional correctness verified');
+        testBed.logger.info(
+          'Cache statistics not available - functional correctness verified'
+        );
       }
 
       // Performance assertion: Verify caching is working correctly when monitoring is available

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder, ModEntityScenarios } from '../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../common/mods/ModEntityBuilder.js';
 import '../../common/mods/domainMatchers.js';
 
 describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
@@ -36,7 +39,11 @@ describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
       .build();
 
     const torso = new ModEntityBuilder(torsoId)
-      .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+      .asBodyPart({
+        parent: null,
+        children: [leftBreastId, rightBreastId],
+        subType: 'torso',
+      })
       .build();
 
     const leftBreast = new ModEntityBuilder(leftBreastId)
@@ -63,7 +70,7 @@ describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
     // Assert - Action is discovered
     expect(discovered).toContainEqual(
       expect.objectContaining({
-        id: 'seduction:squeeze_breasts_draw_attention'
+        id: 'seduction:squeeze_breasts_draw_attention',
       })
     );
 
@@ -92,7 +99,11 @@ describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
       .build();
 
     const torso = new ModEntityBuilder(torsoId)
-      .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+      .asBodyPart({
+        parent: null,
+        children: [leftBreastId, rightBreastId],
+        subType: 'torso',
+      })
       .build();
 
     const leftBreast = new ModEntityBuilder(leftBreastId)
@@ -111,7 +122,7 @@ describe('Targetless Action Workflow - Anatomy Prerequisites', () => {
     // Assert - Action requires other actors present (hasOtherActorsAtLocation fails)
     expect(discovered).not.toContainEqual(
       expect.objectContaining({
-        id: 'seduction:squeeze_breasts_draw_attention'
+        id: 'seduction:squeeze_breasts_draw_attention',
       })
     );
   });

@@ -69,13 +69,11 @@ const registerEventDefinition = (registry, eventId, overrides = {}) => {
   });
 };
 
-const createDispatcherEnvironment = (
-  {
-    LoggerClass = RecordingLogger,
-    EventBusClass = EventBus,
-    ValidatedDispatcherClass = ValidatedEventDispatcher,
-  } = {}
-) => {
+const createDispatcherEnvironment = ({
+  LoggerClass = RecordingLogger,
+  EventBusClass = EventBus,
+  ValidatedDispatcherClass = ValidatedEventDispatcher,
+} = {}) => {
   const logger = new LoggerClass();
   const registry = new InMemoryDataRegistry({ logger });
   const gameDataRepository = new GameDataRepository(registry, logger);

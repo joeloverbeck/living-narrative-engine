@@ -41,7 +41,8 @@ import { configureBaseContainer } from './baseContainerConfig.js';
  * @param {boolean} [options.includeValidationServices] - Whether to include validation services (for CLI tools)
  */
 export async function configureMinimalContainer(container, options = {}) {
-  const { includeCharacterBuilder = false, includeValidationServices = false } = options;
+  const { includeCharacterBuilder = false, includeValidationServices = false } =
+    options;
   const registrar = new Registrar(container);
 
   // --- Bootstrap logger with LoggerStrategy ---
@@ -83,7 +84,9 @@ export async function configureMinimalContainer(container, options = {}) {
 
   // --- Register validation services if requested (for CLI tools) ---
   if (includeValidationServices) {
-    logger.debug('[MinimalContainerConfig] Registering validation services for CLI environment...');
+    logger.debug(
+      '[MinimalContainerConfig] Registering validation services for CLI environment...'
+    );
     await registerValidationServices(container, logger);
   }
 
@@ -119,23 +122,33 @@ async function registerValidationServices(container, logger) {
     const validationBasePath = '../../cli/validation/';
 
     // Import ModReferenceExtractor
-    const modReferenceExtractorModule = await import(validationBasePath + 'modReferenceExtractor.js');
+    const modReferenceExtractorModule = await import(
+      validationBasePath + 'modReferenceExtractor.js'
+    );
     const ModReferenceExtractor = modReferenceExtractorModule.default;
 
     // Import ModCrossReferenceValidator
-    const modCrossReferenceValidatorModule = await import(validationBasePath + 'modCrossReferenceValidator.js');
+    const modCrossReferenceValidatorModule = await import(
+      validationBasePath + 'modCrossReferenceValidator.js'
+    );
     const ModCrossReferenceValidator = modCrossReferenceValidatorModule.default;
 
     // Import ModValidationOrchestrator
-    const modValidationOrchestratorModule = await import(validationBasePath + 'modValidationOrchestrator.js');
+    const modValidationOrchestratorModule = await import(
+      validationBasePath + 'modValidationOrchestrator.js'
+    );
     const ModValidationOrchestrator = modValidationOrchestratorModule.default;
 
     // Import ViolationReporter (still in src/validation as it doesn't use Node.js core modules)
-    const violationReporterModule = await import('../validation/violationReporter.js');
+    const violationReporterModule = await import(
+      '../validation/violationReporter.js'
+    );
     const ViolationReporter = violationReporterModule.default;
 
     // Import ModDependencyValidator
-    const modDependencyValidatorModule = await import('../modding/modDependencyValidator.js');
+    const modDependencyValidatorModule = await import(
+      '../modding/modDependencyValidator.js'
+    );
     const ModDependencyValidator = modDependencyValidatorModule.default;
 
     // Register ModReferenceExtractor
@@ -166,7 +179,9 @@ async function registerValidationServices(container, logger) {
         new ModValidationOrchestrator({
           logger: c.resolve(tokens.ILogger),
           modDependencyValidator: ModDependencyValidator,
-          modCrossReferenceValidator: c.resolve(tokens.IModCrossReferenceValidator),
+          modCrossReferenceValidator: c.resolve(
+            tokens.IModCrossReferenceValidator
+          ),
           modLoadOrderResolver: c.resolve(tokens.ModLoadOrderResolver),
           modManifestLoader: c.resolve(tokens.ModManifestLoader),
           pathResolver: c.resolve(tokens.IPathResolver),
@@ -183,9 +198,14 @@ async function registerValidationServices(container, logger) {
         })
     );
 
-    logger.debug('[MinimalContainerConfig] Validation services registered successfully');
+    logger.debug(
+      '[MinimalContainerConfig] Validation services registered successfully'
+    );
   } catch (error) {
-    logger.error('[MinimalContainerConfig] Failed to register validation services:', error);
+    logger.error(
+      '[MinimalContainerConfig] Failed to register validation services:',
+      error
+    );
     throw error;
   }
 }

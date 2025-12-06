@@ -158,7 +158,9 @@ describe('main.js start world selection', () => {
       'default',
       logger
     );
-    expect(logger.debug).toHaveBeenCalledWith('Starting game with world: default');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Starting game with world: default'
+    );
     expect(mockDisplayFatal).not.toHaveBeenCalled();
   });
 });

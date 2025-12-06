@@ -48,10 +48,13 @@ export const createRequestTrackingMiddleware = (options = {}) => {
       req.requestState = newState;
 
       if (logger) {
-        logger.debug(`Request ${requestId}: State ${transition.from} → ${transition.to}`, {
-          requestId,
-          ...metadata,
-        });
+        logger.debug(
+          `Request ${requestId}: State ${transition.from} → ${transition.to}`,
+          {
+            requestId,
+            ...metadata,
+          }
+        );
       }
     };
 
@@ -72,7 +75,11 @@ export const createRequestTrackingMiddleware = (options = {}) => {
         if (logger) {
           logger.warn(
             `Request ${requestId}: Response already committed to '${commitmentSource}', cannot commit to '${source}'`,
-            { requestId, existingSource: commitmentSource, attemptedSource: source }
+            {
+              requestId,
+              existingSource: commitmentSource,
+              attemptedSource: source,
+            }
           );
         }
         return false;
@@ -83,10 +90,13 @@ export const createRequestTrackingMiddleware = (options = {}) => {
       transitionState(REQUEST_STATE.RESPONDING, { source });
 
       if (logger) {
-        logger.debug(`Request ${requestId}: Response committed to '${source}'`, {
-          requestId,
-          source,
-        });
+        logger.debug(
+          `Request ${requestId}: Response committed to '${source}'`,
+          {
+            requestId,
+            source,
+          }
+        );
       }
 
       return true;
@@ -115,21 +125,30 @@ export const createRequestTrackingMiddleware = (options = {}) => {
     const originalEnd = res.end;
 
     res.json = function (...args) {
-      if (req.requestState !== REQUEST_STATE.ERROR && req.requestState !== REQUEST_STATE.TIMEOUT) {
+      if (
+        req.requestState !== REQUEST_STATE.ERROR &&
+        req.requestState !== REQUEST_STATE.TIMEOUT
+      ) {
         transitionState(REQUEST_STATE.COMPLETED, { method: 'json' });
       }
       return originalJson.apply(this, args);
     };
 
     res.send = function (...args) {
-      if (req.requestState !== REQUEST_STATE.ERROR && req.requestState !== REQUEST_STATE.TIMEOUT) {
+      if (
+        req.requestState !== REQUEST_STATE.ERROR &&
+        req.requestState !== REQUEST_STATE.TIMEOUT
+      ) {
         transitionState(REQUEST_STATE.COMPLETED, { method: 'send' });
       }
       return originalSend.apply(this, args);
     };
 
     res.end = function (...args) {
-      if (req.requestState !== REQUEST_STATE.ERROR && req.requestState !== REQUEST_STATE.TIMEOUT) {
+      if (
+        req.requestState !== REQUEST_STATE.ERROR &&
+        req.requestState !== REQUEST_STATE.TIMEOUT
+      ) {
         transitionState(REQUEST_STATE.COMPLETED, { method: 'end' });
       }
       return originalEnd.apply(this, args);

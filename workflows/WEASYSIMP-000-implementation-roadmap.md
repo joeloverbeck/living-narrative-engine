@@ -11,6 +11,7 @@ This roadmap breaks down the weapons system implementation into actionable, deta
 ### System Architecture
 
 The weapons system is split into two parts:
+
 1. **Items Mod Extensions** (WEASYSIMP-003 to 007): General aiming for any aimable item
 2. **Weapons Mod** (WEASYSIMP-008 to 019): Weapon-specific functionality
 
@@ -27,10 +28,10 @@ The weapons system is split into two parts:
 
 **Goal:** Setup mod structure and dependencies
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-001](WEASYSIMP-001-setup-weapons-mod-directory.md) | Setup Weapons Mod Directory | P0 | 0.5 days | None |
-| [WEASYSIMP-002](WEASYSIMP-002-create-weapons-mod-manifest.md) | Create Weapons Mod Manifest | P0 | 0.5 days | WEASYSIMP-001 |
+| Ticket                                                        | Title                       | Priority | Effort   | Dependencies  |
+| ------------------------------------------------------------- | --------------------------- | -------- | -------- | ------------- |
+| [WEASYSIMP-001](WEASYSIMP-001-setup-weapons-mod-directory.md) | Setup Weapons Mod Directory | P0       | 0.5 days | None          |
+| [WEASYSIMP-002](WEASYSIMP-002-create-weapons-mod-manifest.md) | Create Weapons Mod Manifest | P0       | 0.5 days | WEASYSIMP-001 |
 
 ---
 
@@ -40,23 +41,23 @@ The weapons system is split into two parts:
 
 ### Aiming Components & Actions (Day 1)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-003](WEASYSIMP-003-items-aiming-components.md) | Create Items Mod Aiming Components | P0 | 1 day | None |
-| [WEASYSIMP-004](WEASYSIMP-004-items-aiming-actions.md) | Create Items Mod Aiming Actions | P0 | 1 day | WEASYSIMP-003 |
+| Ticket                                                    | Title                              | Priority | Effort | Dependencies  |
+| --------------------------------------------------------- | ---------------------------------- | -------- | ------ | ------------- |
+| [WEASYSIMP-003](WEASYSIMP-003-items-aiming-components.md) | Create Items Mod Aiming Components | P0       | 1 day  | None          |
+| [WEASYSIMP-004](WEASYSIMP-004-items-aiming-actions.md)    | Create Items Mod Aiming Actions    | P0       | 1 day  | WEASYSIMP-003 |
 
 ### Aiming Scopes & Events (Day 2)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-005](WEASYSIMP-005-items-aiming-scopes.md) | Create Items Mod Aiming Scopes | P0 | 1 day | WEASYSIMP-003 |
-| [WEASYSIMP-006](WEASYSIMP-006-items-aiming-events-conditions.md) | Create Items Mod Aiming Events & Conditions | P0 | 1 day | WEASYSIMP-004 |
+| Ticket                                                           | Title                                       | Priority | Effort | Dependencies  |
+| ---------------------------------------------------------------- | ------------------------------------------- | -------- | ------ | ------------- |
+| [WEASYSIMP-005](WEASYSIMP-005-items-aiming-scopes.md)            | Create Items Mod Aiming Scopes              | P0       | 1 day  | WEASYSIMP-003 |
+| [WEASYSIMP-006](WEASYSIMP-006-items-aiming-events-conditions.md) | Create Items Mod Aiming Events & Conditions | P0       | 1 day  | WEASYSIMP-004 |
 
 ### Aiming Rules (Day 3)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-007](WEASYSIMP-007-items-aiming-rules.md) | Create Items Mod Aiming Rules | P0 | 1 day | WEASYSIMP-003, 006 |
+| Ticket                                               | Title                         | Priority | Effort | Dependencies       |
+| ---------------------------------------------------- | ----------------------------- | -------- | ------ | ------------------ |
+| [WEASYSIMP-007](WEASYSIMP-007-items-aiming-rules.md) | Create Items Mod Aiming Rules | P0       | 1 day  | WEASYSIMP-003, 006 |
 
 ---
 
@@ -66,28 +67,28 @@ The weapons system is split into two parts:
 
 ### Components (Day 4-5)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-008](WEASYSIMP-008-weapons-marker-components.md) | Create Weapons Mod Marker Components | P0 | 0.5 days | WEASYSIMP-002 |
-| [WEASYSIMP-009](WEASYSIMP-009-weapons-data-components.md) | Create Weapons Mod Data Components | P0 | 1 day | WEASYSIMP-008 |
-| [WEASYSIMP-010](WEASYSIMP-010-weapons-state-component.md) | Create Weapons Mod State Component | P0 | 0.5 days | WEASYSIMP-008 |
+| Ticket                                                      | Title                                | Priority | Effort   | Dependencies  |
+| ----------------------------------------------------------- | ------------------------------------ | -------- | -------- | ------------- |
+| [WEASYSIMP-008](WEASYSIMP-008-weapons-marker-components.md) | Create Weapons Mod Marker Components | P0       | 0.5 days | WEASYSIMP-002 |
+| [WEASYSIMP-009](WEASYSIMP-009-weapons-data-components.md)   | Create Weapons Mod Data Components   | P0       | 1 day    | WEASYSIMP-008 |
+| [WEASYSIMP-010](WEASYSIMP-010-weapons-state-component.md)   | Create Weapons Mod State Component   | P0       | 0.5 days | WEASYSIMP-008 |
 
 ### Actions & Rules (Day 5-7)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-011](WEASYSIMP-011-shoot-weapon-action-rule.md) | Create Shoot Weapon Action and Rule | P0 | 1 day | WEASYSIMP-007, 009 |
-| [WEASYSIMP-012](WEASYSIMP-012-reload-weapon-action-rule.md) | Create Reload Weapon Action and Rule | P0 | 1 day | WEASYSIMP-009 |
-| [WEASYSIMP-013](WEASYSIMP-013-chamber-round-action-rule.md) | Create Chamber Round Action and Rule | P1 | 0.5 days | WEASYSIMP-009 |
-| [WEASYSIMP-014](WEASYSIMP-014-clear-jam-action-rule.md) | Create Clear Jam Action and Rule | P1 | 0.5 days | WEASYSIMP-010 |
-| [WEASYSIMP-015](WEASYSIMP-015-magazine-management.md) | Create Magazine Management Actions and Rules | P1 | 1 day | WEASYSIMP-009 |
+| Ticket                                                      | Title                                        | Priority | Effort   | Dependencies       |
+| ----------------------------------------------------------- | -------------------------------------------- | -------- | -------- | ------------------ |
+| [WEASYSIMP-011](WEASYSIMP-011-shoot-weapon-action-rule.md)  | Create Shoot Weapon Action and Rule          | P0       | 1 day    | WEASYSIMP-007, 009 |
+| [WEASYSIMP-012](WEASYSIMP-012-reload-weapon-action-rule.md) | Create Reload Weapon Action and Rule         | P0       | 1 day    | WEASYSIMP-009      |
+| [WEASYSIMP-013](WEASYSIMP-013-chamber-round-action-rule.md) | Create Chamber Round Action and Rule         | P1       | 0.5 days | WEASYSIMP-009      |
+| [WEASYSIMP-014](WEASYSIMP-014-clear-jam-action-rule.md)     | Create Clear Jam Action and Rule             | P1       | 0.5 days | WEASYSIMP-010      |
+| [WEASYSIMP-015](WEASYSIMP-015-magazine-management.md)       | Create Magazine Management Actions and Rules | P1       | 1 day    | WEASYSIMP-009      |
 
 ### Scopes & Events (Day 8-9)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-016](WEASYSIMP-016-weapons-scopes.md) | Create Weapons Mod Scopes | P0 | 1 day | WEASYSIMP-009, 010 |
-| [WEASYSIMP-017](WEASYSIMP-017-weapons-events.md) | Create Weapons Mod Events | P0 | 1 day | WEASYSIMP-011-015 |
+| Ticket                                           | Title                     | Priority | Effort | Dependencies       |
+| ------------------------------------------------ | ------------------------- | -------- | ------ | ------------------ |
+| [WEASYSIMP-016](WEASYSIMP-016-weapons-scopes.md) | Create Weapons Mod Scopes | P0       | 1 day  | WEASYSIMP-009, 010 |
+| [WEASYSIMP-017](WEASYSIMP-017-weapons-events.md) | Create Weapons Mod Events | P0       | 1 day  | WEASYSIMP-011-015  |
 
 ---
 
@@ -95,10 +96,10 @@ The weapons system is split into two parts:
 
 **Goal:** Create example weapons and ammunition
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-018](WEASYSIMP-018-weapon-entities.md) | Create Weapon Entity Definitions | P1 | 1.5 days | WEASYSIMP-009 |
-| [WEASYSIMP-019](WEASYSIMP-019-ammunition-entities.md) | Create Ammunition Entity Definitions | P1 | 0.5 days | WEASYSIMP-009 |
+| Ticket                                                | Title                                | Priority | Effort   | Dependencies  |
+| ----------------------------------------------------- | ------------------------------------ | -------- | -------- | ------------- |
+| [WEASYSIMP-018](WEASYSIMP-018-weapon-entities.md)     | Create Weapon Entity Definitions     | P1       | 1.5 days | WEASYSIMP-009 |
+| [WEASYSIMP-019](WEASYSIMP-019-ammunition-entities.md) | Create Ammunition Entity Definitions | P1       | 0.5 days | WEASYSIMP-009 |
 
 ---
 
@@ -108,20 +109,20 @@ The weapons system is split into two parts:
 
 ### Unit & Integration Tests (Day 10-12)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-020](WEASYSIMP-020-items-aiming-tests.md) | Create Items Mod Aiming Tests | P0 | 1 day | WEASYSIMP-007 |
-| [WEASYSIMP-021](WEASYSIMP-021-weapons-component-tests.md) | Create Weapons Mod Component Tests | P1 | 1 day | WEASYSIMP-009, 010 |
-| [WEASYSIMP-022](WEASYSIMP-022-shooting-workflow-tests.md) | Create Shooting Workflow Tests | P0 | 1 day | WEASYSIMP-011 |
-| [WEASYSIMP-023](WEASYSIMP-023-reloading-workflow-tests.md) | Create Reloading Workflow Tests | P0 | 1 day | WEASYSIMP-012 |
+| Ticket                                                     | Title                              | Priority | Effort | Dependencies       |
+| ---------------------------------------------------------- | ---------------------------------- | -------- | ------ | ------------------ |
+| [WEASYSIMP-020](WEASYSIMP-020-items-aiming-tests.md)       | Create Items Mod Aiming Tests      | P0       | 1 day  | WEASYSIMP-007      |
+| [WEASYSIMP-021](WEASYSIMP-021-weapons-component-tests.md)  | Create Weapons Mod Component Tests | P1       | 1 day  | WEASYSIMP-009, 010 |
+| [WEASYSIMP-022](WEASYSIMP-022-shooting-workflow-tests.md)  | Create Shooting Workflow Tests     | P0       | 1 day  | WEASYSIMP-011      |
+| [WEASYSIMP-023](WEASYSIMP-023-reloading-workflow-tests.md) | Create Reloading Workflow Tests    | P0       | 1 day  | WEASYSIMP-012      |
 
 ### E2E & Validation (Day 13-15)
 
-| Ticket | Title | Priority | Effort | Dependencies |
-|--------|-------|----------|--------|--------------|
-| [WEASYSIMP-024](WEASYSIMP-024-integration-tests.md) | Create Complete Integration Tests | P0 | 1 day | WEASYSIMP-011-015 |
-| [WEASYSIMP-025](WEASYSIMP-025-e2e-sentinel-test.md) | Create E2E Sentinel Scenario Test | P1 | 1 day | WEASYSIMP-018, 019 |
-| [WEASYSIMP-026](WEASYSIMP-026-validation-documentation.md) | System Validation and Documentation | P0 | 1 day | All previous |
+| Ticket                                                     | Title                               | Priority | Effort | Dependencies       |
+| ---------------------------------------------------------- | ----------------------------------- | -------- | ------ | ------------------ |
+| [WEASYSIMP-024](WEASYSIMP-024-integration-tests.md)        | Create Complete Integration Tests   | P0       | 1 day  | WEASYSIMP-011-015  |
+| [WEASYSIMP-025](WEASYSIMP-025-e2e-sentinel-test.md)        | Create E2E Sentinel Scenario Test   | P1       | 1 day  | WEASYSIMP-018, 019 |
+| [WEASYSIMP-026](WEASYSIMP-026-validation-documentation.md) | System Validation and Documentation | P0       | 1 day  | All previous       |
 
 ---
 
@@ -144,39 +145,47 @@ The following tickets form the critical path for MVP functionality:
 ### Parallel Work Streams
 
 **Stream 1: Items Mod Extensions**
+
 - Can be completed independently
 - Tickets: WEASYSIMP-003 through WEASYSIMP-007
 
 **Stream 2: Weapons Mod Foundation**
+
 - Depends on Stream 1 completion
 - Tickets: WEASYSIMP-008 through WEASYSIMP-010
 
 **Stream 3: Weapons Mod Actions**
+
 - Can be parallelized after Stream 2
 - Tickets: WEASYSIMP-011 through WEASYSIMP-015
 
 **Stream 4: Testing**
+
 - Can begin in parallel with Stream 3 (TDD approach)
 - Tickets: WEASYSIMP-020 through WEASYSIMP-025
 
 ### Validation Checkpoints
 
 **Checkpoint 1 (After Phase 2):**
+
 - Items mod aiming system fully functional
 - Actions discoverable in game
 - Scopes resolve correctly
 - Tests pass: `npm run test:integration -- tests/integration/mods/items/`
 
 **Checkpoint 2 (After Phase 3 Components):**
+
 - All weapon components validate
 - Schema validation passes: `npm run validate:mod:weapons`
 
 **Checkpoint 3 (After Phase 3 Actions):**
+
 - All weapon actions discoverable
 - Rules execute correctly
 - Events dispatch successfully
 
 **Checkpoint 4 (After Phase 5):**
+
 - All tests pass: `npm run test:ci`
 - ESLint passes: `npm run lint`
 - Full system validated
@@ -186,6 +195,7 @@ The following tickets form the critical path for MVP functionality:
 ## Content Statistics
 
 ### Items Mod Extensions
+
 - **Components:** 2 (aimable, aimed_at)
 - **Actions:** 2 (aim_item, lower_aim)
 - **Scopes:** 3
@@ -195,6 +205,7 @@ The following tickets form the critical path for MVP functionality:
 - **Total Files:** 13
 
 ### Weapons Mod
+
 - **Components:** 6 (weapon, firearm, ammunition, magazine, jammed, ammo_container)
 - **Actions:** 7 (shoot, reload, chamber, clear_jam, eject_magazine, insert_magazine, +1)
 - **Scopes:** 9
@@ -205,6 +216,7 @@ The following tickets form the critical path for MVP functionality:
 - **Total Files:** 43
 
 ### Testing
+
 - **Unit Test Files:** ~10
 - **Integration Test Files:** ~8
 - **E2E Test Files:** 1
@@ -251,6 +263,7 @@ The following tickets form the critical path for MVP functionality:
 ## Success Criteria
 
 ### Functional Requirements
+
 - [ ] Actor can aim weapon at target
 - [ ] Actor can shoot aimed weapon
 - [ ] Ammo decrements correctly
@@ -262,6 +275,7 @@ The following tickets form the critical path for MVP functionality:
 - [ ] All actions discoverable when conditions met
 
 ### Technical Requirements
+
 - [ ] All schemas validate: `npm run validate`
 - [ ] All tests pass: `npm run test:ci`
 - [ ] Code lints cleanly: `npm run lint`
@@ -270,6 +284,7 @@ The following tickets form the critical path for MVP functionality:
 - [ ] Color schemes meet WCAG AA standards
 
 ### Documentation Requirements
+
 - [ ] All tickets have acceptance criteria
 - [ ] All tickets have test requirements
 - [ ] README updated with weapons mod info
@@ -281,12 +296,14 @@ The following tickets form the critical path for MVP functionality:
 ## Future Extensions (Post-MVP)
 
 **Phase 2 Enhancements:**
+
 - Burst fire mode
 - Suppressive fire
 - Weapon attachments (scopes, suppressors)
 - Weapon maintenance/cleaning
 
 **Phase 3 Enhancements:**
+
 - Damage system integration
 - Cover system
 - Weapon skills/proficiency
@@ -302,11 +319,13 @@ See spec section "Part 6: Future Extensions" for full details.
 ### Color Schemes
 
 **Items Mod (Aiming):**
+
 - Background: #004d61 (Teal)
 - Text: #e0f7fa
 - Contrast: 12.74:1 (AAA)
 
 **Weapons Mod:**
+
 - Background: #112a46 (Arctic Steel)
 - Text: #e6f1ff
 - Contrast: 12.74:1 (AAA)

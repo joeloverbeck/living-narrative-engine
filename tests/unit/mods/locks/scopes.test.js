@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import path from 'path';
 import fs from 'fs';
 import { createMinimalTestContainer } from '../../../common/scopeDsl/minimalTestContainer.js';
@@ -7,13 +14,10 @@ import { HasComponentOperator } from '../../../../src/logic/operators/hasCompone
 import { UnifiedScopeResolver } from '../../../../src/actions/scopes/unifiedScopeResolver.js';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
 
-const SCOPES_DIR = path.resolve(
-  process.cwd(),
-  'data/mods/locks/scopes',
-);
+const SCOPES_DIR = path.resolve(process.cwd(), 'data/mods/locks/scopes');
 const CONDITIONS_DIR = path.resolve(
   process.cwd(),
-  'data/mods/locks/conditions',
+  'data/mods/locks/conditions'
 );
 
 /**
@@ -25,7 +29,7 @@ function loadScopeDefinition(scopeName) {
   const scopePath = path.join(SCOPES_DIR, filename);
   const parsed = parseScopeDefinitions(
     fs.readFileSync(scopePath, 'utf8'),
-    scopePath,
+    scopePath
   );
   return parsed.get(scopeName);
 }
@@ -44,7 +48,7 @@ function loadConditionDefinitions(dataRegistry) {
 
   conditionFiles.forEach((file) => {
     const condition = JSON.parse(
-      fs.readFileSync(path.join(CONDITIONS_DIR, file), 'utf8'),
+      fs.readFileSync(path.join(CONDITIONS_DIR, file), 'utf8')
     );
     dataRegistry.store('conditions', condition.id, condition);
   });
@@ -65,7 +69,7 @@ async function createResolver() {
     logger: services.logger,
   });
   jsonLogicEval.addOperation('has_component', (entityPath, componentId, ctx) =>
-    hasComponent.evaluate([entityPath, componentId], ctx),
+    hasComponent.evaluate([entityPath, componentId], ctx)
   );
   jsonLogicEval.addOperation(
     'get_component_value',
@@ -74,7 +78,10 @@ async function createResolver() {
         entityRef && typeof entityRef === 'object' && 'id' in entityRef
           ? entityRef.id
           : entityRef;
-      const data = services.entityManager.getComponentData(entityId, componentId);
+      const data = services.entityManager.getComponentData(
+        entityId,
+        componentId
+      );
       if (!data || typeof data !== 'object') {
         return null;
       }
@@ -102,9 +109,7 @@ async function createResolver() {
     'locks:blockers_actor_can_lock': loadScopeDefinition(
       'locks:blockers_actor_can_lock'
     ),
-    'locks:keys_for_blocker': loadScopeDefinition(
-      'locks:keys_for_blocker'
-    ),
+    'locks:keys_for_blocker': loadScopeDefinition('locks:keys_for_blocker'),
   });
 
   const resolver = new UnifiedScopeResolver({
@@ -229,20 +234,22 @@ describe('Locks scopes', () => {
     const actor = createActor(true);
 
     const actorHasKeyCondition = services.dataRegistry.getConditionDefinition(
-      'locks:actor-has-key-for-blocker',
+      'locks:actor-has-key-for-blocker'
     );
     const resultWithId = services.jsonLogicEval.evaluate(
       actorHasKeyCondition.logic,
-      { actor, entity: { blocker: 'locks:blocker_locked' } },
+      { actor, entity: { blocker: 'locks:blocker_locked' } }
     );
     const resultWithEntity = services.jsonLogicEval.evaluate(
       actorHasKeyCondition.logic,
       {
         actor,
         entity: {
-          blocker: services.entityManager.getEntityInstance('locks:blocker_locked'),
+          blocker: services.entityManager.getEntityInstance(
+            'locks:blocker_locked'
+          ),
         },
-      },
+      }
     );
     expect(resultWithId).toBe(true);
     expect(resultWithEntity).toBe(true);
@@ -290,7 +297,7 @@ describe('Locks scopes', () => {
     addCommonEntities();
     const actor = createActor(true);
     const targetBlocker = services.entityManager.getEntityInstance(
-      'locks:blocker_locked',
+      'locks:blocker_locked'
     );
 
     const keys = resolver.resolveSync('locks:keys_for_blocker', {

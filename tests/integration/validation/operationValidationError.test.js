@@ -36,10 +36,18 @@ describe('OperationValidationError - Integration Tests', () => {
 
       // Check error has all required sections
       expect(caughtError.message).toContain('❌ Operation validation failed');
-      expect(caughtError.message).toContain('📋 Missing registrations detected');
-      expect(caughtError.message).toContain('⚠️  STEP 7: NOT IN PRE-VALIDATION WHITELIST');
-      expect(caughtError.message).toContain('⚠️  STEP 1: SCHEMA FILE NOT FOUND');
-      expect(caughtError.message).toContain('⚠️  STEP 2: SCHEMA NOT REFERENCED');
+      expect(caughtError.message).toContain(
+        '📋 Missing registrations detected'
+      );
+      expect(caughtError.message).toContain(
+        '⚠️  STEP 7: NOT IN PRE-VALIDATION WHITELIST'
+      );
+      expect(caughtError.message).toContain(
+        '⚠️  STEP 1: SCHEMA FILE NOT FOUND'
+      );
+      expect(caughtError.message).toContain(
+        '⚠️  STEP 2: SCHEMA NOT REFERENCED'
+      );
       expect(caughtError.message).toContain('🔧 Verification commands');
       expect(caughtError.message).toContain('📚 Complete registration guide');
       expect(caughtError.message).toContain('💡 Tip');

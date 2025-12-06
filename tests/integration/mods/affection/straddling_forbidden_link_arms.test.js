@@ -169,9 +169,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
         facing_away: false,
       };
 
-      const target = createActorWithArms('target1', 'Bob', 'room1', [
-        'actor1',
-      ]);
+      const target = createActorWithArms('target1', 'Bob', 'room1', ['actor1']);
       target.entity.components['positioning:sitting_on'] = {
         furniture_id: 'chair1',
         spot_index: 0,
@@ -186,8 +184,9 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       ]);
       await configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).not.toContain(ACTION_ID);
     });
@@ -203,9 +202,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
         facing_away: true,
       };
 
-      const target = createActorWithArms('target1', 'Bob', 'room1', [
-        'actor1',
-      ]);
+      const target = createActorWithArms('target1', 'Bob', 'room1', ['actor1']);
       target.entity.components['positioning:sitting_on'] = {
         furniture_id: 'chair1',
         spot_index: 0,
@@ -220,8 +217,9 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       ]);
       await configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).not.toContain(ACTION_ID);
     });
@@ -242,7 +240,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
       );
-      const actionIds = availableActions.map(action => action.id);
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).toContain(ACTION_ID);
     });
@@ -255,9 +253,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
         'target1',
       ]);
 
-      const target = createActorWithArms('target1', 'Bob', 'room1', [
-        'actor1',
-      ]);
+      const target = createActorWithArms('target1', 'Bob', 'room1', ['actor1']);
 
       testFixture.reset([
         room,
@@ -268,8 +264,9 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       ]);
       await configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).toContain(ACTION_ID);
     });
@@ -287,9 +284,7 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
         facing_away: false,
       };
 
-      const target = createActorWithArms('target1', 'Bob', 'room1', [
-        'actor1',
-      ]);
+      const target = createActorWithArms('target1', 'Bob', 'room1', ['actor1']);
 
       testFixture.reset([
         room,
@@ -314,7 +309,9 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-      expect(testFixture.events).toHaveActionSuccess('Alice links arms with Bob.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice links arms with Bob.'
+      );
     });
   });
 
@@ -349,8 +346,9 @@ describe('link_arms forbidden when straddling - Integration Tests', () => {
       ]);
       await configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       // Action should not be available for ANY target since actor is straddling
       expect(actionIds).not.toContain(ACTION_ID);

@@ -272,7 +272,4 @@ describe('AlertRouter', () => {
     expect(router.queue).toEqual([]);
     expect(router.flushTimer).toBeNull();
   });
-
 });
-
-

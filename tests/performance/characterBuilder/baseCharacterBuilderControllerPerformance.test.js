@@ -354,7 +354,10 @@ describe('BaseCharacterBuilderController - Performance Tests', () => {
       controller.performanceMonitor.mark('test-start');
 
       // Simulate some work (in real scenario, work happens between marks)
-      const measurement = controller.performanceMonitor.measure('test-operation', 'test-start');
+      const measurement = controller.performanceMonitor.measure(
+        'test-operation',
+        'test-start'
+      );
 
       // Measurement should have a duration property
       expect(measurement).toBeTruthy();
@@ -365,24 +368,26 @@ describe('BaseCharacterBuilderController - Performance Tests', () => {
     it('should dispatch warning events when threshold exceeded', () => {
       // Override the mock's measure function to ensure duration > 100ms
       const originalMeasure = mockPerformanceMonitor.measure;
-      mockPerformanceMonitor.measure = jest.fn((measureName, startMark, endMark = null) => {
-        // Call original to set up marks properly
-        const result = originalMeasure(measureName, startMark, endMark);
-        // Override duration to guarantee threshold exceeded
-        if (result) {
-          result.duration = 150; // Guaranteed > 100ms threshold
-          // Manually trigger the warning event dispatch
-          mockEventBus.dispatch(
-            CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING,
-            {
-              controller: 'BaseCharacterBuilderController',
-              measurement: measureName,
-              duration: result.duration,
-            }
-          );
+      mockPerformanceMonitor.measure = jest.fn(
+        (measureName, startMark, endMark = null) => {
+          // Call original to set up marks properly
+          const result = originalMeasure(measureName, startMark, endMark);
+          // Override duration to guarantee threshold exceeded
+          if (result) {
+            result.duration = 150; // Guaranteed > 100ms threshold
+            // Manually trigger the warning event dispatch
+            mockEventBus.dispatch(
+              CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING,
+              {
+                controller: 'BaseCharacterBuilderController',
+                measurement: measureName,
+                duration: result.duration,
+              }
+            );
+          }
+          return result;
         }
-        return result;
-      });
+      );
 
       controller = new TestControllerWithPrivates({
         logger: mockLogger,
@@ -404,7 +409,10 @@ describe('BaseCharacterBuilderController - Performance Tests', () => {
       // Create a measurement that will exceed the default threshold (100ms)
       controller.performanceMonitor.mark('slow-start');
 
-      const measurement = controller.performanceMonitor.measure('slow-operation', 'slow-start');
+      const measurement = controller.performanceMonitor.measure(
+        'slow-operation',
+        'slow-start'
+      );
 
       // Verify measurement duration exceeds threshold
       expect(measurement).toBeTruthy();
@@ -605,7 +613,10 @@ describe('BaseCharacterBuilderController - Performance Tests', () => {
       controller.performanceMonitor.mark('start');
 
       // Measure without providing end mark (should auto-create)
-      const measurement = controller.performanceMonitor.measure('auto-end', 'start');
+      const measurement = controller.performanceMonitor.measure(
+        'auto-end',
+        'start'
+      );
 
       expect(measurement).toBeTruthy();
       expect(typeof measurement.duration).toBe('number');

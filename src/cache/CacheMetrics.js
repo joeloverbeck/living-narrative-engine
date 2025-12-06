@@ -48,7 +48,7 @@ export class CacheMetrics extends BaseService {
 
     this.#logger.info(
       `CacheMetrics initialized: collection interval=${this.#config.collectionInterval}ms, ` +
-      `auto-collection=${this.#config.enableAutoCollection}`
+        `auto-collection=${this.#config.enableAutoCollection}`
     );
   }
 
@@ -80,7 +80,9 @@ export class CacheMetrics extends BaseService {
       history: [],
     });
 
-    this.#logger.info(`Cache registered for metrics: ${cacheId} (type: ${metadata.type || 'unknown'})`);
+    this.#logger.info(
+      `Cache registered for metrics: ${cacheId} (type: ${metadata.type || 'unknown'})`
+    );
   }
 
   /**
@@ -127,13 +129,17 @@ export class CacheMetrics extends BaseService {
       cacheInfo.history.push(metricsSnapshot);
 
       // Trim history based on retention policy
-      const cutoff = timestamp - (this.#config.historyRetention * 3600000); // hours to ms
-      cacheInfo.history = cacheInfo.history.filter(entry => entry.timestamp > cutoff);
+      const cutoff = timestamp - this.#config.historyRetention * 3600000; // hours to ms
+      cacheInfo.history = cacheInfo.history.filter(
+        (entry) => entry.timestamp > cutoff
+      );
 
       return metricsSnapshot;
-
     } catch (error) {
-      this.#logger.error(`Failed to collect metrics for cache: ${cacheId}`, error);
+      this.#logger.error(
+        `Failed to collect metrics for cache: ${cacheId}`,
+        error
+      );
       return null;
     }
   }
@@ -212,8 +218,8 @@ export class CacheMetrics extends BaseService {
       return null;
     }
 
-    const cutoff = Date.now() - (hours * 3600000); // hours to ms
-    return cacheInfo.history.filter(entry => entry.timestamp > cutoff);
+    const cutoff = Date.now() - hours * 3600000; // hours to ms
+    return cacheInfo.history.filter((entry) => entry.timestamp > cutoff);
   }
 
   /**
@@ -273,7 +279,7 @@ export class CacheMetrics extends BaseService {
 
       // Strategy distribution
       const strategy = metrics.strategyName || 'unknown';
-      aggregated.strategyDistribution[strategy] = 
+      aggregated.strategyDistribution[strategy] =
         (aggregated.strategyDistribution[strategy] || 0) + 1;
 
       // Memory utilization
@@ -299,14 +305,19 @@ export class CacheMetrics extends BaseService {
 
     // Calculate derived metrics
     if (aggregated.totalHits + aggregated.totalMisses > 0) {
-      aggregated.overallHitRate = aggregated.totalHits / (aggregated.totalHits + aggregated.totalMisses);
+      aggregated.overallHitRate =
+        aggregated.totalHits / (aggregated.totalHits + aggregated.totalMisses);
     }
 
     if (utilizationRates.length > 0) {
       // Use reduce to avoid stack overflow with large arrays
-      aggregated.memoryUtilization.highestUtilization = utilizationRates.reduce((max, rate) => Math.max(max, rate), -Infinity);
+      aggregated.memoryUtilization.highestUtilization = utilizationRates.reduce(
+        (max, rate) => Math.max(max, rate),
+        -Infinity
+      );
       aggregated.memoryUtilization.averageUtilization =
-        utilizationRates.reduce((sum, rate) => sum + rate, 0) / utilizationRates.length;
+        utilizationRates.reduce((sum, rate) => sum + rate, 0) /
+        utilizationRates.length;
     }
 
     // Runtime information
@@ -359,22 +370,34 @@ export class CacheMetrics extends BaseService {
     const recommendations = [];
 
     if (aggregated.overallHitRate < 0.6) {
-      recommendations.push('Overall hit rate is below 60%. Consider reviewing cache TTL settings or key strategies.');
+      recommendations.push(
+        'Overall hit rate is below 60%. Consider reviewing cache TTL settings or key strategies.'
+      );
     }
 
     if (aggregated.memoryUtilization.averageUtilization > 85) {
-      recommendations.push('Memory utilization is high (>85%). Consider increasing memory limits or enabling more aggressive pruning.');
+      recommendations.push(
+        'Memory utilization is high (>85%). Consider increasing memory limits or enabling more aggressive pruning.'
+      );
     }
 
     const lruCount = aggregated.strategyDistribution.LRU || 0;
     const totalCaches = aggregated.cacheCount;
-    
+
     if (lruCount / totalCaches < 0.7 && totalCaches > 1) {
-      recommendations.push('Consider using LRU strategy for most caches as it typically provides the best balance of performance and memory usage.');
+      recommendations.push(
+        'Consider using LRU strategy for most caches as it typically provides the best balance of performance and memory usage.'
+      );
     }
 
-    if (Object.values(aggregated.caches).some(cache => cache.size === cache.maxSize)) {
-      recommendations.push('Some caches are at maximum capacity. Monitor eviction patterns and consider increasing cache sizes for frequently accessed data.');
+    if (
+      Object.values(aggregated.caches).some(
+        (cache) => cache.size === cache.maxSize
+      )
+    ) {
+      recommendations.push(
+        'Some caches are at maximum capacity. Monitor eviction patterns and consider increasing cache sizes for frequently accessed data.'
+      );
     }
 
     return recommendations;
@@ -415,7 +438,9 @@ export class CacheMetrics extends BaseService {
       this.collectAllMetrics();
     }, collectionInterval);
 
-    this.#logger.info(`Started automatic metrics collection with interval: ${collectionInterval}ms`);
+    this.#logger.info(
+      `Started automatic metrics collection with interval: ${collectionInterval}ms`
+    );
   }
 
   /**
@@ -438,10 +463,12 @@ export class CacheMetrics extends BaseService {
     const history = [];
 
     for (const [cacheId, cacheInfo] of this.#registeredCaches.entries()) {
-      history.push(...cacheInfo.history.map(entry => ({
-        ...entry,
-        cacheId
-      })));
+      history.push(
+        ...cacheInfo.history.map((entry) => ({
+          ...entry,
+          cacheId,
+        }))
+      );
     }
 
     // Sort by timestamp
@@ -464,7 +491,7 @@ export class CacheMetrics extends BaseService {
       .map(([id, info]) => ({
         id,
         hitRate: info.lastMetrics.hitRate,
-        strategy: info.lastMetrics.strategyName
+        strategy: info.lastMetrics.strategyName,
       }))
       .sort((a, b) => b.hitRate - a.hitRate)
       .slice(0, 5);
@@ -475,7 +502,7 @@ export class CacheMetrics extends BaseService {
       .map(([id, info]) => ({
         id,
         hitRate: info.lastMetrics.hitRate,
-        strategy: info.lastMetrics.strategyName
+        strategy: info.lastMetrics.strategyName,
       }))
       .sort((a, b) => a.hitRate - b.hitRate)
       .slice(0, 5);
@@ -485,12 +512,12 @@ export class CacheMetrics extends BaseService {
         totalCaches: aggregated.cacheCount,
         overallHitRate: aggregated.overallHitRate,
         totalMemoryMB: aggregated.memoryUtilization.totalMB,
-        averageUtilization: aggregated.memoryUtilization.averageUtilization
+        averageUtilization: aggregated.memoryUtilization.averageUtilization,
       },
       topPerformers,
       poorPerformers,
       recommendations: this.#generateRecommendations(aggregated),
-      strategyDistribution: aggregated.strategyDistribution
+      strategyDistribution: aggregated.strategyDistribution,
     };
   }
 

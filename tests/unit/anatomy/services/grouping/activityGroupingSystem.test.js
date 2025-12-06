@@ -418,10 +418,7 @@ describe('ActivityGroupingSystem - Priority Sorting', () => {
 
     system.sortByPriority(activities, cacheKey);
 
-    expect(indexManager.buildIndex).toHaveBeenCalledWith(
-      activities,
-      cacheKey
-    );
+    expect(indexManager.buildIndex).toHaveBeenCalledWith(activities, cacheKey);
   });
 });
 

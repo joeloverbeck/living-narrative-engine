@@ -13,15 +13,18 @@
 **Ticket Correction**: Updated acceptance criteria and test template notes to reflect this behavioral difference.
 
 **Implementation Changes**:
+
 1. Handler was implemented to log partial unlocks (when fewer unlocked than requested) as debug info, not errors
 2. Tests verify graceful degradation behavior with no error dispatch
 
 **Files Created** (as planned):
+
 - `data/schemas/operations/unlockGrabbing.schema.json`
 - `src/logic/operationHandlers/unlockGrabbingHandler.js`
 - `tests/unit/logic/operationHandlers/unlockGrabbingHandler.test.js` (25 tests, all passing)
 
 **Files Modified** (as planned, plus one additional):
+
 - `data/schemas/operation.schema.json` - Added `$ref` entry
 - `src/dependencyInjection/tokens/tokens-core.js` - Added `UnlockGrabbingHandler` token
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Added factory
@@ -30,6 +33,7 @@
 - **`src/configuration/staticConfiguration.js`** - Added schema to schemaFiles array (this was not in the original ticket but was required for schema loading)
 
 **Test Results**:
+
 - 25 unit tests pass
 - Schema validation passes
 - ESLint passes (warnings only, no errors)
@@ -47,21 +51,21 @@ Create the `UNLOCK_GRABBING` operation that unlocks a specified number of grabbi
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/unlockGrabbing.schema.json` | Operation schema |
-| `src/logic/operationHandlers/unlockGrabbingHandler.js` | Operation handler |
-| `tests/unit/logic/operationHandlers/unlockGrabbingHandler.test.js` | Unit tests |
+| File                                                               | Purpose           |
+| ------------------------------------------------------------------ | ----------------- |
+| `data/schemas/operations/unlockGrabbing.schema.json`               | Operation schema  |
+| `src/logic/operationHandlers/unlockGrabbingHandler.js`             | Operation handler |
+| `tests/unit/logic/operationHandlers/unlockGrabbingHandler.test.js` | Unit tests        |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/schemas/operation.schema.json` | Add `$ref` to unlockGrabbing.schema.json in anyOf array |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add `UnlockGrabbingHandler` token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handler factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Map operation type to handler |
-| `src/utils/preValidationUtils.js` | Add `'UNLOCK_GRABBING'` to KNOWN_OPERATION_TYPES |
+| File                                                                     | Change                                                  |
+| ------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `data/schemas/operation.schema.json`                                     | Add `$ref` to unlockGrabbing.schema.json in anyOf array |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add `UnlockGrabbingHandler` token                       |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handler factory                                |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Map operation type to handler                           |
+| `src/utils/preValidationUtils.js`                                        | Add `'UNLOCK_GRABBING'` to KNOWN_OPERATION_TYPES        |
 
 ## Out of Scope
 
@@ -147,11 +151,13 @@ class UnlockGrabbingHandler extends BaseOperationHandler {
 ### DI Registration Changes
 
 **tokens-core.js** - Add after existing handler tokens (alphabetically sorted):
+
 ```javascript
 UnlockGrabbingHandler: 'UnlockGrabbingHandler',
 ```
 
 **operationHandlerRegistrations.js** - Add import and factory:
+
 ```javascript
 import UnlockGrabbingHandler from '../../logic/operationHandlers/unlockGrabbingHandler.js';
 
@@ -167,16 +173,19 @@ import UnlockGrabbingHandler from '../../logic/operationHandlers/unlockGrabbingH
 ```
 
 **interpreterRegistrations.js** - Add mapping:
+
 ```javascript
 registry.register('UNLOCK_GRABBING', bind(tokens.UnlockGrabbingHandler));
 ```
 
 **preValidationUtils.js** - Add to KNOWN_OPERATION_TYPES (alphabetically):
+
 ```javascript
 'UNLOCK_GRABBING',
 ```
 
 **operation.schema.json** - Add $ref in anyOf array (alphabetically):
+
 ```json
 { "$ref": "./operations/unlockGrabbing.schema.json" }
 ```

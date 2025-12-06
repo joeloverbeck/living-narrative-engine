@@ -13,7 +13,9 @@ const createDescriptorProperties = (overrides = {}) => ({
   ...overrides,
 });
 
-const createBodyComponent = (descriptorProperties = createDescriptorProperties()) => ({
+const createBodyComponent = (
+  descriptorProperties = createDescriptorProperties()
+) => ({
   dataSchema: {
     properties: {
       body: {
@@ -54,16 +56,14 @@ describe('RecipeBodyDescriptorValidator', () => {
     const component = hasComponentOverride
       ? providedComponent
       : createBodyComponent();
-    const dataRegistry =
-      dataRegistryImpl ||
-      {
-        get: jest.fn().mockImplementation((collection, id) => {
-          if (collection === 'components' && id === 'anatomy:body') {
-            return component;
-          }
-          return undefined;
-        }),
-      };
+    const dataRegistry = dataRegistryImpl || {
+      get: jest.fn().mockImplementation((collection, id) => {
+        if (collection === 'components' && id === 'anatomy:body') {
+          return component;
+        }
+        return undefined;
+      }),
+    };
 
     const validator = new RecipeBodyDescriptorValidator({
       logger,
@@ -100,7 +100,10 @@ describe('RecipeBodyDescriptorValidator', () => {
       const { validator, dataRegistry } = createValidator();
       const result = await validator.validate(createRecipe());
 
-      expect(dataRegistry.get).toHaveBeenCalledWith('components', 'anatomy:body');
+      expect(dataRegistry.get).toHaveBeenCalledWith(
+        'components',
+        'anatomy:body'
+      );
       expect(result.passed).toHaveLength(1);
     });
 
@@ -133,7 +136,9 @@ describe('RecipeBodyDescriptorValidator', () => {
 
     it('records passed message when recipe has no bodyDescriptors object', async () => {
       const { validator } = createValidator();
-      const result = await validator.validate(createRecipe({ bodyDescriptors: undefined }));
+      const result = await validator.validate(
+        createRecipe({ bodyDescriptors: undefined })
+      );
 
       expect(result.errors).toHaveLength(0);
       expect(result.passed).toEqual([
@@ -158,7 +163,9 @@ describe('RecipeBodyDescriptorValidator', () => {
 
     it('passes validation for empty bodyDescriptors object', async () => {
       const { validator } = createValidator();
-      const result = await validator.validate(createRecipe({ bodyDescriptors: {} }));
+      const result = await validator.validate(
+        createRecipe({ bodyDescriptors: {} })
+      );
 
       expect(result.errors).toHaveLength(0);
       expect(result.passed).toEqual([
@@ -223,7 +230,8 @@ describe('RecipeBodyDescriptorValidator', () => {
         {
           type: 'INVALID_BODY_DESCRIPTOR_VALUE',
           severity: 'error',
-          message: "Invalid value 'gigantic' for body descriptor 'descriptors:size_category'",
+          message:
+            "Invalid value 'gigantic' for body descriptor 'descriptors:size_category'",
           check: 'body_descriptors',
           field: 'descriptors:size_category',
           value: 'gigantic',
@@ -248,7 +256,8 @@ describe('RecipeBodyDescriptorValidator', () => {
         {
           type: 'INVALID_BODY_DESCRIPTOR_TYPE',
           severity: 'error',
-          message: "Invalid type for body descriptor 'descriptors:texture': expected one of [string], got null",
+          message:
+            "Invalid type for body descriptor 'descriptors:texture': expected one of [string], got null",
           check: 'body_descriptors',
           field: 'descriptors:texture',
           value: null,
@@ -338,7 +347,9 @@ describe('RecipeBodyDescriptorValidator', () => {
 
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].type).toBe('INVALID_BODY_DESCRIPTOR_TYPE');
-      expect(result.errors[0].message).toContain('expected one of [string, null]');
+      expect(result.errors[0].message).toContain(
+        'expected one of [string, null]'
+      );
       expect(result.errors[0].message).toContain('got number');
       expect(result.errors[0].field).toBe('descriptors:phase');
       expect(result.errors[0].expectedTypes).toEqual(['string', 'null']);
@@ -385,7 +396,9 @@ describe('RecipeBodyDescriptorValidator', () => {
 
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].type).toBe('INVALID_BODY_DESCRIPTOR_TYPE');
-      expect(result.errors[0].message).toContain('expected one of [string, number]');
+      expect(result.errors[0].message).toContain(
+        'expected one of [string, number]'
+      );
       expect(result.errors[0].message).toContain('got object');
       expect(result.errors[0].field).toBe('descriptors:density');
       expect(result.errors[0].expectedTypes).toEqual(['string', 'number']);

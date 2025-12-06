@@ -1,17 +1,17 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "patrol:writhing_observer_instance",
-    "definitionId": "patrol:writhing_observer",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "patrol:eldritch_dimension_instance"
-        },
-        "items:inventory": {
-            "items": [],
-            "capacity": {
-                "maxWeight": 50.0,
-                "maxItems": 20
-            }
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "patrol:writhing_observer_instance",
+  "definitionId": "patrol:writhing_observer",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "patrol:eldritch_dimension_instance"
+    },
+    "items:inventory": {
+      "items": [],
+      "capacity": {
+        "maxWeight": 50.0,
+        "maxItems": 20
+      }
     }
+  }
 }

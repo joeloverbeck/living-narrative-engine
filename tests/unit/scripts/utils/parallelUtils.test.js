@@ -104,9 +104,9 @@ describe('parallelUtils.batchProcess', () => {
       return item;
     });
 
-    await expect(
-      batchProcess(['a', 'b', 'c'], processor, 2)
-    ).rejects.toThrow('failure');
+    await expect(batchProcess(['a', 'b', 'c'], processor, 2)).rejects.toThrow(
+      'failure'
+    );
     expect(processor).toHaveBeenCalledTimes(2);
   });
 });

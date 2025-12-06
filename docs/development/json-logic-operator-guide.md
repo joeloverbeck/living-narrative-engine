@@ -103,7 +103,11 @@ export class JsonLogicCustomOperators extends BaseService {
 
     // Validation happens automatically at end of method
     const allowedOps = jsonLogicEvaluationService.getAllowedOperations();
-    validateOperatorWhitelist(this.#registeredOperators, allowedOps, this.#logger);
+    validateOperatorWhitelist(
+      this.#registeredOperators,
+      allowedOps,
+      this.#logger
+    );
   }
 }
 ```
@@ -121,7 +125,7 @@ this.#allowedOperations = new Set([
   // ... existing operators ...
 
   // Custom operations - your new operator
-  'myCustomOperator',  // <-- ADD THIS
+  'myCustomOperator', // <-- ADD THIS
 
   // ... rest of operators ...
 ]);
@@ -130,6 +134,7 @@ this.#allowedOperations = new Set([
 **✅ Validation** (automatic):
 
 After adding to whitelist, validation happens automatically:
+
 1. ✅ Operator added to `#registeredOperators` set when registered
 2. ✅ `validateOperatorWhitelist()` called at end of `registerOperators()`
 3. ✅ Throws error if operator is registered but not in `#allowedOperations`
@@ -294,12 +299,14 @@ Error: JSON Logic validation error: Disallowed operation 'unknownOperator'
 The enhancement adds automatic validation to the existing manual process:
 
 **Before (No Validation):**
+
 1. Implement operator in `src/logic/operators/`
 2. Register in `JsonLogicCustomOperators.registerOperators()`
 3. Manually add to `ALLOWED_OPERATIONS` whitelist
 4. ⚠️ If you forget step 3, silent failure occurs
 
 **After (With Validation):**
+
 1. Implement operator in `src/logic/operators/`
 2. Register in `JsonLogicCustomOperators.registerOperators()` using `#registerOperator()` helper
 3. Manually add to `ALLOWED_OPERATIONS` whitelist
@@ -346,8 +353,8 @@ describe('MyCustomOperator Integration', () => {
     const logic = {
       and: [
         { myCustomOperator: ['entity', 'value'] },
-        { hasPartOfType: ['entity', 'hand'] }
-      ]
+        { hasPartOfType: ['entity', 'hand'] },
+      ],
     };
     const result = evaluationService.evaluate(logic, context);
     expect(result).toBe(true);
@@ -372,6 +379,7 @@ Registration tests are automatically provided in `jsonLogicOperatorRegistration.
 **Symptom**: Operator not found when evaluating rules
 
 **Fix**: Ensure operator name matches exactly in:
+
 - Registration call: `this.#registerOperator('myOperator', ...)`
 - Whitelist entry: `'myOperator'`
 - Usage in rules: `{ "myOperator": [...] }`
@@ -454,7 +462,7 @@ this.#registerOperator(
 
 this.#allowedOperations = new Set([
   // ... existing operators ...
-  'hasTag',  // <-- ADD THIS
+  'hasTag', // <-- ADD THIS
   // ...
 ]);
 ```

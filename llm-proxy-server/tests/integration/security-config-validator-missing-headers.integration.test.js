@@ -7,7 +7,14 @@
  *              through the real Express stack.
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 

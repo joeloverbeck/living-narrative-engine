@@ -9,7 +9,10 @@ import ComponentNotFoundError from '../../../../src/anatomy/errors/ComponentNotF
 import InvalidPropertyError from '../../../../src/anatomy/errors/InvalidPropertyError.js';
 import SocketNotFoundError from '../../../../src/anatomy/errors/SocketNotFoundError.js';
 import RecipeValidationError from '../../../../src/anatomy/errors/RecipeValidationError.js';
-import { createError, ERROR_TEMPLATES } from '../../../../src/anatomy/errors/errorTemplates.js';
+import {
+  createError,
+  ERROR_TEMPLATES,
+} from '../../../../src/anatomy/errors/errorTemplates.js';
 
 describe('AnatomyError Base Class', () => {
   it('should create error with all fields', () => {
@@ -151,7 +154,9 @@ describe('ComponentNotFoundError', () => {
     const str = error.toString();
 
     expect(str).toContain("Recipe 'human_female', slot 'torso'");
-    expect(str).toContain("Component 'anatomy:missing_component' does not exist");
+    expect(str).toContain(
+      "Component 'anatomy:missing_component' does not exist"
+    );
   });
 
   it('should include example component structure in fix', () => {
@@ -164,7 +169,9 @@ describe('ComponentNotFoundError', () => {
     const str = error.toString();
 
     expect(str).toContain('Example Component Structure:');
-    expect(str).toContain('"$schema": "schema://living-narrative-engine/component.schema.json"');
+    expect(str).toContain(
+      '"$schema": "schema://living-narrative-engine/component.schema.json"'
+    );
     expect(str).toContain('"id": "anatomy:missing_component"');
   });
 
@@ -245,7 +252,9 @@ describe('InvalidPropertyError', () => {
 
     const str = error.toString();
 
-    expect(str).toContain('Component Schema: data/mods/anatomy/components/body.component.json');
+    expect(str).toContain(
+      'Component Schema: data/mods/anatomy/components/body.component.json'
+    );
   });
 });
 
@@ -311,7 +320,9 @@ describe('SocketNotFoundError', () => {
 
     const str = error.toString();
 
-    expect(str).toContain('Available sockets: [left_shoulder, right_shoulder, neck]');
+    expect(str).toContain(
+      'Available sockets: [left_shoulder, right_shoulder, neck]'
+    );
   });
 
   it('should include entity path when provided', () => {
@@ -326,7 +337,9 @@ describe('SocketNotFoundError', () => {
 
     const str = error.toString();
 
-    expect(str).toContain('File: data/mods/anatomy/entities/humanoid_torso.entity.json');
+    expect(str).toContain(
+      'File: data/mods/anatomy/entities/humanoid_torso.entity.json'
+    );
   });
 });
 
@@ -336,16 +349,14 @@ describe('RecipeValidationError', () => {
       summary: {
         recipeId: 'human_female',
       },
-      errors: [
-        { message: 'Error 1' },
-        { message: 'Error 2' },
-      ],
-      warnings: [
-        { message: 'Warning 1' },
-      ],
+      errors: [{ message: 'Error 1' }, { message: 'Error 2' }],
+      warnings: [{ message: 'Warning 1' }],
     };
 
-    const error = new RecipeValidationError({ message: 'Recipe validation failed', report });
+    const error = new RecipeValidationError({
+      message: 'Recipe validation failed',
+      report,
+    });
 
     expect(error.report).toBe(report);
   });
@@ -360,13 +371,13 @@ describe('RecipeValidationError', () => {
         { message: 'Error 2' },
         { message: 'Error 3' },
       ],
-      warnings: [
-        { message: 'Warning 1' },
-        { message: 'Warning 2' },
-      ],
+      warnings: [{ message: 'Warning 1' }, { message: 'Warning 2' }],
     };
 
-    const error = new RecipeValidationError({ message: 'Recipe validation failed', report });
+    const error = new RecipeValidationError({
+      message: 'Recipe validation failed',
+      report,
+    });
     const str = error.toString();
 
     expect(str).toContain('Errors: 3');
@@ -382,10 +393,13 @@ describe('RecipeValidationError', () => {
       warnings: [],
     };
 
-    const error = new RecipeValidationError({ message: 'Recipe validation failed', report });
+    const error = new RecipeValidationError({
+      message: 'Recipe validation failed',
+      report,
+    });
     const str = error.toString();
 
-    expect(str).toContain("Recipe Validation: human_female");
+    expect(str).toContain('Recipe Validation: human_female');
   });
 
   it('should include validation references', () => {
@@ -397,7 +411,10 @@ describe('RecipeValidationError', () => {
       warnings: [],
     };
 
-    const error = new RecipeValidationError({ message: 'Recipe validation failed', report });
+    const error = new RecipeValidationError({
+      message: 'Recipe validation failed',
+      report,
+    });
     const str = error.toString();
 
     expect(str).toContain('docs/anatomy/troubleshooting.md');

@@ -5,7 +5,10 @@ import { join } from 'path';
 describe('Tortoise Tail Entity Validation', () => {
   const tailEntity = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_tail.entity.json'),
+      join(
+        process.cwd(),
+        'data/mods/anatomy/entities/definitions/tortoise_tail.entity.json'
+      ),
       'utf-8'
     )
   );
@@ -21,7 +24,9 @@ describe('Tortoise Tail Entity Validation', () => {
 
     it('should have anatomy:part component with tortoise_tail subType', () => {
       expect(tailEntity.components['anatomy:part']).toBeDefined();
-      expect(tailEntity.components['anatomy:part'].subType).toBe('tortoise_tail');
+      expect(tailEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_tail'
+      );
     });
 
     it('should have core:name component with text "tail"', () => {
@@ -31,22 +36,32 @@ describe('Tortoise Tail Entity Validation', () => {
 
     it('should have descriptors:texture component with "scaled" texture', () => {
       expect(tailEntity.components['descriptors:texture']).toBeDefined();
-      expect(tailEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(tailEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
 
     it('should have descriptors:length_category component with "short" length', () => {
-      expect(tailEntity.components['descriptors:length_category']).toBeDefined();
-      expect(tailEntity.components['descriptors:length_category'].length).toBe('short');
+      expect(
+        tailEntity.components['descriptors:length_category']
+      ).toBeDefined();
+      expect(tailEntity.components['descriptors:length_category'].length).toBe(
+        'short'
+      );
     });
 
     it('should have descriptors:shape_general component with "conical" shape', () => {
       expect(tailEntity.components['descriptors:shape_general']).toBeDefined();
-      expect(tailEntity.components['descriptors:shape_general'].shape).toBe('conical');
+      expect(tailEntity.components['descriptors:shape_general'].shape).toBe(
+        'conical'
+      );
     });
 
     it('should have descriptors:color_extended component with "dark-olive" color', () => {
       expect(tailEntity.components['descriptors:color_extended']).toBeDefined();
-      expect(tailEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
+      expect(tailEntity.components['descriptors:color_extended'].color).toBe(
+        'dark-olive'
+      );
     });
   });
 
@@ -67,7 +82,9 @@ describe('Tortoise Tail Entity Validation', () => {
       expect(tailEntity.components['anatomy:part_health']).toBeDefined();
       expect(tailEntity.components['core:name']).toBeDefined();
       expect(tailEntity.components['descriptors:texture']).toBeDefined();
-      expect(tailEntity.components['descriptors:length_category']).toBeDefined();
+      expect(
+        tailEntity.components['descriptors:length_category']
+      ).toBeDefined();
       expect(tailEntity.components['descriptors:shape_general']).toBeDefined();
       expect(tailEntity.components['descriptors:color_extended']).toBeDefined();
     });
@@ -96,7 +113,9 @@ describe('Tortoise Tail Entity Validation', () => {
     });
 
     it('should have subType matching structure template allowedTypes', () => {
-      expect(tailEntity.components['anatomy:part'].subType).toBe('tortoise_tail');
+      expect(tailEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_tail'
+      );
     });
   });
 
@@ -140,7 +159,9 @@ describe('Tortoise Tail Entity Validation', () => {
         'velvety',
         'webbed-clawed',
       ];
-      expect(validTextures).toContain(tailEntity.components['descriptors:texture'].texture);
+      expect(validTextures).toContain(
+        tailEntity.components['descriptors:texture'].texture
+      );
     });
 
     it('should use valid length category from schema enum', () => {
@@ -175,7 +196,9 @@ describe('Tortoise Tail Entity Validation', () => {
         'square',
         'tapered',
       ];
-      expect(validShapes).toContain(tailEntity.components['descriptors:shape_general'].shape);
+      expect(validShapes).toContain(
+        tailEntity.components['descriptors:shape_general'].shape
+      );
     });
 
     it('should use valid color from schema enum', () => {
@@ -231,7 +254,9 @@ describe('Tortoise Tail Entity Validation', () => {
         'violet',
         'warm-brown',
       ];
-      expect(validColors).toContain(tailEntity.components['descriptors:color_extended'].color);
+      expect(validColors).toContain(
+        tailEntity.components['descriptors:color_extended'].color
+      );
     });
   });
 
@@ -241,19 +266,27 @@ describe('Tortoise Tail Entity Validation', () => {
     });
 
     it('should have scaled texture consistent with reptilian anatomy', () => {
-      expect(tailEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(tailEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
 
     it('should have short length as specified for tortoise tail', () => {
-      expect(tailEntity.components['descriptors:length_category'].length).toBe('short');
+      expect(tailEntity.components['descriptors:length_category'].length).toBe(
+        'short'
+      );
     });
 
     it('should have conical shape characteristic', () => {
-      expect(tailEntity.components['descriptors:shape_general'].shape).toBe('conical');
+      expect(tailEntity.components['descriptors:shape_general'].shape).toBe(
+        'conical'
+      );
     });
 
     it('should have color consistent with tortoise appearance', () => {
-      expect(tailEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
+      expect(tailEntity.components['descriptors:color_extended'].color).toBe(
+        'dark-olive'
+      );
     });
   });
 
@@ -273,7 +306,9 @@ describe('Tortoise Tail Entity Validation', () => {
         (a) => a.type === 'tail'
       );
       expect(tailAppendage).toBeDefined();
-      expect(tailAppendage.socketPattern.allowedTypes).toContain('tortoise_tail');
+      expect(tailAppendage.socketPattern.allowedTypes).toContain(
+        'tortoise_tail'
+      );
     });
 
     it('should match structure template allowedTypes exactly', () => {
@@ -290,7 +325,10 @@ describe('Tortoise Tail Entity Validation', () => {
     it('should have scaled texture like other tortoise limbs', () => {
       const armEntity = JSON.parse(
         readFileSync(
-          join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'),
+          join(
+            process.cwd(),
+            'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+          ),
           'utf-8'
         )
       );
@@ -300,14 +338,19 @@ describe('Tortoise Tail Entity Validation', () => {
     });
 
     it('should use length_category component (not generic length)', () => {
-      expect(tailEntity.components['descriptors:length_category']).toBeDefined();
+      expect(
+        tailEntity.components['descriptors:length_category']
+      ).toBeDefined();
       expect(tailEntity.components['descriptors:length']).toBeUndefined();
     });
 
     it('should have olive-green color consistent with tortoise body', () => {
       const armEntity = JSON.parse(
         readFileSync(
-          join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'),
+          join(
+            process.cwd(),
+            'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+          ),
           'utf-8'
         )
       );

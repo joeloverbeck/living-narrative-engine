@@ -189,21 +189,32 @@ describe('Mixed Action Types Discovery - Integration', () => {
     it('should discover single-target and multi-target actions when conditions are met', async () => {
       // Debug: Check loaded action definitions
       const actionRepository = testFixture.testEnv.actionRepository;
-      const dropAction = actionRepository ? actionRepository.getActionDefinition('items:drop_item') : null;
+      const dropAction = actionRepository
+        ? actionRepository.getActionDefinition('items:drop_item')
+        : null;
 
       console.log('\n=== ACTION DEFINITION DEBUG ===');
       console.log('Action repository exists:', !!actionRepository);
       console.log('drop_item definition exists:', !!dropAction);
       if (dropAction) {
         console.log('drop_item targets:', dropAction.targets);
-        console.log('drop_item required_components:', dropAction.required_components);
-        console.log('drop_item forbidden_components:', dropAction.forbidden_components);
+        console.log(
+          'drop_item required_components:',
+          dropAction.required_components
+        );
+        console.log(
+          'drop_item forbidden_components:',
+          dropAction.forbidden_components
+        );
         console.log('drop_item prerequisites:', dropAction.prerequisites);
       } else {
         console.log('drop_item action definition NOT LOADED');
         if (actionRepository) {
           const allActions = actionRepository.getAllActionDefinitions();
-          console.log('All loaded actions:', allActions.map(a => a.id));
+          console.log(
+            'All loaded actions:',
+            allActions.map((a) => a.id)
+          );
         }
       }
 
@@ -222,9 +233,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(actionIds).toContain('items:take_from_container'); // Multi-target
 
       // Count each action type
-      const dropActions = actions.filter(
-        (a) => a.id === 'items:drop_item'
-      );
+      const dropActions = actions.filter((a) => a.id === 'items:drop_item');
 
       // Debug: Check drop_item action structure after discovery
       console.log('\n=== DROP_ITEM AFTER DISCOVERY ===');
@@ -234,7 +243,10 @@ describe('Mixed Action Types Discovery - Integration', () => {
         console.log('Has targets object:', !!dropAction.targets);
         console.log('targets type:', typeof dropAction.targets);
         console.log('Has targets.primary:', !!dropAction.targets?.primary);
-        console.log('targets.primary.scope:', dropAction.targets?.primary?.scope);
+        console.log(
+          'targets.primary.scope:',
+          dropAction.targets?.primary?.scope
+        );
         console.log('Template:', dropAction.template);
       } else {
         console.log('drop_item NOT FOUND in discovered actions');
@@ -258,9 +270,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const dropActions = actions.filter(
-        (a) => a.id === 'items:drop_item'
-      );
+      const dropActions = actions.filter((a) => a.id === 'items:drop_item');
 
       expect(dropActions.length).toBeGreaterThan(0);
 
@@ -291,7 +301,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       for (const action of takeActions) {
         expect(action.id).toBe('items:take_from_container');
         expect(action.template).toBeDefined();
-        expect(action.template).toBe('take {secondary.name} from {primary.name}');
+        expect(action.template).toBe(
+          'take {secondary.name} from {primary.name}'
+        );
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined(); // container
         expect(action.targets.secondary).toBeDefined(); // item
@@ -319,7 +331,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
         // Should not have duplicates
         expect(uniqueKeys.size).toBe(actionKeys.length);
 
-        console.log(`  ✅ No duplicate ${actionType} actions (${uniqueKeys.size} unique)`);
+        console.log(
+          `  ✅ No duplicate ${actionType} actions (${uniqueKeys.size} unique)`
+        );
       }
     });
   });
@@ -350,9 +364,12 @@ describe('Mixed Action Types Discovery - Integration', () => {
       const containers = Array.from(containerResult.value ?? []);
       expect(containers).toContain(containerId);
 
-      const contentsResult = scopeResolver.resolveSync('items:container_contents', {
-        primary: { id: containerId },
-      });
+      const contentsResult = scopeResolver.resolveSync(
+        'items:container_contents',
+        {
+          primary: { id: containerId },
+        }
+      );
       expect(contentsResult?.success).toBe(true);
 
       const containerItems = Array.from(contentsResult.value ?? []);
@@ -365,7 +382,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
       // All actions should have proper structure
       for (const action of takeActions) {
         expect(action.id).toBe('items:take_from_container');
-        expect(action.template).toBe('take {secondary.name} from {primary.name}');
+        expect(action.template).toBe(
+          'take {secondary.name} from {primary.name}'
+        );
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined();
         expect(action.targets.secondary).toBeDefined();
@@ -383,9 +402,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const dropActions = actions.filter(
-        (a) => a.id === 'items:drop_item'
-      );
+      const dropActions = actions.filter((a) => a.id === 'items:drop_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
@@ -407,16 +424,14 @@ describe('Mixed Action Types Discovery - Integration', () => {
       // Use addComponent to replace the existing inventory data
       await testFixture.entityManager.addComponent(actorId, 'items:inventory', {
         items: [],
-        capacity: { maxWeight: 50, maxItems: 10 }
+        capacity: { maxWeight: 50, maxItems: 10 },
       });
 
       const actions = testFixture.discoverActions(actorId);
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const dropActions = actions.filter(
-        (a) => a.id === 'items:drop_item'
-      );
+      const dropActions = actions.filter((a) => a.id === 'items:drop_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
@@ -452,15 +467,15 @@ describe('Mixed Action Types Discovery - Integration', () => {
       for (const action of takeActions) {
         expect(action.id).toBe('items:take_from_container');
         expect(action.template).toBeDefined();
-        expect(action.template).toBe('take {secondary.name} from {primary.name}');
+        expect(action.template).toBe(
+          'take {secondary.name} from {primary.name}'
+        );
         expect(action.targets).toBeDefined();
         expect(action.targets.primary).toBeDefined(); // container
         expect(action.targets.secondary).toBeDefined(); // item
         expect(action.targets.secondary.contextFrom).toBe('primary');
 
-        console.log(
-          `  ✅ Pipeline data structure complete for ${action.id}`
-        );
+        console.log(`  ✅ Pipeline data structure complete for ${action.id}`);
       }
     });
 
@@ -469,9 +484,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const dropActions = actions.filter(
-        (a) => a.id === 'items:drop_item'
-      );
+      const dropActions = actions.filter((a) => a.id === 'items:drop_item');
       const takeActions = actions.filter(
         (a) => a.id === 'items:take_from_container'
       );
@@ -484,20 +497,18 @@ describe('Mixed Action Types Discovery - Integration', () => {
         expect(action.template).toBe('drop {item}');
         expect(action.targets.primary).toBeDefined();
 
-        console.log(
-          `  ✅ Single-target template: "${action.template}"`
-        );
+        console.log(`  ✅ Single-target template: "${action.template}"`);
       }
 
       // Multi-target take_from_container has {primary.name} and {secondary.name}
       for (const action of takeActions) {
-        expect(action.template).toBe('take {secondary.name} from {primary.name}');
+        expect(action.template).toBe(
+          'take {secondary.name} from {primary.name}'
+        );
         expect(action.targets.primary).toBeDefined();
         expect(action.targets.secondary).toBeDefined();
 
-        console.log(
-          `  ✅ Multi-target template: "${action.template}"`
-        );
+        console.log(`  ✅ Multi-target template: "${action.template}"`);
       }
     });
 
@@ -506,7 +517,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const multiTargetActions = actions.filter((a) => a.id === 'items:take_from_container');
+      const multiTargetActions = actions.filter(
+        (a) => a.id === 'items:take_from_container'
+      );
 
       expect(multiTargetActions.length).toBeGreaterThan(0);
 
@@ -540,8 +553,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       const relevantActions = actions.filter(
         (a) =>
-          a.id === 'items:drop_item' ||
-          a.id === 'items:take_from_container'
+          a.id === 'items:drop_item' || a.id === 'items:take_from_container'
       );
 
       expect(relevantActions.length).toBeGreaterThan(0);
@@ -554,12 +566,15 @@ describe('Mixed Action Types Discovery - Integration', () => {
         // Templates should use proper placeholder syntax
         const expectedTemplates = {
           'items:drop_item': 'drop {item}',
-          'items:take_from_container': 'take {secondary.name} from {primary.name}',
+          'items:take_from_container':
+            'take {secondary.name} from {primary.name}',
         };
         const expectedTemplate = expectedTemplates[action.id];
         expect(action.template).toBe(expectedTemplate);
 
-        console.log(`  ✅ Valid template for ${action.id}: "${action.template}"`);
+        console.log(
+          `  ✅ Valid template for ${action.id}: "${action.template}"`
+        );
       }
     });
 
@@ -568,10 +583,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const actionTypes = [
-        'items:drop_item',
-        'items:take_from_container',
-      ];
+      const actionTypes = ['items:drop_item', 'items:take_from_container'];
 
       for (const actionType of actionTypes) {
         const typeActions = actions.filter((a) => a.id === actionType);

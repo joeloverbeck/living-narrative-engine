@@ -8,13 +8,14 @@ Create comprehensive unit tests for the `PickRandomEntityHandler` to verify all 
 
 ## Files to Modify
 
-| File | Purpose |
-|------|---------|
+| File                                                                 | Purpose                                                  |
+| -------------------------------------------------------------------- | -------------------------------------------------------- |
 | `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` | Unit test suite (already exists, needs additional tests) |
 
 ## Existing Tests (Already Implemented)
 
 The test file already contains 9 basic tests:
+
 1. ✅ Constructor initialization
 2. ✅ Store null if location_id is missing/invalid
 3. ✅ Pick random entity from location
@@ -133,7 +134,7 @@ describe('PickRandomEntityHandler', () => {
   beforeEach(() => {
     // NOTE: The handler requires these three methods per constructor validation
     mockEntityManager = {
-      getEntitiesWithComponent: jest.fn(),  // NOT getEntitiesInLocation
+      getEntitiesWithComponent: jest.fn(), // NOT getEntitiesInLocation
       getComponentData: jest.fn(),
       hasComponent: jest.fn(),
     };
@@ -194,6 +195,7 @@ npm run test:unit
 ## Reference Files
 
 For understanding test patterns:
+
 - `tests/unit/logic/operationHandlers/getDamageCapabilitiesHandler.test.js` - Similar handler test
 - `tests/unit/logic/operationHandlers/setVariableHandler.test.js` - Simple handler test pattern
 - `tests/common/testBed.js` - Test utilities
@@ -244,12 +246,12 @@ Expanded the existing test file from 9 to 26 tests, organized into logical descr
 
 ### Coverage Results
 
-| Metric | Coverage |
-|--------|----------|
+| Metric     | Coverage  |
+| ---------- | --------- |
 | Statements | 95.65% ✅ |
-| Branches | 83.33% ✅ |
-| Functions | 100% ✅ |
-| Lines | 95.65% ✅ |
+| Branches   | 83.33% ✅ |
+| Functions  | 100% ✅   |
+| Lines      | 95.65% ✅ |
 
 All metrics exceed the 80% requirement.
 

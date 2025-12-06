@@ -62,7 +62,12 @@ describe('PartSelectionService - partType/subType Matching', () => {
       const allowedTypes = ['spider_leg'];
 
       // Should find matching entity
-      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+      const result = await service.selectPart(
+        requirements,
+        allowedTypes,
+        undefined,
+        Math.random
+      );
 
       expect(result).toBe('anatomy:spider_leg');
     });
@@ -98,7 +103,9 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // Should throw because subType "leg" !== partType "spider_leg"
       await expect(
         service.selectPart(requirements, allowedTypes, undefined, Math.random)
-      ).rejects.toThrow('No entity definitions found matching anatomy requirements');
+      ).rejects.toThrow(
+        'No entity definitions found matching anatomy requirements'
+      );
     });
 
     it('should accept entity when no partType is specified', async () => {
@@ -128,7 +135,12 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg'];
 
-      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+      const result = await service.selectPart(
+        requirements,
+        allowedTypes,
+        undefined,
+        Math.random
+      );
 
       expect(result).toBe('anatomy:generic_leg');
     });
@@ -178,7 +190,12 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       const allowedTypes = ['leg', 'spider_leg', 'dragon_leg'];
 
-      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+      const result = await service.selectPart(
+        requirements,
+        allowedTypes,
+        undefined,
+        Math.random
+      );
 
       // Should select spider_leg, not human_leg or dragon_leg
       expect(result).toBe('anatomy:spider_leg');
@@ -221,7 +238,9 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // Should throw because no entity matches spider_leg
       await expect(
         service.selectPart(requirements, allowedTypes, undefined, Math.random)
-      ).rejects.toThrow('No entity definitions found matching anatomy requirements');
+      ).rejects.toThrow(
+        'No entity definitions found matching anatomy requirements'
+      );
     });
   });
 
@@ -252,14 +271,21 @@ describe('PartSelectionService - partType/subType Matching', () => {
 
       // allowedTypes includes spider_leg
       const allowedTypes1 = ['spider_leg', 'leg'];
-      const result1 = await service.selectPart(requirements, allowedTypes1, undefined, Math.random);
+      const result1 = await service.selectPart(
+        requirements,
+        allowedTypes1,
+        undefined,
+        Math.random
+      );
       expect(result1).toBe('anatomy:spider_leg'); // Should match
 
       // allowedTypes does NOT include spider_leg
       const allowedTypes2 = ['leg', 'arm'];
       await expect(
         service.selectPart(requirements, allowedTypes2, undefined, Math.random)
-      ).rejects.toThrow('No entity definitions found matching anatomy requirements'); // Should throw (subType not in allowedTypes)
+      ).rejects.toThrow(
+        'No entity definitions found matching anatomy requirements'
+      ); // Should throw (subType not in allowedTypes)
     });
 
     it('should accept wildcard in allowedTypes', async () => {
@@ -289,7 +315,12 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // Wildcard allows any type
       const allowedTypes = ['*'];
 
-      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+      const result = await service.selectPart(
+        requirements,
+        allowedTypes,
+        undefined,
+        Math.random
+      );
 
       expect(result).toBe('anatomy:spider_leg');
     });
@@ -330,7 +361,9 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // Should throw because subType "leg" !== partType "spider_leg"
       await expect(
         service.selectPart(requirements, allowedTypes, undefined, Math.random)
-      ).rejects.toThrow('No entity definitions found matching anatomy requirements'); // Bug reproduced: No match found
+      ).rejects.toThrow(
+        'No entity definitions found matching anatomy requirements'
+      ); // Bug reproduced: No match found
     });
 
     it('should work after fix: spider_leg entity with subType="spider_leg" accepted', async () => {
@@ -365,7 +398,12 @@ describe('PartSelectionService - partType/subType Matching', () => {
       const allowedTypes = ['spider_leg']; // Socket allows specific type
 
       // Should succeed because subType "spider_leg" === partType "spider_leg"
-      const result = await service.selectPart(requirements, allowedTypes, undefined, Math.random);
+      const result = await service.selectPart(
+        requirements,
+        allowedTypes,
+        undefined,
+        Math.random
+      );
 
       expect(result).toBe('anatomy:spider_leg');
     });

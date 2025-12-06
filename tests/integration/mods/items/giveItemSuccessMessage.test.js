@@ -77,7 +77,12 @@ describe('item-transfer:give_item success message display', () => {
     it('should dispatch core:display_successful_action_result event', async () => {
       // Arrange
       const scenario = setupGiveItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -98,8 +103,17 @@ describe('item-transfer:give_item success message display', () => {
 
     it('should use present tense "gives" not past tense "gave"', async () => {
       // Arrange
-      const scenario = setupGiveItemScenario('Jon Ureña', 'Alicia', 'yellowed goodbye letter');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      const scenario = setupGiveItemScenario(
+        'Jon Ureña',
+        'Alicia',
+        'yellowed goodbye letter'
+      );
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -120,8 +134,17 @@ describe('item-transfer:give_item success message display', () => {
 
     it('should include actor, item, and target names in success message', async () => {
       // Arrange
-      const scenario = setupGiveItemScenario('Sarah', 'James', 'mysterious note');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      const scenario = setupGiveItemScenario(
+        'Sarah',
+        'James',
+        'mysterious note'
+      );
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -146,7 +169,12 @@ describe('item-transfer:give_item success message display', () => {
     it('should dispatch both perceptible_event and display_successful_action_result', async () => {
       // Arrange
       const scenario = setupGiveItemScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -169,8 +197,17 @@ describe('item-transfer:give_item success message display', () => {
 
     it('should match message format between perceptible_event and display_successful_action_result', async () => {
       // Arrange
-      const scenario = setupGiveItemScenario('Diana', 'Victor', 'ancient scroll');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      const scenario = setupGiveItemScenario(
+        'Diana',
+        'Victor',
+        'ancient scroll'
+      );
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -201,8 +238,17 @@ describe('item-transfer:give_item success message display', () => {
   describe('specific message format', () => {
     it('should format message as "ActorName gives ItemName to TargetName."', async () => {
       // Arrange
-      const scenario = setupGiveItemScenario('Jon Ureña', 'Alicia Western', 'yellowed goodbye letter');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      const scenario = setupGiveItemScenario(
+        'Jon Ureña',
+        'Alicia Western',
+        'yellowed goodbye letter'
+      );
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -228,7 +274,12 @@ describe('item-transfer:give_item success message display', () => {
     it('should dispatch items:item_transferred event on successful transfer', async () => {
       // Arrange
       const scenario = setupGiveItemScenario('Alice', 'Bob', 'letter');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -253,7 +304,12 @@ describe('item-transfer:give_item success message display', () => {
     it('should not dispatch unnamespaced ITEM_TRANSFERRED event', async () => {
       // Arrange
       const scenario = setupGiveItemScenario('Charlie', 'Dana', 'coin');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -273,7 +329,12 @@ describe('item-transfer:give_item success message display', () => {
     it('should complete transfer without errors or warnings', async () => {
       // Arrange
       const scenario = setupGiveItemScenario('Eve', 'Frank', 'book');
-      testFixture.reset([scenario.room, scenario.actor, scenario.target, scenario.item]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.target,
+        scenario.item,
+      ]);
 
       // Act
       await testFixture.executeAction('test:actor1', 'test:actor2', {
@@ -292,8 +353,11 @@ describe('item-transfer:give_item success message display', () => {
       expect(errorEvents).toHaveLength(0);
 
       // Assert: Verify transfer succeeded
-      const targetEntity = testFixture.entityManager.getEntityInstance('test:actor2');
-      expect(targetEntity.components['items:inventory'].items).toContain('test-item');
+      const targetEntity =
+        testFixture.entityManager.getEntityInstance('test:actor2');
+      expect(targetEntity.components['items:inventory'].items).toContain(
+        'test-item'
+      );
 
       const turnEndedEvent = testFixture.events.find(
         (e) => e.eventType === 'core:turn_ended'

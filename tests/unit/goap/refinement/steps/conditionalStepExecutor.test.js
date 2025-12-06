@@ -24,13 +24,18 @@ describe('ConditionalStepExecutor', () => {
     mockContextAssemblyService = testBed.createMock('IContextAssemblyService', [
       'assembleConditionContext',
     ]);
-    mockPrimitiveActionExecutor = testBed.createMock('IPrimitiveActionStepExecutor', [
-      'execute',
+    mockPrimitiveActionExecutor = testBed.createMock(
+      'IPrimitiveActionStepExecutor',
+      ['execute']
+    );
+    mockJsonLogicService = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
     ]);
-    mockJsonLogicService = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
 
     // Create mock self-reference for testing (will be replaced with real executor below)
-    mockConditionalExecutor = testBed.createMock('IConditionalStepExecutor', ['execute']);
+    mockConditionalExecutor = testBed.createMock('IConditionalStepExecutor', [
+      'execute',
+    ]);
 
     // Create executor with mock self-reference initially
     executor = new ConditionalStepExecutor({
@@ -284,7 +289,9 @@ describe('ConditionalStepExecutor', () => {
       });
 
       // Act & Assert - should not throw
-      await expect(executor.execute(step, context, 0, 0)).resolves.toBeDefined();
+      await expect(
+        executor.execute(step, context, 0, 0)
+      ).resolves.toBeDefined();
     });
 
     it('should allow 2-level nesting', async () => {
@@ -307,7 +314,9 @@ describe('ConditionalStepExecutor', () => {
       mockJsonLogicService.evaluate.mockReturnValue(true);
 
       // Act & Assert - depth 1 should be allowed
-      await expect(executor.execute(step, context, 0, 1)).resolves.toBeDefined();
+      await expect(
+        executor.execute(step, context, 0, 1)
+      ).resolves.toBeDefined();
     });
 
     it('should allow 3-level nesting (at limit)', async () => {
@@ -330,7 +339,9 @@ describe('ConditionalStepExecutor', () => {
       mockJsonLogicService.evaluate.mockReturnValue(true);
 
       // Act & Assert - depth 2 should be allowed (3rd level)
-      await expect(executor.execute(step, context, 0, 2)).resolves.toBeDefined();
+      await expect(
+        executor.execute(step, context, 0, 2)
+      ).resolves.toBeDefined();
     });
 
     it('should throw error when nesting exceeds 3 levels', async () => {
@@ -663,9 +674,7 @@ describe('ConditionalStepExecutor', () => {
         stepType: 'conditional',
         description: 'Empty else branch',
         condition: { '==': [1, 2] },
-        thenSteps: [
-          { stepType: 'primitive_action', actionId: 'test:action1' },
-        ],
+        thenSteps: [{ stepType: 'primitive_action', actionId: 'test:action1' }],
         elseSteps: [],
       };
 
@@ -742,7 +751,9 @@ describe('ConditionalStepExecutor', () => {
 
   describe('Constructor Validation', () => {
     it('should throw error when contextAssemblyService is invalid', () => {
-      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', ['execute']);
+      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', [
+        'execute',
+      ]);
       expect(() => {
         new ConditionalStepExecutor({
           contextAssemblyService: {},
@@ -755,7 +766,9 @@ describe('ConditionalStepExecutor', () => {
     });
 
     it('should throw error when primitiveActionStepExecutor is invalid', () => {
-      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', ['execute']);
+      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', [
+        'execute',
+      ]);
       expect(() => {
         new ConditionalStepExecutor({
           contextAssemblyService: mockContextAssemblyService,
@@ -780,7 +793,9 @@ describe('ConditionalStepExecutor', () => {
     });
 
     it('should throw error when jsonLogicService is invalid', () => {
-      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', ['execute']);
+      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', [
+        'execute',
+      ]);
       expect(() => {
         new ConditionalStepExecutor({
           contextAssemblyService: mockContextAssemblyService,
@@ -793,7 +808,9 @@ describe('ConditionalStepExecutor', () => {
     });
 
     it('should throw error when logger is invalid', () => {
-      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', ['execute']);
+      const mockSelfRef = testBed.createMock('IConditionalStepExecutor', [
+        'execute',
+      ]);
       expect(() => {
         new ConditionalStepExecutor({
           contextAssemblyService: mockContextAssemblyService,

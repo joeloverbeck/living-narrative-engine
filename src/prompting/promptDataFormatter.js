@@ -421,8 +421,7 @@ STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to.
         ? characterName.trim()
         : 'your character';
 
-    const baseGuidance =
-      `NOTES WRITING GUIDANCE: The notes must be concise, but written in ${safeName}'s own voice. Focus each note on critical facts while preserving ${safeName}'s perspective. Avoid generic or neutral phrasing.`;
+    const baseGuidance = `NOTES WRITING GUIDANCE: The notes must be concise, but written in ${safeName}'s own voice. Focus each note on critical facts while preserving ${safeName}'s perspective. Avoid generic or neutral phrasing.`;
 
     if (!Array.isArray(notesArray) || notesArray.length === 0) {
       this.#logger.debug(
@@ -482,7 +481,7 @@ STYLE RULE: Use intent- and possibility-language ("I'm going to...", "I want to.
     const hintMarkers = {
       critical: '*** CRITICAL',
       reference: 'REFERENCE',
-      system: 'SYSTEM'
+      system: 'SYSTEM',
     };
 
     const marker = hintMarkers[hintType] || hintType.toUpperCase();

@@ -62,8 +62,14 @@ describe('Debug canScootCloser in scope', () => {
     const actorEntity = testFixture.entityManager.getEntityInstance('actor1');
     console.log('\n=== ACTOR COMPONENTS ===');
     console.log('Actor components:', Object.keys(actorEntity.components));
-    console.log('sitting_on component:', actorEntity.components['positioning:sitting_on']);
-    console.log('Actor has positioning:sitting_on?', !!actorEntity.components['positioning:sitting_on']);
+    console.log(
+      'sitting_on component:',
+      actorEntity.components['positioning:sitting_on']
+    );
+    console.log(
+      'Actor has positioning:sitting_on?',
+      !!actorEntity.components['positioning:sitting_on']
+    );
     console.log('=== END ACTOR COMPONENTS ===\n');
 
     // Try action discovery
@@ -84,7 +90,10 @@ describe('Debug canScootCloser in scope', () => {
     console.log('\nscoot_closer found:', !!scootAction);
 
     if (scootAction) {
-      console.log('scootAction.targets:', JSON.stringify(scootAction.targets, null, 2));
+      console.log(
+        'scootAction.targets:',
+        JSON.stringify(scootAction.targets, null, 2)
+      );
     } else {
       console.log('\nNo scoot_closer action discovered!');
       console.log('\nLet me check what actions ARE discovered:');

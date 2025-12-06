@@ -18,6 +18,7 @@ Migrate 17 of 20 rules in the `affection` mod from the expanded pattern to use `
 ## Files to Touch
 
 ### Modified Files (17 rules - use target/targetName pattern)
+
 - `data/mods/affection/rules/brush_hand.rule.json`
 - `data/mods/affection/rules/handle_brush_hair_behind_ear.rule.json`
 - `data/mods/affection/rules/handle_link_arms.rule.json`
@@ -37,6 +38,7 @@ Migrate 17 of 20 rules in the `affection` mod from the expanded pattern to use `
 - `data/mods/affection/rules/wrap_arm_around_waist.rule.json`
 
 ### Excluded Files (3 rules - use primary/primaryName pattern, require handler extension)
+
 - `data/mods/affection/rules/handle_place_hands_on_flat_chest.rule.json`
 - `data/mods/affection/rules/handle_rest_head_against_chest.rule.json`
 - `data/mods/affection/rules/handle_rest_head_against_flat_chest.rule.json`
@@ -46,6 +48,7 @@ Migrate 17 of 20 rules in the `affection` mod from the expanded pattern to use `
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any action files (only rules)
 - Any condition files
 - Any component files
@@ -63,13 +66,50 @@ Migrate 17 of 20 rules in the `affection` mod from the expanded pattern to use `
 ```json
 {
   "actions": [
-    { "type": "GET_NAME", "parameters": { "entity_ref": "actor", "result_variable": "actorName" } },
-    { "type": "GET_NAME", "parameters": { "entity_ref": "target", "result_variable": "targetName" } },
-    { "type": "QUERY_COMPONENT", "parameters": { "entity_ref": "actor", "component_type": "core:position", "result_variable": "actorPosition" } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "logMessage", "value": "{context.actorName} gently brushes {context.targetName}'s hand." } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "perceptionType", "value": "action_target_general" } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "locationId", "value": "{context.actorPosition.locationId}" } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "targetId", "value": "{event.payload.targetId}" } },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} gently brushes {context.targetName}'s hand."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
     { "macro": "core:logSuccessAndEndTurn" }
   ]
 }
@@ -81,7 +121,13 @@ Migrate 17 of 20 rules in the `affection` mod from the expanded pattern to use `
 {
   "actions": [
     { "type": "PREPARE_ACTION_CONTEXT" },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "logMessage", "value": "{context.actorName} gently brushes {context.targetName}'s hand." } },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} gently brushes {context.targetName}'s hand."
+      }
+    },
     { "macro": "core:logSuccessAndEndTurn" }
   ]
 }
@@ -108,11 +154,13 @@ For each of the 17 eligible rules:
 ### Tests That Must Pass
 
 1. **All affection mod integration tests:**
+
    ```bash
    npm run test:integration -- tests/integration/mods/affection/
    ```
 
 2. **Mod validation:**
+
    ```bash
    npm run validate:mod affection
    ```
@@ -178,16 +226,19 @@ If issues are discovered:
 ### What Was Actually Changed
 
 **17 rule files migrated** in `data/mods/affection/rules/`:
+
 - Each rule reduced from ~55 lines (8 operations) to ~20 lines (3 operations)
 - Pattern: `PREPARE_ACTION_CONTEXT` → `SET_VARIABLE (logMessage)` → `core:logSuccessAndEndTurn`
 - All rules now use `{ "type": "PREPARE_ACTION_CONTEXT", "parameters": {} }` format
 
 **Bug fix discovered and applied:**
+
 - `PrepareActionContextHandler.#resolveEntityName()` was looking for names in `core:actor.name` and `core:item.name`
 - Changed to look for `core:name.text` first (matching `GetNameHandler` behavior), then fall back to `core:actor.name` and `core:item.name`
 - This ensures consistent name resolution across all operation handlers
 
 **Test coverage added:**
+
 - 2 new unit tests in `prepareActionContextHandler.test.js`:
   - `should resolve name from core:name component (primary source)`
   - `should fallback to core:actor if core:name not found`

@@ -3,9 +3,6 @@
   "id": "vampirism:event-is-action-drink-blood",
   "description": "Validates that the event is an attempt to execute the drink_blood action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "vampirism:drink_blood"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "vampirism:drink_blood"]
   }
 }

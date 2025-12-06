@@ -34,6 +34,7 @@ When a task is created, it has **parameters**. Your refinement method accesses t
 ```
 
 **What happens**:
+
 1. Task has `params: { targetItem: "apple_7" }`
 2. Refinement binds `item` to `"task.params.targetItem"`
 3. At runtime, resolves to `"apple_7"`
@@ -60,6 +61,7 @@ Let's create a simple refinement method that moves to a location:
 ```
 
 **Task Parameters** (provided by planner):
+
 ```json
 {
   "destination": "tavern_main_room"
@@ -106,6 +108,7 @@ You have **four sources** of data you can bind to actions:
 ```
 
 **Later step**:
+
 ```json
 {
   "targetBindings": {
@@ -124,8 +127,8 @@ You have **four sources** of data you can bind to actions:
 {
   "condition": {
     "!=": [
-      {"var": "actor.position.room"},
-      {"var": "task.params.destination"}
+      { "var": "actor.position.room" },
+      { "var": "task.params.destination" }
     ]
   }
 }
@@ -181,6 +184,7 @@ You have **four sources** of data you can bind to actions:
 ```
 
 **Task params**:
+
 ```json
 {
   "item": {
@@ -195,6 +199,7 @@ You have **four sources** of data you can bind to actions:
 ```
 
 **Result**:
+
 - `location` = `"armory"`
 - `ownerId` = `"guard_5"`
 
@@ -211,8 +216,8 @@ You have **four sources** of data you can bind to actions:
   },
   "condition": {
     "!=": [
-      {"var": "actor.position.room"},
-      {"var": "task.params.destination"}
+      { "var": "actor.position.room" },
+      { "var": "task.params.destination" }
     ]
   }
 }
@@ -259,7 +264,7 @@ You have **four sources** of data you can bind to actions:
       "description": "Validate item exists",
       "stepType": "conditional",
       "condition": {
-        "entity-exists": [{"var": "task.params.item"}]
+        "entity-exists": [{ "var": "task.params.item" }]
       },
       "trueBranch": [
         {
@@ -291,13 +296,13 @@ You have **four sources** of data you can bind to actions:
     {
       "stepType": "primitive_action",
       "actionId": "items:pick_up_item",
-      "targetBindings": {"item": "task.params.item"},
+      "targetBindings": { "item": "task.params.item" },
       "storeResultAs": "pickupResult"
     },
     {
       "stepType": "conditional",
       "condition": {
-        "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+        "==": [{ "var": "refinement.localState.pickupResult.success" }, true]
       },
       "trueBranch": [
         {
@@ -346,19 +351,19 @@ You have **four sources** of data you can bind to actions:
 ```json
 {
   "targetBindings": {
-    "item": "task.params.targetItem"  // ✅ Correct - "item" is the placeholder
+    "item": "task.params.targetItem" // ✅ Correct - "item" is the placeholder
   }
 }
 ```
 
 ### Common Placeholder Names by Action Type
 
-| Action Type | Common Placeholders | Examples |
-|-------------|---------------------|----------|
-| Movement | `target`, `destination` | `positioning:move_to` |
-| Items | `item`, `primary` | `items:pick_up_item`, `items:drink_from` |
-| Social | `npc`, `target` | `social:talk_to` |
-| Combat | `target`, `weapon` | `combat:attack` |
+| Action Type | Common Placeholders     | Examples                                 |
+| ----------- | ----------------------- | ---------------------------------------- |
+| Movement    | `target`, `destination` | `positioning:move_to`                    |
+| Items       | `item`, `primary`       | `items:pick_up_item`, `items:drink_from` |
+| Social      | `npc`, `target`         | `social:talk_to`                         |
+| Combat      | `target`, `weapon`      | `combat:attack`                          |
 
 **Always check the action file** - don't assume placeholder names!
 
@@ -375,7 +380,7 @@ Use `storeResultAs` to save step results:
   "targetBindings": {
     "item": "task.params.item"
   },
-  "storeResultAs": "myResult"  // ← Store result with this name
+  "storeResultAs": "myResult" // ← Store result with this name
 }
 ```
 
@@ -399,18 +404,21 @@ Every stored result has this structure:
 ### Accessing Stored Results
 
 **Check if succeeded**:
+
 ```json
-{"var": "refinement.localState.myResult.success"}
+{ "var": "refinement.localState.myResult.success" }
 ```
 
 **Get data from result**:
+
 ```json
 "refinement.localState.myResult.data.item"
 ```
 
 **Check for error**:
+
 ```json
-{"var": "refinement.localState.myResult.error"}
+{ "var": "refinement.localState.myResult.error" }
 ```
 
 ### Visibility Rules
@@ -426,15 +434,15 @@ Every stored result has this structure:
     },
     {
       "targetBindings": {
-        "value": "refinement.localState.step1.data.value"  // ✅ Can access
+        "value": "refinement.localState.step1.data.value" // ✅ Can access
       },
       "storeResultAs": "step2"
       // ❌ Cannot access: refinement.localState.step2
     },
     {
       "targetBindings": {
-        "val1": "refinement.localState.step1.data.value",  // ✅ Can access
-        "val2": "refinement.localState.step2.data.value"   // ✅ Can access
+        "val1": "refinement.localState.step1.data.value", // ✅ Can access
+        "val2": "refinement.localState.step2.data.value" // ✅ Can access
       }
     }
   ]
@@ -452,45 +460,46 @@ Every stored result has this structure:
 ### What to Validate
 
 1. **Required parameters exist**
+
 ```json
 {
   "condition": {
     "and": [
-      {"!=": [{"var": "task.params.item"}, null]},
-      {"!=": [{"var": "task.params.item"}, undefined]}
+      { "!=": [{ "var": "task.params.item" }, null] },
+      { "!=": [{ "var": "task.params.item" }, undefined] }
     ]
   }
 }
 ```
 
 2. **Entities exist**
+
 ```json
 {
   "condition": {
-    "entity-exists": [{"var": "task.params.item"}]
+    "entity-exists": [{ "var": "task.params.item" }]
   }
 }
 ```
 
 3. **Entities have required components**
+
 ```json
 {
   "condition": {
-    "entity-has-component": [
-      {"var": "task.params.item"},
-      "items:pickupable"
-    ]
+    "entity-has-component": [{ "var": "task.params.item" }, "items:pickupable"]
   }
 }
 ```
 
 4. **Actor state is valid**
+
 ```json
 {
   "condition": {
     "<": [
-      {"var": "actor.inventory.length"},
-      {"var": "actor.inventory.maxSize"}
+      { "var": "actor.inventory.length" },
+      { "var": "actor.inventory.maxSize" }
     ]
   }
 }
@@ -506,9 +515,14 @@ Every stored result has this structure:
       "stepType": "conditional",
       "condition": {
         "and": [
-          {"!=": [{"var": "task.params.item"}, null]},
-          {"entity-exists": [{"var": "task.params.item"}]},
-          {"entity-has-component": [{"var": "task.params.item"}, "items:item"]}
+          { "!=": [{ "var": "task.params.item" }, null] },
+          { "entity-exists": [{ "var": "task.params.item" }] },
+          {
+            "entity-has-component": [
+              { "var": "task.params.item" },
+              "items:item"
+            ]
+          }
         ]
       },
       "trueBranch": [
@@ -536,11 +550,13 @@ Error: Parameter 'task.params.nonexistent' not found in context
 ```
 
 **Causes**:
+
 - Parameter name misspelled
 - Parameter not provided by task
 - Wrong parameter source (task.params vs refinement.localState)
 
 **Fix**:
+
 - Check parameter name spelling
 - Verify task provides the parameter
 - Check if you meant to use a different source
@@ -552,10 +568,12 @@ Error: Cannot read property 'location' of undefined (task.params.item.location)
 ```
 
 **Causes**:
+
 - Parent object doesn't exist
 - Trying to access property on null/undefined
 
 **Fix**:
+
 - Validate parent exists first
 - Use conditional to check before accessing
 
@@ -563,8 +581,8 @@ Error: Cannot read property 'location' of undefined (task.params.item.location)
 {
   "condition": {
     "and": [
-      {"!=": [{"var": "task.params.item"}, null]},
-      {"!=": [{"var": "task.params.item.location"}, null]}
+      { "!=": [{ "var": "task.params.item" }, null] },
+      { "!=": [{ "var": "task.params.item.location" }, null] }
     ]
   }
 }
@@ -577,10 +595,12 @@ Error: Local state 'refinement.localState.futureResult' not available - step not
 ```
 
 **Causes**:
+
 - Trying to access result before it's stored
 - Wrong execution order
 
 **Fix**:
+
 - Move the accessing step AFTER the storing step
 - Check conditional branches - result might not be in scope
 
@@ -591,10 +611,12 @@ Error: Action "items:drink_from" expects placeholder "primary", but "item" was p
 ```
 
 **Causes**:
+
 - Using wrong placeholder name for action
 - Different actions have different placeholder names
 
 **Fix**:
+
 - Check action definition file
 - Use exact placeholder name from action schema
 
@@ -617,12 +639,13 @@ When implemented, you'll be able to enable parameter tracing:
 ```javascript
 {
   debug: {
-    traceParameters: true
+    traceParameters: true;
   }
 }
 ```
 
 This will show you:
+
 - What parameters are available at each step
 - How bindings resolve to actual values
 - What gets stored in local state
@@ -633,6 +656,7 @@ This will show you:
 ### 1. Always Use Full Paths
 
 **✅ Good**:
+
 ```json
 {
   "targetBindings": {
@@ -643,11 +667,12 @@ This will show you:
 ```
 
 **❌ Ambiguous**:
+
 ```json
 {
   "targetBindings": {
-    "item": "targetItem",  // Which scope?
-    "location": "room"     // Which scope?
+    "item": "targetItem", // Which scope?
+    "location": "room" // Which scope?
   }
 }
 ```
@@ -655,6 +680,7 @@ This will show you:
 ### 2. Validate Early
 
 **✅ Good**: Validate at the start
+
 ```json
 {
   "steps": [
@@ -673,6 +699,7 @@ This will show you:
 ```
 
 **❌ Bad**: Validate late, after work is done
+
 ```json
 {
   "steps": [
@@ -692,6 +719,7 @@ This will show you:
 ### 3. Name Results Descriptively
 
 **✅ Good**:
+
 ```json
 {
   "storeResultAs": "pickupResult",
@@ -701,6 +729,7 @@ This will show you:
 ```
 
 **❌ Bad**:
+
 ```json
 {
   "storeResultAs": "r1",
@@ -712,10 +741,11 @@ This will show you:
 ### 4. Check Success Before Using Results
 
 **✅ Good**:
+
 ```json
 {
   "condition": {
-    "==": [{"var": "refinement.localState.pickupResult.success"}, true]
+    "==": [{ "var": "refinement.localState.pickupResult.success" }, true]
   },
   "trueBranch": [
     {
@@ -728,10 +758,11 @@ This will show you:
 ```
 
 **❌ Risky**: Assume success
+
 ```json
 {
   "targetBindings": {
-    "item": "refinement.localState.pickupResult.data.item"  // What if pickup failed?
+    "item": "refinement.localState.pickupResult.data.item" // What if pickup failed?
   }
 }
 ```
@@ -739,17 +770,21 @@ This will show you:
 ### 5. Document Expected Parameters
 
 **✅ Good**:
+
 ```json
 {
   "id": "my_mod:get_item",
   "description": "Acquires and uses an item. Requires task.params.item (entity ID) and task.params.location (room entity ID).",
-  "steps": [/* ... */]
+  "steps": [
+    /* ... */
+  ]
 }
 ```
 
 ### 6. Use Descriptive Task Parameter Names
 
 **✅ Good**:
+
 ```json
 {
   "task": {
@@ -763,6 +798,7 @@ This will show you:
 ```
 
 **❌ Bad**:
+
 ```json
 {
   "task": {
@@ -780,18 +816,22 @@ This will show you:
 See the `docs/goap/examples/` directory for complete working examples:
 
 ### Example 1: Simple Parameter Passing
+
 **File**: `parameter-simple.refinement.json`
 **What it shows**: Basic parameter passing from task to actions
 
 ### Example 2: Parameter Transformation
+
 **File**: `parameter-transformation.refinement.json`
 **What it shows**: Extracting nested properties, property access patterns
 
 ### Example 3: State Accumulation
+
 **File**: `parameter-state.refinement.json`
 **What it shows**: Using `storeResultAs`, chaining results, state evolution
 
 ### Example 4: Parameter Validation
+
 **File**: `parameter-validation.refinement.json`
 **What it shows**: Comprehensive validation, error handling, fail scenarios
 
@@ -799,20 +839,20 @@ See the `docs/goap/examples/` directory for complete working examples:
 
 ### Parameter Access Syntax
 
-| Context | Format | Example |
-|---------|--------|---------|
-| Target Bindings | Direct string | `"task.params.item"` |
-| Conditions | JSON Logic `{"var": "..."}` | `{"var": "task.params.item"}` |
-| Property Access | Dot notation | `"task.params.item.location"` |
+| Context         | Format                      | Example                       |
+| --------------- | --------------------------- | ----------------------------- |
+| Target Bindings | Direct string               | `"task.params.item"`          |
+| Conditions      | JSON Logic `{"var": "..."}` | `{"var": "task.params.item"}` |
+| Property Access | Dot notation                | `"task.params.item.location"` |
 
 ### Parameter Sources
 
-| Source | Description | Example |
-|--------|-------------|---------|
-| `task.params.*` | Task parameters | `"task.params.targetItem"` |
-| `refinement.localState.*` | Stored results | `"refinement.localState.pickupResult.data.item"` |
-| `actor.*` | Actor entity data | `"actor.position.room"` |
-| `world.*` | World state (TBD) | `"world.currentTime"` |
+| Source                    | Description       | Example                                          |
+| ------------------------- | ----------------- | ------------------------------------------------ |
+| `task.params.*`           | Task parameters   | `"task.params.targetItem"`                       |
+| `refinement.localState.*` | Stored results    | `"refinement.localState.pickupResult.data.item"` |
+| `actor.*`                 | Actor entity data | `"actor.position.room"`                          |
+| `world.*`                 | World state (TBD) | `"world.currentTime"`                            |
 
 ### Result Structure
 
@@ -828,12 +868,12 @@ See the `docs/goap/examples/` directory for complete working examples:
 
 ### Common Validation Operators
 
-| Operator | Purpose | Example |
-|----------|---------|---------|
-| `entity-exists` | Check entity exists | `{"entity-exists": [{"var": "task.params.item"}]}` |
+| Operator               | Purpose                    | Example                                                     |
+| ---------------------- | -------------------------- | ----------------------------------------------------------- |
+| `entity-exists`        | Check entity exists        | `{"entity-exists": [{"var": "task.params.item"}]}`          |
 | `entity-has-component` | Check entity has component | `{"entity-has-component": ["entity_id", "component:name"]}` |
-| `!=`, `==` | Equality checks | `{"!=": [{"var": "task.params.item"}, null]}` |
-| `and`, `or` | Logical operators | `{"and": [condition1, condition2]}` |
+| `!=`, `==`             | Equality checks            | `{"!=": [{"var": "task.params.item"}, null]}`               |
+| `and`, `or`            | Logical operators          | `{"and": [condition1, condition2]}`                         |
 
 ## Need Help?
 

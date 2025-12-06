@@ -59,7 +59,9 @@ class DamageNarrativeComposer extends BaseService {
    */
   compose(entries) {
     if (!entries || entries.length === 0) {
-      this.#logger.warn('DamageNarrativeComposer.compose called with empty entries');
+      this.#logger.warn(
+        'DamageNarrativeComposer.compose called with empty entries'
+      );
       return '';
     }
 
@@ -68,7 +70,9 @@ class DamageNarrativeComposer extends BaseService {
     const propagatedEntries = entries.filter((e) => e.propagatedFrom);
 
     if (!primaryEntry) {
-      this.#logger.warn('DamageNarrativeComposer: No primary damage entry found');
+      this.#logger.warn(
+        'DamageNarrativeComposer: No primary damage entry found'
+      );
       return '';
     }
 
@@ -79,7 +83,9 @@ class DamageNarrativeComposer extends BaseService {
 
     // Propagation segment (combined sentence format per user requirement)
     if (propagatedEntries.length > 0) {
-      segments.push(this.#composePropagationSegment(primaryEntry, propagatedEntries));
+      segments.push(
+        this.#composePropagationSegment(primaryEntry, propagatedEntries)
+      );
     }
 
     return segments.join(' ');
@@ -96,7 +102,9 @@ class DamageNarrativeComposer extends BaseService {
     const partName = this.#formatPartName(entry.partType, entry.orientation);
     let segment = `${entry.entityName}'s ${partName} suffers ${entry.damageType} damage`;
 
-    const effectDescriptions = this.#getEffectDescriptions(entry.effectsTriggered);
+    const effectDescriptions = this.#getEffectDescriptions(
+      entry.effectsTriggered
+    );
     if (effectDescriptions.length > 0) {
       segment += ` and ${effectDescriptions.join(' and ')}`;
     }
@@ -131,7 +139,11 @@ class DamageNarrativeComposer extends BaseService {
     const sentences = [];
 
     for (const [damageType, entries] of byDamageType) {
-      const sentence = this.#composePropagationGroup(primary, entries, damageType);
+      const sentence = this.#composePropagationGroup(
+        primary,
+        entries,
+        damageType
+      );
       if (sentence) {
         sentences.push(sentence);
       }
@@ -220,7 +232,10 @@ class DamageNarrativeComposer extends BaseService {
    * @private
    */
   #formatPartName(partType, orientation) {
-    const normalizedType = (partType?.toLowerCase() || 'body part').replace(/_/g, ' ');
+    const normalizedType = (partType?.toLowerCase() || 'body part').replace(
+      /_/g,
+      ' '
+    );
 
     if (orientation) {
       return `${orientation} ${normalizedType}`;

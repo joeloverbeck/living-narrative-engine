@@ -39,7 +39,6 @@ describe('ModReferenceExtractor - Performance Tests', () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mod-ref-perf-test-'));
     testModPath = path.join(tempDir, 'performance_test_mod');
     await fs.mkdir(testModPath, { recursive: true });
-
   });
 
   afterEach(async () => {

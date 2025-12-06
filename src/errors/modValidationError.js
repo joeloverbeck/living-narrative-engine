@@ -22,7 +22,11 @@ export class ModValidationError extends BaseError {
    * @param {boolean} [recoverable] - Whether the error is recoverable
    */
   constructor(message, code, context, recoverable = true) {
-    const baseContext = { ...context, originalCode: code, originalRecoverable: recoverable };
+    const baseContext = {
+      ...context,
+      originalCode: code,
+      originalRecoverable: recoverable,
+    };
     super(message, code || 'MOD_VALIDATION_ERROR', baseContext);
     this.name = 'ModValidationError';
     // Store properties for backward compatibility
@@ -57,7 +61,7 @@ export class ModValidationError extends BaseError {
   get recoverable() {
     return this._recoverable !== undefined ? this._recoverable : true;
   }
-  
+
   /**
    * Serializes the error for logging or reporting
    *
@@ -71,10 +75,10 @@ export class ModValidationError extends BaseError {
       context: this.context,
       recoverable: this.recoverable,
       timestamp: this.timestamp || new Date().toISOString(),
-      stack: this.stack
+      stack: this.stack,
     };
   }
-  
+
   /**
    * Creates a formatted string representation of the error
    *

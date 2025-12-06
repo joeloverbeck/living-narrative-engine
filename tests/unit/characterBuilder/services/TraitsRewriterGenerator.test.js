@@ -348,14 +348,12 @@ describe('TraitsRewriterGenerator', () => {
         llmConfigId: 'temporary-config',
       });
 
-      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenNthCalledWith(
-        1,
-        'temporary-config'
-      );
-      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenNthCalledWith(
-        2,
-        'original-config'
-      );
+      expect(
+        mockLlmConfigManager.setActiveConfiguration
+      ).toHaveBeenNthCalledWith(1, 'temporary-config');
+      expect(
+        mockLlmConfigManager.setActiveConfiguration
+      ).toHaveBeenNthCalledWith(2, 'original-config');
     });
 
     it('should log an error if restoring the original LLM configuration fails after an error', async () => {
@@ -463,9 +461,8 @@ describe('TraitsRewriterGenerator', () => {
 
       mockTokenEstimator.estimateTokens.mockClear();
 
-      const result = await generatorWithoutEstimator.generateRewrittenTraits(
-        characterDef
-      );
+      const result =
+        await generatorWithoutEstimator.generateRewrittenTraits(characterDef);
 
       expect(result.rewrittenTraits).toBeDefined();
       expect(mockTokenEstimator.estimateTokens).not.toHaveBeenCalled();
@@ -506,7 +503,10 @@ describe('TraitsRewriterGenerator', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'TraitsRewriterGenerator: Extracting response from function_call wrapper',
         expect.objectContaining({
-          wrapperKeys: expect.arrayContaining(['characterName', 'rewrittenTraits']),
+          wrapperKeys: expect.arrayContaining([
+            'characterName',
+            'rewrittenTraits',
+          ]),
         })
       );
     });

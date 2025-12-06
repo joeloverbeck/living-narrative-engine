@@ -16,10 +16,7 @@
       "stepType": "conditional",
       "description": "PATTERN 1: Check if entity has specific component",
       "condition": {
-        "has_component": [
-          { "var": "actor" },
-          "items:inventory"
-        ]
+        "has_component": [{ "var": "actor" }, "items:inventory"]
       },
       "thenSteps": [],
       "onFailure": "skip"
@@ -30,10 +27,7 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "items:inventory"
-            ]
+            "has_component": [{ "var": "actor" }, "items:inventory"]
           },
           {
             "in": [
@@ -52,10 +46,7 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "positioning:position"
-            ]
+            "has_component": [{ "var": "actor" }, "positioning:position"]
           },
           {
             "has_component": [
@@ -66,7 +57,9 @@
           {
             "==": [
               { "var": "actor.components.positioning:position.location" },
-              { "var": "task.params.target.components.positioning:position.location" }
+              {
+                "var": "task.params.target.components.positioning:position.location"
+              }
             ]
           }
         ]
@@ -80,16 +73,10 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "task.params.item" },
-              "core:visible"
-            ]
+            "has_component": [{ "var": "task.params.item" }, "core:visible"]
           },
           {
-            "==": [
-              { "var": "task.params.item.components.core:visible" },
-              true
-            ]
+            "==": [{ "var": "task.params.item.components.core:visible" }, true]
           }
         ]
       },
@@ -102,10 +89,7 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "task.params.item" },
-              "core:known_to"
-            ]
+            "has_component": [{ "var": "task.params.item" }, "core:known_to"]
           },
           {
             "in": [
@@ -124,16 +108,10 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "core:health"
-            ]
+            "has_component": [{ "var": "actor" }, "core:health"]
           },
           {
-            "<": [
-              { "var": "actor.components.core:health.current" },
-              50
-            ]
+            "<": [{ "var": "actor.components.core:health.current" }, 50]
           }
         ]
       },
@@ -146,18 +124,12 @@
       "condition": {
         "or": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "items:weapon_equipped"
-            ]
+            "has_component": [{ "var": "actor" }, "items:weapon_equipped"]
           },
           {
             "and": [
               {
-                "has_component": [
-                  { "var": "actor" },
-                  "items:inventory"
-                ]
+                "has_component": [{ "var": "actor" }, "items:inventory"]
               },
               {
                 "in": [
@@ -176,10 +148,7 @@
       "stepType": "conditional",
       "description": "PATTERN 8: Check if actor is wearing clothing in slot",
       "condition": {
-        "hasClothingInSlot": [
-          { "var": "actor" },
-          "torso"
-        ]
+        "hasClothingInSlot": [{ "var": "actor" }, "torso"]
       },
       "thenSteps": [],
       "onFailure": "skip"
@@ -202,20 +171,21 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "task.params.item" },
-              "items:food"
-            ]
+            "has_component": [{ "var": "task.params.item" }, "items:food"]
           },
           {
             "!=": [
-              { "var": "task.params.item.components.items:food.nutrition_value" },
+              {
+                "var": "task.params.item.components.items:food.nutrition_value"
+              },
               null
             ]
           },
           {
             ">": [
-              { "var": "task.params.item.components.items:food.nutrition_value" },
+              {
+                "var": "task.params.item.components.items:food.nutrition_value"
+              },
               10
             ]
           }

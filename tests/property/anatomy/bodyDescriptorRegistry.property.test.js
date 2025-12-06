@@ -56,7 +56,8 @@ describe('Body Descriptor Registry - Property Tests', () => {
       const enumeratedDescriptors = getEnumeratedDescriptors();
 
       for (const descriptorName of enumeratedDescriptors) {
-        const validValues = BODY_DESCRIPTOR_REGISTRY[descriptorName].validValues;
+        const validValues =
+          BODY_DESCRIPTOR_REGISTRY[descriptorName].validValues;
 
         // For each enumerated descriptor, all valid values must pass validation
         fc.assert(
@@ -77,7 +78,8 @@ describe('Body Descriptor Registry - Property Tests', () => {
       const enumeratedDescriptors = getEnumeratedDescriptors();
 
       for (const descriptorName of enumeratedDescriptors) {
-        const validValues = BODY_DESCRIPTOR_REGISTRY[descriptorName].validValues;
+        const validValues =
+          BODY_DESCRIPTOR_REGISTRY[descriptorName].validValues;
 
         // Generate strings that are guaranteed not to be in validValues
         fc.assert(

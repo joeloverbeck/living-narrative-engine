@@ -96,7 +96,9 @@ class WorkflowBase {
     });
 
     if (result.status === 'ok') {
-      this._logger.debug(`completed ${payload.action} at ${result.completedAt}`);
+      this._logger.debug(
+        `completed ${payload.action} at ${result.completedAt}`
+      );
     } else {
       this._logger.error(`failed ${payload.action}: ${result.reason}`);
     }
@@ -132,7 +134,10 @@ describe('withValidatedDeps integration', () => {
       },
     });
 
-    const result = workflow.execute({ actor: 'hero', action: 'gather resources' });
+    const result = workflow.execute({
+      actor: 'hero',
+      action: 'gather resources',
+    });
 
     expect(result.status).toBe('ok');
     expect(result.acceptedAt).toBe(1);

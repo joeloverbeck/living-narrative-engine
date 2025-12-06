@@ -131,19 +131,17 @@ function loadScenario(
 
 describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
   let testFixture;
-    beforeEach(async () => {
+  beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'seduction',
       ACTION_ID,
       strokePenisToDrawAttentionRule,
       eventIsActionStrokePenisToDrawAttention
     );
-
-      });
+  });
 
   afterEach(() => {
     if (testFixture) {
-      
       testFixture.cleanup();
       testFixture = null;
     }
@@ -179,7 +177,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
     it('discovers the action when the actor has an uncovered penis', () => {
       const { actorId } = loadScenario(testFixture);
 
-            const actions = testFixture.discoverActions(actorId);
+      const actions = testFixture.discoverActions(actorId);
 
       expect(actions).toHaveAction(ACTION_ID);
     });
@@ -187,7 +185,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
     it('omits the action when the actor lacks a penis', () => {
       const { actorId } = loadScenario(testFixture, { hasPenis: false });
 
-            const actions = testFixture.discoverActions(actorId);
+      const actions = testFixture.discoverActions(actorId);
 
       expect(actions).not.toHaveAction(ACTION_ID);
     });
@@ -195,7 +193,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
     it("omits the action when the actor's penis is covered", () => {
       const { actorId } = loadScenario(testFixture, { penisCovered: true });
 
-            const actions = testFixture.discoverActions(actorId);
+      const actions = testFixture.discoverActions(actorId);
 
       expect(actions).not.toHaveAction(ACTION_ID);
     });
@@ -205,7 +203,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
     it('suppresses discovery while the actor is hugging someone', () => {
       const { actorId } = loadScenario(testFixture, { includeHugging: true });
 
-            const actions = testFixture.discoverActions(actorId);
+      const actions = testFixture.discoverActions(actorId);
 
       expect(actions).not.toHaveAction(ACTION_ID);
     });
@@ -220,7 +218,7 @@ describe('seduction:stroke_penis_to_draw_attention action discovery', () => {
         initiated: true,
       };
 
-            const actions = testFixture.discoverActions(actorId);
+      const actions = testFixture.discoverActions(actorId);
 
       expect(actions).not.toHaveAction(ACTION_ID);
     });

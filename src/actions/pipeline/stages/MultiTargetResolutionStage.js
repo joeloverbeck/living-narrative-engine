@@ -201,7 +201,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
 
     this.#logger.debug('\n=== MULTITARGETRESOLUTIONSTAGE ENTRY ===');
     this.#logger.debug('Candidate actions count:', candidateActions.length);
-    this.#logger.debug('Candidate action IDs:', candidateActions.map(a => a.id));
+    this.#logger.debug(
+      'Candidate action IDs:',
+      candidateActions.map((a) => a.id)
+    );
     this.#logger.debug('Actor ID:', actor.id);
     this.#logger.debug('=== END ENTRY ===\n');
 
@@ -234,7 +237,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
     for (const actionDef of candidateActions) {
       this.#logger.debug(`\n--- Processing action: ${actionDef.id} ---`);
       this.#logger.debug('Action has targets?', !!actionDef.targets);
-      this.#logger.debug('Targets:', JSON.stringify(actionDef.targets, null, 2));
+      this.#logger.debug(
+        'Targets:',
+        JSON.stringify(actionDef.targets, null, 2)
+      );
 
       try {
         trace?.step(
@@ -253,12 +259,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
         const resolutionStartTime = Date.now();
 
         // TEMPORARY DIAGNOSTIC: Log which resolution path is taken
-        this.#logger.debug(`[DIAGNOSTIC] Action ${actionDef.id} resolution path:`, {
-          isLegacy,
-          hasStringTargets: typeof actionDef.targets === 'string',
-          targets: actionDef.targets,
-          scope: actionDef.scope,
-        });
+        this.#logger.debug(
+          `[DIAGNOSTIC] Action ${actionDef.id} resolution path:`,
+          {
+            isLegacy,
+            hasStringTargets: typeof actionDef.targets === 'string',
+            targets: actionDef.targets,
+            scope: actionDef.scope,
+          }
+        );
 
         // Capture legacy detection if action-aware tracing is enabled
         if (isActionAwareTrace) {
@@ -269,10 +278,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
               isLegacy,
               hasStringTargets: typeof actionDef.targets === 'string',
               hasScopeOnly: !!(actionDef.scope && !actionDef.targets),
-              hasLegacyFields: !!(actionDef.targetType || actionDef.targetCount),
-              detectedFormat: this.#tracingOrchestrator.analyzeLegacyFormat(
-                actionDef
+              hasLegacyFields: !!(
+                actionDef.targetType || actionDef.targetCount
               ),
+              detectedFormat:
+                this.#tracingOrchestrator.analyzeLegacyFormat(actionDef),
               requiresConversion: isLegacy,
             }
           );
@@ -323,8 +333,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
                 isLegacy: true,
                 resolutionSuccess: result.success,
                 resolutionTimeMs: Date.now() - resolutionStartTime,
-                targetCount:
-                  result.data?.resolvedTargets?.primary?.length || 0,
+                targetCount: result.data?.resolvedTargets?.primary?.length || 0,
                 scope:
                   result.data?.targetDefinitions?.primary?.scope ||
                   actionDef.scope ||
@@ -456,10 +465,13 @@ export class MultiTargetResolutionStage extends PipelineStage {
     }
 
     this.#logger.debug('\n=== MULTITARGETRESOLUTIONSTAGE EXIT ===');
-    this.#logger.debug('Actions with resolved targets:', allActionsWithTargets.length);
+    this.#logger.debug(
+      'Actions with resolved targets:',
+      allActionsWithTargets.length
+    );
     this.#logger.debug(
       'Action IDs with targets:',
-      allActionsWithTargets.map(awt => awt.actionDef.id)
+      allActionsWithTargets.map((awt) => awt.actionDef.id)
     );
     this.#logger.debug('=== END EXIT ===\n');
 
@@ -560,12 +572,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
     );
 
     // TEMPORARY DIAGNOSTIC: Log resolution result
-    this.#logger.debug(`[DIAGNOSTIC] Legacy resolution result for ${actionDef.id}:`, {
-      success: result.success,
-      hasValue: !!result.value,
-      targetContextsLength: result.value?.length || 0,
-      targetContexts: result.value || [],
-    });
+    this.#logger.debug(
+      `[DIAGNOSTIC] Legacy resolution result for ${actionDef.id}:`,
+      {
+        success: result.success,
+        hasValue: !!result.value,
+        targetContextsLength: result.value?.length || 0,
+        targetContexts: result.value || [],
+      }
+    );
 
     if (!result.success) {
       return PipelineResult.failure(result.errors, context.data);
@@ -636,10 +651,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
       targetContexts,
       {
         ...conversionResult,
-        targetDefinitions:
-          conversionResult.targetDefinitions || {
-            primary: { scope, placeholder },
-          },
+        targetDefinitions: conversionResult.targetDefinitions || {
+          primary: { scope, placeholder },
+        },
       },
       actionDef
     );

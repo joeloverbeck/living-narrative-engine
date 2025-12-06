@@ -61,9 +61,14 @@ class RecipeValidationContext {
       requiredMethods: ['validate'],
     });
 
-    validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', console, {
-      requiredMethods: ['getBlueprint', 'getRecipe'],
-    });
+    validateDependency(
+      anatomyBlueprintRepository,
+      'IAnatomyBlueprintRepository',
+      console,
+      {
+        requiredMethods: ['getBlueprint', 'getRecipe'],
+      }
+    );
 
     validateDependency(slotGenerator, 'ISlotGenerator', console, {
       requiredMethods: ['generateSlots'],

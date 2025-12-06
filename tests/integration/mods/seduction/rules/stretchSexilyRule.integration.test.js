@@ -89,7 +89,15 @@ describe('Seduction Mod: Stretch Sexily Rule', () => {
       const actions = testFixture.ruleFile.actions;
       expect(actions).toHaveLength(7);
 
-      const [getName, queryComponent, messageAction, perceptionType, locationId, targetId, macro] = actions;
+      const [
+        getName,
+        queryComponent,
+        messageAction,
+        perceptionType,
+        locationId,
+        targetId,
+        macro,
+      ] = actions;
 
       expect(getName.type).toBe('GET_NAME');
       expect(getName.parameters.entity_ref).toBe('actor');
@@ -107,7 +115,9 @@ describe('Seduction Mod: Stretch Sexily Rule', () => {
       expect(perceptionType.parameters.value).toBe('action_self_general');
 
       expect(locationId.parameters.variable_name).toBe('locationId');
-      expect(locationId.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(locationId.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
 
       expect(targetId.parameters.variable_name).toBe('targetId');
       expect(targetId.parameters.value).toBeNull();

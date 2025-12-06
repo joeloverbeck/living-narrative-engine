@@ -6,7 +6,14 @@
  *              updated while real modules collaborate without mocks.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -114,7 +121,10 @@ describe('MetricsService zero-token resilience integration coverage', () => {
       .send(payload);
 
     expect(response.status).toBe(207);
-    expect(response.body.usage).toEqual({ prompt_tokens: 0, completion_tokens: 0 });
+    expect(response.body.usage).toEqual({
+      prompt_tokens: 0,
+      completion_tokens: 0,
+    });
 
     await new Promise((resolve) => setImmediate(resolve));
 
@@ -130,15 +140,17 @@ describe('MetricsService zero-token resilience integration coverage', () => {
       metricsJson,
       'llm_proxy_rate_limit_map_size_entries'
     );
-    expect(mapSizeMetrics.every((entry) => Number(entry.value) === 0)).toBe(true);
+    expect(mapSizeMetrics.every((entry) => Number(entry.value) === 0)).toBe(
+      true
+    );
 
     const requestTotals = getMetricValues(
       metricsJson,
       'llm_proxy_http_requests_total'
     );
-    expect(requestTotals.some((entry) => entry.labels.route === '/api/llm-request')).toBe(
-      true
-    );
+    expect(
+      requestTotals.some((entry) => entry.labels.route === '/api/llm-request')
+    ).toBe(true);
 
     const rateLimitHits = getMetricValues(
       metricsJson,

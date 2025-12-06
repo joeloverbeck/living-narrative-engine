@@ -1,5 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import { detectMatcherType, hasMatcher } from '../../../../../src/anatomy/recipePatternResolver/utils/patternUtils.js';
+import {
+  detectMatcherType,
+  hasMatcher,
+} from '../../../../../src/anatomy/recipePatternResolver/utils/patternUtils.js';
 
 describe('patternUtils', () => {
   describe('hasMatcher', () => {
@@ -30,11 +33,15 @@ describe('patternUtils', () => {
     });
 
     it('detects matchesGroup when defined', () => {
-      expect(detectMatcherType({ matches: [], matchesGroup: 'group-id' })).toBe('matchesGroup');
+      expect(detectMatcherType({ matches: [], matchesGroup: 'group-id' })).toBe(
+        'matchesGroup'
+      );
     });
 
     it('detects matchesPattern when present', () => {
-      expect(detectMatcherType({ matchesPattern: 'pattern-id' })).toBe('matchesPattern');
+      expect(detectMatcherType({ matchesPattern: 'pattern-id' })).toBe(
+        'matchesPattern'
+      );
     });
 
     it('detects matchesAll fallback', () => {

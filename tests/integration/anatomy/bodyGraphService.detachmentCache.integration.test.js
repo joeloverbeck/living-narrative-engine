@@ -68,7 +68,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -111,19 +112,25 @@ const populateAnatomy = (entityManager) => {
     subType: 'torso',
   });
 
-  entityManager.addComponent(PART_IDS.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(PART_IDS.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(PART_IDS.torso, 'anatomy:joint', {
     parentId: ACTOR_ID,
     socketId: 'core',
   });
 
-  entityManager.addComponent(PART_IDS.head, 'anatomy:part', { subType: 'head' });
+  entityManager.addComponent(PART_IDS.head, 'anatomy:part', {
+    subType: 'head',
+  });
   entityManager.addComponent(PART_IDS.head, 'anatomy:joint', {
     parentId: PART_IDS.torso,
     socketId: 'neck',
   });
 
-  entityManager.addComponent(PART_IDS.leftArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(PART_IDS.leftArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(PART_IDS.leftArm, 'anatomy:joint', {
     parentId: PART_IDS.torso,
     socketId: 'left-shoulder',
@@ -132,7 +139,9 @@ const populateAnatomy = (entityManager) => {
     posture: { state: 'raised' },
   });
 
-  entityManager.addComponent(PART_IDS.leftHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(PART_IDS.leftHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(PART_IDS.leftHand, 'anatomy:joint', {
     parentId: PART_IDS.leftArm,
     socketId: 'left-wrist',
@@ -142,20 +151,26 @@ const populateAnatomy = (entityManager) => {
     quality: 'legendary',
   });
 
-  entityManager.addComponent(PART_IDS.rightArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(PART_IDS.rightArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(PART_IDS.rightArm, 'anatomy:joint', {
     parentId: PART_IDS.torso,
     socketId: 'right-shoulder',
   });
   entityManager.addComponent(PART_IDS.rightArm, 'equipment:grip', {});
 
-  entityManager.addComponent(PART_IDS.rightHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(PART_IDS.rightHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(PART_IDS.rightHand, 'anatomy:joint', {
     parentId: PART_IDS.rightArm,
     socketId: 'right-wrist',
   });
 
-  entityManager.addComponent(PART_IDS.heart, 'anatomy:part', { subType: 'heart' });
+  entityManager.addComponent(PART_IDS.heart, 'anatomy:part', {
+    subType: 'heart',
+  });
   entityManager.addComponent(PART_IDS.heart, 'anatomy:joint', {
     parentId: PART_IDS.torso,
     socketId: 'heart-socket',
@@ -164,7 +179,9 @@ const populateAnatomy = (entityManager) => {
     metrics: { heartbeat: { bpm: 72 } },
   });
 
-  entityManager.addComponent(PART_IDS.leftLeg, 'anatomy:part', { subType: 'leg' });
+  entityManager.addComponent(PART_IDS.leftLeg, 'anatomy:part', {
+    subType: 'leg',
+  });
   entityManager.addComponent(PART_IDS.leftLeg, 'anatomy:joint', {
     parentId: PART_IDS.torso,
     socketId: 'left-hip',
@@ -213,7 +230,9 @@ describe('BodyGraphService detachment and cache invalidation integration', () =>
     expect(service.getAllParts(undefined)).toEqual([]);
 
     const blueprintBodyComponent = { body: { root: PART_IDS.blueprintTorso } };
-    const partsWithoutActorContext = service.getAllParts(blueprintBodyComponent);
+    const partsWithoutActorContext = service.getAllParts(
+      blueprintBodyComponent
+    );
     expect(partsWithoutActorContext).toEqual([PART_IDS.blueprintTorso]);
 
     await service.buildAdjacencyCache(ACTOR_ID);
@@ -282,9 +301,7 @@ describe('BodyGraphService detachment and cache invalidation integration', () =>
 
     expect(
       service.hasPartWithComponent(actorRootBodyComponent, 'equipment:grip')
-    ).toBe(
-      true
-    );
+    ).toBe(true);
     const gripAfterDetachExpectation = () =>
       service.hasPartWithComponent(actorRootBodyComponent, 'equipment:grip');
 

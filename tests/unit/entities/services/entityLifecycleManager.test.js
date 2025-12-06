@@ -560,7 +560,6 @@ describe('EntityLifecycleManager - Successful Operations', () => {
       'Entity reconstructed: test-entity (definition: test:def)'
     );
   });
-
 });
 
 describe('EntityLifecycleManager - Stats and Cache', () => {

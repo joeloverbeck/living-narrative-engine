@@ -300,10 +300,8 @@ class ProbabilityCalculatorService {
    */
   #buildResult(baseChance, finalChance, formula, bounds) {
     const normalizedBounds = {
-      min:
-        typeof bounds?.min === 'number' ? bounds.min : DEFAULT_BOUNDS.min,
-      max:
-        typeof bounds?.max === 'number' ? bounds.max : DEFAULT_BOUNDS.max,
+      min: typeof bounds?.min === 'number' ? bounds.min : DEFAULT_BOUNDS.min,
+      max: typeof bounds?.max === 'number' ? bounds.max : DEFAULT_BOUNDS.max,
     };
 
     return {

@@ -12,12 +12,12 @@ This document provides a summary of all tickets created to address the performan
 
 These tickets address **actual memory leaks** in the GOAP system that will cause production problems:
 
-| Ticket | Title | Priority | Dependencies | Estimated Effort |
-|--------|-------|----------|--------------|------------------|
-| [PERTESFLAANA-001](PERTESFLAANA-001-bounded-cache-lru.md) | Implement Bounded Cache with LRU Eviction | 🔴 Critical | None | 3-5 hours |
-| [PERTESFLAANA-002](PERTESFLAANA-002-timestamp-pruning-failures.md) | Add Timestamp-Based Pruning for Failure Arrays | 🔴 Critical | None | 2-4 hours |
-| [PERTESFLAANA-003](PERTESFLAANA-003-diagnostics-cleanup-lifecycle.md) | Implement Actor Diagnostics Cleanup Lifecycle | 🔴 Critical | None | 2-3 hours |
-| [PERTESFLAANA-004](PERTESFLAANA-004-memory-pressure-monitoring.md) | Add Memory Pressure Monitoring to GOAP System | 🟡 Important | 001, 002, 003 | 6-8 hours |
+| Ticket                                                                | Title                                          | Priority     | Dependencies  | Estimated Effort |
+| --------------------------------------------------------------------- | ---------------------------------------------- | ------------ | ------------- | ---------------- |
+| [PERTESFLAANA-001](PERTESFLAANA-001-bounded-cache-lru.md)             | Implement Bounded Cache with LRU Eviction      | 🔴 Critical  | None          | 3-5 hours        |
+| [PERTESFLAANA-002](PERTESFLAANA-002-timestamp-pruning-failures.md)    | Add Timestamp-Based Pruning for Failure Arrays | 🔴 Critical  | None          | 2-4 hours        |
+| [PERTESFLAANA-003](PERTESFLAANA-003-diagnostics-cleanup-lifecycle.md) | Implement Actor Diagnostics Cleanup Lifecycle  | 🔴 Critical  | None          | 2-3 hours        |
+| [PERTESFLAANA-004](PERTESFLAANA-004-memory-pressure-monitoring.md)    | Add Memory Pressure Monitoring to GOAP System  | 🟡 Important | 001, 002, 003 | 6-8 hours        |
 
 **Total Critical Path**: 13-20 hours
 
@@ -25,10 +25,10 @@ These tickets address **actual memory leaks** in the GOAP system that will cause
 
 These tickets address **test flakiness** without any production code changes:
 
-| Ticket | Title | Priority | Dependencies | Estimated Effort |
-|--------|-------|----------|--------------|------------------|
-| [PERTESFLAANA-005](PERTESFLAANA-005-relax-slotgenerator-thresholds.md) | Relax SlotGenerator Performance Test Thresholds | 🟢 Low | None | 45-60 minutes |
-| [PERTESFLAANA-006](PERTESFLAANA-006-percentile-performance-assertions.md) | Add Percentile-Based Assertions to Performance Tests | 🟢 Optional | None | 6-7 hours |
+| Ticket                                                                    | Title                                                | Priority    | Dependencies | Estimated Effort |
+| ------------------------------------------------------------------------- | ---------------------------------------------------- | ----------- | ------------ | ---------------- |
+| [PERTESFLAANA-005](PERTESFLAANA-005-relax-slotgenerator-thresholds.md)    | Relax SlotGenerator Performance Test Thresholds      | 🟢 Low      | None         | 45-60 minutes    |
+| [PERTESFLAANA-006](PERTESFLAANA-006-percentile-performance-assertions.md) | Add Percentile-Based Assertions to Performance Tests | 🟢 Optional | None         | 6-7 hours        |
 
 **Total Test Improvements**: 7-8 hours
 
@@ -83,25 +83,26 @@ These tickets address **test flakiness** without any production code changes:
 
 After implementing tickets 001-003:
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Memory growth (1000 iterations) | 220 MB | <50 MB | >77% reduction |
-| Memory growth rate | 220 KB/iteration | <50 KB/iteration | >77% reduction |
-| 24-hour session (10 NPCs) | 5.3 GB leak | <1.2 GB | >77% reduction |
+| Metric                          | Before           | After            | Improvement    |
+| ------------------------------- | ---------------- | ---------------- | -------------- |
+| Memory growth (1000 iterations) | 220 MB           | <50 MB           | >77% reduction |
+| Memory growth rate              | 220 KB/iteration | <50 KB/iteration | >77% reduction |
+| 24-hour session (10 NPCs)       | 5.3 GB leak      | <1.2 GB          | >77% reduction |
 
 ### Test Stability
 
 After implementing tickets 005-006:
 
-| Test | Current Pass Rate | Expected Pass Rate |
-|------|-------------------|-------------------|
-| SlotGenerator performance | ~60% (CI) | >95% (CI) |
-| GOAP memory tests | ~40% (CI) | >95% (CI) |
-| All performance tests | ~70% (CI) | >95% (CI) |
+| Test                      | Current Pass Rate | Expected Pass Rate |
+| ------------------------- | ----------------- | ------------------ |
+| SlotGenerator performance | ~60% (CI)         | >95% (CI)          |
+| GOAP memory tests         | ~40% (CI)         | >95% (CI)          |
+| All performance tests     | ~70% (CI)         | >95% (CI)          |
 
 ## Success Criteria
 
 ### Phase 1 Complete When:
+
 - [ ] All GOAP performance tests pass consistently (>95% success rate)
 - [ ] Memory growth < 50 MB over 1000 planning iterations
 - [ ] No unbounded cache or array growth detected
@@ -109,12 +110,14 @@ After implementing tickets 005-006:
 - [ ] Full test suite passes (`npm run test:ci`)
 
 ### Phase 2 Complete When:
+
 - [ ] Memory monitoring integrated with event bus
 - [ ] Alerts dispatched on memory pressure
 - [ ] Automatic cleanup triggers under pressure
 - [ ] Metrics available for capacity planning
 
 ### Phase 3 Complete When:
+
 - [ ] SlotGenerator test passes consistently in CI
 - [ ] Percentile-based utility available for all performance tests
 - [ ] Documentation updated with best practices
@@ -233,6 +236,7 @@ No cascading failures expected due to ticket independence.
 ### Q: What if tests still fail after implementing fixes?
 
 **A**: Check:
+
 1. All three tickets (001-003) implemented?
 2. Performance tests run with `--expose-gc` flag?
 3. CI environment has sufficient resources?

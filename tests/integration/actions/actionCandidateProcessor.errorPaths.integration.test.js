@@ -202,9 +202,9 @@ describe('ActionCandidateProcessor integration error paths', () => {
     const [errorContext] = result.value.errors;
     expect(errorContext.actionId).toBe(baseAction.id);
     expect(errorContext.actorId).toBe(actorEntity.id);
-    expect(
-      errorContext.error.environmentContext.errorStack
-    ).toContain('Prerequisite evaluation failed');
+    expect(errorContext.error.environmentContext.errorStack).toContain(
+      'Prerequisite evaluation failed'
+    );
     expect(errorContext.environmentContext).toMatchObject({
       phase: 'validation',
       errorName: 'Error',
@@ -279,7 +279,11 @@ describe('ActionCandidateProcessor integration error paths', () => {
   it('logs and surfaces target resolution exceptions via ActionResult failure', () => {
     const logger = new TestLogger();
     const thrown = new Error('scope exploded');
-    const { processor, logger: serviceLogger, targetService } = createProcessor({
+    const {
+      processor,
+      logger: serviceLogger,
+      targetService,
+    } = createProcessor({
       prerequisiteImpl: () => true,
       targetImpl: () => {
         throw thrown;
@@ -297,8 +301,10 @@ describe('ActionCandidateProcessor integration error paths', () => {
       result.value.errors[0].error.environmentContext.errorStack
     ).toContain('scope exploded');
 
-    expect(serviceLogger.errorLogs.some(({ message }) =>
-      message.includes("Error resolving scope for action 'action:test'"),
-    )).toBe(true);
+    expect(
+      serviceLogger.errorLogs.some(({ message }) =>
+        message.includes("Error resolving scope for action 'action:test'")
+      )
+    ).toBe(true);
   });
 });

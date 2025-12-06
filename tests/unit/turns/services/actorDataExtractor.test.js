@@ -382,10 +382,16 @@ describe('ActorDataExtractor', () => {
           },
         };
         const result = extractor.extractPromptData(actorState);
-        
-        expect(result.motivations).toBe('I seek power because I fear being powerless again.');
-        expect(result.internalTensions).toBe('I want revenge but also want to forgive.');
-        expect(result.coreDilemmas).toBe('Can I achieve justice without becoming a monster?');
+
+        expect(result.motivations).toBe(
+          'I seek power because I fear being powerless again.'
+        );
+        expect(result.internalTensions).toBe(
+          'I want revenge but also want to forgive.'
+        );
+        expect(result.coreDilemmas).toBe(
+          'Can I achieve justice without becoming a monster?'
+        );
       });
 
       test('should return undefined for psychological components when absent', () => {
@@ -394,7 +400,7 @@ describe('ActorDataExtractor', () => {
           [DESCRIPTION_COMPONENT_ID]: { text: 'A simple character' },
         };
         const result = extractor.extractPromptData(actorState);
-        
+
         expect(result.motivations).toBeUndefined();
         expect(result.internalTensions).toBeUndefined();
         expect(result.coreDilemmas).toBeUndefined();
@@ -412,10 +418,12 @@ describe('ActorDataExtractor', () => {
           },
         };
         const result = extractor.extractPromptData(actorState);
-        
+
         expect(result.motivations).toBe('To protect those I love.');
         expect(result.internalTensions).toBeUndefined();
-        expect(result.coreDilemmas).toBe('How far is too far when protecting family?');
+        expect(result.coreDilemmas).toBe(
+          'How far is too far when protecting family?'
+        );
       });
 
       test('should return undefined for empty text in psychological components', () => {
@@ -426,7 +434,7 @@ describe('ActorDataExtractor', () => {
           [DILEMMAS_COMPONENT_ID]: { text: null },
         };
         const result = extractor.extractPromptData(actorState);
-        
+
         expect(result.motivations).toBeUndefined();
         expect(result.internalTensions).toBeUndefined();
         expect(result.coreDilemmas).toBeUndefined();
@@ -446,9 +454,11 @@ describe('ActorDataExtractor', () => {
           },
         };
         const result = extractor.extractPromptData(actorState);
-        
+
         expect(result.motivations).toBe('To find my purpose');
-        expect(result.internalTensions).toBe('Desire for freedom vs need for security');
+        expect(result.internalTensions).toBe(
+          'Desire for freedom vs need for security'
+        );
         expect(result.coreDilemmas).toBe('Can I trust again?');
       });
 
@@ -460,7 +470,7 @@ describe('ActorDataExtractor', () => {
           [DILEMMAS_COMPONENT_ID]: { notText: 'wrong property' },
         };
         const result = extractor.extractPromptData(actorState);
-        
+
         expect(result.motivations).toBeUndefined();
         expect(result.internalTensions).toBeUndefined();
         expect(result.coreDilemmas).toBeUndefined();
@@ -472,15 +482,19 @@ describe('ActorDataExtractor', () => {
           [PERSONALITY_COMPONENT_ID]: { text: 'Brooding and intense' },
           [FEARS_COMPONENT_ID]: { text: 'Being alone' },
           [MOTIVATIONS_COMPONENT_ID]: { text: 'To find belonging' },
-          [INTERNAL_TENSIONS_COMPONENT_ID]: { text: 'Push people away vs need connection' },
+          [INTERNAL_TENSIONS_COMPONENT_ID]: {
+            text: 'Push people away vs need connection',
+          },
           [DILEMMAS_COMPONENT_ID]: { text: 'Is vulnerability weakness?' },
         };
         const result = extractor.extractPromptData(actorState);
-        
+
         expect(result.personality).toBe('Brooding and intense');
         expect(result.fears).toBe('Being alone');
         expect(result.motivations).toBe('To find belonging');
-        expect(result.internalTensions).toBe('Push people away vs need connection');
+        expect(result.internalTensions).toBe(
+          'Push people away vs need connection'
+        );
         expect(result.coreDilemmas).toBe('Is vulnerability weakness?');
       });
     });
@@ -628,7 +642,9 @@ describe('ActorDataExtractor', () => {
         const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
         const result = extractorWithHealth.extractPromptData(actorState);
         expect(result.healthState).toBeNull();
-        expect(mockInjuryAggregationService.aggregateInjuries).not.toHaveBeenCalled();
+        expect(
+          mockInjuryAggregationService.aggregateInjuries
+        ).not.toHaveBeenCalled();
       });
 
       test('should return null healthState for healthy characters (100% health, no injuries)', () => {
@@ -650,9 +666,9 @@ describe('ActorDataExtractor', () => {
         );
 
         expect(result.healthState).toBeNull();
-        expect(mockInjuryAggregationService.aggregateInjuries).toHaveBeenCalledWith(
-          'actor-1'
-        );
+        expect(
+          mockInjuryAggregationService.aggregateInjuries
+        ).toHaveBeenCalledWith('actor-1');
       });
 
       test('should return null healthState when aggregation service returns null', () => {
@@ -924,9 +940,11 @@ describe('ActorDataExtractor', () => {
       });
 
       test('should handle aggregation service errors gracefully', () => {
-        mockInjuryAggregationService.aggregateInjuries.mockImplementation(() => {
-          throw new Error('Service unavailable');
-        });
+        mockInjuryAggregationService.aggregateInjuries.mockImplementation(
+          () => {
+            throw new Error('Service unavailable');
+          }
+        );
 
         const actorState = { [NAME_COMPONENT_ID]: { text: 'Test' } };
         const result = extractorWithHealth.extractPromptData(

@@ -13,8 +13,8 @@
       },
       "condition": {
         "!=": [
-          {"var": "actor.position.room"},
-          {"var": "task.params.itemLocation"}
+          { "var": "actor.position.room" },
+          { "var": "task.params.itemLocation" }
         ]
       }
     },

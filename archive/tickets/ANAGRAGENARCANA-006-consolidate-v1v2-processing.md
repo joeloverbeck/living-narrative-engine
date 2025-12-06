@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-006: Consolidate V1/V2 Processing Logic
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-006
 - **Priority**: MEDIUM
 - **Severity**: P6
@@ -17,6 +18,7 @@ Version detection and processing logic is duplicated across two files, creating 
 ### Current State
 
 **File 1: `blueprintLoader.js:49`**
+
 ```javascript
 if (blueprint.schemaVersion === '2.0' && blueprint.structureTemplate) {
   return processV2Blueprint(blueprint, dependencies);
@@ -24,6 +26,7 @@ if (blueprint.schemaVersion === '2.0' && blueprint.structureTemplate) {
 ```
 
 **File 2: `BlueprintProcessorService.js`**
+
 ```javascript
 detectVersion(blueprint) {
   if (blueprint.schemaVersion === '2.0') return 2;
@@ -32,6 +35,7 @@ detectVersion(blueprint) {
 ```
 
 ### Issues
+
 1. **Dual implementations**: Both files have V1/V2 detection logic
 2. **Processing flag inconsistency**: `_generatedSockets` array used to detect V2 processing state
 3. **Pattern resolver integration**: V2 pattern handling split between `RecipeProcessor` and `RecipePatternResolver`
@@ -41,12 +45,12 @@ detectVersion(blueprint) {
 
 ## Affected Files
 
-| File | Change Type |
-|------|-------------|
-| `src/anatomy/bodyBlueprintFactory/blueprintLoader.js` | Refactor - delegate to service |
-| `src/anatomy/services/blueprintProcessorService.js` | Enhance - add V2 processing |
-| `src/anatomy/recipeProcessor.js` | Review - clarify V1 role |
-| `src/anatomy/recipePatternResolver/patternResolver.js` | Review - clarify V2 role |
+| File                                                   | Change Type                    |
+| ------------------------------------------------------ | ------------------------------ |
+| `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`  | Refactor - delegate to service |
+| `src/anatomy/services/blueprintProcessorService.js`    | Enhance - add V2 processing    |
+| `src/anatomy/recipeProcessor.js`                       | Review - clarify V1 role       |
+| `src/anatomy/recipePatternResolver/patternResolver.js` | Review - clarify V2 role       |
 
 ---
 
@@ -92,8 +96,9 @@ export class BlueprintProcessorService {
    * @returns {boolean}
    */
   requiresV2Processing(blueprint) {
-    return this.detectVersion(blueprint) === 2 &&
-           blueprint.structureTemplate != null;
+    return (
+      this.detectVersion(blueprint) === 2 && blueprint.structureTemplate != null
+    );
   }
 
   /**
@@ -116,7 +121,7 @@ export class BlueprintProcessorService {
     return {
       ...blueprint,
       _processingVersion: 1,
-      _wasProcessed: true
+      _wasProcessed: true,
     };
   }
 
@@ -127,18 +132,27 @@ export class BlueprintProcessorService {
     const { socketGenerator, slotGenerator, dataRegistry } = dependencies;
 
     // Load and expand structure template
-    const template = await dataRegistry.get('structureTemplates', blueprint.structureTemplate);
+    const template = await dataRegistry.get(
+      'structureTemplates',
+      blueprint.structureTemplate
+    );
 
     // Generate sockets from template
-    const generatedSockets = socketGenerator.generateSockets(template, blueprint);
+    const generatedSockets = socketGenerator.generateSockets(
+      template,
+      blueprint
+    );
 
     // Generate slots from template
-    const generatedSlots = slotGenerator.generateBlueprintSlots(template, blueprint);
+    const generatedSlots = slotGenerator.generateBlueprintSlots(
+      template,
+      blueprint
+    );
 
     // Merge with additionalSlots (additionalSlots override generated)
     const mergedSlots = {
       ...generatedSlots,
-      ...(blueprint.additionalSlots || {})
+      ...(blueprint.additionalSlots || {}),
     };
 
     return {
@@ -148,7 +162,7 @@ export class BlueprintProcessorService {
       _generatedSlots: generatedSlots,
       _generatedSockets: generatedSockets,
       _processingVersion: 2,
-      _wasProcessed: true
+      _wasProcessed: true,
     };
   }
 
@@ -194,15 +208,20 @@ Ensure `BlueprintProcessorService` is properly registered and injected:
 
 ```javascript
 // In registrations file
-container.register(tokens.IBlueprintProcessorService, BlueprintProcessorService);
+container.register(
+  tokens.IBlueprintProcessorService,
+  BlueprintProcessorService
+);
 
 // In blueprintLoader factory
 const blueprintLoader = ({ blueprintProcessorService, dataRegistry }) => {
   return {
     load: async (blueprintId) => {
       const rawBlueprint = await dataRegistry.get('blueprints', blueprintId);
-      return blueprintProcessorService.process(rawBlueprint, { /* deps */ });
-    }
+      return blueprintProcessorService.process(rawBlueprint, {
+        /* deps */
+      });
+    },
   };
 };
 ```
@@ -250,6 +269,7 @@ Add clear documentation about the processing pipeline:
 Create/update tests in `tests/unit/anatomy/services/BlueprintProcessorService.test.js`:
 
 1. **Test: Should detect V1 blueprints correctly**
+
 ```javascript
 describe('detectVersion', () => {
   it('should return 1 for blueprints without schemaVersion', () => {
@@ -268,25 +288,31 @@ describe('detectVersion', () => {
 ```
 
 2. **Test: Should determine V2 processing requirement**
+
 ```javascript
 describe('requiresV2Processing', () => {
   it('should return false for V2 without structureTemplate', () => {
-    expect(service.requiresV2Processing({
-      schemaVersion: '2.0'
-      // No structureTemplate
-    })).toBe(false);
+    expect(
+      service.requiresV2Processing({
+        schemaVersion: '2.0',
+        // No structureTemplate
+      })
+    ).toBe(false);
   });
 
   it('should return true for V2 with structureTemplate', () => {
-    expect(service.requiresV2Processing({
-      schemaVersion: '2.0',
-      structureTemplate: 'templates:biped'
-    })).toBe(true);
+    expect(
+      service.requiresV2Processing({
+        schemaVersion: '2.0',
+        structureTemplate: 'templates:biped',
+      })
+    ).toBe(true);
   });
 });
 ```
 
 3. **Test: Should process V1 blueprints with minimal transformation**
+
 ```javascript
 it('should add processing markers to V1 blueprints', async () => {
   const v1Blueprint = { slots: { head: {} } };
@@ -299,17 +325,24 @@ it('should add processing markers to V1 blueprints', async () => {
 ```
 
 4. **Test: Should process V2 blueprints with template expansion**
+
 ```javascript
 it('should expand V2 blueprints from template', async () => {
   const v2Blueprint = {
     schemaVersion: '2.0',
-    structureTemplate: 'templates:biped'
+    structureTemplate: 'templates:biped',
   };
 
   const mockDeps = {
     socketGenerator: { generateSockets: jest.fn().mockReturnValue([]) },
-    slotGenerator: { generateBlueprintSlots: jest.fn().mockReturnValue({ torso: {} }) },
-    dataRegistry: { get: jest.fn().mockResolvedValue({ /* template */ }) }
+    slotGenerator: {
+      generateBlueprintSlots: jest.fn().mockReturnValue({ torso: {} }),
+    },
+    dataRegistry: {
+      get: jest.fn().mockResolvedValue({
+        /* template */
+      }),
+    },
   };
 
   const result = await service.process(v2Blueprint, mockDeps);
@@ -391,6 +424,7 @@ The consolidation was successfully completed with the following changes:
    - Updated existing test files to use new architecture
 
 ### Files Modified
+
 - `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`
 - `src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js`
 - `src/anatomy/services/blueprintProcessorService.js`
@@ -398,6 +432,7 @@ The consolidation was successfully completed with the following changes:
 - Multiple test files updated for new architecture
 
 ### Test Results
+
 - All 233 bodyBlueprintFactory-related tests pass
 - All 33 blueprintProcessorService tests pass
 - No regressions detected

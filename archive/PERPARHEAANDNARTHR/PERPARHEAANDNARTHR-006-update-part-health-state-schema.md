@@ -12,21 +12,25 @@
 ### What Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create schema with inline `parameters` definition
 - Add to operation.schema.json "in alphabetical order"
 - Touch 2 files total
 
 **Actually Implemented:**
+
 1. **Schema pattern corrected**: Used `$defs/Parameters` reference pattern (matching `updateHungerState.schema.json`) instead of inline parameters as originally specified
 2. **Insertion point corrected**: operation.schema.json is NOT alphabetically sorted - placed after `modifyPartHealth.schema.json` for functional grouping
 3. **Additional file discovered**: `staticConfiguration.js` also required update to register schema for loading
 
 **Files Changed:**
+
 - ✅ `data/schemas/operations/updatePartHealthState.schema.json` (created)
 - ✅ `data/schemas/operation.schema.json` (added $ref after modifyPartHealth)
 - ✅ `src/configuration/staticConfiguration.js` (added to OPERATION_SCHEMA_FILES)
 
 **Validation Results:**
+
 - ✅ `npm run validate` - PASSED
 - ✅ `npm run validate:strict` - PASSED
 - ⚠️ `npm run test:ci` - Expected errors for missing handler/DI (covered by tickets 007-008)
@@ -42,9 +46,11 @@ Create the JSON schema for the `UPDATE_PART_HEALTH_STATE` operation, which recal
 ## Files to Touch
 
 ### New Files
+
 - `data/schemas/operations/updatePartHealthState.schema.json`
 
 ### Modified Files
+
 - `data/schemas/operation.schema.json` (add `$ref` entry to `anyOf` array)
 - `src/configuration/staticConfiguration.js` (add schema to `OPERATION_SCHEMA_FILES` array)
 
@@ -53,6 +59,7 @@ Create the JSON schema for the `UPDATE_PART_HEALTH_STATE` operation, which recal
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation schemas
 - Any operation handler implementation files
 - Any rule files
@@ -93,10 +100,7 @@ Create `data/schemas/operations/updatePartHealthState.schema.json`:
       "properties": {
         "part_entity_ref": {
           "description": "Reference to the body part entity. Can be a direct entity ID string or a JSON Logic expression that resolves to an entity ID.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         }
       },
       "required": ["part_entity_ref"],
@@ -136,11 +140,13 @@ Insert after `modifyPartHealth.schema.json` (around line 150) to keep related op
    - `npm run validate:strict` passes without errors
 
 2. **JSON schema validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/schemas/operations/updatePartHealthState.schema.json'))"
    ```
 
 3. **operation.schema.json validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/schemas/operation.schema.json'))"
    ```

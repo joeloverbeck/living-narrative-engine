@@ -149,7 +149,11 @@ class RefinementMethodLoader extends SimpleItemLoader {
             `Refinement method ${data.id} in ${filename}: Conditional step ${i} must have 'condition' property`
           );
         }
-        if (!step.thenSteps || !Array.isArray(step.thenSteps) || step.thenSteps.length === 0) {
+        if (
+          !step.thenSteps ||
+          !Array.isArray(step.thenSteps) ||
+          step.thenSteps.length === 0
+        ) {
           throw new Error(
             `Refinement method ${data.id} in ${filename}: Conditional step ${i} must have at least one 'thenSteps' entry`
           );

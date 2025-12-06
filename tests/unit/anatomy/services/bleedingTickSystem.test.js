@@ -135,15 +135,17 @@ describe('BleedingTickSystem', () => {
     it('should apply tick damage to bleeding part', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'moderate', remainingTurns: 3, tickDamage: 3 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'moderate', remainingTurns: 3, tickDamage: 3 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'anatomy:part_health';
       });
@@ -167,15 +169,17 @@ describe('BleedingTickSystem', () => {
     it('should remove bleeding and emit stopped event when duration expires', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'minor', remainingTurns: 1, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'minor', remainingTurns: 1, tickDamage: 1 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'anatomy:part_health';
       });
@@ -199,15 +203,17 @@ describe('BleedingTickSystem', () => {
     it('should remove bleeding when part is destroyed', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'severe', remainingTurns: 5, tickDamage: 5 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'severe', remainingTurns: 5, tickDamage: 5 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 0, maxHealth: 100 }; // Destroyed
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 0, maxHealth: 100 }; // Destroyed
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'anatomy:part_health';
       });
@@ -231,12 +237,14 @@ describe('BleedingTickSystem', () => {
     it('should handle part with no health component as destroyed', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'minor', remainingTurns: 2, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'minor', remainingTurns: 2, tickDamage: 1 };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(false);
 
       await system.processTick();
@@ -256,15 +264,17 @@ describe('BleedingTickSystem', () => {
     it('should process multiple bleeding parts in one tick', async () => {
       const parts = ['part:arm', 'part:leg'];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(parts);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'minor', remainingTurns: 2, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'minor', remainingTurns: 2, tickDamage: 1 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       await system.processTick();
@@ -287,15 +297,17 @@ describe('BleedingTickSystem', () => {
     it('should clamp health to 0 minimum', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'severe', remainingTurns: 2, tickDamage: 10 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'severe', remainingTurns: 2, tickDamage: 10 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 5, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 5, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       await system.processTick();
@@ -312,15 +324,17 @@ describe('BleedingTickSystem', () => {
     it('should process tick when turn ended event fires', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BLEEDING_COMPONENT_ID) {
-          return { severity: 'minor', remainingTurns: 2, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BLEEDING_COMPONENT_ID) {
+            return { severity: 'minor', remainingTurns: 2, tickDamage: 1 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       // Trigger the turn ended callback

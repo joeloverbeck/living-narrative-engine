@@ -5,6 +5,7 @@ This directory contains historical tests that are no longer actively maintained 
 ## Purpose
 
 Tests are archived rather than deleted to:
+
 - Preserve historical context and testing approaches
 - Allow reference for similar future testing needs
 - Maintain a record of what was tested and why it changed
@@ -23,11 +24,13 @@ Tests are archived rather than deleted to:
 ## Guidelines
 
 **Do Not**:
+
 - Run these tests as part of automated test suites
 - Expect these tests to pass without modification
 - Use as examples of current best practices
 
 **Do**:
+
 - Reference for historical context
 - Use as inspiration for new testing approaches
 - Review before deleting to understand testing history
@@ -35,6 +38,7 @@ Tests are archived rather than deleted to:
 ## Adding to Archive
 
 When archiving a test:
+
 1. Move the test file to this directory
 2. Update this README with:
    - File name

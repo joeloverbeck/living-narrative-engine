@@ -24,15 +24,15 @@ function createFreshMocks() {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     },
     mockEntityManager: {
       getComponentData: jest.fn(),
-      hasComponent: jest.fn()
+      hasComponent: jest.fn(),
     },
     mockEntitiesGateway: {
-      getComponentData: jest.fn()
-    }
+      getComponentData: jest.fn(),
+    },
   };
 }
 
@@ -52,30 +52,30 @@ describe('ClothingAccessibilityService Memory Usage', () => {
     mockEntityManager.getComponentData.mockReturnValue({
       equipped: {
         torso: { base: 'shirt', outer: 'jacket' },
-        legs: { base: 'pants', underwear: 'underwear' }
-      }
+        legs: { base: 'pants', underwear: 'underwear' },
+      },
     });
 
     mockEntitiesGateway.getComponentData.mockReturnValue({
       covers: ['body_area'],
-      coveragePriority: 'base'
+      coveragePriority: 'base',
     });
 
     service = new ClothingAccessibilityService({
       logger: mockLogger,
       entityManager: mockEntityManager,
       entitiesGateway: mockEntitiesGateway,
-      maxCacheSize: 100 // Limit cache size for memory tests
+      maxCacheSize: 100, // Limit cache size for memory tests
     });
   });
 
   describe('Memory leak detection', () => {
-
     it('should not leak memory with repeated cache operations', async () => {
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(2); // Reduced samples
+      const initialMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2); // Reduced samples
       const iterations = 200; // Reduced from 1000 - leaks show up quickly
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({
-        MAX_MEMORY_MB: 10
+        MAX_MEMORY_MB: 10,
       });
 
       // Perform many operations that could potentially leak memory
@@ -85,11 +85,12 @@ describe('ClothingAccessibilityService Memory Usage', () => {
 
         service.getAccessibleItems(entityId, {
           mode: 'topmost',
-          uniqueOption: i // Force different cache keys
+          uniqueOption: i, // Force different cache keys
         });
 
         // Occasionally clear cache to test cleanup
-        if (i % 50 === 0) { // More frequent cleanup (was 250)
+        if (i % 50 === 0) {
+          // More frequent cleanup (was 250)
           service.clearCache(entityId);
         }
       }
@@ -98,18 +99,26 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       const memoryIncrease = finalMemory - initialMemory;
       const increaseInMB = memoryIncrease / (1024 * 1024);
 
-      console.log(`Memory test - Initial: ${(initialMemory / 1024 / 1024).toFixed(2)}MB, Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, Increase: ${increaseInMB.toFixed(2)}MB`);
+      console.log(
+        `Memory test - Initial: ${(initialMemory / 1024 / 1024).toFixed(2)}MB, Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, Increase: ${increaseInMB.toFixed(2)}MB`
+      );
 
       // Use adaptive memory assertion with reduced retry logic
-      await expect(global.memoryTestUtils.assertMemoryWithRetry(
-        () => global.memoryTestUtils.getStableMemoryUsage(2).then(m => m - initialMemory),
-        thresholds.MAX_MEMORY_MB,
-        3 // Reduced retries from 6 to 3
-      )).resolves.toBeUndefined();
+      await expect(
+        global.memoryTestUtils.assertMemoryWithRetry(
+          () =>
+            global.memoryTestUtils
+              .getStableMemoryUsage(2)
+              .then((m) => m - initialMemory),
+          thresholds.MAX_MEMORY_MB,
+          3 // Reduced retries from 6 to 3
+        )
+      ).resolves.toBeUndefined();
     });
 
     it('should clean up priority cache properly', async () => {
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(2); // Reduced samples from 5
+      const initialMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2); // Reduced samples from 5
 
       // Generate equipment to stress priority cache (optimized size)
       mockEntityManager.getComponentData.mockReturnValue({
@@ -120,11 +129,11 @@ describe('ClothingAccessibilityService Memory Usage', () => {
             equipment[`slot_${slot}`] = {
               outer: `outer_${slot}`,
               base: `base_${slot}`,
-              underwear: `underwear_${slot}`
+              underwear: `underwear_${slot}`,
             };
           }
           return equipment;
-        })()
+        })(),
       });
 
       // Perform operations that build up priority cache (reduced iterations)
@@ -132,11 +141,12 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       for (let i = 0; i < iterations; i++) {
         service.getAccessibleItems(`priority_entity_${i}`, {
           mode: 'all',
-          sortByPriority: true
+          sortByPriority: true,
         });
       }
 
-      const afterCacheMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const afterCacheMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
 
       // Clear all caches
       for (let i = 0; i < iterations; i++) {
@@ -144,12 +154,15 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       }
 
       await global.memoryTestUtils.forceGCAndWait();
-      const afterClearMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const afterClearMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
 
       const cacheGrowth = afterCacheMemory - initialMemory;
       const postClearGrowth = afterClearMemory - initialMemory;
 
-      console.log(`Priority cache memory - Cache built: +${(cacheGrowth / 1024 / 1024).toFixed(2)}MB, After clear: +${(postClearGrowth / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Priority cache memory - Cache built: +${(cacheGrowth / 1024 / 1024).toFixed(2)}MB, After clear: +${(postClearGrowth / 1024 / 1024).toFixed(2)}MB`
+      );
 
       // Cache should be cleaned up significantly (more lenient threshold for CI)
       const cleanupRatio = global.memoryTestUtils.isCI() ? 0.85 : 0.6;
@@ -158,20 +171,27 @@ describe('ClothingAccessibilityService Memory Usage', () => {
         global.memoryTestUtils.isCI() ? 7.5 : 5
       );
 
-      await expect(global.memoryTestUtils.assertMemoryWithRetry(
-        () => global.memoryTestUtils.getStableMemoryUsage(2).then(m => m - initialMemory),
-        cleanupTargetMB,
-        3 // Reduced retries from 6-8 to 3
-      )).resolves.toBeUndefined();
+      await expect(
+        global.memoryTestUtils.assertMemoryWithRetry(
+          () =>
+            global.memoryTestUtils
+              .getStableMemoryUsage(2)
+              .then((m) => m - initialMemory),
+          cleanupTargetMB,
+          3 // Reduced retries from 6-8 to 3
+        )
+      ).resolves.toBeUndefined();
 
-      const toleranceBytes = (global.memoryTestUtils.isCI() ? 8 : 5) * 1024 * 1024;
+      const toleranceBytes =
+        (global.memoryTestUtils.isCI() ? 8 : 5) * 1024 * 1024;
       expect(postClearGrowth).toBeLessThan(cacheGrowth + toleranceBytes);
     });
 
     it('should handle cache size limits without excessive memory growth', async () => {
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const initialMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({
-        MAX_MEMORY_MB: 20
+        MAX_MEMORY_MB: 20,
       });
 
       // Force many unique cache entries to test cache size management
@@ -179,7 +199,7 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       for (let i = 0; i < iterations; i++) {
         service.getAccessibleItems(`cache_limit_entity_${i}`, {
           mode: 'all',
-          uniqueParam: Math.random() // Force unique cache keys
+          uniqueParam: Math.random(), // Force unique cache keys
         });
       }
 
@@ -187,18 +207,26 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       const memoryIncrease = finalMemory - initialMemory;
       const increaseInMB = memoryIncrease / (1024 * 1024);
 
-      console.log(`Cache limit test - Memory increase: ${increaseInMB.toFixed(2)}MB for ${iterations} unique operations`);
+      console.log(
+        `Cache limit test - Memory increase: ${increaseInMB.toFixed(2)}MB for ${iterations} unique operations`
+      );
 
       // Use adaptive memory assertion
-      await expect(global.memoryTestUtils.assertMemoryWithRetry(
-        () => global.memoryTestUtils.getStableMemoryUsage(2).then(m => m - initialMemory),
-        thresholds.MAX_MEMORY_MB,
-        3 // Reduced retries
-      )).resolves.toBeUndefined();
+      await expect(
+        global.memoryTestUtils.assertMemoryWithRetry(
+          () =>
+            global.memoryTestUtils
+              .getStableMemoryUsage(2)
+              .then((m) => m - initialMemory),
+          thresholds.MAX_MEMORY_MB,
+          3 // Reduced retries
+        )
+      ).resolves.toBeUndefined();
     });
 
     it('should not accumulate memory over multiple service instances', async () => {
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const initialMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
       const serviceInstances = [];
 
       // Create service instances to test for static/global memory leaks
@@ -209,39 +237,45 @@ describe('ClothingAccessibilityService Memory Usage', () => {
         freshMocks.mockEntityManager.getComponentData.mockReturnValue({
           equipped: {
             torso: { base: 'shirt', outer: 'jacket' },
-            legs: { base: 'pants', underwear: 'underwear' }
-          }
+            legs: { base: 'pants', underwear: 'underwear' },
+          },
         });
         freshMocks.mockEntitiesGateway.getComponentData.mockReturnValue({
           covers: ['body_area'],
-          coveragePriority: 'base'
+          coveragePriority: 'base',
         });
 
         const newService = new ClothingAccessibilityService({
           logger: freshMocks.mockLogger,
           entityManager: freshMocks.mockEntityManager,
           entitiesGateway: freshMocks.mockEntitiesGateway,
-          maxCacheSize: 50 // Smaller cache for multi-instance test
+          maxCacheSize: 50, // Smaller cache for multi-instance test
         });
 
         // Use each service
-        newService.getAccessibleItems(`instance_test_${i}`, { mode: 'topmost' });
+        newService.getAccessibleItems(`instance_test_${i}`, {
+          mode: 'topmost',
+        });
         serviceInstances.push(newService);
       }
 
-      const afterCreationMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const afterCreationMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
 
       // Clear references to allow garbage collection
       serviceInstances.length = 0;
 
       // Force garbage collection and stabilization
       await global.memoryTestUtils.forceGCAndWait();
-      const afterClearMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const afterClearMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
 
       const creationIncrease = afterCreationMemory - initialMemory;
       const finalIncrease = afterClearMemory - initialMemory;
 
-      console.log(`Instance memory test - After creation: +${(creationIncrease / 1024 / 1024).toFixed(2)}MB, After clear: +${(finalIncrease / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Instance memory test - After creation: +${(creationIncrease / 1024 / 1024).toFixed(2)}MB, After clear: +${(finalIncrease / 1024 / 1024).toFixed(2)}MB`
+      );
 
       // Memory should be mostly reclaimed after clearing references (more lenient for mocks)
       const cleanupRatio = global.memoryTestUtils.isCI() ? 0.8 : 0.6;
@@ -249,9 +283,10 @@ describe('ClothingAccessibilityService Memory Usage', () => {
     });
 
     it('should handle memory pressure during concurrent operations', async () => {
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const initialMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({
-        MAX_MEMORY_MB: 15
+        MAX_MEMORY_MB: 15,
       });
 
       // Simulate memory pressure with concurrent-like operations
@@ -262,26 +297,34 @@ describe('ClothingAccessibilityService Memory Usage', () => {
           return service.getAccessibleItems(`concurrent_${i}`, {
             mode: 'all',
             context: 'removal',
-            sortByPriority: true
+            sortByPriority: true,
           });
         });
         promises.push(promise);
       }
 
       const results = await Promise.all(promises);
-      const afterConcurrentMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
+      const afterConcurrentMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(2);
       const memoryIncrease = afterConcurrentMemory - initialMemory;
 
       expect(results).toHaveLength(concurrentCount);
 
-      console.log(`Concurrent memory test - Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB for ${concurrentCount} concurrent operations`);
+      console.log(
+        `Concurrent memory test - Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB for ${concurrentCount} concurrent operations`
+      );
 
       // Use adaptive memory assertion
-      await expect(global.memoryTestUtils.assertMemoryWithRetry(
-        () => global.memoryTestUtils.getStableMemoryUsage(2).then(m => m - initialMemory),
-        thresholds.MAX_MEMORY_MB,
-        3 // Reduced retries
-      )).resolves.toBeUndefined();
+      await expect(
+        global.memoryTestUtils.assertMemoryWithRetry(
+          () =>
+            global.memoryTestUtils
+              .getStableMemoryUsage(2)
+              .then((m) => m - initialMemory),
+          thresholds.MAX_MEMORY_MB,
+          3 // Reduced retries
+        )
+      ).resolves.toBeUndefined();
     });
   });
 
@@ -296,12 +339,12 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       const beforeMemory = await global.memoryTestUtils.getStableMemoryUsage();
       await operation();
       const afterMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      
+
       return {
         before: beforeMemory,
         after: afterMemory,
         increase: afterMemory - beforeMemory,
-        increaseKB: (afterMemory - beforeMemory) / 1024
+        increaseKB: (afterMemory - beforeMemory) / 1024,
       };
     }
 
@@ -315,7 +358,7 @@ describe('ClothingAccessibilityService Memory Usage', () => {
 
       console.log(`Basic operations memory stats:`, {
         increaseKB: stats.increaseKB.toFixed(2),
-        perOperation: (stats.increaseKB / operationCount).toFixed(2)
+        perOperation: (stats.increaseKB / operationCount).toFixed(2),
       });
 
       // Each operation should use minimal memory (more lenient for CI)
@@ -344,7 +387,7 @@ describe('ClothingAccessibilityService Memory Usage', () => {
 
       console.log(`Cache operations memory stats:`, {
         increaseKB: stats.increaseKB.toFixed(2),
-        perCycleKB: (stats.increaseKB / cacheOpCount).toFixed(2)
+        perCycleKB: (stats.increaseKB / cacheOpCount).toFixed(2),
       });
 
       // Cache cycle should have minimal net memory increase (more lenient for CI)
@@ -362,11 +405,11 @@ describe('ClothingAccessibilityService Memory Usage', () => {
             equipment[`slot_${slot}`] = {
               outer: `outer_${slot}`,
               base: `base_${slot}`,
-              underwear: `underwear_${slot}`
+              underwear: `underwear_${slot}`,
             };
           }
           return equipment;
-        })()
+        })(),
       });
 
       const priorityOpCount = 10; // Reduced from 20
@@ -374,14 +417,14 @@ describe('ClothingAccessibilityService Memory Usage', () => {
         for (let i = 0; i < priorityOpCount; i++) {
           service.getAccessibleItems(`priority_${i}`, {
             mode: 'all',
-            sortByPriority: true
+            sortByPriority: true,
           });
         }
       });
 
       console.log(`Priority calculation memory stats:`, {
         increaseKB: stats.increaseKB.toFixed(2),
-        perOperationKB: (stats.increaseKB / priorityOpCount).toFixed(2)
+        perOperationKB: (stats.increaseKB / priorityOpCount).toFixed(2),
       });
 
       // Priority calculations should have reasonable memory overhead (more lenient for CI)
@@ -396,7 +439,7 @@ describe('ClothingAccessibilityService Memory Usage', () => {
       const measurements = [];
       const baseMemory = await global.memoryTestUtils.getStableMemoryUsage(2);
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({
-        MAX_MEMORY_MB: 25
+        MAX_MEMORY_MB: 25,
       });
 
       // Simulate long-running service usage (reduced scale)
@@ -409,21 +452,24 @@ describe('ClothingAccessibilityService Memory Usage', () => {
 
           service.getAccessibleItems(entityId, { mode: 'topmost' });
 
-          if (op % 25 === 0) { // More frequent cleanup (was 50)
+          if (op % 25 === 0) {
+            // More frequent cleanup (was 50)
             // Periodic cleanup
             service.clearCache(entityId);
           }
         }
 
         // Measure memory after each cycle (less frequent sampling)
-        const currentMemory = await global.memoryTestUtils.getStableMemoryUsage(1); // Reduced samples
+        const currentMemory =
+          await global.memoryTestUtils.getStableMemoryUsage(1); // Reduced samples
         const memoryIncrease = currentMemory - baseMemory;
         measurements.push(memoryIncrease);
       }
 
       // Verify growth rate stabilization after initial cycles
       const maxGrowthRate = global.memoryTestUtils.isCI() ? 2.0 : 1.6;
-      for (let i = 2; i < measurements.length; i++) { // Start from cycle 2 instead of 3
+      for (let i = 2; i < measurements.length; i++) {
+        // Start from cycle 2 instead of 3
         const previousIncrease = measurements[i - 1];
         const currentIncrease = measurements[i];
         const growthRate = currentIncrease / previousIncrease;
@@ -433,17 +479,29 @@ describe('ClothingAccessibilityService Memory Usage', () => {
 
       console.log(`Long-running memory stability:`, {
         cycles: measurements.length,
-        finalIncreaseMB: (measurements[measurements.length - 1] / 1024 / 1024).toFixed(2),
-        avgGrowthRate: measurements.slice(1).reduce((sum, curr, i) =>
-          sum + (curr / measurements[i]), 0) / (measurements.length - 1)
+        finalIncreaseMB: (
+          measurements[measurements.length - 1] /
+          1024 /
+          1024
+        ).toFixed(2),
+        avgGrowthRate:
+          measurements
+            .slice(1)
+            .reduce((sum, curr, i) => sum + curr / measurements[i], 0) /
+          (measurements.length - 1),
       });
 
       // Use adaptive memory assertion for total increase
-      await expect(global.memoryTestUtils.assertMemoryWithRetry(
-        () => global.memoryTestUtils.getStableMemoryUsage(2).then(m => m - baseMemory),
-        thresholds.MAX_MEMORY_MB,
-        3 // Reduced retries
-      )).resolves.toBeUndefined();
+      await expect(
+        global.memoryTestUtils.assertMemoryWithRetry(
+          () =>
+            global.memoryTestUtils
+              .getStableMemoryUsage(2)
+              .then((m) => m - baseMemory),
+          thresholds.MAX_MEMORY_MB,
+          3 // Reduced retries
+        )
+      ).resolves.toBeUndefined();
     });
   });
 });

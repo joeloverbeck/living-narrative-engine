@@ -5,12 +5,15 @@
 **Status:** Not Started
 
 ## Report Reference
+
 [reports/hardcoded-mod-references-analysis.md](../reports/hardcoded-mod-references-analysis.md) - "Action Pipeline Hardcoding"
 
 ## Problem Statement
+
 Migrate action pipeline validation strategies to plugin architecture, enabling mods to register custom validation logic without modifying core engine.
 
 ## Affected Files
+
 1. `src/actions/pipeline/stages/TargetComponentValidationStage.js`
 2. `src/plugins/interfaces/IValidationStrategy.js`
 3. Example validation plugins
@@ -19,6 +22,7 @@ Migrate action pipeline validation strategies to plugin architecture, enabling m
 ## Implementation
 
 Plugin interface enables mods to add custom validation:
+
 ```javascript
 export class CustomValidationStrategy extends BaseValidationStrategyPlugin {
   canValidate(action, context) {
@@ -29,13 +33,14 @@ export class CustomValidationStrategy extends BaseValidationStrategyPlugin {
     // Custom validation logic
     return {
       valid: true,
-      reason: null
+      reason: null,
     };
   }
 }
 ```
 
 ## Acceptance Criteria
+
 - [ ] ValidationStrategy interface defined
 - [ ] Existing validation extracted to plugins
 - [ ] Validation stage uses plugin manager
@@ -44,4 +49,5 @@ export class CustomValidationStrategy extends BaseValidationStrategyPlugin {
 - [ ] Plugin guide updated
 
 ## Dependencies
+
 HARMODREF-021 (plugin infrastructure)

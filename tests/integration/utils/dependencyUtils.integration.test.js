@@ -318,7 +318,9 @@ describe('dependencyUtils integration via SystemInitializer', () => {
           eventDispatchService,
           initializationTag: 'broken',
         })
-    ).toThrow("SystemInitializer requires a valid IServiceResolver with 'resolveByTag'.");
+    ).toThrow(
+      "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
+    );
   });
 
   it('throws when logger dependency is missing', () => {
@@ -355,11 +357,9 @@ describe('dependencyUtils integration via DelegatingDecisionProvider', () => {
       safeEventDispatcher,
     });
 
-    const result = await provider.decide(
-      { id: 'actor-1' },
-      {},
-      [{ actionId: 'test-action' }]
-    );
+    const result = await provider.decide({ id: 'actor-1' }, {}, [
+      { actionId: 'test-action' },
+    ]);
 
     expect(result.chosenIndex).toBe(1);
     expect(result.speech).toBe('hello there');
@@ -442,7 +442,9 @@ describe('dependencyUtils integration via SchemaLoader', () => {
 
     expect(brokenLogger.errorMessages).toEqual(
       expect.arrayContaining([
-        expect.stringContaining("Invalid or missing method 'debug' on dependency 'ILogger'."),
+        expect.stringContaining(
+          "Invalid or missing method 'debug' on dependency 'ILogger'."
+        ),
       ])
     );
   });
@@ -465,7 +467,9 @@ describe('dependencyUtils integration via TargetManager', () => {
   });
 
   it('logs and throws when targets object is missing', () => {
-    expect(() => manager.setTargets(null)).toThrow('Targets object is required');
+    expect(() => manager.setTargets(null)).toThrow(
+      'Targets object is required'
+    );
     expect(logger.errorMessages).toEqual(
       expect.arrayContaining([
         { message: 'Targets object is required', args: [] },
@@ -474,14 +478,22 @@ describe('dependencyUtils integration via TargetManager', () => {
   });
 
   it('rejects blank target names and entity identifiers', () => {
-    expect(() => manager.addTarget('   ', 'entity-3')).toThrow(InvalidArgumentError);
-    expect(() => manager.addTarget('secondary', '   ')).toThrow(InvalidArgumentError);
-    expect(logger.errorMessages.some(({ message }) =>
-      message.includes('TargetManager.addTarget: Invalid name')
-    )).toBe(true);
-    expect(logger.errorMessages.some(({ message }) =>
-      message.includes('TargetManager.addTarget: Invalid entityId')
-    )).toBe(true);
+    expect(() => manager.addTarget('   ', 'entity-3')).toThrow(
+      InvalidArgumentError
+    );
+    expect(() => manager.addTarget('secondary', '   ')).toThrow(
+      InvalidArgumentError
+    );
+    expect(
+      logger.errorMessages.some(({ message }) =>
+        message.includes('TargetManager.addTarget: Invalid name')
+      )
+    ).toBe(true);
+    expect(
+      logger.errorMessages.some(({ message }) =>
+        message.includes('TargetManager.addTarget: Invalid entityId')
+      )
+    ).toBe(true);
   });
 });
 
@@ -510,9 +522,11 @@ describe('dependencyUtils integration via LocationQueryService', () => {
   it('returns empty set and logs warning for invalid id', () => {
     const result = service.getEntitiesInLocation('   ');
     expect(result.size).toBe(0);
-    expect(logger.warnMessages.some(({ message }) =>
-      message.includes('invalid locationId')
-    )).toBe(true);
+    expect(
+      logger.warnMessages.some(({ message }) =>
+        message.includes('invalid locationId')
+      )
+    ).toBe(true);
   });
 });
 
@@ -603,11 +617,17 @@ describe('dependencyUtils integration with FacadeFactory and FacadeRegistry', ()
       { name: 'TestFacade', greeting: 'hi' }
     );
 
-    const facadeInstance = registry.getFacade('TestFacade', { greeting: 'Howdy' });
+    const facadeInstance = registry.getFacade('TestFacade', {
+      greeting: 'Howdy',
+    });
     expect(facadeInstance).toBeInstanceOf(SampleFacade);
     const announcement = facadeInstance.announce('integration');
     expect(announcement).toBe('Howdy, integration');
-    expect(eventBus.dispatched.some(({ eventName }) => eventName === 'FACADE_REGISTERED')).toBe(true);
+    expect(
+      eventBus.dispatched.some(
+        ({ eventName }) => eventName === 'FACADE_REGISTERED'
+      )
+    ).toBe(true);
 
     expect(() => registry.getFacade('')).toThrow(InvalidArgumentError);
   });

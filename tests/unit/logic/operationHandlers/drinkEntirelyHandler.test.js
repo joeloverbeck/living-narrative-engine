@@ -165,9 +165,9 @@ describe('DrinkEntirelyHandler', () => {
             instanceId: 'bottle1',
             componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
             componentData: expect.objectContaining({
-              currentVolumeMilliliters: 0
-            })
-          })
+              currentVolumeMilliliters: 0,
+            }),
+          }),
         ]),
         true
       );
@@ -439,7 +439,9 @@ describe('DrinkEntirelyHandler', () => {
         .mockReturnValueOnce(false); // not empty
 
       // Make batchAddComponentsOptimized throw an error
-      em.batchAddComponentsOptimized.mockRejectedValueOnce(new Error('Database error'));
+      em.batchAddComponentsOptimized.mockRejectedValueOnce(
+        new Error('Database error')
+      );
 
       const result = await handler.execute({
         actorEntity: 'actor1',

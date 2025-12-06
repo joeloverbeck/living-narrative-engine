@@ -130,7 +130,10 @@ describe('AnatomySocketIndex - Concurrency Isolation', () => {
       for (const root of roots) {
         const expectedSockets = socketIds[root];
         for (const socketId of expectedSockets) {
-          const foundEntity = await service.findEntityWithSocket(root, socketId);
+          const foundEntity = await service.findEntityWithSocket(
+            root,
+            socketId
+          );
           expect(foundEntity).toBe(root);
         }
       }
@@ -216,9 +219,7 @@ describe('AnatomySocketIndex - Concurrency Isolation', () => {
       );
 
       // Act: Concurrent builds (simulates Promise.all in game.html)
-      await Promise.all(
-        characters.map((char) => service.buildIndex(char.id))
-      );
+      await Promise.all(characters.map((char) => service.buildIndex(char.id)));
 
       // Verify: Each character can find their own sockets
       for (const char of characters) {

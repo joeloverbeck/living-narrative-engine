@@ -23,10 +23,9 @@ describe('PlanningEffectsSimulator - Constructor', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    const mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    const mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     const simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -43,10 +42,9 @@ describe('PlanningEffectsSimulator - Constructor', () => {
   it('should throw error if parameterResolutionService is missing required methods', () => {
     const mockLogger = testBed.createMockLogger();
     const invalidService = { resolve: jest.fn() }; // missing clearCache
-    const mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    const mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     expect(
       () =>
@@ -91,10 +89,9 @@ describe('PlanningEffectsSimulator - ADD_COMPONENT Simulation', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -236,10 +233,9 @@ describe('PlanningEffectsSimulator - MODIFY_COMPONENT Simulation', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -497,10 +493,9 @@ describe('PlanningEffectsSimulator - REMOVE_COMPONENT Simulation', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -656,10 +651,9 @@ describe('PlanningEffectsSimulator - Operation Sequences', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -774,10 +768,9 @@ describe('PlanningEffectsSimulator - State Immutability', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -894,10 +887,9 @@ describe('PlanningEffectsSimulator - Parameter Resolution', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -1008,10 +1000,9 @@ describe('PlanningEffectsSimulator - Error Handling', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -1352,10 +1343,9 @@ describe('PlanningEffectsSimulator - Edge Case Simulations', () => {
       ['resolve', 'clearCache']
     );
     mockParameterResolution.resolve.mockImplementation(() => 'entity-1');
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -1391,7 +1381,9 @@ describe('PlanningEffectsSimulator - Edge Case Simulations', () => {
     );
 
     expect(result.success).toBe(true);
-    expect(result.state['entity-1:core:nutrition']).toEqual({ hungerLevel: 10 });
+    expect(result.state['entity-1:core:nutrition']).toEqual({
+      hungerLevel: 10,
+    });
   });
 
   it('should support increment and decrement on nested field keys', () => {
@@ -1447,10 +1439,9 @@ describe('PlanningEffectsSimulator - MODIFY_COMPONENT Type Safety', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -1783,10 +1774,9 @@ describe('PlanningEffectsSimulator - Modification Application Safety', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,
@@ -2028,10 +2018,9 @@ describe('PlanningEffectsSimulator - Edge Cases', () => {
       'IParameterResolutionService',
       ['resolve', 'clearCache']
     );
-    mockContextAssembly = testBed.createMock(
-      'IContextAssemblyService',
-      ['assemblePlanningContext']
-    );
+    mockContextAssembly = testBed.createMock('IContextAssemblyService', [
+      'assemblePlanningContext',
+    ]);
 
     simulator = new PlanningEffectsSimulator({
       parameterResolutionService: mockParameterResolution,

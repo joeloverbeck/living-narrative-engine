@@ -415,7 +415,9 @@ describe('GoapController - Plan State Management', () => {
       await controller.decideTurn(mockActor, mockWorld);
 
       // Verify validation call
-      expect(mockPlanInvalidationDetector.checkPlanValidity).toHaveBeenCalledWith(
+      expect(
+        mockPlanInvalidationDetector.checkPlanValidity
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           goal: mockGoal,
           tasks: mockTasks,

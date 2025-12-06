@@ -62,7 +62,7 @@ describe('TraitsRewriter Memory', () => {
 
         const generated =
           await services.generator.generateRewrittenTraits(testCharacter);
-        
+
         // The generator already processes the response internally, so we can use its result directly
         const enhanced = services.enhancer.enhanceForDisplay(
           generated.rewrittenTraits,

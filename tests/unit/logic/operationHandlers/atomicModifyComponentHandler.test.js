@@ -3,7 +3,14 @@
 /**
  * @jest-environment node
  */
-import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import AtomicModifyComponentHandler from '../../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
 

@@ -165,7 +165,6 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     return mergedMemberIds;
   }
 
-
   /**
    * Merge the actor and target circles.
    *

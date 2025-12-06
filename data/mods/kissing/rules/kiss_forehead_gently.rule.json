@@ -3,7 +3,9 @@
   "rule_id": "handle_kiss_forehead_gently",
   "comment": "Handles the 'kissing:kiss_forehead_gently' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "kissing:event-is-action-kiss-forehead-gently" },
+  "condition": {
+    "condition_ref": "kissing:event-is-action-kiss-forehead-gently"
+  },
   "actions": [
     {
       "type": "PREPARE_ACTION_CONTEXT",

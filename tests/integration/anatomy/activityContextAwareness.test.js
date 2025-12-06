@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
@@ -190,10 +197,13 @@ describe('Activity Description - Context Edge Cases', () => {
       priority: 95,
     });
 
-    const baselineContext = contextBuildingSystem.buildActivityContext(actor.id, {
-      targetEntityId: alicia.id,
-      priority: 95,
-    });
+    const baselineContext = contextBuildingSystem.buildActivityContext(
+      actor.id,
+      {
+        targetEntityId: alicia.id,
+        priority: 95,
+      }
+    );
     expect(baselineContext.relationshipTone).toBe('closeness_partner');
 
     await entityManager.addComponent(actor.id, 'positioning:closeness', {
@@ -214,10 +224,13 @@ describe('Activity Description - Context Edge Cases', () => {
 
     service.invalidateCache(actor.id, 'closeness');
 
-    const refreshedContext = contextBuildingSystem.buildActivityContext(actor.id, {
-      targetEntityId: alicia.id,
-      priority: 95,
-    });
+    const refreshedContext = contextBuildingSystem.buildActivityContext(
+      actor.id,
+      {
+        targetEntityId: alicia.id,
+        priority: 95,
+      }
+    );
     expect(refreshedContext.relationshipTone).toBe('neutral');
   });
 });

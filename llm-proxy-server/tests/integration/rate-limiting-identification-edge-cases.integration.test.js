@@ -168,7 +168,9 @@ describe('Rate limiting identification edge cases integration', () => {
       }
 
       expect(blockResponse.status).toBe(429);
-      expect(blockResponse.body.error.details.severity).toMatch(/^(high|normal)$/);
+      expect(blockResponse.body.error.details.severity).toMatch(
+        /^(high|normal)$/
+      );
     } finally {
       manager.destroy();
     }
@@ -243,7 +245,10 @@ describe('Rate limiting identification edge cases integration', () => {
       const fullyCleaned = followUpManager.fullCleanup();
       expect(fullyCleaned).toBeGreaterThanOrEqual(0);
 
-      followUpManager.set('delta', { requests: [Date.now()], suspiciousScore: 2 });
+      followUpManager.set('delta', {
+        requests: [Date.now()],
+        suspiciousScore: 2,
+      });
       const stats = followUpManager.getStats();
       expect(stats.totalEntries).toBeGreaterThanOrEqual(0);
       expect(stats.memoryUsageEstimate).toBeGreaterThanOrEqual(0);
@@ -265,7 +270,9 @@ describe('Rate limiting identification edge cases integration', () => {
   it('enforces API, LLM, and auth rate limits with structured responses', async () => {
     const generalApp = express();
     generalApp.use(createApiRateLimiter({ trustProxy: false }));
-    generalApp.get('/limited', (_req, res) => res.status(200).json({ ok: true }));
+    generalApp.get('/limited', (_req, res) =>
+      res.status(200).json({ ok: true })
+    );
 
     const generalAgent = request(generalApp);
     for (let i = 0; i < RATE_LIMIT_GENERAL_MAX_REQUESTS; i += 1) {
@@ -277,8 +284,10 @@ describe('Rate limiting identification edge cases integration', () => {
     expect(generalBlocked.body.error.code).toBe('RATE_LIMIT_EXCEEDED');
 
     const llmApp = express();
-    llmApp.post('/llm', createLlmRateLimiter({ trustProxy: true, useApiKey: true }), (_req, res) =>
-      res.status(200).json({ ok: true })
+    llmApp.post(
+      '/llm',
+      createLlmRateLimiter({ trustProxy: true, useApiKey: true }),
+      (_req, res) => res.status(200).json({ ok: true })
     );
 
     const llmAgent = request(llmApp);
@@ -286,13 +295,17 @@ describe('Rate limiting identification edge cases integration', () => {
       // eslint-disable-next-line no-await-in-loop
       await llmAgent.post('/llm').set('x-api-key', 'edge-api-key-1234567890');
     }
-    const llmBlocked = await llmAgent.post('/llm').set('x-api-key', 'edge-api-key-1234567890');
+    const llmBlocked = await llmAgent
+      .post('/llm')
+      .set('x-api-key', 'edge-api-key-1234567890');
     expect(llmBlocked.status).toBe(429);
     expect(llmBlocked.body.error.code).toBe('LLM_RATE_LIMIT_EXCEEDED');
 
     const authApp = express();
-    authApp.post('/auth', createAuthRateLimiter({ trustProxy: false }), (_req, res) =>
-      res.status(401).json({ ok: false })
+    authApp.post(
+      '/auth',
+      createAuthRateLimiter({ trustProxy: false }),
+      (_req, res) => res.status(401).json({ ok: false })
     );
 
     const authAgent = request(authApp);

@@ -25,7 +25,12 @@ describe('PipelineResult - behavior coverage', () => {
       const actions = [{ id: 'demo', name: 'Demo' }];
       const errors = [{ phase: 'validation' }];
       const data = { foo: 'bar' };
-      const result = PipelineResult.success({ actions, errors, data, continueProcessing: false });
+      const result = PipelineResult.success({
+        actions,
+        errors,
+        data,
+        continueProcessing: false,
+      });
 
       expect(result.success).toBe(true);
       expect(result.actions).toBe(actions);
@@ -50,19 +55,28 @@ describe('PipelineResult - behavior coverage', () => {
 
     it('should convert ActionResult instances', () => {
       const successActionResult = ActionResult.success({ payload: 42 });
-      const successPipelineResult = PipelineResult.fromActionResult(successActionResult, {
-        stage: 'formatting',
-      });
+      const successPipelineResult = PipelineResult.fromActionResult(
+        successActionResult,
+        {
+          stage: 'formatting',
+        }
+      );
 
       expect(successPipelineResult.success).toBe(true);
-      expect(successPipelineResult.data).toEqual({ stage: 'formatting', payload: 42 });
+      expect(successPipelineResult.data).toEqual({
+        stage: 'formatting',
+        payload: 42,
+      });
       expect(successPipelineResult.errors).toEqual([]);
       expect(successPipelineResult.continueProcessing).toBe(true);
 
       const failureActionResult = ActionResult.failure(new Error('nope'));
-      const failurePipelineResult = PipelineResult.fromActionResult(failureActionResult, {
-        stage: 'resolution',
-      });
+      const failurePipelineResult = PipelineResult.fromActionResult(
+        failureActionResult,
+        {
+          stage: 'resolution',
+        }
+      );
 
       expect(failurePipelineResult.success).toBe(false);
       expect(failurePipelineResult.errors).toEqual(failureActionResult.errors);
@@ -78,7 +92,9 @@ describe('PipelineResult - behavior coverage', () => {
         errors: [{ phase: 'warn' }],
         data: { trace: ['first'] },
       });
-      const second = PipelineResult.failure([{ phase: 'error' }], { trace: ['second'] });
+      const second = PipelineResult.failure([{ phase: 'error' }], {
+        trace: ['second'],
+      });
 
       const merged = first.merge(second);
 

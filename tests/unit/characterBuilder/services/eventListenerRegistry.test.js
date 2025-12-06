@@ -108,7 +108,7 @@ describe('EventListenerRegistry', () => {
 
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledWith(
-      "TestController: Cannot add click listener - invalid target provided"
+      'TestController: Cannot add click listener - invalid target provided'
     );
   });
 
@@ -162,7 +162,11 @@ describe('EventListenerRegistry', () => {
     const eventBus = { subscribe: jest.fn(() => null) };
     const handler = jest.fn();
 
-    const result = registry.subscribeToEvent(eventBus, 'incomplete:event', handler);
+    const result = registry.subscribeToEvent(
+      eventBus,
+      'incomplete:event',
+      handler
+    );
 
     expect(result).toBeNull();
     expect(logger.error).toHaveBeenCalledWith(
@@ -198,7 +202,12 @@ describe('EventListenerRegistry', () => {
 
   it('warns when attempting to delegate from an invalid container', () => {
     const handler = jest.fn();
-    const result = registry.addDelegatedListener(null, '.child', 'click', handler);
+    const result = registry.addDelegatedListener(
+      null,
+      '.child',
+      'click',
+      handler
+    );
 
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledWith(
@@ -235,7 +244,12 @@ describe('EventListenerRegistry', () => {
       .spyOn(registry, 'addEventListener')
       .mockReturnValue(null);
 
-    const result = registry.addDebouncedListener(element, 'input', handler, 125);
+    const result = registry.addDebouncedListener(
+      element,
+      'input',
+      handler,
+      125
+    );
 
     expect(result).toBeNull();
     const debounced = asyncUtilities.debounce.mock.results[0].value;

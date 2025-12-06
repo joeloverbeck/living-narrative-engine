@@ -148,7 +148,11 @@ describe('ActionCommandFormatter integration', () => {
     );
 
     expect(result).toEqual({ ok: true, value: 'Say hi to missing-entity' });
-    expect(logger.warnMessages.some((msg) => msg.includes('Could not find entity instance'))).toBe(true);
+    expect(
+      logger.warnMessages.some((msg) =>
+        msg.includes('Could not find entity instance')
+      )
+    ).toBe(true);
   });
 
   it('warns about templates with no targets when using the none target domain', () => {
@@ -167,7 +171,9 @@ describe('ActionCommandFormatter integration', () => {
     );
 
     expect(result).toEqual({ ok: true, value: 'Wait patiently, {target}.' });
-    expect(logger.warnMessages.some((msg) => msg.includes('target_domain'))).toBe(true);
+    expect(
+      logger.warnMessages.some((msg) => msg.includes('target_domain'))
+    ).toBe(true);
   });
 
   it('dispatches validation errors when required inputs are missing', () => {
@@ -208,7 +214,8 @@ describe('ActionCommandFormatter integration', () => {
 
     expect(result).toEqual({
       ok: false,
-      error: 'formatActionCommand: Invalid or missing actionDefinition or template.',
+      error:
+        'formatActionCommand: Invalid or missing actionDefinition or template.',
     });
     expect(dispatcher.events).toHaveLength(1);
     expect(dispatcher.events[0].payload.message).toBe(
@@ -287,7 +294,11 @@ describe('ActionCommandFormatter integration', () => {
     );
 
     expect(result).toEqual({ ok: true, value: 'Cheer loudly!' });
-    expect(logger.warnMessages.some((msg) => msg.includes('Unknown targetContext type'))).toBe(true);
+    expect(
+      logger.warnMessages.some((msg) =>
+        msg.includes('Unknown targetContext type')
+      )
+    ).toBe(true);
   });
 
   it('propagates formatter specific failures without dispatching errors', () => {

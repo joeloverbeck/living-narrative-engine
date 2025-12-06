@@ -201,7 +201,11 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
 
         // --- MODIFIED ASSERTIONS ---
         // Use toEqual for objects/arrays, toBe for primitives
-        if (type === 'object' && typeof expectedResult === 'object' && expectedResult !== null) {
+        if (
+          type === 'object' &&
+          typeof expectedResult === 'object' &&
+          expectedResult !== null
+        ) {
           expect(result).toEqual(expectedResult);
         } else {
           expect(result).toBe(expectedResult);

@@ -143,8 +143,10 @@ export class ScopeResolverHelpers {
         return { success: true, value: new Set() };
       }
 
-      const sourceEntity =
-        sourceEntityRef ?? entityManager.getEntityInstance(sourceEntityId) ?? { id: sourceEntityId };
+      const sourceEntity = sourceEntityRef ??
+        entityManager.getEntityInstance(sourceEntityId) ?? {
+          id: sourceEntityId,
+        };
 
       const array = getArray(sourceEntity, context, entityManager);
       if (!Array.isArray(array)) {
@@ -185,8 +187,10 @@ export class ScopeResolverHelpers {
         return { success: true, value: new Set() };
       }
 
-      const sourceEntity =
-        sourceEntityRef ?? entityManager.getEntityInstance(sourceEntityId) ?? { id: sourceEntityId };
+      const sourceEntity = sourceEntityRef ??
+        entityManager.getEntityInstance(sourceEntityId) ?? {
+          id: sourceEntityId,
+        };
 
       const sourceLocation = entityManager.getComponentData(
         sourceEntity.id,
@@ -303,93 +307,95 @@ export class ScopeResolverHelpers {
               return entityId && entityId !== actor.id;
             },
           }
-      ),
+        ),
 
       // "closest leftmost occupant" (for scoot_closer action)
-      'personal-space:closest_leftmost_occupant': this.createArrayFilterResolver(
-        'personal-space:closest_leftmost_occupant',
-        {
-          getArray: (actor, context, em) => {
-            const sitting = em.getComponentData(
-              actor.id,
-              'positioning:sitting_on'
-            );
-            if (!sitting) return [];
+      'personal-space:closest_leftmost_occupant':
+        this.createArrayFilterResolver(
+          'personal-space:closest_leftmost_occupant',
+          {
+            getArray: (actor, context, em) => {
+              const sitting = em.getComponentData(
+                actor.id,
+                'positioning:sitting_on'
+              );
+              if (!sitting) return [];
 
-            const furniture = em.getComponentData(
-              sitting.furniture_id,
-              'positioning:allows_sitting'
-            );
-            if (!furniture?.spots) return [];
+              const furniture = em.getComponentData(
+                sitting.furniture_id,
+                'positioning:allows_sitting'
+              );
+              if (!furniture?.spots) return [];
 
-            const actorSpotIndex = sitting.spot_index;
-            const leftSpots = furniture.spots.slice(0, actorSpotIndex);
+              const actorSpotIndex = sitting.spot_index;
+              const leftSpots = furniture.spots.slice(0, actorSpotIndex);
 
-            // Find rightmost occupied spot to the left
-            for (let i = leftSpots.length - 1; i >= 0; i--) {
-              if (leftSpots[i] && leftSpots[i] !== null) {
-                return [leftSpots[i]];
+              // Find rightmost occupied spot to the left
+              for (let i = leftSpots.length - 1; i >= 0; i--) {
+                if (leftSpots[i] && leftSpots[i] !== null) {
+                  return [leftSpots[i]];
+                }
               }
-            }
 
-            return [];
-          },
-          filterFn: (entityId, actor) => {
-            return entityId && entityId !== actor.id;
-          },
-        }
-      ),
+              return [];
+            },
+            filterFn: (entityId, actor) => {
+              return entityId && entityId !== actor.id;
+            },
+          }
+        ),
 
       // "closest rightmost occupant" (for scoot_closer_right action)
-      'personal-space:closest_rightmost_occupant': this.createArrayFilterResolver(
-        'personal-space:closest_rightmost_occupant',
-        {
-          getArray: (actor, context, em) => {
-            const sitting = em.getComponentData(
-              actor.id,
-              'positioning:sitting_on'
-            );
-            if (!sitting) {
-              return [];
-            }
-
-            const furniture = em.getComponentData(
-              sitting.furniture_id,
-              'positioning:allows_sitting'
-            );
-            if (!furniture?.spots) {
-              return [];
-            }
-
-            const spots = furniture.spots;
-            const actorSpotIndex = sitting.spot_index;
-
-            if (typeof actorSpotIndex !== 'number') {
-              return [];
-            }
-
-            if (actorSpotIndex + 1 >= spots.length) {
-              return [];
-            }
-
-            if (spots[actorSpotIndex + 1] !== null) {
-              return [];
-            }
-
-            for (let i = actorSpotIndex + 2; i < spots.length; i++) {
-              const occupantId = spots[i];
-              if (occupantId && occupantId !== actor.id) {
-                return [occupantId];
+      'personal-space:closest_rightmost_occupant':
+        this.createArrayFilterResolver(
+          'personal-space:closest_rightmost_occupant',
+          {
+            getArray: (actor, context, em) => {
+              const sitting = em.getComponentData(
+                actor.id,
+                'positioning:sitting_on'
+              );
+              if (!sitting) {
+                return [];
               }
-            }
 
-            return [];
-          },
-          filterFn: (entityId, actor) => {
-            return entityId && entityId !== actor.id;
-          },
-        }
-      ),
+              const furniture = em.getComponentData(
+                sitting.furniture_id,
+                'positioning:allows_sitting'
+              );
+              if (!furniture?.spots) {
+                return [];
+              }
+
+              const spots = furniture.spots;
+              const actorSpotIndex = sitting.spot_index;
+
+              if (typeof actorSpotIndex !== 'number') {
+                return [];
+              }
+
+              if (actorSpotIndex + 1 >= spots.length) {
+                return [];
+              }
+
+              if (spots[actorSpotIndex + 1] !== null) {
+                return [];
+              }
+
+              for (let i = actorSpotIndex + 2; i < spots.length; i++) {
+                const occupantId = spots[i];
+                if (occupantId && occupantId !== actor.id) {
+                  return [occupantId];
+                }
+              }
+
+              return [];
+            },
+            filterFn: (entityId, actor) => {
+              return entityId && entityId !== actor.id;
+            },
+          }
+        ),
 
       // "furniture pieces that allow sitting at location"
       'positioning:furniture_allowing_sitting_at_location':
@@ -738,7 +744,10 @@ export class ScopeResolverHelpers {
                 entityId,
                 'positioning:sitting_on'
               );
-              if (!sitting?.furniture_id || typeof sitting.spot_index !== 'number') {
+              if (
+                !sitting?.furniture_id ||
+                typeof sitting.spot_index !== 'number'
+              ) {
                 return false;
               }
 
@@ -799,7 +808,9 @@ export class ScopeResolverHelpers {
             // Check if furniture has at least one empty spot
             return (
               furniture?.spots &&
-              furniture.spots.some((spot) => spot === null || spot === undefined)
+              furniture.spots.some(
+                (spot) => spot === null || spot === undefined
+              )
             );
           },
         }
@@ -826,26 +837,24 @@ export class ScopeResolverHelpers {
       ),
 
       // "furniture im sitting on" - Current sitting surface (alias for furniture_actor_sitting_on)
-      'positioning:furniture_im_sitting_on':
-        this.createComponentLookupResolver(
-          'positioning:furniture_im_sitting_on',
-          {
-            componentType: 'positioning:sitting_on',
-            sourceField: 'furniture_id',
-            contextSource: 'actor',
-          }
-        ),
+      'positioning:furniture_im_sitting_on': this.createComponentLookupResolver(
+        'positioning:furniture_im_sitting_on',
+        {
+          componentType: 'positioning:sitting_on',
+          sourceField: 'furniture_id',
+          contextSource: 'actor',
+        }
+      ),
 
       // "surface im bending over" - Bending-over surface lookup
-      'positioning:surface_im_bending_over':
-        this.createComponentLookupResolver(
-          'positioning:surface_im_bending_over',
-          {
-            componentType: 'positioning:bending_over',
-            sourceField: 'surface_id',
-            contextSource: 'actor',
-          }
-        ),
+      'positioning:surface_im_bending_over': this.createComponentLookupResolver(
+        'positioning:surface_im_bending_over',
+        {
+          componentType: 'positioning:bending_over',
+          sourceField: 'surface_id',
+          contextSource: 'actor',
+        }
+      ),
 
       // "actors im facing away from" - Facing-away targets in closeness
       'positioning:actors_im_facing_away_from': this.createArrayFilterResolver(
@@ -1046,7 +1055,7 @@ export class ScopeResolverHelpers {
           const clothingService = new ClothingAccessibilityService({
             logger,
             entityManager: currentEntityManager,
-            entitiesGateway: testEnv.entitiesGateway || null
+            entitiesGateway: testEnv.entitiesGateway || null,
           });
 
           // Use ClothingAccessibilityService to get accessible items
@@ -1058,12 +1067,12 @@ export class ScopeResolverHelpers {
           // Convert array to Set
           return {
             success: true,
-            value: new Set(accessibleItems)
+            value: new Set(accessibleItems),
           };
         } catch (error) {
           logger.warn('Failed to resolve clothing:topmost_clothing scope', {
             actorId: actorEntityId,
-            error: error.message
+            error: error.message,
           });
           return { success: true, value: new Set() };
         }
@@ -1157,7 +1166,8 @@ export class ScopeResolverHelpers {
     // Load condition dependencies if requested (mirrors ModTestFixture.registerCustomScope)
     if (loadConditions) {
       // Extract condition references from the parsed AST
-      const conditionRefs = ScopeConditionAnalyzer.extractConditionRefs(scopeData);
+      const conditionRefs =
+        ScopeConditionAnalyzer.extractConditionRefs(scopeData);
 
       if (conditionRefs.size > 0) {
         // Discover transitive dependencies
@@ -1185,7 +1195,10 @@ export class ScopeResolverHelpers {
         }
 
         // Load all discovered conditions into the test environment registry
-        await this._loadConditionsIntoRegistry(testEnv, Array.from(allConditions));
+        await this._loadConditionsIntoRegistry(
+          testEnv,
+          Array.from(allConditions)
+        );
       }
     }
 
@@ -1222,7 +1235,11 @@ export class ScopeResolverHelpers {
           );
         }
 
-        const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);
+        const result = scopeEngine.resolve(
+          scopeData.ast,
+          actorEntity,
+          runtimeCtx
+        );
         return { success: true, value: result };
       } catch (err) {
         if (err instanceof ParameterValidationError) {
@@ -1259,9 +1276,10 @@ export class ScopeResolverHelpers {
   static _registerResolvers(testEnv, entityManager, resolvers) {
     // Store original resolver if not already stored
     if (!testEnv._originalResolveSync) {
-      testEnv._originalResolveSync = testEnv.unifiedScopeResolver.resolveSync.bind(
-        testEnv.unifiedScopeResolver
-      );
+      testEnv._originalResolveSync =
+        testEnv.unifiedScopeResolver.resolveSync.bind(
+          testEnv.unifiedScopeResolver
+        );
     }
 
     // Store registered resolvers map if not exists
@@ -1390,9 +1408,7 @@ export class ScopeResolverHelpers {
     // Store original if not already stored
     if (!testEnv._originalGetConditionDefinition) {
       testEnv._originalGetConditionDefinition =
-        testEnv.dataRegistry.getConditionDefinition.bind(
-          testEnv.dataRegistry
-        );
+        testEnv.dataRegistry.getConditionDefinition.bind(testEnv.dataRegistry);
     }
 
     // Override getConditionDefinition to check loaded conditions first

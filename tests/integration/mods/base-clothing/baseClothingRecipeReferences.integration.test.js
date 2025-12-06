@@ -127,9 +127,7 @@ describe('CLOLAYMIG-012: Base-Clothing Recipe Reference Updates', () => {
 
   describe('Mod Manifest Dependencies', () => {
     it('should have base-clothing dependency in fantasy mod manifest', async () => {
-      const manifestPath = path.resolve(
-        'data/mods/fantasy/mod-manifest.json'
-      );
+      const manifestPath = path.resolve('data/mods/fantasy/mod-manifest.json');
       const content = await fs.readFile(manifestPath, 'utf8');
       const manifest = JSON.parse(content);
 

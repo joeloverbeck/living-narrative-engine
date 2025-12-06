@@ -5,7 +5,10 @@
 
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createEntityDefinition } from '../entities/entityFactories.js';
-import { FOLLOWING_COMPONENT_ID, LEADING_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import {
+  FOLLOWING_COMPONENT_ID,
+  LEADING_COMPONENT_ID,
+} from '../../../src/constants/componentIds.js';
 
 /**
  * Shared test utilities for action system E2E tests
@@ -37,7 +40,7 @@ export class ActionTestUtilities {
             'core:name': { name: 'Test Room 1' },
             'core:description': { description: 'First test room' },
             'core:position': { x: 0, y: 0, z: 0 },
-            "movement:exits": {
+            'movement:exits': {
               north: { target: 'test-location-2', blocked: false },
               south: { target: null, blocked: false },
               east: { target: null, blocked: false },
@@ -53,7 +56,7 @@ export class ActionTestUtilities {
             'core:name': { name: 'Test Room 2' },
             'core:description': { description: 'Second test room' },
             'core:position': { x: 1, y: 0, z: 0 },
-            "movement:exits": {
+            'movement:exits': {
               north: { target: null, blocked: false },
               south: { target: 'test-location-1', blocked: false },
               east: { target: 'test-location-3', blocked: false },
@@ -69,7 +72,7 @@ export class ActionTestUtilities {
             'core:name': { name: 'Test Room 3' },
             'core:description': { description: 'Third test room' },
             'core:position': { x: 2, y: 0, z: 0 },
-            "movement:exits": {
+            'movement:exits': {
               north: { target: null, blocked: false },
               south: { target: null, blocked: false },
               east: { target: null, blocked: false },

@@ -112,7 +112,9 @@ describe('RetryHttpClient network integration', () => {
 
     expect(
       logger.errorMessages.some(({ message }) =>
-        message.includes('RetryHttpClient: Missing or invalid SafeEventDispatcher')
+        message.includes(
+          'RetryHttpClient: Missing or invalid SafeEventDispatcher'
+        )
       )
     ).toBe(true);
   });
@@ -149,9 +151,11 @@ describe('RetryHttpClient network integration', () => {
       );
       expect(warningEvent.payload.details.statusCode).toBe(500);
 
-      expect(logger.debugMessages.some(({ message }) =>
-        message.includes('RetryHttpClient.request: Attempt 2/3')
-      )).toBe(true);
+      expect(
+        logger.debugMessages.some(({ message }) =>
+          message.includes('RetryHttpClient.request: Attempt 2/3')
+        )
+      ).toBe(true);
     } finally {
       await server.close();
     }
@@ -290,12 +294,16 @@ describe('RetryHttpClient network integration', () => {
       const infoMessages = logger.infoMessages.map(({ message }) => message);
       expect(
         infoMessages.some((message) =>
-          message.includes('Attempting salvage recovery for request request-123')
+          message.includes(
+            'Attempting salvage recovery for request request-123'
+          )
         )
       ).toBe(true);
       expect(
         infoMessages.some((message) =>
-          message.includes('Successfully recovered salvaged response for request request-123')
+          message.includes(
+            'Successfully recovered salvaged response for request request-123'
+          )
         )
       ).toBe(true);
     } finally {
@@ -377,7 +385,9 @@ describe('RetryHttpClient network integration', () => {
 
       expect(
         logger.debugMessages.some(({ message }) =>
-          message.includes('No salvaged response available for request cached-id')
+          message.includes(
+            'No salvaged response available for request cached-id'
+          )
         )
       ).toBe(true);
       expect(
@@ -512,10 +522,14 @@ describe('RetryHttpClient network integration', () => {
       expect(warningEvents).toHaveLength(1);
 
       const salvageFailureLogs = logger.debugMessages.filter(({ message }) =>
-        message.includes('RetryHttpClient: Salvage recovery failed for request request-456')
+        message.includes(
+          'RetryHttpClient: Salvage recovery failed for request request-456'
+        )
       );
       expect(salvageFailureLogs).toHaveLength(1);
-      expect(salvageFailureLogs[0].details).toEqual({ error: 'salvage fetch failed' });
+      expect(salvageFailureLogs[0].details).toEqual({
+        error: 'salvage fetch failed',
+      });
     } finally {
       global.fetch = originalFetch;
     }
@@ -549,7 +563,9 @@ describe('RetryHttpClient network integration', () => {
 
     try {
       await expect(
-        client.request('https://llm.example.com/api/llm-request', { method: 'POST' })
+        client.request('https://llm.example.com/api/llm-request', {
+          method: 'POST',
+        })
       ).rejects.toBe(finalError);
 
       const warningEvent = dispatcher.events.find(
@@ -594,7 +610,9 @@ describe('RetryHttpClient network integration', () => {
 
     try {
       await expect(
-        client.request('https://llm.example.com/api/llm-request', { method: 'GET' })
+        client.request('https://llm.example.com/api/llm-request', {
+          method: 'GET',
+        })
       ).rejects.toBe(secondError);
 
       const warningEvent = dispatcher.events.find(

@@ -113,7 +113,13 @@ class TrackingTargetResolver {
   }
 
   resolveTargets(scope, actor, actionContext, trace, actionId) {
-    this.calls.push({ scope, actorId: actor.id, actionContext, trace, actionId });
+    this.calls.push({
+      scope,
+      actorId: actor.id,
+      actionContext,
+      trace,
+      actionId,
+    });
     return this.handler({ scope, actor, actionContext, trace, actionId });
   }
 }
@@ -140,7 +146,10 @@ class FailingFormatter extends ActionCommandFormatter {
 function createFixSuggestionEngine(logger) {
   const gameDataRepository = {
     getComponentDefinition: () => ({ id: 'core:traits' }),
-    getConditionDefinition: () => ({ id: 'friendly-check', logic: { '==': [true, true] } }),
+    getConditionDefinition: () => ({
+      id: 'friendly-check',
+      logic: { '==': [true, true] },
+    }),
   };
 
   const actionIndex = {
@@ -169,20 +178,20 @@ function createEnvironment(options = {}) {
         components: {
           'identity:name': { text: 'Astra' },
           'core:traits': { friendly: true },
-        'core:location': { value: 'plaza' },
+          'core:location': { value: 'plaza' },
+        },
       },
-    },
-    {
-      id: 'companion',
-      components: {
-        'identity:name': { text: 'Talia' },
+      {
+        id: 'companion',
+        components: {
+          'identity:name': { text: 'Talia' },
+        },
       },
-    },
-    {
-      id: 'stranger',
-      components: {
-        'identity:name': { text: 'Orion' },
-      },
+      {
+        id: 'stranger',
+        components: {
+          'identity:name': { text: 'Orion' },
+        },
       },
     ]);
 
@@ -234,12 +243,13 @@ function createEnvironment(options = {}) {
     template: 'Say hello to {target}',
     visual: { icon: 'wave' },
     ...(options.actionDefinition ?? {}),
-    prerequisites:
-      options.prerequisites ??
+    prerequisites: options.prerequisites ??
       options.actionDefinition?.prerequisites ?? [
         {
           id: 'friendly-check',
-          logic: { '==': [{ var: 'actor.components.core:traits.friendly' }, true] },
+          logic: {
+            '==': [{ var: 'actor.components.core:traits.friendly' }, true],
+          },
         },
       ],
   };
@@ -520,7 +530,7 @@ describe('ActionCandidateProcessor integration coverage', () => {
     expect(result.value.actions).toHaveLength(0);
     expect(
       env.logger.debugLogs.some(([message]) =>
-        message.includes("resolved to 0 targets")
+        message.includes('resolved to 0 targets')
       )
     ).toBe(true);
   });

@@ -110,9 +110,7 @@
                     "perception_type": "connection_lock_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
-                    "involved_entities": [
-                      "{event.payload.secondaryId}"
-                    ],
+                    "involved_entities": ["{event.payload.secondaryId}"],
                     "contextual_data": {
                       "reason": "missing_or_wrong_key"
                     }
@@ -145,10 +143,7 @@
                   "comment": "Guard against already locked state.",
                   "parameters": {
                     "condition": {
-                      "==": [
-                        { "var": "context.openable.isLocked" },
-                        true
-                      ]
+                      "==": [{ "var": "context.openable.isLocked" }, true]
                     },
                     "then_actions": [
                       {
@@ -167,9 +162,7 @@
                           "perception_type": "connection_lock_failed",
                           "actor_id": "{event.payload.actorId}",
                           "target_id": "{event.payload.targetId}",
-                          "involved_entities": [
-                            "{event.payload.secondaryId}"
-                          ],
+                          "involved_entities": ["{event.payload.secondaryId}"],
                           "contextual_data": {
                             "reason": "already_locked"
                           }

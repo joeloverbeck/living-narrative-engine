@@ -11,6 +11,7 @@ Create end-to-end integration tests that validate the complete modifier system f
 **Original ticket assumed** a testBed API with `createEntity()`, `getContainer()`, `getEntityManager()`, and `addComponent()` that does not exist in this codebase.
 
 **Actual pattern** (from existing `chanceCalculationService.integration.test.js`):
+
 - Uses local helper functions for creating mocks
 - Instantiates real services directly (`new ServiceClass({deps})`)
 - Creates mock entity manager that accepts a `Map<entityId, Map<componentId, componentData>>`
@@ -20,10 +21,12 @@ Create end-to-end integration tests that validate the complete modifier system f
 ## File List
 
 Files created:
+
 - `tests/integration/combat/modifierSystemFlow.integration.test.js`
 - `tests/integration/actions/chanceBasedModifierDisplay.integration.test.js`
 
 Files referenced (read-only):
+
 - `src/combat/services/ModifierContextBuilder.js`
 - `src/combat/services/ModifierCollectorService.js`
 - `src/combat/services/ChanceCalculationService.js`
@@ -45,12 +48,23 @@ Following the existing pattern from `chanceCalculationService.integration.test.j
 
 ```javascript
 // Local helper functions
-function createMockLogger() { /* returns mock with debug/info/warn/error */ }
-function createMockEntityManager(entityComponents = {}) { /* returns mock with hasComponent/getComponentData */ }
+function createMockLogger() {
+  /* returns mock with debug/info/warn/error */
+}
+function createMockEntityManager(entityComponents = {}) {
+  /* returns mock with hasComponent/getComponentData */
+}
 
 // Real service instantiation
-const modifierContextBuilder = new ModifierContextBuilder({ entityManager, logger });
-const modifierCollectorService = new ModifierCollectorService({ entityManager, modifierContextBuilder, logger });
+const modifierContextBuilder = new ModifierContextBuilder({
+  entityManager,
+  logger,
+});
+const modifierCollectorService = new ModifierCollectorService({
+  entityManager,
+  modifierContextBuilder,
+  logger,
+});
 ```
 
 ### 1. Modifier System Flow Integration Test
@@ -58,6 +72,7 @@ const modifierCollectorService = new ModifierCollectorService({ entityManager, m
 File: `tests/integration/combat/modifierSystemFlow.integration.test.js`
 
 Tests:
+
 - Context building with entity data retrieval
 - Modifier collection with JSON Logic condition evaluation
 - Modifier activation when conditions are met
@@ -71,6 +86,7 @@ Tests:
 File: `tests/integration/actions/chanceBasedModifierDisplay.integration.test.js`
 
 Tests:
+
 - Tag display in formatted action output
 - Tag absence when modifiers are inactive
 - Multiple tags when multiple modifiers active

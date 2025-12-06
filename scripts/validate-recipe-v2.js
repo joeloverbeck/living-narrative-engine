@@ -43,7 +43,10 @@ const VALID_FORMATS = new Set(['text', 'json', 'junit']);
  * @param {object} [runtimeOverrides] - Optional runtime overrides for tests.
  * @returns {Promise<RunnerResult>} Runner result with exit metadata.
  */
-export async function runValidation(argv = process.argv, runtimeOverrides = {}) {
+export async function runValidation(
+  argv = process.argv,
+  runtimeOverrides = {}
+) {
   const exitOnCompletion = runtimeOverrides.exitOnCompletion !== false;
   let lastResult = { exitCode: 1, results: [], exitResult: { exitCode: 1 } };
 
@@ -63,7 +66,11 @@ export async function runValidation(argv = process.argv, runtimeOverrides = {}) 
     )
     .action(async (recipes, options) => {
       try {
-        lastResult = await executeRecipeValidation(recipes, options, runtimeOverrides);
+        lastResult = await executeRecipeValidation(
+          recipes,
+          options,
+          runtimeOverrides
+        );
       } catch (error) {
         console.error('❌ Validation run failed:', error);
         lastResult = { exitCode: 1, results: [], exitResult: { exitCode: 1 } };
@@ -150,7 +157,9 @@ export async function executeRecipeValidation(
     const overrides = buildConfigurationOverrides(cliOptions);
     if (cliOptions.verbose) {
       consoleInterface.log(
-        chalkInstance.blue('\n🔧 Creating validation context and loading mods...\n')
+        chalkInstance.blue(
+          '\n🔧 Creating validation context and loading mods...\n'
+        )
       );
     }
 
@@ -163,7 +172,9 @@ export async function executeRecipeValidation(
       runtimeOverrides,
     });
   } catch (error) {
-    consoleInterface.error(chalkInstance.red(`\n❌ Validation Error: ${error.message}\n`));
+    consoleInterface.error(
+      chalkInstance.red(`\n❌ Validation Error: ${error.message}\n`)
+    );
     if (cliOptions.verbose && error?.stack) {
       consoleInterface.error(error.stack);
     }
@@ -187,13 +198,17 @@ export async function executeRecipeValidation(
 
   for (const recipePath of recipes) {
     if (!legacyJsonMode && finalFormat === 'text') {
-      consoleInterface.log(chalkInstance.blue(`\n✓ Validating ${recipePath}...`));
+      consoleInterface.log(
+        chalkInstance.blue(`\n✓ Validating ${recipePath}...`)
+      );
     }
 
     const preloadError = recipeLoadFailures.get(recipePath);
     if (preloadError) {
       consoleInterface.error(
-        chalkInstance.red(`\n❌ Failed to validate ${recipePath}: ${preloadError.message}`)
+        chalkInstance.red(
+          `\n❌ Failed to validate ${recipePath}: ${preloadError.message}`
+        )
       );
       if (cliOptions.verbose && preloadError?.stack) {
         consoleInterface.error(preloadError.stack);
@@ -225,12 +240,16 @@ export async function executeRecipeValidation(
       }
 
       if (!report.isValid && cliOptions.failFast) {
-        consoleInterface.log(chalkInstance.red('\n❌ Stopping due to --fail-fast\n'));
+        consoleInterface.log(
+          chalkInstance.red('\n❌ Stopping due to --fail-fast\n')
+        );
         break;
       }
     } catch (error) {
       consoleInterface.error(
-        chalkInstance.red(`\n❌ Failed to validate ${recipePath}: ${error.message}`)
+        chalkInstance.red(
+          `\n❌ Failed to validate ${recipePath}: ${error.message}`
+        )
       );
       if (cliOptions.verbose && error?.stack) {
         consoleInterface.error(error.stack);
@@ -261,7 +280,12 @@ export async function executeRecipeValidation(
     consoleInterface.log(formatExitMessage(exitResult, chalkInstance));
   }
 
-  return { exitCode: exitResult.exitCode, results, config: context.config, exitResult };
+  return {
+    exitCode: exitResult.exitCode,
+    results,
+    config: context.config,
+    exitResult,
+  };
 }
 
 /**
@@ -278,7 +302,9 @@ export async function loadRecipeFile(recipePath) {
     const content = await fs.readFile(absolutePath, 'utf-8');
     return JSON.parse(content);
   } catch (error) {
-    throw new Error(`Failed to load recipe file '${recipePath}': ${error.message}`);
+    throw new Error(
+      `Failed to load recipe file '${recipePath}': ${error.message}`
+    );
   }
 }
 
@@ -452,7 +478,9 @@ function normalizeFormat(value) {
 
   const normalized = value.toLowerCase();
   if (!VALID_FORMATS.has(normalized)) {
-    throw new Error(`Unsupported format '${value}'. Choose from text, json, or junit.`);
+    throw new Error(
+      `Unsupported format '${value}'. Choose from text, json, or junit.`
+    );
   }
   return normalized;
 }
@@ -476,15 +504,17 @@ async function createValidationContext({
   inferredMods = [],
   runtimeOverrides = {},
 }) {
-  const container = (await runtimeOverrides.createContainer?.()) ?? new AppContainer();
-  const configure = runtimeOverrides.configureContainer ?? configureMinimalContainer;
+  const container =
+    (await runtimeOverrides.createContainer?.()) ?? new AppContainer();
+  const configure =
+    runtimeOverrides.configureContainer ?? configureMinimalContainer;
   await configure(container);
 
-  const registerFetchers = runtimeOverrides.registerFetchers ?? registerNodeFetchers;
+  const registerFetchers =
+    runtimeOverrides.registerFetchers ?? registerNodeFetchers;
   await registerFetchers(container);
 
-  const logger =
-    runtimeOverrides.logger ??
+  const logger = runtimeOverrides.logger ??
     container.resolve(tokens.ILogger) ?? {
       info: console.log,
       warn: console.warn,
@@ -509,15 +539,22 @@ async function createValidationContext({
     'data/schemas/validation-config.schema.json'
   );
   try {
-    const schemaContent = await fs.readFile(validationConfigSchemaPath, 'utf-8');
+    const schemaContent = await fs.readFile(
+      validationConfigSchemaPath,
+      'utf-8'
+    );
     const schemaData = JSON.parse(schemaContent);
-    const schemaId = schemaData.$id || 'schema://living-narrative-engine/validation-config.schema.json';
+    const schemaId =
+      schemaData.$id ||
+      'schema://living-narrative-engine/validation-config.schema.json';
 
     // Only add if not already loaded
     if (!schemaValidator.isSchemaLoaded(schemaId)) {
       await schemaValidator.addSchema(schemaData, schemaId);
       if (verbose) {
-        logger.info(`[validate-recipe] Pre-loaded validation-config schema: ${schemaId}`);
+        logger.info(
+          `[validate-recipe] Pre-loaded validation-config schema: ${schemaId}`
+        );
       }
     }
   } catch (error) {
@@ -547,11 +584,18 @@ async function createValidationContext({
         verbose,
         logger,
       })
-    : await loadModsFromContainer({ container, requestedMods, verbose, logger });
+    : await loadModsFromContainer({
+        container,
+        requestedMods,
+        verbose,
+        logger,
+      });
 
   const validatorDeps = {
     dataRegistry: container.resolve(tokens.IDataRegistry),
-    anatomyBlueprintRepository: container.resolve(tokens.IAnatomyBlueprintRepository),
+    anatomyBlueprintRepository: container.resolve(
+      tokens.IAnatomyBlueprintRepository
+    ),
     schemaValidator,
     slotGenerator: container.resolve(tokens.ISlotGenerator),
     entityMatcherService: container.resolve(tokens.IEntityMatcherService),
@@ -577,7 +621,8 @@ async function createValidationContext({
  */
 async function registerNodeFetchers(container) {
   const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
-  const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js')).default;
+  const NodeTextDataFetcher = (await import('./utils/nodeTextDataFetcher.js'))
+    .default;
   container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
   container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
 }
@@ -591,7 +636,12 @@ async function registerNodeFetchers(container) {
  * @param params.logger
  * @returns {Promise<{loadFailures: object}>} Load metadata.
  */
-async function loadModsFromContainer({ container, requestedMods, verbose, logger }) {
+async function loadModsFromContainer({
+  container,
+  requestedMods,
+  verbose,
+  logger,
+}) {
   const dataRegistry = container.resolve(tokens.IDataRegistry);
   const { createLoadContext } = await import('../src/loaders/LoadContext.js');
 
@@ -631,7 +681,9 @@ async function loadModsFromContainer({ container, requestedMods, verbose, logger
  * @returns {Array<string>} Ordered mod names.
  */
 function deriveMods(modConfig = {}, recipePaths = [], inferredMods = []) {
-  const essential = Array.isArray(modConfig.essential) ? modConfig.essential : [];
+  const essential = Array.isArray(modConfig.essential)
+    ? modConfig.essential
+    : [];
   const optional = Array.isArray(modConfig.optional) ? modConfig.optional : [];
   const extra = Array.isArray(inferredMods) ? inferredMods.filter(Boolean) : [];
   const modSet = new Set([...essential, ...optional, ...extra]);
@@ -691,7 +743,8 @@ function formatJUnitOutput(results) {
 
   const testCases = results
     .map((report) => {
-      const payload = typeof report?.toJSON === 'function' ? report.toJSON() : report;
+      const payload =
+        typeof report?.toJSON === 'function' ? report.toJSON() : report;
       const name = payload?.recipePath || payload?.recipeId || 'recipe';
       const errors = payload?.errors ?? [];
       const sanitizedName = escapeXml(name);

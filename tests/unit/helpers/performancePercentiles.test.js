@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { getPercentile, measureSamples } from '../../helpers/performancePercentiles.js';
+import {
+  getPercentile,
+  measureSamples,
+} from '../../helpers/performancePercentiles.js';
 
 describe('performancePercentiles helper', () => {
   let nowSpy;
@@ -26,7 +29,9 @@ describe('performancePercentiles helper', () => {
   describe('measureSamples', () => {
     it('collects percentile stats while ignoring warmup time', () => {
       let currentTime = 0;
-      nowSpy = jest.spyOn(performance, 'now').mockImplementation(() => currentTime);
+      nowSpy = jest
+        .spyOn(performance, 'now')
+        .mockImplementation(() => currentTime);
 
       const fn = () => {
         currentTime += 2; // deterministic per-iteration cost

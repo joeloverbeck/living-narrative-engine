@@ -449,7 +449,8 @@ describe('RecipeValidationRunner - Integration', () => {
       // Verify the message or type based on which path was taken
       const hasValidPatternCheck =
         patternCheck && patternCheck.message.includes('pattern(s)');
-      const hasValidWarning = patternWarning && patternWarning.type === 'NO_MATCHING_SLOTS';
+      const hasValidWarning =
+        patternWarning && patternWarning.type === 'NO_MATCHING_SLOTS';
 
       expect(hasValidPatternCheck || hasValidWarning).toBe(true);
     });
@@ -483,7 +484,9 @@ describe('RecipeValidationRunner - Integration', () => {
       const output = report.toString();
       expect(output).toContain('test:dragon_recipe');
       expect(output).toContain('dragon.recipe.json');
-      expect(output).toContain('Component \'test:missing_scale_component\' does not exist');
+      expect(output).toContain(
+        "Component 'test:missing_scale_component' does not exist"
+      );
       expect(output).toContain('❌ Validation FAILED');
     });
 

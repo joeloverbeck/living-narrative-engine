@@ -509,9 +509,7 @@ export function registerWorldAndEntity(container) {
       cacheManager: c.resolve('IActivityCacheManager'),
     });
   });
-  logger.debug(
-    'World and Entity Registration: Registered IActivityNLGSystem.'
-  );
+  logger.debug('World and Entity Registration: Registered IActivityNLGSystem.');
 
   // Activity System: Condition Validator (ACTDESSERREF-004)
   registrar.singletonFactory('IActivityConditionValidator', (c) => {
@@ -528,9 +526,7 @@ export function registerWorldAndEntity(container) {
     return new ActivityFilteringSystem({
       logger: c.resolve(tokens.ILogger),
       conditionValidator: c.resolve('IActivityConditionValidator'),
-      jsonLogicEvaluationService: c.resolve(
-        tokens.JsonLogicEvaluationService
-      ),
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
       entityManager: c.resolve(tokens.IEntityManager),
     });
   });
@@ -555,9 +551,7 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
       anatomyFormattingService: c.resolve(tokens.AnatomyFormattingService),
-      jsonLogicEvaluationService: c.resolve(
-        tokens.JsonLogicEvaluationService
-      ),
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
       cacheManager: c.resolve('IActivityCacheManager'),
       indexManager: c.resolve('IActivityIndexManager'),
       metadataCollectionSystem: c.resolve('IActivityMetadataCollectionSystem'),
@@ -565,7 +559,9 @@ export function registerWorldAndEntity(container) {
       nlgSystem: c.resolve('IActivityNLGSystem'),
       filteringSystem: c.resolve('IActivityFilteringSystem'),
       contextBuildingSystem: c.resolve('IActivityContextBuildingSystem'),
-      eventBus: c.isRegistered(tokens.IEventBus) ? c.resolve(tokens.IEventBus) : null,
+      eventBus: c.isRegistered(tokens.IEventBus)
+        ? c.resolve(tokens.IEventBus)
+        : null,
       // activityIndex will be added in Phase 3 (ACTDESC-020)
     });
   });
@@ -588,7 +584,9 @@ export function registerWorldAndEntity(container) {
       groupingSystem: c.resolve('IActivityGroupingSystem'),
       contextBuildingSystem: c.resolve('IActivityContextBuildingSystem'),
       filteringSystem: c.resolve('IActivityFilteringSystem'),
-      eventBus: c.isRegistered(tokens.IEventBus) ? c.resolve(tokens.IEventBus) : null,
+      eventBus: c.isRegistered(tokens.IEventBus)
+        ? c.resolve(tokens.IEventBus)
+        : null,
     });
   });
   logger.debug(

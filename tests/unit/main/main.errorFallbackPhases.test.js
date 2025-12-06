@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createMainBootstrapContainerMock } from '../../common/mockFactories/mainBootstrapContainer.js';
 
 const mockStageImplementations = {
@@ -31,8 +38,7 @@ jest.mock('../../../src/bootstrapper/stages/index.js', () => ({
     mockStageImplementations.setupMenuButtonListenersStage(...args),
   setupGlobalEventListenersStage: (...args) =>
     mockStageImplementations.setupGlobalEventListenersStage(...args),
-  startGameStage: (...args) =>
-    mockStageImplementations.startGameStage(...args),
+  startGameStage: (...args) => mockStageImplementations.startGameStage(...args),
 }));
 
 const mockDisplayFatalStartupError = jest.fn();

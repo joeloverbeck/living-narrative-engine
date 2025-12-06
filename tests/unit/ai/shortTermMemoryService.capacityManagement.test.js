@@ -10,7 +10,7 @@ describe('ShortTermMemoryService capacity management', () => {
 
     expect(() => service.addThought(null, 'anything')).toThrow(TypeError);
     expect(() => service.addThought(undefined, 'anything')).toThrow(
-      'mem must be an object conforming to core:short_term_memory schema',
+      'mem must be an object conforming to core:short_term_memory schema'
     );
   });
 
@@ -122,7 +122,11 @@ describe('ShortTermMemoryService capacity management', () => {
       eventDispatcher: { dispatch },
     });
 
-    service.emitThoughtAdded('actor-1', 'remember this', '2024-01-06T00:00:00.000Z');
+    service.emitThoughtAdded(
+      'actor-1',
+      'remember this',
+      '2024-01-06T00:00:00.000Z'
+    );
 
     expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
       entityId: 'actor-1',
@@ -135,13 +139,13 @@ describe('ShortTermMemoryService capacity management', () => {
     const service = new ShortTermMemoryService();
 
     expect(() =>
-      service.emitThoughtAdded('actor-2', 'ignored', '2024-01-07T00:00:00.000Z'),
+      service.emitThoughtAdded('actor-2', 'ignored', '2024-01-07T00:00:00.000Z')
     ).not.toThrow();
 
     service.eventDispatcher = { dispatch: 'not-a-function' };
 
     expect(() =>
-      service.emitThoughtAdded('actor-2', 'ignored', '2024-01-07T00:00:00.000Z'),
+      service.emitThoughtAdded('actor-2', 'ignored', '2024-01-07T00:00:00.000Z')
     ).not.toThrow();
   });
 });

@@ -8,13 +8,13 @@ This plan details the service architecture for implementing a data-driven modifi
 
 ### Existing Services
 
-| Service | Location | Current Role |
-|---------|----------|--------------|
-| `ModifierCollectorService` | `src/combat/services/ModifierCollectorService.js` | Phase 5 stub - collects modifiers but `#collectActionModifiers` returns `[]` |
-| `ChanceCalculationService` | `src/combat/services/ChanceCalculationService.js` | Orchestrates probability calculation, already calls `modifierCollectorService.collectModifiers()` |
-| `ProbabilityCalculatorService` | `src/combat/services/ProbabilityCalculatorService.js` | Applies modifiers via `#applyModifiers()`: `(base + totalFlat) * totalPercentage` |
-| `JsonLogicEvaluationService` | `src/logic/jsonLogicEvaluationService.js` | Evaluates JSON Logic conditions with custom operators |
-| `MultiTargetActionFormatter` | `src/actions/formatters/MultiTargetActionFormatter.js` | Handles `{chance}` placeholder injection |
+| Service                        | Location                                               | Current Role                                                                                      |
+| ------------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `ModifierCollectorService`     | `src/combat/services/ModifierCollectorService.js`      | Phase 5 stub - collects modifiers but `#collectActionModifiers` returns `[]`                      |
+| `ChanceCalculationService`     | `src/combat/services/ChanceCalculationService.js`      | Orchestrates probability calculation, already calls `modifierCollectorService.collectModifiers()` |
+| `ProbabilityCalculatorService` | `src/combat/services/ProbabilityCalculatorService.js`  | Applies modifiers via `#applyModifiers()`: `(base + totalFlat) * totalPercentage`                 |
+| `JsonLogicEvaluationService`   | `src/logic/jsonLogicEvaluationService.js`              | Evaluates JSON Logic conditions with custom operators                                             |
+| `MultiTargetActionFormatter`   | `src/actions/formatters/MultiTargetActionFormatter.js` | Handles `{chance}` placeholder injection                                                          |
 
 ### Data Flow (Current)
 
@@ -43,18 +43,24 @@ ActionDef.chanceBased.modifiers → ModifierCollectorService.collectModifiers()
 ## Design Decisions
 
 ### 1. Modifier Types
+
 Support both **flat** and **percentage** modifiers:
+
 - Flat: `+10`, `-5` (added to base chance)
 - Percentage: `1.2` (multiplier, where 1.0 = no change)
 
 ### 2. Display Tags
+
 Add new `tag` property for UI display (short labels like "+10% Darkness")
 
 ### 3. Location Resolution
+
 Auto-resolve actor's location from `core:position` component
 
 ### 4. Condition Evaluation
+
 Leverage existing `JsonLogicEvaluationService` with enriched context containing:
+
 - `actor`: Actor entity with components
 - `primary`, `secondary`, `tertiary`: Target entities with components
 - `location`: Actor's location entity with components
@@ -66,10 +72,12 @@ Leverage existing `JsonLogicEvaluationService` with enriched context containing:
 ### Service Responsibilities
 
 #### 1. `ModifierCollectorService` (MODIFY)
+
 **Current**: Stub returning empty modifiers
 **New**: Full implementation
 
 **Responsibilities**:
+
 - Build evaluation context with actor, targets, and location
 - Iterate through `actionConfig.modifiers` array
 - Evaluate each modifier's condition using `JsonLogicEvaluationService`
@@ -78,24 +86,31 @@ Leverage existing `JsonLogicEvaluationService` with enriched context containing:
 - Calculate totals (modify to support percentage)
 
 **New Dependencies**:
+
 - `JsonLogicEvaluationService` - for condition evaluation
 
 #### 2. `ModifierContextBuilder` (NEW SERVICE)
+
 **Location**: `src/combat/services/ModifierContextBuilder.js`
 
 **Responsibilities**:
+
 - Build JSON Logic evaluation context from entity IDs
 - Auto-resolve actor's location from `core:position`
 - Build component accessor objects for actor, targets, location
 - Provide consistent context structure for condition evaluation
 
 #### 3. `ChanceCalculationService` (MINOR MODIFY)
+
 **Changes**:
+
 - Pass resolved target IDs to `modifierCollectorService.collectModifiers()`
 - Include modifier tags in display result
 
 #### 4. `MultiTargetActionFormatter` (MODIFY)
+
 **Changes**:
+
 - Accept modifier tags alongside chance value
 - Support new `{modifiers}` placeholder or append tags to `{chance}`
 
@@ -184,14 +199,16 @@ class ModifierContextBuilder {
   buildContext({ actorId, primaryId, secondaryId, tertiaryId }) {
     // Build actor context with components
     const actor = this.#buildEntityContext(actorId);
-    
+
     // Auto-resolve location from actor's core:position
     const locationId = this.#resolveActorLocation(actorId);
     const location = locationId ? this.#buildEntityContext(locationId) : null;
-    
+
     // Build target contexts
     const primary = primaryId ? this.#buildEntityContext(primaryId) : null;
-    const secondary = secondaryId ? this.#buildEntityContext(secondaryId) : null;
+    const secondary = secondaryId
+      ? this.#buildEntityContext(secondaryId)
+      : null;
     const tertiary = tertiaryId ? this.#buildEntityContext(tertiaryId) : null;
 
     return {
@@ -219,21 +236,25 @@ class ModifierContextBuilder {
     // Create proxy-like object for lazy component access
     const accessor = {};
     const entity = this.#entityManager.getEntityInstance(entityId);
-    
+
     if (entity?.componentTypeIds) {
       for (const componentId of entity.componentTypeIds) {
         Object.defineProperty(accessor, componentId, {
-          get: () => this.#entityManager.getComponentData(entityId, componentId),
+          get: () =>
+            this.#entityManager.getComponentData(entityId, componentId),
           enumerable: true,
         });
       }
     }
-    
+
     return accessor;
   }
 
   #resolveActorLocation(actorId) {
-    const position = this.#entityManager.getComponentData(actorId, 'core:position');
+    const position = this.#entityManager.getComponentData(
+      actorId,
+      'core:position'
+    );
     return position?.locationId ?? null;
   }
 }
@@ -255,10 +276,15 @@ export default ModifierContextBuilder;
 class ModifierCollectorService {
   #entityManager;
   #logger;
-  #jsonLogicService;  // NEW
-  #contextBuilder;    // NEW
+  #jsonLogicService; // NEW
+  #contextBuilder; // NEW
 
-  constructor({ entityManager, logger, jsonLogicEvaluationService, modifierContextBuilder }) {
+  constructor({
+    entityManager,
+    logger,
+    jsonLogicEvaluationService,
+    modifierContextBuilder,
+  }) {
     // ... validation ...
     this.#jsonLogicService = jsonLogicEvaluationService;
     this.#contextBuilder = modifierContextBuilder;
@@ -275,7 +301,13 @@ class ModifierCollectorService {
    * @param {object} [params.actionConfig] - Action's chanceBased configuration
    * @returns {ModifierCollection}
    */
-  collectModifiers({ actorId, primaryId, secondaryId, tertiaryId, actionConfig }) {
+  collectModifiers({
+    actorId,
+    primaryId,
+    secondaryId,
+    tertiaryId,
+    actionConfig,
+  }) {
     const allModifiers = [];
 
     if (actionConfig?.modifiers?.length) {
@@ -306,7 +338,7 @@ class ModifierCollectorService {
       modifiers: stackedModifiers,
       totalFlat: totals.totalFlat,
       totalPercentage: totals.totalPercentage,
-      tags: stackedModifiers.map(m => m.tag).filter(Boolean),
+      tags: stackedModifiers.map((m) => m.tag).filter(Boolean),
     };
   }
 
@@ -448,21 +480,25 @@ ModifierContextBuilder: 'ModifierContextBuilder',
 import ModifierContextBuilder from '../../combat/services/ModifierContextBuilder.js';
 
 // Add ModifierContextBuilder registration
-registrar.singletonFactory(tokens.ModifierContextBuilder, (c) =>
-  new ModifierContextBuilder({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-  })
+registrar.singletonFactory(
+  tokens.ModifierContextBuilder,
+  (c) =>
+    new ModifierContextBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    })
 );
 
 // Update ModifierCollectorService registration
-registrar.singletonFactory(tokens.ModifierCollectorService, (c) =>
-  new ModifierCollectorService({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-    jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
-    modifierContextBuilder: c.resolve(tokens.ModifierContextBuilder),
-  })
+registrar.singletonFactory(
+  tokens.ModifierCollectorService,
+  (c) =>
+    new ModifierCollectorService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService),
+      modifierContextBuilder: c.resolve(tokens.ModifierContextBuilder),
+    })
 );
 ```
 
@@ -495,7 +531,10 @@ registrar.singletonFactory(tokens.ModifierCollectorService, (c) =>
       },
       {
         "condition": {
-          "==": [{ "var": "actor.components.status:wounded.severity" }, "severe"]
+          "==": [
+            { "var": "actor.components.status:wounded.severity" },
+            "severe"
+          ]
         },
         "type": "percentage",
         "value": 0.8,

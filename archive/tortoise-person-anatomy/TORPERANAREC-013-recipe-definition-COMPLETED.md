@@ -3,18 +3,22 @@
 ## Status: ✅ COMPLETED
 
 ## Objective
+
 Create the complete recipe definition that ties together the blueprint, entity definitions, and body descriptors.
 
 ## Dependencies
+
 - **REQUIRES**: TORPERANAREC-001 (structure template) ✅
 - **REQUIRES**: TORPERANAREC-002 (blueprint) ✅
 - **REQUIRES**: TORPERANAREC-003 through TORPERANAREC-011 (all entity definitions) ✅
 
 ## Files Created
+
 - **CREATED**: `data/mods/anatomy/recipes/tortoise_person.recipe.json` ✅
 - **CREATED**: `tests/integration/anatomy/tortoisePersonRecipeValidation.test.js` ✅
 
 ## Files Not Modified
+
 - ✅ No existing recipes modified
 - ✅ Entity definitions unchanged
 - ✅ Blueprint unchanged
@@ -23,6 +27,7 @@ Create the complete recipe definition that ties together the blueprint, entity d
 ## Reassessed Assumptions
 
 ### ✅ Verified Correct:
+
 1. Blueprint exists at `data/mods/anatomy/blueprints/tortoise_person.blueprint.json`
 2. Blueprint ID is `"anatomy:tortoise_person"`
 3. Blueprint references structure template `"anatomy:structure_tortoise_biped"`
@@ -38,6 +43,7 @@ Create the complete recipe definition that ties together the blueprint, entity d
    - smell: "earthy" (free-form) ✅
 
 ### 🔧 Corrections Applied:
+
 1. **Pattern matching strategy**: Confirmed matchesGroup usage for limbSets
    - Structure template defines `limbSet:arm` and `limbSet:leg`
    - Pattern uses `"matchesGroup": "limbSet:arm"` syntax
@@ -55,6 +61,7 @@ Create the complete recipe definition that ties together the blueprint, entity d
 ## Implementation Summary
 
 ### Recipe Structure Created:
+
 1. ✅ Schema reference: `schema://living-narrative-engine/anatomy.recipe.schema.json`
 2. ✅ Recipe ID: `anatomy:tortoise_person`
 3. ✅ Blueprint ID: `anatomy:tortoise_person`
@@ -64,11 +71,13 @@ Create the complete recipe definition that ties together the blueprint, entity d
 7. ✅ Constraints (3 total): shell co-presence, beak requirement, eyes requirement
 
 ### Pattern Matching Strategies Used:
+
 - **matchesGroup**: Arms and legs (bilateral limbs from structure template)
 - **matches array**: Hands, feet, eyes (explicit bilateral socket lists)
 - **slot definitions**: Head, tail, shell parts (unique non-patterned slots)
 
 ### Property Overrides Applied:
+
 - Shell parts: texture, pattern, color descriptors
 - Limbs: texture, build descriptors
 - Terminal parts (hands/feet): digit_count, projection descriptors
@@ -77,9 +86,11 @@ Create the complete recipe definition that ties together the blueprint, entity d
 ## Test Coverage
 
 ### Test Suite: `tortoisePersonRecipeValidation.test.js`
+
 **Total Tests**: 39 tests, all passing ✅
 
 **Test Categories**:
+
 1. **Recipe metadata** (4 tests): Schema, IDs, blueprint reference
 2. **Body descriptors** (7 tests): All 6 descriptors with enumerated value validation
 3. **Slot definitions** (6 tests): 4 slots structure and entity references
@@ -90,6 +101,7 @@ Create the complete recipe definition that ties together the blueprint, entity d
 8. **Blueprint integration** (2 tests): Additional slots and schemaVersion support
 
 ### Test Execution Results:
+
 ```
 PASS tests/integration/anatomy/tortoisePersonRecipeValidation.test.js
   Test Suites: 1 passed, 1 total
@@ -100,15 +112,18 @@ PASS tests/integration/anatomy/tortoisePersonRecipeValidation.test.js
 ## Validation Results
 
 ### Schema Validation: ✅ PASSED
+
 ```bash
 npm run validate
 ```
+
 - Recipe validates against `anatomy.recipe.schema.json`
 - All referenced entity definitions exist
 - Blueprint reference resolves correctly
 - JSON is well-formed and parseable
 
 ### All Acceptance Criteria Met:
+
 1. ✅ File created with correct schema reference
 2. ✅ Recipe ID and blueprint ID match
 3. ✅ All 6 body descriptors use valid values
@@ -121,6 +136,7 @@ npm run validate
 10. ✅ No existing files modified (out of scope items preserved)
 
 ## Invariants Maintained:
+
 1. ✅ No existing recipes modified
 2. ✅ All bodyDescriptors use valid enumerated values per Body Descriptor Registry
 3. ✅ Pattern matchesGroup references valid limbSets from structure template
@@ -133,6 +149,7 @@ npm run validate
 10. ✅ Recipe references correct blueprint ID
 
 ## Definition of Done
+
 - [x] Assumptions reassessed and ticket corrected
 - [x] File created with correct schema reference
 - [x] Recipe ID and blueprint ID match
@@ -147,6 +164,7 @@ npm run validate
 - [x] File committed with descriptive message
 
 ## Completion Date
+
 2025-01-23
 
 ---
@@ -156,11 +174,13 @@ npm run validate
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create recipe with 5 unique slots and 5 patterns
 - Use matchesGroup for bilateral limbs and matchesPattern/matches for other parts
 - Include 3 constraints for shell, beak, and eyes
 
 **Actually Implemented:**
+
 - ✅ Created recipe with **4 slots** (shell_upper, shell_lower, head, tail) and **5 patterns** (arms, legs, hands, feet, eyes)
 - ✅ Used **matchesGroup** exclusively for bilateral limbs (arms, legs) as recommended
 - ✅ Used **matches arrays** for hand/foot/eye sockets instead of matchesPattern (more explicit and reliable)
@@ -169,20 +189,24 @@ npm run validate
 - ✅ Created comprehensive test suite with **39 tests** (not originally planned but added for quality assurance)
 
 **Key Deviations from Original Plan:**
+
 1. **Fewer slots, more patterns**: Originally planned 5 slots, but analysis revealed head and tail should be slots (unique parts) while hands/feet/eyes should be patterns (bilateral parts)
 2. **No matchesPattern usage**: Decided against wildcards in favor of explicit matches arrays for better maintainability and clarity
 3. **Enhanced testing**: Added comprehensive integration test suite covering all aspects of the recipe (metadata, descriptors, patterns, constraints, socket compatibility)
 
 **Why Changes Were Made:**
+
 - **Architectural clarity**: Separating unique slots from patterned bilateral parts follows established recipe conventions (see red_dragon.recipe.json)
 - **Explicit over implicit**: Using matches arrays instead of matchesPattern provides clearer intent and easier debugging
 - **Quality assurance**: Comprehensive tests ensure recipe integrity and catch regressions
 
 ### Files Modified/Created:
+
 1. `data/mods/anatomy/recipes/tortoise_person.recipe.json` - **CREATED** (161 lines)
 2. `tests/integration/anatomy/tortoisePersonRecipeValidation.test.js` - **CREATED** (505 lines, 39 tests)
 
 ### Validation Status:
+
 - ✅ Schema validation: PASSED
 - ✅ All tests: 39/39 PASSED
 - ✅ No breaking changes to existing code

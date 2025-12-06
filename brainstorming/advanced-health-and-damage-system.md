@@ -6,14 +6,14 @@ In this design, each character’s body is represented as a directed acyclic gra
 
 Character (Entity)
 └─ Torso (entity: torso)
-    ├─ Head (entity: head)
-    │    ├─ Left Eye (entity: eye_left)
-    │    ├─ Right Eye (entity: eye_right)
-    │    └─ Brain (entity: brain) 
-    ├─ Left Arm (entity: arm_left)
-    │    └─ Left Hand (entity: hand_left)
-    └─ Right Arm (entity: arm_right)
-         └─ Right Hand (entity: hand_right)
+├─ Head (entity: head)
+│ ├─ Left Eye (entity: eye_left)
+│ ├─ Right Eye (entity: eye_right)
+│ └─ Brain (entity: brain)
+├─ Left Arm (entity: arm_left)
+│ └─ Left Hand (entity: hand_left)
+└─ Right Arm (entity: arm_right)
+└─ Right Hand (entity: hand_right)
 
 Each part entity has an anatomy:part component identifying its type and role, and an anatomy:sockets component defining its attachment points for child parts. This modular design means each body part can independently hold data like health, injuries, and status.
 
@@ -59,24 +59,24 @@ Not all damage is the same – a sword slash differs from a hammer blow or a fir
 
 // Example schema for damage types
 {
-  "id": "cutting",
-  "name": "Cutting",
-  "description": "Sharp cutting damage from blades. Causes external bleeding.",
-  "causesBleeding": true,
-  "bleedSeverity": "high",
-  "breaksBones": false,
-  "penetration": 0.8
+"id": "cutting",
+"name": "Cutting",
+"description": "Sharp cutting damage from blades. Causes external bleeding.",
+"causesBleeding": true,
+"bleedSeverity": "high",
+"breaksBones": false,
+"penetration": 0.8
 }
 
 In the above conceptual example, a “cutting” damage type causes bleeding, has high bleed severity, does not typically break bones, and has a high penetration value (meaning it easily cuts through flesh, possibly reaching internal parts). Contrast that with a blunt damage type:
 
 {
-  "id": "blunt",
-  "name": "Blunt",
-  "description": "Crushing force trauma. Breaks bones but causes little external bleeding.",
-  "causesBleeding": false,
-  "breaksBones": true,
-  "stunChance": 0.3
+"id": "blunt",
+"name": "Blunt",
+"description": "Crushing force trauma. Breaks bones but causes little external bleeding.",
+"causesBleeding": false,
+"breaksBones": true,
+"stunChance": 0.3
 }
 
 A blunt attack might have a chance to stun or stagger a character and is good at breaking bones (perhaps causing an irreparable injury flag, discussed later). Meanwhile, piercing damage might combine aspects: moderate bleeding, high penetration to hit internals, etc. Other types can include fire, cold, acid, poison, magical, each with custom effects (burning could ignite a target causing ongoing fire damage; poison could inflict a status that drains health over time or imposes stat penalties; acid might continue eating away at a part for a few turns).
@@ -168,10 +168,10 @@ To make the depth of this system player-comprehensible and to feed into narrativ
 Data Aggregation: The injury reporting functionality will likely be part of a Character Status System or UI system that queries the state of all body parts on a character. It will iterate through the anatomy graph of an entity and collect any part that is not in “Healthy” status. For each part, it will note its narrative status label (Bruised, Wounded, etc.) and whether that part is bleeding (and possibly other conditions like broken or missing). It may ignore very minor injuries (depending on design, maybe we don’t report Bruised if we want to reduce noise, or maybe we do — likely we do, for completeness). This collection results in a list of injury descriptors, which can be structured as an array of objects for programmatic use. For example:
 
 [
-  { "part": "head", "status": "Badly Damaged", "bleeding": true },
-  { "part": "left eye", "status": "Badly Damaged", "bleeding": true },
-  { "part": "left ear", "status": "Badly Damaged", "bleeding": true },
-  { "part": "torso", "status": "Bruised", "bleeding": false }
+{ "part": "head", "status": "Badly Damaged", "bleeding": true },
+{ "part": "left eye", "status": "Badly Damaged", "bleeding": true },
+{ "part": "left ear", "status": "Badly Damaged", "bleeding": true },
+{ "part": "torso", "status": "Bruised", "bleeding": false }
 ]
 
 This kind of data structure makes it easy to then format into human-readable text.
@@ -181,20 +181,20 @@ Narrative Formatting: With the collected data, the system forms sentences or phr
 For example, pseudocode for report generation:
 
 function generateInjuryReport(character):
-    partsByStatus = group non-healthy parts by status label (and bleeding)
-    sentenceList = []
-    for each group (status, bleeding) in descending severity:
-        partNames = list of part names in that group
-        if empty group: continue
-        // Construct phrase
-        statusText = status label (lowercase)
-        if bleeding == true:
-            statusText += " and bleeding"
-        // e.g. "badly damaged and bleeding"
-        partListText = commaJoin(partNames)  // e.g. "head, left eye, and left ear"
-        sentence = character.name + "'s " + partListText + " are " + statusText + "."
-        sentenceList.append(sentence)
-    return sentences joined with " "
+partsByStatus = group non-healthy parts by status label (and bleeding)
+sentenceList = []
+for each group (status, bleeding) in descending severity:
+partNames = list of part names in that group
+if empty group: continue
+// Construct phrase
+statusText = status label (lowercase)
+if bleeding == true:
+statusText += " and bleeding"
+// e.g. "badly damaged and bleeding"
+partListText = commaJoin(partNames) // e.g. "head, left eye, and left ear"
+sentence = character.name + "'s " + partListText + " are " + statusText + "."
+sentenceList.append(sentence)
+return sentences joined with " "
 
 The result: "Emily's head, left eye, and left ear are badly damaged and bleeding. Her torso is bruised.".
 
@@ -211,9 +211,9 @@ One of the strengths of a data-driven ECS approach is the ability to handle vast
 Vital Organs per Blueprint: Each anatomy blueprint (the definition of a creature’s body structure) can specify which parts are considered vital and in what way. We can extend the blueprint JSON schema to include a section for vital roles. For example:
 
 "vitals": {
-   "thinking": [ "anatomy:brain", "anatomy:head" ],
-   "pumping": [ "anatomy:heart" ],
-   "core": [ "anatomy:torso" ]
+"thinking": [ "anatomy:brain", "anatomy:head" ],
+"pumping": [ "anatomy:heart" ],
+"core": [ "anatomy:torso" ]
 }
 
 In this hypothetical snippet, the blueprint declares that any parts of type “brain” or “head” count as thinking organs, any part of type “heart” is a pumping organ, and the torso is considered a “core” part (perhaps meaning if the torso is destroyed, the creature cannot survive even if head/heart are intact). The Death System will then use these lists to evaluate death conditions, instead of hardcoding for specific part names. A multi-headed creature’s blueprint might list multiple heads in the thinking category, as shown. A creature could have multiple hearts listed under pumping (e.g. an octopus might have three hearts – all would need to fail). Undead like skeletons might have an empty pumping list (since they have no heart) and maybe “thinking: [skull]” if the skull is treated as the locus of whatever magic animates it. This could be done in a more data-driven way by including certain components in specific body parts. For example, a very specific 'anatomy:bearded_humanoid_head' could have the anatomy:allows_thinking component, and the relevant code would check for the presence of those components in anatomy nodes.

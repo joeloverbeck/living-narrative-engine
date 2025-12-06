@@ -23,16 +23,56 @@ import setTenseMoodAction from '../../../../data/mods/music/actions/set_tense_mo
 import setTriumphantMoodAction from '../../../../data/mods/music/actions/set_triumphant_mood_on_instrument.action.json' assert { type: 'json' };
 
 const MOOD_ACTIONS = [
-  { name: 'aggressive', action: setAggressiveMoodAction, id: 'music:set_aggressive_mood_on_instrument' },
-  { name: 'cheerful', action: setCheerfulMoodAction, id: 'music:set_cheerful_mood_on_instrument' },
-  { name: 'eerie', action: setEerieMoodAction, id: 'music:set_eerie_mood_on_instrument' },
-  { name: 'meditative', action: setMeditativeMoodAction, id: 'music:set_meditative_mood_on_instrument' },
-  { name: 'mournful', action: setMournfulMoodAction, id: 'music:set_mournful_mood_on_instrument' },
-  { name: 'playful', action: setPlayfulMoodAction, id: 'music:set_playful_mood_on_instrument' },
-  { name: 'solemn', action: setSolemnMoodAction, id: 'music:set_solemn_mood_on_instrument' },
-  { name: 'tender', action: setTenderMoodAction, id: 'music:set_tender_mood_on_instrument' },
-  { name: 'tense', action: setTenseMoodAction, id: 'music:set_tense_mood_on_instrument' },
-  { name: 'triumphant', action: setTriumphantMoodAction, id: 'music:set_triumphant_mood_on_instrument' },
+  {
+    name: 'aggressive',
+    action: setAggressiveMoodAction,
+    id: 'music:set_aggressive_mood_on_instrument',
+  },
+  {
+    name: 'cheerful',
+    action: setCheerfulMoodAction,
+    id: 'music:set_cheerful_mood_on_instrument',
+  },
+  {
+    name: 'eerie',
+    action: setEerieMoodAction,
+    id: 'music:set_eerie_mood_on_instrument',
+  },
+  {
+    name: 'meditative',
+    action: setMeditativeMoodAction,
+    id: 'music:set_meditative_mood_on_instrument',
+  },
+  {
+    name: 'mournful',
+    action: setMournfulMoodAction,
+    id: 'music:set_mournful_mood_on_instrument',
+  },
+  {
+    name: 'playful',
+    action: setPlayfulMoodAction,
+    id: 'music:set_playful_mood_on_instrument',
+  },
+  {
+    name: 'solemn',
+    action: setSolemnMoodAction,
+    id: 'music:set_solemn_mood_on_instrument',
+  },
+  {
+    name: 'tender',
+    action: setTenderMoodAction,
+    id: 'music:set_tender_mood_on_instrument',
+  },
+  {
+    name: 'tense',
+    action: setTenseMoodAction,
+    id: 'music:set_tense_mood_on_instrument',
+  },
+  {
+    name: 'triumphant',
+    action: setTriumphantMoodAction,
+    id: 'music:set_triumphant_mood_on_instrument',
+  },
 ];
 
 describe('Music mood actions discovery', () => {
@@ -53,7 +93,7 @@ describe('Music mood actions discovery', () => {
       }
 
       // Build action index with all music mood actions
-      testEnv.actionIndex.buildIndex(MOOD_ACTIONS.map(m => m.action));
+      testEnv.actionIndex.buildIndex(MOOD_ACTIONS.map((m) => m.action));
     };
   });
 
@@ -69,7 +109,9 @@ describe('Music mood actions discovery', () => {
         it('should have correct action structure', () => {
           expect(action).toBeDefined();
           expect(action.id).toBe(id);
-          expect(action.name).toBe(`Set ${name.charAt(0).toUpperCase() + name.slice(1)} Mood on Instrument`);
+          expect(action.name).toBe(
+            `Set ${name.charAt(0).toUpperCase() + name.slice(1)} Mood on Instrument`
+          );
           expect(action.description).toContain(name);
           expect(action.description).toContain('instrument');
           expect(action.template).toBe(`set ${name} mood on {instrument}`);
@@ -80,13 +122,17 @@ describe('Music mood actions discovery', () => {
           expect(action.targets.primary).toBeDefined();
           expect(action.targets.primary.scope).toBe('items:examinable_items');
           expect(action.targets.primary.placeholder).toBe('instrument');
-          expect(action.targets.primary.description).toBe(`Instrument to play with ${name} mood`);
+          expect(action.targets.primary.description).toBe(
+            `Instrument to play with ${name} mood`
+          );
         });
 
         it('should require music:is_musician component on actor', () => {
           expect(action.required_components).toBeDefined();
           expect(action.required_components.actor).toBeDefined();
-          expect(action.required_components.actor).toEqual(['music:is_musician']);
+          expect(action.required_components.actor).toEqual([
+            'music:is_musician',
+          ]);
         });
 
         it('should require items:item and music:is_instrument components on primary target', () => {
@@ -141,8 +187,10 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should discover all 10 mood actions
@@ -150,11 +198,12 @@ describe('Music mood actions discovery', () => {
 
         // Verify each mood action is present
         MOOD_ACTIONS.forEach(({ id }) => {
-          expect(moodActions.some(a => a.id === id)).toBe(true);
+          expect(moodActions.some((a) => a.id === id)).toBe(true);
         });
 
         // Verify scope resolution includes the instrument
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -196,15 +245,18 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should discover all 10 mood actions
         expect(moodActions.length).toBe(10);
 
         // Verify scope resolution includes the instrument
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -245,8 +297,10 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should NOT discover mood actions for non-portable instrument
@@ -254,7 +308,8 @@ describe('Music mood actions discovery', () => {
         expect(moodActions.length).toBe(0);
 
         // Verify scope resolution excludes non-portable instrument
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -298,8 +353,10 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should NOT discover any mood actions
@@ -326,15 +383,18 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should NOT discover any mood actions
         expect(moodActions.length).toBe(0);
 
         // Verify scope resolution returns empty
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -375,15 +435,18 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should NOT discover any mood actions
         expect(moodActions.length).toBe(0);
 
         // Verify scope resolution doesn't include distant instrument
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -428,15 +491,18 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should NOT discover any mood actions
         expect(moodActions.length).toBe(0);
 
         // Scope resolves the item but required_components filter excludes it
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -490,15 +556,18 @@ describe('Music mood actions discovery', () => {
         configureActionDiscovery();
 
         const discoveredActions = testFixture.discoverActions('actor1');
-        const moodActions = discoveredActions.filter((action) =>
-          action.id.startsWith('music:set_') && action.id.endsWith('_mood_on_instrument')
+        const moodActions = discoveredActions.filter(
+          (action) =>
+            action.id.startsWith('music:set_') &&
+            action.id.endsWith('_mood_on_instrument')
         );
 
         // Should discover all 10 mood actions
         expect(moodActions.length).toBe(10);
 
         // Verify scope includes both instruments
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',

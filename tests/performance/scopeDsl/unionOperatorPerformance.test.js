@@ -236,7 +236,8 @@ describe('Union Operator Performance', () => {
 
       for (let i = 1; i < scalingMetrics.length; i++) {
         const currentTimePerItem = scalingMetrics[i].timePerItem;
-        const exceedsRatio = currentTimePerItem > baselineTimePerItem * ratioThreshold;
+        const exceedsRatio =
+          currentTimePerItem > baselineTimePerItem * ratioThreshold;
         const exceedsAbsolute =
           currentTimePerItem - baselineTimePerItem > absoluteThreshold;
 
@@ -315,7 +316,8 @@ describe('Union Operator Performance', () => {
         const absoluteDifference = actualTimePerUnion - baselineTimePerUnion;
 
         // Fail only if both ratio exceeds 2x AND absolute difference > 1ms
-        const shouldFail = actualTimePerUnion > expectedThreshold && absoluteDifference > 1;
+        const shouldFail =
+          actualTimePerUnion > expectedThreshold && absoluteDifference > 1;
         expect(shouldFail).toBe(false);
       }
     });
@@ -539,7 +541,8 @@ describe('Union Operator Performance', () => {
       // baseline exceeds 2.5× even though the actual slowdown is negligible).
       const relativeTolerance = 2.5;
       const absoluteTolerance = 10; // 10ms absolute guard for low baselines
-      const allowedTime = firstWindowTime * relativeTolerance + absoluteTolerance;
+      const allowedTime =
+        firstWindowTime * relativeTolerance + absoluteTolerance;
       expect(lastWindowTime).toBeLessThan(allowedTime);
 
       // Success rates should remain high

@@ -16,7 +16,10 @@ describe('items:jot_down_notes action definition', () => {
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', 'items:jot_down_notes');
+    testFixture = await ModTestFixture.forAction(
+      'items',
+      'items:jot_down_notes'
+    );
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -119,7 +122,8 @@ describe('items:jot_down_notes action definition', () => {
 
       expect(jotNotesActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -127,11 +131,10 @@ describe('items:jot_down_notes action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:actor_inventory_items',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['notebook_1']);
@@ -316,7 +319,8 @@ describe('items:jot_down_notes action definition', () => {
       // Action should be available with multiple target options
       expect(jotNotesActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor6');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor6');
       const scopeContext = {
         actor: {
           id: 'actor6',
@@ -324,11 +328,10 @@ describe('items:jot_down_notes action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:actor_inventory_items',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:actor_inventory_items',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       const resolvedItems = Array.from(scopeResult.value);

@@ -13,7 +13,13 @@
         "socketPattern": {
           "idTemplate": "leg_{{orientation}}",
           "orientationScheme": "bilateral",
-          "allowedTypes": ["horse_leg", "equine_leg", "centaur_leg", "centaur_leg_front", "centaur_leg_rear"],
+          "allowedTypes": [
+            "horse_leg",
+            "equine_leg",
+            "centaur_leg",
+            "centaur_leg_front",
+            "centaur_leg_rear"
+          ],
           "nameTpl": "{{orientation}} leg"
         }
       },
@@ -36,7 +42,11 @@
         "attachment": "anterior",
         "socketPattern": {
           "idTemplate": "upper_torso",
-          "allowedTypes": ["human_torso", "humanoid_torso", "centaur_upper_torso"],
+          "allowedTypes": [
+            "human_torso",
+            "humanoid_torso",
+            "centaur_upper_torso"
+          ],
           "nameTpl": "upper torso"
         }
       },

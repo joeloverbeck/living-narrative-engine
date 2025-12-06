@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import InitializationService from '../../../src/initializers/services/initializationService.js';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
 import { ServiceRegistry } from '../../../src/actions/pipeline/services/ServiceRegistry.js';
@@ -226,11 +233,17 @@ describe('dependency utilities integration coverage', () => {
       const info = jest.fn();
       const warn = jest.fn();
       const logger = { debug, info, warn };
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
-      expect(() => new ServiceRegistry({ logger })).toThrow(InvalidArgumentError);
+      expect(() => new ServiceRegistry({ logger })).toThrow(
+        InvalidArgumentError
+      );
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid or missing method 'error' on dependency 'ILogger'.")
+        expect.stringContaining(
+          "Invalid or missing method 'error' on dependency 'ILogger'."
+        )
       );
     });
   });
@@ -308,7 +321,9 @@ describe('dependency utilities integration coverage', () => {
           })
       ).toThrow(InvalidArgumentError);
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Missing required dependency: ComponentMutationService')
+        expect.stringContaining(
+          'Missing required dependency: ComponentMutationService'
+        )
       );
     });
   });

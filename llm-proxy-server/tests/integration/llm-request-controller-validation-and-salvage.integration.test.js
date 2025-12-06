@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -348,7 +355,8 @@ describe('LlmRequestController integration: validation and salvage coverage', ()
       );
       expect(salvageSpy).toHaveBeenCalledTimes(1);
       const salvagedRequestId = salvageSpy.mock.calls[0][0];
-      const salvagedEntry = salvageService.retrieveByRequestId(salvagedRequestId);
+      const salvagedEntry =
+        salvageService.retrieveByRequestId(salvagedRequestId);
       expect(salvagedEntry).not.toBeNull();
       expect(salvagedEntry?.statusCode).toBe(201);
     } finally {
@@ -391,7 +399,10 @@ describe('LlmRequestController integration: validation and salvage coverage', ()
         statusCode: 502,
         errorStage: 'llm_upstream_failure',
         errorMessage: 'Upstream gateway failure',
-        errorDetailsForClient: { llmId: modelConfig.configId, reason: 'upstream' },
+        errorDetailsForClient: {
+          llmId: modelConfig.configId,
+          reason: 'upstream',
+        },
       })),
     };
 
@@ -474,9 +485,13 @@ describe('LlmRequestController integration: validation and salvage coverage', ()
 
       expect(response.status).toBe(500);
       expect(response.body.stage).toBe('internal_llm_service_exception');
-      expect(response.body.details.originalErrorMessage).toBe('provider exploded');
+      expect(response.body.details.originalErrorMessage).toBe(
+        'provider exploded'
+      );
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL - LlmRequestService threw an unexpected exception'),
+        expect.stringContaining(
+          'CRITICAL - LlmRequestService threw an unexpected exception'
+        ),
         expect.objectContaining({
           details: expect.objectContaining({ llmId: modelConfig.configId }),
         })

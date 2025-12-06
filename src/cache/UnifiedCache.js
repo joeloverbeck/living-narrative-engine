@@ -20,7 +20,7 @@ import FIFOStrategy from './strategies/FIFOStrategy.js';
  */
 export const EvictionPolicy = {
   LRU: 'lru',
-  LFU: 'lfu', 
+  LFU: 'lfu',
   FIFO: 'fifo',
 };
 
@@ -70,7 +70,7 @@ export class UnifiedCache extends BaseService {
     if (!Object.values(EvictionPolicy).includes(this.#config.evictionPolicy)) {
       throw new InvalidArgumentError(
         `Invalid eviction policy: ${this.#config.evictionPolicy}. ` +
-        `Supported policies: ${Object.values(EvictionPolicy).join(', ')}`
+          `Supported policies: ${Object.values(EvictionPolicy).join(', ')}`
       );
     }
 
@@ -78,8 +78,10 @@ export class UnifiedCache extends BaseService {
 
     this.#logger.info(
       `UnifiedCache initialized: ${this.#config.evictionPolicy.toUpperCase()} strategy, ` +
-      `maxSize=${this.#config.maxSize}, ttl=${this.#config.ttl}ms` +
-      (this.#config.maxMemoryUsage ? `, maxMemory=${(this.#config.maxMemoryUsage / 1048576).toFixed(1)}MB` : '')
+        `maxSize=${this.#config.maxSize}, ttl=${this.#config.ttl}ms` +
+        (this.#config.maxMemoryUsage
+          ? `, maxMemory=${(this.#config.maxMemoryUsage / 1048576).toFixed(1)}MB`
+          : '')
     );
   }
 
@@ -106,7 +108,9 @@ export class UnifiedCache extends BaseService {
       case EvictionPolicy.FIFO:
         return new FIFOStrategy(strategyConfig);
       default:
-        throw new InvalidArgumentError(`Unsupported eviction policy: ${config.evictionPolicy}`);
+        throw new InvalidArgumentError(
+          `Unsupported eviction policy: ${config.evictionPolicy}`
+        );
     }
   }
 
@@ -149,7 +153,7 @@ export class UnifiedCache extends BaseService {
 
       // Handle async generators
       if (generatedValue && typeof generatedValue.then === 'function') {
-        return generatedValue.then(value => {
+        return generatedValue.then((value) => {
           if (value !== undefined) {
             this.set(key, value);
           }
@@ -162,10 +166,11 @@ export class UnifiedCache extends BaseService {
         this.set(key, generatedValue);
       }
       return generatedValue;
-
     } catch (error) {
       this.#logger.error(`Generator function failed for key: ${key}`, error);
-      throw new CacheError(`Failed to generate value for key: ${key}`, { cause: error });
+      throw new CacheError(`Failed to generate value for key: ${key}`, {
+        cause: error,
+      });
     }
   }
 
@@ -194,11 +199,14 @@ export class UnifiedCache extends BaseService {
         this.#stats.sets++;
       }
 
-      this.#logger.debug(`Cache set: ${key}` + (options.ttl ? ` (TTL: ${options.ttl}ms)` : ''));
-
+      this.#logger.debug(
+        `Cache set: ${key}` + (options.ttl ? ` (TTL: ${options.ttl}ms)` : '')
+      );
     } catch (error) {
       this.#logger.error(`Failed to set cache value for key: ${key}`, error);
-      throw new CacheError(`Failed to cache value for key: ${key}`, { cause: error });
+      throw new CacheError(`Failed to cache value for key: ${key}`, {
+        cause: error,
+      });
     }
   }
 
@@ -275,7 +283,9 @@ export class UnifiedCache extends BaseService {
     }
 
     if (invalidated > 0) {
-      this.#logger.info(`Cache invalidated ${invalidated} entries matching pattern: ${pattern}`);
+      this.#logger.info(
+        `Cache invalidated ${invalidated} entries matching pattern: ${pattern}`
+      );
     }
 
     return invalidated;
@@ -294,7 +304,9 @@ export class UnifiedCache extends BaseService {
       if (this.#config.enableMetrics) {
         this.#stats.prunings++;
       }
-      this.#logger.info(`Cache pruned ${pruned} entries (aggressive: ${aggressive})`);
+      this.#logger.info(
+        `Cache pruned ${pruned} entries (aggressive: ${aggressive})`
+      );
     }
 
     return pruned;
@@ -312,22 +324,23 @@ export class UnifiedCache extends BaseService {
       maxSize: this.#strategy.maxSize,
       memorySize: this.#strategy.memorySize,
       strategyName: this.#strategy.strategyName,
-      
+
       // Configuration
       config: { ...this.#config },
-      
+
       // Statistics (if enabled)
       stats: this.#config.enableMetrics ? { ...this.#stats } : null,
-      
+
       // Calculated metrics
-      hitRate: this.#config.enableMetrics && (this.#stats.hits + this.#stats.misses) > 0
-        ? this.#stats.hits / (this.#stats.hits + this.#stats.misses)
-        : 0,
-      
+      hitRate:
+        this.#config.enableMetrics && this.#stats.hits + this.#stats.misses > 0
+          ? this.#stats.hits / (this.#stats.hits + this.#stats.misses)
+          : 0,
+
       // Memory usage
       memoryUsageMB: this.#strategy.memorySize / 1048576,
-      maxMemoryUsageMB: this.#config.maxMemoryUsage 
-        ? this.#config.maxMemoryUsage / 1048576 
+      maxMemoryUsageMB: this.#config.maxMemoryUsage
+        ? this.#config.maxMemoryUsage / 1048576
         : null,
     };
 
@@ -352,9 +365,11 @@ export class UnifiedCache extends BaseService {
       currentBytes: this.#strategy.memorySize,
       currentMB: this.#strategy.memorySize / 1048576,
       maxBytes: this.#config.maxMemoryUsage,
-      maxMB: this.#config.maxMemoryUsage ? this.#config.maxMemoryUsage / 1048576 : null,
-      utilizationPercent: this.#config.maxMemoryUsage 
-        ? (this.#strategy.memorySize / this.#config.maxMemoryUsage) * 100 
+      maxMB: this.#config.maxMemoryUsage
+        ? this.#config.maxMemoryUsage / 1048576
+        : null,
+      utilizationPercent: this.#config.maxMemoryUsage
+        ? (this.#strategy.memorySize / this.#config.maxMemoryUsage) * 100
         : null,
     };
   }

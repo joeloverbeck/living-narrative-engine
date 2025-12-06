@@ -126,7 +126,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       // Next distance: 0 (20 <= 30, goal satisfied)
       mockHeuristicRegistry.calculate.mockReturnValueOnce(0);
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(true);
       expect(mockEffectsSimulator.simulateEffects).toHaveBeenCalledWith(
@@ -191,7 +196,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       // Next distance: 80 - 70 = 10 (health below goal by 10)
       mockHeuristicRegistry.calculate.mockReturnValueOnce(10);
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -244,7 +254,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       // Next distance: 50 - 30 = 20 (hunger exceeds goal by 20)
       mockHeuristicRegistry.calculate.mockReturnValueOnce(20);
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -290,7 +305,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       mockHeuristicRegistry.calculate.mockReturnValueOnce(20);
       mockHeuristicRegistry.calculate.mockReturnValueOnce(20);
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -332,7 +352,9 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       }
 
       expect(thrownError).toBeDefined();
-      expect(thrownError.code).toBe(GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION);
+      expect(thrownError.code).toBe(
+        GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION
+      );
       expect(thrownError.message).toContain('Invalid operation');
       expect(mockHeuristicRegistry.calculate).not.toHaveBeenCalled();
     });
@@ -366,7 +388,9 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       }
 
       expect(thrownError).toBeDefined();
-      expect(thrownError.code).toBe(GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION);
+      expect(thrownError.code).toBe(
+        GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION
+      );
       expect(thrownError.message).toContain('Parameter resolution failed');
       expect(mockHeuristicRegistry.calculate).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -402,7 +426,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       mockHeuristicRegistry.calculate.mockReturnValueOnce(Infinity);
       mockHeuristicRegistry.calculate.mockReturnValueOnce(10);
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(true);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -441,7 +470,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
         throw new Error('Heuristic calculation failed');
       });
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(true);
       const warningCalls = mockLogger.warn.mock.calls.filter(
@@ -552,7 +586,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
         throw new Error('logger failure');
       });
 
-      const result = planner.testTaskReducesDistance(task, currentState, goal, 'actor-1');
+      const result = planner.testTaskReducesDistance(
+        task,
+        currentState,
+        goal,
+        'actor-1'
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -595,7 +634,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       // Mock distance - stays same
       mockHeuristicRegistry.calculate.mockReturnValue(20);
 
-      const result = planner.testGetApplicableTasks(tasks, state, 'actor-1', goal);
+      const result = planner.testGetApplicableTasks(
+        tasks,
+        state,
+        'actor-1',
+        goal
+      );
 
       expect(result).toHaveLength(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -637,7 +681,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       mockHeuristicRegistry.calculate.mockReturnValueOnce(50);
       mockHeuristicRegistry.calculate.mockReturnValueOnce(0);
 
-      const result = planner.testGetApplicableTasks(tasks, state, 'actor-1', goal);
+      const result = planner.testGetApplicableTasks(
+        tasks,
+        state,
+        'actor-1',
+        goal
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('test:eat');
@@ -657,7 +706,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
 
       const state = {};
 
-      const result = planner.testGetApplicableTasks(tasks, state, 'actor-1', null);
+      const result = planner.testGetApplicableTasks(
+        tasks,
+        state,
+        'actor-1',
+        null
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('test:action');
@@ -689,7 +743,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       // Mock precondition evaluation - fails
       mockJsonLogicService.evaluateCondition.mockReturnValue(false);
 
-      const result = planner.testGetApplicableTasks(tasks, state, 'actor-1', goal);
+      const result = planner.testGetApplicableTasks(
+        tasks,
+        state,
+        'actor-1',
+        goal
+      );
 
       expect(result).toHaveLength(0);
       // Should NOT call distance checking (precondition failed first)
@@ -724,7 +783,12 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
         goalState: { '!': { has_component: ['actor', 'test:hungry'] } },
       };
 
-      const result = planner.testGetApplicableTasks(tasks, state, 'actor-1', goal);
+      const result = planner.testGetApplicableTasks(
+        tasks,
+        state,
+        'actor-1',
+        goal
+      );
 
       // Task should be included (no distance check for non-numeric goals)
       expect(result).toHaveLength(1);
@@ -734,5 +798,4 @@ describe('GoapPlanner - Action Applicability with Numeric Goals (MODCOMPLASUP-00
       expect(mockHeuristicRegistry.calculate).not.toHaveBeenCalled();
     });
   });
-
 });

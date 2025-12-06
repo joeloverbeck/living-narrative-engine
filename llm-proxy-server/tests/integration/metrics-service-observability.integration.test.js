@@ -5,7 +5,14 @@
  *              Prometheus primitive failures.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -49,7 +56,13 @@ describe('MetricsService observability integration', () => {
 
     const app = express();
     app.use(express.json());
-    app.use(createMetricsMiddleware({ metricsService: service, logger, enabled: true }));
+    app.use(
+      createMetricsMiddleware({
+        metricsService: service,
+        logger,
+        enabled: true,
+      })
+    );
 
     app.post(
       '/llm/full',
@@ -60,7 +73,10 @@ describe('MetricsService observability integration', () => {
           cacheType: 'llm-response',
         });
 
-        cacheRecorder.recordOperation('get', 'hit', { size: 2, memoryUsage: 512 });
+        cacheRecorder.recordOperation('get', 'hit', {
+          size: 2,
+          memoryUsage: 512,
+        });
         cacheRecorder.recordStats(5, 2048);
 
         service.recordRateLimiting({
@@ -104,7 +120,7 @@ describe('MetricsService observability integration', () => {
             completion_tokens: 21,
           },
         });
-      },
+      }
     );
 
     const payload = { llmId: 'openai/gpt-4', prompt: 'collect metrics' };
@@ -115,7 +131,8 @@ describe('MetricsService observability integration', () => {
     await waitForAsync();
 
     const metricsJson = await service.getRegistry().getMetricsAsJSON();
-    const findMetric = (name) => metricsJson.find((metric) => metric.name === name) ?? { values: [] };
+    const findMetric = (name) =>
+      metricsJson.find((metric) => metric.name === name) ?? { values: [] };
 
     const httpSizeMetric = findMetric('llm_proxy_http_request_size_bytes');
     expect(httpSizeMetric.values[0]?.value).toBeGreaterThan(0);
@@ -124,7 +141,9 @@ describe('MetricsService observability integration', () => {
     expect(httpResponseSize.values[0]?.value).toBeGreaterThan(0);
 
     const tokenMetric = findMetric('llm_proxy_llm_tokens_processed_total');
-    const tokenLabels = tokenMetric.values.map((entry) => entry.labels.token_type).sort();
+    const tokenLabels = tokenMetric.values
+      .map((entry) => entry.labels.token_type)
+      .sort();
     expect(tokenLabels).toEqual(['input', 'output']);
 
     const cacheSizeMetric = findMetric('llm_proxy_cache_size_entries');
@@ -136,13 +155,17 @@ describe('MetricsService observability integration', () => {
     const rateLimitGauge = findMetric('llm_proxy_rate_limit_map_size_entries');
     expect(rateLimitGauge.values[0]?.value).toBe(9);
 
-    const securityValidationMetric = findMetric('llm_proxy_security_validation_results_total');
+    const securityValidationMetric = findMetric(
+      'llm_proxy_security_validation_results_total'
+    );
     expect(securityValidationMetric.values[0]?.labels).toMatchObject({
       result: 'pass',
       validation_type: 'headers',
     });
 
-    const securityIncidentMetric = findMetric('llm_proxy_security_incidents_total');
+    const securityIncidentMetric = findMetric(
+      'llm_proxy_security_incidents_total'
+    );
     expect(securityIncidentMetric.values[0]?.labels).toMatchObject({
       incident_type: 'shadow_anomaly',
       severity: 'medium',
@@ -155,7 +178,9 @@ describe('MetricsService observability integration', () => {
       key_source: 'env',
     });
 
-    const healthResultMetric = findMetric('llm_proxy_health_check_results_total');
+    const healthResultMetric = findMetric(
+      'llm_proxy_health_check_results_total'
+    );
     expect(healthResultMetric.values[0]?.labels).toMatchObject({
       check_type: 'readiness',
       result: 'success',
@@ -183,82 +208,69 @@ describe('MetricsService observability integration', () => {
   });
 
   it('logs and absorbs failures when Prometheus primitives throw unexpectedly', async () => {
-    const service = new MetricsService({ logger, collectDefaultMetrics: false });
+    const service = new MetricsService({
+      logger,
+      collectDefaultMetrics: false,
+    });
 
     const app = express();
     app.use(express.json());
-    app.use(createMetricsMiddleware({ metricsService: service, logger, enabled: true }));
+    app.use(
+      createMetricsMiddleware({
+        metricsService: service,
+        logger,
+        enabled: true,
+      })
+    );
 
-    jest
-      .spyOn(service.httpRequestsTotal, 'inc')
-      .mockImplementation(() => {
-        throw new Error('http counter failure');
-      });
-    jest
-      .spyOn(service.llmRequestsTotal, 'inc')
-      .mockImplementation(() => {
-        throw new Error('llm counter failure');
-      });
-    jest
-      .spyOn(service.cacheOperationsTotal, 'inc')
-      .mockImplementation(() => {
-        throw new Error('cache counter failure');
-      });
-    jest
-      .spyOn(service.cacheSize, 'set')
-      .mockImplementation(() => {
-        throw new Error('cache size failure');
-      });
-    jest
-      .spyOn(service.cacheMemoryUsage, 'set')
-      .mockImplementation(() => {
-        throw new Error('cache memory failure');
-      });
-    jest
-      .spyOn(service.rateLimitHits, 'inc')
-      .mockImplementation(() => {
-        throw new Error('rate limit counter failure');
-      });
+    jest.spyOn(service.httpRequestsTotal, 'inc').mockImplementation(() => {
+      throw new Error('http counter failure');
+    });
+    jest.spyOn(service.llmRequestsTotal, 'inc').mockImplementation(() => {
+      throw new Error('llm counter failure');
+    });
+    jest.spyOn(service.cacheOperationsTotal, 'inc').mockImplementation(() => {
+      throw new Error('cache counter failure');
+    });
+    jest.spyOn(service.cacheSize, 'set').mockImplementation(() => {
+      throw new Error('cache size failure');
+    });
+    jest.spyOn(service.cacheMemoryUsage, 'set').mockImplementation(() => {
+      throw new Error('cache memory failure');
+    });
+    jest.spyOn(service.rateLimitHits, 'inc').mockImplementation(() => {
+      throw new Error('rate limit counter failure');
+    });
     jest
       .spyOn(service.suspiciousPatternsDetected, 'inc')
       .mockImplementation(() => {
         throw new Error('pattern counter failure');
       });
-    jest
-      .spyOn(service.rateLimitMapSize, 'set')
-      .mockImplementation(() => {
-        throw new Error('rate limit gauge failure');
-      });
+    jest.spyOn(service.rateLimitMapSize, 'set').mockImplementation(() => {
+      throw new Error('rate limit gauge failure');
+    });
     jest
       .spyOn(service.securityValidationResults, 'inc')
       .mockImplementation(() => {
         throw new Error('security validation counter failure');
       });
-    jest
-      .spyOn(service.securityIncidents, 'inc')
-      .mockImplementation(() => {
-        throw new Error('security incident counter failure');
-      });
-    jest
-      .spyOn(service.apiKeyOperations, 'inc')
-      .mockImplementation(() => {
-        throw new Error('api key counter failure');
-      });
-    jest
-      .spyOn(service.healthCheckResults, 'inc')
-      .mockImplementation(() => {
-        throw new Error('health counter failure');
-      });
+    jest.spyOn(service.securityIncidents, 'inc').mockImplementation(() => {
+      throw new Error('security incident counter failure');
+    });
+    jest.spyOn(service.apiKeyOperations, 'inc').mockImplementation(() => {
+      throw new Error('api key counter failure');
+    });
+    jest.spyOn(service.healthCheckResults, 'inc').mockImplementation(() => {
+      throw new Error('health counter failure');
+    });
     jest
       .spyOn(service.healthCheckDuration, 'observe')
       .mockImplementation(() => {
         throw new Error('health histogram failure');
       });
-    jest
-      .spyOn(service.errorsTotal, 'inc')
-      .mockImplementation(() => {
-        throw new Error('error counter failure');
-      });
+    jest.spyOn(service.errorsTotal, 'inc').mockImplementation(() => {
+      throw new Error('error counter failure');
+    });
 
     app.post(
       '/llm/failure',
@@ -269,7 +281,10 @@ describe('MetricsService observability integration', () => {
           cacheType: 'llm-response',
         });
 
-        cacheRecorder.recordOperation('set', 'error', { size: 3, memoryUsage: 128 });
+        cacheRecorder.recordOperation('set', 'error', {
+          size: 3,
+          memoryUsage: 128,
+        });
         cacheRecorder.recordStats(7, 4096);
 
         service.recordRateLimiting({
@@ -312,7 +327,7 @@ describe('MetricsService observability integration', () => {
             output_tokens: 1,
           },
         });
-      },
+      }
     );
 
     const failureResponse = await request(app)
@@ -334,38 +349,36 @@ describe('MetricsService observability integration', () => {
         'Error recording API key operation metrics',
         'Error recording health check metrics',
         'Error recording error metrics',
-      ]),
+      ])
     );
 
     jest
       .spyOn(service.getRegistry(), 'metrics')
       .mockRejectedValue(new Error('metrics snapshot failure'));
-    await expect(service.getMetrics()).rejects.toThrow('metrics snapshot failure');
+    await expect(service.getMetrics()).rejects.toThrow(
+      'metrics snapshot failure'
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Error getting metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
 
-    jest
-      .spyOn(service.getRegistry(), 'resetMetrics')
-      .mockImplementation(() => {
-        throw new Error('reset failure');
-      });
+    jest.spyOn(service.getRegistry(), 'resetMetrics').mockImplementation(() => {
+      throw new Error('reset failure');
+    });
     service.reset();
     expect(logger.error).toHaveBeenCalledWith(
       'Error resetting metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
 
-    jest
-      .spyOn(service.getRegistry(), 'clear')
-      .mockImplementation(() => {
-        throw new Error('clear failure');
-      });
+    jest.spyOn(service.getRegistry(), 'clear').mockImplementation(() => {
+      throw new Error('clear failure');
+    });
     service.clear();
     expect(logger.error).toHaveBeenCalledWith(
       'Error clearing metrics',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     jest
@@ -377,7 +390,7 @@ describe('MetricsService observability integration', () => {
     expect(stats).toEqual({ enabled: true, error: 'stats failure' });
     expect(logger.error).toHaveBeenCalledWith(
       'Error getting metrics stats',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 });

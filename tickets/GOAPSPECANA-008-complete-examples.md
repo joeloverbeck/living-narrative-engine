@@ -25,6 +25,7 @@ Create 5 complete worked examples demonstrating the GOAP system from initial sta
 ## Tasks
 
 ### Example 1: Simple Refinement (Item in Inventory)
+
 ```
 Initial State:
 - Actor: id=actor_1, location=room_8, hunger=75
@@ -64,6 +65,7 @@ Replan triggered (hunger still > 30), finds second item...
 ```
 
 ### Example 2: Complex Refinement (Requires Movement)
+
 ```
 Initial State:
 - Actor: id=actor_1, location=room_8, hunger=80, inventory=[]
@@ -94,6 +96,7 @@ Execution:
 ```
 
 ### Example 3: Failed Refinement (No Valid Target)
+
 ```
 Initial State:
 - Actor: id=actor_1, hunger=85, inventory=[]
@@ -114,6 +117,7 @@ Fallback Behavior:
 ```
 
 ### Example 4: Plan Invalidation (Concurrent Actor)
+
 ```
 Timeline:
 T=0: Actor_A plans to consume apple_5 (in room_12)
@@ -126,6 +130,7 @@ T=6: Actor_A replans (finds bread_7 instead)
 ```
 
 ### Example 5: Knowledge-Limited Planning (Omniscience Prevention)
+
 ```
 Initial State:
 - Actor: id=actor_1, location=room_8, hunger=80

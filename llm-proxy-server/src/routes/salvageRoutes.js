@@ -19,7 +19,9 @@ export const createSalvageRoutes = (salvageController) => {
   );
 
   // GET /api/llm-request/salvage-stats - Get salvage service statistics
-  router.get('/salvage-stats', (req, res) => salvageController.handleSalvageStats(req, res));
+  router.get('/salvage-stats', (req, res) =>
+    salvageController.handleSalvageStats(req, res)
+  );
 
   return router;
 };

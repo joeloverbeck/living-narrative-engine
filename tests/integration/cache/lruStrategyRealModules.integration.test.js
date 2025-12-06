@@ -1,5 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import { UnifiedCache, EvictionPolicy } from '../../../src/cache/UnifiedCache.js';
+import {
+  UnifiedCache,
+  EvictionPolicy,
+} from '../../../src/cache/UnifiedCache.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
 /**
@@ -51,7 +54,10 @@ describe('LRU strategy real module integration', () => {
 
     const entries = lruCache.getEntries(10);
     const storedPairs = Object.fromEntries(entries);
-    expect(storedPairs['object:value']).toEqual({ label: 'beta', nested: { id: 42 } });
+    expect(storedPairs['object:value']).toEqual({
+      label: 'beta',
+      nested: { id: 42 },
+    });
     expect(storedPairs['circular:value']).toBe(circular);
 
     const metrics = lruCache.getMetrics();

@@ -123,7 +123,9 @@ describe('log formatter default fallback integration coverage', () => {
   });
 
   it('treats primitive payloads as detail entries when no context object is provided', async () => {
-    const { getLogFormatter } = await import('../../src/logging/logFormatter.js');
+    const { getLogFormatter } = await import(
+      '../../src/logging/logFormatter.js'
+    );
     const formatter = getLogFormatter();
 
     const formatted = formatter.formatMessage(

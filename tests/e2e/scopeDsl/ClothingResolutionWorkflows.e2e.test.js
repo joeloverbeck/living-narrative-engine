@@ -115,7 +115,6 @@ describe('Clothing Resolution Workflows E2E', () => {
     }
   });
 
-
   /**
    * Creates game context for scope resolution
    *

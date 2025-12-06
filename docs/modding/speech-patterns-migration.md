@@ -19,17 +19,18 @@ This guide walks you through converting legacy string-based speech patterns to t
 
 The structured format offers several benefits over legacy strings:
 
-| Benefit | Description |
-|---------|-------------|
-| **Better Organization** | Patterns grouped by theme rather than flat list |
-| **Richer Context** | Explicit tags tell LLM *when* to use patterns |
-| **Easier Maintenance** | Add/remove examples without rewriting descriptions |
-| **Improved LLM Guidance** | Structured data helps AI understand pattern usage |
-| **Future-Proofing** | New features will build on structured format |
+| Benefit                   | Description                                        |
+| ------------------------- | -------------------------------------------------- |
+| **Better Organization**   | Patterns grouped by theme rather than flat list    |
+| **Richer Context**        | Explicit tags tell LLM _when_ to use patterns      |
+| **Easier Maintenance**    | Add/remove examples without rewriting descriptions |
+| **Improved LLM Guidance** | Structured data helps AI understand pattern usage  |
+| **Future-Proofing**       | New features will build on structured format       |
 
 ### Prompt Output Comparison
 
 **Legacy format** produces:
+
 ```xml
 <speech_patterns>
   - (when nervous) 'I, um, didn't mean to—sorry.'
@@ -38,6 +39,7 @@ The structured format offers several benefits over legacy strings:
 ```
 
 **Structured format** produces:
+
 ```xml
 <speech_patterns>
   <!-- Use naturally, not mechanically. Examples show tendencies, not rules. -->
@@ -128,12 +130,12 @@ Choose clear, descriptive names (4-8 categories):
 
 Assign each pattern to a category:
 
-| Pattern | Category |
-|---------|----------|
-| "Oh meow-y goodness..." | Feline Verbal Tics |
-| "Purr-haps you could..." | Feline Verbal Tics |
-| "Don't. Don't you dare." | Feline Verbal Tics (absence marker) |
-| "You have gorgeous eyes~..." | Tonal Shifts |
+| Pattern                      | Category                            |
+| ---------------------------- | ----------------------------------- |
+| "Oh meow-y goodness..."      | Feline Verbal Tics                  |
+| "Purr-haps you could..."     | Feline Verbal Tics                  |
+| "Don't. Don't you dare."     | Feline Verbal Tics (absence marker) |
+| "You have gorgeous eyes~..." | Tonal Shifts                        |
 
 ### Step 5: Extract Pure Examples
 
@@ -226,20 +228,25 @@ Group patterns that express specific traits:
 ### Good Context Tags
 
 **Emotional triggers**:
+
 - `anxiety`, `confidence`, `vulnerability`, `anger`, `joy`
 
 **Situational triggers**:
+
 - `combat`, `negotiation`, `storytelling`, `teaching`
 
 **Social triggers**:
+
 - `with strangers`, `with intimates`, `in public`, `alone`
 
 **Frequency indicators**:
+
 - `rare`, `common`, `when stressed`, `when relaxed`
 
 ### Context Tag Patterns
 
 **Descriptive phrases** work well:
+
 ```json
 "contexts": [
   "Casual context: integrated naturally into speech",
@@ -248,6 +255,7 @@ Group patterns that express specific traits:
 ```
 
 **Simple tags** also work:
+
 ```json
 "contexts": ["casual", "manipulative", "vulnerable"]
 ```
@@ -259,6 +267,7 @@ Choose whichever style better captures the nuance.
 ### Example 1: Simple Character
 
 **Before (5 legacy patterns)**:
+
 ```json
 {
   "patterns": [
@@ -272,12 +281,17 @@ Choose whichever style better captures the nuance.
 ```
 
 **After (2 structured categories)**:
+
 ```json
 {
   "patterns": [
     {
       "type": "Anxious Deflections",
-      "contexts": ["social situations", "receiving attention", "making mistakes"],
+      "contexts": [
+        "social situations",
+        "receiving attention",
+        "making mistakes"
+      ],
       "examples": [
         "Ha, well, you know how it is...",
         "Sorry, sorry, I didn't mean—",
@@ -287,7 +301,11 @@ Choose whichever style better captures the nuance.
     },
     {
       "type": "Academic Enthusiasm",
-      "contexts": ["discussing books", "making connections", "teaching moments"],
+      "contexts": [
+        "discussing books",
+        "making connections",
+        "teaching moments"
+      ],
       "examples": [
         "Oh! This reminds me of a passage in—",
         "Fascinating! The parallel to Thornwick's theory is—"
@@ -300,26 +318,32 @@ Choose whichever style better captures the nuance.
 ### Example 2: Complex Character
 
 **Before (18 legacy patterns)**:
+
 ```json
 {
   "patterns": [
     "(when performing or manipulating, she lays it on thick) 'Oh meow-y goodness...'",
     "(casual feline wordplay) 'Purr-haps you could help?'",
     "(abrupt shift from flirtation to analysis) 'Your eyes are gorgeous~ Your breathing suggests trauma.'",
-    "(violence as mundane) 'Killed three bandits before breakfast.'",
+    "(violence as mundane) 'Killed three bandits before breakfast.'"
     // ... 14 more patterns
   ]
 }
 ```
 
 **After (6 structured categories)**:
+
 ```json
 {
   "patterns": [
     {
       "type": "Feline Verbal Tics",
       "contexts": ["casual", "manipulative", "vulnerable (absence)"],
-      "examples": ["Oh meow-y goodness...", "Purr-haps...", "Don't. Don't you dare."]
+      "examples": [
+        "Oh meow-y goodness...",
+        "Purr-haps...",
+        "Don't. Don't you dare."
+      ]
     },
     {
       "type": "Tonal Shifts",
@@ -330,7 +354,7 @@ Choose whichever style better captures the nuance.
       "type": "Violence Casualization",
       "contexts": ["combat", "mundane conversation"],
       "examples": ["Killed three bandits before breakfast.", "Decent workout."]
-    },
+    }
     // ... 3 more categories
   ]
 }
@@ -362,7 +386,7 @@ Choose whichever style better captures the nuance.
 
 **Problem**: Tags like "speech" or "talking" don't help the LLM.
 
-**Solution**: Be specific about *when* and *why*.
+**Solution**: Be specific about _when_ and _why_.
 
 ```json
 // Too generic
@@ -407,24 +431,28 @@ Choose whichever style better captures the nuance.
 Before finalizing your migration:
 
 ### Structure
+
 - [ ] 4-8 pattern categories
 - [ ] Each category has `type` and `examples`
 - [ ] Each category has 2-5 examples
 - [ ] Total examples: 15-25
 
 ### Content Quality
+
 - [ ] Category names are clear and distinct
 - [ ] Context tags are specific and helpful
 - [ ] Examples are authentic to character
 - [ ] No duplicate examples across categories
 
 ### Technical
+
 - [ ] Valid JSON syntax
 - [ ] Schema validation passes (`npm run validate:mod:yourmod`)
 - [ ] Character loads successfully
 - [ ] No console errors
 
 ### Completeness
+
 - [ ] All original patterns accounted for
 - [ ] No important speech characteristics lost
 - [ ] Pattern richness preserved
@@ -449,7 +477,7 @@ Create scenarios matching your context tags. The LLM should favor those patterns
 
 ### Test 3: Pattern Absence
 
-Sometimes characters should speak *without* distinctive patterns.
+Sometimes characters should speak _without_ distinctive patterns.
 
 **Good**: Normal sentences appear alongside patterned speech.
 **Bad**: Character cannot speak a single plain sentence.
@@ -468,6 +496,7 @@ This section walks through the real conversion of Vespera Nightwhisper.
 ### Starting Point
 
 Vespera had 18 legacy string patterns covering:
+
 - Cat-girl verbal tics (meow, purr, etc.)
 - Bard's narrative tendency
 - Tonal shifts from playful to cold
@@ -488,7 +517,7 @@ Analysis revealed 6 natural groupings:
 
 ### Context Development
 
-Each category got contexts explaining *when* patterns appear:
+Each category got contexts explaining _when_ patterns appear:
 
 ```json
 {
@@ -505,15 +534,15 @@ Note how the third context describes **absence** of the pattern—this helps the
 
 ### Example Distribution
 
-| Category | Examples | Original Patterns |
-|----------|----------|-------------------|
-| Feline Verbal Tics | 5 | 4 |
-| Narrativization Bleeding | 3 | 3 |
-| Tonal Shifts | 3 | 4 |
-| Violence Casualization | 4 | 3 |
-| Deflection & Exposure | 3 | 2 |
-| Fragmented Memory | 2 | 2 |
-| **Total** | **20** | **18** |
+| Category                 | Examples | Original Patterns |
+| ------------------------ | -------- | ----------------- |
+| Feline Verbal Tics       | 5        | 4                 |
+| Narrativization Bleeding | 3        | 3                 |
+| Tonal Shifts             | 3        | 4                 |
+| Violence Casualization   | 4        | 3                 |
+| Deflection & Exposure    | 3        | 2                 |
+| Fragmented Memory        | 2        | 2                 |
+| **Total**                | **20**   | **18**            |
 
 Slight increase in examples because some patterns were split to show more variety.
 
@@ -535,5 +564,6 @@ Slight increase in examples because some patterns were split to show more variet
 ---
 
 **Related Documentation**:
+
 - [Speech Patterns Guide](./speech-patterns-guide.md) - Complete format reference and best practices
 - [Component Schema](../../data/mods/core/components/speech_patterns.component.json) - Technical schema definition

@@ -70,16 +70,16 @@ describe('Items - Entity Loading', () => {
     const entityFiles = [
       'letter_to_sheriff.entity.json',
       'revolver.entity.json',
-      'gold_bar.entity.json'
+      'gold_bar.entity.json',
     ];
 
     // Verify all entities are listed in manifest
-    entityFiles.forEach(filename => {
+    entityFiles.forEach((filename) => {
       expect(manifest.content.entities.definitions).toContain(filename);
     });
 
     // Verify all entity files exist
-    entityFiles.forEach(filename => {
+    entityFiles.forEach((filename) => {
       const entityPath = path.resolve(
         process.cwd(),
         `data/mods/items/entities/definitions/${filename}`

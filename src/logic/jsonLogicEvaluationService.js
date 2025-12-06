@@ -153,7 +153,8 @@ class JsonLogicEvaluationService extends BaseService {
 
       return {
         matchAtEnd: primaryKey === 'matchAtEnd' ? Boolean(value) : false,
-        matchWholeWord: primaryKey === 'matchWholeWord' ? Boolean(value) : false,
+        matchWholeWord:
+          primaryKey === 'matchWholeWord' ? Boolean(value) : false,
       };
     };
 
@@ -470,7 +471,11 @@ class JsonLogicEvaluationService extends BaseService {
     );
 
     // TEMPORARY DIAGNOSTIC: Log condition_ref evaluations
-    if (resolvedRule && typeof resolvedRule === 'object' && resolvedRule.condition_ref) {
+    if (
+      resolvedRule &&
+      typeof resolvedRule === 'object' &&
+      resolvedRule.condition_ref
+    ) {
       this.#logger.debug('[DIAGNOSTIC] Evaluating condition_ref:', {
         conditionRef: resolvedRule.condition_ref,
         contextKeys: Object.keys(context || {}),
@@ -505,11 +510,17 @@ class JsonLogicEvaluationService extends BaseService {
               args,
               resolvedRule: JSON.stringify(resolvedRule),
               contextKeys: Object.keys(context || {}),
-              stateKeys: context?.state ? Object.keys(context.state) : 'no state'
+              stateKeys: context?.state
+                ? Object.keys(context.state)
+                : 'no state',
             }
           );
           rawResult = jsonLogic.apply(resolvedRule, context);
-          this.#logger.debug('[JsonLogicEvaluationService] Result from jsonLogic.apply', 'logic:evaluation', rawResult);
+          this.#logger.debug(
+            '[JsonLogicEvaluationService] Result from jsonLogic.apply',
+            'logic:evaluation',
+            rawResult
+          );
         }
       } else {
         this.#logger.debug(
@@ -518,11 +529,15 @@ class JsonLogicEvaluationService extends BaseService {
           {
             resolvedRule: JSON.stringify(resolvedRule),
             contextKeys: Object.keys(context || {}),
-            stateKeys: context?.state ? Object.keys(context.state) : 'no state'
+            stateKeys: context?.state ? Object.keys(context.state) : 'no state',
           }
         );
         rawResult = jsonLogic.apply(resolvedRule, context);
-        this.#logger.debug('[JsonLogicEvaluationService] Result from jsonLogic.apply (else branch)', 'logic:evaluation', rawResult);
+        this.#logger.debug(
+          '[JsonLogicEvaluationService] Result from jsonLogic.apply (else branch)',
+          'logic:evaluation',
+          rawResult
+        );
       }
 
       // Return raw result directly - json-logic-js returns correct types for all operators

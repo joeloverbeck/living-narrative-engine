@@ -3,9 +3,6 @@
   "id": "items:event-is-action-drop-wielded-item",
   "description": "Checks if event is the drop_wielded_item action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:drop_wielded_item"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "items:drop_wielded_item"]
   }
 }

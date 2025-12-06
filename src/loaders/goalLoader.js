@@ -52,10 +52,20 @@ function isNormalizationDiagnosticsEnabled() {
     return true;
   }
   const normalized = raw.trim().toLowerCase();
-  if (normalized === '0' || normalized === 'false' || normalized === 'off' || normalized === 'no') {
+  if (
+    normalized === '0' ||
+    normalized === 'false' ||
+    normalized === 'off' ||
+    normalized === 'no'
+  ) {
     return false;
   }
-  if (normalized === '1' || normalized === 'true' || normalized === 'on' || normalized === 'yes') {
+  if (
+    normalized === '1' ||
+    normalized === 'true' ||
+    normalized === 'on' ||
+    normalized === 'yes'
+  ) {
     return true;
   }
   return true;
@@ -257,7 +267,9 @@ class GoalLoader extends SimpleItemLoader {
     this._normalizationDiagnostics.context = {
       modId: context.modId || this._normalizationDiagnostics.modId || null,
       registryKey:
-        context.registryKey || this._normalizationDiagnostics.registryKey || null,
+        context.registryKey ||
+        this._normalizationDiagnostics.registryKey ||
+        null,
       status: context.status || 'unknown',
       errorMessage: context.errorMessage || null,
       diagnosticsEnabled: this._shouldEmitNormalizationDiagnostics(),
@@ -359,7 +371,13 @@ class GoalLoader extends SimpleItemLoader {
     stats.lastModId = modId;
   }
 
-  async loadItemsForMod(modId, modManifest, contentKey, diskFolder, registryKey) {
+  async loadItemsForMod(
+    modId,
+    modManifest,
+    contentKey,
+    diskFolder,
+    registryKey
+  ) {
     this._resetNormalizationDiagnostics(modId, registryKey);
     try {
       const result = await super.loadItemsForMod(
@@ -509,7 +527,8 @@ class GoalLoader extends SimpleItemLoader {
           failureThrowMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
           filePath: resolvedPath,
           onValidationFailure: ({ errors, errorDetails }) => {
-            const firstError = Array.isArray(errors) && errors.length > 0 ? errors[0] : null;
+            const firstError =
+              Array.isArray(errors) && errors.length > 0 ? errors[0] : null;
             failureDetails = {
               errors,
               formattedErrors: errorDetails,
@@ -564,7 +583,9 @@ class GoalLoader extends SimpleItemLoader {
     );
 
     return new ModValidationError(
-      failureDetails?.message || originalError.message || 'Goal schema validation failed.',
+      failureDetails?.message ||
+        originalError.message ||
+        'Goal schema validation failed.',
       GOAL_SCHEMA_ERROR_CODE,
       {
         modId,

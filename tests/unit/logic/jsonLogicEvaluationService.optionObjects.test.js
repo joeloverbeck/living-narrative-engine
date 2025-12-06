@@ -32,7 +32,11 @@ describe('JsonLogicEvaluationService option literal handling', () => {
 
     service.addOperation(
       'hasPartSubTypeContaining',
-      function registerHasPartSubTypeContaining(entityPath, substring, options) {
+      function registerHasPartSubTypeContaining(
+        entityPath,
+        substring,
+        options
+      ) {
         return operator.evaluate([entityPath, substring, options], this);
       }
     );
@@ -69,7 +73,9 @@ describe('JsonLogicEvaluationService option literal handling', () => {
       errorMessages.some(
         (message) =>
           typeof message === 'string' &&
-          message.includes("JSON Logic validation error: Disallowed operation 'matchAtEnd'")
+          message.includes(
+            "JSON Logic validation error: Disallowed operation 'matchAtEnd'"
+          )
       )
     ).toBe(false);
   });

@@ -791,7 +791,9 @@ describe('PlanningNode - Edge Cases', () => {
     });
 
     expect(node.state['entity-1:core:inventory'].items.length).toBe(2);
-    expect(node.state['entity-1:core:inventory'].items[0].properties.weight).toBe(5);
+    expect(
+      node.state['entity-1:core:inventory'].items[0].properties.weight
+    ).toBe(5);
   });
 
   it('should handle special values in state', () => {

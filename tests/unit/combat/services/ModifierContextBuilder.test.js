@@ -105,7 +105,10 @@ describe('ModifierContextBuilder', () => {
     it('should throw error when entityManager missing required methods', () => {
       expect(() => {
         new ModifierContextBuilder({
-          entityManager: { getComponentData: jest.fn(), hasComponent: jest.fn() }, // Missing getEntity
+          entityManager: {
+            getComponentData: jest.fn(),
+            hasComponent: jest.fn(),
+          }, // Missing getEntity
           logger: mockLogger,
         });
       }).toThrow(InvalidArgumentError);
@@ -121,12 +124,14 @@ describe('ModifierContextBuilder', () => {
         });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') {
-            return actorEntity.components[componentId];
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123') {
+              return actorEntity.components[componentId];
+            }
+            return undefined;
           }
-          return undefined;
-        });
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
@@ -169,11 +174,15 @@ describe('ModifierContextBuilder', () => {
           if (id === 'target-456') return targetEntity;
           return undefined;
         });
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          if (entityId === 'target-456') return targetEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            if (entityId === 'target-456')
+              return targetEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({
           actorId: 'actor-123',
@@ -197,9 +206,15 @@ describe('ModifierContextBuilder', () => {
 
       it('should build context with all targets (primary, secondary, tertiary)', () => {
         const actorEntity = createMockEntity('actor-1', { 'core:actor': {} });
-        const primaryEntity = createMockEntity('primary-2', { 'core:actor': {} });
-        const secondaryEntity = createMockEntity('secondary-3', { 'status:allied': {} });
-        const tertiaryEntity = createMockEntity('tertiary-4', { 'items:container': {} });
+        const primaryEntity = createMockEntity('primary-2', {
+          'core:actor': {},
+        });
+        const secondaryEntity = createMockEntity('secondary-3', {
+          'status:allied': {},
+        });
+        const tertiaryEntity = createMockEntity('tertiary-4', {
+          'items:container': {},
+        });
 
         mockEntityManager.getEntity.mockImplementation((id) => {
           if (id === 'actor-1') return actorEntity;
@@ -208,15 +223,17 @@ describe('ModifierContextBuilder', () => {
           if (id === 'tertiary-4') return tertiaryEntity;
           return undefined;
         });
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          const entities = {
-            'actor-1': actorEntity,
-            'primary-2': primaryEntity,
-            'secondary-3': secondaryEntity,
-            'tertiary-4': tertiaryEntity,
-          };
-          return entities[entityId]?.components[componentId];
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            const entities = {
+              'actor-1': actorEntity,
+              'primary-2': primaryEntity,
+              'secondary-3': secondaryEntity,
+              'tertiary-4': tertiaryEntity,
+            };
+            return entities[entityId]?.components[componentId];
+          }
+        );
 
         const result = service.buildContext({
           actorId: 'actor-1',
@@ -244,10 +261,13 @@ describe('ModifierContextBuilder', () => {
           if (id === 'actor-123') return actorEntity;
           return undefined;
         });
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({
           actorId: 'actor-123',
@@ -260,7 +280,7 @@ describe('ModifierContextBuilder', () => {
     });
 
     describe('location resolution', () => {
-      it('should resolve location from actor\'s core:position component', () => {
+      it("should resolve location from actor's core:position component", () => {
         const actorEntity = createMockEntity('actor-123', {
           'core:actor': {},
           'core:position': { locationId: 'location-789' },
@@ -275,11 +295,15 @@ describe('ModifierContextBuilder', () => {
           if (id === 'location-789') return locationEntity;
           return undefined;
         });
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          if (entityId === 'location-789') return locationEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            if (entityId === 'location-789')
+              return locationEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
@@ -299,10 +323,13 @@ describe('ModifierContextBuilder', () => {
         });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
@@ -316,10 +343,13 @@ describe('ModifierContextBuilder', () => {
         });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
@@ -336,10 +366,13 @@ describe('ModifierContextBuilder', () => {
           if (id === 'actor-123') return actorEntity;
           return undefined; // Location not found
         });
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
@@ -357,17 +390,26 @@ describe('ModifierContextBuilder', () => {
         });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
         expect(result.entity.actor.components).toHaveProperty('core:actor');
-        expect(result.entity.actor.components).toHaveProperty('skills:grappling_skill');
-        expect(result.entity.actor.components).toHaveProperty('buffs:adrenaline_surge');
-        expect(result.entity.actor.components).toHaveProperty('health:vitality');
+        expect(result.entity.actor.components).toHaveProperty(
+          'skills:grappling_skill'
+        );
+        expect(result.entity.actor.components).toHaveProperty(
+          'buffs:adrenaline_surge'
+        );
+        expect(result.entity.actor.components).toHaveProperty(
+          'health:vitality'
+        );
         expect(Object.keys(result.entity.actor.components)).toHaveLength(4);
       });
 
@@ -392,15 +434,22 @@ describe('ModifierContextBuilder', () => {
         });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const result = service.buildContext({ actorId: 'actor-123' });
 
-        expect(result.entity.actor.components).toHaveProperty('valid:component');
-        expect(result.entity.actor.components).not.toHaveProperty('null:component');
+        expect(result.entity.actor.components).toHaveProperty(
+          'valid:component'
+        );
+        expect(result.entity.actor.components).not.toHaveProperty(
+          'null:component'
+        );
       });
     });
 
@@ -441,10 +490,13 @@ describe('ModifierContextBuilder', () => {
         const actorEntity = createMockEntity('actor-123', { 'core:actor': {} });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         service.buildContext({
           actorId: 'actor-123',
@@ -465,18 +517,24 @@ describe('ModifierContextBuilder', () => {
           'core:actor': {},
           'core:position': { locationId: 'loc-1' },
         });
-        const locationEntity = createMockEntity('loc-1', { 'environment:darkness': {} });
+        const locationEntity = createMockEntity('loc-1', {
+          'environment:darkness': {},
+        });
 
         mockEntityManager.getEntity.mockImplementation((id) => {
           if (id === 'actor-123') return actorEntity;
           if (id === 'loc-1') return locationEntity;
           return undefined;
         });
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          if (entityId === 'loc-1') return locationEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            if (entityId === 'loc-1')
+              return locationEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         service.buildContext({ actorId: 'actor-123' });
 
@@ -511,10 +569,13 @@ describe('ModifierContextBuilder', () => {
         const actorEntity = createMockEntity('actor-123', { 'core:actor': {} });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         const input = { actorId: 'actor-123', primaryTargetId: 'target-456' };
         const result1 = service.buildContext(input);
@@ -527,10 +588,13 @@ describe('ModifierContextBuilder', () => {
         const actorEntity = createMockEntity('actor-123', { 'core:actor': {} });
 
         mockEntityManager.getEntity.mockReturnValue(actorEntity);
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-          if (entityId === 'actor-123') return actorEntity.components[componentId];
-          return undefined;
-        });
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (entityId === 'actor-123')
+              return actorEntity.components[componentId];
+            return undefined;
+          }
+        );
 
         service.buildContext({ actorId: 'actor-123' });
 

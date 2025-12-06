@@ -313,14 +313,14 @@ export class InitiativePriorityQueue extends ITurnOrderQueue {
     ); // LOGGING
 
     if (this.#activeSize === 0 || this.#queue.length === 0) {
-      console.debug('[DEBUG] toArray: No active entities. Returning empty array.');
+      console.debug(
+        '[DEBUG] toArray: No active entities. Returning empty array.'
+      );
       return [];
     }
 
     const snapshot = new TinyQueue([], this.#queue.compare);
-    snapshot.data = this.#queue.data.map((item) =>
-      item ? { ...item } : item
-    );
+    snapshot.data = this.#queue.data.map((item) => (item ? { ...item } : item));
     snapshot.length = snapshot.data.length;
 
     /** @type {Entity[]} */

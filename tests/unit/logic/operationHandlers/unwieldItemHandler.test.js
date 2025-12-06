@@ -324,7 +324,9 @@ describe('UnwieldItemHandler', () => {
         'actor-001',
         'item-002'
       );
-      expect(grabbingUtils.unlockAppendagesHoldingItem).toHaveBeenCalledTimes(1);
+      expect(grabbingUtils.unlockAppendagesHoldingItem).toHaveBeenCalledTimes(
+        1
+      );
     });
   });
 
@@ -425,9 +427,7 @@ describe('UnwieldItemHandler', () => {
       mockEntityManager.getComponentData.mockReturnValue({
         wielded_item_ids: ['item-001', 'item-002'],
       });
-      mockEntityManager.addComponent.mockRejectedValue(
-        new Error('Add failed')
-      );
+      mockEntityManager.addComponent.mockRejectedValue(new Error('Add failed'));
 
       const result = await handler.execute(params, executionContext);
 

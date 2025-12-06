@@ -66,15 +66,15 @@ bodyBlueprintFactory.createAnatomyGraph()
 
 ### Key Components
 
-| Component | File | Responsibility |
-|-----------|------|----------------|
-| Blueprint Loader | `src/anatomy/bodyBlueprintFactory/blueprintLoader.js` | V1/V2 detection, template processing |
-| Slot Resolution | `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | Node creation loop |
-| Graph Context | `src/anatomy/anatomyGraphContext.js` | State tracking during build |
-| Recipe Processor | `src/anatomy/recipeProcessor.js` | V1 pattern expansion |
-| Pattern Resolver | `src/anatomy/recipePatternResolver/patternResolver.js` | V2 pattern resolution |
-| Socket Manager | `src/anatomy/socketManager.js` | Socket occupancy tracking |
-| Entity Builder | `src/anatomy/entityGraphBuilder.js` | Entity creation and attachment |
+| Component        | File                                                             | Responsibility                       |
+| ---------------- | ---------------------------------------------------------------- | ------------------------------------ |
+| Blueprint Loader | `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`            | V1/V2 detection, template processing |
+| Slot Resolution  | `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | Node creation loop                   |
+| Graph Context    | `src/anatomy/anatomyGraphContext.js`                             | State tracking during build          |
+| Recipe Processor | `src/anatomy/recipeProcessor.js`                                 | V1 pattern expansion                 |
+| Pattern Resolver | `src/anatomy/recipePatternResolver/patternResolver.js`           | V2 pattern resolution                |
+| Socket Manager   | `src/anatomy/socketManager.js`                                   | Socket occupancy tracking            |
+| Entity Builder   | `src/anatomy/entityGraphBuilder.js`                              | Entity creation and attachment       |
 
 ---
 
@@ -91,6 +91,7 @@ return blueprint; // V1 pass-through
 ```
 
 **V2 Processing**:
+
 1. Load structure template from DataRegistry
 2. Generate sockets via `socketGenerator.generateSockets()`
 3. Generate slots via `slotGenerator.generateBlueprintSlots()`
@@ -147,6 +148,7 @@ mapSlotToEntity(slotKey, entityId) {
 **Problem**: When processing slots, the orchestrator doesn't validate that socket IDs are unique across all instances of an entity definition.
 
 **Scenario**:
+
 1. Blueprint has `left_leg` and `right_leg` slots
 2. Both reference same entity definition (`chicken_leg`)
 3. `chicken_leg` has sockets `foot` and `spur`
@@ -169,7 +171,7 @@ for (const socket of existingSocketList) {
   socketMap.set(socket.id, socket);
 }
 for (const socket of blueprint._generatedSockets) {
-  socketMap.set(socket.id, socket);  // Complete replacement, no merge
+  socketMap.set(socket.id, socket); // Complete replacement, no merge
 }
 ```
 
@@ -304,7 +306,7 @@ console.log('[DEBUG]   blueprint.slots exists?', !!blueprint.slots);
 **Problem**: Two anatomy parts with the same `core:name.text` are indistinguishable in the visualizer.
 
 ```javascript
-name = nameComponent?.text || id
+name = nameComponent?.text || id;
 ```
 
 **Impact**: User confusion when viewing anatomy graphs with parts like "finger" appearing multiple times.
@@ -318,7 +320,8 @@ name = nameComponent?.text || id
 **Problem**: For each node, the visualizer iterates ALL unvisited entities to find children.
 
 ```javascript
-for (const partId of allPartIds) {  // O(n) per node
+for (const partId of allPartIds) {
+  // O(n) per node
   if (!visited.has(partId)) {
     // Check if this is a child...
   }
@@ -333,12 +336,12 @@ for (const partId of allPartIds) {  // O(n) per node
 
 ### Current State
 
-| Aspect | V1 | V2 |
-|--------|----|----|
-| Schema Detection | No `schemaVersion` or "1.0" | `schemaVersion: "2.0"` |
-| Slots Source | Direct: `blueprint.slots` | Generated from `structureTemplate` |
-| Pattern Expansion | `RecipeProcessor` (simple) | `RecipePatternResolver` (complex) |
-| Configuration | Simple slot objects | Slots + patterns + exclusions |
+| Aspect            | V1                          | V2                                 |
+| ----------------- | --------------------------- | ---------------------------------- |
+| Schema Detection  | No `schemaVersion` or "1.0" | `schemaVersion: "2.0"`             |
+| Slots Source      | Direct: `blueprint.slots`   | Generated from `structureTemplate` |
+| Pattern Expansion | `RecipeProcessor` (simple)  | `RecipePatternResolver` (complex)  |
+| Configuration     | Simple slot objects         | Slots + patterns + exclusions      |
 
 ### Issues
 
@@ -356,6 +359,7 @@ Consolidate all version detection and processing into `BlueprintProcessorService
 ## 5. The Chicken Bug: Root Cause Analysis
 
 ### User Report
+
 - Right chicken leg has children: `chicken_spur` and `chicken_foot`
 - Left chicken leg has NO children (they got overwritten)
 
@@ -364,6 +368,7 @@ Consolidate all version detection and processing into `BlueprintProcessorService
 1. **Entity Definition Issue**: `chicken_leg.entity.json` has socket IDs `foot` and `spur` (not unique)
 
 2. **Blueprint Correctly Structured**:
+
    ```json
    "left_foot": { "parent": "left_leg", "socket": "foot", ... },
    "right_foot": { "parent": "right_leg", "socket": "foot", ... }
@@ -381,9 +386,11 @@ Consolidate all version detection and processing into `BlueprintProcessorService
    - Graph appeared complete but was corrupted
 
 ### Fix Applied
+
 The socket IDs in entity definitions were made unique (e.g., using orientation prefixes).
 
 ### Systemic Issue Remaining
+
 No fail-fast validation exists to catch similar issues in future recipes.
 
 ---
@@ -448,7 +455,12 @@ function validateSocketUniqueness(blueprint, context, entityManager) {
 **File**: `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js`
 
 ```javascript
-function validateComponentOverrides(partDefinitionId, componentOverrides, dataRegistry, logger) {
+function validateComponentOverrides(
+  partDefinitionId,
+  componentOverrides,
+  dataRegistry,
+  logger
+) {
   const partDef = dataRegistry.get('anatomyParts', partDefinitionId);
   const validComponents = Object.keys(partDef.components || {});
 
@@ -456,7 +468,7 @@ function validateComponentOverrides(partDefinitionId, componentOverrides, dataRe
     if (!validComponents.includes(componentId)) {
       logger.warn(
         `Component override '${componentId}' does not exist on entity definition '${partDefinitionId}'. ` +
-        `Available components: ${validComponents.join(', ')}`
+          `Available components: ${validComponents.join(', ')}`
       );
     }
   }
@@ -480,6 +492,7 @@ Remove all `console.log('[DEBUG]')` statements and replace with proper logger ca
 ### R5: Consolidate V1/V2 Processing
 
 **Files**:
+
 - `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`
 - `src/anatomy/services/blueprintProcessorService.js`
 
@@ -494,6 +507,7 @@ Move all V2 processing logic from `blueprintLoader.processV2Blueprint()` into `B
 **File**: New validator in `src/anatomy/validation/validators/`
 
 Create `SlotKeyUniquenessValidator.js` that fails if:
+
 - Blueprint has duplicate slot keys
 - additionalSlots duplicates generated slot keys (without explicit override intent)
 
@@ -539,17 +553,17 @@ Build parent-to-children index during initial iteration instead of O(n^2) discov
 
 ## 7. Implementation Priority Matrix
 
-| ID | Issue | Severity | Effort | Priority |
-|----|-------|----------|--------|----------|
-| R1 | Duplicate key detection in mapSlotToEntity | CRITICAL | Low | **1** |
-| R2 | Socket ID collision validation | CRITICAL | Medium | **2** |
-| R4 | Remove debug console.log | HIGH | Low | **3** |
-| R3 | Component override validation | HIGH | Medium | **4** |
-| R6 | Slot key uniqueness validator | MEDIUM | Medium | **5** |
-| R5 | Consolidate V1/V2 processing | MEDIUM | High | **6** |
-| R7 | Retry logic for child entities | MEDIUM | Low | **7** |
-| R8 | Name collision in visualizer | LOW | Low | **8** |
-| R9 | Optimize visualizer discovery | LOW | Medium | **9** |
+| ID  | Issue                                      | Severity | Effort | Priority |
+| --- | ------------------------------------------ | -------- | ------ | -------- |
+| R1  | Duplicate key detection in mapSlotToEntity | CRITICAL | Low    | **1**    |
+| R2  | Socket ID collision validation             | CRITICAL | Medium | **2**    |
+| R4  | Remove debug console.log                   | HIGH     | Low    | **3**    |
+| R3  | Component override validation              | HIGH     | Medium | **4**    |
+| R6  | Slot key uniqueness validator              | MEDIUM   | Medium | **5**    |
+| R5  | Consolidate V1/V2 processing               | MEDIUM   | High   | **6**    |
+| R7  | Retry logic for child entities             | MEDIUM   | Low    | **7**    |
+| R8  | Name collision in visualizer               | LOW      | Low    | **8**    |
+| R9  | Optimize visualizer discovery              | LOW      | Medium | **9**    |
 
 ---
 
@@ -557,41 +571,41 @@ Build parent-to-children index during initial iteration instead of O(n^2) discov
 
 ### Core Anatomy System
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js` | ~400 | Main orchestrator |
-| `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | 371 | Slot processing loop |
-| `src/anatomy/bodyBlueprintFactory/blueprintLoader.js` | 165 | V1/V2 detection and loading |
-| `src/anatomy/anatomyGraphContext.js` | 185 | State tracking |
-| `src/anatomy/entityGraphBuilder.js` | ~300 | Entity creation |
-| `src/anatomy/socketManager.js` | ~200 | Socket occupancy |
-| `src/anatomy/recipeProcessor.js` | ~200 | V1 pattern expansion |
-| `src/anatomy/recipePatternResolver/patternResolver.js` | ~300 | V2 pattern resolution |
-| `src/anatomy/services/blueprintProcessorService.js` | ~150 | V1/V2 processing service |
+| File                                                             | Lines | Purpose                     |
+| ---------------------------------------------------------------- | ----- | --------------------------- |
+| `src/anatomy/bodyBlueprintFactory/bodyBlueprintFactory.js`       | ~400  | Main orchestrator           |
+| `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | 371   | Slot processing loop        |
+| `src/anatomy/bodyBlueprintFactory/blueprintLoader.js`            | 165   | V1/V2 detection and loading |
+| `src/anatomy/anatomyGraphContext.js`                             | 185   | State tracking              |
+| `src/anatomy/entityGraphBuilder.js`                              | ~300  | Entity creation             |
+| `src/anatomy/socketManager.js`                                   | ~200  | Socket occupancy            |
+| `src/anatomy/recipeProcessor.js`                                 | ~200  | V1 pattern expansion        |
+| `src/anatomy/recipePatternResolver/patternResolver.js`           | ~300  | V2 pattern resolution       |
+| `src/anatomy/services/blueprintProcessorService.js`              | ~150  | V1/V2 processing service    |
 
 ### Validation Pipeline
 
-| File | Purpose |
-|------|---------|
-| `src/anatomy/validation/RecipeValidationRunner.js` | Validator orchestration |
-| `src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js` | Socket-slot validation |
-| `src/anatomy/validation/validators/SocketNameTplValidator.js` | Socket name template validation |
-| `src/anatomy/graphIntegrityValidator.js` | Final graph validation |
+| File                                                                    | Purpose                         |
+| ----------------------------------------------------------------------- | ------------------------------- |
+| `src/anatomy/validation/RecipeValidationRunner.js`                      | Validator orchestration         |
+| `src/anatomy/validation/validators/SocketSlotCompatibilityValidator.js` | Socket-slot validation          |
+| `src/anatomy/validation/validators/SocketNameTplValidator.js`           | Socket name template validation |
+| `src/anatomy/graphIntegrityValidator.js`                                | Final graph validation          |
 
 ### Visualization
 
-| File | Purpose |
-|------|---------|
+| File                                                  | Purpose                      |
+| ----------------------------------------------------- | ---------------------------- |
 | `src/domUI/anatomy-renderer/VisualizationComposer.js` | Graph building and rendering |
-| `src/domUI/AnatomyVisualizerUI.js` | UI controller |
-| `src/domUI/visualizer/VisualizerStateController.js` | State management |
+| `src/domUI/AnatomyVisualizerUI.js`                    | UI controller                |
+| `src/domUI/visualizer/VisualizerStateController.js`   | State management             |
 
 ### Entry Points
 
-| File | Purpose |
-|------|---------|
-| `scripts/validate-recipe-v2.js` | CLI validation tool |
-| `src/anatomy-visualizer.js` | Visualizer bootstrap |
+| File                            | Purpose              |
+| ------------------------------- | -------------------- |
+| `scripts/validate-recipe-v2.js` | CLI validation tool  |
+| `src/anatomy-visualizer.js`     | Visualizer bootstrap |
 
 ---
 
@@ -600,6 +614,7 @@ Build parent-to-children index during initial iteration instead of O(n^2) discov
 The anatomy graph generation system has a solid architectural foundation but lacks critical fail-fast validations that would prevent silent data corruption. The chicken bug is symptomatic of a broader class of issues where duplicate keys, socket collisions, and invalid overrides are processed without warning.
 
 **Immediate actions**:
+
 1. Implement R1 (duplicate key detection) and R2 (socket collision validation)
 2. Remove debug console.log statements (R4)
 3. Add component override validation (R3)
@@ -608,4 +623,4 @@ These changes will transform the system from "works most of the time" to "fails 
 
 ---
 
-*Report generated by architecture analysis on 2025-12-02*
+_Report generated by architecture analysis on 2025-12-02_

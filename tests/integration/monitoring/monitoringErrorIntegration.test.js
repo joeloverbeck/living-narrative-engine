@@ -31,7 +31,9 @@ describe('Monitoring and Error Handler Integration', () => {
 
   it('should register MonitoringCoordinator successfully', () => {
     expect(() => {
-      const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+      const monitoringCoordinator = container.resolve(
+        tokens.IMonitoringCoordinator
+      );
       expect(monitoringCoordinator).toBeDefined();
       expect(monitoringCoordinator.getStats).toBeDefined();
       expect(monitoringCoordinator.injectErrorHandlers).toBeDefined();
@@ -47,7 +49,9 @@ describe('Monitoring and Error Handler Integration', () => {
 
   it('should register RecoveryStrategyManager successfully', () => {
     expect(() => {
-      const recoveryManager = container.resolve(tokens.IRecoveryStrategyManager);
+      const recoveryManager = container.resolve(
+        tokens.IRecoveryStrategyManager
+      );
       expect(recoveryManager).toBeDefined();
     }).not.toThrow();
   });
@@ -61,7 +65,9 @@ describe('Monitoring and Error Handler Integration', () => {
 
   it('should have error handlers injected into MonitoringCoordinator', () => {
     // Resolve MonitoringCoordinator - this should trigger the deferred injection
-    const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+    const monitoringCoordinator = container.resolve(
+      tokens.IMonitoringCoordinator
+    );
 
     // Get error handling components (this will trigger their creation and injection)
     const errorHandler = container.resolve(tokens.ICentralErrorHandler);
@@ -84,7 +90,9 @@ describe('Monitoring and Error Handler Integration', () => {
   });
 
   it('should handle executeMonitored with error handler integration', async () => {
-    const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+    const monitoringCoordinator = container.resolve(
+      tokens.IMonitoringCoordinator
+    );
 
     // Create a simple operation that succeeds
     const successOperation = jest.fn().mockResolvedValue('success');
@@ -99,7 +107,9 @@ describe('Monitoring and Error Handler Integration', () => {
   });
 
   it('should calculate health status including error metrics', () => {
-    const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+    const monitoringCoordinator = container.resolve(
+      tokens.IMonitoringCoordinator
+    );
     const stats = monitoringCoordinator.getStats();
 
     expect(stats.healthStatus).toBeDefined();
@@ -113,9 +123,13 @@ describe('Monitoring and Error Handler Integration', () => {
   it('should not have circular dependency errors', () => {
     // This test passes if we can resolve all services without errors
     expect(() => {
-      const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+      const monitoringCoordinator = container.resolve(
+        tokens.IMonitoringCoordinator
+      );
       const errorHandler = container.resolve(tokens.ICentralErrorHandler);
-      const recoveryManager = container.resolve(tokens.IRecoveryStrategyManager);
+      const recoveryManager = container.resolve(
+        tokens.IRecoveryStrategyManager
+      );
       const errorReporter = container.resolve(tokens.IErrorReporter);
 
       // Verify all are defined

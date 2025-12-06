@@ -4,8 +4,6 @@
   "name": "activity",
   "dependencies": [],
   "content": {
-    "components": [
-      "description_metadata.component.json"
-    ]
+    "components": ["description_metadata.component.json"]
   }
 }

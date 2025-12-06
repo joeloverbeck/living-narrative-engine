@@ -44,7 +44,11 @@ describe('ActionResult pipeline integration', () => {
     const failure = ActionResult.failure([
       'string failure',
       createError('existing error', 'ERR_EXISTING', { scope: 'pipeline' }),
-      { message: 'object failure', code: 'ERR_OBJECT', context: { slot: 'stage-3' } },
+      {
+        message: 'object failure',
+        code: 'ERR_OBJECT',
+        context: { slot: 'stage-3' },
+      },
     ]);
 
     expect(failure.success).toBe(false);
@@ -61,7 +65,10 @@ describe('ActionResult pipeline integration', () => {
 
   it('maps successful results while preserving failures and converts thrown errors to failures', () => {
     const success = ActionResult.success({ count: 2 });
-    const doubled = success.map((value) => ({ ...value, count: value.count * 2 }));
+    const doubled = success.map((value) => ({
+      ...value,
+      count: value.count * 2,
+    }));
     expect(doubled.success).toBe(true);
     expect(doubled.value).toEqual({ count: 4 });
 
@@ -79,13 +86,19 @@ describe('ActionResult pipeline integration', () => {
 
   it('flatMaps into chained ActionResult instances and validates return types', () => {
     const chain = ActionResult.success({ step: 1 })
-      .flatMap((value) => ActionResult.success({ ...value, step: value.step + 1 }))
-      .flatMap((value) => ActionResult.success({ ...value, step: value.step + 1 }));
+      .flatMap((value) =>
+        ActionResult.success({ ...value, step: value.step + 1 })
+      )
+      .flatMap((value) =>
+        ActionResult.success({ ...value, step: value.step + 1 })
+      );
 
     expect(chain.success).toBe(true);
     expect(chain.value).toEqual({ step: 3 });
 
-    const invalidReturn = ActionResult.success('oops').flatMap(() => 'not a result');
+    const invalidReturn = ActionResult.success('oops').flatMap(
+      () => 'not a result'
+    );
     expect(invalidReturn.success).toBe(false);
     expect(invalidReturn.errors[0].message).toBe(
       'flatMap function must return an ActionResult'

@@ -9,6 +9,7 @@
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned (7 methods)**:
+
 - `#buildDismemberedPartIdSet(summary)`
 - `#formatDyingMessage(turnsRemaining)`
 - `#formatDismembermentFirstPerson(summary)`
@@ -18,27 +19,32 @@
 - `#formatListWithOxfordComma(items)`
 
 **Actually Extracted (3 methods)**:
+
 - `#buildDismemberedPartIdSet(summary)` - lines 402-406
 - `#formatDyingMessage(turnsRemaining)` - lines 415-418
 - `#formatDismembermentFirstPerson(summary)` - lines 427-433
 
 **Already Existed (4 methods)**:
+
 - `#formatEffectsFirstPerson(summary, dismemberedPartIds)` - existed at lines 287-336
 - `#formatBleedingEffectsFirstPerson(bleedingParts)` - existed at lines 346-375
 - `#formatListWithOxfordComma(items)` - existed at lines 384-392
 - `#formatPartGroupFirstPerson(parts, state)` - existed at lines 260-277
 
 ### Files Changed
-| File | Change |
-|------|--------|
+
+| File                                                      | Change                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `src/anatomy/services/injuryNarrativeFormatterService.js` | Extracted 3 inline code blocks into dedicated private methods with JSDoc |
 
 ### Test Results
+
 - **All 64 tests pass** without modification
 - Behavior-preserving refactoring confirmed
 - No new tests needed (existing coverage sufficient)
 
 ### Notes
+
 - Original ticket overestimated scope significantly (~92-350 lines → ~30 lines actual)
 - Previous tickets (001-004) had already implemented most helper methods
 - ESLint found pre-existing issues unrelated to this refactoring (unused `#getPossessivePronoun` method)
@@ -91,33 +97,35 @@ formatFirstPerson(summary) {
 
 ### New Helper Methods
 
-| Method | Purpose |
-|--------|---------|
-| `#buildDismemberedPartIdSet(summary)` | Create Set of dismembered part IDs for filtering |
-| `#formatDyingMessage(turnsRemaining)` | Generate dying state message |
-| `#formatDismembermentFirstPerson(summary)` | Generate "is missing" sentences |
-| `#formatHealthStatesFirstPerson(summary, excludePartIds)` | Generate health state sentences |
-| `#formatOtherEffectsFirstPerson(summary, excludePartIds)` | Generate effect sentences |
-| `#formatBleedingEffectsFirstPerson(bleedingParts)` | Group and format bleeding |
-| `#formatListWithOxfordComma(items)` | Format array with proper grammar |
+| Method                                                    | Purpose                                          |
+| --------------------------------------------------------- | ------------------------------------------------ |
+| `#buildDismemberedPartIdSet(summary)`                     | Create Set of dismembered part IDs for filtering |
+| `#formatDyingMessage(turnsRemaining)`                     | Generate dying state message                     |
+| `#formatDismembermentFirstPerson(summary)`                | Generate "is missing" sentences                  |
+| `#formatHealthStatesFirstPerson(summary, excludePartIds)` | Generate health state sentences                  |
+| `#formatOtherEffectsFirstPerson(summary, excludePartIds)` | Generate effect sentences                        |
+| `#formatBleedingEffectsFirstPerson(bleedingParts)`        | Group and format bleeding                        |
+| `#formatListWithOxfordComma(items)`                       | Format array with proper grammar                 |
 
 ---
 
 ## Files to Touch
 
-| File | Change Type | Lines |
-|------|-------------|-------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Refactor | Minor extraction (~30 lines new, ~15 lines replaced) |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Verify only | All 64 existing tests must pass |
+| File                                                                  | Change Type | Lines                                                |
+| --------------------------------------------------------------------- | ----------- | ---------------------------------------------------- |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`             | Refactor    | Minor extraction (~30 lines new, ~15 lines replaced) |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Verify only | All 64 existing tests must pass                      |
 
 ### Corrected Assumptions (2025-12-04)
 
 **Methods that already exist** (no changes needed):
+
 - `#formatEffectsFirstPerson(summary, dismemberedPartIds)` - lines 299-348
 - `#formatBleedingEffectsFirstPerson(bleedingParts)` - lines 358-387
 - `#formatListWithOxfordComma(items)` - lines 396-404
 
 **Methods to extract from inline code**:
+
 - `#buildDismemberedPartIdSet(summary)` - Extract from lines 124-126
 - `#formatDyingMessage(turnsRemaining)` - Extract from lines 105-109
 - `#formatDismembermentFirstPerson(summary)` - Extract from lines 129-133
@@ -150,6 +158,7 @@ Every test from the original test suite PLUS all tests added in tickets 001-004 
 #### No Behavior Change Verification
 
 Run the following verification:
+
 1. Save output of `formatFirstPerson()` with 10+ test scenarios BEFORE refactoring
 2. Run same scenarios AFTER refactoring
 3. Outputs must be **byte-for-byte identical**

@@ -63,7 +63,7 @@ describe('createStrictProxy', () => {
     try {
       // Trigger the proxy error while relying on the default object name
       // to appear in the message.
-       
+
       proxy.absent;
     } catch (error) {
       capturedError = error;

@@ -124,7 +124,8 @@ describe('AnatomyInitializationService real module integration', () => {
 
   afterEach(async () => {
     if (testBed?.anatomyGenerationService && originalGenerate) {
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = originalGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        originalGenerate;
     }
     anatomyInitializationService?.destroy();
     await testBed.cleanup();
@@ -135,7 +136,8 @@ describe('AnatomyInitializationService real module integration', () => {
   it('generates anatomy for new entities when the creation event is dispatched', async () => {
     anatomyInitializationService.initialize();
 
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -171,12 +173,10 @@ describe('AnatomyInitializationService real module integration', () => {
   it('processes multiple creation events sequentially with queue bookkeeping', async () => {
     anatomyInitializationService.initialize();
 
-    const firstActor = await testBed.entityManager.createEntityInstance(
-      'core:actor'
-    );
-    const secondActor = await testBed.entityManager.createEntityInstance(
-      'core:actor'
-    );
+    const firstActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
+    const secondActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
 
     await testBed.entityManager.addComponent(firstActor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
@@ -199,8 +199,9 @@ describe('AnatomyInitializationService real module integration', () => {
     // Wait for events to be processed before creating waiters
     await waitForTick();
 
-    const firstResult =
-      anatomyInitializationService.waitForEntityGeneration(firstActor.id);
+    const firstResult = anatomyInitializationService.waitForEntityGeneration(
+      firstActor.id
+    );
     const secondResult = (async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
       return await anatomyInitializationService.waitForEntityGeneration(
@@ -219,12 +220,12 @@ describe('AnatomyInitializationService real module integration', () => {
     const processingLogs = logger.calls.debug.filter(([message]) =>
       message.includes('Processing anatomy generation for entity')
     );
-    expect(processingLogs.some(([message]) => message.includes(firstActor.id))).toBe(
-      true
-    );
-    expect(processingLogs.some(([message]) => message.includes(secondActor.id))).toBe(
-      true
-    );
+    expect(
+      processingLogs.some(([message]) => message.includes(firstActor.id))
+    ).toBe(true);
+    expect(
+      processingLogs.some(([message]) => message.includes(secondActor.id))
+    ).toBe(true);
 
     const secondGenerationLog = logger.calls.info.find(([message]) =>
       message.includes(`Generated anatomy for entity '${secondActor.id}'`)

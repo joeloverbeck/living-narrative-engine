@@ -9,12 +9,14 @@ Reorder the narrative output so that dismemberment descriptions appear FIRST, be
 ## Problem Statement
 
 **Current output order:**
+
 ```
 My torso screams with agony. My upper head throbs painfully. My right ear is missing.
 Blood flows steadily from my torso.
 ```
 
 **Expected output order:**
+
 ```
 My right ear is missing. My torso screams with agony. My upper head throbs painfully.
 Blood flows steadily from my torso.
@@ -23,6 +25,7 @@ Blood flows steadily from my torso.
 ## Root Cause
 
 The current `formatFirstPerson()` method processes in this order:
+
 1. Health states by severity (destroyed → critical → injured → wounded → scratched)
 2. Effects (dismembered → bleeding → burning → poisoned → fractured)
 
@@ -62,10 +65,10 @@ formatFirstPerson(summary) {
 
 ## Files Changed
 
-| File | Change Type | Lines |
-|------|-------------|-------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Modify | ~128-133, ~160, ~302-303 |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests | 5 new test cases |
+| File                                                                  | Change Type | Lines                    |
+| --------------------------------------------------------------------- | ----------- | ------------------------ |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`             | Modify      | ~128-133, ~160, ~302-303 |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests   | 5 new test cases         |
 
 ---
 

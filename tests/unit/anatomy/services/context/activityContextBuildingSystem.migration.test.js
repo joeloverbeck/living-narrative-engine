@@ -70,7 +70,9 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
     return {
       detectEntityGender: jest.fn(() => 'male'),
       mergeAdverb: jest.fn((current, injected) => `${current} ${injected}`),
-      injectSoftener: jest.fn((template, descriptor) => `${template} [${descriptor}]`),
+      injectSoftener: jest.fn(
+        (template, descriptor) => `${template} [${descriptor}]`
+      ),
     };
   }
 
@@ -115,9 +117,10 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
   describe('buildActivityContext - Relationship Detection', () => {
     it('should detect closeness_partner relationship', () => {
       // Create entity with closeness component
-      const actor = createMockEntity('actor1', new Map([
-        ['positioning:closeness', { partners: ['target1'] }],
-      ]));
+      const actor = createMockEntity(
+        'actor1',
+        new Map([['positioning:closeness', { partners: ['target1'] }]])
+      );
 
       // Setup entity manager to return our actor
       const entityMap = new Map([['actor1', actor]]);
@@ -224,9 +227,10 @@ describe('ActivityContextBuildingSystem - Migrated Characterization Tests', () =
   describe('Contextual Tone Application', () => {
     it('should apply relationship tone to activity context', () => {
       // Create entity with closeness component
-      const actor = createMockEntity('actor1', new Map([
-        ['positioning:closeness', { partners: ['target1'] }],
-      ]));
+      const actor = createMockEntity(
+        'actor1',
+        new Map([['positioning:closeness', { partners: ['target1'] }]])
+      );
 
       // Setup entity manager to return our actor
       const entityMap = new Map([['actor1', actor]]);

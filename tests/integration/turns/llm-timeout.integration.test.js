@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, afterEach, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  afterEach,
+  beforeEach,
+} from '@jest/globals';
 import { ActionDecisionWorkflow } from '../../../src/turns/states/workflows/actionDecisionWorkflow.js';
 import { LLMDecisionProvider } from '../../../src/turns/providers/llmDecisionProvider.js';
 import { LLM_SUGGESTED_ACTION_ID } from '../../../src/constants/eventIds.js';
@@ -60,7 +67,8 @@ describe('LLM timeout policies integration', () => {
       waitActionHints: ['wait'],
     });
 
-    const { safeDispatcher, llmProvider, actor, ctx, state } = buildCommonDeps();
+    const { safeDispatcher, llmProvider, actor, ctx, state } =
+      buildCommonDeps();
 
     ctx.getPlayerPromptService = () => ({
       prompt: jest.fn(() => new Promise(() => {})),
@@ -102,14 +110,23 @@ describe('LLM timeout policies integration', () => {
     await jest.runAllTimersAsync();
     await runPromise;
 
-    expect(ctx.setAwaitingExternalEvent).toHaveBeenNthCalledWith(1, true, 'actor-1');
-    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'actor-1');
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenNthCalledWith(
+      1,
+      true,
+      'actor-1'
+    );
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(
+      false,
+      'actor-1'
+    );
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
       expect.objectContaining({ actorId: 'actor-1', suggestedIndex: 1 }),
       expect.objectContaining({ allowSchemaNotFound: true })
     );
-    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledTimes(1);
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledTimes(
+      1
+    );
     expect(state._recordDecision).toHaveBeenCalledWith(
       ctx,
       finalAction,
@@ -130,7 +147,8 @@ describe('LLM timeout policies integration', () => {
       waitActionHints: ['wait'],
     });
 
-    const { safeDispatcher, llmProvider, actor, ctx, state } = buildCommonDeps();
+    const { safeDispatcher, llmProvider, actor, ctx, state } =
+      buildCommonDeps();
 
     ctx.getPlayerPromptService = () => ({
       prompt: jest.fn(() => new Promise(() => {})),
@@ -197,7 +215,8 @@ describe('LLM timeout policies integration', () => {
       waitActionHints: ['wait'],
     });
 
-    const { safeDispatcher, llmProvider, actor, ctx, state } = buildCommonDeps();
+    const { safeDispatcher, llmProvider, actor, ctx, state } =
+      buildCommonDeps();
 
     let resolvePrompt;
     const promptPromise = new Promise((resolve) => {
@@ -262,7 +281,10 @@ describe('LLM timeout policies integration', () => {
         timeoutPolicy: 'noop',
       })
     );
-    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(false, 'actor-1');
+    expect(ctx.setAwaitingExternalEvent).toHaveBeenLastCalledWith(
+      false,
+      'actor-1'
+    );
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
       LLM_SUGGESTED_ACTION_ID,
       expect.objectContaining({ actorId: 'actor-1' }),

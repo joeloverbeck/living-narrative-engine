@@ -408,7 +408,7 @@ export class EquipmentOrchestrator {
         }
 
         const itemId = conflict.conflictingItemId || conflict.itemId;
-        
+
         // Check if we have a valid item ID to remove
         if (!itemId) {
           errors.push(

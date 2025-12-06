@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -12,7 +6,10 @@ import path from 'node:path';
 import { tmpdir } from 'node:os';
 import v8 from 'v8';
 
-import { createLivenessCheck, createReadinessCheck } from '../../src/middleware/healthCheck.js';
+import {
+  createLivenessCheck,
+  createReadinessCheck,
+} from '../../src/middleware/healthCheck.js';
 import { createConsoleLogger } from '../../src/consoleLogger.js';
 import { NodeFileSystemReader } from '../../src/nodeFileSystemReader.js';
 import {
@@ -29,7 +26,11 @@ const ORIGINAL_HEAP_STATS = v8.getHeapStatistics;
 const createMalformedConfig = () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'readiness-fallback-'));
   const filePath = path.join(directory, 'llm-configs.json');
-  writeFileSync(filePath, JSON.stringify({ defaultConfigId: 'broken-config' }), 'utf8');
+  writeFileSync(
+    filePath,
+    JSON.stringify({ defaultConfigId: 'broken-config' }),
+    'utf8'
+  );
   return { directory, filePath };
 };
 
@@ -161,7 +162,9 @@ describe('health check readiness fallbacks integration', () => {
     expect(llmCheck.status).toBe('DOWN');
     expect(llmCheck.details.operational).toBe(false);
     expect(llmCheck.details.error).toContain('ProxyLlmConfigLoader');
-    expect(llmCheck.details.stage).toBe('validation_malformed_or_missing_configs_map');
+    expect(llmCheck.details.stage).toBe(
+      'validation_malformed_or_missing_configs_map'
+    );
 
     const cacheCheck = readinessResponse.body.details.dependencies.find(
       (dep) => dep.name === 'cacheService'

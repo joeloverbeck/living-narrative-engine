@@ -4,13 +4,7 @@
  * The goal is to exercise queue behaviors end-to-end without mocking collaborators.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { InitiativePriorityQueue } from '../../../../src/turns/order/queues/initiativePriorityQueue.js';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { createMockLogger } from '../../../common/mockFactories/index.js';

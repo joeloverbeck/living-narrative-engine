@@ -259,7 +259,9 @@ describe('AnatomyGenerationWorkflow - Events', () => {
 
       // Verify error was logged
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to publish anatomy:anatomy_generated event'),
+        expect.stringContaining(
+          'Failed to publish anatomy:anatomy_generated event'
+        ),
         expect.any(Error)
       );
     });
@@ -315,9 +317,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         return mockPartEntity;
       });
 
-      mockEntityManager.createEntityInstance.mockResolvedValue(
-        'slot-entity-1'
-      );
+      mockEntityManager.createEntityInstance.mockResolvedValue('slot-entity-1');
 
       mockDataRegistry.get.mockImplementation((type) => {
         if (type === 'anatomyRecipes') return mockRecipe;

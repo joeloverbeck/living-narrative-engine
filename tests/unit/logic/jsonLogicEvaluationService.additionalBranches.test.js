@@ -121,12 +121,7 @@ describe('JsonLogicEvaluationService uncovered branches', () => {
     service.addOperation('hasPartWithComponentValue', operation);
 
     const rule = {
-      hasPartWithComponentValue: [
-        'actor',
-        'core:movement',
-        'locked',
-        false,
-      ],
+      hasPartWithComponentValue: ['actor', 'core:movement', 'locked', false],
     };
 
     const result = service.evaluate(rule, { actor: { id: 'actor-1' } });

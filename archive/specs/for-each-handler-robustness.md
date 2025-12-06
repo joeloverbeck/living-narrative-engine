@@ -13,13 +13,13 @@
 
 The FOR_EACH operation handler spans multiple modules:
 
-| Module | File Path | Purpose |
-|--------|-----------|---------|
-| **Flow Handler** | `src/logic/flowHandlers/forEachHandler.js` | Core iteration logic |
-| **Operation Handler** | `src/logic/operationHandlers/forEachHandler.js` | Operation registry wrapper |
-| **Schema** | `data/schemas/operations/forEach.schema.json` | Parameter validation schema |
-| **Pre-Validation** | `src/utils/preValidationUtils.js` | Whitelist for operation types |
-| **Path Resolution** | `src/utils/objectUtils.js` | `resolvePath()` function |
+| Module                | File Path                                       | Purpose                       |
+| --------------------- | ----------------------------------------------- | ----------------------------- |
+| **Flow Handler**      | `src/logic/flowHandlers/forEachHandler.js`      | Core iteration logic          |
+| **Operation Handler** | `src/logic/operationHandlers/forEachHandler.js` | Operation registry wrapper    |
+| **Schema**            | `data/schemas/operations/forEach.schema.json`   | Parameter validation schema   |
+| **Pre-Validation**    | `src/utils/preValidationUtils.js`               | Whitelist for operation types |
+| **Path Resolution**   | `src/utils/objectUtils.js`                      | `resolvePath()` function      |
 
 ### What the Module Does
 
@@ -65,9 +65,10 @@ FOR_EACH Operation
 5. Rule execution fails completely
 
 **Handler Code** (forEachHandler.js:47-55):
+
 ```javascript
 if (
-  !path?.trim() ||  // ← TypeError when path is object
+  !path?.trim() || // ← TypeError when path is object
   !varName?.trim() ||
   !Array.isArray(actions) ||
   actions.length === 0
@@ -87,10 +88,12 @@ if (
 ### Test Links
 
 **Existing Tests**:
+
 - `tests/unit/logic/flowHandlers/forEachHandler.test.js` - Unit tests for flow handler
 - `tests/unit/logic/operationHandlers/forEachHandler.test.js` - Unit tests for operation handler wrapper
 
 **New Tests Created**:
+
 - `tests/integration/mods/weapons/forEachCollectionTypeValidation.integration.test.js` - Validates collection parameter type
 - `tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js` - Updated to expect string format
 
@@ -103,6 +106,7 @@ if (
 **Source**: `data/schemas/operations/forEach.schema.json`
 
 **Relevant Section** (line 26):
+
 ```json
 "collection": {
   "type": "string",
@@ -115,6 +119,7 @@ if (
 ### 2. Working Examples in Codebase
 
 **Source**: `data/mods/movement/rules/follow_auto_move.rule.json:82`
+
 ```json
 "collection": "context.followersToMove"  // ✅ String path
 ```
@@ -138,7 +143,9 @@ Step 7 (CRITICAL): Add operation type to `KNOWN_OPERATION_TYPES` in `preValidati
 ### Normal Cases
 
 #### 1. String Path Collection
+
 **Input**:
+
 ```json
 {
   "type": "FOR_EACH",
@@ -149,35 +156,44 @@ Step 7 (CRITICAL): Add operation type to `KNOWN_OPERATION_TYPES` in `preValidati
   }
 }
 ```
+
 **Expected**: Resolve path, iterate, execute actions for each item.
 
 #### 2. Nested Path Collection
+
 **Input**:
+
 ```json
 {
   "collection": "context.weaponDamage.entries"
 }
 ```
+
 **Expected**: Resolve nested path, iterate over entries array.
 
 #### 3. Empty Collection
+
 **Input**: Path resolves to `[]`
 **Expected**: No iterations, no errors, clean return.
 
 ### Edge Cases
 
 #### 1. JSON Logic Object Collection (Current Bug)
+
 **Input**:
+
 ```json
 {
   "collection": { "var": "context.items" }
 }
 ```
+
 **Current Behavior**: TypeError - `path?.trim is not a function`
 
 **Proposed Behavior Options**:
 
 **Option A (Recommended)**: Detect and provide helpful error message
+
 ```
 FOR_EACH: 'collection' parameter must be a string path, not an object.
 Received: {"var": "context.items"}
@@ -185,27 +201,34 @@ Use: "context.items" instead of {"var": "context.items"}
 ```
 
 **Option B**: Support both formats (flexible but adds complexity)
+
 - If string: use as path directly
 - If object with `var`: extract the var path and use that
 - Trade-off: More complex, may encourage inconsistent patterns
 
 #### 2. Null/Undefined Collection Path
+
 **Input**: `"collection": null` or missing
 **Expected**: Early return with warning log
+
 ```
 FOR_EACH: invalid parameters. 'collection' is required and must be a non-empty string.
 ```
 
 #### 3. Path Resolves to Non-Array
+
 **Input**: Path exists but points to object, string, or number
 **Expected**: Warning log, no iteration
+
 ```
 FOR_EACH: 'context.weaponDamage' did not resolve to an array. Got: object
 ```
 
 #### 4. Path Resolves to Undefined
+
 **Input**: Path doesn't exist in context
 **Expected**: Warning log, no iteration
+
 ```
 FOR_EACH: 'context.nonexistent' resolved to undefined.
 ```
@@ -213,21 +236,26 @@ FOR_EACH: 'context.nonexistent' resolved to undefined.
 ### Failure Modes
 
 #### 1. Type Validation Failure (Before Execution)
+
 **When**: `collection` is not a string
 **Error Response**:
+
 ```javascript
 throw new TypeError(
   `FOR_EACH: 'collection' must be a string path. ` +
-  `Received: ${typeof collection} (${JSON.stringify(collection)})`
+    `Received: ${typeof collection} (${JSON.stringify(collection)})`
 );
 ```
+
 **User Impact**: Clear indication of parameter type mismatch.
 
 #### 2. Path Resolution Failure (During Execution)
+
 **When**: Path doesn't resolve to array
 **Error Response**: Warning log (current behavior is acceptable)
 
 #### 3. Action Execution Failure (Within Loop)
+
 **When**: Nested action throws
 **Error Response**: Propagate error with context (current behavior)
 
@@ -263,6 +291,7 @@ throw new TypeError(
 ### Tests to Add
 
 #### 1. Robust Type Validation Tests
+
 **File**: `tests/unit/logic/flowHandlers/forEachHandler.typeValidation.test.js` (NEW)
 
 ```javascript
@@ -273,21 +302,23 @@ describe('FOR_EACH collection type validation', () => {
       parameters: {
         collection: { var: 'context.items' }, // Object
         item_variable: 'item',
-        actions: [{ type: 'LOG' }]
-      }
+        actions: [{ type: 'LOG' }],
+      },
     };
 
-    await expect(handleForEach(node, ctx, logger, interpreter, executor))
-      .rejects.toThrow(/collection.*must be.*string/i);
+    await expect(
+      handleForEach(node, ctx, logger, interpreter, executor)
+    ).rejects.toThrow(/collection.*must be.*string/i);
   });
 
   it('should provide fix suggestion for JSON Logic objects', async () => {
     const node = {
-      parameters: { collection: { var: 'context.items' } }
+      parameters: { collection: { var: 'context.items' } },
     };
 
-    await expect(handleForEach(node, ctx, logger, interpreter, executor))
-      .rejects.toThrow(/Use: "context.items" instead/);
+    await expect(
+      handleForEach(node, ctx, logger, interpreter, executor)
+    ).rejects.toThrow(/Use: "context.items" instead/);
   });
 
   it('should accept valid string paths', async () => {
@@ -295,31 +326,35 @@ describe('FOR_EACH collection type validation', () => {
       parameters: {
         collection: 'context.items',
         item_variable: 'item',
-        actions: [{ type: 'LOG' }]
-      }
+        actions: [{ type: 'LOG' }],
+      },
     };
 
-    await expect(handleForEach(node, ctx, logger, interpreter, executor))
-      .resolves.not.toThrow();
+    await expect(
+      handleForEach(node, ctx, logger, interpreter, executor)
+    ).resolves.not.toThrow();
   });
 });
 ```
 
 #### 2. Schema Validation Integration Tests
+
 **File**: `tests/integration/validation/forEachSchemaValidation.integration.test.js` (NEW)
 
 ```javascript
 describe('FOR_EACH schema validation', () => {
   it('should reject object collection at validation stage', async () => {
     const rule = {
-      actions: [{
-        type: 'FOR_EACH',
-        parameters: {
-          collection: { var: 'context.items' },
-          item_variable: 'item',
-          actions: []
-        }
-      }]
+      actions: [
+        {
+          type: 'FOR_EACH',
+          parameters: {
+            collection: { var: 'context.items' },
+            item_variable: 'item',
+            actions: [],
+          },
+        },
+      ],
     };
 
     const errors = validator.validate(schemaId, rule);
@@ -344,17 +379,16 @@ describe('FOR_EACH schema validation', () => {
 ```javascript
 describe('FOR_EACH property tests', () => {
   it('should always restore context after iteration', () => {
-    fc.assert(fc.property(
-      fc.array(fc.anything()),
-      (items) => {
+    fc.assert(
+      fc.property(fc.array(fc.anything()), (items) => {
         const originalContext = { ...ctx.evaluationContext.context };
         try {
           handleForEach(createNode(items), ctx, logger, interpreter, executor);
         } finally {
           expect(ctx.evaluationContext.context).toEqual(originalContext);
         }
-      }
-    ));
+      })
+    );
   });
 });
 ```
@@ -370,6 +404,7 @@ describe('FOR_EACH property tests', () => {
 **File**: `src/logic/flowHandlers/forEachHandler.js`
 
 **Before** (lines 47-55):
+
 ```javascript
 if (
   !path?.trim() ||
@@ -383,14 +418,16 @@ if (
 ```
 
 **After**:
+
 ```javascript
 // Type check collection parameter
 if (typeof path !== 'string') {
   const received = JSON.stringify(path);
-  const message = path && typeof path === 'object' && 'var' in path
-    ? `FOR_EACH: 'collection' must be a string path, not a JSON Logic object. ` +
-      `Received: ${received}. Use: "${path.var}" instead of ${received}`
-    : `FOR_EACH: 'collection' must be a string path. Received: ${typeof path}`;
+  const message =
+    path && typeof path === 'object' && 'var' in path
+      ? `FOR_EACH: 'collection' must be a string path, not a JSON Logic object. ` +
+        `Received: ${received}. Use: "${path.var}" instead of ${received}`
+      : `FOR_EACH: 'collection' must be a string path. Received: ${typeof path}`;
   throw new TypeError(message);
 }
 
@@ -416,12 +453,12 @@ if (
 
 ## Files to Create/Modify
 
-| File | Action |
-|------|--------|
-| `specs/for-each-handler-robustness.md` | Create spec file (this file) |
-| `src/logic/flowHandlers/forEachHandler.js` | Add type validation (optional improvement) |
-| `tests/unit/logic/flowHandlers/forEachHandler.typeValidation.test.js` | Add type validation tests |
-| `tests/integration/validation/forEachSchemaValidation.integration.test.js` | Add schema validation tests |
+| File                                                                       | Action                                     |
+| -------------------------------------------------------------------------- | ------------------------------------------ |
+| `specs/for-each-handler-robustness.md`                                     | Create spec file (this file)               |
+| `src/logic/flowHandlers/forEachHandler.js`                                 | Add type validation (optional improvement) |
+| `tests/unit/logic/flowHandlers/forEachHandler.typeValidation.test.js`      | Add type validation tests                  |
+| `tests/integration/validation/forEachSchemaValidation.integration.test.js` | Add schema validation tests                |
 
 ---
 

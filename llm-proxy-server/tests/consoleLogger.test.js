@@ -242,7 +242,14 @@ describe('ConsoleLogger', () => {
       expect(freshLogger).not.toBe(consoleLoggerDefault);
 
       // But they should expose the same public logging API surface
-      const publicMethods = ['info', 'warn', 'error', 'debug', 'createSecure', 'testEnhancedOutput'];
+      const publicMethods = [
+        'info',
+        'warn',
+        'error',
+        'debug',
+        'createSecure',
+        'testEnhancedOutput',
+      ];
       for (const method of publicMethods) {
         expect(typeof consoleLoggerDefault[method]).toBe('function');
         expect(typeof freshLogger[method]).toBe('function');

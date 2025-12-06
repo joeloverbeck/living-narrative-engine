@@ -87,7 +87,7 @@ describe('ScopeDslErrorHandler Load Testing', () => {
       }
 
       // Small delay to allow system to stabilize
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const start = performance.now();
 

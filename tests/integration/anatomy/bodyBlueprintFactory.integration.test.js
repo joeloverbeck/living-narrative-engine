@@ -116,7 +116,9 @@ class InMemoryEntityManager {
 
   getEntityInstance(entityId) {
     const instance = this.instances.get(entityId);
-    return instance ? { id: instance.id, definitionId: instance.definitionId } : null;
+    return instance
+      ? { id: instance.id, definitionId: instance.definitionId }
+      : null;
   }
 
   getComponentData(entityId, componentId) {
@@ -266,9 +268,7 @@ class SimpleSocketManager {
   occupySocket(parentId, socketId) {
     const occupancyKey = `${parentId}:${socketId}`;
     this.occupied.add(occupancyKey);
-    this.#logger.debug(
-      `occupy ${socketId} on ${parentId}`
-    );
+    this.#logger.debug(`occupy ${socketId} on ${parentId}`);
   }
 
   generatePartName(socket, childEntityId, parentId) {
@@ -343,9 +343,8 @@ class SimpleEntityGraphBuilder {
       return null;
     }
 
-    const child = await this.#entityManager.createEntityInstance(
-      partDefinitionId
-    );
+    const child =
+      await this.#entityManager.createEntityInstance(partDefinitionId);
     this.createdParts.push(child.id);
     await this.#entityManager.addComponent(child.id, 'anatomy:joint', {
       parentId,
@@ -368,7 +367,9 @@ class SimpleEntityGraphBuilder {
   }
 
   async setEntityName(entityId, name) {
-    await this.#entityManager.addComponent(entityId, 'core:name', { text: name });
+    await this.#entityManager.addComponent(entityId, 'core:name', {
+      text: name,
+    });
   }
 
   async cleanupEntities(entityIds) {
@@ -592,9 +593,7 @@ describe('BodyBlueprintFactory integration', () => {
     const blueprint = createBlueprint();
     const recipe = createRecipe();
     registry.register('anatomyBlueprints', blueprint.id, blueprint);
-    recipeProcessor = new SimpleRecipeProcessor(
-      new Map([[recipe.id, recipe]])
-    );
+    recipeProcessor = new SimpleRecipeProcessor(new Map([[recipe.id, recipe]]));
   };
 
   it('constructs anatomy graph using real collaborators', async () => {
@@ -607,11 +606,10 @@ describe('BodyBlueprintFactory integration', () => {
     recipeProcessor = updatedProcessor;
     const factory = createFactory();
 
-    const result = await factory.createAnatomyGraph(
-      blueprint.id,
-      recipe.id,
-      { ownerId: 'actor-1', seed: 42 }
-    );
+    const result = await factory.createAnatomyGraph(blueprint.id, recipe.id, {
+      ownerId: 'actor-1',
+      seed: 42,
+    });
 
     expect(result.entities).toHaveLength(4);
     expect(entityGraphBuilder.createdParts).toHaveLength(3);
@@ -628,7 +626,9 @@ describe('BodyBlueprintFactory integration', () => {
 
     expect(eventDispatcher.events).toHaveLength(0);
     expect(logger.errorMessages).toHaveLength(0);
-    expect(partSelectionService.selectionCalls.length).toBeGreaterThanOrEqual(2);
+    expect(partSelectionService.selectionCalls.length).toBeGreaterThanOrEqual(
+      2
+    );
   });
 
   it('skips optional slots when no part is selected', async () => {
@@ -649,9 +649,9 @@ describe('BodyBlueprintFactory integration', () => {
     );
 
     expect(result.entities.length).toBe(4);
-    expect(entityGraphBuilder.createdParts.some((id) => id.includes('wing'))).toBe(
-      false
-    );
+    expect(
+      entityGraphBuilder.createdParts.some((id) => id.includes('wing'))
+    ).toBe(false);
   });
 
   it('skips optional slots when socket is unavailable', async () => {
@@ -665,9 +665,9 @@ describe('BodyBlueprintFactory integration', () => {
     const result = await factory.createAnatomyGraph(blueprint.id, recipe.id);
 
     expect(result.entities.length).toBe(4);
-    expect(entityGraphBuilder.createdParts.some((id) => id.includes('wing'))).toBe(
-      false
-    );
+    expect(
+      entityGraphBuilder.createdParts.some((id) => id.includes('wing'))
+    ).toBe(false);
   });
 
   it('throws ValidationError when recipe slots are not defined in blueprint', async () => {
@@ -696,7 +696,7 @@ describe('BodyBlueprintFactory integration', () => {
       (event) => event.eventId === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(dispatched).toBeDefined();
-    expect(dispatched.payload.message).toContain("invalid slot keys");
+    expect(dispatched.payload.message).toContain('invalid slot keys');
   });
 
   it('cleans up entities when constraint evaluation fails', async () => {
@@ -868,7 +868,9 @@ describe('BodyBlueprintFactory integration', () => {
       (event) => event.eventId === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(dispatched).toBeDefined();
-    expect(dispatched.payload.message).toContain('Failed to process blueprint slot');
+    expect(dispatched.payload.message).toContain(
+      'Failed to process blueprint slot'
+    );
   });
 
   it('skips slots that only signal equipment by requirements', async () => {
@@ -929,9 +931,9 @@ describe('BodyBlueprintFactory integration', () => {
     );
 
     expect(result.entities).toHaveLength(4);
-    expect(entityGraphBuilder.createdParts.some((id) => id.includes('right-leg'))).toBe(
-      true
-    );
+    expect(
+      entityGraphBuilder.createdParts.some((id) => id.includes('right-leg'))
+    ).toBe(true);
   });
 
   it('dispatches validation error when blueprint has no slots but recipe does', async () => {
@@ -977,9 +979,9 @@ describe('BodyBlueprintFactory integration', () => {
     const ornamentId = entityGraphBuilder.createdParts.find((id) =>
       id.includes('ornament')
     );
-    expect(
-      entityManager.getComponentData(ornamentId, 'core:name')?.text
-    ).toBe('Ornament Default');
+    expect(entityManager.getComponentData(ornamentId, 'core:name')?.text).toBe(
+      'Ornament Default'
+    );
   });
 
   it('treats slots without requirements as non-equipment', async () => {

@@ -4,9 +4,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ValidationService } from '../../../../src/characterBuilder/services/validationService.js';
-import {
-  ERROR_CATEGORIES,
-} from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
+import { ERROR_CATEGORIES } from '../../../../src/characterBuilder/controllers/BaseCharacterBuilderController.js';
 
 describe('ValidationService', () => {
   let schemaValidator;
@@ -77,11 +75,9 @@ describe('ValidationService', () => {
       throw validationError;
     });
 
-    const result = service.validateData(
-      { field: 'value' },
-      'missing.schema',
-      { operation: 'loadSchema' }
-    );
+    const result = service.validateData({ field: 'value' }, 'missing.schema', {
+      operation: 'loadSchema',
+    });
 
     expect(handleError).toHaveBeenCalledWith(validationError, {
       operation: 'loadSchema',

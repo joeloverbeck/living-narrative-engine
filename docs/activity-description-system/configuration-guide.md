@@ -67,11 +67,11 @@ class CustomAnatomyFormattingService extends AnatomyFormattingService {
   getActivityIntegrationConfig() {
     return {
       ...super.getActivityIntegrationConfig(),
-      maxActivities: 20,           // Increase from default 10
-      maxDescriptionLength: 1000,  // Increase from default 500
-      prefix: '',                  // Remove "Activity: " prefix
+      maxActivities: 20, // Increase from default 10
+      maxDescriptionLength: 1000, // Increase from default 500
+      prefix: '', // Remove "Activity: " prefix
       nameResolution: {
-        usePronounsWhenAvailable: true,  // Enable pronouns
+        usePronounsWhenAvailable: true, // Enable pronouns
         preferReflexivePronouns: true,
       },
     };
@@ -91,20 +91,20 @@ container.register('AnatomyFormattingService', CustomAnatomyFormattingService);
 ```javascript
 const facade = new ActivityDescriptionFacade({
   // Required dependencies
-  logger,                        // ILogger implementation
-  entityManager,                 // IEntityManager implementation
-  anatomyFormattingService,      // AnatomyFormattingService instance
-  cacheManager,                  // IActivityCacheManager implementation
-  indexManager,                  // IActivityIndexManager implementation
-  metadataCollectionSystem,      // IActivityMetadataCollectionSystem implementation
-  nlgSystem,                     // IActivityNLGSystem implementation
-  groupingSystem,                // IActivityGroupingSystem implementation
-  contextBuildingSystem,         // IActivityContextBuildingSystem implementation
-  filteringSystem,               // IActivityFilteringSystem implementation
+  logger, // ILogger implementation
+  entityManager, // IEntityManager implementation
+  anatomyFormattingService, // AnatomyFormattingService instance
+  cacheManager, // IActivityCacheManager implementation
+  indexManager, // IActivityIndexManager implementation
+  metadataCollectionSystem, // IActivityMetadataCollectionSystem implementation
+  nlgSystem, // IActivityNLGSystem implementation
+  groupingSystem, // IActivityGroupingSystem implementation
+  contextBuildingSystem, // IActivityContextBuildingSystem implementation
+  filteringSystem, // IActivityFilteringSystem implementation
 
   // Optional parameters
-  activityIndex: null,           // Pre-built index (reserved for future)
-  eventBus: null,                // EventBus for error dispatching
+  activityIndex: null, // Pre-built index (reserved for future)
+  eventBus: null, // EventBus for error dispatching
 });
 ```
 
@@ -149,8 +149,8 @@ facade.destroy();
 
 ```javascript
 const cacheManager = new ActivityCacheManager({
-  logger,              // ILogger implementation (required)
-  eventBus: null,      // Optional EventBus for auto-invalidation
+  logger, // ILogger implementation (required)
+  eventBus: null, // Optional EventBus for auto-invalidation
 });
 ```
 
@@ -160,8 +160,8 @@ Each cache must be registered before use:
 
 ```javascript
 cacheManager.registerCache('entityName', {
-  ttl: 60000,          // Time-to-live in milliseconds (default: 60000)
-  maxSize: 1000,       // Maximum entries before LRU pruning (default: 1000)
+  ttl: 60000, // Time-to-live in milliseconds (default: 60000)
+  maxSize: 1000, // Maximum entries before LRU pruning (default: 1000)
 });
 
 cacheManager.registerCache('gender', {
@@ -171,7 +171,7 @@ cacheManager.registerCache('gender', {
 
 cacheManager.registerCache('activityIndex', {
   ttl: 60000,
-  maxSize: 100,        // Smaller for activity indices
+  maxSize: 100, // Smaller for activity indices
 });
 
 cacheManager.registerCache('closeness', {
@@ -220,7 +220,7 @@ const cacheManager = new ActivityCacheManager({
 // Cache automatically invalidated
 eventBus.dispatch({
   type: 'COMPONENT_ADDED',
-  payload: { entity: { id: 'actor_1' } }
+  payload: { entity: { id: 'actor_1' } },
 });
 ```
 
@@ -229,14 +229,14 @@ eventBus.dispatch({
 ```javascript
 // High-traffic application
 cacheManager.registerCache('entityName', {
-  ttl: 120000,         // 2 minutes (longer TTL)
-  maxSize: 5000,       // More entries
+  ttl: 120000, // 2 minutes (longer TTL)
+  maxSize: 5000, // More entries
 });
 
 // Low-memory environment
 cacheManager.registerCache('entityName', {
-  ttl: 30000,          // 30 seconds (shorter TTL)
-  maxSize: 100,        // Fewer entries
+  ttl: 30000, // 30 seconds (shorter TTL)
+  maxSize: 100, // Fewer entries
 });
 ```
 
@@ -248,8 +248,8 @@ cacheManager.registerCache('entityName', {
 
 ```javascript
 const indexManager = new ActivityIndexManager({
-  logger,              // ILogger implementation (required)
-  cacheManager,        // IActivityCacheManager implementation (required)
+  logger, // ILogger implementation (required)
+  cacheManager, // IActivityCacheManager implementation (required)
 });
 ```
 
@@ -304,8 +304,8 @@ const index = indexManager.getActivityIndex(activities, cacheKey);
 
 ```javascript
 const metadataSystem = new ActivityMetadataCollectionSystem({
-  logger,              // ILogger implementation (required)
-  entityManager,       // IEntityManager implementation (required)
+  logger, // ILogger implementation (required)
+  entityManager, // IEntityManager implementation (required)
 });
 ```
 
@@ -361,8 +361,8 @@ To add custom metadata sources, extend the component with `activityMetadata`:
 
 ```javascript
 const nlgSystem = new ActivityNLGSystem({
-  logger,              // ILogger implementation (required)
-  entityManager,       // IEntityManager implementation (required)
+  logger, // ILogger implementation (required)
+  entityManager, // IEntityManager implementation (required)
 });
 ```
 
@@ -372,7 +372,12 @@ const nlgSystem = new ActivityNLGSystem({
 const context = {
   actorName: 'Jon Ureña',
   actorId: 'actor_1',
-  actorPronouns: { subject: 'he', object: 'him', possessive: 'his', reflexive: 'himself' },
+  actorPronouns: {
+    subject: 'he',
+    object: 'him',
+    possessive: 'his',
+    reflexive: 'himself',
+  },
   preferReflexivePronouns: true,
   forceReflexivePronoun: false,
   omitActor: false,
@@ -383,7 +388,12 @@ const activity = {
   targetEntityId: 'actor_2',
 };
 
-const phrase = nlgSystem.generateActivityPhrase('Jon Ureña', activity, false, context);
+const phrase = nlgSystem.generateActivityPhrase(
+  'Jon Ureña',
+  activity,
+  false,
+  context
+);
 // Returns: "Jon Ureña is kneeling before Alicia Western"
 ```
 
@@ -429,7 +439,7 @@ const merged2 = nlgSystem.mergeAdverb('quickly', 'quickly');
 
 ```javascript
 const groupingSystem = new ActivityGroupingSystem({
-  logger,              // ILogger implementation (required)
+  logger, // ILogger implementation (required)
 });
 ```
 
@@ -457,10 +467,10 @@ const grouped = groupingSystem.groupActivities(activities, cacheKey);
     primaryActivity: { id: 'act1', priority: 100 },
     relatedActivities: [
       { activity: { id: 'act2', priority: 90 }, conjunction: 'and' },
-      { activity: { id: 'act3', priority: 85 }, conjunction: 'while' }
-    ]
-  }
-]
+      { activity: { id: 'act3', priority: 85 }, conjunction: 'while' },
+    ],
+  },
+];
 ```
 
 ### Conjunction Selection
@@ -479,9 +489,9 @@ Conjunctions are selected based on activity context:
 
 ```javascript
 const contextSystem = new ActivityContextBuildingSystem({
-  logger,              // ILogger implementation (required)
-  entityManager,       // IEntityManager implementation (required)
-  nlgSystem,           // IActivityNLGSystem implementation (required)
+  logger, // ILogger implementation (required)
+  entityManager, // IEntityManager implementation (required)
+  nlgSystem, // IActivityNLGSystem implementation (required)
 });
 ```
 
@@ -526,10 +536,10 @@ contextSystem.invalidateClosenessCache('actor_1');
 
 ```javascript
 const filteringSystem = new ActivityFilteringSystem({
-  logger,                      // ILogger implementation (required)
-  conditionValidator,          // ActivityConditionValidator instance (required)
-  jsonLogicEvaluationService,  // JsonLogicEvaluationService instance (required)
-  entityManager,               // IEntityManager implementation (required)
+  logger, // ILogger implementation (required)
+  conditionValidator, // ActivityConditionValidator instance (required)
+  jsonLogicEvaluationService, // JsonLogicEvaluationService instance (required)
+  entityManager, // IEntityManager implementation (required)
 });
 ```
 
@@ -540,13 +550,13 @@ const activities = [
   {
     id: 'kneel_1',
     visibilityConditions: {
-      "==": [{ "var": "entity.hasComponent" }, "positioning:standing"]
-    }
+      '==': [{ var: 'entity.hasComponent' }, 'positioning:standing'],
+    },
   },
   {
     id: 'hold_hand_1',
-    visibilityConditions: null // Always visible
-  }
+    visibilityConditions: null, // Always visible
+  },
 ];
 
 const filtered = filteringSystem.filterByConditions(activities, entity);
@@ -564,7 +574,11 @@ Add `visibilityConditions` to activity metadata using JSON Logic:
     "visibilityConditions": {
       "and": [
         { "==": [{ "var": "entity.hasComponent" }, "positioning:standing"] },
-        { "!": { "==": [{ "var": "entity.hasComponent" }, "positioning:sitting"] } }
+        {
+          "!": {
+            "==": [{ "var": "entity.hasComponent" }, "positioning:sitting"]
+          }
+        }
       ]
     }
   }
@@ -581,17 +595,17 @@ Add `visibilityConditions` to activity metadata using JSON Logic:
 // config/development.js
 export const activityConfig = {
   cacheManager: {
-    ttl: 30000,           // 30 seconds (shorter for frequent changes)
-    maxSize: 100,         // Smaller cache
-    enableMetrics: true,  // Enable for debugging
+    ttl: 30000, // 30 seconds (shorter for frequent changes)
+    maxSize: 100, // Smaller cache
+    enableMetrics: true, // Enable for debugging
   },
   facade: {
-    maxActivities: 20,    // Show more activities for testing
+    maxActivities: 20, // Show more activities for testing
     maxDescriptionLength: 1000, // Longer descriptions
   },
   logging: {
-    level: 'debug',       // Verbose logging
-  }
+    level: 'debug', // Verbose logging
+  },
 };
 ```
 
@@ -601,17 +615,17 @@ export const activityConfig = {
 // config/production.js
 export const activityConfig = {
   cacheManager: {
-    ttl: 120000,          // 2 minutes (longer TTL)
-    maxSize: 5000,        // Larger cache
+    ttl: 120000, // 2 minutes (longer TTL)
+    maxSize: 5000, // Larger cache
     enableMetrics: false, // Disable for performance
   },
   facade: {
-    maxActivities: 10,    // Reasonable limit
+    maxActivities: 10, // Reasonable limit
     maxDescriptionLength: 500, // Standard length
   },
   logging: {
-    level: 'warn',        // Only warnings and errors
-  }
+    level: 'warn', // Only warnings and errors
+  },
 };
 ```
 
@@ -621,17 +635,17 @@ export const activityConfig = {
 // config/testing.js
 export const activityConfig = {
   cacheManager: {
-    ttl: 1000,            // 1 second (fast expiration)
-    maxSize: 10,          // Minimal cache
+    ttl: 1000, // 1 second (fast expiration)
+    maxSize: 10, // Minimal cache
     enableMetrics: false, // Disable for speed
   },
   facade: {
-    maxActivities: 5,     // Minimal for tests
+    maxActivities: 5, // Minimal for tests
     maxDescriptionLength: 200,
   },
   logging: {
-    level: 'error',       // Silent tests
-  }
+    level: 'error', // Silent tests
+  },
 };
 ```
 
@@ -650,12 +664,12 @@ const cacheManager = new ActivityCacheManager({
 
 // Larger caches, longer TTL
 cacheManager.registerCache('entityName', {
-  ttl: 180000,   // 3 minutes
+  ttl: 180000, // 3 minutes
   maxSize: 10000, // 10K entries
 });
 
 cacheManager.registerCache('activityIndex', {
-  ttl: 120000,   // 2 minutes
+  ttl: 120000, // 2 minutes
   maxSize: 1000, // 1K indices
 });
 ```
@@ -665,8 +679,8 @@ cacheManager.registerCache('activityIndex', {
 ```javascript
 // Low-memory environment
 cacheManager.registerCache('entityName', {
-  ttl: 30000,    // 30 seconds
-  maxSize: 50,   // Minimal entries
+  ttl: 30000, // 30 seconds
+  maxSize: 50, // Minimal entries
 });
 
 cacheManager.registerCache('activityIndex', {
@@ -680,8 +694,8 @@ cacheManager.registerCache('activityIndex', {
 ```javascript
 // Performance-critical: reduce activity processing
 const config = {
-  maxActivities: 5,              // Process fewer activities
-  deduplicateActivities: true,   // Always deduplicate
+  maxActivities: 5, // Process fewer activities
+  deduplicateActivities: true, // Always deduplicate
   enableContextAwareness: false, // Disable context processing
 };
 ```
@@ -853,6 +867,7 @@ This configuration guide covers all aspects of the Activity Description System:
 - **Debugging**: Logging, diagnostics, profiling
 
 For implementation details, see:
+
 - **Architecture**: `docs/activity-description-system/architecture.md`
 - **API Reference**: `docs/activity-description-system/api-reference.md`
 - **Testing Guide**: `docs/activity-description-system/testing-guide.md`

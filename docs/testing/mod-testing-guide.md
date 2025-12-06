@@ -31,6 +31,7 @@ Examples:
 ```
 
 **Handler Rule Files** (also underscores):
+
 ```
 Format: handle_{actionName}.rule.json
 Examples:
@@ -93,18 +94,19 @@ Examples:
 
 ### Quick Reference Table
 
-| File Type | Naming Convention | Example |
-|-----------|------------------|---------|
-| **Rule** | `{action_name}.rule.json` | `tear_out_throat.rule.json` |
-| **Handler Rule** | `handle_{action_name}.rule.json` | `handle_tear_out_throat.rule.json` |
-| **Condition** | `event-is-action-{action-name}.condition.json` | `event-is-action-tear-out-throat.condition.json` |
-| **Action** | `{action_name}.action.json` | `tear_out_throat.action.json` |
-| **Component** | `{component_name}.component.json` | `biting_neck.component.json` |
-| **Scope** | `{scope_name}.scope` | `actor_being_bitten_by_me.scope` |
+| File Type        | Naming Convention                              | Example                                          |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------ |
+| **Rule**         | `{action_name}.rule.json`                      | `tear_out_throat.rule.json`                      |
+| **Handler Rule** | `handle_{action_name}.rule.json`               | `handle_tear_out_throat.rule.json`               |
+| **Condition**    | `event-is-action-{action-name}.condition.json` | `event-is-action-tear-out-throat.condition.json` |
+| **Action**       | `{action_name}.action.json`                    | `tear_out_throat.action.json`                    |
+| **Component**    | `{component_name}.component.json`              | `biting_neck.component.json`                     |
+| **Scope**        | `{scope_name}.scope`                           | `actor_being_bitten_by_me.scope`                 |
 
 ### Common Mistake: Mixing Conventions
 
 ❌ **WRONG** - Mixing hyphens and underscores inconsistently:
+
 ```
 data/mods/violence/
 ├── actions/
@@ -117,6 +119,7 @@ data/mods/violence/
 ```
 
 ✅ **CORRECT** - Consistent application of conventions:
+
 ```
 data/mods/violence/
 ├── actions/
@@ -168,7 +171,10 @@ describe('positioning:sit_down', () => {
   let fixture;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+    fixture = await ModTestFixture.forAction(
+      'positioning',
+      'positioning:sit_down'
+    );
   });
 
   afterEach(() => {
@@ -183,7 +189,9 @@ describe('positioning:sit_down', () => {
       scenario.furniture.id
     );
 
-    const actor = fixture.entityManager.getEntityInstance(scenario.seatedActors[0].id);
+    const actor = fixture.entityManager.getEntityInstance(
+      scenario.seatedActors[0].id
+    );
     expect(actor).toHaveComponent('positioning:sitting_on');
     expect(fixture.events).toHaveActionSuccess();
   });
@@ -238,7 +246,7 @@ testFixture = await ModTestFixture.forAction(
   null,
   {
     autoRegisterScopes: true,
-    scopeCategories: ['positioning', 'anatomy']
+    scopeCategories: ['positioning', 'anatomy'],
   }
 );
 ```
@@ -251,6 +259,7 @@ ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
 ```
 
 **Valid Scope Categories**:
+
 - `'positioning'` - Sitting, standing, closeness, facing scopes (default)
 - `'inventory'` or `'items'` - Item, container, inventory scopes
 - `'anatomy'` - Body part, anatomy interaction scopes
@@ -267,7 +276,10 @@ const fixture = await ModTestFixture.forAction(
   'positioning',
   'positioning:sit_down'
 );
-const scenario = fixture.createStandardActorTarget(['Actor Name', 'Target Name']);
+const scenario = fixture.createStandardActorTarget([
+  'Actor Name',
+  'Target Name',
+]);
 await fixture.executeAction(scenario.actor.id, scenario.target.id);
 
 // ❌ Deprecated and unsupported
@@ -276,23 +288,23 @@ ModTestHandlerFactory.createHandler({ actionId: 'sit_down' });
 new ModEntityBuilder(); // Missing ID and validation
 ```
 
-| Method | Description | Key parameters | Returns |
-| --- | --- | --- | --- |
-| `forActionAutoLoad(modId, fullActionId, options?)` | Loads rule and condition JSON automatically. | `modId`, fully-qualified action ID, optional config overrides. | `ModActionTestFixture` |
-| `forAction(modId, fullActionId, ruleFile?, conditionFile?, options?)` | Creates an action fixture with explicit overrides. | `modId`, action ID, optional rule/condition JSON, `options.autoRegisterScopes` (boolean), `options.scopeCategories` (string[]). | `ModActionTestFixture` |
-| `forRule(modId, fullActionId, ruleFile?, conditionFile?)` | Targets resolver rules without executing the whole action. | `modId`, action ID, optional rule/condition JSON. | `ModActionTestFixture` |
-| `forCategory(modId, options?)` | Builds a category-level harness for discovery-style assertions. | `modId`, optional configuration. | `ModCategoryTestFixture` |
+| Method                                                                | Description                                                     | Key parameters                                                                                                                  | Returns                  |
+| --------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `forActionAutoLoad(modId, fullActionId, options?)`                    | Loads rule and condition JSON automatically.                    | `modId`, fully-qualified action ID, optional config overrides.                                                                  | `ModActionTestFixture`   |
+| `forAction(modId, fullActionId, ruleFile?, conditionFile?, options?)` | Creates an action fixture with explicit overrides.              | `modId`, action ID, optional rule/condition JSON, `options.autoRegisterScopes` (boolean), `options.scopeCategories` (string[]). | `ModActionTestFixture`   |
+| `forRule(modId, fullActionId, ruleFile?, conditionFile?)`             | Targets resolver rules without executing the whole action.      | `modId`, action ID, optional rule/condition JSON.                                                                               | `ModActionTestFixture`   |
+| `forCategory(modId, options?)`                                        | Builds a category-level harness for discovery-style assertions. | `modId`, optional configuration.                                                                                                | `ModCategoryTestFixture` |
 
 #### Core instance helpers
 
-| Method | Purpose | Highlights |
-| --- | --- | --- |
-| `createStandardActorTarget([actorName, targetName])` | Creates reciprocal actor/target entities with validated components. | Use the returned IDs rather than hard-coded strings. |
-| `createSittingPair(options)` and other scenario builders | Provision seating, inventory, and bespoke setups. | Prefer these helpers before writing custom entity graphs. |
-| `executeAction(actorId, targetId, options?)` | Runs the action and captures emitted events. | Options include `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and multi-target IDs such as `secondaryTargetId`. |
-| `assertActionSuccess(message)` / legacy assertions | Provides backward-compatible assertions. | Prefer Jest matchers from `domainMatchers` for clearer failures. |
-| `assertPerceptibleEvent(eventData)` | Validates perceptible event payloads. | Pair with event matchers when migrating legacy suites. |
-| `clearEvents()` / `cleanup()` | Reset captured events and teardown resources. | Call `cleanup()` in `afterEach` to avoid shared state. |
+| Method                                                   | Purpose                                                             | Highlights                                                                                                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createStandardActorTarget([actorName, targetName])`     | Creates reciprocal actor/target entities with validated components. | Use the returned IDs rather than hard-coded strings.                                                                                       |
+| `createSittingPair(options)` and other scenario builders | Provision seating, inventory, and bespoke setups.                   | Prefer these helpers before writing custom entity graphs.                                                                                  |
+| `executeAction(actorId, targetId, options?)`             | Runs the action and captures emitted events.                        | Options include `additionalPayload`, `originalInput`, `skipDiscovery`, `skipValidation`, and multi-target IDs such as `secondaryTargetId`. |
+| `assertActionSuccess(message)` / legacy assertions       | Provides backward-compatible assertions.                            | Prefer Jest matchers from `domainMatchers` for clearer failures.                                                                           |
+| `assertPerceptibleEvent(eventData)`                      | Validates perceptible event payloads.                               | Pair with event matchers when migrating legacy suites.                                                                                     |
+| `clearEvents()` / `cleanup()`                            | Reset captured events and teardown resources.                       | Call `cleanup()` in `afterEach` to avoid shared state.                                                                                     |
 
 **Usage notes**
 
@@ -325,18 +337,18 @@ describe('my action suite', () => {
 });
 ```
 
-| Helper | Purpose | Notes |
-| --- | --- | --- |
-| `createActionDiscoveryBed()` | Provision a validated bed with mocks, logging capture, and diagnostics toggles. | Pair with manual lifecycle management when suites need custom setup. |
-| `describeActionDiscoverySuite(title, suiteFn, overrides?)` | Wrap `describe` to automate bed setup/teardown. | Ideal when modernizing multiple suites. |
-| `createActorWithValidation(actorId, options)` | Build validated actors through `ModEntityBuilder`. | Use to mix custom entities with bed-managed fixtures. |
-| `createActorTargetScenario(options)` | Produce an actor/target pair sharing a location with optional `closeProximity`. | Mirrors fixture scenario helpers. |
-| `establishClosenessWithValidation(actor, target)` | Adds reciprocal `positioning:closeness` components safely. | Avoid manual component wiring. |
-| `discoverActionsWithDiagnostics(actorOrId, options?)` | Run discovery and optionally capture `{ actions, diagnostics }`. | Set `includeDiagnostics` or `traceScopeResolution` only when needed. |
-| `formatDiagnosticSummary(diagnostics)` | Present captured diagnostics for logging or snapshots. | Use when assertions fail to surface detailed traces. |
-| `createDiscoveryServiceWithTracing(options?)` | Instantiate `ActionDiscoveryService` with tracing toggles. | Helpful for targeted debugging. |
-| `getDebugLogs()`/`getInfoLogs()`/`getWarningLogs()`/`getErrorLogs()` | Retrieve captured log messages. | Enables log-based assertions without touching console output. |
-| `createTracedScopeResolver(scopeResolver, traceContext)` | Wrap resolvers to capture per-scope decisions. | Use with `formatScopeEvaluationSummary(traceContext)`. |
+| Helper                                                               | Purpose                                                                         | Notes                                                                |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `createActionDiscoveryBed()`                                         | Provision a validated bed with mocks, logging capture, and diagnostics toggles. | Pair with manual lifecycle management when suites need custom setup. |
+| `describeActionDiscoverySuite(title, suiteFn, overrides?)`           | Wrap `describe` to automate bed setup/teardown.                                 | Ideal when modernizing multiple suites.                              |
+| `createActorWithValidation(actorId, options)`                        | Build validated actors through `ModEntityBuilder`.                              | Use to mix custom entities with bed-managed fixtures.                |
+| `createActorTargetScenario(options)`                                 | Produce an actor/target pair sharing a location with optional `closeProximity`. | Mirrors fixture scenario helpers.                                    |
+| `establishClosenessWithValidation(actor, target)`                    | Adds reciprocal `positioning:closeness` components safely.                      | Avoid manual component wiring.                                       |
+| `discoverActionsWithDiagnostics(actorOrId, options?)`                | Run discovery and optionally capture `{ actions, diagnostics }`.                | Set `includeDiagnostics` or `traceScopeResolution` only when needed. |
+| `formatDiagnosticSummary(diagnostics)`                               | Present captured diagnostics for logging or snapshots.                          | Use when assertions fail to surface detailed traces.                 |
+| `createDiscoveryServiceWithTracing(options?)`                        | Instantiate `ActionDiscoveryService` with tracing toggles.                      | Helpful for targeted debugging.                                      |
+| `getDebugLogs()`/`getInfoLogs()`/`getWarningLogs()`/`getErrorLogs()` | Retrieve captured log messages.                                                 | Enables log-based assertions without touching console output.        |
+| `createTracedScopeResolver(scopeResolver, traceContext)`             | Wrap resolvers to capture per-scope decisions.                                  | Use with `formatScopeEvaluationSummary(traceContext)`.               |
 
 #### Modernizing discovery suites
 
@@ -351,6 +363,7 @@ describe('my action suite', () => {
 ### Diagnostics & Logging
 
 #### enableDiagnostics()
+
 Enable detailed logging for action discovery and execution debugging.
 
 ```javascript
@@ -363,6 +376,7 @@ beforeEach(async () => {
 ```
 
 **When to Use**:
+
 - Action not being discovered
 - Unexpected action execution results
 - Scope resolution issues
@@ -387,11 +401,13 @@ The ModTestFixture provides comprehensive diagnostics to help debug scope resolu
 **What it does**: Validates parameters passed to scope resolution functions
 
 **Catches**:
+
 - Context object passed instead of entity
 - Missing or invalid runtimeCtx
 - Malformed AST structures
 
 **Example error**:
+
 ```javascript
 ParameterValidationError: Expected actorEntity (object with .id), got object
   Source: ScopeEngine.resolve
@@ -404,12 +420,14 @@ ParameterValidationError: Expected actorEntity (object with .id), got object
 **What it does**: Wraps scope resolution errors with rich context
 
 **Provides**:
+
 - Scope name and phase where error occurred
 - Parameter values for debugging
 - Helpful hints and suggestions
 - Code examples for correct usage
 
 **Example error**:
+
 ```javascript
 ScopeResolutionError: Invalid parameter passed to scope resolver
   Scope: positioning:close_actors
@@ -425,12 +443,14 @@ ScopeResolutionError: Invalid parameter passed to scope resolver
 **What it does**: Captures step-by-step execution of scope resolution
 
 **Enables**:
+
 - Seeing which resolvers execute and in what order
 - Inspecting input/output of each step
 - Viewing filter evaluations per entity
 - Identifying where empty sets occur
 
 **Usage**:
+
 ```javascript
 it('debug with scope tracing', async () => {
   testFixture.enableScopeTracing();
@@ -445,6 +465,7 @@ it('debug with scope tracing', async () => {
 ```
 
 **Output**:
+
 ```
 SCOPE EVALUATION TRACE:
 ================================================================================
@@ -471,11 +492,13 @@ Summary: 3 steps, 12ms, Final size: 1
 **What it does**: Shows which filter clauses pass/fail for each entity
 
 **Enables**:
+
 - Identifying exactly which filter condition failed
 - Seeing variable values in filter context
 - Understanding complex nested filter logic
 
 **Usage**:
+
 ```javascript
 it('debug filter failure', async () => {
   testFixture.enableScopeTracing();
@@ -487,7 +510,7 @@ it('debug filter failure', async () => {
 
   if (breakdown && !breakdown.result) {
     console.log('Filter failed:');
-    breakdown.clauses.forEach(clause => {
+    breakdown.clauses.forEach((clause) => {
       const symbol = clause.result ? '✓' : '✗';
       console.log(`  ${symbol} ${clause.operator}: ${clause.description}`);
     });
@@ -496,6 +519,7 @@ it('debug filter failure', async () => {
 ```
 
 **Output**:
+
 ```
 Filter failed:
   ✗ and: All conditions must be true
@@ -508,12 +532,14 @@ Filter failed:
 **What it does**: Measures timing of scope resolution operations
 
 **Provides**:
+
 - Per-resolver timing breakdown
 - Filter evaluation statistics
 - Slowest operation identification
 - Tracing overhead calculation
 
 **Usage**:
+
 ```javascript
 it('analyze performance', async () => {
   testFixture.enableScopeTracing();
@@ -524,8 +550,10 @@ it('analyze performance', async () => {
   const metrics = testFixture.getScopePerformanceMetrics();
 
   console.log(`Total: ${metrics.totalDuration.toFixed(2)}ms`);
-  metrics.resolverStats.forEach(stat => {
-    console.log(`  ${stat.resolver}: ${stat.totalTime.toFixed(2)}ms (${stat.percentage.toFixed(1)}%)`);
+  metrics.resolverStats.forEach((stat) => {
+    console.log(
+      `  ${stat.resolver}: ${stat.totalTime.toFixed(2)}ms (${stat.percentage.toFixed(1)}%)`
+    );
   });
 });
 ```
@@ -535,15 +563,19 @@ it('analyze performance', async () => {
 ### Scope Tracing Control
 
 #### `enableScopeTracing()`
+
 Enable scope evaluation tracing.
 
 #### `disableScopeTracing()`
+
 Disable scope evaluation tracing.
 
 #### `clearScopeTrace()`
+
 Clear accumulated trace data.
 
 #### `enableScopeTracingIf(condition)`
+
 Conditionally enable tracing.
 
 ```javascript
@@ -554,6 +586,7 @@ testFixture.enableScopeTracingIf(shouldTrace);
 ### Trace Data Access
 
 #### `getScopeTrace()`
+
 Get formatted, human-readable trace output.
 
 **Returns**: `string` - Formatted trace
@@ -564,6 +597,7 @@ console.log(trace);
 ```
 
 #### `getScopeTraceData()`
+
 Get raw trace data structure.
 
 **Returns**: `object` - Raw trace with steps and summary
@@ -575,9 +609,11 @@ console.log(data.summary.resolversUsed);
 ```
 
 #### `getFilterBreakdown(entityId?)`
+
 Get filter clause breakdown.
 
 **Parameters**:
+
 - `entityId` (optional): Filter to specific entity
 
 **Returns**: `object|Array` - Filter breakdown with clauses
@@ -593,6 +629,7 @@ const breakdown = testFixture.getFilterBreakdown(entityId);
 ### Performance Metrics
 
 #### `getScopePerformanceMetrics()`
+
 Get detailed performance timing metrics.
 
 **Returns**: `object` - Performance metrics
@@ -605,6 +642,7 @@ console.log(metrics.slowestOperations);
 ```
 
 #### `getScopeTraceWithPerformance()`
+
 Get formatted trace with performance focus.
 
 **Returns**: `string` - Performance-focused trace
@@ -618,18 +656,18 @@ console.log(perfTrace);
 
 Import the relevant matcher modules once per suite to unlock expressive assertions.
 
-| Matcher | Module | Best used for |
-| --- | --- | --- |
-| `toHaveActionSuccess(message?)` | `../../common/mods/domainMatchers.js` | Confirm successful action execution events. |
-| `toHaveActionFailure()` | `../../common/mods/domainMatchers.js` | Assert the absence of success events. |
-| `toHaveComponent(componentType)` / `toNotHaveComponent(componentType)` | `../../common/mods/domainMatchers.js` | Verify component presence on entities. |
-| `toHaveComponentData(componentType, expectedData)` | `../../common/mods/domainMatchers.js` | Deep-match component payloads. |
-| `toDispatchEvent(eventType)` | `../../common/mods/domainMatchers.js` | Validate emitted event types. |
-| `toHaveAction(actionId)` | `../../common/actionMatchers.js` | Check that discovery included a specific action. |
-| `toDiscoverActionCount(expectedCount)` | `../../common/actionMatchers.js` | Assert exact discovery counts. |
-| `toHaveActionSuccess(message)` (discovery event form) | `../../common/actionMatchers.js` | Match action success events captured via the bed. |
-| `toHaveComponent(componentType)` (entity matcher variant) | `../../common/actionMatchers.js` | Assert entity components when using the discovery bed. |
-| `toBeAt(locationId)` | `../../common/actionMatchers.js` | Assert entity location relationships. |
+| Matcher                                                                | Module                                | Best used for                                          |
+| ---------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------ |
+| `toHaveActionSuccess(message?)`                                        | `../../common/mods/domainMatchers.js` | Confirm successful action execution events.            |
+| `toHaveActionFailure()`                                                | `../../common/mods/domainMatchers.js` | Assert the absence of success events.                  |
+| `toHaveComponent(componentType)` / `toNotHaveComponent(componentType)` | `../../common/mods/domainMatchers.js` | Verify component presence on entities.                 |
+| `toHaveComponentData(componentType, expectedData)`                     | `../../common/mods/domainMatchers.js` | Deep-match component payloads.                         |
+| `toDispatchEvent(eventType)`                                           | `../../common/mods/domainMatchers.js` | Validate emitted event types.                          |
+| `toHaveAction(actionId)`                                               | `../../common/actionMatchers.js`      | Check that discovery included a specific action.       |
+| `toDiscoverActionCount(expectedCount)`                                 | `../../common/actionMatchers.js`      | Assert exact discovery counts.                         |
+| `toHaveActionSuccess(message)` (discovery event form)                  | `../../common/actionMatchers.js`      | Match action success events captured via the bed.      |
+| `toHaveComponent(componentType)` (entity matcher variant)              | `../../common/actionMatchers.js`      | Assert entity components when using the discovery bed. |
+| `toBeAt(locationId)`                                                   | `../../common/actionMatchers.js`      | Assert entity location relationships.                  |
 
 Mix matcher usage with targeted entity inspections; for example, call `fixture.entityManager.getEntityInstance(actorId)` to inspect component payloads directly.
 
@@ -640,20 +678,25 @@ Actions that use scopes from dependency mods (e.g., `positioning:close_actors`, 
 > **✨ NEW: Unified Scope Registration System (2025-11-08)**
 >
 > A new unified `TestScopeResolverRegistry` system is now available for managing test scope resolvers. This system provides:
+>
 > - **Auto-discovery** of scopes from mod directories
 > - **Centralized management** of all test scope resolvers
 > - **Better error messages** when scopes are missing
 > - **Dependency tracking** and validation
 >
 > **Quick Start:**
+>
 > ```javascript
 > // NEW unified pattern (recommended for new tests)
-> await testEnv.scopeResolverRegistry.discoverAndRegister(['positioning', 'inventory']);
+> await testEnv.scopeResolverRegistry.discoverAndRegister([
+>   'positioning',
+>   'inventory',
+> ]);
 >
 > // Or use ModTestFixture's autoRegisterScopes option
 > const fixture = await ModTestFixture.forAction('mod', 'action', null, null, {
 >   autoRegisterScopes: true,
->   scopeCategories: ['positioning', 'inventory']
+>   scopeCategories: ['positioning', 'inventory'],
 > });
 > ```
 >
@@ -682,11 +725,11 @@ beforeEach(async () => {
 
 **Available Registration Methods**:
 
-| Method | Coverage | Scopes Registered | Use When |
-|--------|----------|-------------------|----------|
-| `registerPositioningScopes(testEnv)` | **26 scopes (90%+ coverage)**: Sitting, standing, closeness, kneeling, facing, straddling, lying, bending, furniture discovery, and specialized positioning patterns | 26 | Action uses positioning mod scopes |
-| `registerInventoryScopes(testEnv)` | Items, containers, inventory, equipped items | 5 | Action uses items mod scopes |
-| `registerAnatomyScopes(testEnv)` | Body parts, anatomy interactions | 2 | Action uses anatomy mod scopes |
+| Method                               | Coverage                                                                                                                                                             | Scopes Registered | Use When                           |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ---------------------------------- |
+| `registerPositioningScopes(testEnv)` | **26 scopes (90%+ coverage)**: Sitting, standing, closeness, kneeling, facing, straddling, lying, bending, furniture discovery, and specialized positioning patterns | 26                | Action uses positioning mod scopes |
+| `registerInventoryScopes(testEnv)`   | Items, containers, inventory, equipped items                                                                                                                         | 5                 | Action uses items mod scopes       |
+| `registerAnatomyScopes(testEnv)`     | Body parts, anatomy interactions                                                                                                                                     | 2                 | Action uses anatomy mod scopes     |
 
 **Positioning Scopes Coverage** (TEAOUTTHR-006 - 90%+ coverage):
 
@@ -694,6 +737,7 @@ beforeEach(async () => {
 <summary>Expand to see all 26 registered positioning scopes</summary>
 
 **High Priority - Closeness & Facing (6 scopes)**:
+
 - `positioning:close_actors` - Close actors excluding kneeling relationships
 - `positioning:close_actors_facing_each_other` - Close actors facing each other (no kneeling)
 - `positioning:actors_both_sitting_close` - Close actors both sitting
@@ -702,11 +746,13 @@ beforeEach(async () => {
 - `positioning:close_actors_or_entity_kneeling_before_actor` - Close actors plus those kneeling before actor
 
 **Medium Priority - Straddling & Seating (3 scopes)**:
+
 - `positioning:actor_im_straddling` - Entity actor is straddling
 - `positioning:entity_actor_is_kneeling_before` - Entity actor is kneeling before
 - `positioning:actors_sitting_with_space_to_right` - Sitting actors with 2+ empty spots to right
 
 **Lower Priority - Furniture & Specialized (6 scopes)**:
+
 - `positioning:available_furniture` - Furniture with empty sitting spots at location
 - `positioning:available_lying_furniture` - Furniture with empty lying spots at location
 - `positioning:furniture_im_lying_on` - Furniture actor is lying on
@@ -715,6 +761,7 @@ beforeEach(async () => {
 - `positioning:actors_im_facing_away_from` - Actors that actor is facing away from
 
 **Previously Registered (11 scopes)**:
+
 - `positioning:furniture_actor_sitting_on` - Furniture entity lookup
 - `positioning:actors_sitting_on_same_furniture` - Actors sharing furniture
 - `positioning:closest_leftmost_occupant` - Leftmost sitting actor
@@ -760,7 +807,7 @@ beforeEach(async () => {
     {
       componentType: 'positioning:biting_neck',
       sourceField: 'bitten_entity_id',
-      contextSource: 'actor'
+      contextSource: 'actor',
     }
   );
 
@@ -775,12 +822,12 @@ beforeEach(async () => {
 
 **Available Factory Methods**:
 
-| Factory Method | Pattern | Example Use Case |
-|----------------|---------|------------------|
-| `createComponentLookupResolver()` | "Get entity ID from component field" | "Furniture actor is sitting on" |
-| `createArrayFilterResolver()` | "Filter array of entities" | "Close actors facing each other" |
-| `createLocationMatchResolver()` | "Entities at same location" | "Actors in same room" |
-| `createComponentFilterResolver()` | "Entities with component" | "All sitting actors" |
+| Factory Method                    | Pattern                              | Example Use Case                 |
+| --------------------------------- | ------------------------------------ | -------------------------------- |
+| `createComponentLookupResolver()` | "Get entity ID from component field" | "Furniture actor is sitting on"  |
+| `createArrayFilterResolver()`     | "Filter array of entities"           | "Close actors facing each other" |
+| `createLocationMatchResolver()`   | "Entities at same location"          | "Actors in same room"            |
+| `createComponentFilterResolver()` | "Entities with component"            | "All sitting actors"             |
 
 #### Example: Complete Test Setup with Scopes
 
@@ -808,7 +855,9 @@ describe('violence:grab_neck - Action Discovery', () => {
     const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
     // Get available actions
-    const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+    const availableActions = await testFixture.getAvailableActions(
+      scenario.actor.id
+    );
 
     // Assert action is discovered
     expect(availableActions).toContain('violence:grab_neck');
@@ -858,6 +907,7 @@ describe('Action Discovery with Custom Scope', () => {
 ```
 
 **What this method does automatically**:
+
 - ✅ Loads the scope file from `data/mods/{modId}/scopes/{scopeName}.scope`
 - ✅ Parses the scope definitions using `parseScopeDefinitions()`
 - ✅ Extracts condition references from the scope AST
@@ -872,11 +922,9 @@ describe('Action Discovery with Custom Scope', () => {
 If you need to load conditions manually or your scope doesn't reference any conditions:
 
 ```javascript
-await testFixture.registerCustomScope(
-  'my-mod',
-  'my-custom-scope',
-  { loadConditions: false }
-);
+await testFixture.registerCustomScope('my-mod', 'my-custom-scope', {
+  loadConditions: false,
+});
 ```
 
 **Error Handling**:
@@ -914,6 +962,7 @@ await ScopeResolverHelpers.registerCustomScope(
 **Lines Reduced**: This approach reduces custom scope registration from **36+ lines** of boilerplate to **1 line**.
 
 **Before (36 lines)**:
+
 ```javascript
 const scopeDefPath = path.join(
   __dirname,
@@ -922,7 +971,8 @@ const scopeDefPath = path.join(
 
 const scopeDef = await parseScopeDefinitions(scopeDefPath);
 
-const scopeId = 'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind';
+const scopeId =
+  'sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind';
 const scopeName = 'actors_with_exposed_asshole_accessible_from_behind';
 
 const resolver = (runtimeCtx) => {
@@ -950,6 +1000,7 @@ ScopeResolverHelpers._registerResolvers(testFixture.testEnv, {
 ```
 
 **After (1 line)**:
+
 ```javascript
 await testFixture.registerCustomScope(
   'sex-anal-penetration',
@@ -991,11 +1042,12 @@ import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.
 ```javascript
 // Load positioning condition needed by the custom scope
 await testFixture.loadDependencyConditions([
-  'positioning:actor-in-entity-facing-away'
+  'positioning:actor-in-entity-facing-away',
 ]);
 ```
 
 This method replaces the manual 10+ line workaround (Steps 1-2 below) with a single convenience call. It:
+
 - ✅ Validates condition ID format
 - ✅ Loads condition files from the correct mod directories
 - ✅ Extends the `dataRegistry.getConditionDefinition` mock automatically
@@ -1007,7 +1059,7 @@ This method replaces the manual 10+ line workaround (Steps 1-2 below) with a sin
 ```javascript
 await testFixture.loadDependencyConditions([
   'positioning:actor-in-entity-facing-away',
-  'positioning:entity-not-in-facing-away'
+  'positioning:entity-not-in-facing-away',
 ]);
 ```
 
@@ -1016,16 +1068,17 @@ await testFixture.loadDependencyConditions([
 ```javascript
 // First call
 await testFixture.loadDependencyConditions([
-  'positioning:actor-in-entity-facing-away'
+  'positioning:actor-in-entity-facing-away',
 ]);
 
 // Later - adds to previously loaded conditions
 await testFixture.loadDependencyConditions([
-  'positioning:entity-not-in-facing-away'
+  'positioning:entity-not-in-facing-away',
 ]);
 ```
 
 **When to use this method**:
+
 - Your custom scope uses `condition_ref` to reference conditions from dependency mods
 - You need to load conditions from mods like `positioning`, `items`, etc.
 - You want to avoid verbose manual mock setup
@@ -1058,19 +1111,23 @@ Extend the `dataRegistry.getConditionDefinition` mock to return the dependency c
 
 ```javascript
 // Save reference to original mock
-const originalGetCondition = testFixture.testEnv.dataRegistry.getConditionDefinition;
+const originalGetCondition =
+  testFixture.testEnv.dataRegistry.getConditionDefinition;
 
 // Extend mock to handle dependency conditions
-testFixture.testEnv.dataRegistry.getConditionDefinition = jest.fn((conditionId) => {
-  if (conditionId === 'positioning:actor-in-entity-facing-away') {
-    return positioningCondition.default;
+testFixture.testEnv.dataRegistry.getConditionDefinition = jest.fn(
+  (conditionId) => {
+    if (conditionId === 'positioning:actor-in-entity-facing-away') {
+      return positioningCondition.default;
+    }
+    // Fall back to original mock for other conditions
+    return originalGetCondition(conditionId);
   }
-  // Fall back to original mock for other conditions
-  return originalGetCondition(conditionId);
-});
+);
 ```
 
 **Key Points**:
+
 - Keep a reference to the original mock function
 - Return the imported condition's `.default` property
 - Fall back to the original mock for conditions not explicitly handled
@@ -1092,6 +1149,7 @@ const parsedScopes = parseScopeDefinitions(scopeContent, scopePath);
 ```
 
 **Notes**:
+
 - `parseScopeDefinitions()` returns a Map of scope names to AST objects
 - The scope file path is used for error reporting
 
@@ -1130,6 +1188,7 @@ for (const [scopeName, scopeAst] of parsedScopes) {
 ```
 
 **Important Details**:
+
 - Create a **new** `ScopeEngine` instance (don't try to access an existing one)
 - The resolver must return `{ success: true, value: result }`
 - `context` parameter contains actor/entity properties (e.g., `{ actor: { id: 'actor-id' } }`)
@@ -1138,6 +1197,7 @@ for (const [scopeName, scopeAst] of parsedScopes) {
 ### Complete Working Example
 
 See the full implementation in:
+
 - **File**: `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js`
 - **Lines**: 23-69
 
@@ -1157,7 +1217,10 @@ When implementing this pattern, document the dependencies your action uses:
  * - sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind
  */
 beforeEach(async () => {
-  testFixture = await ModTestFixture.forAction('sex-anal-penetration', 'insert_finger_into_asshole');
+  testFixture = await ModTestFixture.forAction(
+    'sex-anal-penetration',
+    'insert_finger_into_asshole'
+  );
 
   // Auto-register standard positioning scopes
   ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
@@ -1169,12 +1232,12 @@ beforeEach(async () => {
 
 ### Pattern Comparison Table
 
-| Scenario | Method | Setup Required |
-|----------|--------|----------------|
-| Standard positioning scopes | `autoRegisterScopes: true, scopeCategories: ['positioning']` | None - automatic |
-| Custom mod scopes (no dependency conditions) | Manual registration | Load scope file, register resolver (steps 3-4) |
-| Custom mod scopes (with dependency conditions) | Manual registration + mock extension | Load condition, extend mock, load scope, register resolver (steps 1-4) |
-| Mixed standard + custom scopes | Combine both approaches | `autoRegisterScopes: true` + manual setup for custom scopes |
+| Scenario                                       | Method                                                       | Setup Required                                                         |
+| ---------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Standard positioning scopes                    | `autoRegisterScopes: true, scopeCategories: ['positioning']` | None - automatic                                                       |
+| Custom mod scopes (no dependency conditions)   | Manual registration                                          | Load scope file, register resolver (steps 3-4)                         |
+| Custom mod scopes (with dependency conditions) | Manual registration + mock extension                         | Load condition, extend mock, load scope, register resolver (steps 1-4) |
+| Mixed standard + custom scopes                 | Combine both approaches                                      | `autoRegisterScopes: true` + manual setup for custom scopes            |
 
 ### Key Implementation Details
 
@@ -1187,11 +1250,13 @@ const scopeEngine = new ScopeEngine();
 ```
 
 **ScopeEngine.resolve() signature**:
+
 ```javascript
-scopeEngine.resolve(ast, context, runtimeCtx, trace = null)
+scopeEngine.resolve(ast, context, runtimeCtx, (trace = null));
 ```
 
 **Parameters**:
+
 1. `ast` - Parsed scope AST from `parseScopeDefinitions()`
 2. `context` - Context object with actor/entity properties (e.g., `{ actor: { id: 'actor-id' } }`)
 3. `runtimeCtx` - Runtime context with `{ entityManager, jsonLogicEval, logger }`
@@ -1199,6 +1264,7 @@ scopeEngine.resolve(ast, context, runtimeCtx, trace = null)
 
 **Resolver wrapper**:
 The resolver function wraps `scopeEngine.resolve()` and returns the expected format:
+
 ```javascript
 const scopeResolver = (context) => {
   const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
@@ -1235,6 +1301,7 @@ Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automaticall
 **Cause**: This is NOT an issue with ModTestFixture. Custom operators auto-register during fixture initialization.
 
 **Solution**:
+
 - Verify fixture is initialized: `testFixture = await ModTestFixture.forAction(...)`
 - Check that you're using the fixture's test environment services
 - Ensure `jsonLogicEval` in `runtimeCtx` is from `testFixture.testEnv.jsonLogic`
@@ -1244,6 +1311,7 @@ Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automaticall
 **Cause**: Import statement is incorrect or condition file doesn't exist
 
 **Solution**:
+
 - Verify the condition file path is correct
 - Use `assert: { type: 'json' }` in the import statement
 - Check that the file exists at the specified path
@@ -1263,6 +1331,7 @@ Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automaticall
 ### Cross-References
 
 **Helper files and utilities**:
+
 - `tests/common/mods/scopeResolverHelpers.js` - Available helper methods and `_registerResolvers()`
 - `tests/integration/mods/sex-anal-penetration/insert_finger_into_asshole_action_discovery.test.js` - Complete working example
 - `src/scopeDsl/engine.js` - ScopeEngine API reference
@@ -1270,6 +1339,7 @@ Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automaticall
 - `src/logic/jsonLogicCustomOperators.js` - Custom operator auto-registration
 
 **Related documentation**:
+
 - [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) - Standard scope registration
 - [ScopeResolverHelpers Registry](./scope-resolver-registry.md) - Available scope factory methods
 
@@ -1285,7 +1355,7 @@ The new `loadDependencyConditions()` method eliminates Steps 1-2 of the manual p
 ```javascript
 // Current API (Steps 1-2 simplified)
 await testFixture.loadDependencyConditions([
-  'positioning:actor-in-entity-facing-away'
+  'positioning:actor-in-entity-facing-away',
 ]);
 ```
 
@@ -1303,6 +1373,7 @@ await testFixture.registerCustomScope(
 If your action is not being discovered (`availableActions` returns empty array `[]`), follow this systematic checklist:
 
 #### ✅ Step 1: Verify Action File Exists
+
 **Check**: Action definition file is present and correctly named
 
 ```bash
@@ -1314,6 +1385,7 @@ ls data/mods/violence/actions/tear_out_throat.action.json
 ```
 
 **Common Issues**:
+
 - File missing or in wrong directory
 - Incorrect file extension (should be `.action.json`)
 - Typo in action name
@@ -1323,6 +1395,7 @@ ls data/mods/violence/actions/tear_out_throat.action.json
 ---
 
 #### ✅ Step 2: Verify Condition File Naming
+
 **Check**: Condition file uses **hyphens**, not underscores
 
 ```bash
@@ -1336,6 +1409,7 @@ data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json
 **Rule**: Condition files use hyphens to separate words, even if action name uses underscores.
 
 **Fix**: Rename condition file to use hyphens
+
 ```bash
 mv data/mods/violence/conditions/event-is-action-tear_out_throat.condition.json \
    data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json
@@ -1346,15 +1420,22 @@ mv data/mods/violence/conditions/event-is-action-tear_out_throat.condition.json 
 ---
 
 #### ✅ Step 3: Verify ModTestFixture Parameters
+
 **Check**: `forAction()` receives `(modId, actionName)`, not `(modId, fullActionId)`
 
 ```javascript
 // ❌ WRONG - Double prefixing
-const testFixture = await ModTestFixture.forAction('violence', 'violence:tear_out_throat');
+const testFixture = await ModTestFixture.forAction(
+  'violence',
+  'violence:tear_out_throat'
+);
 // Results in: violence:violence:tear_out_throat
 
 // ✅ CORRECT - Just action name
-const testFixture = await ModTestFixture.forAction('violence', 'tear_out_throat');
+const testFixture = await ModTestFixture.forAction(
+  'violence',
+  'tear_out_throat'
+);
 // Results in: violence:tear_out_throat
 ```
 
@@ -1363,6 +1444,7 @@ const testFixture = await ModTestFixture.forAction('violence', 'tear_out_throat'
 ---
 
 #### ✅ Step 4: Register Dependency Mod Scopes
+
 **Check**: If action uses positioning/inventory/anatomy scopes, they must be registered
 
 ```javascript
@@ -1377,6 +1459,7 @@ beforeEach(async () => {
 ```
 
 **How to Check**: Look at action's `targets` field in action definition:
+
 - `positioning:*` → Need `registerPositioningScopes()`
 - `items:*` → Need `registerInventoryScopes()`
 - `anatomy:*` → Need `registerAnatomyScopes()`
@@ -1388,6 +1471,7 @@ See [Testing Actions with Custom Scopes](#testing-actions-with-custom-scopes) fo
 ---
 
 #### ✅ Step 5: Handle Custom Scopes
+
 **Check**: If action uses custom scopes not in standard library, create resolver
 
 ```javascript
@@ -1402,7 +1486,7 @@ const customResolver = ScopeResolverHelpers.createComponentLookupResolver(
   {
     componentType: 'positioning:biting_neck',
     sourceField: 'bitten_entity_id',
-    contextSource: 'actor'
+    contextSource: 'actor',
   }
 );
 
@@ -1414,6 +1498,7 @@ ScopeResolverHelpers._registerResolvers(
 ```
 
 **How to Identify Custom Scopes**:
+
 - Check `tests/common/mods/scopeResolverHelpers.js` for registered scopes
 - If your scope isn't listed in `registerPositioningScopes()`, it's custom
 
@@ -1422,6 +1507,7 @@ ScopeResolverHelpers._registerResolvers(
 ---
 
 #### ✅ Step 6: Enable Diagnostics Mode
+
 **Check**: Enable detailed logging to see what's happening
 
 ```javascript
@@ -1437,13 +1523,16 @@ it('should discover action', async () => {
   const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
   // This will now log detailed discovery process
-  const availableActions = await testFixture.getAvailableActions(scenario.actor.id);
+  const availableActions = await testFixture.getAvailableActions(
+    scenario.actor.id
+  );
 
   expect(availableActions).toContain('violence:tear_out_throat');
 });
 ```
 
 **Diagnostics Output Shows**:
+
 - Which actions were evaluated
 - Which conditions passed/failed
 - Scope resolution results
@@ -1469,17 +1558,20 @@ Use this quick checklist for rapid diagnosis:
 If action discovery still fails after this checklist:
 
 1. **Verify entity components**: Ensure test entities have required components
+
    ```javascript
    console.log('Actor components:', scenario.actor.components);
    console.log('Target components:', scenario.target.components);
    ```
 
 2. **Check action condition logic**: Review condition JSON for logical errors
+
    ```bash
    cat data/mods/{mod}/conditions/event-is-action-{action}.condition.json
    ```
 
 3. **Validate rule execution**: Ensure rule file exists and is correctly formed
+
    ```bash
    cat data/mods/{mod}/rules/{action}.rule.json
    ```
@@ -1499,6 +1591,7 @@ const availableActions = await testFixture.discoverActions(scenario.actor.id);
 ```
 
 **Suppressing Hints** (for tests expecting empty results):
+
 ```javascript
 beforeEach(async () => {
   testFixture = await ModTestFixture.forAction('violence', 'grab_neck');
@@ -1549,19 +1642,19 @@ This section helps maintainers convert legacy mod tests to modern fixtures and h
 
 Use the following table to capture the state of legacy helper usage before each migration batch begins. Tracking the counts for manual builders, assertion helpers, and domain matcher adoption makes it easy to measure progress as suites are modernised.
 
-| Batch | Captured On | Suites using `ModEntityBuilder` | Suites using `ModAssertionHelpers` | Suites importing `domainMatchers.js` | Notes |
-| --- | --- | --- | --- | --- | --- |
-| Batch 1 (MODTESTROB-010-01) | 2025-10-22 | 127 | 29 | 0 | Baseline established prior to migrating priority integration suites. |
+| Batch                       | Captured On | Suites using `ModEntityBuilder` | Suites using `ModAssertionHelpers` | Suites importing `domainMatchers.js` | Notes                                                                |
+| --------------------------- | ----------- | ------------------------------- | ---------------------------------- | ------------------------------------ | -------------------------------------------------------------------- |
+| Batch 1 (MODTESTROB-010-01) | 2025-10-22  | 127                             | 29                                 | 0                                    | Baseline established prior to migrating priority integration suites. |
 
 ### Quick Pattern Reference
 
-| Legacy Pattern | Replace With | Notes |
-| --- | --- | --- |
-| Manual `ModEntityBuilder` graphs constructed inline | Fixture scenario helpers such as `fixture.createSittingPair(options)`, `fixture.createInventoryTransfer(options)`, or `fixture.createOpenContainerScenario(options)` | Scenario helpers automatically register the same component graphs the builders created by hand. They are backed by `ModEntityScenarios` inside `tests/common/mods/ModTestFixture.js`. |
-| `testFixture.reset([...entities])` calls before every assertion | Scenario helper return values combined with the fixture lifecycle methods (`beforeEach`, `afterEach`, `fixture.cleanup()`) | The helpers provision entities and register them with the fixture for you. Use the returned ids through `fixture.entityManager`. |
-| `expect(...).toBe(true)` or raw array inspection on `testFixture.events` | `expect(testFixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, `expect(entity).toHaveComponentData(...)` | Import `../../common/mods/domainMatchers.js` at the top of each suite once. |
-| Inline `testFixture.registerScopeResolver(...)` implementations | `ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv)` (or the relevant helper) | Centralising scope logic prevents drift and keeps diagnostics consistent. |
-| Passing JSON definitions directly to `ModTestFixture.forAction(...)` | `createActionValidationProxy(json, 'label')` prior to invocation | Validation proxies surface schema drift immediately and are already described in the testing guide. |
+| Legacy Pattern                                                           | Replace With                                                                                                                                                         | Notes                                                                                                                                                                                 |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Manual `ModEntityBuilder` graphs constructed inline                      | Fixture scenario helpers such as `fixture.createSittingPair(options)`, `fixture.createInventoryTransfer(options)`, or `fixture.createOpenContainerScenario(options)` | Scenario helpers automatically register the same component graphs the builders created by hand. They are backed by `ModEntityScenarios` inside `tests/common/mods/ModTestFixture.js`. |
+| `testFixture.reset([...entities])` calls before every assertion          | Scenario helper return values combined with the fixture lifecycle methods (`beforeEach`, `afterEach`, `fixture.cleanup()`)                                           | The helpers provision entities and register them with the fixture for you. Use the returned ids through `fixture.entityManager`.                                                      |
+| `expect(...).toBe(true)` or raw array inspection on `testFixture.events` | `expect(testFixture.events).toHaveActionSuccess(...)`, `expect(entity).toHaveComponent(...)`, `expect(entity).toHaveComponentData(...)`                              | Import `../../common/mods/domainMatchers.js` at the top of each suite once.                                                                                                           |
+| Inline `testFixture.registerScopeResolver(...)` implementations          | `ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv)` (or the relevant helper)                                                                           | Centralising scope logic prevents drift and keeps diagnostics consistent.                                                                                                             |
+| Passing JSON definitions directly to `ModTestFixture.forAction(...)`     | `createActionValidationProxy(json, 'label')` prior to invocation                                                                                                     | Validation proxies surface schema drift immediately and are already described in the testing guide.                                                                                   |
 
 ### Example: Sitting Action Migration
 
@@ -1570,18 +1663,25 @@ Use the following table to capture the state of legacy helper usage before each 
 ```javascript
 const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 const furniture = new ModEntityBuilder('furniture1')
-  .withComponent('positioning:allows_sitting', { spots: ['occupant1', null, 'actor1'] })
+  .withComponent('positioning:allows_sitting', {
+    spots: ['occupant1', null, 'actor1'],
+  })
   .build();
 const actor = new ModEntityBuilder('actor1')
   .asActor()
-  .withComponent('positioning:sitting_on', { furniture_id: 'furniture1', spot_index: 2 })
+  .withComponent('positioning:sitting_on', {
+    furniture_id: 'furniture1',
+    spot_index: 2,
+  })
   .build();
 
 testFixture.reset([room, furniture, actor]);
 await testFixture.executeAction('actor1', 'furniture1', {
   additionalPayload: { secondaryId: 'occupant1' },
 });
-expect(testFixture.events.some((evt) => evt.type === 'action/success')).toBe(true);
+expect(testFixture.events.some((evt) => evt.type === 'action/success')).toBe(
+  true
+);
 ```
 
 **Modern pattern:** fixture helpers, domain matchers, shared scopes.
@@ -1593,7 +1693,10 @@ import { ScopeResolverHelpers } from '../../common/mods/scopeResolverHelpers.js'
 let fixture;
 
 beforeEach(async () => {
-  fixture = await ModTestFixture.forAction('positioning', 'positioning:scoot_closer');
+  fixture = await ModTestFixture.forAction(
+    'positioning',
+    'positioning:scoot_closer'
+  );
   ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
 });
 
@@ -1662,14 +1765,14 @@ Scenario helpers pair fixtures with curated entity graphs. Each helper is availa
 
 ### Seating Scenarios
 
-| Helper | Best for |
-| --- | --- |
-| `createSittingArrangement(options)` | Full control over seated, standing, and kneeling actors plus additional furniture. |
-| `createSittingPair(options)` | Reciprocal seating relationships and closeness metadata for two actors sharing furniture. |
-| `createSoloSitting(options)` | Sit/stand transitions where only one actor occupies a seat. |
-| `createStandingNearSitting(options)` | Mixed posture scenarios with standing companions (including `standing_behind`). |
-| `createSeparateFurnitureArrangement(options)` | Multiple furniture entities populated in a single call for comparison tests. |
-| `createKneelingBeforeSitting(options)` | Seated actor plus kneeling observers linked by `positioning:kneeling_before`. |
+| Helper                                        | Best for                                                                                  |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `createSittingArrangement(options)`           | Full control over seated, standing, and kneeling actors plus additional furniture.        |
+| `createSittingPair(options)`                  | Reciprocal seating relationships and closeness metadata for two actors sharing furniture. |
+| `createSoloSitting(options)`                  | Sit/stand transitions where only one actor occupies a seat.                               |
+| `createStandingNearSitting(options)`          | Mixed posture scenarios with standing companions (including `standing_behind`).           |
+| `createSeparateFurnitureArrangement(options)` | Multiple furniture entities populated in a single call for comparison tests.              |
+| `createKneelingBeforeSitting(options)`        | Seated actor plus kneeling observers linked by `positioning:kneeling_before`.             |
 
 ```javascript
 const scenario = fixture.createSittingPair({
@@ -1680,10 +1783,7 @@ const scenario = fixture.createSittingPair({
   ],
 });
 
-await fixture.executeAction(
-  scenario.seatedActors[0].id,
-  scenario.furniture.id
-);
+await fixture.executeAction(scenario.seatedActors[0].id, scenario.furniture.id);
 
 const actor = fixture.entityManager.getEntityInstance('alice');
 expect(actor).toHaveComponentData('positioning:sitting_on', {
@@ -1702,16 +1802,16 @@ Usage tips:
 
 ### Inventory Scenarios
 
-| Helper | Purpose |
-| --- | --- |
-| `createInventoryLoadout(options)` | Actor with populated inventory and default capacity for ownership tests. |
-| `createItemsOnGround(options)` | Loose items positioned in a room with optional observing actor. |
-| `createContainerWithContents(options)` | Containers pre-filled with contents and optional key metadata. |
-| `createInventoryTransfer(options)` | Two actors configured for `items:give_item` style transfers. |
-| `createDropItemScenario(options)` | Actor ready to drop an owned item. |
-| `createPickupScenario(options)` | Actor and ground item setup for `items:pick_up_item`. |
-| `createOpenContainerScenario(options)` | Actor, container, and optional key for `items:open_container`. |
-| `createPutInContainerScenario(options)` | Actor holding an item plus container prepared for storage actions. |
+| Helper                                  | Purpose                                                                  |
+| --------------------------------------- | ------------------------------------------------------------------------ |
+| `createInventoryLoadout(options)`       | Actor with populated inventory and default capacity for ownership tests. |
+| `createItemsOnGround(options)`          | Loose items positioned in a room with optional observing actor.          |
+| `createContainerWithContents(options)`  | Containers pre-filled with contents and optional key metadata.           |
+| `createInventoryTransfer(options)`      | Two actors configured for `items:give_item` style transfers.             |
+| `createDropItemScenario(options)`       | Actor ready to drop an owned item.                                       |
+| `createPickupScenario(options)`         | Actor and ground item setup for `items:pick_up_item`.                    |
+| `createOpenContainerScenario(options)`  | Actor, container, and optional key for `items:open_container`.           |
+| `createPutInContainerScenario(options)` | Actor holding an item plus container prepared for storage actions.       |
 
 ```javascript
 const scenario = fixture.createPutInContainerScenario({
@@ -1778,17 +1878,20 @@ By consolidating these practices in a single guide, contributors can author reli
 ## Common Pitfalls
 
 ### File Naming Mismatches
+
 **Symptom**: Test fails with "Could not load condition file" error
 
 **Cause**: Condition file uses underscores instead of hyphens
 
 **Example Error**:
+
 ```
 Could not load condition file for violence:tear_out_throat.
 Tried paths: data/mods/violence/conditions/event-is-action-tear-out-throat.condition.json
 ```
 
 **Fix**: Rename condition file to use hyphens
+
 ```bash
 # ❌ Wrong naming
 event-is-action-tear_out_throat.condition.json
@@ -1806,6 +1909,7 @@ If your test shows `availableActions` as an empty array `[]`, follow the [Action
 ### Scope Not Found Errors
 
 If you see errors about undefined scopes:
+
 - Import ScopeResolverHelpers and call the appropriate `register*Scopes()` method
 - For custom scopes, use factory methods to create resolvers
 - See [Creating Custom Scope Resolvers](#creating-custom-scope-resolvers) for examples

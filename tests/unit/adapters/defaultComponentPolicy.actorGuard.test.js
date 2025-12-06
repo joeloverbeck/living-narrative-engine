@@ -44,7 +44,9 @@ describe('DefaultComponentPolicy - actor gate', () => {
       addComponent: jest.fn(),
     };
 
-    const validator = { validate: jest.fn().mockReturnValue({ isValid: true }) };
+    const validator = {
+      validate: jest.fn().mockReturnValue({ isValid: true }),
+    };
     const logger = { debug: jest.fn(), error: jest.fn() };
 
     const policy = new DefaultComponentPolicy();
@@ -63,7 +65,9 @@ describe('DefaultComponentPolicy - actor gate', () => {
       expect.any(Object)
     );
     expect(entity.addComponent).toHaveBeenCalledTimes(2);
-    const addedIds = entity.addComponent.mock.calls.map(([componentId]) => componentId);
+    const addedIds = entity.addComponent.mock.calls.map(
+      ([componentId]) => componentId
+    );
     expect(addedIds).toEqual([NOTES_COMPONENT_ID, GOALS_COMPONENT_ID]);
     expect(logger.error).not.toHaveBeenCalled();
   });

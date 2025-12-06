@@ -84,9 +84,8 @@ describe('TestScopeResolverRegistry - Integration', () => {
 
   describe('ScopeDiscoveryService Integration', () => {
     it('should discover scope files from positioning mod', async () => {
-      const discovered = await ScopeDiscoveryService.discoverScopes(
-        'positioning'
-      );
+      const discovered =
+        await ScopeDiscoveryService.discoverScopes('positioning');
 
       expect(discovered.length).toBeGreaterThan(0);
 
@@ -100,9 +99,8 @@ describe('TestScopeResolverRegistry - Integration', () => {
     }, 5000);
 
     it('should infer categories correctly', async () => {
-      const discovered = await ScopeDiscoveryService.discoverScopes(
-        'positioning'
-      );
+      const discovered =
+        await ScopeDiscoveryService.discoverScopes('positioning');
 
       // All positioning scopes should be in positioning category
       for (const metadata of discovered) {
@@ -130,9 +128,8 @@ describe('TestScopeResolverRegistry - Integration', () => {
   describe('ScopeResolverFactory Integration', () => {
     it('should create resolver from scope file', async () => {
       // Discover a scope first
-      const discovered = await ScopeDiscoveryService.discoverScopes(
-        'positioning'
-      );
+      const discovered =
+        await ScopeDiscoveryService.discoverScopes('positioning');
 
       expect(discovered.length).toBeGreaterThan(0);
 
@@ -148,9 +145,8 @@ describe('TestScopeResolverRegistry - Integration', () => {
     }, 5000);
 
     it('should create multiple resolvers', async () => {
-      const discovered = await ScopeDiscoveryService.discoverScopes(
-        'positioning'
-      );
+      const discovered =
+        await ScopeDiscoveryService.discoverScopes('positioning');
 
       const resolvers = await ScopeResolverFactory.createResolvers(discovered);
 

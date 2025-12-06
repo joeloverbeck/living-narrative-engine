@@ -2,7 +2,14 @@
  * @file Unit tests for ActivityCacheManager
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ActivityCacheManager from '../../../../src/anatomy/cache/activityCacheManager.js';
 import {
   COMPONENT_ADDED_ID,
@@ -158,7 +165,9 @@ describe('ActivityCacheManager', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Cache set: testCache:key1')
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cache hit: testCache:key1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cache hit: testCache:key1'
+      );
     });
 
     it('should return undefined for non-existent key', () => {
@@ -285,7 +294,9 @@ describe('ActivityCacheManager', () => {
 
       expect(cacheManager.get('testCache', 'key1')).toBeUndefined();
       expect(cacheManager.get('testCache', 'key2')).toBe('value2');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Invalidated: testCache:key1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Invalidated: testCache:key1'
+      );
     });
 
     it('should handle invalidation of non-existent key gracefully', () => {
@@ -548,7 +559,10 @@ describe('ActivityCacheManager', () => {
       cacheManager.registerCache('entityNames', { ttl: 60000, maxSize: 1000 });
       cacheManager.registerCache('genderData', { ttl: 60000, maxSize: 1000 });
       cacheManager.registerCache('activityIndex', { ttl: 60000, maxSize: 100 });
-      cacheManager.registerCache('closenessData', { ttl: 60000, maxSize: 1000 });
+      cacheManager.registerCache('closenessData', {
+        ttl: 60000,
+        maxSize: 1000,
+      });
     });
 
     it('should handle multiple caches independently', () => {
@@ -562,7 +576,9 @@ describe('ActivityCacheManager', () => {
       expect(cacheManager.get('activityIndex', 'activity1')).toEqual({
         data: 'test',
       });
-      expect(cacheManager.get('closenessData', 'entity1:entity2')).toBe('close');
+      expect(cacheManager.get('closenessData', 'entity1:entity2')).toBe(
+        'close'
+      );
     });
 
     it('should invalidate entity across all registered caches', () => {
@@ -576,7 +592,9 @@ describe('ActivityCacheManager', () => {
 
       expect(cacheManager.get('entityNames', entityId)).toBeUndefined();
       expect(cacheManager.get('genderData', entityId)).toBeUndefined();
-      expect(cacheManager.get('closenessData', `${entityId}:other`)).toBeUndefined();
+      expect(
+        cacheManager.get('closenessData', `${entityId}:other`)
+      ).toBeUndefined();
     });
 
     it('should handle event-driven invalidation across multiple caches', () => {

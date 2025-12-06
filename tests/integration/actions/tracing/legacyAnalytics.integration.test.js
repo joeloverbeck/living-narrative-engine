@@ -174,8 +174,7 @@ describe('LegacyAnalytics integration', () => {
       {
         type: 'migration_opportunity',
         priority: 'medium',
-        description:
-          'Found 5 legacy actions that could be modernized',
+        description: 'Found 5 legacy actions that could be modernized',
         actions: [
           'Review migration suggestions in trace data',
           'Plan gradual modernization',
@@ -184,8 +183,7 @@ describe('LegacyAnalytics integration', () => {
       {
         type: 'performance_concern',
         priority: 'high',
-        description:
-          'Legacy conversion taking 6.5ms on average',
+        description: 'Legacy conversion taking 6.5ms on average',
         actions: [
           'Profile legacy conversion bottlenecks',
           'Consider caching conversion results',

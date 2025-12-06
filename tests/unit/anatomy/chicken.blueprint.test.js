@@ -243,14 +243,21 @@ describe('Chicken Blueprints', () => {
     });
 
     it('should have identical head structure', () => {
-      const roosterHeadSlots = ['head', 'beak', 'left_eye', 'right_eye', 'comb', 'wattle'];
+      const roosterHeadSlots = [
+        'head',
+        'beak',
+        'left_eye',
+        'right_eye',
+        'comb',
+        'wattle',
+      ];
       const henHeadSlots = roosterHeadSlots;
 
-      roosterHeadSlots.forEach(slotName => {
+      roosterHeadSlots.forEach((slotName) => {
         expect(roosterBlueprint.slots[slotName]).toBeDefined();
       });
 
-      henHeadSlots.forEach(slotName => {
+      henHeadSlots.forEach((slotName) => {
         expect(henBlueprint.slots[slotName]).toBeDefined();
       });
     });

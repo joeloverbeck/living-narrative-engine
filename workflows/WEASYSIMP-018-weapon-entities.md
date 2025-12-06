@@ -16,7 +16,7 @@ All files in `data/mods/weapons/entities/`:
 
 1. `pistol_9mm_standard.entity.json` (spec lines 1228-1270)
    - Semi-automatic pistol with 15-round magazine
-   - Components: core:name, core:description, items:*, weapons:*, weights
+   - Components: core:name, core:description, items:_, weapons:_, weights
 2. `rifle_556_auto.entity.json` (spec lines 1272-1315)
    - Military automatic rifle with 30-round magazine
    - Includes rateOfFire, higher accuracy and range
@@ -27,6 +27,7 @@ All files in `data/mods/weapons/entities/`:
 ## Key Details
 
 Each weapon needs:
+
 - Core components: name, description
 - Item components: item, portable, aimable, weight
 - Weapon components: weapon, firearm, ammunition

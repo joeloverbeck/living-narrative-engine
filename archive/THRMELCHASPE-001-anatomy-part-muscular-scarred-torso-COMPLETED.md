@@ -17,9 +17,11 @@ Create a new anatomy part entity combining muscular build with scarred texture f
 ## Files Created
 
 ### New Files
+
 - ✅ `data/mods/anatomy/entities/definitions/human_female_torso_muscular_scarred.entity.json`
 
 ### Modified Files
+
 - ✅ Ticket updated with corrected component IDs and structure
 
 ---
@@ -29,6 +31,7 @@ Create a new anatomy part entity combining muscular build with scarred texture f
 ### What Was Actually Changed
 
 **Entity File Created**: `human_female_torso_muscular_scarred.entity.json`
+
 - ✅ All 12 standard female torso sockets included
 - ✅ Correct component ID: `descriptors:body_composition` (not `descriptors:composition`)
 - ✅ Build: "muscular" (valid enum)
@@ -37,6 +40,7 @@ Create a new anatomy part entity combining muscular build with scarred texture f
 - ✅ Description emphasizes functional combat strength
 
 **Ticket Corrections Made**:
+
 1. Fixed component ID from `descriptors:composition` → `descriptors:body_composition`
 2. Added missing `anatomy:sockets` component (critical for torso functionality)
 3. Updated entity structure to match all existing female torso patterns
@@ -54,11 +58,13 @@ Create a new anatomy part entity combining muscular build with scarred texture f
 ### Deviations from Original Plan
 
 **Original Plan Issues**:
+
 - ❌ Missing `anatomy:sockets` component (would have broken functionality)
 - ❌ Wrong component ID `descriptors:composition` (doesn't exist)
 - ❌ Simplified entity structure didn't match pattern
 
 **Actual Implementation**:
+
 - ✅ Included all 12 required sockets (neck, shoulders, hips, chest, pubic_hair, vagina, asshole, ass_cheeks)
 - ✅ Used correct component ID `descriptors:body_composition`
 - ✅ Followed exact pattern from existing female torso entities
@@ -90,6 +96,7 @@ Create a new anatomy part entity combining muscular build with scarred texture f
 ### Components Used
 
 All standard, existing components:
+
 - `anatomy:part` - Core anatomy component
 - `anatomy:sockets` - Socket definitions (12 female-specific sockets)
 - `descriptors:build` - Build descriptor
@@ -109,6 +116,7 @@ All standard, existing components:
 ## Testing Summary
 
 ### Manual Verification Completed
+
 - ✅ File exists at correct path
 - ✅ JSON is valid (no parse errors)
 - ✅ Schema validation passes
@@ -116,6 +124,7 @@ All standard, existing components:
 - ✅ All 12 sockets present and correct
 
 ### Automated Tests
+
 - ✅ 73 unit tests passed
 - ✅ 93 integration tests passed
 - ✅ No new test failures introduced
@@ -128,12 +137,14 @@ All standard, existing components:
 ## Acceptance Criteria - All Met ✅
 
 ### Schema Validation
+
 - ✅ File validates against `entity-definition.schema.json`
 - ✅ Entity ID follows format: `anatomy:human_female_torso_muscular_scarred`
 - ✅ Schema reference uses `schema://` URI format
 - ✅ All component references are valid
 
 ### Component Validation
+
 - ✅ `anatomy:part` component has `subType: "torso"`
 - ✅ `anatomy:sockets` component includes all 12 standard female torso sockets
 - ✅ `descriptors:build` has valid enum value "muscular"
@@ -143,6 +154,7 @@ All standard, existing components:
 - ✅ `core:description` matches character aesthetic
 
 ### Invariants Maintained
+
 - ✅ No existing anatomy part entities modified
 - ✅ No schema files changed
 - ✅ No component definitions altered
@@ -169,17 +181,20 @@ All standard, existing components:
 ## Lessons Learned
 
 ### Critical Discoveries
+
 1. **All female torso entities require 12 sockets** - This was not mentioned in original spec
 2. **Component ID is `body_composition` not `composition`** - Caught during assumption validation
 3. **Pattern consistency is critical** - New entities must match existing structure exactly
 
 ### Process Improvements
+
 - ✅ Always check existing entities before implementing new ones
 - ✅ Validate component IDs against actual component files
 - ✅ Never assume simplified structures will work for complex entity types
 - ✅ Cross-reference multiple existing entities to find true patterns
 
 ### Impact
+
 - Prevented runtime errors from missing sockets
 - Prevented validation errors from wrong component IDs
 - Ensured entity will work correctly in character recipes
@@ -200,11 +215,13 @@ All standard, existing components:
 ## Assumption Corrections Made
 
 **Original Assumptions** (From Initial Ticket):
+
 - Component ID was `descriptors:composition` ❌
 - Sockets component was not mentioned ❌
 - Simplified entity structure was acceptable ❌
 
 **Corrected Assumptions** (After Code Analysis):
+
 - Component ID is `descriptors:body_composition` ✅
 - All female torso entities require `anatomy:sockets` with 12 standard sockets ✅
 - Entity structure must exactly match pattern from existing entities ✅

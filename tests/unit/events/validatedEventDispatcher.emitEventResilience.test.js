@@ -81,7 +81,10 @@ describe('ValidatedEventDispatcher - emit event resilience', () => {
     });
 
     const payload = { id: 'abc-123' };
-    const result = await validatedEventDispatcher.dispatch('test:event', payload);
+    const result = await validatedEventDispatcher.dispatch(
+      'test:event',
+      payload
+    );
 
     expect(result).toBe(true);
     expect(mockEventBus.dispatch).toHaveBeenCalledWith('test:event', payload);
@@ -107,7 +110,10 @@ describe('ValidatedEventDispatcher - emit event resilience', () => {
     });
 
     const payload = { id: 'xyz-789' };
-    const result = await validatedEventDispatcher.dispatch('test:event', payload);
+    const result = await validatedEventDispatcher.dispatch(
+      'test:event',
+      payload
+    );
 
     expect(result).toBe(true);
     expect(mockEventBus.dispatch).toHaveBeenCalledWith('test:event', payload);
@@ -173,10 +179,12 @@ describe('ValidatedEventDispatcher - emit event resilience', () => {
     const result = validatedEventDispatcher.unsubscribe('some:event', listener);
 
     expect(result).toBe(true);
-    expect(mockEventBus.unsubscribe).toHaveBeenCalledWith('some:event', listener);
+    expect(mockEventBus.unsubscribe).toHaveBeenCalledWith(
+      'some:event',
+      listener
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'VED: Delegating unsubscription for event "some:event" to EventBus.'
     );
   });
 });
-

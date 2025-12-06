@@ -47,7 +47,11 @@ describe('LogFormatter additional coverage', () => {
     const circularContext = {};
     circularContext.self = circularContext;
 
-    const result = formatter.formatMessage('info', 'circular context', circularContext);
+    const result = formatter.formatMessage(
+      'info',
+      'circular context',
+      circularContext
+    );
 
     expect(result.contextLines).toHaveLength(1);
     expect(result.contextLines[0]).toContain('Unable to format');

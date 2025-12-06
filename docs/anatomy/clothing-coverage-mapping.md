@@ -27,6 +27,7 @@
 - Runtime priority logic recognises `outer`, `armor`, `base`, `underwear`, and `direct`. Any other value—including `accessories`—is treated as `direct`, the lowest priority tier, before sorting coverage candidates.
 
 **Coverage Priority Values** (lower = higher visibility):
+
 - `outer`: 100 (highest visibility)
 - `armor`: 150 (protective equipment)
 - `base`: 200 (regular clothing)
@@ -49,9 +50,9 @@ Dark indigo denim jeans cover the wearer's lower torso and are treated as base-l
   "components": {
     "clothing:coverage_mapping": {
       "covers": ["torso_lower"],
-      "coveragePriority": "base"
-    }
-  }
+      "coveragePriority": "base",
+    },
+  },
 }
 ```
 
@@ -86,7 +87,12 @@ Dark indigo denim jeans cover the wearer's lower torso and are treated as base-l
     }
   },
   "clothing:coverage_mapping": {
-    "covers": ["torso_upper", "torso_lower", "left_arm_clothing", "right_arm_clothing"],
+    "covers": [
+      "torso_upper",
+      "torso_lower",
+      "left_arm_clothing",
+      "right_arm_clothing"
+    ],
     "coveragePriority": "armor"
   }
 }

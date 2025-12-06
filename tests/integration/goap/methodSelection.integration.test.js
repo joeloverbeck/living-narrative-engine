@@ -4,7 +4,14 @@
  * @see src/goap/refinement/methodSelectionService.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import MethodSelectionService from '../../../src/goap/refinement/methodSelectionService.js';
 import MethodSelectionError from '../../../src/goap/errors/methodSelectionError.js';
@@ -77,18 +84,14 @@ describe('Method Selection Integration Tests', () => {
       mockGameDataRepository.get.mockReturnValue({});
 
       expect(() => {
-        service.selectMethod(
-          'core:nonexistent_task',
-          'actor-123',
-          { param: 'value' }
-        );
+        service.selectMethod('core:nonexistent_task', 'actor-123', {
+          param: 'value',
+        });
       }).toThrow(MethodSelectionError);
       expect(() => {
-        service.selectMethod(
-          'core:nonexistent_task',
-          'actor-123',
-          { param: 'value' }
-        );
+        service.selectMethod('core:nonexistent_task', 'actor-123', {
+          param: 'value',
+        });
       }).toThrow("Task 'core:nonexistent_task' not found in game data");
     });
   });
@@ -131,9 +134,13 @@ describe('Method Selection Integration Tests', () => {
         description: 'Simple consumption method',
         applicability: {
           description: 'Item must be in inventory',
-          condition: { has_component: ['task.params.item', 'core:in_inventory'] },
+          condition: {
+            has_component: ['task.params.item', 'core:in_inventory'],
+          },
         },
-        steps: [{ stepType: 'primitive_action', actionId: 'items:consume_item' }],
+        steps: [
+          { stepType: 'primitive_action', actionId: 'items:consume_item' },
+        ],
       };
 
       // Mock task registry
@@ -163,7 +170,9 @@ describe('Method Selection Integration Tests', () => {
 
       // Verify
       expect(result.selectedMethod).toBeDefined();
-      expect(result.selectedMethod.id).toBe('core:consume_nourishing_item.simple_consume');
+      expect(result.selectedMethod.id).toBe(
+        'core:consume_nourishing_item.simple_consume'
+      );
       expect(result.diagnostics.methodsEvaluated).toBe(1);
       expect(result.diagnostics.evaluationResults[0].applicable).toBe(true);
     });
@@ -191,9 +200,13 @@ describe('Method Selection Integration Tests', () => {
         description: 'Simple consumption method',
         applicability: {
           description: 'Item must be in inventory',
-          condition: { has_component: ['task.params.item', 'core:in_inventory'] },
+          condition: {
+            has_component: ['task.params.item', 'core:in_inventory'],
+          },
         },
-        steps: [{ stepType: 'primitive_action', actionId: 'items:consume_item' }],
+        steps: [
+          { stepType: 'primitive_action', actionId: 'items:consume_item' },
+        ],
       };
 
       // Mock registries
@@ -315,7 +328,9 @@ describe('Method Selection Integration Tests', () => {
       expect(result.selectedMethod.id).toBe('core:test_task.valid_method');
       expect(result.diagnostics.methodsEvaluated).toBe(2);
       expect(result.diagnostics.evaluationResults[0].applicable).toBe(false);
-      expect(result.diagnostics.evaluationResults[0].reason).toContain('Evaluation error');
+      expect(result.diagnostics.evaluationResults[0].reason).toContain(
+        'Evaluation error'
+      );
       expect(result.diagnostics.evaluationResults[1].applicable).toBe(true);
     });
   });

@@ -58,7 +58,6 @@ describe('persistenceErrors module', () => {
   it('gracefully skips stack capture when the runtime does not support it', () => {
     const originalCapture = Error.captureStackTrace;
     try {
-       
       // @ts-ignore - deleting built-in for test coverage purposes.
       delete Error.captureStackTrace;
 
@@ -69,12 +68,13 @@ describe('persistenceErrors module', () => {
 
       expect(error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
       expect(error.name).toBe('PersistenceError');
-      expect(typeof error.stack === 'string' || typeof error.stack === 'undefined').toBe(true);
+      expect(
+        typeof error.stack === 'string' || typeof error.stack === 'undefined'
+      ).toBe(true);
     } finally {
       if (originalCapture) {
         Error.captureStackTrace = originalCapture;
       } else {
-         
         // @ts-ignore
         delete Error.captureStackTrace;
       }

@@ -145,20 +145,21 @@ export async function validateEnvironment() {
     const { container } = await import(
       '../../src/dependencyInjection/container.js'
     );
-    
+
     const requiredServices = [
       coreTokens.IModValidationOrchestrator,
       coreTokens.IViolationReporter,
-      coreTokens.IModCrossReferenceValidator
+      coreTokens.IModCrossReferenceValidator,
     ];
-    
+
     for (const token of requiredServices) {
       const service = container.resolve(token);
       if (!service) {
         issues.push({
           type: 'MISSING_SERVICE',
           message: `Required service ${token} not registered`,
-          suggestion: 'Ensure all validation services are properly registered in the DI container',
+          suggestion:
+            'Ensure all validation services are properly registered in the DI container',
         });
       }
     }
@@ -184,10 +185,7 @@ export function formatEnvironmentIssues(issues) {
     return null;
   }
 
-  const lines = [
-    chalk.red('❌ Environment validation failed:'),
-    ''
-  ];
+  const lines = [chalk.red('❌ Environment validation failed:'), ''];
 
   issues.forEach((issue, index) => {
     lines.push(chalk.yellow(`${index + 1}. ${issue.message}`));
@@ -271,7 +269,7 @@ export function createProgressReporter(options = {}) {
     warn(message) {
       if (quiet) return;
       console.log(chalk.yellow('⚠'), message);
-    }
+    },
   };
 }
 
@@ -283,26 +281,26 @@ export function createProgressReporter(options = {}) {
  */
 export function formatValidationStats(stats) {
   const lines = [];
-  
+
   if (stats.totalMods !== undefined) {
     lines.push(`Total mods: ${stats.totalMods}`);
   }
-  
+
   if (stats.validMods !== undefined) {
     lines.push(`Valid mods: ${chalk.green(stats.validMods)}`);
   }
-  
+
   if (stats.invalidMods !== undefined && stats.invalidMods > 0) {
     lines.push(`Invalid mods: ${chalk.red(stats.invalidMods)}`);
   }
-  
+
   if (stats.totalViolations !== undefined && stats.totalViolations > 0) {
     lines.push(`Total violations: ${chalk.yellow(stats.totalViolations)}`);
   }
-  
+
   if (stats.criticalViolations !== undefined && stats.criticalViolations > 0) {
     lines.push(`Critical violations: ${chalk.red(stats.criticalViolations)}`);
   }
-  
+
   return lines.join('\n');
 }

@@ -56,7 +56,7 @@ function createMockBaseFormatter() {
 function createMockEntityManager(entityComponents = {}) {
   return {
     hasComponent: jest.fn((entityId, componentId) => {
-      return !!(entityComponents[entityId]?.[componentId]);
+      return !!entityComponents[entityId]?.[componentId];
     }),
     getComponentData: jest.fn((entityId, componentId) => {
       return entityComponents[entityId]?.[componentId] ?? null;
@@ -130,22 +130,28 @@ describe('Chance-Based Modifier Display Integration', () => {
   describe('Tag Display in Action Templates', () => {
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Fighter' },
           'skills:grappling_skill': { value: 50 },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Goblin' },
           'positioning:prone': {},
         },
-        'target2': {
+        target2: {
           'core:actor': { name: 'Orc' },
           // Not prone
         },
       });
 
-      chanceCalculationService = createChanceCalculationService(entityManager, logger);
-      multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+      chanceCalculationService = createChanceCalculationService(
+        entityManager,
+        logger
+      );
+      multiTargetFormatter = new MultiTargetActionFormatter(
+        baseFormatter,
+        logger
+      );
     });
 
     it('should display tags in formatted action when modifiers are active', () => {
@@ -163,7 +169,11 @@ describe('Chance-Based Modifier Display Integration', () => {
           modifiers: [
             {
               condition: {
-                logic: { '!!': [{ 'var': 'entity.primary.components.positioning:prone' }] }
+                logic: {
+                  '!!': [
+                    { var: 'entity.primary.components.positioning:prone' },
+                  ],
+                },
               },
               value: 15,
               type: 'flat',
@@ -204,7 +214,11 @@ describe('Chance-Based Modifier Display Integration', () => {
           modifiers: [
             {
               condition: {
-                logic: { '!!': [{ 'var': 'entity.primary.components.positioning:prone' }] }
+                logic: {
+                  '!!': [
+                    { var: 'entity.primary.components.positioning:prone' },
+                  ],
+                },
               },
               value: 15,
               type: 'flat',
@@ -234,18 +248,21 @@ describe('Chance-Based Modifier Display Integration', () => {
     it('should display multiple tags when multiple modifiers are active', () => {
       // Update entityManager with target that has multiple status components
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Fighter' },
           'skills:grappling_skill': { value: 50 },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Goblin' },
           'positioning:prone': {},
           'positioning:being_restrained': { restrainedBy: 'someone' },
         },
       });
 
-      chanceCalculationService = createChanceCalculationService(entityManager, logger);
+      chanceCalculationService = createChanceCalculationService(
+        entityManager,
+        logger
+      );
 
       const actionDef = {
         id: 'test:attack',
@@ -261,7 +278,11 @@ describe('Chance-Based Modifier Display Integration', () => {
           modifiers: [
             {
               condition: {
-                logic: { '!!': [{ 'var': 'entity.primary.components.positioning:prone' }] }
+                logic: {
+                  '!!': [
+                    { var: 'entity.primary.components.positioning:prone' },
+                  ],
+                },
               },
               value: 15,
               type: 'flat',
@@ -269,7 +290,13 @@ describe('Chance-Based Modifier Display Integration', () => {
             },
             {
               condition: {
-                logic: { '!!': [{ 'var': 'entity.primary.components.positioning:being_restrained' }] }
+                logic: {
+                  '!!': [
+                    {
+                      var: 'entity.primary.components.positioning:being_restrained',
+                    },
+                  ],
+                },
               },
               value: 10,
               type: 'flat',
@@ -327,22 +354,28 @@ describe('Chance-Based Modifier Display Integration', () => {
   describe('Different Target Combinations', () => {
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Fighter' },
           'skills:grappling_skill': { value: 50 },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Goblin' },
           'positioning:prone': {},
         },
-        'target2': {
+        target2: {
           'core:actor': { name: 'Orc' },
           // Not prone
         },
       });
 
-      chanceCalculationService = createChanceCalculationService(entityManager, logger);
-      multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+      chanceCalculationService = createChanceCalculationService(
+        entityManager,
+        logger
+      );
+      multiTargetFormatter = new MultiTargetActionFormatter(
+        baseFormatter,
+        logger
+      );
     });
 
     it('should calculate modifiers per target combination', () => {
@@ -360,7 +393,11 @@ describe('Chance-Based Modifier Display Integration', () => {
           modifiers: [
             {
               condition: {
-                logic: { '!!': [{ 'var': 'entity.primary.components.positioning:prone' }] }
+                logic: {
+                  '!!': [
+                    { var: 'entity.primary.components.positioning:prone' },
+                  ],
+                },
               },
               value: 15,
               type: 'flat',
@@ -375,8 +412,8 @@ describe('Chance-Based Modifier Display Integration', () => {
         {
           primary: [
             { id: 'target1', displayName: 'Goblin' }, // Prone
-            { id: 'target2', displayName: 'Orc' },    // Not prone
-          ]
+            { id: 'target2', displayName: 'Orc' }, // Not prone
+          ],
         },
         {},
         {
@@ -390,7 +427,9 @@ describe('Chance-Based Modifier Display Integration', () => {
       expect(result.value).toHaveLength(2);
 
       // Goblin (prone) should have tag
-      const goblinCommand = result.value.find((v) => v.command.includes('Goblin'));
+      const goblinCommand = result.value.find((v) =>
+        v.command.includes('Goblin')
+      );
       expect(goblinCommand).toBeDefined();
       expect(goblinCommand.command).toContain('[prone]');
 
@@ -416,7 +455,11 @@ describe('Chance-Based Modifier Display Integration', () => {
           modifiers: [
             {
               condition: {
-                logic: { '!!': [{ 'var': 'entity.primary.components.positioning:prone' }] }
+                logic: {
+                  '!!': [
+                    { var: 'entity.primary.components.positioning:prone' },
+                  ],
+                },
               },
               value: 15,
               type: 'flat',
@@ -431,8 +474,8 @@ describe('Chance-Based Modifier Display Integration', () => {
         {
           primary: [
             { id: 'target1', displayName: 'Goblin' }, // Prone
-            { id: 'target2', displayName: 'Orc' },    // Not prone
-          ]
+            { id: 'target2', displayName: 'Orc' }, // Not prone
+          ],
         },
         {},
         {
@@ -445,7 +488,9 @@ describe('Chance-Based Modifier Display Integration', () => {
       expect(result.ok).toBe(true);
 
       // Extract percentage values from commands
-      const goblinCommand = result.value.find((v) => v.command.includes('Goblin'));
+      const goblinCommand = result.value.find((v) =>
+        v.command.includes('Goblin')
+      );
       const orcCommand = result.value.find((v) => v.command.includes('Orc'));
 
       // Extract number from "(XX% chance)"
@@ -466,17 +511,23 @@ describe('Chance-Based Modifier Display Integration', () => {
   describe('Edge Cases', () => {
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Fighter' },
           'skills:grappling_skill': { value: 50 },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Goblin' },
         },
       });
 
-      chanceCalculationService = createChanceCalculationService(entityManager, logger);
-      multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+      chanceCalculationService = createChanceCalculationService(
+        entityManager,
+        logger
+      );
+      multiTargetFormatter = new MultiTargetActionFormatter(
+        baseFormatter,
+        logger
+      );
     });
 
     it('should handle actions without template {chance} placeholder', () => {

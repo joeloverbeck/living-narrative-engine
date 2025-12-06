@@ -142,8 +142,17 @@ describe('BodyBlueprintFactory additional coverage', () => {
 
     const generatedSockets = [
       { id: 'shoulder_socket', orientation: 'forward', nameTpl: 'Shoulder' },
-      { id: 'upper_arm_socket', orientation: undefined, nameTpl: 'Arm {{side}}' },
-      { id: 'aux_socket', allowedTypes: ['sensor'], orientation: undefined, nameTpl: 'Auxiliary' },
+      {
+        id: 'upper_arm_socket',
+        orientation: undefined,
+        nameTpl: 'Arm {{side}}',
+      },
+      {
+        id: 'aux_socket',
+        allowedTypes: ['sensor'],
+        orientation: undefined,
+        nameTpl: 'Auxiliary',
+      },
     ];
     const generatedSlots = {
       shoulder: {
@@ -177,7 +186,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
     deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
     deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
-    deps.blueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
+    deps.blueprintProcessorService.processBlueprint.mockReturnValue(
+      processedBlueprint
+    );
     deps.validator.validateGraph.mockResolvedValue({
       valid: true,
       errors: [],
@@ -212,16 +223,18 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
 
     const factory = new BodyBlueprintFactory(deps);
-    const result = await factory.createAnatomyGraph(
-      'anatomy:v2',
-      'recipe:v2',
-      { ownerId: 'owner:1' }
-    );
+    const result = await factory.createAnatomyGraph('anatomy:v2', 'recipe:v2', {
+      ownerId: 'owner:1',
+    });
 
     // Verify blueprintProcessorService was called with the raw blueprint
-    expect(deps.blueprintProcessorService.processBlueprint).toHaveBeenCalledWith(blueprint);
+    expect(
+      deps.blueprintProcessorService.processBlueprint
+    ).toHaveBeenCalledWith(blueprint);
 
-    expect(deps.recipePatternResolver.resolveRecipePatterns).toHaveBeenCalledWith(
+    expect(
+      deps.recipePatternResolver.resolveRecipePatterns
+    ).toHaveBeenCalledWith(
       recipe,
       expect.objectContaining({ id: 'anatomy:v2' })
     );
@@ -280,7 +293,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
       if (type === 'anatomyBlueprints') return blueprint;
       return null;
     });
-    deps.blueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
+    deps.blueprintProcessorService.processBlueprint.mockReturnValue(
+      processedBlueprint
+    );
     deps.recipeProcessor.loadRecipe.mockReturnValue(recipe);
     deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
     deps.socketManager.validateSocketAvailability.mockReturnValue({
@@ -294,7 +309,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
     deps.partSelectionService.selectPart.mockResolvedValue('part:core');
     deps.entityGraphBuilder.createRootEntity.mockResolvedValue('entity:root');
-    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue('entity:core');
+    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue(
+      'entity:core'
+    );
     deps.entityGraphBuilder.getPartType.mockReturnValue('core');
 
     const factory = new BodyBlueprintFactory(deps);
@@ -304,7 +321,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     );
 
     // Verify blueprintProcessorService was called
-    expect(deps.blueprintProcessorService.processBlueprint).toHaveBeenCalledWith(blueprint);
+    expect(
+      deps.blueprintProcessorService.processBlueprint
+    ).toHaveBeenCalledWith(blueprint);
     expect(deps.entityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
       'entity:root',
       'core_socket',
@@ -347,7 +366,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
     deps.partSelectionService.selectPart.mockResolvedValue('part:left_arm');
     deps.entityGraphBuilder.createRootEntity.mockResolvedValue('entity:root');
-    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue('entity:left_arm');
+    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue(
+      'entity:left_arm'
+    );
     deps.entityGraphBuilder.getPartType.mockReturnValue('arm');
     deps.constraintEvaluator.evaluateConstraints.mockReturnValue({
       valid: false,
@@ -401,7 +422,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
     deps.partSelectionService.selectPart.mockResolvedValue('part:right_leg');
     deps.entityGraphBuilder.createRootEntity.mockResolvedValue('entity:root');
-    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue('entity:right_leg');
+    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue(
+      'entity:right_leg'
+    );
     deps.entityGraphBuilder.getPartType.mockReturnValue('leg');
     deps.validator.validateGraph.mockResolvedValue({
       valid: false,
@@ -412,7 +435,10 @@ describe('BodyBlueprintFactory additional coverage', () => {
     const factory = new BodyBlueprintFactory(deps);
 
     await expect(
-      factory.createAnatomyGraph('anatomy:graph-failure', 'recipe:graph-failure')
+      factory.createAnatomyGraph(
+        'anatomy:graph-failure',
+        'recipe:graph-failure'
+      )
     ).rejects.toThrow(ValidationError);
     expect(deps.entityGraphBuilder.cleanupEntities).toHaveBeenCalledWith(
       expect.arrayContaining(['entity:root', 'entity:right_leg'])
@@ -458,7 +484,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         details: expect.objectContaining({
-          raw: expect.stringContaining('BlueprintValidator.validateRecipeSlots'),
+          raw: expect.stringContaining(
+            'BlueprintValidator.validateRecipeSlots'
+          ),
         }),
       })
     );
@@ -539,7 +567,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
 
     // blueprintProcessorService throws when structure template is missing
     deps.blueprintProcessorService.processBlueprint.mockImplementation(() => {
-      throw new ValidationError('Structure template not found: template:missing');
+      throw new ValidationError(
+        'Structure template not found: template:missing'
+      );
     });
 
     const factory = new BodyBlueprintFactory(deps);
@@ -547,7 +577,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     await expect(
       factory.createAnatomyGraph('anatomy:v2:missing-template', 'recipe:v2')
     ).rejects.toThrow(ValidationError);
-    expect(deps.blueprintProcessorService.processBlueprint).toHaveBeenCalledWith(blueprint);
+    expect(
+      deps.blueprintProcessorService.processBlueprint
+    ).toHaveBeenCalledWith(blueprint);
     expect(deps.eventDispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
@@ -613,13 +645,18 @@ describe('BodyBlueprintFactory additional coverage', () => {
     const factory = new BodyBlueprintFactory(deps);
 
     await expect(
-      factory.createAnatomyGraph('anatomy:invalid_parent', 'recipe:invalid_parent')
+      factory.createAnatomyGraph(
+        'anatomy:invalid_parent',
+        'recipe:invalid_parent'
+      )
     ).rejects.toThrow(ValidationError);
 
     expect(deps.eventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining("Failed to process blueprint slot 'orphan'"),
+        message: expect.stringContaining(
+          "Failed to process blueprint slot 'orphan'"
+        ),
       })
     );
   });
@@ -750,12 +787,17 @@ describe('BodyBlueprintFactory additional coverage', () => {
     const factory = new BodyBlueprintFactory(deps);
 
     await expect(
-      factory.createAnatomyGraph('anatomy:required-missing', 'recipe:required-missing')
+      factory.createAnatomyGraph(
+        'anatomy:required-missing',
+        'recipe:required-missing'
+      )
     ).rejects.toThrow(ValidationError);
     expect(deps.eventDispatchService.safeDispatchEvent).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining("Failed to process blueprint slot 'left_leg'"),
+        message: expect.stringContaining(
+          "Failed to process blueprint slot 'left_leg'"
+        ),
       })
     );
   });
@@ -790,7 +832,10 @@ describe('BodyBlueprintFactory additional coverage', () => {
     deps.recipeProcessor.processRecipe.mockReturnValue(recipe);
 
     const factory = new BodyBlueprintFactory(deps);
-    await factory.createAnatomyGraph('anatomy:orientation', 'recipe:orientation');
+    await factory.createAnatomyGraph(
+      'anatomy:orientation',
+      'recipe:orientation'
+    );
 
     expect(deps.entityGraphBuilder.createAndAttachPart).toHaveBeenCalledWith(
       'entity:root',
@@ -874,7 +919,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
     });
     deps.partSelectionService.selectPart.mockResolvedValue('part:tool');
     deps.entityGraphBuilder.createRootEntity.mockResolvedValue('entity:root');
-    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue('entity:tool');
+    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue(
+      'entity:tool'
+    );
     deps.socketManager.generatePartName.mockReturnValue('');
 
     const factory = new BodyBlueprintFactory(deps);
@@ -936,7 +983,7 @@ describe('BodyBlueprintFactory additional coverage', () => {
 
     expect(deps.entityGraphBuilder.createAndAttachPart).not.toHaveBeenCalled();
     expect(deps.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping equipment slot 'weapon_slot'"),
+      expect.stringContaining("Skipping equipment slot 'weapon_slot'")
     );
     expect(result.entities).toEqual(['entity:root']);
   });
@@ -1052,7 +1099,9 @@ describe('BodyBlueprintFactory additional coverage', () => {
       },
     });
     deps.partSelectionService.selectPart.mockResolvedValue('anatomy:left_arm');
-    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue('entity:left_arm');
+    deps.entityGraphBuilder.createAndAttachPart.mockResolvedValue(
+      'entity:left_arm'
+    );
     deps.entityGraphBuilder.getPartType.mockReturnValue('arm');
     deps.socketManager.generatePartName.mockReturnValue('Left Arm');
 

@@ -53,7 +53,8 @@ export const SPEECH_PATTERNS_RESPONSE_SCHEMA = {
           type: {
             type: 'string',
             minLength: 5,
-            description: 'Pattern category name (e.g., "Verbal Tics", "Tonal Shifts")',
+            description:
+              'Pattern category name (e.g., "Verbal Tics", "Tonal Shifts")',
           },
           contexts: {
             type: 'array',

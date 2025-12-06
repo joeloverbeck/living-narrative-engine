@@ -82,7 +82,13 @@ export function validateBlueprintSocketUniqueness(blueprint) {
  * @param {boolean} [options.strict] - Throw instead of warn on invalid overrides
  * @returns {object} Filtered overrides containing only valid components
  */
-export function validateComponentOverrides(partDefinitionId, componentOverrides, dataRegistry, logger, options = {}) {
+export function validateComponentOverrides(
+  partDefinitionId,
+  componentOverrides,
+  dataRegistry,
+  logger,
+  options = {}
+) {
   const { strict = false } = options;
 
   if (!componentOverrides || Object.keys(componentOverrides).length === 0) {
@@ -110,7 +116,8 @@ export function validateComponentOverrides(partDefinitionId, componentOverrides,
   }
 
   if (invalidOverrides.length > 0) {
-    const message = `Component override validation for '${partDefinitionId}': ` +
+    const message =
+      `Component override validation for '${partDefinitionId}': ` +
       `The following overrides reference non-existent components and will be ignored: ` +
       `[${invalidOverrides.join(', ')}]. ` +
       `Available components: [${Array.from(validComponents).join(', ')}]`;
@@ -136,8 +143,22 @@ export function validateComponentOverrides(partDefinitionId, componentOverrides,
  * @param {SlotProcessingDependencies} dependencies - Required services
  * @returns {Promise<void>} Processes slots and updates context
  */
-export async function processBlueprintSlots(blueprint, recipe, context, ownerId, dependencies) {
-  const { entityGraphBuilder, partSelectionService, socketManager, recipeProcessor, eventDispatchService, logger, dataRegistry } = dependencies;
+export async function processBlueprintSlots(
+  blueprint,
+  recipe,
+  context,
+  ownerId,
+  dependencies
+) {
+  const {
+    entityGraphBuilder,
+    partSelectionService,
+    socketManager,
+    recipeProcessor,
+    eventDispatchService,
+    logger,
+    dataRegistry,
+  } = dependencies;
 
   // Pre-validate blueprint for socket collisions before any entity creation
   validateBlueprintSocketUniqueness(blueprint);
@@ -159,10 +180,11 @@ export async function processBlueprintSlots(blueprint, recipe, context, ownerId,
   for (const [slotKey, slot] of sortedSlots) {
     try {
       // Log slot processing start for diagnostics
-      logger.info(
-        `SlotResolutionOrchestrator: Processing slot '${slotKey}'`,
-        { slotId: slot.id, parent: slot.parent, socket: slot.socket }
-      );
+      logger.info(`SlotResolutionOrchestrator: Processing slot '${slotKey}'`, {
+        slotId: slot.id,
+        parent: slot.parent,
+        socket: slot.socket,
+      });
 
       // Determine parent entity
       let parentEntityId;
@@ -284,7 +306,7 @@ export async function processBlueprintSlots(blueprint, recipe, context, ownerId,
           hasSlots: !!recipe.slots,
           slotKeys: recipe.slots ? Object.keys(recipe.slots) : [],
           hasSlotKey: !!recipe.slots?.[slotKey],
-          slotData: recipe.slots?.[slotKey]
+          slotData: recipe.slots?.[slotKey],
         }
       );
       if (Object.keys(componentOverrides).length > 0) {
@@ -348,18 +370,15 @@ export async function processBlueprintSlots(blueprint, recipe, context, ownerId,
 
       const errorMessage = `Failed to process blueprint slot '${slotKey}': ${error.message}`;
 
-      await eventDispatchService.safeDispatchEvent(
-        SYSTEM_ERROR_OCCURRED_ID,
-        {
-          message: errorMessage,
-          details: {
-            raw: JSON.stringify({
-              ...errorContext,
-              context: 'SlotResolutionOrchestrator.processBlueprintSlots',
-            }),
-          },
-        }
-      );
+      await eventDispatchService.safeDispatchEvent(SYSTEM_ERROR_OCCURRED_ID, {
+        message: errorMessage,
+        details: {
+          raw: JSON.stringify({
+            ...errorContext,
+            context: 'SlotResolutionOrchestrator.processBlueprintSlots',
+          }),
+        },
+      });
 
       throw new ValidationError(errorMessage);
     }

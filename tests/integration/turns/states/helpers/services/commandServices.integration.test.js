@@ -35,7 +35,10 @@ class TestActionErrorContextBuilder {
   }
 
   buildErrorContext(context) {
-    const snapshot = { ...context, additionalContext: { ...context.additionalContext } };
+    const snapshot = {
+      ...context,
+      additionalContext: { ...context.additionalContext },
+    };
     this.contexts.push(snapshot);
     return snapshot;
   }
@@ -161,7 +164,10 @@ describe('Command helper services integration', () => {
       logger,
     });
 
-    const turnAction = { actionDefinitionId: 'action:test', commandString: 'perform action' };
+    const turnAction = {
+      actionDefinitionId: 'action:test',
+      commandString: 'perform action',
+    };
 
     const dispatchResult = await dispatcher.dispatch({
       turnContext,
@@ -171,7 +177,10 @@ describe('Command helper services integration', () => {
     });
 
     expect(dispatchResult).not.toBeNull();
-    expect(dispatchResult?.commandResult).toEqual({ success: true, data: 'ok' });
+    expect(dispatchResult?.commandResult).toEqual({
+      success: true,
+      data: 'ok',
+    });
     expect(commandProcessor.calls).toHaveLength(1);
 
     const interpretation = await interpreter.interpret({
@@ -210,7 +219,10 @@ describe('Command helper services integration', () => {
       logger,
     });
 
-    const turnAction = { actionDefinitionId: 'action:test', commandString: 'perform action' };
+    const turnAction = {
+      actionDefinitionId: 'action:test',
+      commandString: 'perform action',
+    };
 
     const dispatchResult = await dispatcher.dispatch({
       turnContext,
@@ -238,7 +250,10 @@ describe('Command helper services integration', () => {
       )
     ).toBe(true);
 
-    const otherActorContext = new TestTurnContext({ id: 'different-actor' }, logger);
+    const otherActorContext = new TestTurnContext(
+      { id: 'different-actor' },
+      logger
+    );
     const mismatchResult = dispatcher.validateContextAfterDispatch({
       turnContext: otherActorContext,
       expectedActorId: actor.id,
@@ -333,7 +348,10 @@ describe('Command helper services integration', () => {
       'command_processing_directive_execution'
     );
 
-    const throwingResolver = new TestDirectiveResolver({}, { throwOnResolve: true });
+    const throwingResolver = new TestDirectiveResolver(
+      {},
+      { throwOnResolve: true }
+    );
     const throwingExecutor = new DirectiveExecutor({
       directiveStrategyResolver: throwingResolver,
       unifiedErrorHandler: errorHandler,
@@ -369,15 +387,16 @@ describe('Command helper services integration', () => {
 
     expect(failureOutcome).toEqual({ executed: false, stateChanged: false });
     expect(actionErrorContextBuilder.contexts).toHaveLength(2);
-    expect(
-      actionErrorContextBuilder.contexts[1].additionalContext.stage
-    ).toBe('command_processing_directive_execution');
+    expect(actionErrorContextBuilder.contexts[1].additionalContext.stage).toBe(
+      'command_processing_directive_execution'
+    );
 
     expect(executor.validateDirective('  ')).toBe(false);
     expect(
-      logger.errorEntries.some(([message]) =>
-        message.includes('Invalid directive type') ||
-        message.includes('Empty directive type')
+      logger.errorEntries.some(
+        ([message]) =>
+          message.includes('Invalid directive type') ||
+          message.includes('Empty directive type')
       )
     ).toBe(true);
   });

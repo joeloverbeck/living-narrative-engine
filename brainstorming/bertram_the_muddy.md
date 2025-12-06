@@ -1,6 +1,6 @@
 # New character for the 'fantasy' mod: Betram the Muddy
 
-This is the man who has posted the request data/mods/fantasy/entities/definitions/notice_reciprocal_services.entity.json 
+This is the man who has posted the request data/mods/fantasy/entities/definitions/notice_reciprocal_services.entity.json
 
 ## Physical Description
 
@@ -57,4 +57,3 @@ Practically Metaphorical: Compares things to leatherwork naturally: "Like treati
 Casually Intimate: Talks about his dead wife with warm fondness but no dramatic grief. Discusses sexual preferences with the same comfort as discussing weather.
 
 Sincerely Questioning: When he doesn't understand something, he asks. No ego about it.
-

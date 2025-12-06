@@ -78,7 +78,10 @@ async function sendJsonRequest(httpAgentService, port, payload) {
         path: '/relay',
         method: 'POST',
         agent,
-        headers: { 'Content-Type': 'application/json', 'X-Test-Id': payload.id },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Test-Id': payload.id,
+        },
       },
       (response) => {
         const chunks = [];
@@ -160,7 +163,11 @@ describe('HttpAgentService connection telemetry integration', () => {
     ];
 
     for (const payload of payloads) {
-      const response = await sendJsonRequest(httpAgentService, activePort, payload);
+      const response = await sendJsonRequest(
+        httpAgentService,
+        activePort,
+        payload
+      );
       expect(response.received).toEqual(payload);
       expect(response.headers['x-test-id']).toBe(payload.id);
     }
@@ -181,12 +188,16 @@ describe('HttpAgentService connection telemetry integration', () => {
     expect(stats.socketsCreated).toBeGreaterThanOrEqual(1);
     expect(stats.socketsReused).toBeGreaterThanOrEqual(1);
 
-    const detail = stats.agentDetails.find((entry) => entry.port === String(activePort));
+    const detail = stats.agentDetails.find(
+      (entry) => entry.port === String(activePort)
+    );
     expect(detail).toBeDefined();
     expect(detail.freeSockets).toBeGreaterThanOrEqual(0);
 
     // Destroying an agent for an unused host should hit the graceful false branch.
-    expect(httpAgentService.destroyAgent('http://127.0.0.1:6555/unused')).toBe(false);
+    expect(httpAgentService.destroyAgent('http://127.0.0.1:6555/unused')).toBe(
+      false
+    );
 
     // Force adaptive cleanup in a simulated future to exercise cleanup branches.
     const now = Date.now();
@@ -199,6 +210,8 @@ describe('HttpAgentService connection telemetry integration', () => {
 
     const enhancedStats = httpAgentService.getEnhancedStats();
     expect(enhancedStats.estimatedMemoryUsageMB).toBeGreaterThanOrEqual(0);
-    expect(enhancedStats.adaptiveCleanup.cleanupOperations).toBeGreaterThanOrEqual(1);
+    expect(
+      enhancedStats.adaptiveCleanup.cleanupOperations
+    ).toBeGreaterThanOrEqual(1);
   });
 });

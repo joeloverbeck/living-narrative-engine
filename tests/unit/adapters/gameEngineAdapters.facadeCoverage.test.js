@@ -32,7 +32,10 @@ describe('GameEngine adapters facade coverage', () => {
       const result = await adapter.save('slot-alpha', 'Quick Save');
 
       expect(triggerManualSave).toHaveBeenCalledTimes(1);
-      expect(triggerManualSave).toHaveBeenCalledWith('Quick Save', 'slot-alpha');
+      expect(triggerManualSave).toHaveBeenCalledWith(
+        'Quick Save',
+        'slot-alpha'
+      );
       expect(result).toEqual({ saved: true });
     });
 

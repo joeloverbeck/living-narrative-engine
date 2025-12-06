@@ -1,14 +1,17 @@
 # JSOSCHVALROB-001: Add Regression Test for anyOf Macro Validation
 
 ## Status
+
 ✅ **COMPLETED** - 2025-11-22
 
 ## Objective
+
 Prevent regression to `oneOf` schema pattern by adding comprehensive tests that verify macro references validate without error cascades.
 
 ## Ticket Scope
 
 ### What This Ticket WILL Do
+
 - Create new integration test file `tests/integration/validation/macroReferenceValidation.test.js`
 - Add 3 test cases verifying anyOf behavior with macro references
 - Ensure valid macro references generate 0 validation errors
@@ -16,6 +19,7 @@ Prevent regression to `oneOf` schema pattern by adding comprehensive tests that 
 - Verify mixed action arrays (macros + operations) validate correctly
 
 ### What This Ticket WILL NOT Do
+
 - Modify existing validation logic in `ajvSchemaValidator.js`
 - Change error formatting in `ajvAnyOfErrorFormatter.js`
 - Update pre-validation logic in `preValidationUtils.js`
@@ -26,9 +30,11 @@ Prevent regression to `oneOf` schema pattern by adding comprehensive tests that 
 ## Files Touched
 
 ### New Files (1)
+
 - ✅ `tests/integration/validation/macroReferenceValidation.test.js` - NEW regression test suite (14 tests)
 
 ### Files Modified (1)
+
 - ✅ `tickets/JSOSCHVALROB-001-regression-test-anyof-macro.md` - Updated assumptions and corrected test patterns
 
 ## Implementation Summary
@@ -74,18 +80,21 @@ All 334 existing validation integration tests continue to pass.
 ## Invariants Verified
 
 ✅ **Invariant 1: Schema Structure Unchanged**
+
 ```bash
 grep -A 5 '"Action"' data/schemas/operation.schema.json | grep 'anyOf'
 # Returns: "anyOf": [
 ```
 
 ✅ **Invariant 2: Existing Tests Still Pass**
+
 ```bash
 npm run test:integration -- tests/integration/validation/
 # Returns: Test Suites: 44 passed, Tests: 334 passed
 ```
 
 ✅ **Invariant 3: No New Dependencies**
+
 ```bash
 git diff package.json
 # Returns: (empty - no changes)
@@ -96,6 +105,7 @@ git diff package.json
 ### What Was Actually Changed vs Originally Planned
 
 **Aligned with Plan:**
+
 - ✅ Created new test file with 14 comprehensive test cases
 - ✅ Verified anyOf prevents error cascades (< 20 errors vs 322 with oneOf)
 - ✅ Tested valid macro references (0 errors)
@@ -105,6 +115,7 @@ git diff package.json
 - ✅ No new dependencies
 
 **Adjustments Made:**
+
 1. **Test pattern correction**: Ticket originally assumed `validateAgainstSchema` helper and `createTestBed()` utility, but reference tests use direct `AjvSchemaValidator` instantiation with manually added schemas.
 
 2. **Schema approach**: Used inline schema definitions (mirroring actual schema structure) rather than loading from files, following the pattern in `anyOfErrorFormatting.integration.test.js`.
@@ -114,6 +125,7 @@ git diff package.json
 4. **anyOf vs oneOf comparison**: Added bonus test demonstrating the difference between the two patterns, providing concrete evidence of anyOf's superiority for this use case.
 
 **Ticket Assumption Corrections:**
+
 - Import path: `src/utils/schemaValidationUtils.js` (not `tests/common/validationHelpers.js`)
 - Mock logger: Simple function mocks (not full `createTestBed()` pattern)
 - Validator setup: Direct instantiation with manual schema loading (not automatic project schema loading)
@@ -141,6 +153,7 @@ git status
 ```
 
 ## Related Documentation
+
 - Spec: `specs/json-schema-validation-robustness.md` (lines 790-860)
 - Schema: `data/schemas/operation.schema.json`
 - Validation: `src/validation/ajvSchemaValidator.js`

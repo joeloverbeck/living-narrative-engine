@@ -66,7 +66,8 @@ export class ParameterValidator {
         `[${source}] actorEntity received a scope resolution context object instead of entity instance`,
         {
           expected: 'Entity instance with id, components properties',
-          received: 'scope resolution context object (has runtimeCtx/dispatcher)',
+          received:
+            'scope resolution context object (has runtimeCtx/dispatcher)',
           hint: 'actorEntity must be an entity instance, not an action context (with actor/targets) or scope context (with runtimeCtx/dispatcher)',
           example:
             'actorEntity = entityManager.getEntity("actor-123") // or { id: "actor-123", components: {...} }',

@@ -77,4 +77,3 @@ describe('Readiness health check when LLM configuration service is unavailable',
     );
   });
 });
-

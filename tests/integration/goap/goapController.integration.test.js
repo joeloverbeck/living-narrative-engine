@@ -8,10 +8,32 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createGoapTestSetup } from './testFixtures/goapTestSetup.js';
-import { createTestGoal, createHungerGoal, createShelterGoal, createImpossibleGoal, createComplexGoal } from './testFixtures/testGoalFactory.js';
-import { createTestTask, createConsumeTask, createGatherTask, createBuildShelterTask, createReplanTask, createFailTask, createContinueTask } from './testFixtures/testTaskFactory.js';
-import { createTestMethod, createConsumeMethod, createMultiStepMethod, createFailingMethod } from './testFixtures/testMethodFactory.js';
-import { isValidActionHint, hasRequiredEventFields } from './testHelpers/goapAssertions.js';
+import {
+  createTestGoal,
+  createHungerGoal,
+  createShelterGoal,
+  createImpossibleGoal,
+  createComplexGoal,
+} from './testFixtures/testGoalFactory.js';
+import {
+  createTestTask,
+  createConsumeTask,
+  createGatherTask,
+  createBuildShelterTask,
+  createReplanTask,
+  createFailTask,
+  createContinueTask,
+} from './testFixtures/testTaskFactory.js';
+import {
+  createTestMethod,
+  createConsumeMethod,
+  createMultiStepMethod,
+  createFailingMethod,
+} from './testFixtures/testMethodFactory.js';
+import {
+  isValidActionHint,
+  hasRequiredEventFields,
+} from './testHelpers/goapAssertions.js';
 import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
 
 describe('GOAPController - Integration', () => {
@@ -36,7 +58,7 @@ describe('GOAPController - Integration', () => {
       const goal = createTestGoal({
         id: 'test:simple_goal',
         relevance: { '==': [true, true] }, // Always relevant
-        goalState: { 'has_component': ['actor', 'test:goal_satisfied'] }, // Goal: have this component
+        goalState: { has_component: ['actor', 'test:goal_satisfied'] }, // Goal: have this component
       });
       setup.dataRegistry.register('goals', goal.id, goal);
 
@@ -111,7 +133,7 @@ describe('GOAPController - Integration', () => {
         const eventTypes = setup.eventBus.getEventTypes();
         expect(
           eventTypes.includes(GOAP_EVENTS.GOAL_SELECTED) ||
-          eventTypes.includes(GOAP_EVENTS.PLANNING_FAILED)
+            eventTypes.includes(GOAP_EVENTS.PLANNING_FAILED)
         ).toBe(true);
       }
     });
@@ -146,7 +168,11 @@ describe('GOAPController - Integration', () => {
       });
 
       setup.dataRegistry.register('goals', lowPriorityGoal.id, lowPriorityGoal);
-      setup.dataRegistry.register('goals', highPriorityGoal.id, highPriorityGoal);
+      setup.dataRegistry.register(
+        'goals',
+        highPriorityGoal.id,
+        highPriorityGoal
+      );
 
       // Setup: Task for high priority goal
       const task = createTestTask({ id: 'test:high_priority_task' });
@@ -174,7 +200,9 @@ describe('GOAPController - Integration', () => {
       const result = await setup.controller.decideTurn(actor, world);
 
       // Verify: High priority goal was selected
-      const goalSelectedEvent = setup.eventBus.findEvent(GOAP_EVENTS.GOAL_SELECTED);
+      const goalSelectedEvent = setup.eventBus.findEvent(
+        GOAP_EVENTS.GOAL_SELECTED
+      );
       expect(goalSelectedEvent).toBeDefined();
       expect(goalSelectedEvent.payload.goalId).toBe(highPriorityGoal.id);
     });
@@ -233,7 +261,11 @@ describe('GOAPController - Integration', () => {
           // Simulate state changes from actions (add components)
           if (turn === 0) {
             // After gather - add resources component
-            setup.entityManager.addComponent(actor.id, 'test:has_resources', {});
+            setup.entityManager.addComponent(
+              actor.id,
+              'test:has_resources',
+              {}
+            );
           } else if (turn === 1) {
             // After build - add shelter component
             setup.entityManager.addComponent(actor.id, 'test:has_shelter', {});
@@ -255,7 +287,7 @@ describe('GOAPController - Integration', () => {
         const eventTypes = setup.eventBus.getEventTypes();
         expect(
           eventTypes.includes(GOAP_EVENTS.GOAL_SELECTED) ||
-          eventTypes.includes(GOAP_EVENTS.PLANNING_FAILED)
+            eventTypes.includes(GOAP_EVENTS.PLANNING_FAILED)
         ).toBe(true);
       }
     });
@@ -291,11 +323,15 @@ describe('GOAPController - Integration', () => {
 
       // Turn 1: Start plan
       await setup.controller.decideTurn(actor, world);
-      const planningEvents1 = setup.eventBus.findEvents(GOAP_EVENTS.PLANNING_STARTED);
+      const planningEvents1 = setup.eventBus.findEvents(
+        GOAP_EVENTS.PLANNING_STARTED
+      );
 
       // Turn 2: Continue plan (shouldn't replan)
       await setup.controller.decideTurn(actor, world);
-      const planningEvents2 = setup.eventBus.findEvents(GOAP_EVENTS.PLANNING_STARTED);
+      const planningEvents2 = setup.eventBus.findEvents(
+        GOAP_EVENTS.PLANNING_STARTED
+      );
 
       // Verify: System maintains plan state without crashes
       // (Exact replanning behavior depends on planner internals)
@@ -366,7 +402,11 @@ describe('GOAPController - Integration', () => {
       const hasReplanning = eventTypes.includes(GOAP_EVENTS.REPLANNING_STARTED);
 
       // Either invalidation happened, or system handled gracefully
-      expect(hasInvalidation || hasReplanning || eventTypes.includes(GOAP_EVENTS.PLANNING_STARTED)).toBe(true);
+      expect(
+        hasInvalidation ||
+          hasReplanning ||
+          eventTypes.includes(GOAP_EVENTS.PLANNING_STARTED)
+      ).toBe(true);
     });
 
     it('should handle replanning when target becomes unavailable', async () => {
@@ -452,7 +492,7 @@ describe('GOAPController - Integration', () => {
       const eventTypes = setup.eventBus.getEventTypes();
       expect(
         eventTypes.includes(GOAP_EVENTS.PLANNING_FAILED) ||
-        eventTypes.includes(GOAP_EVENTS.GOAL_SELECTED)
+          eventTypes.includes(GOAP_EVENTS.GOAL_SELECTED)
       ).toBe(true);
     });
 
@@ -601,7 +641,9 @@ describe('GOAPController - Integration', () => {
 
       const goalSelectedIdx = eventTypes.indexOf(GOAP_EVENTS.GOAL_SELECTED);
       const planningStartIdx = eventTypes.indexOf(GOAP_EVENTS.PLANNING_STARTED);
-      const planningCompleteIdx = eventTypes.indexOf(GOAP_EVENTS.PLANNING_COMPLETED);
+      const planningCompleteIdx = eventTypes.indexOf(
+        GOAP_EVENTS.PLANNING_COMPLETED
+      );
       const taskRefinedIdx = eventTypes.indexOf(GOAP_EVENTS.TASK_REFINED);
 
       // Verify: Events dispatched (exact flow depends on planning success)
@@ -663,9 +705,7 @@ describe('GOAPController - Integration', () => {
 
       // Verify: Goal-related events have goalId
       const goalEvents = events.filter(
-        (e) =>
-          e.type.includes('goal') ||
-          e.type.includes('planning')
+        (e) => e.type.includes('goal') || e.type.includes('planning')
       );
 
       goalEvents.forEach((event) => {
@@ -707,7 +747,7 @@ describe('GOAPController - Integration', () => {
         const eventTypes = setup.eventBus.getEventTypes();
         expect(
           eventTypes.includes(GOAP_EVENTS.ACTION_HINT_GENERATED) ||
-          eventTypes.includes(GOAP_EVENTS.TASK_REFINED)
+            eventTypes.includes(GOAP_EVENTS.TASK_REFINED)
         ).toBe(true);
       }
     });

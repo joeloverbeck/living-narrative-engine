@@ -92,14 +92,13 @@ describe('LegacyStrategy', () => {
     });
 
     it('formats actions without fallback and emits summary logging', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        validateVisualProperties,
-        logger,
-      } = createStrategy();
+      const { strategy, commandFormatter, validateVisualProperties, logger } =
+        createStrategy();
 
-      commandFormatter.format.mockReturnValue({ ok: true, value: 'attack target' });
+      commandFormatter.format.mockReturnValue({
+        ok: true,
+        value: 'attack target',
+      });
 
       const outcome = await strategy.format({
         actor: { id: 'actor-1' },
@@ -117,7 +116,10 @@ describe('LegacyStrategy', () => {
         traceSource: 'ActionFormattingStage.execute',
       });
 
-      expect(validateVisualProperties).toHaveBeenCalledWith(undefined, 'action-1');
+      expect(validateVisualProperties).toHaveBeenCalledWith(
+        undefined,
+        'action-1'
+      );
       expect(commandFormatter.format).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'action-1' }),
         { entityId: 'target-1', displayName: 'Enemy' },
@@ -140,12 +142,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('records failures, increments stats, and reports trace information', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        logger,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, logger, createError } =
+        createStrategy();
 
       commandFormatter.format
         .mockReturnValueOnce({ ok: true, value: 'cmd-1' })
@@ -292,7 +290,11 @@ describe('LegacyStrategy', () => {
             command: 'multi-command-1',
             targets: {
               primary: [
-                { id: 'target-a', displayName: 'Target A', contextFromId: 'ctx-1' },
+                {
+                  id: 'target-a',
+                  displayName: 'Target A',
+                  contextFromId: 'ctx-1',
+                },
               ],
             },
           },
@@ -384,7 +386,10 @@ describe('LegacyStrategy', () => {
         createError,
       } = createStrategy();
 
-      commandFormatter.formatMultiTarget.mockReturnValue({ ok: true, value: 'cmd' });
+      commandFormatter.formatMultiTarget.mockReturnValue({
+        ok: true,
+        value: 'cmd',
+      });
       targetNormalizationService.normalize.mockReturnValue({
         error: 'normalize failure',
       });
@@ -398,9 +403,7 @@ describe('LegacyStrategy', () => {
               name: 'Normalize',
               targets: { primary: {} },
             },
-            targetContexts: [
-              { entityId: 'target-x', placeholder: 'primary' },
-            ],
+            targetContexts: [{ entityId: 'target-x', placeholder: 'primary' }],
           },
         ],
         trace: undefined,
@@ -485,11 +488,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('uses fallback when formatter fails and marks statistics', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -536,7 +536,9 @@ describe('LegacyStrategy', () => {
       expect(fallbackFormatter.formatWithFallback).toHaveBeenCalledWith(
         expect.objectContaining({
           actionDefinition: expect.objectContaining({ id: 'multi-fallback' }),
-          targetContext: expect.objectContaining({ entityId: 'target-fallback' }),
+          targetContext: expect.objectContaining({
+            entityId: 'target-fallback',
+          }),
           resolvedTargets: expect.any(Object),
         })
       );
@@ -559,11 +561,7 @@ describe('LegacyStrategy', () => {
     });
 
     it('increments stats when traced fallback succeeds without formatter support', async () => {
-      const {
-        strategy,
-        fallbackFormatter,
-        commandFormatter,
-      } = createStrategy({
+      const { strategy, fallbackFormatter, commandFormatter } = createStrategy({
         commandFormatter: { format: jest.fn(), formatMultiTarget: undefined },
       });
 
@@ -572,7 +570,12 @@ describe('LegacyStrategy', () => {
         value: 'traced-fallback-only',
       });
 
-      const processingStats = { successful: 0, legacy: 0, failed: 0, multiTarget: 0 };
+      const processingStats = {
+        successful: 0,
+        legacy: 0,
+        failed: 0,
+        multiTarget: 0,
+      };
       const trace = { captureActionData: jest.fn(), info: jest.fn() };
 
       const outcome = await strategy.format({
@@ -619,11 +622,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('falls back with empty params when the resolved target lacks an entity id', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -762,11 +762,7 @@ describe('LegacyStrategy', () => {
     });
 
     it('handles formatter absence by delegating entirely to the fallback', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy({
+      const { strategy, commandFormatter, fallbackFormatter } = createStrategy({
         commandFormatter: {
           format: jest.fn(),
           formatMultiTarget: undefined,
@@ -808,12 +804,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('surfaces fallback failures through createError', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -872,10 +864,7 @@ describe('LegacyStrategy', () => {
 
     it('records traced fallback failures when formatter support is missing', async () => {
       const createError = jest.fn();
-      const {
-        strategy,
-        fallbackFormatter,
-      } = createStrategy({
+      const { strategy, fallbackFormatter } = createStrategy({
         commandFormatter: { format: jest.fn(), formatMultiTarget: undefined },
         createError,
       });
@@ -885,7 +874,12 @@ describe('LegacyStrategy', () => {
         error: 'traced-fallback-failure',
       });
 
-      const processingStats = { successful: 0, legacy: 0, failed: 0, multiTarget: 0 };
+      const processingStats = {
+        successful: 0,
+        legacy: 0,
+        failed: 0,
+        multiTarget: 0,
+      };
       const trace = { captureActionData: jest.fn(), info: jest.fn() };
 
       await strategy.format({
@@ -898,7 +892,10 @@ describe('LegacyStrategy', () => {
               targets: { primary: {} },
             },
             targetContexts: [
-              { entityId: 'target-traced-fallback-failure', placeholder: 'primary' },
+              {
+                entityId: 'target-traced-fallback-failure',
+                placeholder: 'primary',
+              },
             ],
           },
         ],
@@ -919,12 +916,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('propagates fallback failures without an entity id when tracing multi-target actions', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -976,12 +969,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('propagates fallback failures with tracing enabled', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -1093,11 +1082,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('formats multi-target commands on the standard path', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        targetNormalizationService,
-      } = createStrategy();
+      const { strategy, commandFormatter, targetNormalizationService } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: true,
@@ -1161,11 +1147,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('falls back successfully on the standard path when formatter fails', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -1203,12 +1186,8 @@ describe('LegacyStrategy', () => {
     });
 
     it('propagates standard fallback failures when formatter returns an error', async () => {
-      const {
-        strategy,
-        commandFormatter,
-        fallbackFormatter,
-        createError,
-      } = createStrategy();
+      const { strategy, commandFormatter, fallbackFormatter, createError } =
+        createStrategy();
 
       commandFormatter.formatMultiTarget.mockReturnValue({
         ok: false,
@@ -1256,11 +1235,7 @@ describe('LegacyStrategy', () => {
     });
 
     it('surfaces fallback failures on the standard path without formatter support', async () => {
-      const {
-        strategy,
-        fallbackFormatter,
-        createError,
-      } = createStrategy({
+      const { strategy, fallbackFormatter, createError } = createStrategy({
         commandFormatter: {
           format: jest.fn(),
           formatMultiTarget: undefined,
@@ -1317,7 +1292,10 @@ describe('LegacyStrategy', () => {
         actor: { id: 'actor-standard-single' },
         actionsWithTargets: [
           {
-            actionDef: { id: 'action-standard-single', name: 'Standard Single' },
+            actionDef: {
+              id: 'action-standard-single',
+              name: 'Standard Single',
+            },
             targetContexts: [{ entityId: 'target-standard-single' }],
           },
         ],
@@ -1398,7 +1376,10 @@ describe('LegacyStrategy', () => {
     it('works correctly when safeEventDispatcher is explicitly set to null', async () => {
       const strategy = new LegacyStrategy({
         commandFormatter: {
-          format: jest.fn(() => ({ ok: true, value: 'null dispatcher command' })),
+          format: jest.fn(() => ({
+            ok: true,
+            value: 'null dispatcher command',
+          })),
           formatMultiTarget: jest.fn(),
         },
         entityManager: {

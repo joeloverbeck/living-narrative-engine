@@ -7,6 +7,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 **Purpose**: Serve as the single source of truth for color scheme selection when creating or updating mods.
 
 **Requirements**:
+
 - WCAG 2.1 AA: Minimum 4.5:1 contrast ratio for normal text
 - WCAG 2.1 AAA: 7:1+ contrast ratio (marked with 🌟)
 - All combinations tested for both normal and hover states
@@ -19,83 +20,94 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Quick Reference: Mod Assignments
 
-| Mod                      | Color Scheme       | Section | Background Color | Status   |
-| ------------------------ | ------------------ | ------- | ---------------- | -------- |
-| Affection                | Soft Purple        | 3.1     | `#6a1b9a`        | Active   |
-| Ballet                   | Indigo Professional| 10.1    | `#283593`        | Active   |
-| Caressing                | Dark Purple        | 7.2     | `#311b92`        | Active   |
-| Clothing                 | Earth Brown        | 4.2     | `#6d4c41`        | Active   |
-| Companionship            | Deep Teal          | 3.3     | `#00695c`        | Active   |
-| Core                     | Classic Blue-Grey  | 1.1     | `#455a64`        | Active   |
-| Deference                | Ceremonial Midnight| 14.1    | `#1f2d3d`        | Active   |
-| Distress                 | Obsidian Frost     | 11.7    | `#0b132b`        | Active   |
-| Exercise                 | Orange Flame       | 2.3     | `#e65100`        | Active   |
-| Gymnastics               | Journey Cobalt     | 9.1     | `#1a237e`        | Active   |
-| Hugging                  | Warm Embrace       | 3.4     | `#7d2a50`        | Active   |
-| Hexing                   | Hexed Nightshade   | 16.1    | `#1f0d2a`        | Active   |
-| Items                    | Aurora Depths      | 11.1    | `#004d61`        | Active   |
-| Kissing                  | Rose Pink          | 3.2     | `#ad1457`        | Active   |
-| Movement                 | Explorer Cyan      | 9.3     | `#006064`        | Active   |
-| Music                    | Starlight Navy     | 11.4    | `#1a2332`        | Active   |
-| Observation              | Ocean Blue         | 4.3     | `#01579b`        | Active   |
-| Physical-Control         | Ironclad Slate     | 11.2    | `#2f2f2f`        | Active   |
-| Positioning              | Deep Orange Energy | 10.2    | `#bf360c`        | Active   |
-| Seduction                | Golden Divine      | 5.2     | `#f57f17`        | Active   |
-| Sex-Anal-Penetration     | Obsidian Teal      | 12.6    | `#053b3f`        | Active   |
-| Sex-Breastplay           | Blush Amethyst     | 12.1    | `#7a1d58`        | Active   |
-| Sex-Core                 | Mystic Purple      | 5.1     | `#4a148c`        | Active   |
-| Sex-Dry-Intimacy         | Velvet Smoke       | 12.4    | `#4a2741`        | Active   |
-| Sex-Penile-Manual        | Ember Touch        | 12.2    | `#8a3b12`        | Active   |
-| Sex-Penile-Oral          | Midnight Orchid    | 12.3    | `#2a1a5e`        | Active   |
-| Sex-Physical-Control     | Velvet Twilight    | 11.3    | `#2c0e37`        | Active   |
-| Sex-Vaginal-Penetration  | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
-| Vampirism                | Crimson Embrace    | 12.5    | `#6c0f36`        | Active   |
-| Violence                 | Dark Crimson       | 2.2     | `#8b0000`        | Active   |
-| Warding                  | Cool Grey Modern   | 10.3    | `#424242`        | Active   |
-| Weapons                  | Arctic Steel       | 11.8    | `#112a46`        | Active   |
-| Item-Transfer            | Trade Amber        | 13.1    | `#7d5a00`        | Active   |
-| Personal-Space           | Molten Copper      | 11.6    | `#7c2d12`        | Active   |
-| Ranged                   | Archer's Focus     | 15.1    | `#2a4a3f`        | Active   |
-| Recovery                 | Evergreen Shadow   | 11.5    | `#123524`        | Active   |
+| Mod                     | Color Scheme        | Section | Background Color | Status |
+| ----------------------- | ------------------- | ------- | ---------------- | ------ |
+| Affection               | Soft Purple         | 3.1     | `#6a1b9a`        | Active |
+| Ballet                  | Indigo Professional | 10.1    | `#283593`        | Active |
+| Caressing               | Dark Purple         | 7.2     | `#311b92`        | Active |
+| Clothing                | Earth Brown         | 4.2     | `#6d4c41`        | Active |
+| Companionship           | Deep Teal           | 3.3     | `#00695c`        | Active |
+| Core                    | Classic Blue-Grey   | 1.1     | `#455a64`        | Active |
+| Deference               | Ceremonial Midnight | 14.1    | `#1f2d3d`        | Active |
+| Distress                | Obsidian Frost      | 11.7    | `#0b132b`        | Active |
+| Exercise                | Orange Flame        | 2.3     | `#e65100`        | Active |
+| Gymnastics              | Journey Cobalt      | 9.1     | `#1a237e`        | Active |
+| Hugging                 | Warm Embrace        | 3.4     | `#7d2a50`        | Active |
+| Hexing                  | Hexed Nightshade    | 16.1    | `#1f0d2a`        | Active |
+| Items                   | Aurora Depths       | 11.1    | `#004d61`        | Active |
+| Kissing                 | Rose Pink           | 3.2     | `#ad1457`        | Active |
+| Movement                | Explorer Cyan       | 9.3     | `#006064`        | Active |
+| Music                   | Starlight Navy      | 11.4    | `#1a2332`        | Active |
+| Observation             | Ocean Blue          | 4.3     | `#01579b`        | Active |
+| Physical-Control        | Ironclad Slate      | 11.2    | `#2f2f2f`        | Active |
+| Positioning             | Deep Orange Energy  | 10.2    | `#bf360c`        | Active |
+| Seduction               | Golden Divine       | 5.2     | `#f57f17`        | Active |
+| Sex-Anal-Penetration    | Obsidian Teal       | 12.6    | `#053b3f`        | Active |
+| Sex-Breastplay          | Blush Amethyst      | 12.1    | `#7a1d58`        | Active |
+| Sex-Core                | Mystic Purple       | 5.1     | `#4a148c`        | Active |
+| Sex-Dry-Intimacy        | Velvet Smoke        | 12.4    | `#4a2741`        | Active |
+| Sex-Penile-Manual       | Ember Touch         | 12.2    | `#8a3b12`        | Active |
+| Sex-Penile-Oral         | Midnight Orchid     | 12.3    | `#2a1a5e`        | Active |
+| Sex-Physical-Control    | Velvet Twilight     | 11.3    | `#2c0e37`        | Active |
+| Sex-Vaginal-Penetration | Crimson Embrace     | 12.5    | `#6c0f36`        | Active |
+| Vampirism               | Crimson Embrace     | 12.5    | `#6c0f36`        | Active |
+| Violence                | Dark Crimson        | 2.2     | `#8b0000`        | Active |
+| Warding                 | Cool Grey Modern    | 10.3    | `#424242`        | Active |
+| Weapons                 | Arctic Steel        | 11.8    | `#112a46`        | Active |
+| Item-Transfer           | Trade Amber         | 13.1    | `#7d5a00`        | Active |
+| Personal-Space          | Molten Copper       | 11.6    | `#7c2d12`        | Active |
+| Ranged                  | Archer's Focus      | 15.1    | `#2a4a3f`        | Active |
+| Recovery                | Evergreen Shadow    | 11.5    | `#123524`        | Active |
 
 ## Available Color Schemes by Category
 
 ### Neutral/System
+
 - **Slate Grey** (1.2) - Administrative actions, settings
 - **Charcoal** (1.3) - Dark theme default, low-energy actions
 
 ### Action/Combat
+
 - **Bold Red** (2.1) - Combat, aggressive actions
 
 ### Nature/Environment
+
 - **Forest Green** (4.1) - Nature magic, outdoor actions
 
 ### Warning/Alert
+
 - **Amber Warning** (6.1) - Caution actions, moderate warnings
 - **Dark Red Alert** (6.2) - Critical alerts, dangerous actions
 
 ### Dark Theme Optimized
+
 - **Deep Blue** (7.1) - Primary actions in dark themes
 - **Midnight Green** (7.3) - Success actions in dark themes
 
 ### High Contrast
+
 - **Pure Black & White** (8.1) - Maximum accessibility
 - **White & Black** (8.2) - Light theme high contrast
 - **Yellow on Black** (8.3) - High visibility
 
 ### Additional Versatile
+
 - **Pathfinder Slate** (9.2) - Navigation, wayfinding
 
 ### Honor/Deference
+
 - **Humble Bronze** (14.2) - Reverent gestures, respectful submissions
 
 ### Professional/Modern
+
 (No available schemes - all in use)
 
 ### Expansion Set
-- *(none available — all assigned)*
+
+- _(none available — all assigned)_
 
 ### Hex/Corruption
+
 - **Blighted Moss** (16.2) - Hexcraft rituals, entropic nature magic (available)
 
 ## Complete Color Scheme Definitions
@@ -913,16 +925,16 @@ node scripts/validateVisualContrast.js
 
 ### By Color Family
 
-| Color Family | Psychological Association | Best Used For |
-|-------------|---------------------------|---------------|
-| Red tones | Danger, urgency, power, passion | Combat, violence, critical actions |
-| Blue tones | Trust, calm, information, stability | Social actions, information, navigation |
-| Green tones | Growth, success, nature, healing | Environmental actions, healing, success states |
-| Purple tones | Magic, mystery, luxury, creativity | Arcane abilities, special powers, intimacy |
-| Orange/Yellow | Energy, attention, warmth, caution | Energy actions, warnings, excitement |
-| Grey/Black | Neutral, professional, balanced | System actions, utilities, backgrounds |
-| Brown tones | Earthy, stable, practical, reliable | Crafting, items, physical objects |
-| Teal/Cyan | Discovery, exploration, precision | Navigation, exploration, focused actions |
+| Color Family  | Psychological Association           | Best Used For                                  |
+| ------------- | ----------------------------------- | ---------------------------------------------- |
+| Red tones     | Danger, urgency, power, passion     | Combat, violence, critical actions             |
+| Blue tones    | Trust, calm, information, stability | Social actions, information, navigation        |
+| Green tones   | Growth, success, nature, healing    | Environmental actions, healing, success states |
+| Purple tones  | Magic, mystery, luxury, creativity  | Arcane abilities, special powers, intimacy     |
+| Orange/Yellow | Energy, attention, warmth, caution  | Energy actions, warnings, excitement           |
+| Grey/Black    | Neutral, professional, balanced     | System actions, utilities, backgrounds         |
+| Brown tones   | Earthy, stable, practical, reliable | Crafting, items, physical objects              |
+| Teal/Cyan     | Discovery, exploration, precision   | Navigation, exploration, focused actions       |
 
 ### Design Principles
 

@@ -9,10 +9,7 @@
  * @see activityDescriptionService.js
  */
 
-import {
-  validateDependency,
-  ensureValidLogger,
-} from '../../utils/index.js';
+import { validateDependency, ensureValidLogger } from '../../utils/index.js';
 
 /**
  * Manages activity metadata collection from multiple sources with fallback strategy.
@@ -134,8 +131,7 @@ class ActivityMetadataCollectionSystem {
 
     // Tier 3: Collect dedicated metadata
     try {
-      const dedicatedActivities =
-        this.collectDedicatedMetadata(resolvedEntity);
+      const dedicatedActivities = this.collectDedicatedMetadata(resolvedEntity);
       activities.push(...dedicatedActivities);
     } catch (error) {
       this.#logger.error(
@@ -173,7 +169,7 @@ class ActivityMetadataCollectionSystem {
       ? entity.componentTypeIds
       : [];
 
-    this.#logger.info('Scanning components for inline metadata', {
+    this.#logger.debug('Scanning components for inline metadata', {
       entityId: entity?.id,
       componentCount: componentIds.length,
       componentIds,
@@ -258,7 +254,7 @@ class ActivityMetadataCollectionSystem {
       }
     }
 
-    this.#logger.info('Finished scanning inline metadata', {
+    this.#logger.debug('Finished scanning inline metadata', {
       entityId: entity?.id,
       activitiesFound: activities.length,
       activitySources: activities.map((a) => a.source),

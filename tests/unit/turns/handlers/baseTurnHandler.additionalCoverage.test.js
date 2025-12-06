@@ -58,7 +58,9 @@ describe('BaseTurnHandler additional coverage', () => {
     handler._setCurrentActorInternal(newActor);
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Handler's actor set to 'new-actor' while an active TurnContext exists"),
+      expect.stringContaining(
+        "Handler's actor set to 'new-actor' while an active TurnContext exists"
+      )
     );
     expect(handler._currentActor).toBe(newActor);
   });
@@ -84,7 +86,9 @@ describe('BaseTurnHandler additional coverage', () => {
     handler._setCurrentTurnContextInternal(turnContext);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("Aligning _currentActor ('handler-actor') with new TurnContext actor ('context-actor')"),
+      expect.stringContaining(
+        "Aligning _currentActor ('handler-actor') with new TurnContext actor ('context-actor')"
+      )
     );
     expect(handler._currentActor).toBe(contextActor);
   });
@@ -96,7 +100,9 @@ describe('BaseTurnHandler additional coverage', () => {
     handler._setCurrentTurnContextInternal({ getActor: () => contextActor });
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Setting turn context to object for actor aligned-actor'),
+      expect.stringContaining(
+        'Setting turn context to object for actor aligned-actor'
+      )
     );
     expect(handler._currentActor).toBe(contextActor);
   });
@@ -108,7 +114,7 @@ describe('BaseTurnHandler additional coverage', () => {
     handler._setCurrentTurnContextInternal(turnContext);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("TurnContext actor ('null')"),
+      expect.stringContaining("TurnContext actor ('null')")
     );
   });
 
@@ -143,7 +149,7 @@ describe('BaseTurnHandler additional coverage', () => {
     await handler._transitionToState(persistentState);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Attempted to transition to the same state'),
+      expect.stringContaining('Attempted to transition to the same state')
     );
     expect(persistentState.exitState).not.toHaveBeenCalled();
     expect(persistentState.enterState).not.toHaveBeenCalled();
@@ -160,9 +166,7 @@ describe('BaseTurnHandler additional coverage', () => {
 
     await handler._transitionToState(namelessState);
 
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('N/A'),
-    );
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('N/A'));
   });
 
   it('allows re-entering the same idle state without early return', async () => {
@@ -199,10 +203,14 @@ describe('BaseTurnHandler additional coverage', () => {
     await handler._transitionToState(failingState);
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error during FailingState.enterState or onEnterState hook'),
-      expect.any(Error),
+      expect.stringContaining(
+        'Error during FailingState.enterState or onEnterState hook'
+      ),
+      expect.any(Error)
     );
-    expect(resetSpy).toHaveBeenCalledWith('error-entering-FailingState-for-N/A');
+    expect(resetSpy).toHaveBeenCalledWith(
+      'error-entering-FailingState-for-N/A'
+    );
     expect(factory.createIdleState).toHaveBeenCalled();
     expect(idleState.enterState).toHaveBeenCalled();
   });
@@ -215,7 +223,7 @@ describe('BaseTurnHandler additional coverage', () => {
       isIdle: jest.fn().mockReturnValue(true),
     };
     const failingState = {
-      enterState: jest.fn().mockRejectedValue(new Error('enter boom')), 
+      enterState: jest.fn().mockRejectedValue(new Error('enter boom')),
       exitState: jest.fn(),
       getStateName: jest.fn().mockReturnValue('FailingState'),
     };
@@ -239,7 +247,7 @@ describe('BaseTurnHandler additional coverage', () => {
     await handler._handleTurnEnd('ended-actor');
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('handler already destroyed'),
+      expect.stringContaining('handler already destroyed')
     );
     expect(factory.createEndingState).not.toHaveBeenCalled();
   });
@@ -290,7 +298,7 @@ describe('BaseTurnHandler additional coverage', () => {
     expect(setContextSpy).toHaveBeenCalledWith(null);
     expect(setActorSpy).toHaveBeenCalledWith(null);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Clearing current handler actor'),
+      expect.stringContaining('Clearing current handler actor')
     );
   });
 
@@ -302,7 +310,7 @@ describe('BaseTurnHandler additional coverage', () => {
     handler._resetTurnStateAndResources();
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("_resetTurnStateAndResources (context: 'N/A')"),
+      expect.stringContaining("_resetTurnStateAndResources (context: 'N/A')")
     );
   });
 
@@ -340,11 +348,13 @@ describe('BaseTurnHandler additional coverage', () => {
 
     expect(handler._isDestroyed).toBe(true);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Attempting to cancel active prompt in TurnContext'),
+      expect.stringContaining(
+        'Attempting to cancel active prompt in TurnContext'
+      )
     );
     expect(factory.createIdleState).toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Ensuring transition to TurnIdleState'),
+      expect.stringContaining('Ensuring transition to TurnIdleState')
     );
   });
 
@@ -354,7 +364,7 @@ describe('BaseTurnHandler additional coverage', () => {
     await handler.destroy();
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('destroy() called but already destroyed.'),
+      expect.stringContaining('destroy() called but already destroyed.')
     );
   });
 

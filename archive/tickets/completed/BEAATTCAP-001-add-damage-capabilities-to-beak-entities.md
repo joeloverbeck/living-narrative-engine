@@ -12,10 +12,10 @@ Beaks currently exist as body parts but cannot be used as weapons because they l
 
 ## Files to Touch
 
-| File | Change Type |
-|------|-------------|
-| `data/mods/anatomy/entities/definitions/beak.entity.json` | Modify - add component |
-| `data/mods/anatomy/entities/definitions/chicken_beak.entity.json` | Modify - add component |
+| File                                                               | Change Type            |
+| ------------------------------------------------------------------ | ---------------------- |
+| `data/mods/anatomy/entities/definitions/beak.entity.json`          | Modify - add component |
+| `data/mods/anatomy/entities/definitions/chicken_beak.entity.json`  | Modify - add component |
 | `data/mods/anatomy/entities/definitions/tortoise_beak.entity.json` | Modify - add component |
 
 ## Out of Scope
@@ -97,6 +97,7 @@ Add the component:
 ### Tests That Must Pass
 
 1. **Schema Validation**: All three modified entity files must pass JSON schema validation
+
    ```bash
    npm run validate:mod:anatomy
    ```
@@ -153,20 +154,20 @@ npm run test:unit -- --testPathPattern="anatomy" --silent
 
 The original ticket assumptions used an **incorrect schema format** for `damage-capability-entry.schema.json`:
 
-| Field | Original (Wrong) | Corrected |
-|-------|------------------|-----------|
-| `penetration` | Integer (e.g., 10) | 0-1 fraction (e.g., 0.5) |
-| `bleed` | Number (e.g., 0.3) | Object `{ enabled: true, severity: "minor", ... }` |
-| `dismember` | Number (e.g., 0) | Object or omitted |
-| `fracture` | Number (e.g., 0.1) | Object `{ enabled: true, thresholdFraction: 0.9 }` |
+| Field         | Original (Wrong)   | Corrected                                          |
+| ------------- | ------------------ | -------------------------------------------------- |
+| `penetration` | Integer (e.g., 10) | 0-1 fraction (e.g., 0.5)                           |
+| `bleed`       | Number (e.g., 0.3) | Object `{ enabled: true, severity: "minor", ... }` |
+| `dismember`   | Number (e.g., 0)   | Object or omitted                                  |
+| `fracture`    | Number (e.g., 0.1) | Object `{ enabled: true, thresholdFraction: 0.9 }` |
 
 ### Changes Applied vs Originally Planned
 
-| Beak | Original Plan | Actual Implementation |
-|------|---------------|----------------------|
-| Kraken | `penetration: 10, bleed: 0.3` | `penetration: 0.5, bleed: { enabled: true, severity: "minor", baseDurationTurns: 2 }` |
-| Chicken | `penetration: 1, bleed: 0.1` | `penetration: 0.1` (no bleed - too small) |
-| Tortoise | `penetration: 4, fracture: 0.1` | `penetration: 0.2, fracture: { enabled: true, thresholdFraction: 0.9 }` |
+| Beak     | Original Plan                   | Actual Implementation                                                                 |
+| -------- | ------------------------------- | ------------------------------------------------------------------------------------- |
+| Kraken   | `penetration: 10, bleed: 0.3`   | `penetration: 0.5, bleed: { enabled: true, severity: "minor", baseDurationTurns: 2 }` |
+| Chicken  | `penetration: 1, bleed: 0.1`    | `penetration: 0.1` (no bleed - too small)                                             |
+| Tortoise | `penetration: 4, fracture: 0.1` | `penetration: 0.2, fracture: { enabled: true, thresholdFraction: 0.9 }`               |
 
 ### Files Modified
 

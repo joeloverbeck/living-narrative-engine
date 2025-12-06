@@ -19,7 +19,9 @@ import breatheTeasinglyOnPenisLyingCloseAction from '../../../../data/mods/sex-p
  * @param {ModTestFixture} fixture - Active test fixture instance.
  */
 function configureActionDiscovery(fixture) {
-  fixture.testEnv.actionIndex.buildIndex([breatheTeasinglyOnPenisLyingCloseAction]);
+  fixture.testEnv.actionIndex.buildIndex([
+    breatheTeasinglyOnPenisLyingCloseAction,
+  ]);
 }
 
 describe('sex-penile-oral:breathe_teasingly_on_penis_lying_close action discovery', () => {
@@ -28,7 +30,8 @@ describe('sex-penile-oral:breathe_teasingly_on_penis_lying_close action discover
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installLyingCloseUncoveredPenisScopeOverride(testFixture);
+    restoreScopeResolver =
+      installLyingCloseUncoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {

@@ -15,7 +15,12 @@ describe('safeDispatchEvent', () => {
   });
 
   it('logs a warning and skips dispatch when dispatcher is missing', async () => {
-    await safeDispatchEvent(null, 'story:event-missing', { foo: 'bar' }, undefined);
+    await safeDispatchEvent(
+      null,
+      'story:event-missing',
+      { foo: 'bar' },
+      undefined
+    );
 
     expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
       undefined,
@@ -31,7 +36,10 @@ describe('safeDispatchEvent', () => {
   it('logs a warning when dispatcher lacks a dispatch function', async () => {
     await safeDispatchEvent({}, 'story:no-dispatch', { value: 10 }, logger);
 
-    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(logger, 'safeDispatchEvent');
+    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
+      logger,
+      'safeDispatchEvent'
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       'SafeEventDispatcher unavailable for story:no-dispatch'
     );
@@ -42,13 +50,27 @@ describe('safeDispatchEvent', () => {
     const payload = { id: 42 };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
 
-    await safeDispatchEvent(dispatcher, 'story:dispatch-success', payload, logger);
-
-    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(logger, 'safeDispatchEvent');
-    expect(dispatcher.dispatch).toHaveBeenCalledWith('story:dispatch-success', payload);
-    expect(logger.debug).toHaveBeenCalledWith('Dispatched story:dispatch-success', {
+    await safeDispatchEvent(
+      dispatcher,
+      'story:dispatch-success',
       payload,
-    });
+      logger
+    );
+
+    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
+      logger,
+      'safeDispatchEvent'
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'story:dispatch-success',
+      payload
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Dispatched story:dispatch-success',
+      {
+        payload,
+      }
+    );
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
@@ -109,13 +131,24 @@ describe('safeDispatchEvent', () => {
     const error = new Error('network failure');
     const dispatcher = { dispatch: jest.fn().mockRejectedValue(error) };
 
-    await safeDispatchEvent(dispatcher, 'story:dispatch-error', { reason: 'timeout' }, logger);
+    await safeDispatchEvent(
+      dispatcher,
+      'story:dispatch-error',
+      { reason: 'timeout' },
+      logger
+    );
 
-    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(logger, 'safeDispatchEvent');
+    expect(loggerUtils.ensureValidLogger).toHaveBeenCalledWith(
+      logger,
+      'safeDispatchEvent'
+    );
     expect(dispatcher.dispatch).toHaveBeenCalledWith('story:dispatch-error', {
       reason: 'timeout',
     });
-    expect(logger.error).toHaveBeenCalledWith('Failed to dispatch story:dispatch-error', error);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to dispatch story:dispatch-error',
+      error
+    );
     expect(logger.debug).not.toHaveBeenCalled();
   });
 });

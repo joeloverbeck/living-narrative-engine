@@ -195,7 +195,12 @@ describe('scoot_closer_right action execution - Integration Tests', () => {
         'furniture1',
         'positioning:allows_sitting'
       );
-      expect(furnitureSpots.spots).toEqual([null, 'actor1', 'occupant1', 'occupant2']);
+      expect(furnitureSpots.spots).toEqual([
+        null,
+        'actor1',
+        'occupant1',
+        'occupant2',
+      ]);
 
       const occupant1Sitting = testFixture.entityManager.getComponentData(
         'occupant1',

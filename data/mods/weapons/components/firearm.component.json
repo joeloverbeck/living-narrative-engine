@@ -7,12 +7,7 @@
     "properties": {
       "firearmType": {
         "type": "string",
-        "enum": [
-          "handgun",
-          "rifle",
-          "shotgun",
-          "submachine_gun"
-        ],
+        "enum": ["handgun", "rifle", "shotgun", "submachine_gun"],
         "description": "Category of firearm"
       },
       "firingMode": {
@@ -47,13 +42,7 @@
       },
       "condition": {
         "type": "string",
-        "enum": [
-          "excellent",
-          "good",
-          "fair",
-          "poor",
-          "broken"
-        ],
+        "enum": ["excellent", "good", "fair", "poor", "broken"],
         "description": "Current condition affecting reliability and accuracy"
       }
     },

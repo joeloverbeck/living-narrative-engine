@@ -116,7 +116,9 @@ describe('PipelineStage structured trace integration', () => {
   });
 
   it('propagates thrown errors while flagging the span', async () => {
-    const { trace, span } = createStructuredTraceMock({ includeAttributeFn: false });
+    const { trace, span } = createStructuredTraceMock({
+      includeAttributeFn: false,
+    });
     const stageError = new Error('boom');
     const stage = createStage(async () => {
       throw stageError;
@@ -136,7 +138,9 @@ describe('PipelineStage structured trace integration', () => {
   });
 
   it('executes directly when no structured trace is present', async () => {
-    const stage = createStage(async () => PipelineResult.success({ data: { ok: true } }));
+    const stage = createStage(async () =>
+      PipelineResult.success({ data: { ok: true } })
+    );
 
     const result = await stage.execute({
       actor: { id: 'actor-4' },

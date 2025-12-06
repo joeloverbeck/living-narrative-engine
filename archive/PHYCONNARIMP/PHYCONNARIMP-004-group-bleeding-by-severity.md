@@ -9,16 +9,19 @@ Combine bleeding part descriptions into grouped sentences by severity level, ins
 ## Problem Statement
 
 **Current output (separate sentences):**
+
 ```
 Blood flows steadily from my torso. Blood flows steadily from my upper head.
 ```
 
 **Expected output (grouped):**
+
 ```
 Blood flows steadily from my torso and my upper head.
 ```
 
 **Mixed severity example:**
+
 ```
 Current:  Blood pours freely from my arm. Blood flows steadily from my torso. Blood flows steadily from my head.
 Expected: Blood pours freely from my arm. Blood flows steadily from my torso and my head.
@@ -87,10 +90,10 @@ for (const part of bleedingParts) {
 
 ## Files to Touch
 
-| File | Change Type | Lines |
-|------|-------------|-------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Modify/Add | Bleeding loop in `#formatEffectsFirstPerson`, add new helper methods |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests | New test cases |
+| File                                                                  | Change Type | Lines                                                                |
+| --------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------- |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`             | Modify/Add  | Bleeding loop in `#formatEffectsFirstPerson`, add new helper methods |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests   | New test cases                                                       |
 
 ---
 
@@ -155,13 +158,13 @@ All existing tests must continue to pass.
 
 ### Output Examples
 
-| Input Parts | Severities | Expected Output |
-|-------------|------------|-----------------|
-| torso | moderate | "Blood flows steadily from my torso." |
-| torso, head | moderate, moderate | "Blood flows steadily from my torso and my upper head." |
-| torso, head, leg | moderate, moderate, moderate | "Blood flows steadily from my torso, my upper head, and my right leg." |
-| arm, torso | severe, moderate | "Blood pours freely from my arm. Blood flows steadily from my torso." |
-| arm, leg, head | severe, minor, moderate | "Blood pours freely from my arm. Blood flows steadily from my head. Blood seeps from my leg." |
+| Input Parts      | Severities                   | Expected Output                                                                               |
+| ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------- |
+| torso            | moderate                     | "Blood flows steadily from my torso."                                                         |
+| torso, head      | moderate, moderate           | "Blood flows steadily from my torso and my upper head."                                       |
+| torso, head, leg | moderate, moderate, moderate | "Blood flows steadily from my torso, my upper head, and my right leg."                        |
+| arm, torso       | severe, moderate             | "Blood pours freely from my arm. Blood flows steadily from my torso."                         |
+| arm, leg, head   | severe, minor, moderate      | "Blood pours freely from my arm. Blood flows steadily from my head. Blood seeps from my leg." |
 
 ---
 
@@ -184,14 +187,14 @@ describe('bleeding grouping', () => {
       partEntityId: `part-${index}`,
       partType: config.partType,
       orientation: config.orientation || null,
-      bleedingSeverity: config.bleedingSeverity
+      bleedingSeverity: config.bleedingSeverity,
     }));
 
     const injuredParts = bleedingConfigs.map((config, index) => ({
       partEntityId: `part-${index}`,
       partType: config.partType,
       orientation: config.orientation || null,
-      state: 'wounded'
+      state: 'wounded',
     }));
 
     return {
@@ -210,7 +213,7 @@ describe('bleeding grouping', () => {
 
   it('should format single bleeding part correctly', () => {
     const summary = createSummaryWithBleedingParts([
-      { partType: 'torso', bleedingSeverity: 'moderate' }
+      { partType: 'torso', bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
@@ -220,28 +223,32 @@ describe('bleeding grouping', () => {
   it('should format two bleeding parts with same severity using "and"', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'torso', bleedingSeverity: 'moderate' },
-      { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' }
+      { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
-    expect(result).toMatch(/Blood flows steadily from my torso and my upper head\./);
+    expect(result).toMatch(
+      /Blood flows steadily from my torso and my upper head\./
+    );
   });
 
   it('should format three+ bleeding parts with Oxford comma', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'torso', bleedingSeverity: 'moderate' },
       { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
-      { partType: 'leg', orientation: 'right', bleedingSeverity: 'moderate' }
+      { partType: 'leg', orientation: 'right', bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
-    expect(result).toMatch(/Blood flows steadily from my torso, my upper head, and my right leg\./);
+    expect(result).toMatch(
+      /Blood flows steadily from my torso, my upper head, and my right leg\./
+    );
   });
 
   it('should create separate sentences for different severities', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'torso', bleedingSeverity: 'moderate' },
-      { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' }
+      { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
     ]);
 
     const result = service.formatFirstPerson(summary);
@@ -253,7 +260,7 @@ describe('bleeding grouping', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'leg', orientation: 'right', bleedingSeverity: 'minor' },
       { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
-      { partType: 'torso', bleedingSeverity: 'moderate' }
+      { partType: 'torso', bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
@@ -289,21 +296,25 @@ describe('bleeding grouping', () => {
 ### What Was Actually Changed vs Originally Planned
 
 **Ticket Corrections Made Before Implementation:**
+
 1. **Line number references**: Original said lines 294-303, actual code was at lines ~304-315 within `#formatEffectsFirstPerson` method starting at line 298
 2. **Array mutation bug**: Original `#formatListWithOxfordComma` proposal used `.pop()` which mutates the input array. Changed to `.slice(0, -1)` and direct index access to avoid mutation
 
 **Implementation Changes:**
+
 - ✅ Created `#formatBleedingEffectsFirstPerson(bleedingParts)` method as planned
 - ✅ Created `#formatListWithOxfordComma(items)` helper as planned (with slice fix)
 - ✅ Replaced bleeding loop in `#formatEffectsFirstPerson()` with call to new method
 - ✅ Public API `formatFirstPerson(summary)` unchanged
 
 **Test Coverage:**
+
 - 7 new unit tests added covering all acceptance criteria
 - All 64 unit tests pass (57 existing + 7 new)
 - All 142 anatomy integration tests pass
 
 **Files Modified:**
+
 - `src/anatomy/services/injuryNarrativeFormatterService.js` - Added 2 private methods, modified bleeding handling
 - `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` - Added bleeding grouping test suite
 

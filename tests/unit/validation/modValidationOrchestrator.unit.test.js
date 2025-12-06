@@ -44,8 +44,8 @@ const createDependencies = () => {
     resolve: jest.fn((ids) => [...ids]),
   };
   const modManifestLoader = {
-    loadRequestedManifests: jest.fn(async (ids) =>
-      new Map(ids.map((id) => [id, { id, dependencies: [] }]))
+    loadRequestedManifests: jest.fn(
+      async (ids) => new Map(ids.map((id) => [id, { id, dependencies: [] }]))
     ),
     loadModManifests: jest.fn(),
   };
@@ -111,7 +111,9 @@ describe('ModValidationError', () => {
     const error = new ModValidationError(validationResults);
 
     expect(error.message).toContain('Dependency validation failed: 1 errors');
-    expect(error.message).toContain('Cross-reference validation failed: 2 violations');
+    expect(error.message).toContain(
+      'Cross-reference validation failed: 2 violations'
+    );
     expect(error.validationResults).toBe(validationResults);
   });
 
@@ -121,7 +123,9 @@ describe('ModValidationError', () => {
       crossReferences: { violations: [1, 2, 3] },
     });
 
-    expect(error.message).toContain('Cross-reference validation failed: 3 violations');
+    expect(error.message).toContain(
+      'Cross-reference validation failed: 3 violations'
+    );
     expect(error.name).toBe('ModValidationError');
   });
 });
@@ -181,7 +185,9 @@ describe('ModValidationOrchestrator', () => {
     expect(result.performance.phases.has('manifest-loading')).toBe(true);
     expect(result.performance.phases.has('dependency-validation')).toBe(true);
     expect(result.performance.phases.has('load-order-resolution')).toBe(true);
-    expect(result.performance.phases.has('cross-reference-validation')).toBe(true);
+    expect(result.performance.phases.has('cross-reference-validation')).toBe(
+      true
+    );
   });
 
   it('captures dependency validation failures without failFast', async () => {
@@ -201,7 +207,9 @@ describe('ModValidationOrchestrator', () => {
     expect(result.dependencies.isValid).toBe(false);
     expect(result.errors).toContain('Dependency validation failed');
     expect(result.crossReferences).toBeNull();
-    expect(deps.modCrossReferenceValidator.validateAllModReferences).not.toHaveBeenCalled();
+    expect(
+      deps.modCrossReferenceValidator.validateAllModReferences
+    ).not.toHaveBeenCalled();
     expect(result.isValid).toBe(false);
   });
 
@@ -216,7 +224,10 @@ describe('ModValidationOrchestrator', () => {
     });
 
     await expect(
-      orchestrator.validateEcosystem({ modsToValidate: ['alpha'], failFast: true })
+      orchestrator.validateEcosystem({
+        modsToValidate: ['alpha'],
+        failFast: true,
+      })
     ).rejects.toBeInstanceOf(ModValidationError);
   });
 
@@ -277,7 +288,9 @@ describe('ModValidationOrchestrator', () => {
     expect(errorLog?.[1]).toBeInstanceOf(ModValidationError);
     expect(
       result.errors.some((msg) =>
-        msg.includes('Cross-reference validation failed: Mod ecosystem validation failed')
+        msg.includes(
+          'Cross-reference validation failed: Mod ecosystem validation failed'
+        )
       )
     ).toBe(true);
   });
@@ -333,7 +346,9 @@ describe('ModValidationOrchestrator', () => {
       modsToValidate: ['alpha'],
     });
 
-    expect(result.warnings).toContain('Load order resolution failed: load order failure');
+    expect(result.warnings).toContain(
+      'Load order resolution failed: load order failure'
+    );
     expect(result.loadOrder).toBeNull();
   });
 
@@ -385,10 +400,12 @@ describe('ModValidationOrchestrator', () => {
     });
 
     const { orchestrator, deps } = createOrchestrator();
-    deps.modManifestLoader.loadRequestedManifests.mockImplementation(async (ids) => {
-      expect(ids).toEqual(['alpha', 'beta']);
-      return createManifestsMap(ids);
-    });
+    deps.modManifestLoader.loadRequestedManifests.mockImplementation(
+      async (ids) => {
+        expect(ids).toEqual(['alpha', 'beta']);
+        return createManifestsMap(ids);
+      }
+    );
 
     deps.modCrossReferenceValidator.validateAllModReferences.mockResolvedValue(
       new Map()
@@ -436,10 +453,9 @@ describe('ModValidationOrchestrator', () => {
     const result = await orchestrator.validateMod('alpha');
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
-    expect(deps.modCrossReferenceValidator.validateModReferences).toHaveBeenCalledWith(
-      '/mods/alpha',
-      expect.any(Map)
-    );
+    expect(
+      deps.modCrossReferenceValidator.validateModReferences
+    ).toHaveBeenCalledWith('/mods/alpha', expect.any(Map));
   });
 
   it('throws when attempting to validate an unknown mod', async () => {
@@ -463,9 +479,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     deps.modDependencyValidator.validate.mockImplementation(() => {
@@ -492,9 +506,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     deps.modCrossReferenceValidator.validateModReferences.mockResolvedValue({
@@ -515,9 +527,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     deps.modCrossReferenceValidator.validateModReferences.mockRejectedValue(
@@ -543,10 +553,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     const manifests = new Map([
-      [
-        'alpha',
-        { id: 'alpha', dependencies: ['beta', { id: 'gamma' }] },
-      ],
+      ['alpha', { id: 'alpha', dependencies: ['beta', { id: 'gamma' }] }],
       ['beta', { id: 'beta', dependencies: [] }],
       ['gamma', { id: 'gamma', dependencies: [] }],
     ]);
@@ -573,9 +580,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     const errorWithThrowingGetter = {
@@ -601,9 +606,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     await orchestrator.validateMod('alpha', { skipCrossReferences: true });
@@ -662,9 +665,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     deps.modCrossReferenceValidator.validateModReferences.mockResolvedValue({
@@ -691,9 +692,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     deps.modCrossReferenceValidator.validateModReferences.mockRejectedValue(
@@ -714,9 +713,7 @@ describe('ModValidationOrchestrator', () => {
     const { orchestrator, deps } = createOrchestrator();
 
     deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(
-      new Map([
-        ['alpha', { id: 'alpha', dependencies: [] }],
-      ])
+      new Map([['alpha', { id: 'alpha', dependencies: [] }]])
     );
 
     const errorWithThrowingGetter = {
@@ -739,8 +736,8 @@ describe('ModValidationOrchestrator', () => {
     expect(result.recommendations).toContain(
       'Resolve dependency issues before loading'
     );
-    const errorLog = deps.logger.error.mock.calls.find(([message]) =>
-      message === 'Loading dependency validation failed'
+    const errorLog = deps.logger.error.mock.calls.find(
+      ([message]) => message === 'Loading dependency validation failed'
     );
     expect(errorLog?.[1]).toBeInstanceOf(Error);
   });

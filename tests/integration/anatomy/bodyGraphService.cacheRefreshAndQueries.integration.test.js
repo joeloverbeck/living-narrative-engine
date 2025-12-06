@@ -22,14 +22,16 @@ const createLogger = () => {
     error: [],
   };
 
-  const capture = (level) => (...entries) => {
-    const rendered = entries
-      .map((entry) =>
-        typeof entry === 'string' ? entry : JSON.stringify(entry, null, 2)
-      )
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...entries) => {
+      const rendered = entries
+        .map((entry) =>
+          typeof entry === 'string' ? entry : JSON.stringify(entry, null, 2)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
 
   return {
     messages,
@@ -231,13 +233,8 @@ describe('BodyGraphService integration: cache refresh & graph queries', () => {
   let service;
 
   beforeEach(() => {
-    ({
-      bodyComponent,
-      entityManager,
-      eventDispatcher,
-      logger,
-      service,
-    } = createFixture());
+    ({ bodyComponent, entityManager, eventDispatcher, logger, service } =
+      createFixture());
   });
 
   it('coordinates caches, queries, and traversal across real modules', async () => {
@@ -291,9 +288,15 @@ describe('BodyGraphService integration: cache refresh & graph queries', () => {
     expect(new Set(arms)).toEqual(new Set([LEFT_ARM_ID, RIGHT_ARM_ID]));
     expect(service.findPartsByType(ACTOR_ID, 'arm')).toBe(arms);
 
-    expect(service.hasPartWithComponent(bodyComponent, 'sensors:touch')).toBe(true);
-    expect(service.hasPartWithComponent(bodyComponent, 'custom:emptyOnly')).toBe(false);
-    expect(service.hasPartWithComponent(bodyComponent, 'missing:component')).toBe(false);
+    expect(service.hasPartWithComponent(bodyComponent, 'sensors:touch')).toBe(
+      true
+    );
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'custom:emptyOnly')
+    ).toBe(false);
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'missing:component')
+    ).toBe(false);
 
     expect(
       service.hasPartWithComponentValue(
@@ -357,7 +360,9 @@ describe('BodyGraphService integration: cache refresh & graph queries', () => {
     );
 
     const bodyGraph = await service.getBodyGraph(ACTOR_ID);
-    expect(new Set(bodyGraph.getAllPartIds())).toEqual(new Set(allFromBlueprint));
+    expect(new Set(bodyGraph.getAllPartIds())).toEqual(
+      new Set(allFromBlueprint)
+    );
     expect(bodyGraph.getConnectedParts(LEFT_ARM_ID)).toEqual([LEFT_HAND_ID]);
     await expect(service.getBodyGraph(LEFT_ARM_ID)).rejects.toThrow(
       `Entity ${LEFT_ARM_ID} has no anatomy:body component`
@@ -419,7 +424,8 @@ describe('BodyGraphService integration: cache refresh & graph queries', () => {
 
     expect(service.hasCache(ACTOR_ID)).toBe(false);
 
-    const callsBeforeCascadeRebuild = entityManager.getEntitiesWithComponentCalls;
+    const callsBeforeCascadeRebuild =
+      entityManager.getEntitiesWithComponentCalls;
     await service.buildAdjacencyCache(ACTOR_ID);
     expect(entityManager.getEntitiesWithComponentCalls).toBe(
       callsBeforeCascadeRebuild + 1
@@ -448,7 +454,8 @@ describe('BodyGraphService integration: cache refresh & graph queries', () => {
 
     expect(service.hasCache(ACTOR_ID)).toBe(false);
 
-    const callsBeforeSingleRebuild = entityManager.getEntitiesWithComponentCalls;
+    const callsBeforeSingleRebuild =
+      entityManager.getEntitiesWithComponentCalls;
     await service.buildAdjacencyCache(ACTOR_ID);
     expect(entityManager.getEntitiesWithComponentCalls).toBe(
       callsBeforeSingleRebuild + 1

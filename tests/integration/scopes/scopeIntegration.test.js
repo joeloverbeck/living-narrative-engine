@@ -36,18 +36,25 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
+import {
+  createMultiTargetResolutionStage,
+  createActionPipelineOrchestrator,
+} from '../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
 // Import actual scope file CONTENTS
 const followersScopeContent = fs.readFileSync(
-  path.resolve(__dirname, '../../../data/mods/companionship/scopes/followers.scope'),
+  path.resolve(
+    __dirname,
+    '../../../data/mods/companionship/scopes/followers.scope'
+  ),
   'utf8'
 );
 const environmentScopeContent = fs.readFileSync(
@@ -108,7 +115,9 @@ describe('Scope Integration Tests', () => {
     scopeRegistry.initialize({
       'companionship:followers': followerDefs.get('companionship:followers'),
       'core:environment': environmentDefs.get('core:environment'),
-      'movement:clear_directions': directionDefs.get('movement:clear_directions'),
+      'movement:clear_directions': directionDefs.get(
+        'movement:clear_directions'
+      ),
     });
 
     scopeEngine = new ScopeEngine();
@@ -186,7 +195,7 @@ describe('Scope Integration Tests', () => {
     });
 
     // Create the ActionPipelineOrchestrator using the utility factory
-    
+
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -196,7 +205,7 @@ describe('Scope Integration Tests', () => {
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: currentActionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,

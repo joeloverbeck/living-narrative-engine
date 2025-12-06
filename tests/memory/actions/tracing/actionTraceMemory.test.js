@@ -31,7 +31,7 @@ describe('Action Tracing - Memory Tests', () => {
     // FileTraceOutputHandler uses window.fetch in browser environment
     originalFetch = global.fetch;
     originalWindowFetch = global.window?.fetch;
-    
+
     const mockFetchResponse = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: true,
@@ -47,7 +47,7 @@ describe('Action Tracing - Memory Tests', () => {
     });
 
     global.fetch = mockFetchResponse;
-    
+
     // Mock window.fetch for FileTraceOutputHandler
     if (typeof global.window === 'undefined') {
       global.window = {};
@@ -109,7 +109,8 @@ describe('Action Tracing - Memory Tests', () => {
 
       // Measure initial memory with stabilization
       await global.memoryTestUtils.forceGCAndWait();
-      const initialMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
+      const initialMemory =
+        await global.memoryTestUtils.getStableMemoryUsage(3);
 
       const memorySnapshots = [];
       let totalProcessed = 0;
@@ -232,7 +233,8 @@ describe('Action Tracing - Memory Tests', () => {
 
         // Measure memory after each batch
         await global.memoryTestUtils.forceGCAndWait();
-        const batchMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
+        const batchMemory =
+          await global.memoryTestUtils.getStableMemoryUsage(3);
         batchMemories.push(batchMemory);
 
         // Optimized: Reduced delay between batches

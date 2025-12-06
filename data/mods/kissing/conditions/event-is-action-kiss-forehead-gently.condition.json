@@ -3,9 +3,6 @@
   "id": "kissing:event-is-action-kiss-forehead-gently",
   "description": "Checks if the triggering event is for the 'kissing:kiss_forehead_gently' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "kissing:kiss_forehead_gently"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "kissing:kiss_forehead_gently"]
   }
 }

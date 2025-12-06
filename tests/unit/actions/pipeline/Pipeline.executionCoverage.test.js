@@ -198,9 +198,9 @@ describe('Pipeline execution coverage', () => {
 
     const successfulStage = {
       name: 'SuccessfulStage',
-      execute: jest.fn().mockResolvedValue(
-        PipelineResult.success({ actions: ['ok'] })
-      ),
+      execute: jest
+        .fn()
+        .mockResolvedValue(PipelineResult.success({ actions: ['ok'] })),
     };
 
     const failingStage = {

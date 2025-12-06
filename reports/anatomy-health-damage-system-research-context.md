@@ -24,6 +24,7 @@ The anatomy system represents each character's body as a **Directed Acyclic Grap
 ### How Parts Connect
 
 Each body part can define **sockets**—named attachment points where child parts connect. A socket specifies:
+
 - A unique identifier (e.g., `left_arm_socket`, `head_socket`)
 - Orientation (left, right, mid, anterior, posterior, etc.)
 - Allowed part types (what can attach there)
@@ -62,14 +63,14 @@ The system provides these navigation patterns:
 
 The system supports diverse body plans:
 
-| Blueprint | Structure |
-|-----------|-----------|
-| Human | Standard bipedal, two arms, two legs |
-| Centaur | Human upper body + four-legged lower body |
-| Spider | Eight-legged arachnid body |
-| Kraken | Central body with multiple tentacles |
-| Dragon | Quadruped with wings and tail |
-| Cat-person | Humanoid with tail and cat features |
+| Blueprint  | Structure                                 |
+| ---------- | ----------------------------------------- |
+| Human      | Standard bipedal, two arms, two legs      |
+| Centaur    | Human upper body + four-legged lower body |
+| Spider     | Eight-legged arachnid body                |
+| Kraken     | Central body with multiple tentacles      |
+| Dragon     | Quadruped with wings and tail             |
+| Cat-person | Humanoid with tail and cat features       |
 
 Each blueprint defines which parts exist and how they connect.
 
@@ -80,17 +81,20 @@ Each blueprint defines which parts exist and how they connect.
 The system defines 120+ body part types across several categories:
 
 ### External Parts (Surface)
+
 - **Head region**: head, face, skull, jaw, ear, nose, cheek
 - **Upper body**: torso, chest, back, shoulder, arm, forearm, hand, finger
 - **Lower body**: hip, leg, thigh, calf, foot, toe
 - **Features**: tail, wing, horn, antenna, tentacle
 
 ### Internal Parts (Organs)
+
 - **Vital organs**: heart, brain, lungs
 - **Digestive**: stomach, liver, intestines
 - **Other**: kidneys, bladder, spleen
 
 ### Sensory Parts
+
 - **Vision**: eye, eyelid
 - **Hearing**: ear, inner_ear
 - **Other**: nose (smell), tongue (taste)
@@ -98,6 +102,7 @@ The system defines 120+ body part types across several categories:
 ### Part Attributes
 
 Each part has:
+
 - **subType**: The anatomical type (e.g., "arm", "heart", "eye")
 - **orientation**: Position variant (e.g., "left", "right", "mid", "anterior")
 
@@ -126,22 +131,24 @@ ENTITY (unique ID)
 
 Body parts use these existing components:
 
-| Component | Purpose |
-|-----------|---------|
-| `anatomy:part` | Marks entity as body part, defines `subType` and `orientation` |
-| `anatomy:joint` | Links to parent part via `parentId` and `socketId` |
-| `anatomy:sockets` | Defines attachment points for child parts |
-| `anatomy:body` | Root-level container referencing the recipe and all parts |
-| `anatomy:can_grab` | Marks parts capable of grasping (hands, tentacles) |
+| Component          | Purpose                                                        |
+| ------------------ | -------------------------------------------------------------- |
+| `anatomy:part`     | Marks entity as body part, defines `subType` and `orientation` |
+| `anatomy:joint`    | Links to parent part via `parentId` and `socketId`             |
+| `anatomy:sockets`  | Defines attachment points for child parts                      |
+| `anatomy:body`     | Root-level container referencing the recipe and all parts      |
+| `anatomy:can_grab` | Marks parts capable of grasping (hands, tentacles)             |
 
 ### Adding New Components
 
 To add health tracking to body parts, a new component would be defined with:
+
 - A unique ID (e.g., `health:body_part_health`)
 - A data schema specifying the component's properties
 - Registration in the mod system
 
 Example conceptual structure for a health component:
+
 ```
 health:body_part_health
   ├── currentHealth: number
@@ -174,6 +181,7 @@ The existing combat system determines **outcome** (hit or miss) but applies **no
 ### Outcome Resolution
 
 The skill contest produces:
+
 - **CRITICAL_SUCCESS**: Exceptional hit (roll < 5% of threshold)
 - **SUCCESS**: Normal hit (roll < threshold)
 - **FAILURE**: Miss (roll > threshold)
@@ -198,6 +206,7 @@ The rule structure supports inserting new operations between outcome resolution 
 ### Rule-Based Architecture
 
 Combat actions are defined in JSON rule files:
+
 - **Condition**: When does this rule trigger? (specific action attempted)
 - **Operations**: What steps to execute? (get names, resolve outcome, branch on result)
 - **Branching**: IF/THEN/ELSE based on outcome values
@@ -209,6 +218,7 @@ A damage operation would be added to the SUCCESS branch.
 ## Part 5: Current System Gaps
 
 ### What Exists
+
 - Anatomy graph with individual body parts as entities
 - Combat outcome resolution (hit/miss/critical)
 - Skill-based probability calculations
@@ -217,19 +227,20 @@ A damage operation would be added to the SUCCESS branch.
 
 ### What's Missing
 
-| Gap | Description |
-|-----|-------------|
-| **Health tracking** | No component to store health on body parts |
-| **Damage values** | Weapons have no damage statistics |
-| **Armor/protection** | No damage reduction from equipment |
-| **Damage calculation** | No logic to compute damage from hits |
-| **Injury states** | No wounded, disabled, or destroyed states |
-| **Death condition** | No logic for character death |
-| **Cascading effects** | No propagation of effects through anatomy |
+| Gap                    | Description                                |
+| ---------------------- | ------------------------------------------ |
+| **Health tracking**    | No component to store health on body parts |
+| **Damage values**      | Weapons have no damage statistics          |
+| **Armor/protection**   | No damage reduction from equipment         |
+| **Damage calculation** | No logic to compute damage from hits       |
+| **Injury states**      | No wounded, disabled, or destroyed states  |
+| **Death condition**    | No logic for character death               |
+| **Cascading effects**  | No propagation of effects through anatomy  |
 
 ### Damage Type System (Partial)
 
 The system has **marker components** for damage types:
+
 - `damage-types:can_cut` (slashing weapons)
 - `damage-types:can_pierce` (implied, for thrusting)
 - `damage-types:can_bludgeon` (implied, for blunt)
@@ -243,11 +254,13 @@ These are empty markers with no damage values—they indicate capability, not ma
 ### Event-Driven Communication
 
 All significant changes must dispatch events:
+
 - Components changing → `COMPONENT_ADDED`, `COMPONENT_REMOVED` events
 - Actions completing → `PERCEPTIBLE_EVENT` for narrative
 - State changes → Domain-specific events
 
 A damage system should dispatch events like:
+
 - `DAMAGE_APPLIED` (entity took damage to specific part)
 - `INJURY_STATE_CHANGED` (part became wounded/disabled)
 - `CHARACTER_DIED` (vital damage caused death)
@@ -255,6 +268,7 @@ A damage system should dispatch events like:
 ### Modding-First Philosophy
 
 **All game content exists as mods**—even core mechanics. This means:
+
 - Health components defined in mod JSON files
 - Damage rules defined in mod JSON files
 - No hardcoded game logic in source code
@@ -263,6 +277,7 @@ A damage system should dispatch events like:
 ### Validation Requirements
 
 All data must validate against JSON Schemas:
+
 - Components have schema-validated data
 - Rules have schema-validated operations
 - Invalid data is rejected at load time
@@ -365,6 +380,7 @@ Health would be mutable instance data, while max health might come from definiti
 ### Minimum Viable System
 
 At minimum, the system needs:
+
 1. **Health component** on body parts (current/max HP)
 2. **Damage operation** triggered on combat success
 3. **Target selection** logic (which part gets hit)
@@ -373,6 +389,7 @@ At minimum, the system needs:
 ### Enhanced System Considerations
 
 A fuller system might include:
+
 - Multiple damage types (cut, pierce, bludgeon, fire, etc.)
 - Armor with coverage and resistance values
 - Injury states with gameplay effects
@@ -383,6 +400,7 @@ A fuller system might include:
 ### Architecture Alignment
 
 The design should:
+
 - Use existing component patterns (data in components, behavior in rules)
 - Dispatch appropriate events for each state change
 - Support diverse anatomies without hardcoding
@@ -407,4 +425,4 @@ The design should:
 
 ---
 
-*This document provides context for external research. The goal is to receive recommendations on the best architecture for an anatomy-aware health and damage system that integrates with the described constraints.*
+_This document provides context for external research. The goal is to receive recommendations on the best architecture for an anatomy-aware health and damage system that integrates with the described constraints._

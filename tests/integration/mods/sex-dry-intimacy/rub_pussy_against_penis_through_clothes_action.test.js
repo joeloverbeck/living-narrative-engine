@@ -186,7 +186,9 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
         (e) => e.eventType === 'core:perceptible_event'
       );
 
-      expect(perceptibleEvent.payload.descriptionText).toContain('feeling the shape and size');
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        'feeling the shape and size'
+      );
     });
 
     it('action ends turn properly', async () => {

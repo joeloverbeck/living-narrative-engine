@@ -40,7 +40,13 @@ class PerceptibleEventSenderController {
    * @param {IEntityManager} dependencies.entityManager - Entity manager for querying locations and actors
    * @param {IOperationInterpreter} dependencies.operationInterpreter - Operation interpreter for executing operations
    */
-  constructor({ eventBus, documentContext, logger, entityManager, operationInterpreter }) {
+  constructor({
+    eventBus,
+    documentContext,
+    logger,
+    entityManager,
+    operationInterpreter,
+  }) {
     // Validate dependencies
     validateDependency(eventBus, 'ISafeEventDispatcher', logger, {
       requiredMethods: ['dispatch', 'subscribe'],
@@ -76,32 +82,42 @@ class PerceptibleEventSenderController {
     try {
       this.#logger.debug('[PerceptibleEventSender] Starting initialization...');
       this.#cacheElements();
-      this.#logger.debug('[PerceptibleEventSender] Elements cached successfully');
-      
+      this.#logger.debug(
+        '[PerceptibleEventSender] Elements cached successfully'
+      );
+
       // Disable location selector initially until locations are loaded
       // This provides clear UX feedback that the feature isn't ready yet
       this.#elements.locationSelect.disabled = true;
-      
+
       this.#attachEventListeners();
       this.#logger.debug('[PerceptibleEventSender] Event listeners attached');
-      
+
       this.#subscribeToGameEvents();
-      
+
       // Defensive: Load locations immediately if entities already exist
       // This handles cases where initialization happens after entities are loaded
       try {
-        const locations = this.#entityManager.getEntitiesWithComponent(EXITS_COMPONENT_ID);
+        const locations =
+          this.#entityManager.getEntitiesWithComponent(EXITS_COMPONENT_ID);
         if (locations && locations.length > 0) {
-          this.#logger.debug(`[PerceptibleEventSender] Found ${locations.length} locations during initialization - loading immediately`);
+          this.#logger.debug(
+            `[PerceptibleEventSender] Found ${locations.length} locations during initialization - loading immediately`
+          );
           this.#loadLocations();
         } else {
-          this.#logger.debug('[PerceptibleEventSender] No locations found during initialization - will wait for ENGINE_READY_UI event');
+          this.#logger.debug(
+            '[PerceptibleEventSender] No locations found during initialization - will wait for ENGINE_READY_UI event'
+          );
         }
       } catch (loadErr) {
         // Non-critical error - locations will be loaded when ENGINE_READY_UI fires
-        this.#logger.warn('[PerceptibleEventSender] Could not check for locations during initialization', loadErr);
+        this.#logger.warn(
+          '[PerceptibleEventSender] Could not check for locations during initialization',
+          loadErr
+        );
       }
-      
+
       this.#logger.debug('[PerceptibleEventSender] Initialization complete');
     } catch (err) {
       this.#logger.error('[PerceptibleEventSender] Failed to initialize', err);
@@ -117,16 +133,26 @@ class PerceptibleEventSenderController {
   #cacheElements() {
     this.#elements = {
       messageInput: this.#documentContext.query('#perceptible-event-message'),
-      locationSelect: this.#documentContext.query('#perceptible-event-location'),
+      locationSelect: this.#documentContext.query(
+        '#perceptible-event-location'
+      ),
       actorSelect: this.#documentContext.query('#perceptible-event-actors'),
-      actorFilterContainer: this.#documentContext.query('#actor-filter-container'),
+      actorFilterContainer: this.#documentContext.query(
+        '#actor-filter-container'
+      ),
       sendButton: this.#documentContext.query('#send-perceptible-event-button'),
       statusArea: this.#documentContext.query('#perceptible-event-status'),
       widget: this.#documentContext.query('#perceptible-event-sender-widget'),
     };
 
     // Verify required elements exist
-    const requiredElements = ['messageInput', 'locationSelect', 'actorSelect', 'sendButton', 'statusArea'];
+    const requiredElements = [
+      'messageInput',
+      'locationSelect',
+      'actorSelect',
+      'sendButton',
+      'statusArea',
+    ];
     requiredElements.forEach((elementKey) => {
       if (!this.#elements[elementKey]) {
         throw new Error(`Required element not found: ${elementKey}`);
@@ -142,7 +168,10 @@ class PerceptibleEventSenderController {
   #attachEventListeners() {
     // Message input change
     this.#boundHandlers.onMessageChange = () => this.#validateForm();
-    this.#elements.messageInput.addEventListener('input', this.#boundHandlers.onMessageChange);
+    this.#elements.messageInput.addEventListener(
+      'input',
+      this.#boundHandlers.onMessageChange
+    );
 
     // Location select change
     this.#boundHandlers.onLocationChange = (event) => {
@@ -155,7 +184,10 @@ class PerceptibleEventSenderController {
       }
       this.#validateForm();
     };
-    this.#elements.locationSelect.addEventListener('change', this.#boundHandlers.onLocationChange);
+    this.#elements.locationSelect.addEventListener(
+      'change',
+      this.#boundHandlers.onLocationChange
+    );
 
     // Filter mode radio changes
     this.#boundHandlers.onFilterModeChange = () => {
@@ -164,29 +196,49 @@ class PerceptibleEventSenderController {
 
     // Get all filter mode radio buttons and attach listeners
     // Note: DocumentContext.query() only returns single element, need querySelectorAll for multiple
-    const widget = this.#documentContext.query('#perceptible-event-sender-widget');
+    const widget = this.#documentContext.query(
+      '#perceptible-event-sender-widget'
+    );
     if (widget) {
-      const filterModeRadios = widget.querySelectorAll('input[name="filter-mode"]');
+      const filterModeRadios = widget.querySelectorAll(
+        'input[name="filter-mode"]'
+      );
       filterModeRadios.forEach((radio) => {
-        radio.addEventListener('change', this.#boundHandlers.onFilterModeChange);
+        radio.addEventListener(
+          'change',
+          this.#boundHandlers.onFilterModeChange
+        );
       });
     }
 
     // Actor selection change
     this.#boundHandlers.onActorChange = () => this.#validateForm();
-    this.#elements.actorSelect.addEventListener('change', this.#boundHandlers.onActorChange);
+    this.#elements.actorSelect.addEventListener(
+      'change',
+      this.#boundHandlers.onActorChange
+    );
 
     // Send button click
     this.#boundHandlers.onSendClick = () => this.#sendPerceptibleEvent();
-    this.#elements.sendButton.addEventListener('click', this.#boundHandlers.onSendClick);
+    this.#elements.sendButton.addEventListener(
+      'click',
+      this.#boundHandlers.onSendClick
+    );
 
     // Enter key in message textarea
     this.#boundHandlers.onMessageKeyDown = (event) => {
-      if (event.key === 'Enter' && event.ctrlKey && !this.#elements.sendButton.disabled) {
+      if (
+        event.key === 'Enter' &&
+        event.ctrlKey &&
+        !this.#elements.sendButton.disabled
+      ) {
         this.#sendPerceptibleEvent();
       }
     };
-    this.#elements.messageInput.addEventListener('keydown', this.#boundHandlers.onMessageKeyDown);
+    this.#elements.messageInput.addEventListener(
+      'keydown',
+      this.#boundHandlers.onMessageKeyDown
+    );
   }
 
   /**
@@ -197,12 +249,19 @@ class PerceptibleEventSenderController {
    */
   #subscribeToGameEvents() {
     this.#gameReadyHandler = this.#handleGameReady.bind(this);
-    const unsubscribe = this.#eventBus.subscribe(ENGINE_READY_UI, this.#gameReadyHandler);
-    
+    const unsubscribe = this.#eventBus.subscribe(
+      ENGINE_READY_UI,
+      this.#gameReadyHandler
+    );
+
     if (!unsubscribe) {
-      this.#logger.error('[PerceptibleEventSender] CRITICAL: Failed to subscribe to ENGINE_READY_UI event - locations may not load');
+      this.#logger.error(
+        '[PerceptibleEventSender] CRITICAL: Failed to subscribe to ENGINE_READY_UI event - locations may not load'
+      );
     } else {
-      this.#logger.debug('[PerceptibleEventSender] Successfully subscribed to ENGINE_READY_UI event');
+      this.#logger.debug(
+        '[PerceptibleEventSender] Successfully subscribed to ENGINE_READY_UI event'
+      );
     }
   }
 
@@ -212,7 +271,9 @@ class PerceptibleEventSenderController {
    * @private
    */
   #handleGameReady() {
-    this.#logger.info('[PerceptibleEventSender] ✓ ENGINE_READY_UI event received - loading locations now');
+    this.#logger.info(
+      '[PerceptibleEventSender] ✓ ENGINE_READY_UI event received - loading locations now'
+    );
     this.#loadLocations();
   }
 
@@ -223,19 +284,27 @@ class PerceptibleEventSenderController {
    */
   #loadLocations() {
     try {
-      this.#logger.debug('[PerceptibleEventSender] Loading locations from entity manager...');
-      const locations = this.#entityManager.getEntitiesWithComponent(EXITS_COMPONENT_ID);
+      this.#logger.debug(
+        '[PerceptibleEventSender] Loading locations from entity manager...'
+      );
+      const locations =
+        this.#entityManager.getEntitiesWithComponent(EXITS_COMPONENT_ID);
 
       if (!locations || locations.length === 0) {
-        this.#logger.warn('[PerceptibleEventSender] ⚠️ No locations found - selector will remain disabled');
+        this.#logger.warn(
+          '[PerceptibleEventSender] ⚠️ No locations found - selector will remain disabled'
+        );
         return;
       }
 
       // Success - locations found!
-      this.#logger.info(`[PerceptibleEventSender] ✓ Found ${locations.length} locations`);
+      this.#logger.info(
+        `[PerceptibleEventSender] ✓ Found ${locations.length} locations`
+      );
 
       // Clear and populate dropdown
-      this.#elements.locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+      this.#elements.locationSelect.innerHTML =
+        '<option value="">-- Select Location --</option>';
 
       locations.forEach((location) => {
         const nameComp = location.getComponent('core:name');
@@ -248,9 +317,14 @@ class PerceptibleEventSenderController {
       // Enable the selector now that locations are loaded
       this.#elements.locationSelect.disabled = false;
 
-      this.#logger.info(`[PerceptibleEventSender] ✓ Successfully loaded ${locations.length} locations into selector`);
+      this.#logger.info(
+        `[PerceptibleEventSender] ✓ Successfully loaded ${locations.length} locations into selector`
+      );
     } catch (err) {
-      this.#logger.error('[PerceptibleEventSender] ❌ Failed to load locations', err);
+      this.#logger.error(
+        '[PerceptibleEventSender] ❌ Failed to load locations',
+        err
+      );
       this.#showStatus('Failed to load locations', 'error');
     }
   }
@@ -263,7 +337,8 @@ class PerceptibleEventSenderController {
    */
   #loadActorsForLocation(locationId) {
     try {
-      const allActors = this.#entityManager.getEntitiesWithComponent('core:actor');
+      const allActors =
+        this.#entityManager.getEntitiesWithComponent('core:actor');
       const actorsInLocation = allActors.filter((actor) => {
         const position = actor.getComponent('core:position');
         return position?.locationId === locationId;
@@ -279,7 +354,9 @@ class PerceptibleEventSenderController {
         this.#elements.actorSelect.appendChild(option);
       });
 
-      this.#logger.debug(`Found ${actorsInLocation.length} actors in location ${locationId}`);
+      this.#logger.debug(
+        `Found ${actorsInLocation.length} actors in location ${locationId}`
+      );
     } catch (err) {
       this.#logger.error('Failed to load actors', err);
       this.#elements.actorSelect.innerHTML = '';
@@ -312,9 +389,13 @@ class PerceptibleEventSenderController {
    * @private
    */
   #getSelectedFilterMode() {
-    const widget = this.#documentContext.query('#perceptible-event-sender-widget');
+    const widget = this.#documentContext.query(
+      '#perceptible-event-sender-widget'
+    );
     if (widget) {
-      const filterModeRadios = widget.querySelectorAll('input[name="filter-mode"]');
+      const filterModeRadios = widget.querySelectorAll(
+        'input[name="filter-mode"]'
+      );
       for (const radio of filterModeRadios) {
         if (radio.checked) {
           return radio.value;
@@ -331,7 +412,9 @@ class PerceptibleEventSenderController {
    * @private
    */
   #getSelectedActorIds() {
-    const selectedOptions = Array.from(this.#elements.actorSelect.selectedOptions);
+    const selectedOptions = Array.from(
+      this.#elements.actorSelect.selectedOptions
+    );
     return selectedOptions.map((option) => option.value);
   }
 
@@ -358,7 +441,10 @@ class PerceptibleEventSenderController {
     }
 
     // For specific/exclude modes, at least one actor must be selected
-    if ((filterMode === 'specific' || filterMode === 'exclude') && selectedActorIds.length === 0) {
+    if (
+      (filterMode === 'specific' || filterMode === 'exclude') &&
+      selectedActorIds.length === 0
+    ) {
       isValid = false;
     }
 
@@ -478,7 +564,9 @@ class PerceptibleEventSenderController {
 
     // Reset filter mode to 'all'
     if (this.#elements.widget) {
-      const filterModeRadios = this.#elements.widget.querySelectorAll('input[name="filter-mode"]');
+      const filterModeRadios = this.#elements.widget.querySelectorAll(
+        'input[name="filter-mode"]'
+      );
       if (filterModeRadios && filterModeRadios.length > 0) {
         filterModeRadios.forEach((radio) => {
           radio.checked = radio.value === 'all';
@@ -501,7 +589,9 @@ class PerceptibleEventSenderController {
    * @public
    */
   refresh() {
-    this.#logger.debug('[PerceptibleEventSender] Manual refresh requested - reloading locations');
+    this.#logger.debug(
+      '[PerceptibleEventSender] Manual refresh requested - reloading locations'
+    );
     this.#loadLocations();
   }
 
@@ -522,28 +612,53 @@ class PerceptibleEventSenderController {
 
       // Remove event listeners
       if (this.#elements.messageInput && this.#boundHandlers.onMessageChange) {
-        this.#elements.messageInput.removeEventListener('input', this.#boundHandlers.onMessageChange);
-        this.#elements.messageInput.removeEventListener('keydown', this.#boundHandlers.onMessageKeyDown);
+        this.#elements.messageInput.removeEventListener(
+          'input',
+          this.#boundHandlers.onMessageChange
+        );
+        this.#elements.messageInput.removeEventListener(
+          'keydown',
+          this.#boundHandlers.onMessageKeyDown
+        );
       }
 
-      if (this.#elements.locationSelect && this.#boundHandlers.onLocationChange) {
-        this.#elements.locationSelect.removeEventListener('change', this.#boundHandlers.onLocationChange);
+      if (
+        this.#elements.locationSelect &&
+        this.#boundHandlers.onLocationChange
+      ) {
+        this.#elements.locationSelect.removeEventListener(
+          'change',
+          this.#boundHandlers.onLocationChange
+        );
       }
 
       if (this.#elements.actorSelect && this.#boundHandlers.onActorChange) {
-        this.#elements.actorSelect.removeEventListener('change', this.#boundHandlers.onActorChange);
+        this.#elements.actorSelect.removeEventListener(
+          'change',
+          this.#boundHandlers.onActorChange
+        );
       }
 
       if (this.#elements.sendButton && this.#boundHandlers.onSendClick) {
-        this.#elements.sendButton.removeEventListener('click', this.#boundHandlers.onSendClick);
+        this.#elements.sendButton.removeEventListener(
+          'click',
+          this.#boundHandlers.onSendClick
+        );
       }
 
       // Remove filter mode listeners
-      const widget = this.#documentContext.query('#perceptible-event-sender-widget');
+      const widget = this.#documentContext.query(
+        '#perceptible-event-sender-widget'
+      );
       if (widget && this.#boundHandlers.onFilterModeChange) {
-        const filterModeRadios = widget.querySelectorAll('input[name="filter-mode"]');
+        const filterModeRadios = widget.querySelectorAll(
+          'input[name="filter-mode"]'
+        );
         filterModeRadios.forEach((radio) => {
-          radio.removeEventListener('change', this.#boundHandlers.onFilterModeChange);
+          radio.removeEventListener(
+            'change',
+            this.#boundHandlers.onFilterModeChange
+          );
         });
       }
 
@@ -553,7 +668,10 @@ class PerceptibleEventSenderController {
 
       this.#logger.debug('PerceptibleEventSenderController cleaned up');
     } catch (err) {
-      this.#logger.error('Error during PerceptibleEventSenderController cleanup', err);
+      this.#logger.error(
+        'Error during PerceptibleEventSenderController cleanup',
+        err
+      );
     }
   }
 }

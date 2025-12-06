@@ -8,16 +8,11 @@
       "equipmentSlots": {
         "primary": "torso_lower"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "microfiber",
-      "properties": [
-        "breathable",
-        "flexible"
-      ]
+      "properties": ["breathable", "flexible"]
     },
     "core:name": {
       "text": "seamless thong"

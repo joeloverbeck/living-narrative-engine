@@ -25,9 +25,11 @@ const simpleLogger = {
 };
 
 // Schema IDs
-const COMPONENT_SCHEMA = 'schema://living-narrative-engine/component.schema.json';
+const COMPONENT_SCHEMA =
+  'schema://living-narrative-engine/component.schema.json';
 const ACTION_SCHEMA = 'schema://living-narrative-engine/action.schema.json';
-const CONDITION_SCHEMA = 'schema://living-narrative-engine/condition.schema.json';
+const CONDITION_SCHEMA =
+  'schema://living-narrative-engine/condition.schema.json';
 const RULE_SCHEMA = 'schema://living-narrative-engine/rule.schema.json';
 
 /**
@@ -137,7 +139,9 @@ async function validateScopeFile(filePath) {
       'locationId',
     ];
 
-    const hasValidPattern = validPatterns.some(pattern => content.includes(pattern));
+    const hasValidPattern = validPatterns.some((pattern) =>
+      content.includes(pattern)
+    );
 
     if (!hasValidPattern && content.trim().length > 0) {
       return {
@@ -213,7 +217,12 @@ async function validateBendingSystem() {
   ];
 
   for (const file of components) {
-    const result = await validateFile(validator, file, COMPONENT_SCHEMA, 'components');
+    const result = await validateFile(
+      validator,
+      file,
+      COMPONENT_SCHEMA,
+      'components'
+    );
     results.components.push(result);
     const icon = result.valid ? chalk.green('✅') : chalk.red('❌');
     console.log(`  ${icon} ${path.basename(file)}`);
@@ -230,7 +239,12 @@ async function validateBendingSystem() {
   ];
 
   for (const file of actions) {
-    const result = await validateFile(validator, file, ACTION_SCHEMA, 'actions');
+    const result = await validateFile(
+      validator,
+      file,
+      ACTION_SCHEMA,
+      'actions'
+    );
     results.actions.push(result);
     const icon = result.valid ? chalk.green('✅') : chalk.red('❌');
     console.log(`  ${icon} ${path.basename(file)}`);
@@ -242,12 +256,25 @@ async function validateBendingSystem() {
   // Validate Conditions
   console.log(chalk.yellow('\n🔧 Validating Conditions:'));
   const conditions = [
-    path.join(basePath, 'conditions', 'event-is-action-bend-over.condition.json'),
-    path.join(basePath, 'conditions', 'event-is-action-straighten-up.condition.json'),
+    path.join(
+      basePath,
+      'conditions',
+      'event-is-action-bend-over.condition.json'
+    ),
+    path.join(
+      basePath,
+      'conditions',
+      'event-is-action-straighten-up.condition.json'
+    ),
   ];
 
   for (const file of conditions) {
-    const result = await validateFile(validator, file, CONDITION_SCHEMA, 'conditions');
+    const result = await validateFile(
+      validator,
+      file,
+      CONDITION_SCHEMA,
+      'conditions'
+    );
     results.conditions.push(result);
     const icon = result.valid ? chalk.green('✅') : chalk.red('❌');
     console.log(`  ${icon} ${path.basename(file)}`);
@@ -292,21 +319,31 @@ async function validateBendingSystem() {
 
   // Summary
   console.log(chalk.blue.bold('\n📊 Validation Summary:'));
-  console.log(chalk.cyan(
-    `  Components: ${results.components.filter(r => r.valid).length}/${results.components.length}`
-  ));
-  console.log(chalk.cyan(
-    `  Actions: ${results.actions.filter(r => r.valid).length}/${results.actions.length}`
-  ));
-  console.log(chalk.cyan(
-    `  Conditions: ${results.conditions.filter(r => r.valid).length}/${results.conditions.length}`
-  ));
-  console.log(chalk.cyan(
-    `  Rules: ${results.rules.filter(r => r.valid).length}/${results.rules.length}`
-  ));
-  console.log(chalk.cyan(
-    `  Scopes: ${results.scopes.filter(r => r.valid).length}/${results.scopes.length}`
-  ));
+  console.log(
+    chalk.cyan(
+      `  Components: ${results.components.filter((r) => r.valid).length}/${results.components.length}`
+    )
+  );
+  console.log(
+    chalk.cyan(
+      `  Actions: ${results.actions.filter((r) => r.valid).length}/${results.actions.length}`
+    )
+  );
+  console.log(
+    chalk.cyan(
+      `  Conditions: ${results.conditions.filter((r) => r.valid).length}/${results.conditions.length}`
+    )
+  );
+  console.log(
+    chalk.cyan(
+      `  Rules: ${results.rules.filter((r) => r.valid).length}/${results.rules.length}`
+    )
+  );
+  console.log(
+    chalk.cyan(
+      `  Scopes: ${results.scopes.filter((r) => r.valid).length}/${results.scopes.length}`
+    )
+  );
 
   // Check overall status
   const allValid = [
@@ -315,21 +352,31 @@ async function validateBendingSystem() {
     ...results.conditions,
     ...results.rules,
     ...results.scopes,
-  ].every(r => r.valid);
+  ].every((r) => r.valid);
 
   if (allValid) {
-    console.log(chalk.green.bold('\n✅ All bending system files validated successfully!'));
-    console.log(chalk.gray('\nThe bending over system is ready for production use.\n'));
+    console.log(
+      chalk.green.bold('\n✅ All bending system files validated successfully!')
+    );
+    console.log(
+      chalk.gray('\nThe bending over system is ready for production use.\n')
+    );
     process.exit(0);
   } else {
-    console.log(chalk.red.bold('\n❌ Some files failed validation. Check the output above.'));
-    console.log(chalk.yellow('\nPlease fix the errors before deploying to production.\n'));
+    console.log(
+      chalk.red.bold(
+        '\n❌ Some files failed validation. Check the output above.'
+      )
+    );
+    console.log(
+      chalk.yellow('\nPlease fix the errors before deploying to production.\n')
+    );
     process.exit(1);
   }
 }
 
 // Run validation
-validateBendingSystem().catch(error => {
+validateBendingSystem().catch((error) => {
   console.error(chalk.red.bold('\n❌ Validation script failed:'));
   console.error(chalk.red(error.message));
   process.exit(1);

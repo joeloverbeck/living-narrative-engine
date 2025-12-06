@@ -489,7 +489,9 @@ describe('Character Concepts Manager Main', () => {
 
       // Should exit immediately without touching the real browser globals
       expect(sandboxEnv.window).toBeUndefined();
-      expect(global.window.__characterConceptsManagerController).toBeUndefined();
+      expect(
+        global.window.__characterConceptsManagerController
+      ).toBeUndefined();
     });
 
     it('setupPageVisibilityHandling should short-circuit when document is undefined', () => {
@@ -507,7 +509,9 @@ describe('Character Concepts Manager Main', () => {
     it('setupGlobalErrorHandling should short-circuit when window is undefined', () => {
       const mockLogger = { error: jest.fn(), info: jest.fn(), warn: jest.fn() };
 
-      expect(() => module.setupGlobalErrorHandling(mockLogger, {})).not.toThrow();
+      expect(() =>
+        module.setupGlobalErrorHandling(mockLogger, {})
+      ).not.toThrow();
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
   });

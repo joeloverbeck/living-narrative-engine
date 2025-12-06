@@ -227,7 +227,10 @@ describe('GlobalMultiTargetStrategy', () => {
       ok: true,
       value: [
         'first-command',
-        { command: 'second-command', targets: { primary: [{ id: 'target-3' }] } },
+        {
+          command: 'second-command',
+          targets: { primary: [{ id: 'target-3' }] },
+        },
       ],
     });
 

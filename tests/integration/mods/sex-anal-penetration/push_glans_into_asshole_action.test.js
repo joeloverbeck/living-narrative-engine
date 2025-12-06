@@ -55,7 +55,10 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-anal-penetration', ACTION_ID);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-anal-penetration',
+      ACTION_ID
+    );
   });
 
   afterEach(() => {
@@ -66,17 +69,22 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
   });
 
   it('dispatches the anal penetration initiation narration and perceptible event', async () => {
-    const { entities, actorId, primaryId, roomId } = buildAnalPenetrationScenario();
+    const { entities, actorId, primaryId, roomId } =
+      buildAnalPenetrationScenario();
     testFixture.reset(entities);
 
     await testFixture.executeAction(actorId, primaryId, {
       additionalPayload: { primaryId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
@@ -180,13 +188,17 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
     });
 
     // Verify primary no longer has fucking_anally with old_target, but now has being_fucked_anally with actor
-    const updatedPrimary = testFixture.entityManager.getEntityInstance(primaryId);
+    const updatedPrimary =
+      testFixture.entityManager.getEntityInstance(primaryId);
     expect(updatedPrimary).not.toHaveComponent('positioning:fucking_anally');
     expect(updatedPrimary).toHaveComponent('positioning:being_fucked_anally');
-    expect(updatedPrimary).toHaveComponentData('positioning:being_fucked_anally', {
-      fucking_entity_id: actorId,
-      consented: true,
-    });
+    expect(updatedPrimary).toHaveComponentData(
+      'positioning:being_fucked_anally',
+      {
+        fucking_entity_id: actorId,
+        consented: true,
+      }
+    );
   });
 
   it('does not fire rule for a different action', async () => {

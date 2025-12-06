@@ -57,8 +57,16 @@ describe('Coverage Blocking Performance Benchmarks', () => {
 
     // Define all possible slots and layers
     const slots = [
-      'head', 'neck', 'torso_upper', 'torso_lower', 
-      'hands', 'feet', 'wrists', 'waist', 'back', 'legs'
+      'head',
+      'neck',
+      'torso_upper',
+      'torso_lower',
+      'hands',
+      'feet',
+      'wrists',
+      'waist',
+      'back',
+      'legs',
     ];
     const layers = ['outer', 'base', 'underwear', 'accessories'];
 
@@ -70,7 +78,7 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       equipment[slot] = {};
       for (const layer of layers) {
         if (itemIndex >= itemCount) break;
-        
+
         const itemId = `${entityId}:item_${itemIndex}`;
         equipment[slot][layer] = itemId;
 
@@ -111,7 +119,7 @@ describe('Coverage Blocking Performance Benchmarks', () => {
     };
 
     entityManager = new SimpleEntityManager([]);
-    
+
     // Create entities gateway
     entitiesGateway = {
       getComponentData: (entityId, componentType) => {
@@ -122,20 +130,20 @@ describe('Coverage Blocking Performance Benchmarks', () => {
 
     // Create coverage analyzer
     coverageAnalyzer = createCoverageAnalyzer({ entitiesGateway });
-    
+
     // Setup scope registry
     const parsedScopes = parseScopeDefinitions(
       targetTopMostTorsoLowerNoAccessoriesScopeContent,
       'test-scope.scope'
     );
-    
+
     scopeRegistry = new ScopeRegistry();
     const scopeDefinitions = {};
     Array.from(parsedScopes.entries()).forEach(([name, scopeData]) => {
       scopeDefinitions[name] = scopeData;
     });
     scopeRegistry.initialize(scopeDefinitions);
-    
+
     scopeEngine = new ScopeEngine({ scopeRegistry });
   });
 
@@ -144,13 +152,14 @@ describe('Coverage Blocking Performance Benchmarks', () => {
   });
 
   describe('Large Wardrobe Performance', () => {
-
     it('should handle 50+ item wardrobes within performance budget', () => {
       const entityId = 'perf:large_wardrobe';
       createLargeWardrobe(entityId, 50);
 
       // Get the AST from the scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       const actorEntity = entityManager.getEntityInstance(entityId);
       const runtimeCtx = {
         entityManager,
@@ -183,7 +192,7 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       // Performance assertions
       expect(avgTime).toBeLessThan(10); // Average < 10ms
       expect(maxTime).toBeLessThan(50); // Max < 50ms
-      expect(minTime).toBeLessThan(5);  // Min < 5ms
+      expect(minTime).toBeLessThan(5); // Min < 5ms
 
       // Log performance metrics for analysis
       console.log(`Large wardrobe performance (50 items):
@@ -197,7 +206,9 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       const avgTimes = [];
 
       // Get the AST once since it's the same for all iterations
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
 
       for (const size of sizes) {
         const entityId = `perf:wardrobe_${size}`;
@@ -245,21 +256,26 @@ describe('Coverage Blocking Performance Benchmarks', () => {
 
         // Skip ratio checks if both times are too small to measure reliably
         // At sub-millisecond scales, timer noise dominates and makes ratio comparisons meaningless
-        const isBelowNoiseFloor = baseTime < minMeasurableTime && avgTimes[i] < minMeasurableTime * 2;
+        const isBelowNoiseFloor =
+          baseTime < minMeasurableTime && avgTimes[i] < minMeasurableTime * 2;
 
         if (!isBelowNoiseFloor) {
           // Calculate allowed ratio based on measurement reliability
-          const allowedRatio = baseTime < minMeasurableTime
-            ? // When the baseline time is below the timer resolution, timing noise can
-              // massively inflate ratios. Scale the allowed variance based on how far
-              // below the measurable threshold we are so the test only fails on clear
-              // non-linear growth rather than micro-timing jitter.
-              sizeRatio * Math.max(
-                5,  // Increased from 3 to 5 for better tolerance
-                Math.ceil(minMeasurableTime / Math.max(baseTime, Number.EPSILON)) * 1.5  // Add 50% buffer
-              )
-            : // For measurable operations, maintain the 2x linear growth rate check
-              sizeRatio * 2;
+          const allowedRatio =
+            baseTime < minMeasurableTime
+              ? // When the baseline time is below the timer resolution, timing noise can
+                // massively inflate ratios. Scale the allowed variance based on how far
+                // below the measurable threshold we are so the test only fails on clear
+                // non-linear growth rather than micro-timing jitter.
+                sizeRatio *
+                Math.max(
+                  5, // Increased from 3 to 5 for better tolerance
+                  Math.ceil(
+                    minMeasurableTime / Math.max(baseTime, Number.EPSILON)
+                  ) * 1.5 // Add 50% buffer
+                )
+              : // For measurable operations, maintain the 2x linear growth rate check
+                sizeRatio * 2;
 
           assertions.push({ ratio, allowedRatio, size: sizes[i] });
         }
@@ -283,7 +299,9 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       const avgTimes = [];
 
       // Get the AST once since it's the same for all iterations
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
 
       for (const size of sizes) {
         const entityId = `perf:large_wardrobe_${size}`;
@@ -337,10 +355,12 @@ describe('Coverage Blocking Performance Benchmarks', () => {
           // to how far below the measurable threshold we are.
           const maxAllowedRatio = isNoiseDominated
             ? Math.pow(sizeRatio, 2) *
-                Math.max(
-                  2.5, // Baseline tolerance for sub-millisecond jitter
-                  Math.ceil(minMeasurableTime / Math.max(baseTime, Number.EPSILON))
+              Math.max(
+                2.5, // Baseline tolerance for sub-millisecond jitter
+                Math.ceil(
+                  minMeasurableTime / Math.max(baseTime, Number.EPSILON)
                 )
+              )
             : Math.pow(sizeRatio, 2) * 1.5;
 
           expect(ratio).toBeLessThan(maxAllowedRatio);
@@ -354,7 +374,9 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       console.log('Large wardrobe scaling characteristics:');
       sizes.forEach((size, i) => {
         const ratio = i > 0 ? (avgTimes[i] / avgTimes[0]).toFixed(2) : '1.00';
-        console.log(`  ${size} items: ${avgTimes[i].toFixed(2)}ms (${ratio}x baseline)`);
+        console.log(
+          `  ${size} items: ${avgTimes[i].toFixed(2)}ms (${ratio}x baseline)`
+        );
       });
     });
   });
@@ -364,7 +386,7 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       // Create multiple entities with wardrobes
       const entityCount = 10;
       const entityIds = [];
-      
+
       for (let i = 0; i < entityCount; i++) {
         const entityId = `perf:entity_${i}`;
         createLargeWardrobe(entityId, 20);
@@ -372,11 +394,13 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       }
 
       // Get the AST once since it's the same for all iterations
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
 
       // Measure performance for each entity
       const times = [];
-      
+
       for (const entityId of entityIds) {
         const actorEntity = entityManager.getEntityInstance(entityId);
         const runtimeCtx = {
@@ -385,7 +409,7 @@ describe('Coverage Blocking Performance Benchmarks', () => {
           logger,
           entitiesGateway,
         };
-        
+
         const startTime = performance.now();
         for (let i = 0; i < 10; i++) {
           scopeEngine.resolve(scopeAst, actorEntity, runtimeCtx);
@@ -418,7 +442,9 @@ describe('Coverage Blocking Performance Benchmarks', () => {
       // No equipment component
 
       // Get the AST and entity
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       const actorEntity = entityManager.getEntityInstance(entityId);
       const runtimeCtx = {
         entityManager,
@@ -456,7 +482,7 @@ describe('Coverage Blocking Performance Benchmarks', () => {
         };
 
         // Create items for each layer
-        ['outer', 'base', 'underwear', 'accessories'].forEach(layer => {
+        ['outer', 'base', 'underwear', 'accessories'].forEach((layer) => {
           const itemId = `${entityId}:${layer}_${slot}`;
           entityManager.createEntity(itemId);
           entityManager.addComponent(itemId, 'clothing:item', {

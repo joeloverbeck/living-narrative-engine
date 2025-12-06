@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import IsRemovalBlockedOperator from '../../../../src/logic/operators/isRemovalBlockedOperator.js';
 import * as entityPathResolver from '../../../../src/logic/utils/entityPathResolver.js';
@@ -35,42 +42,51 @@ describe('IsRemovalBlockedOperator', () => {
       const pantsId = 'pants1';
       const context = { actor: { id: actorId }, targetItem: { id: pantsId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_lower: {
-                accessories: [beltId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_lower: {
+                  accessories: [beltId],
+                },
+                legs: {
+                  base: [pantsId],
+                },
               },
-              legs: {
-                base: [pantsId],
-              },
-            },
-          };
+            };
+          }
+          if (entityId === pantsId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+          if (
+            entityId === beltId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base', 'outer'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+          return null;
         }
-        if (entityId === pantsId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' },
-          };
-        }
-        if (entityId === beltId && componentId === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base', 'outer'],
-                blockType: 'must_remove_first',
-              },
-            ],
-          };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.hasComponent.mockImplementation((entityId, componentId) => {
-        return entityId === beltId && componentId === 'clothing:blocks_removal';
-      });
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) => {
+          return (
+            entityId === beltId && componentId === 'clothing:blocks_removal'
+          );
+        }
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -93,27 +109,29 @@ describe('IsRemovalBlockedOperator', () => {
       const pantsId = 'pants1';
       const context = { actor: { id: actorId }, targetItem: { id: pantsId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_upper: {
-                base: [shirtId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_upper: {
+                  base: [shirtId],
+                },
+                legs: {
+                  base: [pantsId],
+                },
               },
-              legs: {
-                base: [pantsId],
-              },
-            },
-          };
+            };
+          }
+          if (entityId === pantsId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+          return null;
         }
-        if (entityId === pantsId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' },
-          };
-        }
-        return null;
-      });
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(false);
 
@@ -132,51 +150,55 @@ describe('IsRemovalBlockedOperator', () => {
       const pantsId = 'pants1';
       const context = { actor: { id: actorId }, targetItem: { id: pantsId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_lower: {
-                accessories: [beltId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_lower: {
+                  accessories: [beltId],
+                },
+                torso_upper: {
+                  accessories: [suspendersId],
+                },
+                legs: {
+                  base: [pantsId],
+                },
               },
-              torso_upper: {
-                accessories: [suspendersId],
-              },
-              legs: {
-                base: [pantsId],
-              },
-            },
-          };
+            };
+          }
+          if (entityId === pantsId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+          if (
+            (entityId === beltId || entityId === suspendersId) &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+          return null;
         }
-        if (entityId === pantsId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' },
-          };
-        }
-        if (
-          (entityId === beltId || entityId === suspendersId) &&
-          componentId === 'clothing:blocks_removal'
-        ) {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base'],
-                blockType: 'must_remove_first',
-              },
-            ],
-          };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.hasComponent.mockImplementation((entityId, componentId) => {
-        return (
-          (entityId === beltId || entityId === suspendersId) &&
-          componentId === 'clothing:blocks_removal'
-        );
-      });
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) => {
+          return (
+            (entityId === beltId || entityId === suspendersId) &&
+            componentId === 'clothing:blocks_removal'
+          );
+        }
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -192,36 +214,49 @@ describe('IsRemovalBlockedOperator', () => {
       const actorId = 'actor1';
       const cursedRingId = 'cursed_ring';
       const artifactId = 'artifact1';
-      const context = { actor: { id: actorId }, targetItem: { id: artifactId } };
+      const context = {
+        actor: { id: actorId },
+        targetItem: { id: artifactId },
+      };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              hands: {
-                accessories: [cursedRingId],
-                base: [artifactId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                hands: {
+                  accessories: [cursedRingId],
+                  base: [artifactId],
+                },
               },
-            },
-          };
+            };
+          }
+          if (entityId === artifactId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'hands' },
+            };
+          }
+          if (
+            entityId === cursedRingId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blocksRemovalOf: [artifactId],
+            };
+          }
+          return null;
         }
-        if (entityId === artifactId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'hands' },
-          };
-        }
-        if (entityId === cursedRingId && componentId === 'clothing:blocks_removal') {
-          return {
-            blocksRemovalOf: [artifactId],
-          };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.hasComponent.mockImplementation((entityId, componentId) => {
-        return entityId === cursedRingId && componentId === 'clothing:blocks_removal';
-      });
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) => {
+          return (
+            entityId === cursedRingId &&
+            componentId === 'clothing:blocks_removal'
+          );
+        }
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -245,35 +280,40 @@ describe('IsRemovalBlockedOperator', () => {
       const beltId = 'belt1';
       const context = { actor: { id: actorId }, targetItem: { id: beltId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_lower: {
-                accessories: [beltId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_lower: {
+                  accessories: [beltId],
+                },
               },
-            },
-          };
+            };
+          }
+          if (entityId === beltId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'accessories',
+              equipmentSlots: { primary: 'torso_lower' },
+            };
+          }
+          if (
+            entityId === beltId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'torso_lower',
+                  layers: ['accessories'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+          return null;
         }
-        if (entityId === beltId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'accessories',
-            equipmentSlots: { primary: 'torso_lower' },
-          };
-        }
-        if (entityId === beltId && componentId === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'torso_lower',
-                layers: ['accessories'],
-                blockType: 'must_remove_first',
-              },
-            ],
-          };
-        }
-        return null;
-      });
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
@@ -327,18 +367,20 @@ describe('IsRemovalBlockedOperator', () => {
       const actorId = 'actor1';
       const context = { actor: { id: actorId } }; // targetItem is missing
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              legs: {
-                base: ['pants1'],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                legs: {
+                  base: ['pants1'],
+                },
               },
-            },
-          };
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -356,22 +398,24 @@ describe('IsRemovalBlockedOperator', () => {
       const itemId = 'item1';
       const context = { actor: { id: actorId }, targetItem: { id: itemId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              legs: {
-                base: [itemId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                legs: {
+                  base: [itemId],
+                },
               },
-            },
-          };
-        }
-        // Return null for clothing:wearable to simulate missing component
-        if (entityId === itemId && componentId === 'clothing:wearable') {
+            };
+          }
+          // Return null for clothing:wearable to simulate missing component
+          if (entityId === itemId && componentId === 'clothing:wearable') {
+            return null;
+          }
           return null;
         }
-        return null;
-      });
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -395,39 +439,48 @@ describe('IsRemovalBlockedOperator', () => {
       const pantsId = 'pants1';
       const context = { actor: { id: actorId }, targetItem: { id: pantsId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_lower: { accessories: [beltId] },
-              legs: { base: [pantsId] },
-            },
-          };
-        }
-        if (entityId === pantsId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' },
-          };
-        }
-        if (entityId === beltId && componentId === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base'],
-                blockType: 'must_remove_first',
-                reason: 'Belt secures pants',
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_lower: { accessories: [beltId] },
+                legs: { base: [pantsId] },
               },
-            ],
-          };
+            };
+          }
+          if (entityId === pantsId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+          if (
+            entityId === beltId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base'],
+                  blockType: 'must_remove_first',
+                  reason: 'Belt secures pants',
+                },
+              ],
+            };
+          }
+          return null;
         }
-        return null;
-      });
+      );
 
-      mockEntityManager.hasComponent.mockImplementation((entityId, componentId) => {
-        return entityId === beltId && componentId === 'clothing:blocks_removal';
-      });
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) => {
+          return (
+            entityId === beltId && componentId === 'clothing:blocks_removal'
+          );
+        }
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -443,41 +496,50 @@ describe('IsRemovalBlockedOperator', () => {
       const shirtId = 'shirt1';
       const context = { actor: { id: actorId }, targetItem: { id: shirtId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_upper: {
-                outer: [armorId],
-                base: [shirtId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_upper: {
+                  outer: [armorId],
+                  base: [shirtId],
+                },
               },
-            },
-          };
+            };
+          }
+          if (entityId === shirtId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'torso_upper' },
+            };
+          }
+          if (
+            entityId === armorId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'torso_upper',
+                  layers: ['base', 'underwear'],
+                  blockType: 'full_block',
+                  reason: 'Plate armor completely covers torso',
+                },
+              ],
+            };
+          }
+          return null;
         }
-        if (entityId === shirtId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'torso_upper' },
-          };
-        }
-        if (entityId === armorId && componentId === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'torso_upper',
-                layers: ['base', 'underwear'],
-                blockType: 'full_block',
-                reason: 'Plate armor completely covers torso',
-              },
-            ],
-          };
-        }
-        return null;
-      });
+      );
 
-      mockEntityManager.hasComponent.mockImplementation((entityId, componentId) => {
-        return entityId === armorId && componentId === 'clothing:blocks_removal';
-      });
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, componentId) => {
+          return (
+            entityId === armorId && componentId === 'clothing:blocks_removal'
+          );
+        }
+      );
 
       // Act
       const result = operator.evaluate(['actor', 'targetItem'], context);
@@ -617,26 +679,28 @@ describe('IsRemovalBlockedOperator', () => {
         .spyOn(entityPathResolver, 'resolveEntityPath')
         .mockReturnValue({ entity: targetId, isValid: true });
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              legs: {
-                base: [targetId, otherItemId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                legs: {
+                  base: [targetId, otherItemId],
+                },
               },
-            },
-          };
-        }
+            };
+          }
 
-        if (entityId === targetId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' },
-          };
-        }
+          if (entityId === targetId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
 
-        return null;
-      });
+          return null;
+        }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(false);
 
@@ -659,42 +723,49 @@ describe('IsRemovalBlockedOperator', () => {
       const blockerId = 'blocker-1';
       const context = { targetItem: { id: targetId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso: {
-                base: [targetId],
-                accessories: [blockerId],
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso: {
+                  base: [targetId],
+                  accessories: [blockerId],
+                },
               },
-            },
-          };
-        }
+            };
+          }
 
-        if (entityId === targetId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: {},
-          };
-        }
+          if (entityId === targetId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: {},
+            };
+          }
 
-        if (entityId === blockerId && componentId === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              { slot: 'torso', layers: ['base'] },
-            ],
-          };
-        }
+          if (
+            entityId === blockerId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [{ slot: 'torso', layers: ['base'] }],
+            };
+          }
 
-        return null;
-      });
+          return null;
+        }
+      );
 
       mockEntityManager.hasComponent.mockImplementation(
         (entityId, componentId) =>
           entityId === blockerId && componentId === 'clothing:blocks_removal'
       );
 
-      const result = operator.evaluateInternal(actorId, ['targetItem'], context);
+      const result = operator.evaluateInternal(
+        actorId,
+        ['targetItem'],
+        context
+      );
 
       expect(result).toBe(false);
     });
@@ -705,42 +776,49 @@ describe('IsRemovalBlockedOperator', () => {
       const blockerId = 'blocker-1';
       const context = { targetItem: { id: targetId } };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        if (entityId === actorId && componentId === 'clothing:equipment') {
-          return {
-            equipped: {
-              legs: {
-                base: [targetId],
-                accessories: blockerId,
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          if (entityId === actorId && componentId === 'clothing:equipment') {
+            return {
+              equipped: {
+                legs: {
+                  base: [targetId],
+                  accessories: blockerId,
+                },
               },
-            },
-          };
-        }
+            };
+          }
 
-        if (entityId === targetId && componentId === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' },
-          };
-        }
+          if (entityId === targetId && componentId === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
 
-        if (entityId === blockerId && componentId === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              { slot: 'torso', layers: ['outer'] },
-            ],
-          };
-        }
+          if (
+            entityId === blockerId &&
+            componentId === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [{ slot: 'torso', layers: ['outer'] }],
+            };
+          }
 
-        return null;
-      });
+          return null;
+        }
+      );
 
       mockEntityManager.hasComponent.mockImplementation(
         (entityId, componentId) =>
           entityId === blockerId && componentId === 'clothing:blocks_removal'
       );
 
-      const result = operator.evaluateInternal(actorId, ['targetItem'], context);
+      const result = operator.evaluateInternal(
+        actorId,
+        ['targetItem'],
+        context
+      );
 
       expect(result).toBe(false);
     });

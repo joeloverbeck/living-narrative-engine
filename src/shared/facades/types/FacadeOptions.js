@@ -250,7 +250,7 @@ export function mergeOptions(...optionObjects) {
  */
 export function validateOptions(options, schema) {
   const errors = [];
-  
+
   if (!options || typeof options !== 'object') {
     errors.push('Options must be an object');
     return { valid: false, errors };
@@ -270,8 +270,14 @@ export function validateOptions(options, schema) {
     for (const [field, expectedType] of Object.entries(schema.types)) {
       if (field in options) {
         const actualType = typeof options[field];
-        if (actualType !== expectedType && options[field] !== null && options[field] !== undefined) {
-          errors.push(`Option ${field} must be of type ${expectedType}, got ${actualType}`);
+        if (
+          actualType !== expectedType &&
+          options[field] !== null &&
+          options[field] !== undefined
+        ) {
+          errors.push(
+            `Option ${field} must be of type ${expectedType}, got ${actualType}`
+          );
         }
       }
     }
@@ -281,7 +287,9 @@ export function validateOptions(options, schema) {
   if (schema.allowedValues && typeof schema.allowedValues === 'object') {
     for (const [field, allowedValues] of Object.entries(schema.allowedValues)) {
       if (field in options && !allowedValues.includes(options[field])) {
-        errors.push(`Option ${field} must be one of: ${allowedValues.join(', ')}`);
+        errors.push(
+          `Option ${field} must be one of: ${allowedValues.join(', ')}`
+        );
       }
     }
   }

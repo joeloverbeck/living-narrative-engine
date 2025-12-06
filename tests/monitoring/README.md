@@ -11,22 +11,26 @@ Performance monitoring dashboard for analyzing system performance metrics.
 **Purpose**: Provides insights into system performance, bottlenecks, and optimization opportunities.
 
 **How to Run**:
+
 ```bash
 node tests/monitoring/performanceDashboard.js
 ```
 
 Or use the convenience script:
+
 ```bash
 npm run monitoring:performance
 ```
 
 **What It Does**:
+
 - Analyzes performance metrics across the system
 - Identifies performance bottlenecks
 - Provides optimization recommendations
 - Generates performance reports
 
 **When to Use**:
+
 - During performance optimization work
 - Before and after performance-related changes
 - When investigating performance regressions

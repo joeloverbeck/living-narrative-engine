@@ -520,7 +520,10 @@ describe('RoundManager', () => {
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'RoundManager.startRound(): Ignoring initiative entry with non-numeric score.',
-        expect.objectContaining({ entityId: 'actorNan', receivedType: 'object' })
+        expect.objectContaining({
+          entityId: 'actorNan',
+          receivedType: 'object',
+        })
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'RoundManager.startRound(): Duplicate initiative entry for entity id "actor1" after normalisation. Using latest value.',
@@ -576,7 +579,11 @@ describe('RoundManager', () => {
         id: 'actor6',
         hasComponent: jest.fn().mockReturnValue(true),
       };
-      mockEntityManager.entities = [primaryActor, supportingActor, tertiaryActor];
+      mockEntityManager.entities = [
+        primaryActor,
+        supportingActor,
+        tertiaryActor,
+      ];
 
       const initiativeArray = [
         'invalid-entry',

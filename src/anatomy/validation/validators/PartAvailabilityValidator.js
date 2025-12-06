@@ -65,10 +65,11 @@ export class PartAvailabilityValidator extends BaseValidator {
       const slots = recipe?.slots || {};
 
       for (const [slotName, slotCriteria] of Object.entries(slots)) {
-        const matchingEntities = this.#entityMatcherService.findMatchingEntities(
-          slotCriteria,
-          allEntityDefs
-        );
+        const matchingEntities =
+          this.#entityMatcherService.findMatchingEntities(
+            slotCriteria,
+            allEntityDefs
+          );
 
         if (matchingEntities.length === 0) {
           const hasProperties =
@@ -91,10 +92,11 @@ export class PartAvailabilityValidator extends BaseValidator {
       const patterns = recipe?.patterns || [];
       for (let index = 0; index < patterns.length; index++) {
         const patternCriteria = patterns[index];
-        const matchingEntities = this.#entityMatcherService.findMatchingEntities(
-          patternCriteria,
-          allEntityDefs
-        );
+        const matchingEntities =
+          this.#entityMatcherService.findMatchingEntities(
+            patternCriteria,
+            allEntityDefs
+          );
 
         if (matchingEntities.length === 0) {
           const hasProperties =

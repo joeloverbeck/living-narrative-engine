@@ -5,6 +5,7 @@ Welcome to the GOAP (Goal-Oriented Action Planning) system documentation. This d
 ## Quick Start
 
 **New to GOAP?** Start here:
+
 1. Read the [GOAP System Specs](../../specs/goap-system-specs.md) for architecture overview
 2. Try [Task Loading Guide](./task-loading.md) to understand how tasks work
 3. Use [Debugging Tools](./debugging-tools.md) when something doesn't work as expected
@@ -85,6 +86,7 @@ Welcome to the GOAP (Goal-Oriented Action Planning) system documentation. This d
 ### Testing
 
 Located in `/tests/`:
+
 - **Unit Tests**: `tests/unit/goap/`
 - **Integration Tests**: `tests/integration/goap/`
 
@@ -147,7 +149,7 @@ specs/
 - **Structural Gates**: Coarse "is this task ever applicable?" filter
 - **Planning Preconditions**: Fine "is this task applicable in this state?" check
 - **Planning Effects**: State changes a task causes during planning
-- **Heuristic**: Distance estimation function for A* search (goal-distance, RPG)
+- **Heuristic**: Distance estimation function for A\* search (goal-distance, RPG)
 - **GOAP**: Goal-Oriented Action Planning - AI planning technique
 
 ## Architecture Quick Reference

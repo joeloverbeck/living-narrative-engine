@@ -687,7 +687,12 @@ describe('ActionButtonsRenderer', () => {
         // Intimacy mod actions (4 actions)
         createTestComposite(6, 'intimacy:hug', 'Hug', 'Give a hug'),
         createTestComposite(7, 'intimacy:kiss', 'Kiss', 'Give a kiss'),
-        createTestComposite(8, 'affection:hold_hand', 'Hold hand', 'Hold hands'),
+        createTestComposite(
+          8,
+          'affection:hold_hand',
+          'Hold hand',
+          'Hold hands'
+        ),
         createTestComposite(9, 'intimacy:cuddle', 'Cuddle', 'Cuddle together'),
         // Sex mod actions (3 actions)
         createTestComposite(10, 'sex:flirt', 'Flirt', 'Flirt playfully'),
@@ -3056,7 +3061,8 @@ describe('ActionButtonsRenderer', () => {
 
     it('renders grouped section headers without counts when disabled', async () => {
       const renderer = createRenderer();
-      const defaultFormat = (namespace) => namespace?.toUpperCase() || 'UNKNOWN';
+      const defaultFormat = (namespace) =>
+        namespace?.toUpperCase() || 'UNKNOWN';
       const defaultShouldShowCounts = () =>
         mockActionCategorizationService.shouldUseGrouping();
 
@@ -3123,7 +3129,9 @@ describe('ActionButtonsRenderer', () => {
       renderer.documentContext.window = dom.window;
       renderer.documentContext.body = document.body;
 
-      const button = createMockElement(document, 'button', '', ['action-button']);
+      const button = createMockElement(document, 'button', '', [
+        'action-button',
+      ]);
       renderer._applyVisualStylesWithValidation(
         button,
         {
@@ -3147,7 +3155,11 @@ describe('ActionButtonsRenderer', () => {
       const renderer = createRenderer();
       const button = createMockElement(document, 'button');
 
-      renderer._applyVisualStyles(null, { backgroundColor: '#ffffff' }, 'core:test');
+      renderer._applyVisualStyles(
+        null,
+        { backgroundColor: '#ffffff' },
+        'core:test'
+      );
       renderer._applyVisualStyles(button, null, 'core:test');
 
       expect(button.classList.add).not.toHaveBeenCalledWith(
@@ -3160,11 +3172,9 @@ describe('ActionButtonsRenderer', () => {
       const button = createMockElement(document, 'button');
       const failure = new Error('visual failure');
 
-      jest
-        .spyOn(renderer.buttonVisualMap, 'set')
-        .mockImplementation(() => {
-          throw failure;
-        });
+      jest.spyOn(renderer.buttonVisualMap, 'set').mockImplementation(() => {
+        throw failure;
+      });
 
       renderer._applyVisualStyles(
         button,
@@ -3175,7 +3185,9 @@ describe('ActionButtonsRenderer', () => {
       const loggedWarning = mockLogger.warn.mock.calls.some(
         ([message, error]) =>
           typeof message === 'string' &&
-          message.includes('Failed to apply visual styles for action core:test') &&
+          message.includes(
+            'Failed to apply visual styles for action core:test'
+          ) &&
           error === failure
       );
 
@@ -3328,7 +3340,9 @@ describe('ActionButtonsRenderer', () => {
       const loggedWarning = mockLogger.warn.mock.calls.some(
         ([message, error]) =>
           typeof message === 'string' &&
-          message.includes('Failed to update visual styles for action core:test') &&
+          message.includes(
+            'Failed to update visual styles for action core:test'
+          ) &&
           error === failure
       );
 

@@ -1057,7 +1057,6 @@ export class CharacterDatabase {
             }
           };
         }
-
       } catch (error) {
         this.#logger.error('Failed to save core motivations:', error);
         reject(error);

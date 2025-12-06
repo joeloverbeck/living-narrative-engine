@@ -1,5 +1,5 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:chicken_coop_door_instance",
-    "definitionId": "fantasy:chicken_coop_door"
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:chicken_coop_door_instance",
+  "definitionId": "fantasy:chicken_coop_door"
 }

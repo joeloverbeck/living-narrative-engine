@@ -18,9 +18,11 @@ The concurrent processing bug (fixed in commit `1c07662fc`) caused multiple char
 ### What Was Actually Changed
 
 **Files Created:**
+
 - `tests/integration/anatomy/anatomyCacheManager.uniquePartOwnership.integration.test.js` (268 lines)
 
 **Files Modified:**
+
 - None (test-only implementation as specified)
 
 ### Key Differences from Original Plan

@@ -45,19 +45,27 @@ describe('quickly_wield_weapon action definition', () => {
     });
 
     it('should forbid positioning:closeness', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:closeness');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:closeness'
+      );
     });
 
     it('should forbid positioning:fallen', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:fallen');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:fallen'
+      );
     });
 
     it('should forbid positioning:being_restrained', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:being_restrained');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:being_restrained'
+      );
     });
 
     it('should forbid positioning:restraining', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:restraining');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:restraining'
+      );
     });
   });
 
@@ -70,7 +78,9 @@ describe('quickly_wield_weapon action definition', () => {
 
     it('should require free grabbing appendage', () => {
       const prerequisite = actionJson.prerequisites[0];
-      expect(prerequisite.logic.condition_ref).toBe('anatomy:actor-has-free-grabbing-appendage');
+      expect(prerequisite.logic.condition_ref).toBe(
+        'anatomy:actor-has-free-grabbing-appendage'
+      );
     });
 
     it('should have failure message for missing appendage', () => {
@@ -87,7 +97,9 @@ describe('quickly_wield_weapon action definition', () => {
     });
 
     it('should use grabbable_weapons_at_location scope for primary target', () => {
-      expect(actionJson.targets.primary.scope).toBe('weapons:grabbable_weapons_at_location');
+      expect(actionJson.targets.primary.scope).toBe(
+        'weapons:grabbable_weapons_at_location'
+      );
     });
 
     it('should use "target" placeholder for primary target', () => {
@@ -130,7 +142,9 @@ describe('quickly_wield_weapon action definition', () => {
 
   describe('Schema Compliance', () => {
     it('should reference correct schema', () => {
-      expect(actionJson.$schema).toBe('schema://living-narrative-engine/action.schema.json');
+      expect(actionJson.$schema).toBe(
+        'schema://living-narrative-engine/action.schema.json'
+      );
     });
 
     it('should have all required action properties', () => {

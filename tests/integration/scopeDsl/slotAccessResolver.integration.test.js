@@ -87,13 +87,17 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
     const mockClothingAccessibilityService = {
       getAccessibleItems: jest.fn((entityId, options = {}) => {
         const { mode = 'topmost' } = options;
-        
+
         // Get the current equipment data from the mock
-        const currentEquipmentData = mockRuntimeContext.entityManager.getComponentData(entityId, 'clothing:equipment');
+        const currentEquipmentData =
+          mockRuntimeContext.entityManager.getComponentData(
+            entityId,
+            'clothing:equipment'
+          );
         if (!currentEquipmentData?.equipped) {
           return [];
         }
-        
+
         const equipment = currentEquipmentData.equipped;
         const result = [];
 
@@ -124,7 +128,7 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
             // For topmost mode, skip slots that only have accessories (like right_arm_clothing)
             let foundNonAccessory = false;
             let topMostItem = null;
-            
+
             for (const layer of layers) {
               if (slotData[layer]) {
                 if (layer !== 'accessories') {
@@ -136,7 +140,7 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
                 }
               }
             }
-            
+
             // Only include if we found a non-accessory item
             if (foundNonAccessory && topMostItem) {
               result.push(topMostItem);

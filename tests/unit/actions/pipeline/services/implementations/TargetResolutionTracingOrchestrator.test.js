@@ -29,10 +29,15 @@ describe('TargetResolutionTracingOrchestrator', () => {
     });
 
     it('should throw when logger is missing required methods', () => {
-      const incompleteLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+      const incompleteLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      };
 
       expect(
-        () => new TargetResolutionTracingOrchestrator({ logger: incompleteLogger })
+        () =>
+          new TargetResolutionTracingOrchestrator({ logger: incompleteLogger })
       ).toThrow("Invalid or missing method 'debug' on dependency 'ILogger'.");
     });
 
@@ -97,7 +102,9 @@ describe('TargetResolutionTracingOrchestrator', () => {
       expect(trace.captureLegacyDetection).toHaveBeenCalledWith('action-42', {
         foo: 'bar',
       });
-      expect(trace.captureLegacyDetection.mock.calls[0][1]).not.toBe(detectionData);
+      expect(trace.captureLegacyDetection.mock.calls[0][1]).not.toBe(
+        detectionData
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         "TargetResolutionTracingOrchestrator: Legacy detection captured for action 'action-42'"
       );
@@ -206,9 +213,13 @@ describe('TargetResolutionTracingOrchestrator', () => {
         evaluationData
       );
 
-      expect(trace.captureScopeEvaluation).toHaveBeenCalledWith('action-x', 'target-y', {
-        success: true,
-      });
+      expect(trace.captureScopeEvaluation).toHaveBeenCalledWith(
+        'action-x',
+        'target-y',
+        {
+          success: true,
+        }
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         "TargetResolutionTracingOrchestrator: Scope evaluation captured for action 'action-x' target 'target-y'"
       );
@@ -259,9 +270,12 @@ describe('TargetResolutionTracingOrchestrator', () => {
 
       orchestrator.captureMultiTargetResolution(trace, 'action-z', summary);
 
-      expect(trace.captureMultiTargetResolution).toHaveBeenCalledWith('action-z', {
-        resolved: 3,
-      });
+      expect(trace.captureMultiTargetResolution).toHaveBeenCalledWith(
+        'action-z',
+        {
+          resolved: 3,
+        }
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         "TargetResolutionTracingOrchestrator: Multi-target summary captured for action 'action-z'"
       );
@@ -310,7 +324,12 @@ describe('TargetResolutionTracingOrchestrator', () => {
       const actor = { id: 'actor-1' };
       const resolutionData = { success: true };
 
-      orchestrator.captureResolutionData(trace, actionDef, actor, resolutionData);
+      orchestrator.captureResolutionData(
+        trace,
+        actionDef,
+        actor,
+        resolutionData
+      );
 
       expect(trace.captureActionData).toHaveBeenCalledWith(
         'target_resolution',
@@ -360,7 +379,12 @@ describe('TargetResolutionTracingOrchestrator', () => {
       const resolutionData = { success: false };
       jest.spyOn(orchestrator, 'isActionAwareTrace').mockReturnValue(true);
 
-      orchestrator.captureResolutionData(trace, actionDef, actor, resolutionData);
+      orchestrator.captureResolutionData(
+        trace,
+        actionDef,
+        actor,
+        resolutionData
+      );
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Action-aware trace missing captureActionData implementation'
@@ -498,7 +522,15 @@ describe('TargetResolutionTracingOrchestrator', () => {
       });
       const orchestrator = new TargetResolutionTracingOrchestrator({ logger });
 
-      orchestrator.capturePostResolutionSummary(null, { id: 'actor' }, 1, 1, false, false, 10);
+      orchestrator.capturePostResolutionSummary(
+        null,
+        { id: 'actor' },
+        1,
+        1,
+        false,
+        false,
+        10
+      );
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Failed to capture post-resolution summary for tracing',
@@ -521,7 +553,14 @@ describe('TargetResolutionTracingOrchestrator', () => {
       const trace = createMockTrace({ captureActionData: true });
       const actionDef = { id: 'act-perf' };
 
-      await orchestrator.capturePerformanceData(trace, actionDef, 100, 160, 10, 7);
+      await orchestrator.capturePerformanceData(
+        trace,
+        actionDef,
+        100,
+        160,
+        10,
+        7
+      );
 
       expect(trace.captureActionData).toHaveBeenCalledWith(
         'stage_performance',
@@ -583,7 +622,9 @@ describe('TargetResolutionTracingOrchestrator', () => {
     it('should detect targetType/targetCount as "legacy_target_type"', () => {
       const action = { targetType: 'enemy' };
 
-      expect(orchestrator.analyzeLegacyFormat(action)).toBe('legacy_target_type');
+      expect(orchestrator.analyzeLegacyFormat(action)).toBe(
+        'legacy_target_type'
+      );
     });
 
     it('should default to "modern" when no legacy hints are present', () => {

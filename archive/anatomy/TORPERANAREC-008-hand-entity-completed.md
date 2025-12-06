@@ -1,17 +1,21 @@
 # TORPERANAREC-008: Create Tortoise Hand Entity ✅ COMPLETED
 
 ## Objective
+
 Create the hand entity with three clawed digits.
 
 ## Dependencies
+
 - None (entity definitions can be created independently)
 
 ## Files Touched
+
 - **CREATED**: `data/mods/anatomy/entities/definitions/tortoise_hand.entity.json`
 - **CREATED**: `tests/integration/anatomy/tortoiseHandEntityValidation.test.js`
 - **MODIFIED**: `data/mods/descriptors/components/projection.component.json` (added "clawed" to enum)
 
 ## Out of Scope
+
 - Do NOT modify existing entity definitions (except projection component schema)
 - Do NOT create arm entity (handled in TORPERANAREC-007)
 - Do NOT create other tortoise entity files (handled in separate tickets)
@@ -28,7 +32,6 @@ Created entity definition with:
 3. **Description**: "Thick-skinned hand with three prominent claws"
 
 4. **Components**:
-
    - **anatomy:part**:
      - subType: "tortoise_hand"
 
@@ -50,12 +53,14 @@ Created entity definition with:
 ### File: `projection.component.json`
 
 Extended projection component enum to include "clawed":
+
 - **Previous enum**: `["flat", "bubbly", "shelf"]`
 - **Updated enum**: `["flat", "bubbly", "shelf", "clawed"]`
 
 ## Acceptance Criteria ✅
 
 ### Tests that must pass:
+
 - [x] `npm run validate` - Schema validation passes
 - [x] Entity validates against `entity-definition.schema.json`
 - [x] All component IDs exist in the system
@@ -64,6 +69,7 @@ Extended projection component enum to include "clawed":
 - [x] All 25 integration tests pass
 
 ### Invariants that remained true:
+
 - [x] No existing entity definitions were modified (except projection schema extension)
 - [x] subType "tortoise_hand" matches arm socket allowedTypes
 - [x] Texture value "leathery" is valid per component schema (✓ confirmed)
@@ -74,6 +80,7 @@ Extended projection component enum to include "clawed":
 - [x] All descriptor components use correct property names
 
 ## Validation Results
+
 ```bash
 npm run validate
 # ✅ No errors found for tortoise_hand
@@ -85,6 +92,7 @@ NODE_ENV=test npx jest tests/integration/anatomy/tortoiseHandEntityValidation.te
 ```
 
 ## Definition of Done ✅
+
 - [x] File created with correct schema reference
 - [x] Entity ID follows naming convention
 - [x] All components properly structured
@@ -102,20 +110,25 @@ NODE_ENV=test npx jest tests/integration/anatomy/tortoiseHandEntityValidation.te
 ### What Was Changed vs Originally Planned
 
 **Schema Extensions:**
+
 1. **projection component**: Added "clawed" to enum `["flat", "bubbly", "shelf", "clawed"]` to support anatomical claw descriptors
 
 **Corrected Assumptions:**
+
 1. **digit_count value type**: Changed from numeric `3` to string `"3"` to match schema enum requirement
 2. **color value**: Changed from "grey-green" to "sickly-gray-green" to match schema enum
 
 **Files Created:**
+
 - `data/mods/anatomy/entities/definitions/tortoise_hand.entity.json` - Entity definition with 6 components
 - `tests/integration/anatomy/tortoiseHandEntityValidation.test.js` - Comprehensive validation test suite
 
 **Files Modified:**
+
 - `data/mods/descriptors/components/projection.component.json` - Extended enum to include "clawed"
 
 **Test Coverage:**
+
 - 25 integration tests covering:
   - Entity ID and description
   - All 6 components (part, name, texture, digit_count, projection, color_extended)
@@ -126,6 +139,7 @@ NODE_ENV=test npx jest tests/integration/anatomy/tortoiseHandEntityValidation.te
   - All invariants
 
 **Validation Status:**
+
 - ✅ Schema validation passed
 - ✅ All 25 tests passed
 - ✅ Compatible with tortoise_arm socket allowedTypes

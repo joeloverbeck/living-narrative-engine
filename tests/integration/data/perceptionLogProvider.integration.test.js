@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { PerceptionLogProvider } from '../../../src/data/providers/perceptionLogProvider.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
@@ -154,7 +161,9 @@ describe('PerceptionLogProvider integration', () => {
     expect(dispatchedEvents[0]).toMatchObject({
       type: SYSTEM_ERROR_OCCURRED_ID,
       payload: {
-        message: expect.stringContaining('PerceptionLogProvider: Error retrieving perception log'),
+        message: expect.stringContaining(
+          'PerceptionLogProvider: Error retrieving perception log'
+        ),
         details: {
           error,
         },

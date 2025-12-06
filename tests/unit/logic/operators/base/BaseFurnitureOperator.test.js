@@ -52,7 +52,9 @@ describe('BaseFurnitureOperator', () => {
       }).toThrow('BaseFurnitureOperator: Missing required dependencies');
 
       expect(() => {
-        new TestFurnitureOperator({ entityManager: mockDependencies.entityManager });
+        new TestFurnitureOperator({
+          entityManager: mockDependencies.entityManager,
+        });
       }).toThrow('BaseFurnitureOperator: Missing required dependencies');
     });
   });
@@ -214,14 +216,15 @@ describe('BaseFurnitureOperator', () => {
       const result = operator.getSittingOnData('entity-1');
 
       expect(result).toBe(sittingOnData);
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'entity-1',
-        'positioning:sitting_on'
-      );
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('entity-1', 'positioning:sitting_on');
     });
 
     test('getSittingOnData returns null when component is missing', () => {
-      mockDependencies.entityManager.getComponentData.mockReturnValue(undefined);
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        undefined
+      );
 
       const result = operator.getSittingOnData('entity-1');
 
@@ -237,14 +240,15 @@ describe('BaseFurnitureOperator', () => {
       const result = operator.getAllowsSittingData('furniture-1');
 
       expect(result).toBe(allowsSittingData);
-      expect(mockDependencies.entityManager.getComponentData).toHaveBeenCalledWith(
-        'furniture-1',
-        'positioning:allows_sitting'
-      );
+      expect(
+        mockDependencies.entityManager.getComponentData
+      ).toHaveBeenCalledWith('furniture-1', 'positioning:allows_sitting');
     });
 
     test('getAllowsSittingData returns null when component is missing', () => {
-      mockDependencies.entityManager.getComponentData.mockReturnValue(undefined);
+      mockDependencies.entityManager.getComponentData.mockReturnValue(
+        undefined
+      );
 
       const result = operator.getAllowsSittingData('furniture-1');
 
@@ -254,9 +258,7 @@ describe('BaseFurnitureOperator', () => {
 
   describe('isSittingOn', () => {
     test('returns false and logs debug when entity lacks component', () => {
-      jest
-        .spyOn(operator, 'getSittingOnData')
-        .mockReturnValue(null);
+      jest.spyOn(operator, 'getSittingOnData').mockReturnValue(null);
 
       const result = operator.isSittingOn('entity-1', 'chair-1');
 
@@ -295,9 +297,7 @@ describe('BaseFurnitureOperator', () => {
 
   describe('getFurnitureSpots', () => {
     test('returns invalid result and logs when allows_sitting missing', () => {
-      jest
-        .spyOn(operator, 'getAllowsSittingData')
-        .mockReturnValue(null);
+      jest.spyOn(operator, 'getAllowsSittingData').mockReturnValue(null);
 
       const result = operator.getFurnitureSpots('chair-1');
 
@@ -308,7 +308,9 @@ describe('BaseFurnitureOperator', () => {
     });
 
     test('returns invalid result and warns when spots is not array', () => {
-      jest.spyOn(operator, 'getAllowsSittingData').mockReturnValue({ spots: {} });
+      jest
+        .spyOn(operator, 'getAllowsSittingData')
+        .mockReturnValue({ spots: {} });
 
       const result = operator.getFurnitureSpots('chair-1');
 
@@ -320,9 +322,7 @@ describe('BaseFurnitureOperator', () => {
 
     test('returns spots when allows_sitting data is valid', () => {
       const spots = [{ id: 'spot-1' }];
-      jest
-        .spyOn(operator, 'getAllowsSittingData')
-        .mockReturnValue({ spots });
+      jest.spyOn(operator, 'getAllowsSittingData').mockReturnValue({ spots });
 
       const result = operator.getFurnitureSpots('chair-1');
 

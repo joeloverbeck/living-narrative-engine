@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "head_gear"
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "gold"
@@ -34,9 +32,7 @@
       "embellishment": "metal chains"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "head_gear"
-      ],
+      "covers": ["head_gear"],
       "coveragePriority": "accessories"
     },
     "items:item": {},

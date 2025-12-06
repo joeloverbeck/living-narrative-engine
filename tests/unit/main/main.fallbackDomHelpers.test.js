@@ -101,7 +101,9 @@ describe('main.js fallback DOM helper coverage', () => {
       mockDisplayFatal.mock.calls[0];
 
     expect(passedElements).toBe(uiElements);
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - DI Container Setup');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - DI Container Setup'
+    );
     expect(errorDetails.errorObject).toBe(stageError);
     expect(loggerArg).toBeNull();
 

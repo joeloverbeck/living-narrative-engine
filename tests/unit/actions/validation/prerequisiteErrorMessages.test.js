@@ -30,14 +30,18 @@ describe('Prerequisite Error Messages', () => {
       expect(message).toContain('Actual: false');
       expect(message).toContain('actorId: "actor-1"');
       expect(message).toContain('bodyParts:');
-      expect(message).toContain('💡 Hint: Actor does not have any body parts of type "hand"');
+      expect(message).toContain(
+        '💡 Hint: Actor does not have any body parts of type "hand"'
+      );
     });
 
     it('should serialize to JSON for structured logging', () => {
       const error = new PrerequisiteEvaluationError({
         actionId: 'test:action',
         prerequisiteIndex: 0,
-        prerequisiteLogic: { component_present: ['actor', 'positioning:sitting'] },
+        prerequisiteLogic: {
+          component_present: ['actor', 'positioning:sitting'],
+        },
         expectedResult: true,
         actualResult: false,
         entityState: { actorId: 'actor-1', hasComponent: false },
@@ -91,7 +95,9 @@ describe('Prerequisite Error Messages', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error.hint).toContain('does not have any body parts of type "breast"');
+      expect(result.error.hint).toContain(
+        'does not have any body parts of type "breast"'
+      );
     });
 
     it('should extract entity state for debugging', () => {
@@ -209,7 +215,9 @@ describe('Prerequisite Error Messages', () => {
       const result = prereqDebugger.evaluate({
         actionId: 'test:action',
         prerequisiteIndex: 0,
-        prerequisiteLogic: { component_present: ['actor', 'positioning:sitting'] },
+        prerequisiteLogic: {
+          component_present: ['actor', 'positioning:sitting'],
+        },
         evaluator: () => {
           throw new Error('Component not present');
         },
@@ -217,7 +225,9 @@ describe('Prerequisite Error Messages', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(result.error.hint).toContain('Entity missing component "positioning:sitting"');
+      expect(result.error.hint).toContain(
+        'Entity missing component "positioning:sitting"'
+      );
     });
   });
 });

@@ -348,9 +348,7 @@ export class LegacyStrategy {
     } catch (error) {
       // Exception during formatting - log with target id fallback and create error
       const targetId =
-        error?.target?.entityId ||
-        error?.entityId ||
-        targetContext.entityId;
+        error?.target?.entityId || error?.entityId || targetContext.entityId;
       this.#logger.warn(
         `Failed to format command for action '${actionDef.id}' with target '${targetId}'`,
         { error, actionDef, targetContext }
@@ -670,8 +668,7 @@ export class LegacyStrategy {
 
     if (fallbackResult.ok) {
       const targetId = targetContexts[0]?.entityId;
-      const params =
-        allowMissingTargetId && !targetId ? {} : { targetId };
+      const params = allowMissingTargetId && !targetId ? {} : { targetId };
 
       formattedActions.push({
         id: actionDef.id,

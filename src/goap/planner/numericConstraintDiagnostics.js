@@ -64,7 +64,9 @@ export function getNumericConstraintDiagnostics(actorId) {
   if (!actorId) {
     return null;
   }
-  return clone(diagnosticsByActor.get(actorId) || diagnosticsByActor.get('unknown'));
+  return clone(
+    diagnosticsByActor.get(actorId) || diagnosticsByActor.get('unknown')
+  );
 }
 
 /**

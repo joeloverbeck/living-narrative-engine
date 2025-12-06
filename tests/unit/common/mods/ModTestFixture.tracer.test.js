@@ -90,7 +90,12 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
       fixture.enableScopeTracing();
 
       // Add some trace data by getting the trace (which should record a start time)
-      fixture.scopeTracer.logStep('TestResolver', 'test operation', 'input', 'output');
+      fixture.scopeTracer.logStep(
+        'TestResolver',
+        'test operation',
+        'input',
+        'output'
+      );
 
       const traceBefore = fixture.getScopeTraceData();
       expect(traceBefore.steps.length).toBeGreaterThan(0);
@@ -232,7 +237,12 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
   describe('Cleanup (BaseModTestFixture)', () => {
     it('should clear tracer on cleanup()', () => {
       fixture.enableScopeTracing();
-      fixture.scopeTracer.logStep('TestResolver', 'test operation', 'input', 'output');
+      fixture.scopeTracer.logStep(
+        'TestResolver',
+        'test operation',
+        'input',
+        'output'
+      );
 
       const traceBefore = fixture.getScopeTraceData();
       expect(traceBefore.steps.length).toBeGreaterThan(0);
@@ -266,7 +276,12 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
 
       // Add lots of trace data
       for (let i = 0; i < 100; i++) {
-        fixture.scopeTracer.logStep(`Resolver${i}`, `operation${i}`, `input${i}`, `output${i}`);
+        fixture.scopeTracer.logStep(
+          `Resolver${i}`,
+          `operation${i}`,
+          `input${i}`,
+          `output${i}`
+        );
       }
 
       const traceBefore = fixture.getScopeTraceData();
@@ -300,7 +315,12 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
       fixture.enableScopeTracing();
 
       // First run
-      fixture.scopeTracer.logStep('Resolver1', 'operation1', 'input1', 'output1');
+      fixture.scopeTracer.logStep(
+        'Resolver1',
+        'operation1',
+        'input1',
+        'output1'
+      );
       expect(fixture.getScopeTraceData().steps.length).toBe(1);
 
       // Clear
@@ -308,7 +328,12 @@ describe('ModTestFixture - Scope Tracer Integration', () => {
       expect(fixture.getScopeTraceData().steps.length).toBe(0);
 
       // Second run
-      fixture.scopeTracer.logStep('Resolver2', 'operation2', 'input2', 'output2');
+      fixture.scopeTracer.logStep(
+        'Resolver2',
+        'operation2',
+        'input2',
+        'output2'
+      );
       expect(fixture.getScopeTraceData().steps.length).toBe(1);
     });
 

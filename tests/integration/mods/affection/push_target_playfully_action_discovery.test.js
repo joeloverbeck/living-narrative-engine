@@ -15,10 +15,7 @@ describe('affection:push_target_playfully action discovery', () => {
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'affection',
-      ACTION_ID
-    );
+    testFixture = await ModTestFixture.forAction('affection', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -99,7 +96,9 @@ describe('affection:push_target_playfully action discovery', () => {
     it('matches the expected affection action schema', () => {
       expect(pushTargetPlayfullyAction).toBeDefined();
       expect(pushTargetPlayfullyAction.id).toBe(ACTION_ID);
-      expect(pushTargetPlayfullyAction.template).toBe('push {target} playfully');
+      expect(pushTargetPlayfullyAction.template).toBe(
+        'push {target} playfully'
+      );
       expect(pushTargetPlayfullyAction.targets).toBe(
         'positioning:close_actors_facing_each_other_or_behind_target'
       );

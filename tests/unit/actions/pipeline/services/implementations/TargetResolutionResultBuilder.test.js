@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import TargetResolutionResultBuilder from '../../../../../../src/actions/pipeline/services/implementations/TargetResolutionResultBuilder.js';
 import { InvalidArgumentError } from '../../../../../../src/errors/invalidArgumentError.js';
 
@@ -101,9 +108,9 @@ describe('TargetResolutionResultBuilder', () => {
     });
 
     it('should validate logger dependency', () => {
-      expect(() => new TargetResolutionResultBuilder({ entityManager })).toThrow(
-        InvalidArgumentError
-      );
+      expect(
+        () => new TargetResolutionResultBuilder({ entityManager })
+      ).toThrow(InvalidArgumentError);
     });
 
     it('should throw if entityManager is missing getEntityInstance', () => {
@@ -127,7 +134,9 @@ describe('TargetResolutionResultBuilder', () => {
     it('should build result with resolved targets', () => {
       const resolvedTargets = createMockResolvedTargets();
       const targetContexts = createMockTargetContexts();
-      const conversionResult = { targetDefinitions: { primary: { scope: 'legacy_scope' } } };
+      const conversionResult = {
+        targetDefinitions: { primary: { scope: 'legacy_scope' } },
+      };
       const actionDef = createMockActionDef();
 
       const result = builder.buildLegacyResult(
@@ -149,7 +158,9 @@ describe('TargetResolutionResultBuilder', () => {
       const resolvedTargets = createMockResolvedTargets();
       const targetContexts = createMockTargetContexts();
       const conversionResult = {
-        targetDefinitions: { primary: { scope: 'legacy_scope', placeholder: 'foo' } },
+        targetDefinitions: {
+          primary: { scope: 'legacy_scope', placeholder: 'foo' },
+        },
       };
       const actionDef = createMockActionDef();
 
@@ -162,7 +173,8 @@ describe('TargetResolutionResultBuilder', () => {
       );
 
       expect(
-        withConversion.data.actionsWithTargets[0].targetDefinitions.primary.scope
+        withConversion.data.actionsWithTargets[0].targetDefinitions.primary
+          .scope
       ).toBe('legacy_scope');
 
       const withoutConversion = builder.buildLegacyResult(
@@ -174,7 +186,8 @@ describe('TargetResolutionResultBuilder', () => {
       );
 
       expect(
-        withoutConversion.data.actionsWithTargets[0].targetDefinitions.primary.scope
+        withoutConversion.data.actionsWithTargets[0].targetDefinitions.primary
+          .scope
       ).toEqual(actionDef.targets);
     });
 
@@ -446,14 +459,7 @@ describe('TargetResolutionResultBuilder', () => {
     });
 
     it('should handle empty action arrays gracefully', () => {
-      const result = builder.buildFinalResult(
-        context,
-        [],
-        [],
-        null,
-        null,
-        []
-      );
+      const result = builder.buildFinalResult(context, [], [], null, null, []);
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toEqual([]);

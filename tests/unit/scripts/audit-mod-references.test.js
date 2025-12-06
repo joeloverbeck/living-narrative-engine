@@ -6,7 +6,7 @@ const {
 } = require('../../../scripts/audit-mod-references');
 
 const createEmptyResults = () =>
-  Object.fromEntries(MODS_TO_AUDIT.map(mod => [mod.id, []]));
+  Object.fromEntries(MODS_TO_AUDIT.map((mod) => [mod.id, []]));
 
 describe('audit-mod-references reporting helpers', () => {
   it('summarizes reference data and renders markdown tables', () => {
@@ -25,7 +25,7 @@ describe('audit-mod-references reporting helpers', () => {
         snippet: "const label = 'positioning:available_furniture';",
         severity: 'Medium',
         approach: 'Config',
-      },
+      }
     );
     sampleResults.items.push({
       file: 'src/items/demo.js',

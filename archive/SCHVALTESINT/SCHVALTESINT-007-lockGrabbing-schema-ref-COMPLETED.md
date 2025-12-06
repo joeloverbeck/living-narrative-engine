@@ -17,8 +17,8 @@ Update `lockGrabbing.schema.json` to use `$ref` to `common.schema.json` for the 
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                               | Change Type                             |
+| -------------------------------------------------- | --------------------------------------- |
 | `data/schemas/operations/lockGrabbing.schema.json` | Replace local oneOf with $ref to common |
 
 ### Files to Create
@@ -27,8 +27,8 @@ None
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
+| File                              | Purpose                                 |
+| --------------------------------- | --------------------------------------- |
 | `data/schemas/common.schema.json` | Target for $ref (from SCHVALTESINT-006) |
 
 ---
@@ -169,11 +169,13 @@ None
 ### Manual Verification Steps
 
 1. Run existing tests:
+
    ```bash
    NODE_ENV=test npx jest tests/integration/mods/weapons/wield_grabbing_schema_validation.test.js --no-coverage
    ```
 
 2. Validate schema syntax:
+
    ```bash
    npm run validate:strict
    ```
@@ -225,10 +227,12 @@ None
 ### What Changed vs. Originally Planned
 
 **Schema Change** (as planned):
+
 - Replaced local `oneOf` definition in `$defs/Parameters.count` with `$ref` to `../common.schema.json#/definitions/positiveIntegerOrTemplate`
 - Preserved existing `$defs/Parameters` structure (ticket assumptions were corrected)
 
 **Tests Modified/Added**:
+
 1. Modified `tests/integration/mods/weapons/wield_grabbing_schema_validation.test.js`:
    - Added `{ useRealSchemas: true }` to `testBed.initialize()` for proper schema loading
    - Changed test assertions from weak `.not.toThrow()` pattern to strong `expect(isValid).toBe(true/false)` pattern
@@ -238,6 +242,7 @@ None
      - `should reject negative integer for count parameter`
 
 **Ticket Assumptions Corrected**:
+
 - Original ticket assumed inline `parameters` properties
 - Reality: Schema uses `$defs/Parameters` pattern with `$ref`
 - Ticket was updated to reflect correct "before" state before implementation

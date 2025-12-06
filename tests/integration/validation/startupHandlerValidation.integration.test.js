@@ -5,7 +5,14 @@
  * @see tickets/ROBOPEHANVAL-006-startup-validation.md
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { HandlerCompletenessValidator } from '../../../src/validation/handlerCompletenessValidator.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import { KNOWN_OPERATION_TYPES } from '../../../src/utils/preValidationUtils.js';
@@ -101,7 +108,11 @@ describe('Startup Handler Validation Integration', () => {
       );
 
       // Assert
-      expect(report.missingHandlers).toEqual(['ALPHA_OP', 'BETA_OP', 'ZETA_OP']);
+      expect(report.missingHandlers).toEqual([
+        'ALPHA_OP',
+        'BETA_OP',
+        'ZETA_OP',
+      ]);
     });
 
     it('should not throw when handlers are missing (warnings only)', () => {

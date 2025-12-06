@@ -7,10 +7,7 @@
   "applicability": {
     "description": "Actor knows about a nourishing item somewhere in the world",
     "condition": {
-      "has_component": [
-        { "var": "task.params.item" },
-        "items:nourishing"
-      ]
+      "has_component": [{ "var": "task.params.item" }, "items:nourishing"]
     }
   },
 
@@ -21,10 +18,7 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "items:inventory"
-            ]
+            "has_component": [{ "var": "actor" }, "items:inventory"]
           },
           {
             "in": [
@@ -50,10 +44,7 @@
           "condition": {
             "and": [
               {
-                "has_component": [
-                  { "var": "actor" },
-                  "positioning:position"
-                ]
+                "has_component": [{ "var": "actor" }, "positioning:position"]
               },
               {
                 "has_component": [
@@ -64,7 +55,9 @@
               {
                 "==": [
                   { "var": "actor.components.positioning:position.location" },
-                  { "var": "task.params.item.components.positioning:position.location" }
+                  {
+                    "var": "task.params.item.components.positioning:position.location"
+                  }
                 ]
               }
             ]

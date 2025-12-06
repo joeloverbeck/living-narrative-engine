@@ -17,7 +17,10 @@ describe('SpeechPatternsGenerationError hierarchy', () => {
 
   it('creates a response processing error with name and cause', () => {
     const cause = new Error('bad payload');
-    const err = new SpeechPatternsResponseProcessingError('cannot parse', cause);
+    const err = new SpeechPatternsResponseProcessingError(
+      'cannot parse',
+      cause
+    );
 
     expect(err).toBeInstanceOf(Error);
     expect(err.name).toBe('SpeechPatternsResponseProcessingError');
@@ -28,7 +31,11 @@ describe('SpeechPatternsGenerationError hierarchy', () => {
   describe('SpeechPatternsValidationError', () => {
     it('defaults validationErrors to empty array and stores cause', () => {
       const cause = new Error('AJV failure');
-      const err = new SpeechPatternsValidationError('invalid data', undefined, cause);
+      const err = new SpeechPatternsValidationError(
+        'invalid data',
+        undefined,
+        cause
+      );
 
       expect(err).toBeInstanceOf(Error);
       expect(err.name).toBe('SpeechPatternsValidationError');
@@ -40,9 +47,16 @@ describe('SpeechPatternsGenerationError hierarchy', () => {
     it('uses provided validation errors', () => {
       const validationErrors = [
         { keyword: 'type', instancePath: '/tone', message: 'should be string' },
-        { keyword: 'minLength', instancePath: '/pattern', message: 'too short' },
+        {
+          keyword: 'minLength',
+          instancePath: '/pattern',
+          message: 'too short',
+        },
       ];
-      const err = new SpeechPatternsValidationError('bad schema', validationErrors);
+      const err = new SpeechPatternsValidationError(
+        'bad schema',
+        validationErrors
+      );
 
       expect(err.validationErrors).toBe(validationErrors);
       expect(err.cause).toBeUndefined();

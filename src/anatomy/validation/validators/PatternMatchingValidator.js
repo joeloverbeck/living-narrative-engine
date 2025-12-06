@@ -33,7 +33,12 @@ export class PatternMatchingValidator extends BaseValidator {
    * @param {import('../../slotGenerator.js').default} params.slotGenerator - Slot generator service.
    * @param {import('../../../interfaces/IAnatomyBlueprintRepository.js').IAnatomyBlueprintRepository} params.anatomyBlueprintRepository - Blueprint repository.
    */
-  constructor({ logger, dataRegistry, slotGenerator, anatomyBlueprintRepository }) {
+  constructor({
+    logger,
+    dataRegistry,
+    slotGenerator,
+    anatomyBlueprintRepository,
+  }) {
     super({
       name: 'pattern-matching',
       priority: 35,
@@ -84,14 +89,15 @@ export class PatternMatchingValidator extends BaseValidator {
       const patterns = recipe?.patterns || [];
 
       if (patterns.length === 0) {
-        builder.addPassed('No patterns to validate', { check: PATTERN_CHECK_NAME });
+        builder.addPassed('No patterns to validate', {
+          check: PATTERN_CHECK_NAME,
+        });
         return;
       }
 
       const blueprintId = recipe?.blueprintId;
-      const rawBlueprint = await this.#anatomyBlueprintRepository.getBlueprint(
-        blueprintId
-      );
+      const rawBlueprint =
+        await this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
 
       if (!rawBlueprint) {
         this.#logger.warn(
@@ -142,10 +148,14 @@ export class PatternMatchingValidator extends BaseValidator {
       }
     } catch (error) {
       this.#logValidatorError(error);
-      builder.addWarning('VALIDATION_WARNING', 'Pattern matching check failed', {
-        check: PATTERN_CHECK_NAME,
-        error: error.message,
-      });
+      builder.addWarning(
+        'VALIDATION_WARNING',
+        'Pattern matching check failed',
+        {
+          check: PATTERN_CHECK_NAME,
+          error: error.message,
+        }
+      );
     }
   }
 }

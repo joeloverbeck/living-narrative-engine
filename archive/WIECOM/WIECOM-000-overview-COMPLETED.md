@@ -11,6 +11,7 @@ Implement the `positioning:wielding` component to track items being actively wie
 ## Problem Statement
 
 When the `wield_threateningly` action executes:
+
 1. No component tracks that the actor is wielding an item
 2. No activity description is generated (e.g., "{actor} is wielding a sword")
 3. No mechanism exists to gate other actions based on wielding state
@@ -18,15 +19,15 @@ When the `wield_threateningly` action executes:
 
 ## Ticket Breakdown
 
-| Ticket | Description | Dependencies |
-|--------|-------------|--------------|
-| WIECOM-001 | Create wielding component definition | None |
-| WIECOM-002 | Update positioning mod manifest | WIECOM-001 |
-| WIECOM-003 | Modify wield_threateningly rule | WIECOM-001 |
-| WIECOM-004 | Activity system array support | None |
-| WIECOM-005 | Activity NLG multi-target support | WIECOM-004 |
-| WIECOM-006 | Component schema unit tests | WIECOM-001 |
-| WIECOM-007 | Integration tests | WIECOM-001 through WIECOM-005 |
+| Ticket     | Description                          | Dependencies                  |
+| ---------- | ------------------------------------ | ----------------------------- |
+| WIECOM-001 | Create wielding component definition | None                          |
+| WIECOM-002 | Update positioning mod manifest      | WIECOM-001                    |
+| WIECOM-003 | Modify wield_threateningly rule      | WIECOM-001                    |
+| WIECOM-004 | Activity system array support        | None                          |
+| WIECOM-005 | Activity NLG multi-target support    | WIECOM-004                    |
+| WIECOM-006 | Component schema unit tests          | WIECOM-001                    |
+| WIECOM-007 | Integration tests                    | WIECOM-001 through WIECOM-005 |
 
 ## Dependency Graph
 
@@ -53,6 +54,7 @@ The following are explicitly out of scope for all WIECOM tickets:
 ## Success Criteria
 
 All tickets completed when:
+
 - [ ] `positioning:wielding` component exists and validates correctly
 - [ ] `wield_threateningly` action adds the component with correct data
 - [ ] Activity descriptions include wielding state (single and multi-item)
@@ -65,6 +67,7 @@ All tickets completed when:
 ## Reference Files
 
 Study before implementation:
+
 - `data/mods/positioning/components/hugging.component.json` - Activity metadata pattern
 - `data/mods/positioning/components/kneeling_before.component.json` - Priority pattern
 - `data/mods/weapons/rules/handle_wield_threateningly.rule.json` - Current rule

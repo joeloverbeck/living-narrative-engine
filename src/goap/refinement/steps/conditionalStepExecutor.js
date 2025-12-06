@@ -266,25 +266,19 @@ class ConditionalStepExecutor {
    * @returns {object} Assembled condition context
    */
   #assembleConditionContext(context, stepIndex) {
-    this.#logger.debug(
-      `Assembling condition context for step ${stepIndex}`,
-      {
-        hasTask: Boolean(context.task),
-        hasRefinement: Boolean(context.refinement),
-        hasActor: Boolean(context.actor),
-        hasWorld: Boolean(context.world),
-      }
-    );
+    this.#logger.debug(`Assembling condition context for step ${stepIndex}`, {
+      hasTask: Boolean(context.task),
+      hasRefinement: Boolean(context.refinement),
+      hasActor: Boolean(context.actor),
+      hasWorld: Boolean(context.world),
+    });
 
     const conditionContext =
       this.#contextAssemblyService.assembleConditionContext(context);
 
-    this.#logger.debug(
-      `Condition context assembled for step ${stepIndex}`,
-      {
-        contextKeys: Object.keys(conditionContext),
-      }
-    );
+    this.#logger.debug(`Condition context assembled for step ${stepIndex}`, {
+      contextKeys: Object.keys(conditionContext),
+    });
 
     return conditionContext;
   }
@@ -557,7 +551,12 @@ class ConditionalStepExecutor {
    * @param {string} description - Step description
    * @returns {object} Aggregate result
    */
-  #buildAggregateResult(branchResults, conditionResult, stepIndex, description) {
+  #buildAggregateResult(
+    branchResults,
+    conditionResult,
+    stepIndex,
+    description
+  ) {
     const allSuccessful = branchResults.every((r) => r.success);
 
     const aggregateData = {

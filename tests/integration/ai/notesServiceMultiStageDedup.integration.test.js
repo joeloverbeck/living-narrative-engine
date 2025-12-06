@@ -1,10 +1,15 @@
 import { describe, expect, test } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import { NotesPersistenceListener } from '../../../src/ai/notesPersistenceListener.js';
 import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 import ComponentAccessService from '../../../src/entities/componentAccessService.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  SUBJECT_TYPES,
+} from '../../../src/constants/subjectTypes.js';
 
 class TestLogger {
   constructor() {
@@ -62,29 +67,42 @@ describe('NotesService integration - multi-stage deduplication', () => {
 
     const component = componentAccess.fetchComponent(actor, NOTES_COMPONENT_ID);
 
-    const earlyResult = notesService.addNotes(component, undefined, firstBatchTime);
-    expect(earlyResult).toEqual({ wasModified: false, component, addedNotes: [] });
-
-    const { wasModified: firstBatchModified, addedNotes: firstBatchAdded } = notesService.addNotes(
+    const earlyResult = notesService.addNotes(
       component,
-      [
-        { text: 'Existing Insight', subject: 'Archivist', subjectType: SUBJECT_TYPES.ENTITY },
-        { text: 'Twin discovery', subject: 'Companion' },
-        { text: 'Twin discovery', subject: 'Companion' },
-        { text: '  Fresh idea  ', subject: 'Archivist' },
-        {
-          text: 'Structured entry',
-          subject: 'Chronomancer',
-          subjectType: SUBJECT_TYPES.KNOWLEDGE,
-          context: 'Temporal anomaly',
-          timestamp: '2025-08-08T08:00:00.000Z',
-        },
-        { text: '   ', subject: 'Whitespace only' },
-        'legacy-string-note',
-        undefined,
-      ],
+      undefined,
       firstBatchTime
     );
+    expect(earlyResult).toEqual({
+      wasModified: false,
+      component,
+      addedNotes: [],
+    });
+
+    const { wasModified: firstBatchModified, addedNotes: firstBatchAdded } =
+      notesService.addNotes(
+        component,
+        [
+          {
+            text: 'Existing Insight',
+            subject: 'Archivist',
+            subjectType: SUBJECT_TYPES.ENTITY,
+          },
+          { text: 'Twin discovery', subject: 'Companion' },
+          { text: 'Twin discovery', subject: 'Companion' },
+          { text: '  Fresh idea  ', subject: 'Archivist' },
+          {
+            text: 'Structured entry',
+            subject: 'Chronomancer',
+            subjectType: SUBJECT_TYPES.KNOWLEDGE,
+            context: 'Temporal anomaly',
+            timestamp: '2025-08-08T08:00:00.000Z',
+          },
+          { text: '   ', subject: 'Whitespace only' },
+          'legacy-string-note',
+          undefined,
+        ],
+        firstBatchTime
+      );
 
     expect(firstBatchModified).toBe(true);
     expect(firstBatchAdded).toHaveLength(3);
@@ -133,7 +151,11 @@ describe('NotesService integration - multi-stage deduplication', () => {
         extractedData: {
           notes: [
             { text: 'Twin discovery!!!', subject: 'Companion' },
-            { text: 'Structured entry', subject: 'Chronomancer', subjectType: SUBJECT_TYPES.KNOWLEDGE },
+            {
+              text: 'Structured entry',
+              subject: 'Chronomancer',
+              subjectType: SUBJECT_TYPES.KNOWLEDGE,
+            },
             { text: 'Scenario log', subject: 'Chronicler' },
             'string-entry',
             null,
@@ -155,13 +177,17 @@ describe('NotesService integration - multi-stage deduplication', () => {
     );
 
     expect(summaryBySubject.Companion.timestamp).toBe(twinNote.timestamp);
-    expect(summaryBySubject.Chronomancer.timestamp).toBe('2025-08-08T08:00:00.000Z');
+    expect(summaryBySubject.Chronomancer.timestamp).toBe(
+      '2025-08-08T08:00:00.000Z'
+    );
     expect(summaryBySubject.Chronicler).toMatchObject({
       subjectType: DEFAULT_SUBJECT_TYPE,
       timestamp: listenerTime.toISOString(),
     });
 
-    const eventMessages = dispatcher.events.map(({ payload }) => payload.message);
+    const eventMessages = dispatcher.events.map(
+      ({ payload }) => payload.message
+    );
     expect(eventMessages).toEqual(
       expect.arrayContaining([
         'NotesPersistenceHook: Invalid note skipped',
@@ -173,25 +199,41 @@ describe('NotesService integration - multi-stage deduplication', () => {
       notes: [
         { text: 'Twin discovery', subject: 'Companion' },
         { text: 'Scenario log', subject: 'Chronicler' },
-        { text: 'Outer rim insight', subject: 'Explorer', subjectType: SUBJECT_TYPES.EVENT },
+        {
+          text: 'Outer rim insight',
+          subject: 'Explorer',
+          subjectType: SUBJECT_TYPES.EVENT,
+        },
         { text: '   ', subject: 'Blank from hook' },
         'hook-string',
       ],
     };
 
-    persistNotes(action, actor, logger, dispatcher, notesService, hookTime, componentAccess);
+    persistNotes(
+      action,
+      actor,
+      logger,
+      dispatcher,
+      notesService,
+      hookTime,
+      componentAccess
+    );
 
     const finalNotes = actor.components[NOTES_COMPONENT_ID].notes.filter(
       (entry) => entry && typeof entry === 'object'
     );
 
-    const explorerNote = finalNotes.find((entry) => entry.subject === 'Explorer');
+    const explorerNote = finalNotes.find(
+      (entry) => entry.subject === 'Explorer'
+    );
     expect(explorerNote).toMatchObject({
       subjectType: SUBJECT_TYPES.EVENT,
       timestamp: hookTime.toISOString(),
     });
 
-    expect(normalizeNoteText({ subject: 'Companion', text: 'Twin discovery' })).toBe(
+    expect(
+      normalizeNoteText({ subject: 'Companion', text: 'Twin discovery' })
+    ).toBe(
       normalizeNoteText({ subject: 'Companion', text: 'Twin discovery!!!' })
     );
     expect(normalizeNoteText('legacy-string-note')).toBe('');

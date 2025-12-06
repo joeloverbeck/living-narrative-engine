@@ -1,12 +1,20 @@
 import { describe, it, expect } from '@jest/globals';
-import { Tokenizer, ScopeSyntaxError } from '../../../../src/scopeDsl/parser/tokenizer.js';
+import {
+  Tokenizer,
+  ScopeSyntaxError,
+} from '../../../../src/scopeDsl/parser/tokenizer.js';
 
 describe('Tokenizer additional coverage scenarios', () => {
   it('skips single line comments and continues tokenizing', () => {
     const tokenizer = new Tokenizer('// ignore me\nactor.name');
     const tokens = tokenizer.getTokens();
 
-    expect(tokens[0]).toMatchObject({ type: 'IDENTIFIER', value: 'actor', line: 2, column: 1 });
+    expect(tokens[0]).toMatchObject({
+      type: 'IDENTIFIER',
+      value: 'actor',
+      line: 2,
+      column: 1,
+    });
     expect(tokens[1]).toMatchObject({ type: 'DOT', value: '.' });
     expect(tokens[2]).toMatchObject({ type: 'IDENTIFIER', value: 'name' });
   });
@@ -15,7 +23,10 @@ describe('Tokenizer additional coverage scenarios', () => {
     const tokenizer = new Tokenizer('"escaped \\" quote"');
     const tokens = tokenizer.getTokens();
 
-    expect(tokens[0]).toMatchObject({ type: 'STRING', value: 'escaped " quote' });
+    expect(tokens[0]).toMatchObject({
+      type: 'STRING',
+      value: 'escaped " quote',
+    });
   });
 
   it('throws a ScopeSyntaxError for unterminated strings', () => {

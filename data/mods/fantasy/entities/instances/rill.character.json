@@ -1,19 +1,17 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:rill_instance",
-    "definitionId": "fantasy:rill",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        },
-        "items:inventory": {
-            "items": [
-                "fantasy:rill_practice_stick_instance"
-            ],
-            "capacity": {
-                "maxWeight": 50.0,
-                "maxItems": 20
-            }
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:rill_instance",
+  "definitionId": "fantasy:rill",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
+    },
+    "items:inventory": {
+      "items": ["fantasy:rill_practice_stick_instance"],
+      "capacity": {
+        "maxWeight": 50.0,
+        "maxItems": 20
+      }
     }
+  }
 }

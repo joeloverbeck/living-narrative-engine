@@ -218,7 +218,10 @@ describe('dependencyUtils integration across runtime modules', () => {
     });
 
     const actor = { id: '   ' }; // triggers assertValidId failure
-    const turnAction = { actionDefinitionId: 'action:test', commandString: 'do' };
+    const turnAction = {
+      actionDefinitionId: 'action:test',
+      commandString: 'do',
+    };
 
     const result = await processor.dispatchAction(actor, turnAction);
 
@@ -250,18 +253,22 @@ describe('dependencyUtils integration across runtime modules', () => {
       },
     ]);
 
-    const prefixedLogger = serviceSetup.setupService('IntegrationService', logger, {
-      execute: {
-        value: () => true,
-        isFunction: true,
-      },
-      audit: {
-        value: {
-          record: () => {},
+    const prefixedLogger = serviceSetup.setupService(
+      'IntegrationService',
+      logger,
+      {
+        execute: {
+          value: () => true,
+          isFunction: true,
         },
-        requiredMethods: ['record'],
-      },
-    });
+        audit: {
+          value: {
+            record: () => {},
+          },
+          requiredMethods: ['record'],
+        },
+      }
+    );
 
     const service = new DecoratedService({
       logger: prefixedLogger,
@@ -279,4 +286,3 @@ describe('dependencyUtils integration across runtime modules', () => {
     ).toThrow(InvalidArgumentError);
   });
 });
-

@@ -31,7 +31,12 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
    * @param {object} options.slotGenerator - Generator for blueprint slots from templates
    * @param {object} options.dataRegistry - Data registry for template lookups
    */
-  constructor({ logger, anatomyBlueprintRepository, slotGenerator, dataRegistry }) {
+  constructor({
+    logger,
+    anatomyBlueprintRepository,
+    slotGenerator,
+    dataRegistry,
+  }) {
     super({
       name: 'slot-key-uniqueness',
       priority: 15, // After BlueprintExistenceValidator (10), before socket validators (22-23)
@@ -39,9 +44,14 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       logger,
     });
 
-    validateDependency(anatomyBlueprintRepository, 'IAnatomyBlueprintRepository', logger, {
-      requiredMethods: ['getBlueprint'],
-    });
+    validateDependency(
+      anatomyBlueprintRepository,
+      'IAnatomyBlueprintRepository',
+      logger,
+      {
+        requiredMethods: ['getBlueprint'],
+      }
+    );
     validateDependency(slotGenerator, 'ISlotGenerator', logger, {
       requiredMethods: ['generateBlueprintSlots'],
     });
@@ -69,7 +79,8 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       return; // No blueprint to validate
     }
 
-    const blueprint = this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
+    const blueprint =
+      this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
     if (!blueprint) {
       return; // Blueprint doesn't exist (handled by BlueprintExistenceValidator)
     }
@@ -95,7 +106,8 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       return;
     }
 
-    const generatedSlots = this.#slotGenerator.generateBlueprintSlots(template) || {};
+    const generatedSlots =
+      this.#slotGenerator.generateBlueprintSlots(template) || {};
     const additionalSlots = blueprint.additionalSlots || {};
 
     // Find conflicting keys
@@ -111,7 +123,11 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
         additionalCount: Object.keys(additionalSlots).length,
       });
       // Still check for duplicate parent:socket combinations even without key collisions
-      this.#checkForDuplicateParentReferences(generatedSlots, additionalSlots, builder);
+      this.#checkForDuplicateParentReferences(
+        generatedSlots,
+        additionalSlots,
+        builder
+      );
       return;
     }
 
@@ -120,7 +136,10 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
       const generatedSlot = generatedSlots[key];
       const additionalSlot = additionalSlots[key];
 
-      const isIntentional = this.#isIntentionalOverride(generatedSlot, additionalSlot);
+      const isIntentional = this.#isIntentionalOverride(
+        generatedSlot,
+        additionalSlot
+      );
 
       if (isIntentional) {
         builder.addWarning(
@@ -148,7 +167,11 @@ export class SlotKeyUniquenessValidator extends BaseValidator {
     }
 
     // Check for duplicate parent:socket combinations
-    this.#checkForDuplicateParentReferences(generatedSlots, additionalSlots, builder);
+    this.#checkForDuplicateParentReferences(
+      generatedSlots,
+      additionalSlots,
+      builder
+    );
   }
 
   /**

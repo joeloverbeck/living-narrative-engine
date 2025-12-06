@@ -4,7 +4,14 @@
  * combined with proxy configuration loading.
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
@@ -88,7 +95,9 @@ describe('AppConfigService string env logging integration', () => {
     );
 
     expect(loadResult.error).toBe(false);
-    expect(loadResult.llmConfigs.configs['primary-model'].apiType).toBe('openai');
+    expect(loadResult.llmConfigs.configs['primary-model'].apiType).toBe(
+      'openai'
+    );
 
     const debugMessages = debugSpy.mock.calls.map(([message]) => message);
 

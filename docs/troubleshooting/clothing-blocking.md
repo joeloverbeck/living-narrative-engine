@@ -5,12 +5,14 @@
 ### Items Not Blocking as Expected
 
 **Symptoms**:
+
 - Blocked items still appear in topmost_clothing
 - Actions show for items that should be blocked
 
 **Diagnostic Steps**:
 
 1. **Verify component exists**:
+
 ```bash
 # Check entity definition
 cat data/mods/YOUR_MOD/entities/YOUR_ITEM.entity.json
@@ -19,6 +21,7 @@ cat data/mods/YOUR_MOD/entities/YOUR_ITEM.entity.json
 Look for `clothing:blocks_removal` component.
 
 2. **Validate schema**:
+
 ```bash
 npm run validate
 ```
@@ -28,6 +31,7 @@ Check for validation errors related to your mod.
 3. **Check operator registration**:
 
 Enable debug logging and look for:
+
 ```
 [DEBUG] IsRemovalBlocked operator registered
 [DEBUG] Filtering blocked item from topmost_clothing
@@ -36,21 +40,23 @@ Enable debug logging and look for:
 4. **Verify slot/layer names**:
 
 Ensure exact matches (case-sensitive):
+
 - Slots: `torso_upper`, `torso_lower`, `legs`, etc.
 - Layers: `underwear`, `base`, `outer`, `accessories`
 
 **Common Causes**:
 
-| Issue | Solution |
-|-------|----------|
-| Typo in slot name | Check spelling: `torso_upper` not `torso-upper` |
-| Wrong layer name | Use valid layers: `base` not `normal` |
-| Missing required fields | Ensure `slot`, `layers`, `blockType` present |
-| Component not loaded | Check mod manifest includes component |
+| Issue                   | Solution                                        |
+| ----------------------- | ----------------------------------------------- |
+| Typo in slot name       | Check spelling: `torso_upper` not `torso-upper` |
+| Wrong layer name        | Use valid layers: `base` not `normal`           |
+| Missing required fields | Ensure `slot`, `layers`, `blockType` present    |
+| Component not loaded    | Check mod manifest includes component           |
 
 ### Items Blocking Themselves
 
 **Symptoms**:
+
 - Item with blocking component doesn't appear in topmost_clothing
 - Item can't be removed even when nothing else equipped
 
@@ -91,17 +97,20 @@ Ensure exact matches (case-sensitive):
 ### Circular Blocking Dependencies
 
 **Symptoms**:
+
 - Multiple items can't be removed
 - Validation errors about circular dependencies
 
 **Cause**: Item A blocks B, Item B blocks A (or longer chains).
 
 **Detection**:
+
 ```bash
 npm run validate:strict
 ```
 
 **Solution**: Redesign blocking hierarchy. Follow layer order:
+
 - accessories → outer → base → underwear
 
 **Prevention**: Never have items in higher layers block lower layers in same slot.
@@ -109,12 +118,14 @@ npm run validate:strict
 ### Performance Issues
 
 **Symptoms**:
+
 - Slow scope resolution
 - Lag when discovering actions
 
 **Diagnostic**:
 
 Check scope resolution time:
+
 ```javascript
 console.time('topmost_clothing');
 const topmost = scopeResolver.resolveTopmostClothing(actorId);
@@ -128,11 +139,13 @@ console.timeEnd('topmost_clothing');
 1. Check number of equipped items (target: < 20)
 2. Check number of blocking rules per item (target: < 5)
 3. Enable performance logging:
+
 ```javascript
 window.game.setLogLevel('debug');
 ```
 
 **Optimization**:
+
 - Reduce blocking rules where possible
 - Use slot-based blocking instead of many explicit IDs
 - Combine multiple blocking rules into one
@@ -152,6 +165,7 @@ window.game.setLogLevel('debug');
 **Cause**: Component schema not loaded.
 
 **Solution**:
+
 1. Verify component file exists: `data/mods/clothing/components/blocks_removal.component.json`
 2. Check mod manifest includes component reference
 3. Run `npm run validate`
@@ -181,6 +195,7 @@ window.game.setLogLevel('debug');
 **Cause**: Block type not in enum.
 
 **Solution**: Use valid block type:
+
 - `must_remove_first`
 - `must_loosen_first`
 - `full_block`
@@ -197,6 +212,7 @@ window.game.setLogLevel('debug');
 ### 2. Check Component Loading
 
 Look for:
+
 ```
 [DEBUG] Loaded component: clothing:blocks_removal
 ```
@@ -204,6 +220,7 @@ Look for:
 ### 3. Check Operator Registration
 
 Look for:
+
 ```
 [DEBUG] Registered operator: isRemovalBlocked
 ```
@@ -211,6 +228,7 @@ Look for:
 ### 4. Check Scope Resolution
 
 Look for:
+
 ```
 [DEBUG] Filtering blocked item from topmost_clothing
 [DEBUG] Item removal blocked by slot rules

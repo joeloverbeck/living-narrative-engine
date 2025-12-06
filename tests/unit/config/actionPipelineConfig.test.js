@@ -67,14 +67,15 @@ describe('actionPipelineConfig', () => {
       envMode: 'development',
     });
 
-    actionPipelineConfig.environments.development.targetValidation.skipForActionTypes = [
-      'stealth',
-    ];
+    actionPipelineConfig.environments.development.targetValidation.skipForActionTypes =
+      ['stealth'];
 
     const config = getActionPipelineConfig();
 
     expect(config.targetValidation.skipForActionTypes).toEqual(['stealth']);
-    expect(actionPipelineConfig.targetValidation.skipForActionTypes).toEqual([]);
+    expect(actionPipelineConfig.targetValidation.skipForActionTypes).toEqual(
+      []
+    );
   });
 
   it('enables production performance settings', async () => {
@@ -90,9 +91,10 @@ describe('actionPipelineConfig', () => {
   });
 
   it('determines whether target validation is enabled', async () => {
-    const { isTargetValidationEnabled, actionPipelineConfig } = await loadModule({
-      envMode: 'development',
-    });
+    const { isTargetValidationEnabled, actionPipelineConfig } =
+      await loadModule({
+        envMode: 'development',
+      });
 
     // Enabled by default
     expect(isTargetValidationEnabled()).toBe(true);

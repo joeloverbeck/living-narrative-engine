@@ -35,11 +35,7 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
 
   it('calculates average search results and resolves display text formatting', () => {
     controller._testExports.searchAnalytics = {
-      searches: [
-        { resultCount: 3 },
-        { resultCount: 5 },
-        { resultCount: 2 },
-      ],
+      searches: [{ resultCount: 3 }, { resultCount: 5 }, { resultCount: 2 }],
       noResultSearches: [],
     };
 
@@ -49,9 +45,9 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
       .spyOn(controller, '_highlightSearchTerms')
       .mockReturnValue('highlighted-text');
     controller._testExports.searchFilter = 'hero';
-    expect(
-      controller._getDisplayText({ concept: 'heroic tale' }, 40)
-    ).toBe('highlighted-text');
+    expect(controller._getDisplayText({ concept: 'heroic tale' }, 40)).toBe(
+      'highlighted-text'
+    );
     expect(highlightSpy).toHaveBeenCalledWith(expect.any(String), 'hero');
 
     highlightSpy.mockRestore();
@@ -159,9 +155,7 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
     };
 
     global.BroadcastChannel = jest.fn(() => channelMock);
-    jest
-      .spyOn(controller, '_registerCleanupTask')
-      .mockImplementation(() => {});
+    jest.spyOn(controller, '_registerCleanupTask').mockImplementation(() => {});
     controller._initializeCrossTabSync();
 
     const performLeaderElectionSpy = jest
@@ -193,7 +187,12 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
 
     const otherTabId = `${capturedTabId}-other`;
     messageHandler({
-      data: { type: 'data-changed', tabId: otherTabId, changeType: 'update', data: { id: 1 } },
+      data: {
+        type: 'data-changed',
+        tabId: otherTabId,
+        changeType: 'update',
+        data: { id: 1 },
+      },
     });
     expect(remoteChangeSpy).toHaveBeenCalledWith('update', { id: 1 });
 
@@ -208,7 +207,12 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
       throw new Error('remote failed');
     });
     messageHandler({
-      data: { type: 'data-changed', tabId: otherTabId, changeType: 'again', data: {} },
+      data: {
+        type: 'data-changed',
+        tabId: otherTabId,
+        changeType: 'again',
+        data: {},
+      },
     });
     expect(errorSpy).toHaveBeenCalledWith(
       'Error handling cross-tab message',
@@ -230,9 +234,7 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
     };
 
     global.BroadcastChannel = jest.fn(() => channelMock);
-    jest
-      .spyOn(controller, '_registerCleanupTask')
-      .mockImplementation(() => {});
+    jest.spyOn(controller, '_registerCleanupTask').mockImplementation(() => {});
     controller._initializeCrossTabSync();
 
     const errorSpy = jest.spyOn(controller.logger, 'error');
@@ -258,7 +260,9 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
     );
 
     controller._cleanup();
-    expect(() => controller._broadcastMessage({ type: 'after-cleanup' })).not.toThrow();
+    expect(() =>
+      controller._broadcastMessage({ type: 'after-cleanup' })
+    ).not.toThrow();
   });
 
   it('broadcasts data-change events through helper', () => {
@@ -328,12 +332,8 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
       close: jest.fn(),
     };
     global.BroadcastChannel = jest.fn(() => channelMock);
-    jest
-      .spyOn(controller, '_registerCleanupTask')
-      .mockImplementation(() => {});
-    jest
-      .spyOn(controller, '_setInterval')
-      .mockImplementation(() => 777);
+    jest.spyOn(controller, '_registerCleanupTask').mockImplementation(() => {});
+    jest.spyOn(controller, '_setInterval').mockImplementation(() => 777);
     const clearIntervalSpy = jest
       .spyOn(controller, '_clearInterval')
       .mockImplementation(() => {});
@@ -451,20 +451,16 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
     const showMilestoneSpy = jest
       .spyOn(controller, '_showMilestone')
       .mockImplementation(() => {});
-    jest
-      .spyOn(controller, '_calculateStatistics')
-      .mockReturnValue({
-        totalConcepts: 10,
-        completionRate: 100,
-        conceptsWithDirections: 1,
-      });
+    jest.spyOn(controller, '_calculateStatistics').mockReturnValue({
+      totalConcepts: 10,
+      completionRate: 100,
+      conceptsWithDirections: 1,
+    });
 
     controller._checkMilestones('created');
     controller._checkMilestones('directions-added');
 
-    expect(showMilestoneSpy).toHaveBeenCalledWith(
-      '🎊 10 Concepts Created!'
-    );
+    expect(showMilestoneSpy).toHaveBeenCalledWith('🎊 10 Concepts Created!');
     expect(showMilestoneSpy).toHaveBeenCalledWith(
       '⭐ All Concepts Have Directions!'
     );
@@ -546,9 +542,7 @@ describe('CharacterConceptsManagerController advanced behaviors', () => {
       close: jest.fn(),
     };
     global.BroadcastChannel = jest.fn(() => channelMock);
-    jest
-      .spyOn(controller, '_registerCleanupTask')
-      .mockImplementation(() => {});
+    jest.spyOn(controller, '_registerCleanupTask').mockImplementation(() => {});
     controller._initializeCrossTabSync();
 
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');

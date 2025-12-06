@@ -96,9 +96,7 @@ describe('RefinementEngine E2E Tests', () => {
       if (logic['<']) {
         const [left, right] = logic['<'];
         const leftVal =
-          typeof left === 'object' && left.var
-            ? evalVar(left.var, data)
-            : left;
+          typeof left === 'object' && left.var ? evalVar(left.var, data) : left;
         const rightVal =
           typeof right === 'object' && right.var
             ? evalVar(right.var, data)
@@ -109,9 +107,7 @@ describe('RefinementEngine E2E Tests', () => {
       if (logic['==']) {
         const [left, right] = logic['=='];
         const leftVal =
-          typeof left === 'object' && left.var
-            ? evalVar(left.var, data)
-            : left;
+          typeof left === 'object' && left.var ? evalVar(left.var, data) : left;
         const rightVal =
           typeof right === 'object' && right.var
             ? evalVar(right.var, data)
@@ -232,10 +228,12 @@ describe('RefinementEngine E2E Tests', () => {
         },
       });
 
-      mockEntityManager.getComponent.mockImplementation((entityId, componentId) => {
-        const entity = mockEntityManager.getEntity(entityId);
-        return entity?.components?.[componentId] || null;
-      });
+      mockEntityManager.getComponent.mockImplementation(
+        (entityId, componentId) => {
+          const entity = mockEntityManager.getEntity(entityId);
+          return entity?.components?.[componentId] || null;
+        }
+      );
 
       mockEntityManager.hasEntity.mockImplementation((entityId) => {
         const entity = mockEntityManager.getEntity(entityId);
@@ -306,7 +304,8 @@ describe('RefinementEngine E2E Tests', () => {
               actor: 'actor.id',
             },
             parameters: {
-              amount: 'refinement.localState.consumption_result.data.nutritionValue',
+              amount:
+                'refinement.localState.consumption_result.data.nutritionValue',
             },
             storeResultAs: 'health_result',
           },
@@ -321,7 +320,8 @@ describe('RefinementEngine E2E Tests', () => {
         }
         if (key === 'refinement-methods') {
           return {
-            'core:consume_nourishing_item.inventory_consumption': refinementMethod,
+            'core:consume_nourishing_item.inventory_consumption':
+              refinementMethod,
           };
         }
         return null;
@@ -393,7 +393,11 @@ describe('RefinementEngine E2E Tests', () => {
             error: null,
           });
         }
-        return Promise.resolve({ success: false, data: {}, error: 'Unknown operation' });
+        return Promise.resolve({
+          success: false,
+          data: {},
+          error: 'Unknown operation',
+        });
       });
 
       // Execute: Refine task
@@ -405,12 +409,16 @@ describe('RefinementEngine E2E Tests', () => {
 
       // Assert: Successful refinement
       expect(result.success).toBe(true);
-      expect(result.methodId).toBe('core:consume_nourishing_item.inventory_consumption');
+      expect(result.methodId).toBe(
+        'core:consume_nourishing_item.inventory_consumption'
+      );
       expect(result.stepResults).toHaveLength(3);
 
       // Assert: Step 1 - Validation
       expect(result.stepResults[0].success).toBe(true);
-      expect(result.stepResults[0].actionId).toBe('items:validate_inventory_item');
+      expect(result.stepResults[0].actionId).toBe(
+        'items:validate_inventory_item'
+      );
       expect(result.stepResults[0].data.valid).toBe(true);
 
       // Assert: Step 2 - Consumption
@@ -474,10 +482,12 @@ describe('RefinementEngine E2E Tests', () => {
         components: { 'core:time': { hour: 10, day: 1 } },
       });
 
-      mockEntityManager.getComponent.mockImplementation((entityId, componentId) => {
-        const entity = mockEntityManager.getEntity(entityId);
-        return entity?.components?.[componentId] || null;
-      });
+      mockEntityManager.getComponent.mockImplementation(
+        (entityId, componentId) => {
+          const entity = mockEntityManager.getEntity(entityId);
+          return entity?.components?.[componentId] || null;
+        }
+      );
 
       mockEntityManager.hasEntity.mockImplementation((entityId) => {
         const entity = mockEntityManager.getEntity(entityId);
@@ -574,7 +584,11 @@ describe('RefinementEngine E2E Tests', () => {
       });
 
       // Execute
-      const result = await refinementEngine.refine('core:seek_healing', actorId, {});
+      const result = await refinementEngine.refine(
+        'core:seek_healing',
+        actorId,
+        {}
+      );
 
       // Assert: Conditional branching selected correct path
       expect(result.success).toBe(true);
@@ -620,10 +634,12 @@ describe('RefinementEngine E2E Tests', () => {
         components: {},
       });
 
-      mockEntityManager.getComponent.mockImplementation((entityId, componentId) => {
-        const entity = mockEntityManager.getEntity(entityId);
-        return entity?.components?.[componentId] || null;
-      });
+      mockEntityManager.getComponent.mockImplementation(
+        (entityId, componentId) => {
+          const entity = mockEntityManager.getEntity(entityId);
+          return entity?.components?.[componentId] || null;
+        }
+      );
 
       mockEntityManager.hasEntity.mockImplementation((entityId) => {
         const entity = mockEntityManager.getEntity(entityId);
@@ -647,7 +663,9 @@ describe('RefinementEngine E2E Tests', () => {
         id: 'test:method',
         taskId: 'test:task',
         applicability: {
-          condition: { '==': [{ var: 'actor.components.core:health.value' }, 50] },
+          condition: {
+            '==': [{ var: 'actor.components.core:health.value' }, 50],
+          },
         },
         steps: [],
       };
@@ -684,10 +702,12 @@ describe('RefinementEngine E2E Tests', () => {
         components: {},
       });
 
-      mockEntityManager.getComponent.mockImplementation((entityId, componentId) => {
-        const entity = mockEntityManager.getEntity(entityId);
-        return entity?.components?.[componentId] || null;
-      });
+      mockEntityManager.getComponent.mockImplementation(
+        (entityId, componentId) => {
+          const entity = mockEntityManager.getEntity(entityId);
+          return entity?.components?.[componentId] || null;
+        }
+      );
 
       mockEntityManager.hasEntity.mockImplementation((entityId) => {
         const entity = mockEntityManager.getEntity(entityId);
@@ -735,7 +755,9 @@ describe('RefinementEngine E2E Tests', () => {
         operation: { type: 'TEST_OP', parameters: {} },
       });
 
-      mockGameDataRepository.getAllActions.mockReturnValue([{ id: 'test:action' }]);
+      mockGameDataRepository.getAllActions.mockReturnValue([
+        { id: 'test:action' },
+      ]);
 
       // Operation fails
       mockOperationInterpreter.execute.mockResolvedValue({
@@ -771,10 +793,12 @@ describe('RefinementEngine E2E Tests', () => {
         components: {},
       });
 
-      mockEntityManager.getComponent.mockImplementation((entityId, componentId) => {
-        const entity = mockEntityManager.getEntity(entityId);
-        return entity?.components?.[componentId] || null;
-      });
+      mockEntityManager.getComponent.mockImplementation(
+        (entityId, componentId) => {
+          const entity = mockEntityManager.getEntity(entityId);
+          return entity?.components?.[componentId] || null;
+        }
+      );
 
       mockEntityManager.hasEntity.mockImplementation((entityId) => {
         const entity = mockEntityManager.getEntity(entityId);
@@ -834,7 +858,11 @@ describe('RefinementEngine E2E Tests', () => {
       });
 
       const startTime = Date.now();
-      const result = await refinementEngine.refine('test:many_steps', actorId, {});
+      const result = await refinementEngine.refine(
+        'test:many_steps',
+        actorId,
+        {}
+      );
       const duration = Date.now() - startTime;
 
       expect(result.success).toBe(true);

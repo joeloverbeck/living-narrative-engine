@@ -6,14 +6,14 @@ Modify the `ActionFormattingStage` to detect actions with `chanceBased.enabled: 
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                                   | Change                           |
+| ------------------------------------------------------ | -------------------------------- |
 | `src/actions/pipeline/stages/ActionFormattingStage.js` | Add chance calculation injection |
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                                | Purpose                             |
+| ------------------------------------------------------------------- | ----------------------------------- |
 | `tests/integration/mods/weapons/swingAtTargetChanceDisplay.test.js` | Integration test for chance display |
 
 ## Implementation Details
@@ -47,10 +47,16 @@ class ActionFormattingStage {
     const { actionDef, actorId, targetId, resolvedTargets } = context;
 
     // Existing formatting logic...
-    let formattedTemplate = this.#formatTemplate(actionDef.template, resolvedTargets);
+    let formattedTemplate = this.#formatTemplate(
+      actionDef.template,
+      resolvedTargets
+    );
 
     // NEW: Inject chance if applicable
-    if (actionDef.chanceBased?.enabled && formattedTemplate.includes('{chance}')) {
+    if (
+      actionDef.chanceBased?.enabled &&
+      formattedTemplate.includes('{chance}')
+    ) {
       const chance = this.#calculateChance(actionDef, actorId, targetId);
       formattedTemplate = formattedTemplate.replace('{chance}', chance);
     }
@@ -99,11 +105,13 @@ class ActionFormattingStage {
 ### Template Transformation
 
 Before:
+
 ```
 "template": "swing {weapon} at {target} ({chance}%)"
 ```
 
 After formatting:
+
 ```
 "swing longsword at chicken (55%)"
 ```
@@ -190,19 +198,21 @@ Required test cases:
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/actions/pipeline/stages/ActionFormattingStage.js` | File to modify |
-| `src/actions/pipeline/stages/MultiTargetResolutionStage.js` | Stage pattern reference |
+| File                                                                | Purpose                  |
+| ------------------------------------------------------------------- | ------------------------ |
+| `src/actions/pipeline/stages/ActionFormattingStage.js`              | File to modify           |
+| `src/actions/pipeline/stages/MultiTargetResolutionStage.js`         | Stage pattern reference  |
 | `tests/integration/mods/weapons/wieldWeaponActionDiscovery.test.js` | Integration test pattern |
 
 ## Alternative Approaches Considered
 
 ### Option A: Modify ActionFormattingStage (Chosen)
+
 - **Pros**: Minimal changes, integrates with existing flow
 - **Cons**: Adds responsibility to formatting stage
 
 ### Option B: New ChanceCalculationStage
+
 - **Pros**: Cleaner separation of concerns
 - **Cons**: More files, more complex pipeline
 - **Decision**: Deferred to Phase 5 if needed for modifier complexity

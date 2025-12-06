@@ -4,7 +4,14 @@
  * eventName and payload parameters, not a single {type, payload} object.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import DropItemAtLocationHandler from '../../../../src/logic/operationHandlers/dropItemAtLocationHandler.js';
 
@@ -36,7 +43,11 @@ describe('DropItemAtLocationHandler - Dispatch Signature', () => {
         updateCount: 2,
       })),
       getEntityInstance: jest.fn((entityId) => ({
-        getComponentTypeIds: () => ['items:item', 'items:portable', 'core:position'],
+        getComponentTypeIds: () => [
+          'items:item',
+          'items:portable',
+          'core:position',
+        ],
       })),
     };
 

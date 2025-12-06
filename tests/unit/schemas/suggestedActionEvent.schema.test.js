@@ -142,7 +142,9 @@ describe('core:suggested_action event schema', () => {
     });
 
     test('rejects negative or zero suggestedIndex', () => {
-      expect(validatePayload({ ...basePayload, suggestedIndex: 0 })).toBe(false);
+      expect(validatePayload({ ...basePayload, suggestedIndex: 0 })).toBe(
+        false
+      );
       expect(validatePayload({ ...basePayload, suggestedIndex: -1 })).toBe(
         false
       );

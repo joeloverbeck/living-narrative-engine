@@ -3,9 +3,6 @@
   "id": "sex-breastplay:event-is-action-lick-breasts",
   "description": "Checks if the triggering event is for the 'sex-breastplay:lick_breasts' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "sex-breastplay:lick_breasts"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "sex-breastplay:lick_breasts"]
   }
 }

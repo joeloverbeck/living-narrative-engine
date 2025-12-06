@@ -5,11 +5,11 @@
 
 ### Design Decisions (User Confirmed)
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Track item-appendage mapping | **YES** | Enables "drop what's in left hand" commands; store `heldItemId` on each `can_grab` component |
-| `requires_grabbing` location | **anatomy mod** | Groups related components together (`can_grab` + `requires_grabbing`) |
-| Implement grip strength | **NOW** | Add `gripStrength` to appendages and `minGripStrength` to items for weight-based restrictions |
+| Decision                     | Choice          | Rationale                                                                                     |
+| ---------------------------- | --------------- | --------------------------------------------------------------------------------------------- |
+| Track item-appendage mapping | **YES**         | Enables "drop what's in left hand" commands; store `heldItemId` on each `can_grab` component  |
+| `requires_grabbing` location | **anatomy mod** | Groups related components together (`can_grab` + `requires_grabbing`)                         |
+| Implement grip strength      | **NOW**         | Add `gripStrength` to appendages and `minGripStrength` to items for weight-based restrictions |
 
 ---
 
@@ -32,6 +32,7 @@ Without this system, actions like hugging, grabbing objects, or wielding additio
 The engine already implements **POSIX-style locks** for gating actions:
 
 #### `core:mouth_engagement` Component
+
 ```json
 {
   "id": "core:mouth_engagement",
@@ -44,11 +45,13 @@ The engine already implements **POSIX-style locks** for gating actions:
   }
 }
 ```
+
 - **Usage**: Gates oral actions (kissing, biting, speaking with full mouth, etc.)
 - **Attached to**: Mouth body parts
 - **Checked via**: `hasPartOfTypeWithComponentValue` operator
 
 #### `core:movement` Component
+
 ```json
 {
   "id": "core:movement",
@@ -61,6 +64,7 @@ The engine already implements **POSIX-style locks** for gating actions:
   }
 }
 ```
+
 - **Usage**: Gates movement actions (go, follow, teleport)
 - **Attached to**: Leg body parts
 - **Checked via**: `hasPartWithComponentValue` operator
@@ -69,14 +73,15 @@ The engine already implements **POSIX-style locks** for gating actions:
 
 Four handlers manage these locks:
 
-| Handler | Operation Type | Purpose |
-|---------|---------------|---------|
-| `LockMovementHandler` | `LOCK_MOVEMENT` | Sets `locked: true` on movement components |
-| `UnlockMovementHandler` | `UNLOCK_MOVEMENT` | Sets `locked: false` on movement components |
-| `LockMouthEngagementHandler` | `LOCK_MOUTH_ENGAGEMENT` | Sets `locked: true` on mouth engagement |
-| `UnlockMouthEngagementHandler` | `UNLOCK_MOUTH_ENGAGEMENT` | Sets `locked: false` on mouth engagement |
+| Handler                        | Operation Type            | Purpose                                     |
+| ------------------------------ | ------------------------- | ------------------------------------------- |
+| `LockMovementHandler`          | `LOCK_MOVEMENT`           | Sets `locked: true` on movement components  |
+| `UnlockMovementHandler`        | `UNLOCK_MOVEMENT`         | Sets `locked: false` on movement components |
+| `LockMouthEngagementHandler`   | `LOCK_MOUTH_ENGAGEMENT`   | Sets `locked: true` on mouth engagement     |
+| `UnlockMouthEngagementHandler` | `UNLOCK_MOUTH_ENGAGEMENT` | Sets `locked: false` on mouth engagement    |
 
 **Common Pattern**:
+
 1. Accept `actor_id` parameter
 2. Find body parts with the relevant component
 3. Update the `locked` boolean via utility function
@@ -85,6 +90,7 @@ Four handlers manage these locks:
 ### 2.3 Condition Checking Pattern
 
 **Condition Definition** (`movement:actor-can-move`):
+
 ```json
 {
   "logic": {
@@ -94,12 +100,15 @@ Four handlers manage these locks:
 ```
 
 **Action Prerequisite** (`movement:go`):
+
 ```json
 {
-  "prerequisites": [{
-    "logic": { "condition_ref": "movement:actor-can-move" },
-    "failure_message": "You cannot move without functioning legs."
-  }]
+  "prerequisites": [
+    {
+      "logic": { "condition_ref": "movement:actor-can-move" },
+      "failure_message": "You cannot move without functioning legs."
+    }
+  ]
 }
 ```
 
@@ -114,6 +123,7 @@ Four handlers manage these locks:
 ### 3.1 Core Concept: Countable Locks
 
 Instead of a single boolean lock, we need:
+
 1. **Component on grabbing appendages** marking them as occupied/free
 2. **Component on items** specifying how many grabbing appendages they require
 3. **Operation handlers** that lock/unlock a specific count of appendages
@@ -156,6 +166,7 @@ Instead of a single boolean lock, we need:
 ```
 
 **Applied to**: Body parts that can grab things
+
 - `anatomy:human_hand` → add `anatomy:can_grab`
 - `anatomy:squid_tentacle` → add `anatomy:can_grab`
 - `anatomy:crab_claw` → add `anatomy:can_grab`
@@ -192,6 +203,7 @@ Instead of a single boolean lock, we need:
 ```
 
 **Applied to**: Weapons, instruments, tools, heavy items (component ID: `anatomy:requires_grabbing`)
+
 - `fantasy:vespera_rapier` → `handsRequired: 1`
 - `fantasy:vespera_main_gauche` → `handsRequired: 1`
 - `fantasy:vespera_hybrid_lute_viol` → `handsRequired: 2`
@@ -245,6 +257,7 @@ Instead of a single boolean lock, we need:
 ```
 
 **Handler Logic** (`src/logic/operationHandlers/lockGrabbingHandler.js`):
+
 1. Find all body parts with `anatomy:can_grab` component where `locked: false`
 2. Verify at least `count` free appendages exist (fail if not)
 3. Lock exactly `count` appendages (set `locked: true`, optionally set `heldItemId`)
@@ -294,6 +307,7 @@ Instead of a single boolean lock, we need:
 ```
 
 **Handler Logic** (`src/logic/operationHandlers/unlockGrabbingHandler.js`):
+
 1. Find body parts with `anatomy:can_grab` where `locked: true`
 2. If `item_id` provided, filter to those with `heldItemId === item_id`
 3. Unlock exactly `count` appendages (set `locked: false`, clear `heldItemId`)
@@ -306,27 +320,36 @@ Instead of a single boolean lock, we need:
 **Location**: `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`
 
 **Usage in JSON Logic**:
+
 ```json
 {
   "hasFreeGrabbingAppendages": ["actor", 2]
 }
 ```
+
 Returns `true` if actor has at least 2 unlocked `anatomy:can_grab` appendages.
 
 **Implementation Pattern**:
+
 ```javascript
 class HasFreeGrabbingAppendagesOperator extends BaseEquipmentOperator {
   evaluateInternal(entityId, params, context) {
     const [requiredCount] = params;
 
     // Get anatomy body component
-    const bodyComponent = this.entityManager.getComponentData(entityId, 'anatomy:body');
+    const bodyComponent = this.entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
     if (!bodyComponent?.body?.parts) return false;
 
     // Count free appendages
     let freeCount = 0;
     for (const partId of Object.values(bodyComponent.body.parts)) {
-      const canGrab = this.entityManager.getComponentData(partId, 'anatomy:can_grab');
+      const canGrab = this.entityManager.getComponentData(
+        partId,
+        'anatomy:can_grab'
+      );
       if (canGrab && !canGrab.locked) {
         freeCount++;
       }
@@ -385,25 +408,35 @@ export function getHeldItems(entityManager, entityId) { ... }
 Add `anatomy:can_grab` component to grabbing-capable body parts:
 
 **`data/mods/anatomy/entities/definitions/human_hand.entity.json`**:
+
 ```json
 {
   "id": "anatomy:human_hand",
   "components": {
     "anatomy:part": { "subType": "hand" },
     "core:name": { "text": "hand" },
-    "anatomy:can_grab": { "locked": false, "heldItemId": null, "gripStrength": 1.0 }
+    "anatomy:can_grab": {
+      "locked": false,
+      "heldItemId": null,
+      "gripStrength": 1.0
+    }
   }
 }
 ```
 
 **`data/mods/anatomy/entities/definitions/squid_tentacle.entity.json`**:
+
 ```json
 {
   "id": "anatomy:squid_tentacle",
   "components": {
     "anatomy:part": { "subType": "tentacle" },
     "core:name": { "text": "tentacle" },
-    "anatomy:can_grab": { "locked": false, "heldItemId": null, "gripStrength": 0.8 }
+    "anatomy:can_grab": {
+      "locked": false,
+      "heldItemId": null,
+      "gripStrength": 0.8
+    }
   }
 }
 ```
@@ -413,6 +446,7 @@ Add `anatomy:can_grab` component to grabbing-capable body parts:
 Add `anatomy:requires_grabbing` component to holdable items:
 
 **`data/mods/fantasy/entities/definitions/vespera_rapier.entity.json`**:
+
 ```json
 {
   "components": {
@@ -423,6 +457,7 @@ Add `anatomy:requires_grabbing` component to holdable items:
 ```
 
 **Longsword Example**:
+
 ```json
 {
   "components": {
@@ -434,6 +469,7 @@ Add `anatomy:requires_grabbing` component to holdable items:
 ### 4.3 Condition Definitions
 
 **`anatomy:actor-has-free-hands.condition.json`**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -446,6 +482,7 @@ Add `anatomy:requires_grabbing` component to holdable items:
 ```
 
 **`anatomy:actor-can-wield-item.condition.json`**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -470,6 +507,7 @@ Add `anatomy:requires_grabbing` component to holdable items:
 ### 4.4 Action Updates
 
 **`weapons:wield_threateningly.action.json`** (updated):
+
 ```json
 {
   "id": "weapons:wield_threateningly",
@@ -484,6 +522,7 @@ Add `anatomy:requires_grabbing` component to holdable items:
 ```
 
 **`affection:hug.action.json`** (example):
+
 ```json
 {
   "id": "affection:hug",
@@ -507,7 +546,9 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
       "type": "LOCK_GRABBING",
       "parameters": {
         "actor_id": { "var": "event.payload.actorId" },
-        "count": { "var": "event.payload.target.components.anatomy:requires_grabbing.handsRequired" },
+        "count": {
+          "var": "event.payload.target.components.anatomy:requires_grabbing.handsRequired"
+        },
         "item_id": { "var": "event.payload.targetId" }
       }
     }
@@ -520,6 +561,7 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
 ## 5. Example Scenarios
 
 ### Scenario 1: Wield Dagger (One-Handed)
+
 1. Actor has 2 free hands
 2. Dagger has `handsRequired: 1`
 3. Prerequisite check: `hasFreeGrabbingAppendages(actor, 1)` → **PASS**
@@ -527,12 +569,14 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
 5. Actor now has 1 free hand
 
 ### Scenario 2: Wield Longsword While Holding Dagger
+
 1. Actor has 1 free hand (dagger in other)
 2. Longsword has `handsRequired: 2`
 3. Prerequisite check: `hasFreeGrabbingAppendages(actor, 2)` → **FAIL**
 4. Action blocked: "You don't have enough free hands to wield this weapon."
 
 ### Scenario 3: Drop Dagger, Then Wield Longsword
+
 1. Actor drops dagger: `UNLOCK_GRABBING(actor, 1, dagger_id)`
 2. Actor now has 2 free hands
 3. Longsword `handsRequired: 2`
@@ -540,12 +584,14 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
 5. After wielding: `LOCK_GRABBING(actor, 2, longsword_id)`
 
 ### Scenario 4: Tentacle Creature with 8 Appendages
+
 1. Creature has 8 tentacles, each with `anatomy:can_grab`
 2. Can hold multiple items simultaneously
 3. Each wield action locks the appropriate number
 4. More flexible than humanoids!
 
 ### Scenario 5: Hug Action Blocked
+
 1. Actor is wielding longsword (2 hands occupied)
 2. Hug requires 2 free hands
 3. Prerequisite check: `hasFreeGrabbingAppendages(actor, 2)` → **FAIL**
@@ -558,11 +604,13 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
 ### 6.1 Which Appendage Gets Locked?
 
 **Option A: First Available (Simple)**
+
 - Lock the first N free appendages found
 - Easy to implement
 - May not respect handedness (dominant hand)
 
 **Option B: Preference System (Complex)**
+
 - Add `preferredHand` property to items
 - Add `dominantHand` property to actors
 - Match preferences when locking
@@ -573,6 +621,7 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
 ### 6.2 Grip Strength and Weight
 
 **Implementing Now**:
+
 - `gripStrength` on appendages (default 1.0)
 - `minGripStrength` on items
 - Calculate total grip strength of locked appendages
@@ -583,12 +632,14 @@ When an actor wields a weapon, the rule should lock the appropriate appendages:
 ### 6.3 Dual-Wield vs Two-Handed
 
 The system naturally handles both:
+
 - **Dual-wield**: Two items each with `handsRequired: 1` → locks 2 appendages
 - **Two-handed**: One item with `handsRequired: 2` → locks 2 appendages
 
 ### 6.4 Items That Don't Require Hands
 
 Some items are worn, not held:
+
 - Rings: `handsRequired: 0`
 - Cloaks: `handsRequired: 0` (uses clothing system)
 - Amulets: `handsRequired: 0`
@@ -596,6 +647,7 @@ Some items are worn, not held:
 ### 6.5 What About Feet?
 
 Some creatures might hold things with feet (monkeys, certain fantasy creatures):
+
 - Create `anatomy:can_grab` variants or use flags
 - Add `footGrab: true` to mark foot-capable grabbing
 - Most actions would still require hand-type grabbing
@@ -605,12 +657,14 @@ Some creatures might hold things with feet (monkeys, certain fantasy creatures):
 ## 7. Implementation Checklist
 
 ### Phase 1: Core Components
+
 - [ ] Create `anatomy:can_grab` component schema
 - [ ] Create `anatomy:requires_grabbing` component schema
 - [ ] Add `can_grab` to hand entity definitions
 - [ ] Add `requires_grabbing` to existing weapon entities
 
 ### Phase 2: Operation Handlers
+
 - [ ] Create `lockGrabbing.schema.json`
 - [ ] Create `unlockGrabbing.schema.json`
 - [ ] Implement `LockGrabbingHandler.js`
@@ -620,16 +674,19 @@ Some creatures might hold things with feet (monkeys, certain fantasy creatures):
 - [ ] Add to `preValidationUtils.js` whitelist
 
 ### Phase 3: Operators
+
 - [ ] Implement `hasFreeGrabbingAppendagesOperator.js`
 - [ ] Register operator in `jsonLogicCustomOperators.js`
 - [ ] Create condition files (`actor-has-free-hands`, `actor-can-wield-item`)
 
 ### Phase 4: Integration
+
 - [ ] Update `wield_threateningly.action.json` with prerequisites
 - [ ] Create wield/unwield rules with lock/unlock operations
 - [ ] Update actions requiring free hands (hug, grab, etc.)
 
 ### Phase 5: Testing
+
 - [ ] Unit tests for handlers
 - [ ] Unit tests for operator
 - [ ] Integration tests for wield scenarios
@@ -640,32 +697,34 @@ Some creatures might hold things with feet (monkeys, certain fantasy creatures):
 ## 8. Files to Create/Modify
 
 ### New Files
-| File | Purpose |
-|------|---------|
-| `data/mods/anatomy/components/can_grab.component.json` | Grabbing capability component |
-| `data/mods/anatomy/components/requires_grabbing.component.json` | Item handling requirements |
-| `data/schemas/operations/lockGrabbing.schema.json` | Lock operation schema |
-| `data/schemas/operations/unlockGrabbing.schema.json` | Unlock operation schema |
-| `src/logic/operationHandlers/lockGrabbingHandler.js` | Lock handler |
-| `src/logic/operationHandlers/unlockGrabbingHandler.js` | Unlock handler |
-| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Count operator |
-| `src/utils/grabbingUtils.js` | Utility functions |
-| `data/mods/anatomy/conditions/actor-has-free-hands.condition.json` | Condition |
-| `data/mods/anatomy/conditions/actor-can-wield-item.condition.json` | Condition |
+
+| File                                                               | Purpose                       |
+| ------------------------------------------------------------------ | ----------------------------- |
+| `data/mods/anatomy/components/can_grab.component.json`             | Grabbing capability component |
+| `data/mods/anatomy/components/requires_grabbing.component.json`    | Item handling requirements    |
+| `data/schemas/operations/lockGrabbing.schema.json`                 | Lock operation schema         |
+| `data/schemas/operations/unlockGrabbing.schema.json`               | Unlock operation schema       |
+| `src/logic/operationHandlers/lockGrabbingHandler.js`               | Lock handler                  |
+| `src/logic/operationHandlers/unlockGrabbingHandler.js`             | Unlock handler                |
+| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`         | Count operator                |
+| `src/utils/grabbingUtils.js`                                       | Utility functions             |
+| `data/mods/anatomy/conditions/actor-has-free-hands.condition.json` | Condition                     |
+| `data/mods/anatomy/conditions/actor-can-wield-item.condition.json` | Condition                     |
 
 ### Modified Files
-| File | Change |
-|------|--------|
-| `data/mods/anatomy/entities/definitions/human_hand.entity.json` | Add `can_grab` |
-| `data/mods/anatomy/entities/definitions/squid_tentacle.entity.json` | Add `can_grab` |
-| `data/mods/fantasy/entities/definitions/vespera_*.entity.json` | Add `requires_grabbing` |
-| `data/mods/weapons/actions/wield_threateningly.action.json` | Add prerequisites |
-| `src/logic/jsonLogicCustomOperators.js` | Register new operator |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add handler tokens |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handlers |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Map operations |
-| `src/utils/preValidationUtils.js` | Add operation types to whitelist |
-| `data/schemas/operation.schema.json` | Add schema references |
+
+| File                                                                     | Change                           |
+| ------------------------------------------------------------------------ | -------------------------------- |
+| `data/mods/anatomy/entities/definitions/human_hand.entity.json`          | Add `can_grab`                   |
+| `data/mods/anatomy/entities/definitions/squid_tentacle.entity.json`      | Add `can_grab`                   |
+| `data/mods/fantasy/entities/definitions/vespera_*.entity.json`           | Add `requires_grabbing`          |
+| `data/mods/weapons/actions/wield_threateningly.action.json`              | Add prerequisites                |
+| `src/logic/jsonLogicCustomOperators.js`                                  | Register new operator            |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add handler tokens               |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Register handlers                |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Map operations                   |
+| `src/utils/preValidationUtils.js`                                        | Add operation types to whitelist |
+| `data/schemas/operation.schema.json`                                     | Add schema references            |
 
 ---
 

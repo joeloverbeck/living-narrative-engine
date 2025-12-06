@@ -85,7 +85,6 @@ export class StackTraceAnalyzer {
         return this.#buildFrameObject(match);
       }
     }
-
   }
 
   /**

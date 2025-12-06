@@ -95,11 +95,7 @@ class DigestFoodHandler extends BaseOperationHandler {
     }
 
     // Validate turns
-    if (
-      typeof turns !== 'number' ||
-      !Number.isInteger(turns) ||
-      turns < 1
-    ) {
+    if (typeof turns !== 'number' || !Number.isInteger(turns) || turns < 1) {
       safeDispatchError(
         this.#dispatcher,
         'DIGEST_FOOD: turns must be a positive integer',
@@ -173,25 +169,36 @@ class DigestFoodHandler extends BaseOperationHandler {
       // Schema requires exclusiveMinimum: 0, but add defensive check for runtime safety
       const conversionRate = Math.max(0.1, fuelConverter.conversion_rate || 0);
       const efficiency = fuelConverter.efficiency || 0;
-      const metabolicEfficiencyMultiplier = fuelConverter.metabolic_efficiency_multiplier || 1.0;
+      const metabolicEfficiencyMultiplier =
+        fuelConverter.metabolic_efficiency_multiplier || 1.0;
 
       // Log warning if conversion_rate was adjusted
-      if (fuelConverter.conversion_rate !== undefined && fuelConverter.conversion_rate <= 0) {
-        log.warn('DIGEST_FOOD: conversion_rate was zero or negative, using minimum 0.1', {
-          entityId,
-          originalRate: fuelConverter.conversion_rate,
-          adjustedRate: conversionRate,
-        });
+      if (
+        fuelConverter.conversion_rate !== undefined &&
+        fuelConverter.conversion_rate <= 0
+      ) {
+        log.warn(
+          'DIGEST_FOOD: conversion_rate was zero or negative, using minimum 0.1',
+          {
+            entityId,
+            originalRate: fuelConverter.conversion_rate,
+            adjustedRate: conversionRate,
+          }
+        );
       }
 
       const currentEnergy = metabolicStore.current_energy || 0;
       const maxEnergy = metabolicStore.max_energy;
 
       // Calculate total bulk in buffer
-      const totalBulk = bufferStorage.reduce((sum, item) => sum + (item.bulk || 0), 0);
+      const totalBulk = bufferStorage.reduce(
+        (sum, item) => sum + (item.bulk || 0),
+        0
+      );
 
       // Calculate maximum digestion potential
-      const maxDigestion = conversionRate * metabolicEfficiencyMultiplier * turns;
+      const maxDigestion =
+        conversionRate * metabolicEfficiencyMultiplier * turns;
 
       // Calculate actual digestion (cannot exceed total buffer bulk)
       const actualDigestion = Math.min(totalBulk, maxDigestion);
@@ -265,7 +272,10 @@ class DigestFoodHandler extends BaseOperationHandler {
         entityId,
         bufferReduced: actualDigestion,
         energyGained,
-        newBuffer: newBufferStorage.reduce((sum, item) => sum + (item.bulk || 0), 0),
+        newBuffer: newBufferStorage.reduce(
+          (sum, item) => sum + (item.bulk || 0),
+          0
+        ),
         newEnergy,
         efficiency,
       });
@@ -274,7 +284,10 @@ class DigestFoodHandler extends BaseOperationHandler {
         entityId,
         bufferReduced: actualDigestion,
         energyGained,
-        newBuffer: newBufferStorage.reduce((sum, item) => sum + (item.bulk || 0), 0),
+        newBuffer: newBufferStorage.reduce(
+          (sum, item) => sum + (item.bulk || 0),
+          0
+        ),
         newEnergy,
         efficiency,
         turns,

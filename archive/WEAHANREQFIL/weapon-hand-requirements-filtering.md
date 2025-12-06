@@ -3,16 +3,19 @@
 ## Problem Statement
 
 The `wield_threateningly` action currently checks if the actor has at least 1 free grabbing appendage, but doesn't validate whether the actor has **enough** appendages for the specific weapon being targeted. For example:
+
 - A longsword requiring 2 hands should not appear as wieldable when the actor only has 1 free hand
 - Items already being grabbed should be excluded from weapon selection
 
 ## Chosen Approach: Custom JSON Logic Operators
 
 Create two new operators:
+
 1. **`canActorGrabItem`** - Compares actor's free appendages against item's `handsRequired`
 2. **`isItemBeingGrabbed`** - Checks if item is currently held by actor
 
 ### Rationale
+
 - Most explicit approach - scope definitions clearly show filtering logic
 - Isolated from core scopeDSL engine - no changes to FilterResolver or entityHelpers
 - Operators can be reused in conditions, not just scopes
@@ -31,6 +34,7 @@ Create two new operators:
 ```
 
 Key logic:
+
 1. Resolve actor and item entity IDs from context
 2. Get item's `anatomy:requires_grabbing.handsRequired` (default: 1)
 3. Get actor's free appendage count via `countFreeGrabbingAppendages()`
@@ -46,6 +50,7 @@ Key logic:
 ```
 
 Key logic:
+
 1. Resolve actor and item entity IDs
 2. Get held items via `getHeldItems(entityManager, actorId)`
 3. Return `heldItemIds.includes(itemId)`
@@ -81,21 +86,22 @@ Change target scope from `weapons:weapons_in_inventory` to `weapons:grabbable_we
 ### Phase 6: Testing
 
 Create comprehensive tests:
+
 - `tests/unit/logic/operators/canActorGrabItemOperator.test.js`
 - `tests/unit/logic/operators/isItemBeingGrabbedOperator.test.js`
 - `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.js`
 
 ## Files to Modify/Create
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/logic/operators/canActorGrabItemOperator.js` | CREATE | New operator |
-| `src/logic/operators/isItemBeingGrabbedOperator.js` | CREATE | New operator |
-| `src/logic/jsonLogicCustomOperators.js` | MODIFY | Register operators |
-| `src/logic/jsonLogicEvaluationService.js` | MODIFY | Add to whitelist |
-| `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope` | CREATE | New scope |
-| `data/mods/weapons/mod-manifest.json` | MODIFY | Add scope file |
-| `data/mods/weapons/actions/wield_threateningly.action.json` | MODIFY | Use new scope |
+| File                                                            | Action | Purpose            |
+| --------------------------------------------------------------- | ------ | ------------------ |
+| `src/logic/operators/canActorGrabItemOperator.js`               | CREATE | New operator       |
+| `src/logic/operators/isItemBeingGrabbedOperator.js`             | CREATE | New operator       |
+| `src/logic/jsonLogicCustomOperators.js`                         | MODIFY | Register operators |
+| `src/logic/jsonLogicEvaluationService.js`                       | MODIFY | Add to whitelist   |
+| `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope` | CREATE | New scope          |
+| `data/mods/weapons/mod-manifest.json`                           | MODIFY | Add scope file     |
+| `data/mods/weapons/actions/wield_threateningly.action.json`     | MODIFY | Use new scope      |
 
 ## Critical Files to Read Before Implementation
 

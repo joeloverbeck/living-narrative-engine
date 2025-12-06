@@ -101,12 +101,18 @@ function createLogger() {
  * @param {Map<string, object>} [options.tracedActions]
  * @returns {object}
  */
-function createStandardTrace({ withSpanAsync = true, tracedActions = null } = {}) {
+function createStandardTrace({
+  withSpanAsync = true,
+  tracedActions = null,
+} = {}) {
   const traced = tracedActions ?? new Map();
   const baseTrace = {
     info: jest.fn(),
     step: jest.fn(),
-    getTracingSummary: jest.fn(() => ({ totalStagesTracked: 0, sessionDuration: 0 })),
+    getTracingSummary: jest.fn(() => ({
+      totalStagesTracked: 0,
+      sessionDuration: 0,
+    })),
     getTracedActions: jest.fn(() => traced),
     captureActionData: jest.fn(),
   };
@@ -147,7 +153,11 @@ describe('ActionDiscoveryService optional tracing integration', () => {
     const tracedActions = new Map([
       [
         'movement:go',
-        { actionId: 'movement:go', actorId: 'actor-1', stages: { pipeline: { steps: [] } } },
+        {
+          actionId: 'movement:go',
+          actorId: 'actor-1',
+          stages: { pipeline: { steps: [] } },
+        },
       ],
     ]);
 
@@ -179,9 +189,14 @@ describe('ActionDiscoveryService optional tracing integration', () => {
       },
     };
 
-    const { service, logger, actionPipelineOrchestrator, actor } = createService(overrides);
+    const { service, logger, actionPipelineOrchestrator, actor } =
+      createService(overrides);
 
-    const result = await service.getValidActions(actor, { mood: 'focused' }, { trace: true });
+    const result = await service.getValidActions(
+      actor,
+      { mood: 'focused' },
+      { trace: true }
+    );
 
     expect(actionTraceFilter.isEnabled).toHaveBeenCalled();
     expect(actionAwareTraceFactory).toHaveBeenCalledWith({
@@ -226,9 +241,12 @@ describe('ActionDiscoveryService optional tracing integration', () => {
       traceContextFactory: jest.fn(() => traceWithoutSpan),
     };
 
-    const { service, logger, actionPipelineOrchestrator, actor } = createService(overrides);
+    const { service, logger, actionPipelineOrchestrator, actor } =
+      createService(overrides);
 
-    const result = await service.getValidActions(actor, undefined, { trace: true });
+    const result = await service.getValidActions(actor, undefined, {
+      trace: true,
+    });
 
     expect(actionPipelineOrchestrator.discoverActions).toHaveBeenCalledWith(
       actor,
@@ -240,7 +258,11 @@ describe('ActionDiscoveryService optional tracing integration', () => {
       `ActionDiscoveryService: Finished action discovery for actor ${actor.id}. Found 0 actions.`
     );
 
-    expect(result).toEqual({ actions: [], errors: [], trace: traceWithoutSpan });
+    expect(result).toEqual({
+      actions: [],
+      errors: [],
+      trace: traceWithoutSpan,
+    });
   });
 
   it('reports tracing availability even when filter errors during enablement checks', () => {
@@ -286,11 +308,17 @@ describe('ActionDiscoveryService optional tracing integration', () => {
       traceContextFactory,
     });
 
-    const result = await service.getValidActions(actor, { reason: 'fallback' }, { trace: true });
+    const result = await service.getValidActions(
+      actor,
+      { reason: 'fallback' },
+      { trace: true }
+    );
 
     expect(traceContextFactory).toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('ActionDiscoveryService: Failed to create trace context for actor actor-1'),
+      expect.stringContaining(
+        'ActionDiscoveryService: Failed to create trace context for actor actor-1'
+      ),
       expect.any(Error)
     );
     expect(result.trace).toBe(fallbackTrace);
@@ -312,10 +340,16 @@ describe('ActionDiscoveryService optional tracing integration', () => {
       traceContextFactory,
     });
 
-    const result = await service.getValidActions(actor, { reason: 'no-trace' }, { trace: true });
+    const result = await service.getValidActions(
+      actor,
+      { reason: 'no-trace' },
+      { trace: true }
+    );
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('ActionDiscoveryService: Failed to create fallback trace context for actor actor-1'),
+      expect.stringContaining(
+        'ActionDiscoveryService: Failed to create fallback trace context for actor actor-1'
+      ),
       expect.any(Error)
     );
     expect(result.trace).toBeNull();

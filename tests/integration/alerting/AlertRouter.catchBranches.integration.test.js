@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import {
   SYSTEM_WARNING_OCCURRED_ID,
@@ -49,7 +56,9 @@ describe('AlertRouter integration – catch branch coverage', () => {
       throw new Error('queue failed');
     };
 
-    router.handleEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'should log error' });
+    router.handleEvent(SYSTEM_WARNING_OCCURRED_ID, {
+      message: 'should log error',
+    });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'AlertRouter error:',
@@ -62,7 +71,9 @@ describe('AlertRouter integration – catch branch coverage', () => {
     const dispatcher = new StubSafeEventDispatcher();
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
 
-    router.handleEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'delayed warning' });
+    router.handleEvent(SYSTEM_WARNING_OCCURRED_ID, {
+      message: 'delayed warning',
+    });
     router.handleEvent(SYSTEM_ERROR_OCCURRED_ID, { message: 'delayed error' });
 
     expect(router.flushTimer).not.toBeNull();
@@ -131,7 +142,9 @@ describe('AlertRouter integration – catch branch coverage', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
 
     router.uiReady = true;
-    router.handleEvent(SYSTEM_ERROR_OCCURRED_ID, { message: 'immediate error' });
+    router.handleEvent(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'immediate error',
+    });
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'AlertRouter dispatch error:',

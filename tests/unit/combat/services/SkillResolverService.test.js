@@ -178,11 +178,7 @@ describe('SkillResolverService', () => {
 
     describe('when entity does not exist or is invalid', () => {
       it('should return default when entityId is null', () => {
-        const result = service.getSkillValue(
-          null,
-          'skills:melee_skill',
-          15
-        );
+        const result = service.getSkillValue(null, 'skills:melee_skill', 15);
 
         expect(result).toEqual({ baseValue: 15, hasComponent: false });
         expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -366,7 +362,6 @@ describe('SkillResolverService', () => {
 
         expect(result).toEqual({ baseValue: 55, hasComponent: true });
       });
-
     });
 
     describe('edge cases', () => {
@@ -396,7 +391,10 @@ describe('SkillResolverService', () => {
         mockEntityManager.hasComponent.mockReturnValue(true);
         mockEntityManager.getComponentData.mockReturnValue({ value: 50 });
 
-        const result = service.getSkillValue(longEntityId, 'skills:melee_skill');
+        const result = service.getSkillValue(
+          longEntityId,
+          'skills:melee_skill'
+        );
 
         expect(result).toEqual({ baseValue: 50, hasComponent: true });
         expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(

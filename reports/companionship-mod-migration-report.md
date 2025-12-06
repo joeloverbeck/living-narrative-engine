@@ -18,6 +18,7 @@ The following/leading system currently resides in the core mod but represents a 
 ## Color Scheme Assignment
 
 **Selected**: Deep Teal (Section 3.3 of WCAG spec)
+
 - Background: `#00695c`
 - Text: `#e0f2f1`
 - Hover Background: `#00897b`
@@ -27,6 +28,7 @@ The following/leading system currently resides in the core mod but represents a 
 ## Files to Migrate
 
 ### Actions (3 files)
+
 ```
 data/mods/core/actions/follow.action.json          → data/mods/companionship/actions/follow.action.json
 data/mods/core/actions/stop_following.action.json  → data/mods/companionship/actions/stop_following.action.json
@@ -34,12 +36,14 @@ data/mods/core/actions/dismiss.action.json         → data/mods/companionship/a
 ```
 
 ### Components (2 files)
+
 ```
 data/mods/core/components/following.component.json → data/mods/companionship/components/following.component.json
 data/mods/core/components/leading.component.json   → data/mods/companionship/components/leading.component.json
 ```
 
 ### Conditions (5 files)
+
 ```
 data/mods/core/conditions/event-is-action-follow.condition.json         → data/mods/companionship/conditions/event-is-action-follow.condition.json
 data/mods/core/conditions/event-is-action-stop-following.condition.json → data/mods/companionship/conditions/event-is-action-stop-following.condition.json
@@ -49,21 +53,25 @@ data/mods/core/conditions/actor-is-following.condition.json             → data
 ```
 
 ### Rules (4 files)
+
 ```
 data/mods/core/rules/follow.rule.json           → data/mods/companionship/rules/follow.rule.json
 data/mods/core/rules/stop_following.rule.json   → data/mods/companionship/rules/stop_following.rule.json
 data/mods/core/rules/dismiss.rule.json          → data/mods/companionship/rules/dismiss.rule.json
 data/mods/core/rules/follow_auto_move.rule.json → data/mods/companionship/rules/follow_auto_move.rule.json
 ```
+
 **Note**: `follow_auto_move.rule.json` responds to `core:entity_moved` event which will remain in core
 
 ### Scopes (2 files)
+
 ```
 data/mods/core/scopes/followers.scope        → data/mods/companionship/scopes/followers.scope
 data/mods/core/scopes/potential_leaders.scope → data/mods/companionship/scopes/potential_leaders.scope
 ```
 
 ### Macros (1 file)
+
 ```
 data/mods/core/macros/autoMoveFollower.macro.json → data/mods/companionship/macros/autoMoveFollower.macro.json
 ```
@@ -73,7 +81,9 @@ data/mods/core/macros/autoMoveFollower.macro.json → data/mods/companionship/ma
 ## JavaScript Files to Update
 
 ### Operation Handlers (5 files)
+
 These handlers implement the core logic for following mechanics and need namespace updates:
+
 ```
 src/logic/operationHandlers/establishFollowRelationHandler.js
 src/logic/operationHandlers/breakFollowRelationHandler.js
@@ -83,12 +93,14 @@ src/logic/operationHandlers/rebuildLeaderListCacheHandler.js
 ```
 
 ### Utility Files (2 files)
+
 ```
 src/utils/followUtils.js - Contains follow-specific utility functions
 src/constants/componentIds.js - Exports FOLLOWING_COMPONENT_ID and LEADING_COMPONENT_ID constants
 ```
 
 ### Changes Required:
+
 - Update all references from `'core:following'` to `'companionship:following'`
 - Update all references from `'core:leading'` to `'companionship:leading'`
 - Update constant definitions to use new namespace
@@ -98,7 +110,9 @@ src/constants/componentIds.js - Exports FOLLOWING_COMPONENT_ID and LEADING_COMPO
 ## Operation Schemas
 
 ### Schema Files (5 files)
+
 These schemas define the operation structures. Consider whether to migrate or keep in core:
+
 ```
 data/schemas/operations/establishFollowRelation.schema.json
 data/schemas/operations/breakFollowRelation.schema.json
@@ -108,6 +122,7 @@ data/schemas/operations/rebuildLeaderListCache.schema.json
 ```
 
 **Architectural Decision Required**: These operations are engine-level handlers. Options:
+
 1. Keep schemas in core but update component references to companionship
 2. Move schemas to companionship mod (may affect engine architecture)
 3. Create companionship-specific operations that wrap core operations
@@ -117,17 +132,21 @@ data/schemas/operations/rebuildLeaderListCache.schema.json
 ## Required Changes During Migration
 
 ### 1. Namespace Updates
+
 All file IDs must be updated from `core:` to `companionship:`:
 
 **Examples**:
+
 - `"id": "core:follow"` → `"id": "companionship:follow"`
 - `"condition_ref": "core:actor-is-following"` → `"condition_ref": "companionship:actor-is-following"`
 - `"macro": "core:autoMoveFollower"` → `"macro": "companionship:autoMoveFollower"`
 
 ### 2. Color Scheme Updates
+
 Update visual properties in all three action files:
 
 **From** (Classic Blue-Grey):
+
 ```json
 {
   "backgroundColor": "#455a64",
@@ -138,6 +157,7 @@ Update visual properties in all three action files:
 ```
 
 **To** (Deep Teal):
+
 ```json
 {
   "backgroundColor": "#00695c",
@@ -148,9 +168,11 @@ Update visual properties in all three action files:
 ```
 
 ### 3. Cross-Module References
+
 Identify and update references from other modules:
 
 **Potential References to Check**:
+
 - Any AI/NPC behavior systems that check following status
 - Movement system integration points
 - Save/load system if it specifically handles following relationships
@@ -159,6 +181,7 @@ Identify and update references from other modules:
 ### 4. Dependency Updates
 
 **Files that need updates**:
+
 - `data/mods/core/mod-manifest.json` - Remove companionship-related entries
 - Other mod manifests that depend on following mechanics - Add `companionship` to dependencies
 - Operation handlers in JavaScript - Update component ID references
@@ -167,6 +190,7 @@ Identify and update references from other modules:
 ### 5. Test File Updates
 
 **Affected Test Categories** (49+ test files):
+
 - Unit tests for operation handlers (`tests/unit/logic/operationHandlers/`)
 - Schema validation tests (`tests/unit/schemas/`)
 - Action discovery tests (`tests/e2e/actions/`, `tests/performance/actions/`)
@@ -176,6 +200,7 @@ Identify and update references from other modules:
 - DOM UI rendering tests (`tests/unit/domUI/`)
 
 **Major Test Files Requiring Updates**:
+
 ```
 tests/integration/core/rules/followRule.integration.test.js
 tests/integration/core/rules/dismissRule.integration.test.js
@@ -189,7 +214,9 @@ tests/unit/schemas/followAutoMove.schema.test.js
 ## New Files to Create
 
 ### 1. Mod Manifest
+
 `data/mods/companionship/mod-manifest.json`:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
@@ -200,10 +227,7 @@ tests/unit/schemas/followAutoMove.schema.test.js
   "author": "Living Narrative Engine Team",
   "dependencies": ["core", "movement"],
   "loadOrder": 20,
-  "components": [
-    "companionship:following",
-    "companionship:leading"
-  ],
+  "components": ["companionship:following", "companionship:leading"],
   "actions": [
     "companionship:follow",
     "companionship:stop_following",
@@ -222,46 +246,47 @@ tests/unit/schemas/followAutoMove.schema.test.js
     "companionship:dismiss",
     "companionship:follow_auto_move"
   ],
-  "scopes": [
-    "companionship:followers",
-    "companionship:potential_leaders"
-  ],
-  "macros": [
-    "companionship:autoMoveFollower"
-  ]
+  "scopes": ["companionship:followers", "companionship:potential_leaders"],
+  "macros": ["companionship:autoMoveFollower"]
 }
 ```
 
 ## Migration Steps
 
 ### Phase 1: Preparation
+
 1. Create `data/mods/companionship/` directory structure
 2. Create subdirectories: `actions/`, `components/`, `conditions/`, `rules/`, `scopes/`, `macros/`
 3. Create mod manifest file
 
 ### Phase 2: File Migration
+
 1. Copy all identified JSON files to new locations
 2. Update all namespace references from `core:` to `companionship:`
 3. Update color schemes in action files
 4. Verify all internal references are correct
 
 ### Phase 3: JavaScript Updates
+
 1. Update component ID constants in `src/constants/componentIds.js`
 2. Update all operation handlers to use new component IDs
 3. Update utility functions in `src/utils/followUtils.js`
 4. Search for any additional hardcoded references
 
 ### Phase 4: Core Mod Cleanup
+
 1. Remove migrated files from core mod
 2. Update `data/mods/core/mod-manifest.json`
 3. Verify operation schemas reference correct component namespaces
 
 ### Phase 5: Dependency Resolution
+
 1. Search for all references to migrated components across codebase
 2. Update mod dependencies where needed
 3. Add `companionship` to `data/game.json` mods list if desired
 
 ### Phase 6: Testing
+
 1. Run all existing tests to identify breaks (49+ test files affected)
 2. Update test imports and references systematically
 3. Update test data factories and fixtures
@@ -271,6 +296,7 @@ tests/unit/schemas/followAutoMove.schema.test.js
 7. Test cross-mod interactions (especially with movement mod)
 
 ### Phase 7: Documentation
+
 1. Update README to mention companionship as optional mod
 2. Document companionship mod API/components
 3. Update CLAUDE.md with new mod information
@@ -279,22 +305,26 @@ tests/unit/schemas/followAutoMove.schema.test.js
 ## Risk Assessment
 
 ### Low Risk
+
 - File movement is straightforward
 - Namespace updates are systematic
 - Color change is cosmetic only
 
 ### Medium Risk
+
 - Tests will need extensive updates (49+ files)
 - Save game compatibility if following relationships are stored
 - Operation schema references need careful handling
 
 ### High Risk
+
 - JavaScript operation handlers are tightly integrated with engine
 - Component ID constants are used throughout the codebase
 - Cross-module dependencies in JavaScript code
 - Engine-level operations may not be modularizable
 
 ### Mitigation Strategies
+
 1. Comprehensive search for all references before migration
 2. Keep backup of original files
 3. Create a migration branch for safe experimentation
@@ -346,6 +376,6 @@ tests/unit/schemas/followAutoMove.schema.test.js
 
 ---
 
-*Report Generated: 2025-01-18*
-*Report Updated: 2025-01-18 - Added JavaScript dependencies, operation schemas, and expanded test impacts*
-*Next Step: Review architectural decisions and approve migration plan before execution*
+_Report Generated: 2025-01-18_
+_Report Updated: 2025-01-18 - Added JavaScript dependencies, operation schemas, and expanded test impacts_
+_Next Step: Review architectural decisions and approve migration plan before execution_

@@ -48,9 +48,7 @@ describe('PerformanceMonitor alert lifecycle integration', () => {
     monitor = createMonitor(structuredTrace);
     intervalCallbacks = [];
 
-    nowSpy = jest
-      .spyOn(performance, 'now')
-      .mockImplementation(() => now);
+    nowSpy = jest.spyOn(performance, 'now').mockImplementation(() => now);
 
     const originalSetInterval = global.setInterval;
     setIntervalSpy = jest
@@ -102,10 +100,7 @@ describe('PerformanceMonitor alert lifecycle integration', () => {
     const stopMonitoring = monitor.startMonitoring({ intervalMs: 5 });
 
     advance(1);
-    monitor.trackOperation(
-      'ManualCriticalOperation',
-      performance.now() - 90
-    );
+    monitor.trackOperation('ManualCriticalOperation', performance.now() - 90);
     advance(1);
     monitor.trackOperation('ManualSlowOperation', performance.now() - 30);
 
@@ -119,10 +114,7 @@ describe('PerformanceMonitor alert lifecycle integration', () => {
     }
 
     advance(1);
-    monitor.trackOperation(
-      'PostTrimCriticalOperation',
-      performance.now() - 80
-    );
+    monitor.trackOperation('PostTrimCriticalOperation', performance.now() - 80);
     advance(1);
     monitor.trackOperation('PostTrimSlowOperation', performance.now() - 25);
 
@@ -178,9 +170,7 @@ describe('PerformanceMonitor sampling fallback integration', () => {
     now = 0;
     structuredTrace = new StructuredTrace();
     monitor = createMonitor(structuredTrace);
-    nowSpy = jest
-      .spyOn(performance, 'now')
-      .mockImplementation(() => now);
+    nowSpy = jest.spyOn(performance, 'now').mockImplementation(() => now);
   });
 
   afterEach(() => {
@@ -228,4 +218,3 @@ describe('PerformanceMonitor sampling fallback integration', () => {
     expect(recorded['operation.analysis.duration']).toBeDefined();
   });
 });
-

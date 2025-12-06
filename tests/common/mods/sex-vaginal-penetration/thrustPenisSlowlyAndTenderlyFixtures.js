@@ -5,8 +5,10 @@
 
 import { ModEntityBuilder } from '../ModEntityBuilder.js';
 
-export const ACTION_ID = 'sex-vaginal-penetration:thrust_penis_slowly_and_tenderly';
-export const SCOPE_NAME = 'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me';
+export const ACTION_ID =
+  'sex-vaginal-penetration:thrust_penis_slowly_and_tenderly';
+export const SCOPE_NAME =
+  'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me';
 
 /**
  * @typedef {object} PenetrationScenarioOptions
@@ -91,7 +93,11 @@ export function buildPenetrationScenario(options = {}) {
     targetBuilder.withBody(targetPelvisId);
 
     const targetPelvis = new ModEntityBuilder(targetPelvisId)
-      .asBodyPart({ parent: null, children: [targetVaginaId], subType: 'pelvis' })
+      .asBodyPart({
+        parent: null,
+        children: [targetVaginaId],
+        subType: 'pelvis',
+      })
       .build();
 
     const targetVagina = new ModEntityBuilder(targetVaginaId)
@@ -150,7 +156,8 @@ function resolveBeingFuckedVaginallyScope(testFixture, context) {
       return false;
     }
 
-    const beingFucked = partner.components?.['positioning:being_fucked_vaginally'];
+    const beingFucked =
+      partner.components?.['positioning:being_fucked_vaginally'];
     if (!beingFucked) {
       return false;
     }

@@ -15,7 +15,9 @@ describe('targetCandidateUtils.extractCandidateId', () => {
   });
 
   it('falls back to the nested entity id when direct id is unavailable', () => {
-    expect(extractCandidateId({ entity: { id: 'nested-id' } })).toBe('nested-id');
+    expect(extractCandidateId({ entity: { id: 'nested-id' } })).toBe(
+      'nested-id'
+    );
   });
 
   it('returns null when no string identifiers are available', () => {

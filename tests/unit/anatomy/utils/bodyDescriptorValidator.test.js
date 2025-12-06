@@ -260,7 +260,8 @@ describe('BodyDescriptorValidator', () => {
       const buildValues = BodyDescriptorValidator.getValidValues('build');
       expect(buildValues).toEqual(Object.values(BODY_BUILD_TYPES));
 
-      const densityValues = BodyDescriptorValidator.getValidValues('hairDensity');
+      const densityValues =
+        BodyDescriptorValidator.getValidValues('hairDensity');
       expect(densityValues).toEqual(Object.values(BODY_HAIR_DENSITY));
 
       const compositionValues =
@@ -280,7 +281,9 @@ describe('BodyDescriptorValidator', () => {
   describe('hasEnumValidation', () => {
     it('should return true for enum-validated properties', () => {
       expect(BodyDescriptorValidator.hasEnumValidation('build')).toBe(true);
-      expect(BodyDescriptorValidator.hasEnumValidation('hairDensity')).toBe(true);
+      expect(BodyDescriptorValidator.hasEnumValidation('hairDensity')).toBe(
+        true
+      );
       expect(BodyDescriptorValidator.hasEnumValidation('composition')).toBe(
         true
       );

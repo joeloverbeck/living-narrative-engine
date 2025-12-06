@@ -17,8 +17,8 @@ Modify `ModTestFixture.forRule()` to validate rule files against their JSON sche
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                  | Change Type                                 |
+| ------------------------------------- | ------------------------------------------- |
 | `tests/common/mods/ModTestFixture.js` | Add schema validation in `forRule()` method |
 
 ### Files to Create
@@ -27,8 +27,8 @@ None (tests added in SCHVALTESINT-001's test file)
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
+| File                            | Purpose                         |
+| ------------------------------- | ------------------------------- |
 | `data/schemas/rule.schema.json` | Rule schema to validate against |
 
 ---
@@ -182,11 +182,13 @@ since `#validateModFiles` was designed for actions).
 ### What Was Actually Changed vs Originally Planned
 
 **Ticket Corrections Made Before Implementation:**
+
 - Original ticket assumed incorrect method signature: `forRule(modId, ruleId, options = {})`
 - Corrected to actual signature: `forRule(modId, ruleId, ruleFile = null, conditionFile = null, options = {})`
 - Updated implementation pattern to match actual code structure
 
 **Code Changes:**
+
 1. **`tests/common/mods/ModTestFixture.js`** - `forRule()` method:
    - Added options destructuring: `const { skipValidation = false, ...otherOptions } = options;`
    - Added validation call before fixture creation using existing `#validateModFiles()` method
@@ -203,10 +205,12 @@ since `#validateModFiles` was designed for actions).
      - Edge cases (minimal required fields)
 
 **Test Results:**
+
 - All 31 validation tests pass (22 existing `forAction()` + 9 new `forRule()`)
 - All 388 integration tests for rules pass (49 test suites)
 
 **Key Design Decisions:**
+
 - Reused existing `#validateModFiles()` private method (no code duplication)
 - Followed exact pattern from `forAction()` for consistency
 - Maintained backward compatibility (existing tests work without changes)

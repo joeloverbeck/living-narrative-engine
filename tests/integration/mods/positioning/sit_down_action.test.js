@@ -23,7 +23,9 @@ describe('positioning:sit_down action forbidden state enforcement', () => {
     const chair = new ModEntityBuilder('chair1')
       .withName('Comfy Chair')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', { spots: [{ occupied: false }] })
+      .withComponent('positioning:allows_sitting', {
+        spots: [{ occupied: false }],
+      })
       .build();
 
     const actor = new ModEntityBuilder('actor1')
@@ -43,9 +45,9 @@ describe('positioning:sit_down action forbidden state enforcement', () => {
 
     testFixture.reset([room, actor, hugger, chair]);
 
-    await expect(
-      testFixture.executeAction(actor.id, chair.id)
-    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    await expect(testFixture.executeAction(actor.id, chair.id)).rejects.toThrow(
+      /forbidden component.*positioning:being_hugged/i
+    );
   });
 
   it('rejects sitting down while hugging someone else', async () => {
@@ -54,7 +56,9 @@ describe('positioning:sit_down action forbidden state enforcement', () => {
     const chair = new ModEntityBuilder('chair1')
       .withName('Comfy Chair')
       .atLocation('room1')
-      .withComponent('positioning:allows_sitting', { spots: [{ occupied: false }] })
+      .withComponent('positioning:allows_sitting', {
+        spots: [{ occupied: false }],
+      })
       .build();
 
     const actor = new ModEntityBuilder('actor1')
@@ -75,8 +79,8 @@ describe('positioning:sit_down action forbidden state enforcement', () => {
 
     testFixture.reset([room, actor, huggee, chair]);
 
-    await expect(
-      testFixture.executeAction(actor.id, chair.id)
-    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    await expect(testFixture.executeAction(actor.id, chair.id)).rejects.toThrow(
+      /forbidden component.*positioning:hugging/i
+    );
   });
 });

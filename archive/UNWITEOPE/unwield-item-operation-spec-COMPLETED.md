@@ -9,10 +9,12 @@ This specification documents the `UNWIELD_ITEM` operation handler, which encapsu
 ## Problem Statement
 
 When dropping a wielded item via `drop_item.action.json`, the system currently:
+
 - Removes the item from inventory
 - Sets the item's position to the actor's location
 
 However, it does NOT:
+
 - Remove the item from `wielded_item_ids` in `positioning:wielding` component
 - Unlock the grabbing appendages holding the item
 - Clean up the wielding component if it becomes empty
@@ -23,6 +25,7 @@ This leaves the actor in an inconsistent state where they appear to still be wie
 ## Solution
 
 Create a new `UNWIELD_ITEM` operation handler that:
+
 1. Encapsulates all unwielding logic in a single, reusable operation
 2. Is idempotent - safe to call even if item is not currently wielded
 3. Can be used by both `handle_unwield_item.rule.json` and `handle_drop_item.rule.json`
@@ -71,10 +74,10 @@ Create a new `UNWIELD_ITEM` operation handler that:
 
 ### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `actorEntity` | string | Yes | Entity ID of the actor who may be wielding the item |
-| `itemEntity` | string | Yes | Entity ID of the item to stop wielding |
+| Parameter     | Type   | Required | Description                                         |
+| ------------- | ------ | -------- | --------------------------------------------------- |
+| `actorEntity` | string | Yes      | Entity ID of the actor who may be wielding the item |
+| `itemEntity`  | string | Yes      | Entity ID of the item to stop wielding              |
 
 **Note**: Original spec used `actor_id` and `item_id`, but actual implementation uses `actorEntity` and `itemEntity` for consistency with other handlers.
 
@@ -119,13 +122,13 @@ Create a new `UNWIELD_ITEM` operation handler that:
 
 The handler is designed to be idempotent, meaning it can be safely called multiple times or when the item isn't being wielded:
 
-| Scenario | Behavior |
-|----------|----------|
-| Actor has no wielding component | Returns success (no-op) |
-| Item not in wielded_item_ids | Returns success (no-op) |
-| wielded_item_ids is empty array | Returns success (no-op) |
-| wielded_item_ids is undefined | Returns success (no-op) |
-| Item is wielded | Performs full unwield, returns success |
+| Scenario                        | Behavior                               |
+| ------------------------------- | -------------------------------------- |
+| Actor has no wielding component | Returns success (no-op)                |
+| Item not in wielded_item_ids    | Returns success (no-op)                |
+| wielded_item_ids is empty array | Returns success (no-op)                |
+| wielded_item_ids is undefined   | Returns success (no-op)                |
+| Item is wielded                 | Performs full unwield, returns success |
 
 This allows rules to unconditionally call `UNWIELD_ITEM` without complex conditional logic.
 
@@ -174,13 +177,17 @@ Uses `UNWIELD_ITEM` to encapsulate the unwielding logic:
 ## DI Registration
 
 ### Token
+
 **File**: `src/dependencyInjection/tokens/tokens-core.js`
+
 ```javascript
 UnwieldItemHandler: 'UnwieldItemHandler',
 ```
 
 ### Factory Registration
+
 **File**: `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
+
 ```javascript
 [
   tokens.UnwieldItemHandler,
@@ -195,13 +202,17 @@ UnwieldItemHandler: 'UnwieldItemHandler',
 ```
 
 ### Interpreter Mapping
+
 **File**: `src/dependencyInjection/registrations/interpreterRegistrations.js`
+
 ```javascript
 registry.register('UNWIELD_ITEM', bind(tokens.UnwieldItemHandler));
 ```
 
 ### Pre-validation Whitelist
+
 **File**: `src/utils/preValidationUtils.js`
+
 ```javascript
 // Add to KNOWN_OPERATION_TYPES array (alphabetically)
 'UNWIELD_ITEM',
@@ -212,6 +223,7 @@ registry.register('UNWIELD_ITEM', bind(tokens.UnwieldItemHandler));
 **Event Type**: `items:item_unwielded`
 
 **Payload**:
+
 ```javascript
 {
   actorEntity: string,       // Entity ID of the actor
@@ -224,27 +236,28 @@ registry.register('UNWIELD_ITEM', bind(tokens.UnwieldItemHandler));
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/unwieldItem.schema.json` | Operation schema |
-| `src/logic/operationHandlers/unwieldItemHandler.js` | Handler implementation |
-| `tests/unit/logic/operationHandlers/unwieldItemHandler.test.js` | Unit tests |
+| File                                                            | Purpose                |
+| --------------------------------------------------------------- | ---------------------- |
+| `data/schemas/operations/unwieldItem.schema.json`               | Operation schema       |
+| `src/logic/operationHandlers/unwieldItemHandler.js`             | Handler implementation |
+| `tests/unit/logic/operationHandlers/unwieldItemHandler.test.js` | Unit tests             |
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `data/schemas/operation.schema.json` | Add schema $ref |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Add mapping |
-| `src/utils/preValidationUtils.js` | Add to whitelist |
-| `data/mods/items/rules/handle_drop_item.rule.json` | Add UNWIELD_ITEM call |
-| `data/mods/items/rules/handle_unwield_item.rule.json` | Simplify using new operation |
+| File                                                                     | Change                       |
+| ------------------------------------------------------------------------ | ---------------------------- |
+| `data/schemas/operation.schema.json`                                     | Add schema $ref              |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add token                    |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add factory                  |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Add mapping                  |
+| `src/utils/preValidationUtils.js`                                        | Add to whitelist             |
+| `data/mods/items/rules/handle_drop_item.rule.json`                       | Add UNWIELD_ITEM call        |
+| `data/mods/items/rules/handle_unwield_item.rule.json`                    | Simplify using new operation |
 
 ## Future Considerations
 
 This operation can be reused for other actions that need to release wielded items:
+
 - `give_item` - When giving a wielded item to another actor
 - `put_in_container` - When putting a wielded item in a container
 - Any future action that transfers a wielded item
@@ -255,11 +268,11 @@ This operation can be reused for other actions that need to release wielded item
 
 ### Spec vs Implementation Differences
 
-| Spec Element | Actual Implementation |
-|--------------|----------------------|
-| Parameter names: `actor_id`, `item_id` | Uses `actorEntity`, `itemEntity` |
-| Event payload: `actorId`, `itemId` | Uses `actorEntity`, `itemEntity` |
-| Returns `{ success: true, wasWielding: boolean }` | Returns `{ success: true }` (no wasWielding field) |
+| Spec Element                                          | Actual Implementation                                   |
+| ----------------------------------------------------- | ------------------------------------------------------- |
+| Parameter names: `actor_id`, `item_id`                | Uses `actorEntity`, `itemEntity`                        |
+| Event payload: `actorId`, `itemId`                    | Uses `actorEntity`, `itemEntity`                        |
+| Returns `{ success: true, wasWielding: boolean }`     | Returns `{ success: true }` (no wasWielding field)      |
 | Integration test file: `unwieldItemOperation.test.js` | Tests in existing `unwield_item_rule_execution.test.js` |
 
 ### Implementation Status

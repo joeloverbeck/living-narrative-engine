@@ -2,7 +2,14 @@
  * @file Edge case tests for buildSpeechMeta - handling invalid/empty notes
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { buildSpeechMeta } from '../../../../src/domUI/helpers/buildSpeechMeta.js';
 
 // Mock the dependencies
@@ -83,7 +90,9 @@ describe('buildSpeechMeta - Edge Cases for Invalid/Empty Notes', () => {
 
       formatNotesAsRichHtml.mockReturnValue('');
 
-      const fragment = buildSpeechMeta(doc, domFactory, { notes: invalidNotes });
+      const fragment = buildSpeechMeta(doc, domFactory, {
+        notes: invalidNotes,
+      });
 
       expect(fragment).toBeNull();
       expect(formatNotesAsRichHtml).toHaveBeenCalledWith(invalidNotes);
@@ -92,7 +101,11 @@ describe('buildSpeechMeta - Edge Cases for Invalid/Empty Notes', () => {
 
   describe('Single note object with empty text', () => {
     it('should not create notes button when single note has empty text', () => {
-      const emptyNote = { text: '', subject: 'Empty', subjectType: 'observation' };
+      const emptyNote = {
+        text: '',
+        subject: 'Empty',
+        subjectType: 'observation',
+      };
 
       formatNotesAsRichHtml.mockReturnValue('');
 
@@ -111,7 +124,9 @@ describe('buildSpeechMeta - Edge Cases for Invalid/Empty Notes', () => {
 
       formatNotesAsRichHtml.mockReturnValue('');
 
-      const fragment = buildSpeechMeta(doc, domFactory, { notes: whitespaceNote });
+      const fragment = buildSpeechMeta(doc, domFactory, {
+        notes: whitespaceNote,
+      });
 
       expect(fragment).toBeNull();
       expect(formatNotesAsRichHtml).toHaveBeenCalledWith(whitespaceNote);

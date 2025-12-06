@@ -141,7 +141,12 @@ class GetDamageCapabilitiesHandler extends ComponentOperationHandler {
    * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher - Event dispatcher
    * @param {JsonLogicEvaluationService} deps.jsonLogicService - JSON Logic evaluation service
    */
-  constructor({ entityManager, logger, safeEventDispatcher, jsonLogicService }) {
+  constructor({
+    entityManager,
+    logger,
+    safeEventDispatcher,
+    jsonLogicService,
+  }) {
     super('GetDamageCapabilitiesHandler', {
       logger: { value: logger },
       entityManager: {
@@ -180,13 +185,16 @@ class GetDamageCapabilitiesHandler extends ComponentOperationHandler {
     if (typeof ref === 'object' && ref !== null) {
       try {
         const resolved = this.#jsonLogicService.evaluate(ref, context);
-        if (typeof resolved === 'string' && resolved.trim()) return resolved.trim();
+        if (typeof resolved === 'string' && resolved.trim())
+          return resolved.trim();
         if (typeof resolved === 'object' && resolved !== null) {
           const id = resolved.id || resolved.entityId;
           if (typeof id === 'string' && id.trim()) return id.trim();
         }
       } catch (err) {
-        logger.warn('GET_DAMAGE_CAPABILITIES: Failed to evaluate entity ref', { error: err.message });
+        logger.warn('GET_DAMAGE_CAPABILITIES: Failed to evaluate entity ref', {
+          error: err.message,
+        });
       }
     }
     return null;
@@ -203,7 +211,11 @@ class GetDamageCapabilitiesHandler extends ComponentOperationHandler {
    */
   #validateParams(params, executionContext, logger) {
     if (
-      !assertParamsObject(params, this.#dispatcher, 'GetDamageCapabilitiesHandler')
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'GetDamageCapabilitiesHandler'
+      )
     ) {
       return null;
     }
@@ -215,7 +227,11 @@ class GetDamageCapabilitiesHandler extends ComponentOperationHandler {
     const { entity_ref, output_variable } = params;
 
     // Use custom resolution that supports JSON Logic expressions
-    const entityId = this.#resolveEntityRef(entity_ref, executionContext, logger);
+    const entityId = this.#resolveEntityRef(
+      entity_ref,
+      executionContext,
+      logger
+    );
 
     if (!entityId) {
       safeDispatchError(

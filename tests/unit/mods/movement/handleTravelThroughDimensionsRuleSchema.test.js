@@ -9,9 +9,10 @@ import handleTravelThroughDimensionsRule from '../../../../data/mods/movement/ru
 describe('handle_travel_through_dimensions Rule Schema', () => {
   describe('Perceptible Event Payload Structure', () => {
     it('should use descriptionText field instead of message for perceptible events', () => {
-      const dispatchEventOperations = handleTravelThroughDimensionsRule.actions.filter(
-        (action) => action.type === 'DISPATCH_EVENT'
-      );
+      const dispatchEventOperations =
+        handleTravelThroughDimensionsRule.actions.filter(
+          (action) => action.type === 'DISPATCH_EVENT'
+        );
 
       const perceptibleEvents = dispatchEventOperations.filter(
         (op) => op.parameters.eventType === 'core:perceptible_event'
@@ -36,9 +37,10 @@ describe('handle_travel_through_dimensions Rule Schema', () => {
     });
 
     it('should include all required perceptible event fields', () => {
-      const dispatchEventOperations = handleTravelThroughDimensionsRule.actions.filter(
-        (action) => action.type === 'DISPATCH_EVENT'
-      );
+      const dispatchEventOperations =
+        handleTravelThroughDimensionsRule.actions.filter(
+          (action) => action.type === 'DISPATCH_EVENT'
+        );
 
       const perceptibleEvents = dispatchEventOperations.filter(
         (op) => op.parameters.eventType === 'core:perceptible_event'
@@ -61,9 +63,10 @@ describe('handle_travel_through_dimensions Rule Schema', () => {
     });
 
     it('should only include allowed perceptible event fields', () => {
-      const dispatchEventOperations = handleTravelThroughDimensionsRule.actions.filter(
-        (action) => action.type === 'DISPATCH_EVENT'
-      );
+      const dispatchEventOperations =
+        handleTravelThroughDimensionsRule.actions.filter(
+          (action) => action.type === 'DISPATCH_EVENT'
+        );
 
       const perceptibleEvents = dispatchEventOperations.filter(
         (op) => op.parameters.eventType === 'core:perceptible_event'
@@ -92,9 +95,10 @@ describe('handle_travel_through_dimensions Rule Schema', () => {
     });
 
     it('should have correct perceptionType values', () => {
-      const dispatchEventOperations = handleTravelThroughDimensionsRule.actions.filter(
-        (action) => action.type === 'DISPATCH_EVENT'
-      );
+      const dispatchEventOperations =
+        handleTravelThroughDimensionsRule.actions.filter(
+          (action) => action.type === 'DISPATCH_EVENT'
+        );
 
       const perceptibleEvents = dispatchEventOperations.filter(
         (op) => op.parameters.eventType === 'core:perceptible_event'
@@ -111,11 +115,12 @@ describe('handle_travel_through_dimensions Rule Schema', () => {
       );
 
       // Verify the SET_VARIABLE operations set the correct values
-      const setPerceptionTypeOperations = handleTravelThroughDimensionsRule.actions.filter(
-        (action) =>
-          action.type === 'SET_VARIABLE' &&
-          action.parameters.variable_name === 'perceptionType'
-      );
+      const setPerceptionTypeOperations =
+        handleTravelThroughDimensionsRule.actions.filter(
+          (action) =>
+            action.type === 'SET_VARIABLE' &&
+            action.parameters.variable_name === 'perceptionType'
+        );
 
       expect(setPerceptionTypeOperations.length).toBe(2);
       expect(setPerceptionTypeOperations[0].parameters.value).toBe(
@@ -127,9 +132,10 @@ describe('handle_travel_through_dimensions Rule Schema', () => {
     });
 
     it('should use display_successful_action_result with message field correctly', () => {
-      const dispatchEventOperations = handleTravelThroughDimensionsRule.actions.filter(
-        (action) => action.type === 'DISPATCH_EVENT'
-      );
+      const dispatchEventOperations =
+        handleTravelThroughDimensionsRule.actions.filter(
+          (action) => action.type === 'DISPATCH_EVENT'
+        );
 
       const displayEvents = dispatchEventOperations.filter(
         (op) =>

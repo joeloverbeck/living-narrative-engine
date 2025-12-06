@@ -27,7 +27,8 @@ const loadModEntityDefinitions = () => {
 };
 
 const getSocketIds = (entity) =>
-  entity.components?.[SOCKETS_COMPONENT]?.sockets?.map((socket) => socket.id) || [];
+  entity.components?.[SOCKETS_COMPONENT]?.sockets?.map((socket) => socket.id) ||
+  [];
 
 const hasSockets = (entity) =>
   Array.isArray(entity.components?.[SOCKETS_COMPONENT]?.sockets) &&
@@ -116,7 +117,9 @@ describe('entityResolutionConsistency', () => {
     it('resolveEntityId returns consistent ID across shuffled registry order', async () => {
       const expected = await resolveEntityId('head', modRegistry);
 
-      const reversedRegistry = buildRegistryWithEntities([...modEntities].reverse());
+      const reversedRegistry = buildRegistryWithEntities(
+        [...modEntities].reverse()
+      );
       const shuffledRegistry = buildRegistryWithEntities(
         shuffleDeterministic(modEntities)
       );

@@ -17,23 +17,27 @@ Verify and complete the comprehensive unit and integration tests for `EstablishB
 ## Outcome
 
 ### Changes Implemented
+
 1.  **Verified Unit Tests:** Confirmed existing unit tests cover 90%+ branches (Actual: 90.38%).
 2.  **Created Integration Tests:** Implemented `tests/integration/logic/operationHandlers/establishBidirectionalCloseness.integration.test.js` covering relationship lifecycle and template resolution.
 3.  **Updated Test Infrastructure:** Registered `ESTABLISH_BIDIRECTIONAL_CLOSENESS` in `tests/common/mods/ModTestHandlerFactory.js` to support integration testing.
 
 ### Verification Results
--   Unit tests passed with >90% coverage.
--   Integration tests passed.
+
+- Unit tests passed with >90% coverage.
+- Integration tests passed.
 
 ---
 
 ## Files Touched
 
 ### New Files (Tests)
+
 - `tests/integration/logic/operationHandlers/establishBidirectionalCloseness.integration.test.js`
 
 ### Modified Files
--   `tests/common/mods/ModTestHandlerFactory.js` (Added handler registration for tests)
+
+- `tests/common/mods/ModTestHandlerFactory.js` (Added handler registration for tests)
 
 ---
 
@@ -48,14 +52,15 @@ Run existing unit tests and check coverage. Add tests if branch coverage is belo
 Create `tests/integration/logic/operationHandlers/establishBidirectionalCloseness.integration.test.js`.
 
 Test Scenarios:
+
 1.  **Full Lifecycle:**
-    -   Create three entities (Actor, Target, ThirdParty).
-    -   Establish closeness between Actor and ThirdParty.
-    -   Run `ESTABLISH_BIDIRECTIONAL_CLOSENESS` for Actor and Target (with `clean_existing: true`).
-    -   Verify Actor has component pointing to Target.
-    -   Verify Target has component pointing to Actor.
-    -   Verify Actor no longer has component pointing to ThirdParty.
-    -   Verify ThirdParty no longer has component pointing to Actor.
+    - Create three entities (Actor, Target, ThirdParty).
+    - Establish closeness between Actor and ThirdParty.
+    - Run `ESTABLISH_BIDIRECTIONAL_CLOSENESS` for Actor and Target (with `clean_existing: true`).
+    - Verify Actor has component pointing to Target.
+    - Verify Target has component pointing to Actor.
+    - Verify Actor no longer has component pointing to ThirdParty.
+    - Verify ThirdParty no longer has component pointing to Actor.
 
 2.  **Template Resolution:**
-    -   Verify `{event.payload.actorId}` and `{event.payload.targetId}` are resolved correctly in component data.
+    - Verify `{event.payload.actorId}` and `{event.payload.targetId}` are resolved correctly in component data.

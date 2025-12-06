@@ -2,7 +2,14 @@
  * @file Integration tests for bootstrapperHelpers utilities using real collaborators.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import StageError from '../../../src/bootstrapper/StageError.js';
 import {
@@ -127,7 +134,13 @@ describe('bootstrapperHelpers integration', () => {
     });
 
     it('logs a warning when the button is missing', () => {
-      setupButtonListener(document, 'missing-button', () => {}, logger, 'Bootstrap');
+      setupButtonListener(
+        document,
+        'missing-button',
+        () => {},
+        logger,
+        'Bootstrap'
+      );
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Bootstrap: Could not find #missing-button. Listener not attached.'

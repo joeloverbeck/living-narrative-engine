@@ -29,7 +29,6 @@ import {
 async function withTemporaryCaptureStackTrace(replacement, callback) {
   const original = Error.captureStackTrace;
   if (replacement === undefined) {
-     
     // @ts-ignore
     delete Error.captureStackTrace;
   } else {
@@ -42,7 +41,6 @@ async function withTemporaryCaptureStackTrace(replacement, callback) {
     if (original) {
       Error.captureStackTrace = original;
     } else {
-       
       // @ts-ignore
       delete Error.captureStackTrace;
     }

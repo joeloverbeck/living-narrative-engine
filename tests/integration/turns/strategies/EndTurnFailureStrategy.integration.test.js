@@ -47,7 +47,9 @@ describe('EndTurnFailureStrategy integration', () => {
    *
    * @param serviceName
    */
-  function createTurnContext(serviceName = 'EndTurnFailureStrategyIntegration') {
+  function createTurnContext(
+    serviceName = 'EndTurnFailureStrategyIntegration'
+  ) {
     const actor = createActor();
     const { logger: baseLogger, entries } = createRecordingLogger();
     const serviceSetup = new ServiceSetup();
@@ -78,16 +80,13 @@ describe('EndTurnFailureStrategy integration', () => {
   }
 
   it('ends the turn with the provided Error from commandResult', async () => {
-    const { turnContext, endTurnCalls, entries, actor } =
-      createTurnContext();
+    const { turnContext, endTurnCalls, entries, actor } = createTurnContext();
     const strategy = new EndTurnFailureStrategy();
     const commandError = new Error('explicit failure');
 
-    await strategy.execute(
-      turnContext,
-      TurnDirective.END_TURN_FAILURE,
-      { error: commandError }
-    );
+    await strategy.execute(turnContext, TurnDirective.END_TURN_FAILURE, {
+      error: commandError,
+    });
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBe(commandError);
@@ -100,11 +99,9 @@ describe('EndTurnFailureStrategy integration', () => {
     const { turnContext, endTurnCalls } = createTurnContext();
     const strategy = new EndTurnFailureStrategy();
 
-    await strategy.execute(
-      turnContext,
-      TurnDirective.END_TURN_FAILURE,
-      { error: 'timeout exceeded' }
-    );
+    await strategy.execute(turnContext, TurnDirective.END_TURN_FAILURE, {
+      error: 'timeout exceeded',
+    });
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(Error);
@@ -115,11 +112,7 @@ describe('EndTurnFailureStrategy integration', () => {
     const { turnContext, endTurnCalls, actor } = createTurnContext();
     const strategy = new EndTurnFailureStrategy();
 
-    await strategy.execute(
-      turnContext,
-      TurnDirective.END_TURN_FAILURE,
-      {}
-    );
+    await strategy.execute(turnContext, TurnDirective.END_TURN_FAILURE, {});
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(Error);
@@ -158,16 +151,13 @@ describe('EndTurnFailureStrategy integration', () => {
   });
 
   it('logs and ends the turn with a generated error when the actor is missing', async () => {
-    const { turnContext, endTurnCalls, entries } =
-      createTurnContext('MissingActorStrategy');
+    const { turnContext, endTurnCalls, entries } = createTurnContext(
+      'MissingActorStrategy'
+    );
     const strategy = new EndTurnFailureStrategy();
     turnContext.getActor = () => null;
 
-    await strategy.execute(
-      turnContext,
-      TurnDirective.END_TURN_FAILURE,
-      {}
-    );
+    await strategy.execute(turnContext, TurnDirective.END_TURN_FAILURE, {});
 
     expect(endTurnCalls).toHaveLength(1);
     expect(endTurnCalls[0]).toBeInstanceOf(Error);

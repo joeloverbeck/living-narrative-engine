@@ -12,7 +12,9 @@ describe('TimeoutConfiguration', () => {
   describe('Environment-Based Configuration', () => {
     it('should return 30-second timeout for production environment', () => {
       // Arrange
-      const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+      const productionProvider = new TestEnvironmentProvider({
+        IS_PRODUCTION: true,
+      });
       const config = new TimeoutConfiguration({
         environmentProvider: productionProvider,
       });
@@ -26,7 +28,9 @@ describe('TimeoutConfiguration', () => {
 
     it('should return 3-second timeout for development environment', () => {
       // Arrange
-      const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+      const developmentProvider = new TestEnvironmentProvider({
+        IS_PRODUCTION: false,
+      });
       const config = new TimeoutConfiguration({
         environmentProvider: developmentProvider,
       });
@@ -42,7 +46,9 @@ describe('TimeoutConfiguration', () => {
   describe('Explicit Timeout Override', () => {
     it('should use explicit timeout over production default', () => {
       // Arrange
-      const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+      const productionProvider = new TestEnvironmentProvider({
+        IS_PRODUCTION: true,
+      });
       const config = new TimeoutConfiguration({
         timeoutMs: 5_000,
         environmentProvider: productionProvider,
@@ -57,7 +63,9 @@ describe('TimeoutConfiguration', () => {
 
     it('should use explicit timeout over development default', () => {
       // Arrange
-      const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+      const developmentProvider = new TestEnvironmentProvider({
+        IS_PRODUCTION: false,
+      });
       const config = new TimeoutConfiguration({
         timeoutMs: 10_000,
         environmentProvider: developmentProvider,
@@ -83,7 +91,9 @@ describe('TimeoutConfiguration', () => {
         throw new Error('Expected getTimeoutMs to throw');
       } catch (err) {
         expect(err).toBeInstanceOf(InvalidArgumentError);
-        expect(err.message).toMatch(/timeoutMs must be a positive finite number.*NaN/);
+        expect(err.message).toMatch(
+          /timeoutMs must be a positive finite number.*NaN/
+        );
       }
       /* eslint-enable jest/no-conditional-expect */
     });
@@ -131,7 +141,9 @@ describe('TimeoutConfiguration', () => {
         throw new Error('Expected getTimeoutMs to throw');
       } catch (err) {
         expect(err).toBeInstanceOf(InvalidArgumentError);
-        expect(err.message).toMatch(/timeoutMs must be a positive finite number.*0/);
+        expect(err.message).toMatch(
+          /timeoutMs must be a positive finite number.*0/
+        );
       }
       /* eslint-enable jest/no-conditional-expect */
     });
@@ -323,7 +335,9 @@ describe('TimeoutConfiguration', () => {
   describe('Edge Cases', () => {
     it('should handle null explicit timeout as undefined', () => {
       // Arrange
-      const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+      const developmentProvider = new TestEnvironmentProvider({
+        IS_PRODUCTION: false,
+      });
       const config = new TimeoutConfiguration({
         timeoutMs: null,
         environmentProvider: developmentProvider,

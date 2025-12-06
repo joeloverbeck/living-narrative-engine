@@ -205,7 +205,11 @@ describe('ComponentStateValidator integration', () => {
   describe('validateBidirectionalCloseness', () => {
     it('throws when entity manager dependency is missing', () => {
       expect(() =>
-        validator.validateBidirectionalCloseness(null, 'game:actor', 'game:partner')
+        validator.validateBidirectionalCloseness(
+          null,
+          'game:actor',
+          'game:partner'
+        )
       ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(

@@ -183,9 +183,15 @@ describe('registerActorAwareStrategy', () => {
     expect(factory.create('aiComponent').decisionProvider.name).toBe('llm');
     expect(factory.create('isAi').decisionProvider.name).toBe('llm');
     expect(factory.create('player').decisionProvider.name).toBe('human');
-    expect(factory.create('playerByMethod').decisionProvider.name).toBe('human');
-    expect(factory.create('componentNoType').decisionProvider.name).toBe('human');
-    expect(factory.create('componentError').decisionProvider.name).toBe('human');
+    expect(factory.create('playerByMethod').decisionProvider.name).toBe(
+      'human'
+    );
+    expect(factory.create('componentNoType').decisionProvider.name).toBe(
+      'human'
+    );
+    expect(factory.create('componentError').decisionProvider.name).toBe(
+      'human'
+    );
     expect(factory.create('unknown').decisionProvider.name).toBe('human');
   });
 

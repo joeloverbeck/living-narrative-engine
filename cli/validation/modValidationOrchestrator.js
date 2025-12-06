@@ -125,7 +125,8 @@ class ModValidationOrchestrator {
     this.#modManifestLoader = modManifestLoader;
     this.#pathResolver = pathResolver;
     this.#configuration = configuration;
-    this.#fileExistenceValidator = fileExistenceValidator || new ManifestFileExistenceValidator({ logger });
+    this.#fileExistenceValidator =
+      fileExistenceValidator || new ManifestFileExistenceValidator({ logger });
   }
 
   /**
@@ -279,13 +280,16 @@ class ModValidationOrchestrator {
       const fileExistenceStartTime = performance.now();
 
       try {
-        results.fileExistence = await this.#fileExistenceValidator.validateAllMods(manifestsMap);
+        results.fileExistence =
+          await this.#fileExistenceValidator.validateAllMods(manifestsMap);
         results.performance.phases.set(
           'file-existence-validation',
           performance.now() - fileExistenceStartTime
         );
 
-        const invalidMods = Array.from(results.fileExistence.values()).filter(r => !r.isValid);
+        const invalidMods = Array.from(results.fileExistence.values()).filter(
+          (r) => !r.isValid
+        );
         if (invalidMods.length > 0) {
           const totalIssues = invalidMods.reduce(
             (sum, r) => sum + r.missingFiles.length + r.namingIssues.length,
@@ -314,13 +318,18 @@ class ModValidationOrchestrator {
       const unregisteredFilesStartTime = performance.now();
 
       try {
-        results.unregisteredFiles = await this.#fileExistenceValidator.validateAllModsUnregistered(manifestsMap);
+        results.unregisteredFiles =
+          await this.#fileExistenceValidator.validateAllModsUnregistered(
+            manifestsMap
+          );
         results.performance.phases.set(
           'unregistered-files-validation',
           performance.now() - unregisteredFilesStartTime
         );
 
-        const modsWithUnregistered = Array.from(results.unregisteredFiles.values()).filter(r => !r.isValid);
+        const modsWithUnregistered = Array.from(
+          results.unregisteredFiles.values()
+        ).filter((r) => !r.isValid);
         if (modsWithUnregistered.length > 0) {
           const totalUnregistered = modsWithUnregistered.reduce(
             (sum, r) => sum + r.unregisteredFiles.length,
@@ -351,9 +360,7 @@ class ModValidationOrchestrator {
             (r) => r.hasViolations
           )) &&
         (!results.fileExistence ||
-          !Array.from(results.fileExistence.values()).some(
-            (r) => !r.isValid
-          ));
+          !Array.from(results.fileExistence.values()).some((r) => !r.isValid));
 
       const totalTime = performance.now() - startTime;
       results.performance.totalTime = totalTime;

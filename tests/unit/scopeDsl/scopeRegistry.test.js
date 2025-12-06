@@ -174,7 +174,9 @@ describe('ScopeRegistry', () => {
         const scope = scopeRegistry.getScopeOrThrow('core:all_characters');
 
         expect(scope).toBeDefined();
-        expect(scope.expr).toBe(mockScopeDefinitions['core:all_characters'].expr);
+        expect(scope.expr).toBe(
+          mockScopeDefinitions['core:all_characters'].expr
+        );
       });
 
       it('throws a ScopeResolutionError with helpful suggestions when the scope is missing', () => {
@@ -187,11 +189,14 @@ describe('ScopeRegistry', () => {
           'core:scope5': { expr: 'scope5()' },
           'core:scope6': { expr: 'scope6()' },
         });
-        scopeRegistry.initialize({ ...addMockAstsToScopes(mockScopeDefinitions), ...extendedScopes });
+        scopeRegistry.initialize({
+          ...addMockAstsToScopes(mockScopeDefinitions),
+          ...extendedScopes,
+        });
 
-        expect(() => scopeRegistry.getScopeOrThrow('core:missing_scope')).toThrow(
-          ScopeResolutionError
-        );
+        expect(() =>
+          scopeRegistry.getScopeOrThrow('core:missing_scope')
+        ).toThrow(ScopeResolutionError);
 
         try {
           scopeRegistry.getScopeOrThrow('core:missing_scope');
@@ -206,7 +211,9 @@ describe('ScopeRegistry', () => {
             requestedScope: 'core:missing_scope',
             totalRegisteredScopes: scopeRegistry.getAllScopeNames().length,
           });
-          expect(context.hint).toBe('Check that the scope is registered and the name is correct');
+          expect(context.hint).toBe(
+            'Check that the scope is registered and the name is correct'
+          );
           expect(context.suggestion).toMatch(/Available scopes \(first 5\):/);
           expect(context.suggestion.split(': ')[1].split(', ').length).toBe(5);
           expect(context.example).toMatch(/scopeRegistry\.getScope\('/);
@@ -216,15 +223,17 @@ describe('ScopeRegistry', () => {
       it('throws a ScopeResolutionError without suggestions when no scopes are registered', () => {
         const emptyRegistry = new ScopeRegistry();
 
-        expect(() => emptyRegistry.getScopeOrThrow('core:missing_scope')).toThrow(
-          ScopeResolutionError
-        );
+        expect(() =>
+          emptyRegistry.getScopeOrThrow('core:missing_scope')
+        ).toThrow(ScopeResolutionError);
 
         try {
           emptyRegistry.getScopeOrThrow('core:missing_scope');
         } catch (error) {
           expect(error.context.scopeName).toBe('core:missing_scope');
-          expect(error.context.suggestion).toBe('No scopes are currently registered');
+          expect(error.context.suggestion).toBe(
+            'No scopes are currently registered'
+          );
           expect(error.context.example).toBeUndefined();
         }
       });

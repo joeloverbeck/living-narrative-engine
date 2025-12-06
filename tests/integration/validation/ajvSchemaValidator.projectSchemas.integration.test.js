@@ -59,7 +59,9 @@ describe('AjvSchemaValidator with project schemas', () => {
   });
 
   it('reports missing schema dependencies for operations schema', async () => {
-    const dispatchSchema = await loadSchema('operations/dispatchSpeech.schema.json');
+    const dispatchSchema = await loadSchema(
+      'operations/dispatchSpeech.schema.json'
+    );
     const validator = new AjvSchemaValidator({ logger });
 
     await validator.addSchema(dispatchSchema, dispatchSchema.$id);
@@ -89,7 +91,9 @@ describe('AjvSchemaValidator with project schemas', () => {
     expect(validator.validateSchemaRefs(dispatchSchema.$id)).toBe(false);
 
     const warnOutput = logger.logs.warn.join('\n');
-    expect(warnOutput).toContain("can't resolve reference ../base-operation.schema.json");
+    expect(warnOutput).toContain(
+      "can't resolve reference ../base-operation.schema.json"
+    );
     expect(warnOutput).toContain('validate called for schemaId');
 
     const errorOutput = logger.logs.error.join('\n');
@@ -114,7 +118,9 @@ describe('AjvSchemaValidator with project schemas', () => {
     const conditionSchema = await loadSchema('condition-container.schema.json');
     const commonSchema = await loadSchema('common.schema.json');
     const baseOperationSchema = await loadSchema('base-operation.schema.json');
-    const dispatchSchema = await loadSchema('operations/dispatchSpeech.schema.json');
+    const dispatchSchema = await loadSchema(
+      'operations/dispatchSpeech.schema.json'
+    );
     const validator = new AjvSchemaValidator({ logger });
 
     await validator.addSchema(jsonLogicSchema, jsonLogicSchema.$id);

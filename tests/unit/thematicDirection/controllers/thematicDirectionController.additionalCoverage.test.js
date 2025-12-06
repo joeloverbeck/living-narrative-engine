@@ -3,7 +3,14 @@
  * @description Focuses on branches that previously lacked unit test coverage
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ThematicDirectionController } from '../../../../src/thematicDirection/controllers/thematicDirectionController.js';
 import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 
@@ -72,7 +79,9 @@ describe('ThematicDirectionController - Additional Branch Coverage', () => {
     const form = document.getElementById('concept-form');
     const addEventListenerSpy = jest.spyOn(form, 'addEventListener');
 
-    testBase.controller = new ThematicDirectionController(testBase.mockDependencies);
+    testBase.controller = new ThematicDirectionController(
+      testBase.mockDependencies
+    );
 
     const generateSpy = jest
       .spyOn(testBase.controller, '_handleGenerateDirections')
@@ -106,15 +115,17 @@ describe('ThematicDirectionController - Additional Branch Coverage', () => {
       createdAt: '2024-01-01T00:00:00.000Z',
     });
 
-    testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue([
-      mockConcept,
-    ]);
+    testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      [mockConcept]
+    );
 
     global.URLSearchParams = jest.fn(() => ({
       get: (key) => (key === 'conceptId' ? 'concept-1' : null),
     }));
 
-    testBase.controller = new ThematicDirectionController(testBase.mockDependencies);
+    testBase.controller = new ThematicDirectionController(
+      testBase.mockDependencies
+    );
 
     const executionError = new Error('generation failed');
     const executionSpy = jest
@@ -131,9 +142,10 @@ describe('ThematicDirectionController - Additional Branch Coverage', () => {
 
     await testBase.controller._handleGenerateDirections();
 
-    expect(
-      testBase.mockDependencies.logger.error
-    ).toHaveBeenCalledWith('Generation failed after retries', executionError);
+    expect(testBase.mockDependencies.logger.error).toHaveBeenCalledWith(
+      'Generation failed after retries',
+      executionError
+    );
 
     testBase.controller._resetToEmpty();
     expect(generateButton.disabled).toBe(false);
@@ -144,7 +156,9 @@ describe('ThematicDirectionController - Additional Branch Coverage', () => {
   it('clears stale selector options and shows the empty state message when no concepts exist', async () => {
     renderControllerLayout({ includeBackButton: false });
 
-    testBase.controller = new ThematicDirectionController(testBase.mockDependencies);
+    testBase.controller = new ThematicDirectionController(
+      testBase.mockDependencies
+    );
 
     await testBase.controller.initialize();
 
@@ -173,14 +187,18 @@ describe('ThematicDirectionController - Additional Branch Coverage', () => {
 
     const message = document.querySelector('.no-concepts-message');
     expect(message).not.toBeNull();
-    expect(message?.previousElementSibling?.classList.contains('cb-form-group')).toBe(true);
+    expect(
+      message?.previousElementSibling?.classList.contains('cb-form-group')
+    ).toBe(true);
     expect(document.getElementById('generate-btn').disabled).toBe(true);
   });
 
   it('truncates long text and safely handles missing legacy form helpers', async () => {
     renderControllerLayout({ includeBackButton: false });
 
-    testBase.controller = new ThematicDirectionController(testBase.mockDependencies);
+    testBase.controller = new ThematicDirectionController(
+      testBase.mockDependencies
+    );
     await testBase.controller.initialize();
 
     const truncated = testBase.controller._truncateText('a'.repeat(20), 10);
@@ -202,11 +220,13 @@ describe('ThematicDirectionController - Additional Branch Coverage', () => {
       thematicDirections: [{ id: 'existing-direction' }],
     });
 
-    testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue([
-      mockConcept,
-    ]);
+    testBase.mockDependencies.characterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      [mockConcept]
+    );
 
-    testBase.controller = new ThematicDirectionController(testBase.mockDependencies);
+    testBase.controller = new ThematicDirectionController(
+      testBase.mockDependencies
+    );
     await testBase.controller.initialize();
 
     jest.useFakeTimers();

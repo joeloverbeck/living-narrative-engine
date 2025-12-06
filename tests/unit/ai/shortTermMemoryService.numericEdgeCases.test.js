@@ -10,18 +10,28 @@ describe('ShortTermMemoryService numeric and capacity edge cases', () => {
     const firstResult = service.addThought(mem, 404, firstTimestamp);
 
     expect(firstResult.wasAdded).toBe(true);
-    expect(firstResult.entry).toEqual({ text: 404, timestamp: firstTimestamp.toISOString() });
+    expect(firstResult.entry).toEqual({
+      text: 404,
+      timestamp: firstTimestamp.toISOString(),
+    });
     expect(mem.thoughts).toHaveLength(1);
 
     const duplicateMem = {
       thoughts: [
         { text: '  404  ', timestamp: '2024-04-01T09:59:00.000Z' },
-        { text: { unexpected: 'value' }, timestamp: '2024-04-01T09:58:00.000Z' },
+        {
+          text: { unexpected: 'value' },
+          timestamp: '2024-04-01T09:58:00.000Z',
+        },
       ],
       maxEntries: 3,
     };
 
-    const duplicateResult = service.addThought(duplicateMem, 404, new Date('2024-04-01T10:01:00.000Z'));
+    const duplicateResult = service.addThought(
+      duplicateMem,
+      404,
+      new Date('2024-04-01T10:01:00.000Z')
+    );
 
     expect(duplicateResult).toEqual({ mem: duplicateMem, wasAdded: false });
     expect(duplicateMem.thoughts).toHaveLength(2);
@@ -53,13 +63,21 @@ describe('ShortTermMemoryService numeric and capacity edge cases', () => {
     const service = new ShortTermMemoryService();
 
     expect(() =>
-      service.emitThoughtAdded('entity-before', 'text', '2024-03-01T12:00:00.000Z'),
+      service.emitThoughtAdded(
+        'entity-before',
+        'text',
+        '2024-03-01T12:00:00.000Z'
+      )
     ).not.toThrow();
 
     const dispatch = jest.fn();
     service.eventDispatcher = { dispatch };
 
-    service.emitThoughtAdded('entity-100', 'remember this', '2024-03-01T12:01:00.000Z');
+    service.emitThoughtAdded(
+      'entity-100',
+      'remember this',
+      '2024-03-01T12:01:00.000Z'
+    );
 
     expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
       entityId: 'entity-100',
@@ -70,7 +88,11 @@ describe('ShortTermMemoryService numeric and capacity edge cases', () => {
     service.eventDispatcher = { dispatch: null };
 
     expect(() =>
-      service.emitThoughtAdded('entity-after', 'noop', '2024-03-01T12:02:00.000Z'),
+      service.emitThoughtAdded(
+        'entity-after',
+        'noop',
+        '2024-03-01T12:02:00.000Z'
+      )
     ).not.toThrow();
   });
 });

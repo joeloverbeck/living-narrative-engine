@@ -36,10 +36,14 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Exec
       additionalPayload: { primaryId: 'beth' },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
   });
 
   it('maintains penetration components without changes', async () => {

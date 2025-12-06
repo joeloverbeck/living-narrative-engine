@@ -116,10 +116,14 @@ describe('initializeAuxiliaryServicesStage integration', () => {
 
     expect(result.success).toBe(true);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Bootstrap Stage: Starting Auxiliary Services Initialization')
+      expect.stringContaining(
+        'Bootstrap Stage: Starting Auxiliary Services Initialization'
+      )
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Bootstrap Stage: Auxiliary Services Initialization completed.')
+      expect.stringContaining(
+        'Bootstrap Stage: Auxiliary Services Initialization completed.'
+      )
     );
 
     expect(engineInitializeSpy).toHaveBeenCalledTimes(1);
@@ -166,7 +170,5 @@ describe('initializeAuxiliaryServicesStage integration', () => {
     expect(failureNames).toEqual(
       expect.arrayContaining(['EngineUIManager', 'LlmSelectionModal'])
     );
-
   });
 });
-

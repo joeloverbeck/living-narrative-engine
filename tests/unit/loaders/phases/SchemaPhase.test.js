@@ -103,7 +103,10 @@ describe('SchemaPhase', () => {
     });
 
     it('should pre-generate validators when supported by the validator', async () => {
-      const mockComponentSchemas = ['schema:component:one', 'schema:component:two'];
+      const mockComponentSchemas = [
+        'schema:component:one',
+        'schema:component:two',
+      ];
       mockValidator.getLoadedComponentSchemas = jest
         .fn()
         .mockReturnValue(mockComponentSchemas);

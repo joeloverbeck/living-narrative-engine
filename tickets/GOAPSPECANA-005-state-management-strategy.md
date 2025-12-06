@@ -9,6 +9,7 @@
 ## Problem Statement
 
 Lines 232-234 mention using "existing operation handlers" to simulate state changes during planning, but operation handlers are designed for execution and may mutate global state. Critical questions unanswered:
+
 - Does planning mutate real world state? (Must be NO)
 - How is state isolated? (Deep copy? COW? Abstract?)
 - What's the memory cost?
@@ -32,6 +33,7 @@ Design, prototype, and specify complete state management strategy that prevents 
 ## Tasks
 
 ### 1. Define Requirements
+
 - [ ] Must-haves:
   - Planning MUST NOT mutate real world state
   - Multiple actors MUST plan concurrently without interference
@@ -46,11 +48,13 @@ Design, prototype, and specify complete state management strategy that prevents 
   - Allow rollback/cleanup after planning
 
 ### 2. Approach A: Deep Copy Prototype
+
 - [ ] Design deep copy mechanism:
   - What to copy: All entities? Actor-local? Relevant entities only?
   - Copy depth: Full recursive? Shallow for some components?
   - Exclusions: What NOT to copy (UI state, logging, etc.)
 - [ ] Build prototype:
+
   ```javascript
   class DeepCopyWorldState {
     constructor(realWorldState, actorId) {
@@ -64,6 +68,7 @@ Design, prototype, and specify complete state management strategy that prevents 
     // ... other query methods
   }
   ```
+
 - [ ] Measure performance:
   - Snapshot creation time (50 actors, 500 entities)
   - Memory overhead per snapshot
@@ -73,16 +78,18 @@ Design, prototype, and specify complete state management strategy that prevents 
   - ❌ Memory intensive, slow for large worlds
 
 ### 3. Approach B: Copy-on-Write Prototype
+
 - [ ] Design COW mechanism:
   - Track modified entities during planning
   - Copy only on write, read from real state
   - Cleanup modified entities after planning
 - [ ] Build prototype:
+
   ```javascript
   class CopyOnWriteWorldState {
     constructor(realWorldState) {
       this.realState = realWorldState;
-      this.modifications = new Map();  // entityId -> components
+      this.modifications = new Map(); // entityId -> components
     }
 
     getComponent(entityId, componentId) {
@@ -94,12 +101,16 @@ Design, prototype, and specify complete state management strategy that prevents 
 
     setComponent(entityId, componentId, data) {
       if (!this.modifications.has(entityId)) {
-        this.modifications.set(entityId, deepClone(this.realState.getEntity(entityId)));
+        this.modifications.set(
+          entityId,
+          deepClone(this.realState.getEntity(entityId))
+        );
       }
       this.modifications.get(entityId)[componentId] = data;
     }
   }
   ```
+
 - [ ] Measure performance:
   - Overhead per read (should be minimal)
   - Memory growth during planning
@@ -109,11 +120,13 @@ Design, prototype, and specify complete state management strategy that prevents 
   - ❌ Complex, requires careful write tracking
 
 ### 4. Approach C: Abstract Planning State Prototype
+
 - [ ] Design abstract state:
   - Planning uses symbolic state representation
   - Facts extracted from real world state
   - Effects modify facts, not entities
 - [ ] Build prototype:
+
   ```javascript
   class AbstractPlanningState {
     constructor(realWorldState, actorId) {
@@ -135,6 +148,7 @@ Design, prototype, and specify complete state management strategy that prevents 
     }
   }
   ```
+
 - [ ] Measure performance:
   - Fact extraction time
   - Memory overhead (facts vs full entities)
@@ -144,6 +158,7 @@ Design, prototype, and specify complete state management strategy that prevents 
   - ❌ Most complex, requires fact extraction/mapping
 
 ### 5. Performance Benchmarking
+
 - [ ] Create test scenario:
   - 50 actors planning concurrently
   - 500 entities in world
@@ -160,28 +175,32 @@ Design, prototype, and specify complete state management strategy that prevents 
   - <100ms total planning time
 
 ### 6. Choose Strategy
+
 - [ ] Create decision matrix:
-  | Criteria | Deep Copy | Copy-on-Write | Abstract State | Weight |
-  |----------|-----------|---------------|----------------|--------|
-  | Simplicity | 5 | 3 | 2 | 3x |
-  | Memory efficiency | 2 | 4 | 5 | 2x |
-  | Performance | 3 | 5 | 4 | 2x |
-  | Safety/isolation | 5 | 4 | 5 | 3x |
-  | Complexity | 5 | 3 | 2 | 1x |
+      | Criteria | Deep Copy | Copy-on-Write | Abstract State | Weight |
+      |----------|-----------|---------------|----------------|--------|
+      | Simplicity | 5 | 3 | 2 | 3x |
+      | Memory efficiency | 2 | 4 | 5 | 2x |
+      | Performance | 3 | 5 | 4 | 2x |
+      | Safety/isolation | 5 | 4 | 5 | 3x |
+      | Complexity | 5 | 3 | 2 | 1x |
 - [ ] Score each approach
 - [ ] Choose winner based on weighted scores
 - [ ] Document rationale
 
 ### 7. Integration Specification
+
 - [ ] Document how operation handlers interact with planning state:
   ```javascript
   // Operation handler adapted for planning
   async function increaseComponentHandler(operation, context) {
     const { entityId, component, path, amount } = operation;
-    const currentValue = context.worldState.getComponent(entityId, component)[path];
+    const currentValue = context.worldState.getComponent(entityId, component)[
+      path
+    ];
     context.worldState.setComponent(entityId, component, {
       ...context.worldState.getComponent(entityId, component),
-      [path]: currentValue + amount
+      [path]: currentValue + amount,
     });
   }
   ```
@@ -190,6 +209,7 @@ Design, prototype, and specify complete state management strategy that prevents 
 - [ ] Document concurrent planning safety guarantees
 
 ### 8. Document in Specification
+
 - [ ] Replace lines 232-234 with complete state management specification
 - [ ] Document chosen approach with rationale
 - [ ] Include performance characteristics

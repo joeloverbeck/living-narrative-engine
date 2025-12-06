@@ -132,7 +132,15 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
     });
 
     await expect(
-      provider.getKey({ configId: 'demo', apiType: 'openai', promptElements: [], promptAssemblyOrder: [] }, /** @type {any} */ ({}))
+      provider.getKey(
+        {
+          configId: 'demo',
+          apiType: 'openai',
+          promptElements: [],
+          promptAssemblyOrder: [],
+        },
+        /** @type {any} */ ({})
+      )
     ).rejects.toThrow(/Invalid environmentContext/);
 
     await new Promise((resolve) => setImmediate(resolve));
@@ -164,7 +172,11 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
     );
 
     expect(key).toBeNull();
-    expect(infra.logger.calls.warn.some(({ message }) => message.includes('non-client environment'))).toBe(true);
+    expect(
+      infra.logger.calls.warn.some(({ message }) =>
+        message.includes('non-client environment')
+      )
+    ).toBe(true);
     expect(infra.dispatchedEvents).toHaveLength(0);
   });
 
@@ -206,7 +218,9 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
 
     expect(key).toBeNull();
     expect(infra.dispatchedEvents).toHaveLength(1);
-    expect(infra.dispatchedEvents[0].payload.details).toMatchObject({ apiType: 'openai' });
+    expect(infra.dispatchedEvents[0].payload.details).toMatchObject({
+      apiType: 'openai',
+    });
   });
 
   it('passes validation when cloud apiType contains key identifiers', async () => {
@@ -231,7 +245,7 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
     expect(infra.dispatchedEvents).toHaveLength(0);
     expect(
       infra.logger.calls.debug.some(({ message }) =>
-        message.includes("has required key identifier(s)")
+        message.includes('has required key identifier(s)')
       )
     ).toBe(true);
   });
@@ -256,7 +270,7 @@ describe('ClientApiKeyProvider integration with real event infrastructure', () =
     expect(key).toBeNull();
     expect(
       infra.logger.calls.debug.some(({ message }) =>
-        message.includes("is not listed as a cloud service")
+        message.includes('is not listed as a cloud service')
       )
     ).toBe(true);
   });

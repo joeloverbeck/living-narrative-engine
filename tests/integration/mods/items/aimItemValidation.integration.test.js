@@ -71,10 +71,14 @@ describe('Items Mod - Aim Item Validation', () => {
       // Assert - should have condition referencing the appropriate condition file
       expect(aimItemData).toHaveProperty('condition');
       expect(aimItemData.condition).toHaveProperty('condition_ref');
-      expect(aimItemData.condition.condition_ref).toBe('items:event-is-action-aim-item');
+      expect(aimItemData.condition.condition_ref).toBe(
+        'items:event-is-action-aim-item'
+      );
       expect(lowerAimData).toHaveProperty('condition');
       expect(lowerAimData.condition).toHaveProperty('condition_ref');
-      expect(lowerAimData.condition.condition_ref).toBe('items:event-is-action-lower-aim');
+      expect(lowerAimData.condition.condition_ref).toBe(
+        'items:event-is-action-lower-aim'
+      );
     });
   });
 });

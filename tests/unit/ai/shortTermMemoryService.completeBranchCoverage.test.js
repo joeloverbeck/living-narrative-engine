@@ -25,7 +25,9 @@ describe('ShortTermMemoryService complete branch coverage', () => {
     it('avoids duplicates regardless of casing or leading whitespace', () => {
       const service = new ShortTermMemoryService();
       const mem = {
-        thoughts: [{ text: 'Plan Ahead', timestamp: '2024-01-01T00:00:00.000Z' }],
+        thoughts: [
+          { text: 'Plan Ahead', timestamp: '2024-01-01T00:00:00.000Z' },
+        ],
         maxEntries: 5,
         entityId: 'entity-2',
       };
@@ -67,7 +69,10 @@ describe('ShortTermMemoryService complete branch coverage', () => {
     it('honours numeric maxEntries and ignores non-string history entries when deduplicating', () => {
       const service = new ShortTermMemoryService();
       const mem = {
-        thoughts: [{ text: 42 }, { text: 'Existing idea', timestamp: '2024-03-01T00:00:00.000Z' }],
+        thoughts: [
+          { text: 42 },
+          { text: 'Existing idea', timestamp: '2024-03-01T00:00:00.000Z' },
+        ],
         maxEntries: 3,
         entityId: 'entity-5',
       };
@@ -87,9 +92,15 @@ describe('ShortTermMemoryService complete branch coverage', () => {
   describe('emitThoughtAdded', () => {
     it('dispatches the ThoughtAdded event when a dispatcher is available', () => {
       const dispatch = jest.fn();
-      const service = new ShortTermMemoryService({ eventDispatcher: { dispatch } });
+      const service = new ShortTermMemoryService({
+        eventDispatcher: { dispatch },
+      });
 
-      service.emitThoughtAdded('entity-4', 'Remember this', '2024-06-01T12:00:00.000Z');
+      service.emitThoughtAdded(
+        'entity-4',
+        'Remember this',
+        '2024-06-01T12:00:00.000Z'
+      );
 
       expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
         entityId: 'entity-4',

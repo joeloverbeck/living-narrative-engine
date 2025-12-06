@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import lieDownAction from '../../../../data/mods/positioning/actions/lie_down.action.json';
 
 describe('positioning:lie_down action discovery', () => {
@@ -30,7 +33,9 @@ describe('positioning:lie_down action discovery', () => {
       expect(lieDownAction.id).toBe('positioning:lie_down');
       expect(lieDownAction.name).toBe('Lie down');
       expect(lieDownAction.description).toBe('Lie down on available furniture');
-      expect(lieDownAction.targets).toBe('positioning:available_lying_furniture');
+      expect(lieDownAction.targets).toBe(
+        'positioning:available_lying_furniture'
+      );
     });
 
     it('should have correct forbidden components', () => {
@@ -170,7 +175,9 @@ describe('positioning:lie_down action discovery', () => {
 
       testFixture.reset([room, bed, scenario.actor]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
       expect(ids).not.toContain('positioning:lie_down');

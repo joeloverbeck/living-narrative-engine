@@ -4,7 +4,14 @@
  * deep recursion chains when generating descriptions for recipes with many body parts
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { DescriptionPersistenceService } from '../../../src/anatomy/DescriptionPersistenceService.js';
 import { DESCRIPTION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import EntityManagerIntegrationTestBed from '../../common/entities/entityManagerIntegrationTestBed.js';
@@ -59,9 +66,10 @@ describe('DescriptionPersistenceService - Batch Operation Recursion Prevention',
       }
 
       // Update all descriptions in batch
-      const result = await descriptionPersistenceService.updateMultipleDescriptions(
-        descriptionsMap
-      );
+      const result =
+        await descriptionPersistenceService.updateMultipleDescriptions(
+          descriptionsMap
+        );
 
       // Verify all updates succeeded
       expect(result.successful).toBe(50);
@@ -108,9 +116,10 @@ describe('DescriptionPersistenceService - Batch Operation Recursion Prevention',
       }
 
       const startTime = performance.now();
-      const result = await descriptionPersistenceService.updateMultipleDescriptions(
-        descriptionsMap
-      );
+      const result =
+        await descriptionPersistenceService.updateMultipleDescriptions(
+          descriptionsMap
+        );
       const duration = performance.now() - startTime;
 
       // Verify updates succeeded
@@ -149,14 +158,19 @@ describe('DescriptionPersistenceService - Batch Operation Recursion Prevention',
       descriptionsMap.set('non_existent_3', 'Invalid description 3');
 
       // Update all descriptions
-      const result = await descriptionPersistenceService.updateMultipleDescriptions(
-        descriptionsMap
-      );
+      const result =
+        await descriptionPersistenceService.updateMultipleDescriptions(
+          descriptionsMap
+        );
 
       // Only the valid entities should succeed
       expect(result.successful).toBe(10);
       // The non-existent entities should be in the failed array
-      expect(result.failed).toEqual(['non_existent_1', 'non_existent_2', 'non_existent_3']);
+      expect(result.failed).toEqual([
+        'non_existent_1',
+        'non_existent_2',
+        'non_existent_3',
+      ]);
 
       // Verify batch operation was used for the valid updates
       expect(batchAddSpy).toHaveBeenCalledTimes(1);

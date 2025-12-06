@@ -162,14 +162,14 @@ return strategy.executeWithErrorHandling(
   contract:
   - Success: `{ isValid: true }`.
   - Failure: `{ isValid: false, errors: string[], errorMessage: string,
-    failureMessage: string }`. The `failureMessage` is logged with
+failureMessage: string }`. The `failureMessage` is logged with
     `logger.warn` along with `{ operation, schemaId, ...context }`
     metadata and should be surfaced in telemetry dashboards.
   - System failure fallback: `{ isValid: false, errors: ['Validation
-    error: <details>'], errorMessage: 'Unable to validate data. Please
-    try again.' }`. This branch is accompanied by
+error: <details>'], errorMessage: 'Unable to validate data. Please
+try again.' }`. This branch is accompanied by
     `handleError(error, { category: ERROR_CATEGORIES.SYSTEM, userMessage:
-    'Validation failed. Please check your input.' })` so the centralized
+'Validation failed. Please check your input.' })` so the centralized
     ErrorHandlingStrategy still receives the exception.
 - Controllers should treat any `{ isValid: false }` response as a hard
   stop for the current flow: show the returned `errorMessage` to users,

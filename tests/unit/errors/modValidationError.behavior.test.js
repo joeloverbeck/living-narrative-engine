@@ -39,7 +39,9 @@ describe('ModValidationError', () => {
   });
 
   it('falls back to default classification and recoverable state when omitted', () => {
-    const error = new ModValidationError('cross-reference validation failed unexpectedly');
+    const error = new ModValidationError(
+      'cross-reference validation failed unexpectedly'
+    );
 
     expect(error.code).toBe('MOD_VALIDATION_ERROR');
     expect(error.isRecoverable()).toBe(true);
@@ -66,7 +68,9 @@ describe('ModValidationError', () => {
   });
 
   it('falls back to generating a timestamp when the base timestamp is unavailable', () => {
-    const error = new ModValidationError('intermittent failure', 'TEMP', { attempt: 1 });
+    const error = new ModValidationError('intermittent failure', 'TEMP', {
+      attempt: 1,
+    });
 
     Object.defineProperty(error, 'timestamp', {
       value: undefined,

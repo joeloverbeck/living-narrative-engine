@@ -53,16 +53,16 @@ describe('LRUStrategy', () => {
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key2', 'value2');
       lruStrategy.set('key3', 'value3');
-      
+
       // All should be present
       expect(lruStrategy.size).toBe(3);
-      
+
       // Access key1 to make it most recently used
       lruStrategy.get('key1');
-      
+
       // Add key4, should evict key2 (least recently used)
       lruStrategy.set('key4', 'value4');
-      
+
       expect(lruStrategy.size).toBe(3);
       expect(lruStrategy.has('key1')).toBe(true);
       expect(lruStrategy.has('key2')).toBe(false);
@@ -74,13 +74,13 @@ describe('LRUStrategy', () => {
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key2', 'value2');
       lruStrategy.set('key3', 'value3');
-      
+
       // Access key1 to make it most recently used
       lruStrategy.get('key1');
-      
+
       // Add key4, should evict key2 (oldest not accessed)
       lruStrategy.set('key4', 'value4');
-      
+
       expect(lruStrategy.has('key1')).toBe(true);
       expect(lruStrategy.has('key2')).toBe(false);
     });
@@ -105,7 +105,7 @@ describe('LRUStrategy', () => {
     it('should support per-entry TTL override', (done) => {
       lruStrategy.set('key1', 'value1', { ttl: 50 });
       lruStrategy.set('key2', 'value2'); // Uses default TTL (1000ms)
-      
+
       expect(lruStrategy.get('key1')).toBe('value1');
       expect(lruStrategy.get('key2')).toBe('value2');
 
@@ -128,12 +128,12 @@ describe('LRUStrategy', () => {
 
     it('should respect max size limit', () => {
       expect(lruStrategy.maxSize).toBe(3);
-      
+
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key2', 'value2');
       lruStrategy.set('key3', 'value3');
       lruStrategy.set('key4', 'value4'); // Should evict key1
-      
+
       expect(lruStrategy.size).toBe(3);
     });
 
@@ -152,7 +152,7 @@ describe('LRUStrategy', () => {
     it('should provide entries iterator', () => {
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key2', 'value2');
-      
+
       const entries = Array.from(lruStrategy.entries());
       expect(entries).toHaveLength(2);
       expect(entries).toContainEqual(['key1', 'value1']);
@@ -162,7 +162,7 @@ describe('LRUStrategy', () => {
     it('should provide keys iterator', () => {
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key2', 'value2');
-      
+
       const keys = Array.from(lruStrategy.keys());
       expect(keys).toHaveLength(2);
       expect(keys).toContain('key1');
@@ -179,7 +179,7 @@ describe('LRUStrategy', () => {
 
       shortTtlStrategy.set('key1', 'value1');
       shortTtlStrategy.set('key2', 'value2');
-      
+
       setTimeout(() => {
         const pruned = shortTtlStrategy.prune();
         expect(pruned).toBeGreaterThan(0);
@@ -191,10 +191,10 @@ describe('LRUStrategy', () => {
     it('should support aggressive pruning', () => {
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key2', 'value2');
-      
+
       const sizeBefore = lruStrategy.size;
       const pruned = lruStrategy.prune(true);
-      
+
       expect(pruned).toBe(sizeBefore);
       expect(lruStrategy.size).toBe(0);
     });
@@ -228,7 +228,7 @@ describe('LRUStrategy', () => {
       for (let i = 0; i < 100; i++) {
         lruStrategy.set(`key${i}`, `value${i}`);
       }
-      
+
       // Should only keep the most recent 3 due to maxSize
       expect(lruStrategy.size).toBe(3);
       expect(lruStrategy.has('key99')).toBe(true);
@@ -240,7 +240,7 @@ describe('LRUStrategy', () => {
     it('should handle same key updates', () => {
       lruStrategy.set('key1', 'value1');
       lruStrategy.set('key1', 'value2');
-      
+
       expect(lruStrategy.size).toBe(1);
       expect(lruStrategy.get('key1')).toBe('value2');
     });

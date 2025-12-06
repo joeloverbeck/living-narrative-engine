@@ -23,9 +23,7 @@ import { createMockTargetContextBuilder } from '../../../common/mocks/mockTarget
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
-import {
-  createTargetResolutionServiceWithMocks,
-} from '../../../common/mocks/mockUnifiedScopeResolver.js';
+import { createTargetResolutionServiceWithMocks } from '../../../common/mocks/mockUnifiedScopeResolver.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
@@ -138,10 +136,26 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     // Store the action definitions in the data registry
     dataRegistry.store('actions', hugTightAction.id, hugTightAction);
     dataRegistry.store('actions', linkArmsAction.id, linkArmsAction);
-    dataRegistry.store('actions', placeHandOnWaistAction.id, placeHandOnWaistAction);
-    dataRegistry.store('actions', restHeadOnShoulderAction.id, restHeadOnShoulderAction);
-    dataRegistry.store('actions', slingArmAroundShouldersAction.id, slingArmAroundShouldersAction);
-    dataRegistry.store('actions', wrapArmAroundWaistAction.id, wrapArmAroundWaistAction);
+    dataRegistry.store(
+      'actions',
+      placeHandOnWaistAction.id,
+      placeHandOnWaistAction
+    );
+    dataRegistry.store(
+      'actions',
+      restHeadOnShoulderAction.id,
+      restHeadOnShoulderAction
+    );
+    dataRegistry.store(
+      'actions',
+      slingArmAroundShouldersAction.id,
+      slingArmAroundShouldersAction
+    );
+    dataRegistry.store(
+      'actions',
+      wrapArmAroundWaistAction.id,
+      wrapArmAroundWaistAction
+    );
 
     // Load necessary condition files
     const conditionPaths = [
@@ -238,7 +252,8 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
     const actionCommandFormatter = new ActionCommandFormatter({ logger });
 
-    const mockTargetContextBuilder = createMockTargetContextBuilder(entityManager);
+    const mockTargetContextBuilder =
+      createMockTargetContextBuilder(entityManager);
 
     const scopeContextBuilder = new ScopeContextBuilder({
       targetContextBuilder: mockTargetContextBuilder,
@@ -252,7 +267,8 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
 
-    const targetRequiredComponentsValidator = createMockTargetRequiredComponentsValidator();
+    const targetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 
     const multiTargetStage = createMultiTargetResolutionStage({
       logger,
@@ -263,7 +279,10 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
     // Create getEntityDisplayNameFn
     const getEntityDisplayNameFn = (entity) => {
-      const nameComponent = entityManager.getComponent(entity.id || entity, 'core:name');
+      const nameComponent = entityManager.getComponent(
+        entity.id || entity,
+        'core:name'
+      );
       return nameComponent?.name || entity.id || entity;
     };
 
@@ -317,7 +336,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
    */
   function createActor(entityId, actorName) {
     const actor = entityManager.createEntity(entityId);
-    entityManager.addComponent(entityId, NAME_COMPONENT_ID, { name: actorName });
+    entityManager.addComponent(entityId, NAME_COMPONENT_ID, {
+      name: actorName,
+    });
     entityManager.addComponent(entityId, POSITION_COMPONENT_ID, {
       location: location,
     });
@@ -344,8 +365,14 @@ describe('Kneeling Position Affection Action Restrictions', () => {
     const id2 = actor2Id.id || actor2Id;
 
     // Get existing closeness or create new
-    const actor1Closeness = entityManager.getComponent(id1, 'positioning:closeness');
-    const actor2Closeness = entityManager.getComponent(id2, 'positioning:closeness');
+    const actor1Closeness = entityManager.getComponent(
+      id1,
+      'positioning:closeness'
+    );
+    const actor2Closeness = entityManager.getComponent(
+      id2,
+      'positioning:closeness'
+    );
 
     // Add actor2 to actor1's partners (if not already there)
     // IMPORTANT: Create a copy of the array to avoid mutation
@@ -377,9 +404,13 @@ describe('Kneeling Position Affection Action Restrictions', () => {
   function makeActorKneelBefore(kneelerId, targetId) {
     const kneelingEntityId = kneelerId.id || kneelerId;
     const targetEntityId = targetId.id || targetId;
-    entityManager.addComponent(kneelingEntityId, 'positioning:kneeling_before', {
-      entityId: targetEntityId,
-    });
+    entityManager.addComponent(
+      kneelingEntityId,
+      'positioning:kneeling_before',
+      {
+        entityId: targetEntityId,
+      }
+    );
   }
 
   /**
@@ -392,7 +423,8 @@ describe('Kneeling Position Affection Action Restrictions', () => {
   function hasActionForTarget(result, actionId, targetId) {
     if (!result?.actions) return false;
     // Extract ID from entity object if needed
-    const targetIdString = typeof targetId === 'string' ? targetId : targetId?.id;
+    const targetIdString =
+      typeof targetId === 'string' ? targetId : targetId?.id;
     return result.actions.some(
       (a) => a.id === actionId && a.params?.targetId === targetIdString
     );
@@ -409,10 +441,13 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Hug tight action should NOT be available for Actor2
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)
+      ).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -425,10 +460,13 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       makeActorKneelBefore(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Hug tight action should NOT be available for Actor2
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)
+      ).toBe(false);
     });
 
     it('should BE available when neither is kneeling', async () => {
@@ -438,10 +476,13 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Hug tight action SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)
+      ).toBe(true);
     });
   });
 
@@ -452,9 +493,12 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor2, actor1);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:link_arms', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:link_arms', actor2)
+      ).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -463,9 +507,12 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor1, actor2);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:link_arms', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:link_arms', actor2)
+      ).toBe(false);
     });
   });
 
@@ -476,9 +523,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor2, actor1);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hand_on_waist', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hand_on_waist',
+          actor2
+        )
+      ).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -487,9 +541,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor1, actor2);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hand_on_waist', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hand_on_waist',
+          actor2
+        )
+      ).toBe(false);
     });
   });
 
@@ -500,9 +561,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor2, actor1);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:rest_head_on_shoulder', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:rest_head_on_shoulder',
+          actor2
+        )
+      ).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -511,9 +579,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor1, actor2);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:rest_head_on_shoulder', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:rest_head_on_shoulder',
+          actor2
+        )
+      ).toBe(false);
     });
   });
 
@@ -524,9 +599,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor2, actor1);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:sling_arm_around_shoulders', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:sling_arm_around_shoulders',
+          actor2
+        )
+      ).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -535,9 +617,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor1, actor2);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:sling_arm_around_shoulders', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:sling_arm_around_shoulders',
+          actor2
+        )
+      ).toBe(false);
     });
   });
 
@@ -548,9 +637,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor2, actor1);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:wrap_arm_around_waist', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:wrap_arm_around_waist',
+          actor2
+        )
+      ).toBe(false);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -559,9 +655,16 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       establishCloseness(actor1, actor2);
       makeActorKneelBefore(actor1, actor2);
 
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
-      expect(hasActionForTarget(actor1Actions, 'affection:wrap_arm_around_waist', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:wrap_arm_around_waist',
+          actor2
+        )
+      ).toBe(false);
     });
   });
 
@@ -580,16 +683,26 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for all actors
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
-      const actor3Actions = await actionDiscoveryService.getValidActions(actor3);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
+      const actor3Actions =
+        await actionDiscoveryService.getValidActions(actor3);
 
       // Assert: Actor1 can hug Actor3 but not Actor2 (who is kneeling)
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor3)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor3)
+      ).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)
+      ).toBe(false);
 
       // Assert: Actor3 can hug both Actor1 and Actor2
-      expect(hasActionForTarget(actor3Actions, 'hugging:hug_tight', actor1)).toBe(true);
-      expect(hasActionForTarget(actor3Actions, 'hugging:hug_tight', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(actor3Actions, 'hugging:hug_tight', actor1)
+      ).toBe(true);
+      expect(
+        hasActionForTarget(actor3Actions, 'hugging:hug_tight', actor2)
+      ).toBe(true);
     });
 
     it('should make actions available again after standing up', async () => {
@@ -603,7 +716,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
 
       // Act 1: Verify actions are unavailable while kneeling
       let actor1Actions = await actionDiscoveryService.getValidActions(actor1);
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)
+      ).toBe(false);
 
       // Act 2: Actor2 stands up
       entityManager.removeComponent(actor2.id, 'positioning:kneeling_before');
@@ -615,7 +730,9 @@ describe('Kneeling Position Affection Action Restrictions', () => {
       actor1Actions = await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Actions should be available again
-      expect(hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'hugging:hug_tight', actor2)
+      ).toBe(true);
     });
   });
 });

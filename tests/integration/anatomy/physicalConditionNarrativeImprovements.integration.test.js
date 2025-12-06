@@ -202,7 +202,9 @@ describe('Physical Condition Narrative Improvements (PHYCONNARIMP)', () => {
       expect(rightEarMatches.length).toBeLessThanOrEqual(1);
 
       // Verify bleeding is grouped with "and" (only first part gets "my")
-      expect(narrative).toMatch(/Blood flows steadily from my torso and upper head\./);
+      expect(narrative).toMatch(
+        /Blood flows steadily from my torso and upper head\./
+      );
     });
 
     test('should handle the exact problematic scenario from spec', () => {

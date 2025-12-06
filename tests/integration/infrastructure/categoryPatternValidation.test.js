@@ -73,7 +73,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate exercise category uses standard handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('exercise');
-      const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+      const handlers = factoryMethod(
+        entityManager,
+        eventBus,
+        logger,
+        mockGameDataRepository
+      );
 
       // Exercise category should use standard handlers
       expect(handlers).toHaveProperty('QUERY_COMPONENT');
@@ -239,7 +244,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate violence category uses perception logging handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('violence');
-      const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+      const handlers = factoryMethod(
+        entityManager,
+        eventBus,
+        logger,
+        mockGameDataRepository
+      );
 
       // Violence category uses perception logging handlers (17 handlers)
       expect(handlers).toHaveProperty('DISPATCH_EVENT');
@@ -330,7 +340,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate affection category uses component mutation handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('affection');
-      const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+      const handlers = factoryMethod(
+        entityManager,
+        eventBus,
+        logger,
+        mockGameDataRepository
+      );
 
       // Affection category now supports component mutation operations
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
@@ -426,7 +441,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate sex category uses component mutation handlers', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
-      const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+      const handlers = factoryMethod(
+        entityManager,
+        eventBus,
+        logger,
+        mockGameDataRepository
+      );
 
       // Sex category should support component mutations
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
@@ -516,7 +536,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate positioning category uses handlers with ADD_COMPONENT', () => {
       const factoryMethod =
         ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
-      const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+      const handlers = factoryMethod(
+        entityManager,
+        eventBus,
+        logger,
+        mockGameDataRepository
+      );
 
       // Positioning category MUST have ADD_COMPONENT handler
       expect(handlers).toHaveProperty('ADD_COMPONENT');
@@ -706,7 +731,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       categories.forEach((category) => {
         const factoryMethod =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
-        const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+        const handlers = factoryMethod(
+          entityManager,
+          eventBus,
+          logger,
+          mockGameDataRepository
+        );
         factoryResults[category] = {
           handlerCount: Object.keys(handlers).length,
           hasAddComponent: Object.prototype.hasOwnProperty.call(
@@ -730,8 +760,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
       Object.entries(expectedCapabilities).forEach(
         ([category, { hasAddComponent, minHandlers }]) => {
-          expect(factoryResults[category].handlerCount).toBeGreaterThanOrEqual(minHandlers);
-          expect(factoryResults[category].hasAddComponent).toBe(hasAddComponent);
+          expect(factoryResults[category].handlerCount).toBeGreaterThanOrEqual(
+            minHandlers
+          );
+          expect(factoryResults[category].hasAddComponent).toBe(
+            hasAddComponent
+          );
           expect(factoryResults[category].commonHandlers).toBe(true);
         }
       );
@@ -877,7 +911,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
               // Return condition file
               return Promise.resolve(
                 JSON.stringify({
-                  $schema: 'schema://living-narrative-engine/condition.schema.json',
+                  $schema:
+                    'schema://living-narrative-engine/condition.schema.json',
                   id: `${category}:event-is-action-test-action`,
                   description: `Matches the ${category} test action.`,
                   logic: {
@@ -937,7 +972,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       unknownCategories.forEach((category) => {
         const factoryMethod =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
-        const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+        const handlers = factoryMethod(
+          entityManager,
+          eventBus,
+          logger,
+          mockGameDataRepository
+        );
 
         // Unknown categories should default to a perception logging superset
         expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(10);
@@ -966,7 +1006,12 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         expect(factoryMethod).toBeDefined();
         expect(typeof factoryMethod).toBe('function');
 
-        const handlers = factoryMethod(entityManager, eventBus, logger, mockGameDataRepository);
+        const handlers = factoryMethod(
+          entityManager,
+          eventBus,
+          logger,
+          mockGameDataRepository
+        );
         expect(handlers).toBeDefined();
         // Default to standard handlers (minimum required set)
         expect(Object.keys(handlers).length).toBeGreaterThanOrEqual(10);

@@ -52,12 +52,19 @@ describe('request tracking response guard conflict scenarios', () => {
         }));
       });
 
-      firstAttempt = guard.sendError(502, 'controller.failure', 'Upstream failed', {
-        upstream: 'primary-llm',
-      });
+      firstAttempt = guard.sendError(
+        502,
+        'controller.failure',
+        'Upstream failed',
+        {
+          upstream: 'primary-llm',
+        }
+      );
     });
 
-    const response = await request(app).post('/error-then-success').send({ payload: 'data' });
+    const response = await request(app)
+      .post('/error-then-success')
+      .send({ payload: 'data' });
     await waitFor();
 
     expect(firstAttempt).toBe(true);
@@ -96,7 +103,9 @@ describe('request tracking response guard conflict scenarios', () => {
     expect(entries.warn).toHaveLength(2);
     expect(entries.warn[0]).toEqual(
       expect.objectContaining({
-        message: expect.stringContaining("Response already committed to 'error'"),
+        message: expect.stringContaining(
+          "Response already committed to 'error'"
+        ),
         metadata: expect.objectContaining({
           requestId: statusAfterFinish.requestId,
           existingSource: 'error',

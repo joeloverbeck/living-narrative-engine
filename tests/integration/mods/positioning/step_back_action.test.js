@@ -39,9 +39,9 @@ describe('positioning:step_back action forbidden state enforcement', () => {
 
     testFixture.reset([room, actor, partner]);
 
-    await expect(
-      testFixture.executeAction(actor.id, null)
-    ).rejects.toThrow(/forbidden component.*positioning:being_hugged/i);
+    await expect(testFixture.executeAction(actor.id, null)).rejects.toThrow(
+      /forbidden component.*positioning:being_hugged/i
+    );
   });
 
   it('rejects stepping back while hugging someone else', async () => {
@@ -67,8 +67,8 @@ describe('positioning:step_back action forbidden state enforcement', () => {
 
     testFixture.reset([room, actor, partner]);
 
-    await expect(
-      testFixture.executeAction(actor.id, null)
-    ).rejects.toThrow(/forbidden component.*positioning:hugging/i);
+    await expect(testFixture.executeAction(actor.id, null)).rejects.toThrow(
+      /forbidden component.*positioning:hugging/i
+    );
   });
 });

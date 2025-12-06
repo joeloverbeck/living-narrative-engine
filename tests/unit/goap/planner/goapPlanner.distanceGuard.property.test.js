@@ -55,7 +55,9 @@ describe('GoapPlanner.distanceGuard.property', () => {
 
       const sanitizedFirst = iteration % 2 === 0;
       const invalidSample = invalidOutputs[iteration % invalidOutputs.length];
-      const heuristicSequence = sanitizedFirst ? [invalidSample, 0] : [20, invalidSample];
+      const heuristicSequence = sanitizedFirst
+        ? [invalidSample, 0]
+        : [20, invalidSample];
 
       let callIndex = 0;
       mocks.heuristicRegistry.calculate.mockImplementation(() => {
@@ -67,7 +69,12 @@ describe('GoapPlanner.distanceGuard.property', () => {
         return next;
       });
 
-      const result = planner.testTaskReducesDistance(baseTask, createState(80), numericGoal, ACTOR_ID);
+      const result = planner.testTaskReducesDistance(
+        baseTask,
+        createState(80),
+        numericGoal,
+        ACTOR_ID
+      );
 
       expect(result).toBe(true);
       expect(mocks.logger.warn).toHaveBeenCalledWith(
@@ -102,13 +109,20 @@ describe('GoapPlanner.distanceGuard.property', () => {
 
     let caughtError;
     try {
-      planner.testTaskReducesDistance(baseTask, createState(90), numericGoal, ACTOR_ID);
+      planner.testTaskReducesDistance(
+        baseTask,
+        createState(90),
+        numericGoal,
+        ACTOR_ID
+      );
     } catch (error) {
       caughtError = error;
     }
 
     expect(caughtError).toBeDefined();
-    expect(caughtError.code).toBe(GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION);
+    expect(caughtError.code).toBe(
+      GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION
+    );
     expect(mocks.heuristicRegistry.calculate).not.toHaveBeenCalled();
 
     const telemetry = planner.getEffectFailureTelemetry(ACTOR_ID);
@@ -139,7 +153,12 @@ describe('GoapPlanner.distanceGuard.property', () => {
 
     const frozenState = Object.freeze(createState(80));
 
-    const result = planner.testTaskReducesDistance(baseTask, frozenState, numericGoal, ACTOR_ID);
+    const result = planner.testTaskReducesDistance(
+      baseTask,
+      frozenState,
+      numericGoal,
+      ACTOR_ID
+    );
 
     expect(result).toBe(true);
     expect(frozenState[STATE_KEY]).toBe(80);

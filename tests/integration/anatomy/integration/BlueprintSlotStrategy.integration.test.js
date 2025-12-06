@@ -206,9 +206,7 @@ describe('BlueprintSlotStrategy (integration)', () => {
         id: 'mapped-entity',
         components: {
           'anatomy:sockets': {
-            sockets: [
-              { id: 'shoulder_socket', orientation: 'forward' },
-            ],
+            sockets: [{ id: 'shoulder_socket', orientation: 'forward' }],
           },
         },
       },
@@ -216,9 +214,13 @@ describe('BlueprintSlotStrategy (integration)', () => {
 
     const strategy = createStrategy();
 
-    const result = await strategy.resolve('actor-direct', {
-      blueprintSlots: ['mapped_slot'],
-    }, new Map([['mapped_slot', 'mapped-entity']]));
+    const result = await strategy.resolve(
+      'actor-direct',
+      {
+        blueprintSlots: ['mapped_slot'],
+      },
+      new Map([['mapped_slot', 'mapped-entity']])
+    );
 
     expect(result).toEqual([
       {
@@ -293,17 +295,14 @@ describe('BlueprintSlotStrategy (integration)', () => {
             socketId: 'left_hand_socket',
           },
           'anatomy:sockets': {
-            sockets: [
-              { id: 'left_hand_socket', orientation: null },
-            ],
+            sockets: [{ id: 'left_hand_socket', orientation: null }],
           },
         },
       },
     ]);
 
-    const originalGetComponentData = entityManager.getComponentData.bind(
-      entityManager
-    );
+    const originalGetComponentData =
+      entityManager.getComponentData.bind(entityManager);
     entityManager.getComponentData = jest.fn((entityId, componentId) => {
       if (entityId === 'arm-entity' && componentId === 'anatomy:joint') {
         return Promise.resolve({
@@ -390,5 +389,4 @@ describe('BlueprintSlotStrategy (integration)', () => {
       },
     ]);
   });
-
 });

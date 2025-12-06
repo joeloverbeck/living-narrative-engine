@@ -12,21 +12,21 @@ Copy 14 accessory entity files from `clothing` mod to `accessories` mod and upda
 
 ## Entity List (14 items)
 
-| Current File | Current ID | New ID |
-|--------------|-----------|--------|
-| `black_calfskin_belt.entity.json` | `clothing:black_calfskin_belt` | `accessories:black_calfskin_belt` |
-| `black_diamond_silver_spike_collar.entity.json` | `clothing:black_diamond_silver_spike_collar` | `accessories:black_diamond_silver_spike_collar` |
-| `black_leather_collar_silver_bell.entity.json` | `clothing:black_leather_collar_silver_bell` | `accessories:black_leather_collar_silver_bell` |
-| `black_tactical_work_belt.entity.json` | `clothing:black_tactical_work_belt` | `accessories:black_tactical_work_belt` |
-| `dark_brown_leather_belt.entity.json` | `clothing:dark_brown_leather_belt` | `accessories:dark_brown_leather_belt` |
-| `layered_gold_chain_necklaces.entity.json` | `clothing:layered_gold_chain_necklaces` | `accessories:layered_gold_chain_necklaces` |
-| `layered_pearl_choker.entity.json` | `clothing:layered_pearl_choker` | `accessories:layered_pearl_choker` |
-| `mikimoto_delicate_pearl_strand.entity.json` | `clothing:mikimoto_delicate_pearl_strand` | `accessories:mikimoto_delicate_pearl_strand` |
-| `platinum_necklace.entity.json` | `clothing:platinum_necklace` | `accessories:platinum_necklace` |
-| `silver_chain_pendant_necklace.entity.json` | `clothing:silver_chain_pendant_necklace` | `accessories:silver_chain_pendant_necklace` |
-| `slate_nylon_baseball_cap.entity.json` | `clothing:slate_nylon_baseball_cap` | `accessories:slate_nylon_baseball_cap` |
-| `small_steel_huggie_hoops.entity.json` | `clothing:small_steel_huggie_hoops` | `accessories:small_steel_huggie_hoops` |
-| `south_sea_pearl_necklace_16mm.entity.json` | `clothing:south_sea_pearl_necklace_16mm` | `accessories:south_sea_pearl_necklace_16mm` |
+| Current File                                           | Current ID                                          | New ID                                                 |
+| ------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------ |
+| `black_calfskin_belt.entity.json`                      | `clothing:black_calfskin_belt`                      | `accessories:black_calfskin_belt`                      |
+| `black_diamond_silver_spike_collar.entity.json`        | `clothing:black_diamond_silver_spike_collar`        | `accessories:black_diamond_silver_spike_collar`        |
+| `black_leather_collar_silver_bell.entity.json`         | `clothing:black_leather_collar_silver_bell`         | `accessories:black_leather_collar_silver_bell`         |
+| `black_tactical_work_belt.entity.json`                 | `clothing:black_tactical_work_belt`                 | `accessories:black_tactical_work_belt`                 |
+| `dark_brown_leather_belt.entity.json`                  | `clothing:dark_brown_leather_belt`                  | `accessories:dark_brown_leather_belt`                  |
+| `layered_gold_chain_necklaces.entity.json`             | `clothing:layered_gold_chain_necklaces`             | `accessories:layered_gold_chain_necklaces`             |
+| `layered_pearl_choker.entity.json`                     | `clothing:layered_pearl_choker`                     | `accessories:layered_pearl_choker`                     |
+| `mikimoto_delicate_pearl_strand.entity.json`           | `clothing:mikimoto_delicate_pearl_strand`           | `accessories:mikimoto_delicate_pearl_strand`           |
+| `platinum_necklace.entity.json`                        | `clothing:platinum_necklace`                        | `accessories:platinum_necklace`                        |
+| `silver_chain_pendant_necklace.entity.json`            | `clothing:silver_chain_pendant_necklace`            | `accessories:silver_chain_pendant_necklace`            |
+| `slate_nylon_baseball_cap.entity.json`                 | `clothing:slate_nylon_baseball_cap`                 | `accessories:slate_nylon_baseball_cap`                 |
+| `small_steel_huggie_hoops.entity.json`                 | `clothing:small_steel_huggie_hoops`                 | `accessories:small_steel_huggie_hoops`                 |
+| `south_sea_pearl_necklace_16mm.entity.json`            | `clothing:south_sea_pearl_necklace_16mm`            | `accessories:south_sea_pearl_necklace_16mm`            |
 | `twisted_black_metal_crown_blood_red_gems.entity.json` | `clothing:twisted_black_metal_crown_blood_red_gems` | `accessories:twisted_black_metal_crown_blood_red_gems` |
 
 ## Files to Create

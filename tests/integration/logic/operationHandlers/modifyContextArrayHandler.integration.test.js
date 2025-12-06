@@ -128,7 +128,9 @@ describe('ModifyContextArrayHandler integration', () => {
           logger: env.logger,
           safeEventDispatcher: {},
         })
-    ).toThrow("Dependency 'ISafeEventDispatcher' with dispatch method is required.");
+    ).toThrow(
+      "Dependency 'ISafeEventDispatcher' with dispatch method is required."
+    );
   });
 
   test('push mode initialises missing context arrays and stores result variable', () => {
@@ -149,7 +151,9 @@ describe('ModifyContextArrayHandler integration', () => {
       'first entry',
     ]);
     expect(env.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("MODIFY_CONTEXT_ARRAY: Performing 'push' on context variable 'story.notes'. Value: \"first entry\"."),
+      expect.stringContaining(
+        "MODIFY_CONTEXT_ARRAY: Performing 'push' on context variable 'story.notes'. Value: \"first entry\"."
+      )
     );
   });
 
@@ -171,9 +175,9 @@ describe('ModifyContextArrayHandler integration', () => {
     expect(executionContext.evaluationContext.context.story.notes).toEqual([
       { id: 1, text: 'hello' },
     ]);
-    expect(
-      executionContext.evaluationContext.context.last_operation
-    ).toEqual([{ id: 1, text: 'hello' }]);
+    expect(executionContext.evaluationContext.context.last_operation).toEqual([
+      { id: 1, text: 'hello' },
+    ]);
   });
 
   test('pop mode removes the final element and stores popped value', () => {
@@ -193,9 +197,9 @@ describe('ModifyContextArrayHandler integration', () => {
     expect(executionContext.evaluationContext.context.inventory.items).toEqual([
       'sword',
     ]);
-    expect(
-      executionContext.evaluationContext.context.last_removed
-    ).toBe('shield');
+    expect(executionContext.evaluationContext.context.last_removed).toBe(
+      'shield'
+    );
   });
 
   test('remove_by_value handles object comparison', () => {
@@ -330,12 +334,12 @@ describe('ModifyContextArrayHandler integration', () => {
       executionContext
     );
 
-    expect(
-      executionContext.evaluationContext.context.story.notes
-    ).toEqual(['entry']);
-    expect(
-      executionContext.evaluationContext.context
-    ).not.toHaveProperty('last_operation');
+    expect(executionContext.evaluationContext.context.story.notes).toEqual([
+      'entry',
+    ]);
+    expect(executionContext.evaluationContext.context).not.toHaveProperty(
+      'last_operation'
+    );
   });
 
   test('missing evaluation context dispatches system error event', async () => {
@@ -411,12 +415,12 @@ describe('ModifyContextArrayHandler integration', () => {
     expect(env.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Value: [unable to stringify].')
     );
-    expect(
-      executionContext.evaluationContext.context.story.notes[0]
-    ).toBe(circular);
-    expect(
-      executionContext.evaluationContext.context.last_operation[0]
-    ).toBe(circular);
+    expect(executionContext.evaluationContext.context.story.notes[0]).toBe(
+      circular
+    );
+    expect(executionContext.evaluationContext.context.last_operation[0]).toBe(
+      circular
+    );
   });
 
   test('push_unique honors deep equality for complex nested structures and avoids duplicates', () => {
@@ -498,8 +502,7 @@ describe('ModifyContextArrayHandler integration', () => {
       executionContext
     );
 
-    const updatedNotes =
-      executionContext.evaluationContext.context.story.notes;
+    const updatedNotes = executionContext.evaluationContext.context.story.notes;
 
     expect(updatedNotes).toHaveLength(7);
     expect(updatedNotes[0]).toBe(primitiveEntry);
@@ -514,9 +517,9 @@ describe('ModifyContextArrayHandler integration', () => {
     expect(updatedNotes[6]).toEqual(duplicate);
     expect(updatedNotes[6]).not.toBe(duplicate);
 
-    expect(
-      executionContext.evaluationContext.context.last_operation
-    ).toBe(updatedNotes);
+    expect(executionContext.evaluationContext.context.last_operation).toBe(
+      updatedNotes
+    );
     expect(env.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Value: [unable to stringify].')
     );
@@ -540,8 +543,7 @@ describe('ModifyContextArrayHandler integration', () => {
         { stage: 'intro', notes: ['start'] },
         { stage: 'climax', notes: ['peak'] },
       ];
-      member.traits.stats.milestones[1].loop =
-        member.traits.stats.milestones;
+      member.traits.stats.milestones[1].loop = member.traits.stats.milestones;
       return member;
     };
 
@@ -566,14 +568,13 @@ describe('ModifyContextArrayHandler integration', () => {
       executionContext
     );
 
-    let members =
-      executionContext.evaluationContext.context.roster.members;
+    let members = executionContext.evaluationContext.context.roster.members;
 
     expect(members).toHaveLength(2);
     expect(members[0]).toEqual(memberToRemove);
-    expect(
-      executionContext.evaluationContext.context.removal_result
-    ).toEqual(members);
+    expect(executionContext.evaluationContext.context.removal_result).toEqual(
+      members
+    );
     expect(systemErrorEvents).toHaveLength(0);
 
     handler.execute(
@@ -586,14 +587,13 @@ describe('ModifyContextArrayHandler integration', () => {
       executionContext
     );
 
-    members =
-      executionContext.evaluationContext.context.roster.members;
+    members = executionContext.evaluationContext.context.roster.members;
 
     expect(members).toHaveLength(1);
     expect(members[0]).toEqual(supportingMember);
-    expect(
-      executionContext.evaluationContext.context.removal_result
-    ).toEqual(members);
+    expect(executionContext.evaluationContext.context.removal_result).toEqual(
+      members
+    );
     expect(systemErrorEvents).toHaveLength(0);
   });
 
@@ -611,7 +611,9 @@ describe('ModifyContextArrayHandler integration', () => {
     );
 
     expect(env.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("MODIFY_CONTEXT_ARRAY: Performing 'push_unique' on context variable 'story.notes'.")
+      expect.stringContaining(
+        "MODIFY_CONTEXT_ARRAY: Performing 'push_unique' on context variable 'story.notes'."
+      )
     );
   });
 });
@@ -633,7 +635,12 @@ describe('arrayModifyUtils integration with ConsoleLogger', () => {
 
   test('advancedArrayModify logs an error when provided array input is invalid', () => {
     const errorSpy = jest.spyOn(logger, 'error');
-    const outcome = advancedArrayModify('push', 'not-an-array', { id: 'x' }, logger);
+    const outcome = advancedArrayModify(
+      'push',
+      'not-an-array',
+      { id: 'x' },
+      logger
+    );
 
     expect(outcome).toEqual({
       nextArray: 'not-an-array',
@@ -649,12 +656,22 @@ describe('arrayModifyUtils integration with ConsoleLogger', () => {
     const errorSpy = jest.spyOn(logger, 'error');
     const base = ['alpha'];
 
-    const modified = applyArrayModification('mystery-mode', base, 'beta', logger);
+    const modified = applyArrayModification(
+      'mystery-mode',
+      base,
+      'beta',
+      logger
+    );
     expect(modified).toBe(base);
     expect(errorSpy).toHaveBeenCalledWith('Unknown mode: mystery-mode');
 
     errorSpy.mockClear();
-    const advancedResult = advancedArrayModify('obscure-mode', base, 'beta', logger);
+    const advancedResult = advancedArrayModify(
+      'obscure-mode',
+      base,
+      'beta',
+      logger
+    );
     expect(advancedResult).toEqual({
       nextArray: base,
       result: undefined,

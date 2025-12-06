@@ -51,7 +51,11 @@ describe('argValidation integration guardrails', () => {
       logger,
       modDependencyValidator: ModDependencyValidator,
       modCrossReferenceValidator: {
-        validateModReferences: async () => ({ isValid: true, errors: [], warnings: [] }),
+        validateModReferences: async () => ({
+          isValid: true,
+          errors: [],
+          warnings: [],
+        }),
         validateAllModReferences: async () => new Map(),
       },
       modLoadOrderResolver: new ModLoadOrderResolver(createLogger()),

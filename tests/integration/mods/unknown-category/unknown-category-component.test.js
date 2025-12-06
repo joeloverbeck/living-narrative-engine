@@ -4,7 +4,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder, ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../../common/mods/ModEntityBuilder.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 
 const UNKNOWN_MOD_ID = 'unknown-category-component-mod';
@@ -74,13 +77,19 @@ describe('Unknown category component/perception coverage', () => {
       .withName('Ava')
       .atLocation('room1')
       .asActor()
-      .withComponent(PERCEPTION_LOG_COMPONENT_ID, { maxEntries: 5, logEntries: [] })
+      .withComponent(PERCEPTION_LOG_COMPONENT_ID, {
+        maxEntries: 5,
+        logEntries: [],
+      })
       .build();
     const target = new ModEntityBuilder('target1')
       .withName('Blake')
       .atLocation('room1')
       .asActor()
-      .withComponent(PERCEPTION_LOG_COMPONENT_ID, { maxEntries: 5, logEntries: [] })
+      .withComponent(PERCEPTION_LOG_COMPONENT_ID, {
+        maxEntries: 5,
+        logEntries: [],
+      })
       .build();
 
     testFixture.reset([room, actor, target]);
@@ -90,11 +99,15 @@ describe('Unknown category component/perception coverage', () => {
     ).resolves.not.toThrow();
 
     const updatedActor = testFixture.entityManager.getEntityInstance(actor.id);
-    expect(updatedActor.components['custom:unknown_marker']).toEqual({ state: 'added' });
+    expect(updatedActor.components['custom:unknown_marker']).toEqual({
+      state: 'added',
+    });
 
     const perceptionLog = updatedActor.components[PERCEPTION_LOG_COMPONENT_ID];
     expect(perceptionLog.logEntries).toEqual([
-      expect.objectContaining({ descriptionText: 'Unknown category marker added' }),
+      expect.objectContaining({
+        descriptionText: 'Unknown category marker added',
+      }),
     ]);
   });
 });

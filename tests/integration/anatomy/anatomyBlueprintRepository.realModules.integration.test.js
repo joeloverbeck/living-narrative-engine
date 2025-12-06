@@ -27,7 +27,7 @@ describe('AnatomyBlueprintRepository (integration)', () => {
 
       expect(result).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid recipe ID provided to getRecipe")
+        expect.stringContaining('Invalid recipe ID provided to getRecipe')
       );
     });
 
@@ -71,7 +71,7 @@ describe('AnatomyBlueprintRepository (integration)', () => {
 
       expect(result).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid blueprint ID provided to getBlueprint")
+        expect.stringContaining('Invalid blueprint ID provided to getBlueprint')
       );
     });
 
@@ -80,7 +80,9 @@ describe('AnatomyBlueprintRepository (integration)', () => {
 
       expect(result).toBeNull();
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Blueprint 'missing-blueprint' not found in registry")
+        expect.stringContaining(
+          "Blueprint 'missing-blueprint' not found in registry"
+        )
       );
     });
 
@@ -94,14 +96,20 @@ describe('AnatomyBlueprintRepository (integration)', () => {
 
       expect(result).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to retrieve blueprint 'failing-blueprint'"),
+        expect.stringContaining(
+          "Failed to retrieve blueprint 'failing-blueprint'"
+        ),
         failure
       );
     });
 
     it('returns the blueprint when it exists in the registry', async () => {
       const storedBlueprint = { id: 'blueprint-1', parts: [] };
-      dataRegistry.store('anatomyBlueprints', storedBlueprint.id, storedBlueprint);
+      dataRegistry.store(
+        'anatomyBlueprints',
+        storedBlueprint.id,
+        storedBlueprint
+      );
 
       const result = await repository.getBlueprint('blueprint-1');
 
@@ -116,7 +124,7 @@ describe('AnatomyBlueprintRepository (integration)', () => {
       expect(result).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Invalid recipe ID provided to getBlueprintByRecipeId"
+          'Invalid recipe ID provided to getBlueprintByRecipeId'
         )
       );
     });
@@ -174,7 +182,8 @@ describe('AnatomyBlueprintRepository (integration)', () => {
 
       const getSpy = jest.spyOn(dataRegistry, 'get');
 
-      const firstResult = await repository.getBlueprintByRecipeId('recipe-cache');
+      const firstResult =
+        await repository.getBlueprintByRecipeId('recipe-cache');
       expect(firstResult).toEqual({ id: 'blueprint-cache', parts: ['part-a'] });
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining("Cached blueprint for recipe 'recipe-cache'")
@@ -184,7 +193,8 @@ describe('AnatomyBlueprintRepository (integration)', () => {
       getSpy.mockClear();
       logger.debug.mockClear();
 
-      const secondResult = await repository.getBlueprintByRecipeId('recipe-cache');
+      const secondResult =
+        await repository.getBlueprintByRecipeId('recipe-cache');
       expect(secondResult).toBe(firstResult);
       expect(getSpy).not.toHaveBeenCalled();
       expect(logger.debug).toHaveBeenCalledWith(
@@ -210,9 +220,8 @@ describe('AnatomyBlueprintRepository (integration)', () => {
         dataRegistry,
       });
 
-      const result = await throwingRepository.getBlueprintByRecipeId(
-        'failing-recipe'
-      );
+      const result =
+        await throwingRepository.getBlueprintByRecipeId('failing-recipe');
 
       expect(result).toBeNull();
       expect(logger.error).toHaveBeenCalledWith(
@@ -240,7 +249,7 @@ describe('AnatomyBlueprintRepository (integration)', () => {
       repository.clearCache();
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Cleared blueprint cache (1 entries)")
+        expect.stringContaining('Cleared blueprint cache (1 entries)')
       );
 
       const getSpy = jest.spyOn(dataRegistry, 'get');

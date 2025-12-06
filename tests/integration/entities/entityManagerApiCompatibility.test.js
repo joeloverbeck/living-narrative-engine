@@ -9,13 +9,16 @@ describe('Entity Manager API Compatibility', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
   });
 
   describe('IEntityManager Interface', () => {
     it('TestEntityManagerAdapter should match production EntityManager API', () => {
-      const adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
+      const adapter = new TestEntityManagerAdapter({
+        logger,
+        initialEntities: [],
+      });
 
       // Required methods from IEntityManager
       const requiredMethods = [
@@ -26,7 +29,7 @@ describe('Entity Manager API Compatibility', () => {
         'findEntities',
         'getAllComponentTypesForEntity',
         'getEntityIds',
-        'getEntitiesInLocation'
+        'getEntitiesInLocation',
       ];
 
       for (const method of requiredMethods) {
@@ -38,15 +41,18 @@ describe('Entity Manager API Compatibility', () => {
     });
 
     it('TestEntityManagerAdapter should provide test-specific convenience methods', () => {
-      const adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
+      const adapter = new TestEntityManagerAdapter({
+        logger,
+        initialEntities: [],
+      });
 
       // Test-specific convenience methods (not in production)
       const testMethods = [
-        'getEntities',      // Array convenience method (not in production)
-        'addEntity',        // Test setup method
-        'deleteEntity',     // Test cleanup method
-        'clearAll',         // Test reset method
-        'setEntities'       // Test setup method
+        'getEntities', // Array convenience method (not in production)
+        'addEntity', // Test setup method
+        'deleteEntity', // Test cleanup method
+        'clearAll', // Test reset method
+        'setEntities', // Test setup method
       ];
 
       for (const method of testMethods) {
@@ -67,8 +73,8 @@ describe('Entity Manager API Compatibility', () => {
         components: {
           'core:actor': {},
           'positioning:standing': {},
-          'core:position': { locationId: 'room1' }
-        }
+          'core:position': { locationId: 'room1' },
+        },
       });
 
       adapter.addEntity({
@@ -76,16 +82,16 @@ describe('Entity Manager API Compatibility', () => {
         components: {
           'core:actor': {},
           'positioning:sitting': { furniture_id: 'couch' },
-          'core:position': { locationId: 'room1' }
-        }
+          'core:position': { locationId: 'room1' },
+        },
       });
 
       adapter.addEntity({
         id: 'item-1',
         components: {
           'items:portable': {},
-          'core:position': { locationId: 'room2' }
-        }
+          'core:position': { locationId: 'room2' },
+        },
       });
     });
 
@@ -95,7 +101,11 @@ describe('Entity Manager API Compatibility', () => {
 
         expect(Array.isArray(entities)).toBe(true);
         expect(entities.length).toBe(3);
-        expect(entities.map(e => e.id).sort()).toEqual(['actor-1', 'actor-2', 'item-1']);
+        expect(entities.map((e) => e.id).sort()).toEqual([
+          'actor-1',
+          'actor-2',
+          'item-1',
+        ]);
       });
     });
 
@@ -105,7 +115,11 @@ describe('Entity Manager API Compatibility', () => {
 
         expect(Array.isArray(entities)).toBe(true);
         expect(entities.length).toBe(3);
-        expect(entities.map(e => e.id).sort()).toEqual(['actor-1', 'actor-2', 'item-1']);
+        expect(entities.map((e) => e.id).sort()).toEqual([
+          'actor-1',
+          'actor-2',
+          'item-1',
+        ]);
       });
     });
 
@@ -114,11 +128,13 @@ describe('Entity Manager API Compatibility', () => {
         const actors = adapter.getEntitiesWithComponent('core:actor');
 
         expect(actors.length).toBe(2);
-        expect(actors.map(e => e.id).sort()).toEqual(['actor-1', 'actor-2']);
+        expect(actors.map((e) => e.id).sort()).toEqual(['actor-1', 'actor-2']);
       });
 
       it('should return empty array when no entities have component', () => {
-        const result = adapter.getEntitiesWithComponent('nonexistent:component');
+        const result = adapter.getEntitiesWithComponent(
+          'nonexistent:component'
+        );
 
         expect(result).toEqual([]);
       });
@@ -130,7 +146,10 @@ describe('Entity Manager API Compatibility', () => {
 
         expect(room1EntityIds instanceof Set).toBe(true);
         expect(room1EntityIds.size).toBe(2);
-        expect(Array.from(room1EntityIds).sort()).toEqual(['actor-1', 'actor-2']);
+        expect(Array.from(room1EntityIds).sort()).toEqual([
+          'actor-1',
+          'actor-2',
+        ]);
       });
 
       it('should return empty Set for empty location', () => {
@@ -148,7 +167,7 @@ describe('Entity Manager API Compatibility', () => {
         expect(components.sort()).toEqual([
           'core:actor',
           'core:position',
-          'positioning:standing'
+          'positioning:standing',
         ]);
       });
 
@@ -163,7 +182,7 @@ describe('Entity Manager API Compatibility', () => {
       it('should find entities matching complex query', () => {
         const result = adapter.findEntities({
           withAll: ['core:actor'],
-          without: ['positioning:sitting']
+          without: ['positioning:sitting'],
         });
 
         expect(result.length).toBe(1);
@@ -172,7 +191,7 @@ describe('Entity Manager API Compatibility', () => {
 
       it('should return empty array when no matches', () => {
         const result = adapter.findEntities({
-          withAll: ['nonexistent:component']
+          withAll: ['nonexistent:component'],
         });
 
         expect(result).toEqual([]);
@@ -182,7 +201,10 @@ describe('Entity Manager API Compatibility', () => {
 
   describe('SimpleEntityManager Passthrough', () => {
     it('should support test-specific methods', () => {
-      const adapter = new TestEntityManagerAdapter({ logger, initialEntities: [] });
+      const adapter = new TestEntityManagerAdapter({
+        logger,
+        initialEntities: [],
+      });
 
       // Test-specific methods should work
       const entity = { id: 'test', components: {} };
@@ -209,7 +231,7 @@ describe('Entity Manager API Compatibility', () => {
       expect(logger.warn).toHaveBeenCalledWith(
         'TestEntityManagerAdapter.getSimpleManager() is deprecated',
         expect.objectContaining({
-          hint: expect.stringContaining('Use adapter methods directly')
+          hint: expect.stringContaining('Use adapter methods directly'),
         })
       );
     });

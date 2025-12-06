@@ -610,7 +610,9 @@ describe('RadialLayoutStrategy', () => {
         set(value) {
           sharedLeafCountSetCalls += 1;
           if (sharedLeafCountSetCalls > 1) {
-            throw new Error('Shared branch leaf count should be calculated once');
+            throw new Error(
+              'Shared branch leaf count should be calculated once'
+            );
           }
           storedSharedLeafCount = value;
         },

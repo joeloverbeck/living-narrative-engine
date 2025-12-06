@@ -30,10 +30,15 @@ describe('PrimitiveActionStepExecutor', () => {
     mockContainer = testBed.createMock('IAppContainer', ['resolve']);
     mockContainer.resolve.mockImplementation(() => {
       // Return fresh mock state manager for each call
-      return testBed.createMock('IRefinementStateManager', ['store', 'getState']);
+      return testBed.createMock('IRefinementStateManager', [
+        'store',
+        'getState',
+      ]);
     });
 
-    mockOperationInterpreter = testBed.createMock('IOperationInterpreter', ['execute']);
+    mockOperationInterpreter = testBed.createMock('IOperationInterpreter', [
+      'execute',
+    ]);
     mockActionIndex = testBed.createMock('IActionIndex', ['getActionById']);
     mockGameDataRepository = testBed.createMock('IGameDataRepository', [
       'getAllActions',
@@ -82,7 +87,9 @@ describe('PrimitiveActionStepExecutor', () => {
       await executor.execute(step, context, 0);
 
       // Assert
-      expect(mockActionIndex.getActionById).toHaveBeenCalledWith('items:pick_up_item');
+      expect(mockActionIndex.getActionById).toHaveBeenCalledWith(
+        'items:pick_up_item'
+      );
     });
 
     it('should throw StepExecutionError when action not found', async () => {
@@ -393,9 +400,9 @@ describe('PrimitiveActionStepExecutor', () => {
         { type: 'PICK_UP_ITEM' },
         expect.objectContaining({
           parameters: {
-            silent: true,  // Step override
+            silent: true, // Step override
             validate: true, // Action default
-            force: true,    // Step addition
+            force: true, // Step addition
           },
         })
       );
@@ -653,7 +660,10 @@ describe('PrimitiveActionStepExecutor', () => {
       const result = await executor.execute(step, context, 0);
 
       // Assert
-      expect(mockStateManager.store).toHaveBeenCalledWith('pickupResult', result);
+      expect(mockStateManager.store).toHaveBeenCalledWith(
+        'pickupResult',
+        result
+      );
     });
 
     it('should not store result when storeResultAs not specified', async () => {

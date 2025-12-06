@@ -180,7 +180,9 @@ describe('Scope Definition Integration', () => {
       };
 
       // Test that scope reference is properly namespaced
-      expect(actionDefinition.targets.primary.scope).toBe('companionship:followers');
+      expect(actionDefinition.targets.primary.scope).toBe(
+        'companionship:followers'
+      );
       expect(actionDefinition.targets.primary.placeholder).toBe('follower');
       expect(actionDefinition.template).toBe('dismiss {follower}');
 
@@ -189,7 +191,8 @@ describe('Scope Definition Integration', () => {
 
       // Extract namespace from the action ID and scope reference
       const actionNamespace = actionDefinition.id.split(':')[0];
-      const scopeNamespace = actionDefinition.targets.primary.scope.split(':')[0];
+      const scopeNamespace =
+        actionDefinition.targets.primary.scope.split(':')[0];
 
       // In this case, they should match since both are from the companionship mod
       expect(scopeNamespace).toBe(actionNamespace);

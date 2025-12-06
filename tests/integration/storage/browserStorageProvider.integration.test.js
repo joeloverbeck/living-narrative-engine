@@ -1,8 +1,6 @@
 import { BrowserStorageProvider } from '../../../src/storage/browserStorageProvider.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
 
@@ -272,7 +270,9 @@ describe('BrowserStorageProvider integration', () => {
     );
 
     expect(writeResult).toEqual({ success: true });
-    expect(fs.getFileBytes('/saves/story1.json')).toEqual(new Uint8Array(payload));
+    expect(fs.getFileBytes('/saves/story1.json')).toEqual(
+      new Uint8Array(payload)
+    );
     expect(fs.hasFile('/saves/story1.json.tmp')).toBe(false);
 
     const exists = await provider.fileExists('/saves/story1.json');
@@ -300,7 +300,10 @@ describe('BrowserStorageProvider integration', () => {
 
   test('re-requests permissions when the cached handle loses access', async () => {
     const encoder = new TextEncoder();
-    await provider.writeFileAtomically('/saves/story2.json', encoder.encode('x'));
+    await provider.writeFileAtomically(
+      '/saves/story2.json',
+      encoder.encode('x')
+    );
 
     fs.setPermission('denied');
     fs.onPermissionRequest(() => 'granted');
@@ -337,9 +340,9 @@ describe('BrowserStorageProvider integration', () => {
       code: StorageErrorCodes.FILE_NOT_FOUND,
     });
 
-    await expect(
-      provider.readFile('/missing/file.json')
-    ).rejects.toThrow('File not found');
+    await expect(provider.readFile('/missing/file.json')).rejects.toThrow(
+      'File not found'
+    );
 
     const deleteResult = await provider.deleteFile('/missing/file.json');
     expect(deleteResult.success).toBe(true);
@@ -362,7 +365,10 @@ describe('BrowserStorageProvider integration', () => {
     expect(exists).toBe(false);
 
     const encoder = new TextEncoder();
-    await provider.writeFileAtomically('/saves/story4.json', encoder.encode('ok'));
+    await provider.writeFileAtomically(
+      '/saves/story4.json',
+      encoder.encode('ok')
+    );
 
     fs.failNext('dir', 'saves', new Error('boom'));
     const files = await provider.listFiles('/saves', 'story');

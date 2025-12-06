@@ -30,7 +30,7 @@ propagateDamage(
   }
 
   const entries = Object.entries(propagationRules);  // <-- iterates as object.entries
-  
+
   for (const [childPartId, rule] of entries) {  // <-- destructures key as childPartId
     // Process each rule
   }
@@ -38,6 +38,7 @@ propagateDamage(
 ```
 
 **Expected rule structure per child:**
+
 ```javascript
 {
   childPartId: {
@@ -49,6 +50,7 @@ propagateDamage(
 ```
 
 **How it uses fields**:
+
 - `probability` (property name) → used directly in `#passesProbabilityCheck()`
 - `damage_fraction` (property name) → used directly in `#calculatePropagatedAmount()`
 - `damage_types` (array) → checked with `Array.includes(damageTypeId)` in `#passesDamageTypeFilter()`
@@ -72,7 +74,12 @@ propagateDamage(
           "properties": {
             "childSocketId": { "type": "string" },
             "baseProbability": { "type": "number", "minimum": 0, "maximum": 1 },
-            "damageFraction": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 },
+            "damageFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5
+            },
             "damageTypeModifiers": {
               "type": "object",
               "additionalProperties": { "type": "number", "minimum": 0 }
@@ -126,31 +133,33 @@ propagateDamage(
 
 ### Format Mismatch
 
-| Aspect | Code Expects | Schema Defines | Data Uses |
-|--------|--------------|----------------|-----------|
-| Structure | Object (keyed) | Array of objects | Array of objects |
-| Child ref | Object key (implicit) | `childSocketId` property | `childSocketId` property |
-| Probability | `probability` property | `baseProbability` property | `baseProbability` property |
-| Damage fraction | `damage_fraction` property | `damageFraction` property | `damageFraction` property |
-| Type filtering | `damage_types` array | Not present | Not present |
-| Type modifiers | Not used | `damageTypeModifiers` object | `damageTypeModifiers` object |
+| Aspect          | Code Expects               | Schema Defines               | Data Uses                    |
+| --------------- | -------------------------- | ---------------------------- | ---------------------------- |
+| Structure       | Object (keyed)             | Array of objects             | Array of objects             |
+| Child ref       | Object key (implicit)      | `childSocketId` property     | `childSocketId` property     |
+| Probability     | `probability` property     | `baseProbability` property   | `baseProbability` property   |
+| Damage fraction | `damage_fraction` property | `damageFraction` property    | `damageFraction` property    |
+| Type filtering  | `damage_types` array       | Not present                  | Not present                  |
+| Type modifiers  | Not used                   | `damageTypeModifiers` object | `damageTypeModifiers` object |
 
 ### Impact on Current System
 
 **Status**: 🔴 **BROKEN - Not actually working with real data**
 
 When `ApplyDamageHandler` calls the service:
+
 ```javascript
 const propagationResults = this.#damagePropagationService.propagateDamage(
   parentPartId,
   damageAmount,
   damageType,
   entityId,
-  propagationRules  // This comes from: partComponent?.damage_propagation
+  propagationRules // This comes from: partComponent?.damage_propagation
 );
 ```
 
 With real entity data (`{ rules: [...] }`):
+
 - `Object.entries(propagationRules)` returns `[["rules", [...]]]` instead of individual rules
 - The loop tries to process `rules` as a `childPartId`
 - Never actually processes the array items
@@ -171,8 +180,8 @@ const rules = {
   'child-part-1': {
     probability: 1,
     damage_fraction: 0.5,
-    damage_types: ['piercing']
-  }
+    damage_types: ['piercing'],
+  },
 };
 
 const result = service.propagateDamage(
@@ -180,7 +189,7 @@ const result = service.propagateDamage(
   10,
   'slashing',
   'entity-1',
-  rules  // <-- Object format, not array
+  rules // <-- Object format, not array
 );
 ```
 
@@ -219,13 +228,14 @@ for (const rule of rules) {
 
 ```json
 {
-  "damage_types": ["piercing", "slashing"],  // Types that propagate
+  "damage_types": ["piercing", "slashing"], // Types that propagate
   "probability": 0.5,
   "damage_fraction": 0.3
 }
 ```
 
-**Logic**: 
+**Logic**:
+
 - If damage type in `damage_types` array → propagate with fixed probability
 - Otherwise → no propagation
 
@@ -240,18 +250,19 @@ for (const rule of rules) {
 {
   "baseProbability": 0.3,
   "damageTypeModifiers": {
-    "piercing": 1.5,    // 30% * 1.5 = 45%
-    "blunt": 0.3,       // 30% * 0.3 = 9%
-    "slashing": 0.8     // 30% * 0.8 = 24%
+    "piercing": 1.5, // 30% * 1.5 = 45%
+    "blunt": 0.3, // 30% * 0.3 = 9%
+    "slashing": 0.8 // 30% * 0.8 = 24%
   },
   "damageFraction": 0.5
 }
 ```
 
 **Logic**:
+
 - Get base probability (0.3)
 - Get modifier for damage type (or default 1.0 if not specified)
-- Calculate effective probability = baseProbability * modifier
+- Calculate effective probability = baseProbability \* modifier
 - Roll against that probability
 
 **Pros**: Nuanced, type-aware, matches real-world anatomy
@@ -379,32 +390,32 @@ propagateDamage(parentPartId, damageAmount, damageTypeId, ownerEntityId, propaga
   if (Array.isArray(rule.damage_types) && rule.damage_types.length > 0) {
     return rule.damage_types.includes(damageTypeId);
   }
-  
+
   // Semantic B: Type-based modifiers (allows any type if no modifier, uses default 1.0)
   if (rule.damageTypeModifiers && typeof rule.damageTypeModifiers === 'object') {
     return true;
   }
-  
+
   // No filter specified = allow all types
   return true;
 }
 
 #passesProbabilityCheck(rule, damageTypeId) {
   // Get base probability
-  const probabilityRaw = 
+  const probabilityRaw =
     typeof rule.baseProbability === 'number' ? rule.baseProbability :
     typeof rule.probability === 'number' ? rule.probability :
     1;
-  
+
   const baseProbability = Math.min(1, Math.max(0, probabilityRaw));
-  
+
   // Apply type-based modifier if present
   let effectiveProbability = baseProbability;
   if (rule.damageTypeModifiers && typeof rule.damageTypeModifiers === 'object') {
     const modifier = rule.damageTypeModifiers[damageTypeId] ?? 1.0;
     effectiveProbability = baseProbability * modifier;
   }
-  
+
   return Math.random() <= effectiveProbability;
 }
 ```
@@ -422,17 +433,20 @@ propagateDamage(parentPartId, damageAmount, damageTypeId, ownerEntityId, propaga
 ## 7. Migration Path
 
 ### Phase 1: Support Both Formats (Non-breaking)
+
 - Update service to handle array format properly
 - Support type modifiers in probability calculation
 - Update unit tests to test both formats
 - Update integration tests to verify real behavior
 
 ### Phase 2: Verify All Tests Pass
+
 - Unit tests for both semantic approaches
 - Integration tests with real entity data
 - Performance tests (no regressions)
 
 ### Phase 3: Deprecate Legacy Support (Future)
+
 - After all new code uses array format
 - Remove legacy object format handling
 - Simplify code to array-only
@@ -453,9 +467,9 @@ describe('DamagePropagationService - Format Support', () => {
             childSocketId: 'heart_socket',
             baseProbability: 0.3,
             damageFraction: 0.5,
-            damageTypeModifiers: { piercing: 1.5 }
-          }
-        ]
+            damageTypeModifiers: { piercing: 1.5 },
+          },
+        ],
       };
       // Test propagation with real array format
     });
@@ -468,9 +482,9 @@ describe('DamagePropagationService - Format Support', () => {
           {
             childSocketId: 'heart_socket',
             baseProbability: 0.3,
-            damageTypeModifiers: { piercing: 1.5 }
-          }
-        ]
+            damageTypeModifiers: { piercing: 1.5 },
+          },
+        ],
       };
       // Damage type: piercing → effective probability = 0.3 * 1.5 = 0.45
     });
@@ -487,9 +501,9 @@ describe('DamagePropagationService - Format Support', () => {
           {
             childSocketId: 'head_socket',
             probability: 0.5,
-            damage_types: ['piercing', 'slashing']
-          }
-        ]
+            damage_types: ['piercing', 'slashing'],
+          },
+        ],
       };
       // Blunt damage → blocked by filter
       // Piercing damage → allowed
@@ -522,15 +536,16 @@ describe('Vital Organ Entities - Damage Propagation', () => {
 
 ### Files to Modify
 
-| File | Change | Complexity |
-|------|--------|-----------|
-| `src/anatomy/services/damagePropagationService.js` | Support array format, add type modifier logic | Medium |
-| `tests/unit/anatomy/services/damagePropagationService.test.js` | Update tests for array format | Medium |
-| `tests/integration/anatomy/vitalOrganEntities.integration.test.js` | Add actual propagation behavior tests | Medium |
-| `data/mods/anatomy/components/damage_propagation.component.json` | Update schema with `oneOf` | Low |
-| `tests/integration/anatomy/damage-application.integration.test.js` | Verify real propagation works | Medium |
+| File                                                               | Change                                        | Complexity |
+| ------------------------------------------------------------------ | --------------------------------------------- | ---------- |
+| `src/anatomy/services/damagePropagationService.js`                 | Support array format, add type modifier logic | Medium     |
+| `tests/unit/anatomy/services/damagePropagationService.test.js`     | Update tests for array format                 | Medium     |
+| `tests/integration/anatomy/vitalOrganEntities.integration.test.js` | Add actual propagation behavior tests         | Medium     |
+| `data/mods/anatomy/components/damage_propagation.component.json`   | Update schema with `oneOf`                    | Low        |
+| `tests/integration/anatomy/damage-application.integration.test.js` | Verify real propagation works                 | Medium     |
 
 ### Files NOT to Change
+
 - Entity definitions (`data/mods/anatomy/entities/definitions/*.entity.json`) - Already correct format
 - `ApplyDamageHandler` - Already passes data correctly
 - Operation schemas - No changes needed
@@ -596,16 +611,16 @@ The code refers to propagation targets as `childPartId`, but the schema uses `ch
 
 ## Summary Table: Current vs Proposed
 
-| Aspect | Current Code | Current Schema/Data | Proposed Solution |
-|--------|---|---|---|
-| Format | Object (keyed) - WRONG | Array - CORRECT | Array (primary) + legacy |
-| Child ID field | Object key (implicit) | `childSocketId` | `childSocketId` |
-| Probability field | `probability` | `baseProbability` | Support both |
-| Fraction field | `damage_fraction` | `damageFraction` | Support both |
-| Type filtering | `damage_types[]` array | `damageTypeModifiers{}` object | Support both |
-| Modifier logic | Not implemented | Defined in data | Implement in code |
-| Tests pass | ✅ Yes (wrong format) | ✅ Schema valid | ✅ All formats |
-| Real data works | ❌ No | N/A | ✅ Yes |
+| Aspect            | Current Code           | Current Schema/Data            | Proposed Solution        |
+| ----------------- | ---------------------- | ------------------------------ | ------------------------ |
+| Format            | Object (keyed) - WRONG | Array - CORRECT                | Array (primary) + legacy |
+| Child ID field    | Object key (implicit)  | `childSocketId`                | `childSocketId`          |
+| Probability field | `probability`          | `baseProbability`              | Support both             |
+| Fraction field    | `damage_fraction`      | `damageFraction`               | Support both             |
+| Type filtering    | `damage_types[]` array | `damageTypeModifiers{}` object | Support both             |
+| Modifier logic    | Not implemented        | Defined in data                | Implement in code        |
+| Tests pass        | ✅ Yes (wrong format)  | ✅ Schema valid                | ✅ All formats           |
+| Real data works   | ❌ No                  | N/A                            | ✅ Yes                   |
 
 ---
 

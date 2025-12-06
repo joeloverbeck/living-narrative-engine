@@ -192,15 +192,17 @@ export class PromptPreviewModal extends BaseModalRenderer {
       // but standard modern browsers support it.
       await navigator.clipboard.writeText(textToCopy);
       this._displayStatusMessage('Copied!', 'success');
-      
+
       // Optionally clear the success message after a delay
       setTimeout(() => {
         // Only clear if it's still the "Copied!" message
-        if (this.elements.statusMessageElement && this.elements.statusMessageElement.textContent === 'Copied!') {
-           this._clearStatusMessage();
+        if (
+          this.elements.statusMessageElement &&
+          this.elements.statusMessageElement.textContent === 'Copied!'
+        ) {
+          this._clearStatusMessage();
         }
       }, 2000);
-
     } catch (err) {
       this.logger.error(`${this._logPrefix} Failed to copy text:`, err);
       this._displayStatusMessage('Failed to copy.', 'error');
@@ -217,23 +219,27 @@ export class PromptPreviewModal extends BaseModalRenderer {
     if (isLoading) {
       this._displayStatusMessage('Generating prompt...', 'info');
       this._clearContent(); // Optional: clear old content while loading
-      // If not already visible, show it? 
+      // If not already visible, show it?
       // The caller might call show() then setLoading(true), or just setLoading(true) implies show().
       // For now, assume the caller handles visibility if they want to show the "Loading" modal.
       // But usually, you'd show the modal *then* set loading.
       if (!this.isVisible) {
-          super.show();
+        super.show();
       }
     } else {
-       // If loading is done, we expect show(payload) to be called, which updates the UI.
-       // Or explicitly clear the loading message if it wasn't cleared by show().
-       // But show() calls _clearStatusMessage() via super.show(), wait.
-       // super.show() clears status message.
-       // If setLoading(true) calls super.show(), it clears status, then sets "Generating prompt...".
-       // If setLoading(false) is called, it might just clear status.
-       if (this.elements.statusMessageElement && this.elements.statusMessageElement.textContent === 'Generating prompt...') {
-           this._clearStatusMessage();
-       }
+      // If loading is done, we expect show(payload) to be called, which updates the UI.
+      // Or explicitly clear the loading message if it wasn't cleared by show().
+      // But show() calls _clearStatusMessage() via super.show(), wait.
+      // super.show() clears status message.
+      // If setLoading(true) calls super.show(), it clears status, then sets "Generating prompt...".
+      // If setLoading(false) is called, it might just clear status.
+      if (
+        this.elements.statusMessageElement &&
+        this.elements.statusMessageElement.textContent ===
+          'Generating prompt...'
+      ) {
+        this._clearStatusMessage();
+      }
     }
   }
 }

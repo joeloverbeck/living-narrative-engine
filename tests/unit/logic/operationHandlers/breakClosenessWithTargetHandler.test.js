@@ -157,25 +157,39 @@ describe('BreakClosenessWithTargetHandler', () => {
       };
 
       // Actor has only target as partner
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: ['target1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['target1'] };
+          }
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1'] };
+          }
+          return undefined;
         }
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1'] };
-        }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
       expect(result.success).toBe(true);
 
       // Actor component should be removed (empty partners)
-      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('actor1', 'positioning:closeness');
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'actor1',
+        'positioning:closeness'
+      );
 
       // Target component should be removed (empty partners)
-      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('target1', 'positioning:closeness');
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'target1',
+        'positioning:closeness'
+      );
 
       // Should not call addComponent for either entity
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
@@ -189,12 +203,14 @@ describe('BreakClosenessWithTargetHandler', () => {
         target_id: 'target1',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'positioning:closeness') {
-          return { partners: [entityId === 'actor1' ? 'target1' : 'actor1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'positioning:closeness') {
+            return { partners: [entityId === 'actor1' ? 'target1' : 'actor1'] };
+          }
+          return undefined;
         }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
@@ -217,15 +233,23 @@ describe('BreakClosenessWithTargetHandler', () => {
       };
 
       // Actor has multiple partners
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: ['partner2', 'target1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['partner2', 'target1'] };
+          }
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1'] };
+          }
+          return undefined;
         }
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1'] };
-        }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
@@ -239,7 +263,10 @@ describe('BreakClosenessWithTargetHandler', () => {
       );
 
       // Target component should be removed (no partners left)
-      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('target1', 'positioning:closeness');
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'target1',
+        'positioning:closeness'
+      );
 
       // Movement unlock no longer performed when breaking closeness
     });
@@ -251,22 +278,33 @@ describe('BreakClosenessWithTargetHandler', () => {
       };
 
       // Both have multiple partners
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: ['target1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['target1'] };
+          }
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1', 'partner3'] };
+          }
+          return undefined;
         }
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1', 'partner3'] };
-        }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
       expect(result.success).toBe(true);
 
       // Actor component should be removed (no partners left)
-      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith('actor1', 'positioning:closeness');
+      expect(mockEntityManager.removeComponent).toHaveBeenCalledWith(
+        'actor1',
+        'positioning:closeness'
+      );
 
       // Target component should be updated (still has partner3)
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -276,7 +314,11 @@ describe('BreakClosenessWithTargetHandler', () => {
       );
 
       // Target movement should NOT be unlocked (still has partners)
-      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(mockEntityManager, 'target1', false);
+      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(
+        mockEntityManager,
+        'target1',
+        false
+      );
     });
 
     it('should handle both entities having multiple partners', async () => {
@@ -285,15 +327,23 @@ describe('BreakClosenessWithTargetHandler', () => {
         target_id: 'target1',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: ['partner2', 'target1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['partner2', 'target1'] };
+          }
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1', 'partner3'] };
+          }
+          return undefined;
         }
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1', 'partner3'] };
-        }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
@@ -315,8 +365,16 @@ describe('BreakClosenessWithTargetHandler', () => {
       expect(mockEntityManager.removeComponent).not.toHaveBeenCalled();
 
       // Neither should have movement unlocked
-      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(mockEntityManager, 'actor1', false);
-      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(mockEntityManager, 'target1', false);
+      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(
+        mockEntityManager,
+        'actor1',
+        false
+      );
+      expect(movementUtils.updateMovementLock).not.toHaveBeenCalledWith(
+        mockEntityManager,
+        'target1',
+        false
+      );
     });
   });
 
@@ -327,12 +385,17 @@ describe('BreakClosenessWithTargetHandler', () => {
         target_id: 'target1',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1'] };
+          }
+          return undefined;
         }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
@@ -349,12 +412,17 @@ describe('BreakClosenessWithTargetHandler', () => {
         target_id: 'target1',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: ['target1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['target1'] };
+          }
+          return undefined;
         }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
@@ -371,15 +439,23 @@ describe('BreakClosenessWithTargetHandler', () => {
         target_id: 'target1',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: 'not-an-array' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: 'not-an-array' };
+          }
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1'] };
+          }
+          return undefined;
         }
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1'] };
-        }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 
@@ -396,15 +472,23 @@ describe('BreakClosenessWithTargetHandler', () => {
         target_id: 'target1',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'actor1' && componentType === 'positioning:closeness') {
-          return { partners: ['target1', 'partner2', 'partner2'] }; // Duplicates
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'actor1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['target1', 'partner2', 'partner2'] }; // Duplicates
+          }
+          if (
+            entityId === 'target1' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['actor1'] };
+          }
+          return undefined;
         }
-        if (entityId === 'target1' && componentType === 'positioning:closeness') {
-          return { partners: ['actor1'] };
-        }
-        return undefined;
-      });
+      );
 
       await handler.execute(parameters, executionContext);
 
@@ -421,12 +505,14 @@ describe('BreakClosenessWithTargetHandler', () => {
         result_variable: 'breakResult',
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (componentType === 'positioning:closeness') {
-          return { partners: [entityId === 'actor1' ? 'target1' : 'actor1'] };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (componentType === 'positioning:closeness') {
+            return { partners: [entityId === 'actor1' ? 'target1' : 'actor1'] };
+          }
+          return undefined;
         }
-        return undefined;
-      });
+      );
 
       const result = await handler.execute(parameters, executionContext);
 

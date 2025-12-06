@@ -114,7 +114,10 @@ describe('RadialLayoutStrategy integration coverage', () => {
     // - The angle is clamped to prevent wrap-around: Math.min(0.45, 0.251) = 0.251
     // This ensures all children fit within 2π without overlap
     const expectedAnglePerChild = (2 * Math.PI) / effectiveChildCount;
-    expect(firstChild.angleEnd - firstChild.angleStart).toBeCloseTo(expectedAnglePerChild, 5);
+    expect(firstChild.angleEnd - firstChild.angleStart).toBeCloseTo(
+      expectedAnglePerChild,
+      5
+    );
 
     // All children should have approximately equal angles to fit within 2π
     const angles = Array.from(nodes.values())
@@ -159,7 +162,12 @@ describe('RadialLayoutStrategy integration coverage', () => {
     const nodes = mapFromNodes(root, child);
     const edges = [new AnatomyEdge('root', 'child', 'socket')];
 
-    strategy.configure({ centerX: 200, centerY: 100, baseRadius: 200, minAngle: 0.2 });
+    strategy.configure({
+      centerX: 200,
+      centerY: 100,
+      baseRadius: 200,
+      minAngle: 0.2,
+    });
     strategy.calculate(nodes, edges, renderContext);
 
     expect(root.x).toBeCloseTo(200);

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { BodyPartDescriptionBuilder } from '../../../src/anatomy/bodyPartDescriptionBuilder.js';
 import { DescriptorFormatter } from '../../../src/anatomy/descriptorFormatter.js';
@@ -144,14 +151,14 @@ describe('BodyDescriptionComposer real module integration', () => {
 
     const bodyComponent = testBed.entityManager.getComponentData(
       actor.id,
-      ANATOMY_BODY_COMPONENT_ID,
+      ANATOMY_BODY_COMPONENT_ID
     );
 
     bodyComponent.body.descriptors = { build: 'broad-shouldered' };
     await testBed.entityManager.addComponent(
       actor.id,
       ANATOMY_BODY_COMPONENT_ID,
-      bodyComponent,
+      bodyComponent
     );
 
     await testBed.entityManager.addComponent(actor.id, 'descriptors:height', {
@@ -160,14 +167,22 @@ describe('BodyDescriptionComposer real module integration', () => {
     await testBed.entityManager.addComponent(
       actor.id,
       'descriptors:body_composition',
-      { composition: 'athletic' },
+      { composition: 'athletic' }
     );
-    await testBed.entityManager.addComponent(actor.id, 'descriptors:body_hair', {
-      density: 'sparse',
-    });
-    await testBed.entityManager.addComponent(actor.id, 'descriptors:skin_color', {
-      skinColor: 'bronzed',
-    });
+    await testBed.entityManager.addComponent(
+      actor.id,
+      'descriptors:body_hair',
+      {
+        density: 'sparse',
+      }
+    );
+    await testBed.entityManager.addComponent(
+      actor.id,
+      'descriptors:skin_color',
+      {
+        skinColor: 'bronzed',
+      }
+    );
 
     const actorEntity = testBed.entityManager.getEntityInstance(actor.id);
     const description = await composer.composeDescription(actorEntity);
@@ -183,8 +198,8 @@ describe('BodyDescriptionComposer real module integration', () => {
     expect(description).not.toContain('tail');
     expect(
       warnSpy.mock.calls.some(([message]) =>
-        message.includes('[DEPRECATION] Entity'),
-      ),
+        message.includes('[DEPRECATION] Entity')
+      )
     ).toBe(true);
 
     warnSpy.mockRestore();
@@ -205,13 +220,13 @@ describe('BodyDescriptionComposer real module integration', () => {
 
     const emptyBodyComponent = testBed.entityManager.getComponentData(
       actor.id,
-      ANATOMY_BODY_COMPONENT_ID,
+      ANATOMY_BODY_COMPONENT_ID
     );
     emptyBodyComponent.body.descriptors = {};
     await testBed.entityManager.addComponent(
       actor.id,
       ANATOMY_BODY_COMPONENT_ID,
-      emptyBodyComponent,
+      emptyBodyComponent
     );
 
     const description = await composer.composeDescription(actorEntity);

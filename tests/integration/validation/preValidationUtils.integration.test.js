@@ -44,7 +44,9 @@ describe('preValidationUtils integration', () => {
     });
 
     it('accepts macro references without additional fields', () => {
-      const result = validateOperationStructure({ macro: 'core:follow-leader' });
+      const result = validateOperationStructure({
+        macro: 'core:follow-leader',
+      });
 
       expect(result).toEqual({
         isValid: true,
@@ -70,10 +72,15 @@ describe('preValidationUtils integration', () => {
     });
 
     it('rejects unknown operation types with enumerated suggestions', () => {
-      const result = validateOperationStructure({ type: 'NOT_A_REAL_OPERATION', parameters: {} });
+      const result = validateOperationStructure({
+        type: 'NOT_A_REAL_OPERATION',
+        parameters: {},
+      });
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Unknown operation type "NOT_A_REAL_OPERATION"');
+      expect(result.error).toBe(
+        'Unknown operation type "NOT_A_REAL_OPERATION"'
+      );
       expect(result.suggestions).toContain('ADD_COMPONENT'); // First in alphabetical list
       expect(result.suggestions?.at(-1)).toMatch(/more$/);
     });
@@ -82,12 +89,17 @@ describe('preValidationUtils integration', () => {
       const result = validateOperationStructure({ type: 'QUERY_COMPONENT' });
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Missing "parameters" field for operation type "QUERY_COMPONENT"');
+      expect(result.error).toBe(
+        'Missing "parameters" field for operation type "QUERY_COMPONENT"'
+      );
     });
 
     it('accepts END_TURN without parameters while still requiring other types', () => {
       const endTurnResult = validateOperationStructure({ type: 'END_TURN' });
-      const sequenceResult = validateOperationStructure({ type: 'SEQUENCE', parameters: {} });
+      const sequenceResult = validateOperationStructure({
+        type: 'SEQUENCE',
+        parameters: {},
+      });
 
       expect(endTurnResult.isValid).toBe(true);
       expect(sequenceResult.isValid).toBe(true);
@@ -100,9 +112,13 @@ describe('preValidationUtils integration', () => {
       });
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Operation type "QUERY_COMPONENT" requires a parameters object');
+      expect(result.error).toBe(
+        'Operation type "QUERY_COMPONENT" requires a parameters object'
+      );
       expect(result.path).toBe('root');
-      expect(result.suggestions?.[0]).toBe('Required parameters: entity_ref, component_type, result_variable');
+      expect(result.suggestions?.[0]).toBe(
+        'Required parameters: entity_ref, component_type, result_variable'
+      );
     });
 
     it('flags invalid parameter fields and suggests corrections when a value exists', () => {
@@ -180,7 +196,9 @@ describe('preValidationUtils integration', () => {
       expect(result.path).toBe('root.actions[1]');
       expect(result.error).toContain('Operation at index 1 failed validation');
       expect(result.suggestions?.[0]).toContain('Add a "type" field');
-      expect(result.suggestions?.[result.suggestions.length - 1]).toContain('Problematic operation:');
+      expect(result.suggestions?.[result.suggestions.length - 1]).toContain(
+        'Problematic operation:'
+      );
     });
 
     it('skips deep validation for macro references while still scanning siblings', () => {
@@ -217,7 +235,9 @@ describe('preValidationUtils integration', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.path).toBe('root.actions[0].parameters.actions[0]');
-      expect(result.error).toContain('Unknown operation type "UNKNOWN_OPERATION"');
+      expect(result.error).toContain(
+        'Unknown operation type "UNKNOWN_OPERATION"'
+      );
     });
 
     it('scans non-operation object properties for nested collections', () => {
@@ -340,7 +360,12 @@ describe('preValidationUtils integration', () => {
     it('skips validation for non-rule schemas', () => {
       const result = performPreValidation({}, 'schema://other-schema.json');
 
-      expect(result).toEqual({ isValid: true, error: null, path: null, suggestions: null });
+      expect(result).toEqual({
+        isValid: true,
+        error: null,
+        path: null,
+        suggestions: null,
+      });
     });
   });
 

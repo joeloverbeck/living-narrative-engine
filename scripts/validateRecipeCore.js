@@ -28,9 +28,11 @@ export function validateCliArgs(recipes) {
  * @returns {string} Error message
  */
 export function formatNoRecipesError(chalk) {
-  return chalk.red('\n❌ Error: No recipe files specified\n') +
+  return (
+    chalk.red('\n❌ Error: No recipe files specified\n') +
     'Usage: npm run validate:recipe <recipe-file> [<recipe-file> ...]\n' +
-    'Example: npm run validate:recipe data/mods/anatomy/recipes/red_dragon.recipe.json\n';
+    'Example: npm run validate:recipe data/mods/anatomy/recipes/red_dragon.recipe.json\n'
+  );
 }
 
 /**
@@ -41,10 +43,13 @@ export function formatNoRecipesError(chalk) {
  */
 export function calculateSummaryStats(results) {
   const totalRecipes = results.length;
-  const validRecipes = results.filter(r => r.isValid).length;
+  const validRecipes = results.filter((r) => r.isValid).length;
   const totalErrors = results.reduce((sum, r) => sum + r.errors.length, 0);
   const totalWarnings = results.reduce((sum, r) => sum + r.warnings.length, 0);
-  const totalSuggestions = results.reduce((sum, r) => sum + r.suggestions.length, 0);
+  const totalSuggestions = results.reduce(
+    (sum, r) => sum + r.suggestions.length,
+    0
+  );
 
   return {
     totalRecipes,
@@ -94,8 +99,14 @@ export function formatJsonOutput(report) {
  * @returns {object} Exit result with code, passed, and stats
  */
 export function determineExitCode(results) {
-  const totalErrors = results.reduce((sum, r) => sum + (r.errors?.length || 0), 0);
-  const totalWarnings = results.reduce((sum, r) => sum + (r.warnings?.length || 0), 0);
+  const totalErrors = results.reduce(
+    (sum, r) => sum + (r.errors?.length || 0),
+    0
+  );
+  const totalWarnings = results.reduce(
+    (sum, r) => sum + (r.warnings?.length || 0),
+    0
+  );
 
   return {
     exitCode: totalErrors > 0 ? 1 : 0,
@@ -115,9 +126,13 @@ export function determineExitCode(results) {
  */
 export function formatExitMessage(exitResult, chalk) {
   if (exitResult.passed) {
-    return chalk.green(`\n✅ Validation PASSED: ${exitResult.totalRecipes} recipe(s) valid\n`);
+    return chalk.green(
+      `\n✅ Validation PASSED: ${exitResult.totalRecipes} recipe(s) valid\n`
+    );
   } else {
-    return chalk.red(`\n❌ Validation FAILED: ${exitResult.totalErrors} error(s), ${exitResult.totalWarnings} warning(s)\n`);
+    return chalk.red(
+      `\n❌ Validation FAILED: ${exitResult.totalErrors} error(s), ${exitResult.totalWarnings} warning(s)\n`
+    );
   }
 }
 

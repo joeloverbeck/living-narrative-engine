@@ -84,10 +84,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       );
 
       await expect(async () => {
-        await testFixture.executeAction(
-          scenario.actor.id,
-          scenario.target.id
-        );
+        await testFixture.executeAction(scenario.actor.id, scenario.target.id);
       }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
     });
   });
@@ -107,7 +104,10 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       console.log('=== DEBUG: Before executeAction ===');
       console.log('Actor ID:', scenario.actor.id);
       console.log('Target ID:', scenario.target.id);
-      console.log('Partners array:', actorBefore.components['positioning:closeness'].partners);
+      console.log(
+        'Partners array:',
+        actorBefore.components['positioning:closeness'].partners
+      );
 
       // Hook the event bus to see the payload
       const originalDispatch = testFixture.eventBus.dispatch;
@@ -205,13 +205,15 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       ]);
 
       // Verify target1 has closeness removed
-      const target1After =
-        testFixture.entityManager.getEntityInstance(target1.id);
+      const target1After = testFixture.entityManager.getEntityInstance(
+        target1.id
+      );
       expect(target1After.components['positioning:closeness']).toBeUndefined();
 
       // Verify target2 still has closeness (unchanged)
-      const target2After =
-        testFixture.entityManager.getEntityInstance(target2.id);
+      const target2After = testFixture.entityManager.getEntityInstance(
+        target2.id
+      );
       expect(target2After.components['positioning:closeness']).toBeDefined();
       expect(target2After.components['positioning:closeness'].partners).toEqual(
         [actor.id]

@@ -76,7 +76,10 @@ export class GoapDecisionProvider extends DelegatingDecisionProvider {
         availableActionsCount: actions.length,
       });
 
-      const result = await this.#goapController.decideTurn({ id: actor.id }, world);
+      const result = await this.#goapController.decideTurn(
+        { id: actor.id },
+        world
+      );
 
       // 3. Handle no decision (no goals, planning failed, etc.)
       if (!result || !result.actionHint) {
@@ -144,7 +147,9 @@ export class GoapDecisionProvider extends DelegatingDecisionProvider {
    */
   #resolveActionHint(hint, actions) {
     // 1. Filter actions by actionId
-    const candidates = actions.filter((action) => action.actionId === hint.actionId);
+    const candidates = actions.filter(
+      (action) => action.actionId === hint.actionId
+    );
 
     if (candidates.length === 0) {
       // Action not available in current context

@@ -120,8 +120,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -163,8 +162,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -198,8 +196,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -233,8 +230,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -268,8 +264,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -303,8 +298,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -358,8 +352,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -398,8 +391,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -442,8 +434,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -475,8 +466,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -508,8 +498,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -560,8 +549,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -591,16 +579,12 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
 
-      await handler.execute(
-        { entity_ref: { id: 'actor1' } },
-        executionContext
-      );
+      await handler.execute({ entity_ref: { id: 'actor1' } }, executionContext);
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'actor1',
@@ -621,8 +605,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });
@@ -678,8 +661,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return null;
         return null;
       });
@@ -757,8 +739,7 @@ describe('UpdateHungerStateHandler', () => {
       };
 
       em.getComponentData.mockImplementation((entityId, componentId) => {
-        if (componentId === METABOLIC_STORE_COMPONENT_ID)
-          return metabolicStore;
+        if (componentId === METABOLIC_STORE_COMPONENT_ID) return metabolicStore;
         if (componentId === HUNGER_STATE_COMPONENT_ID) return hungerState;
         return null;
       });

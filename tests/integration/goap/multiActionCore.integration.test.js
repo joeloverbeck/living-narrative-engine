@@ -121,7 +121,9 @@ describe('Core Multi-Action Planning', () => {
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
         priority: 10,
-        goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -134,12 +136,16 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(4);
       expect(planCreated.payload.tasks).toHaveLength(4);
-      expect(planCreated.payload.tasks.every((taskId) => taskId === 'test:eat')).toBe(true);
+      expect(
+        planCreated.payload.tasks.every((taskId) => taskId === 'test:eat')
+      ).toBe(true);
     });
   });
 
@@ -192,7 +198,9 @@ describe('Core Multi-Action Planning', () => {
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
         priority: 10,
-        goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -205,7 +213,9 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(2);
@@ -262,7 +272,9 @@ describe('Core Multi-Action Planning', () => {
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
         priority: 10,
-        goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -275,7 +287,9 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(1);
@@ -372,7 +386,9 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(5);
@@ -439,7 +455,9 @@ describe('Core Multi-Action Planning', () => {
       const goal = createTestGoal({
         id: 'test:gather_gold',
         priority: 10,
-        goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+        goalState: {
+          '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -452,8 +470,13 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      console.log('[TEST DEBUG] Events:', events.map(e => e.type));
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      console.log(
+        '[TEST DEBUG] Events:',
+        events.map((e) => e.type)
+      );
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       const activePlan = setup.controller.getActivePlan(actor.id);
       console.log('[TEST DEBUG] Active plan:', activePlan);
@@ -513,7 +536,9 @@ describe('Core Multi-Action Planning', () => {
       const goal = createTestGoal({
         id: 'test:gather_gold',
         priority: 10,
-        goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 75] },
+        goalState: {
+          '>=': [{ var: 'state.actor.components.core_resources.gold' }, 75],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -526,7 +551,9 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(3);
@@ -583,7 +610,9 @@ describe('Core Multi-Action Planning', () => {
       const goal = createTestGoal({
         id: 'test:gather_gold',
         priority: 10,
-        goalState: { '==': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+        goalState: {
+          '==': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -596,7 +625,9 @@ describe('Core Multi-Action Planning', () => {
       await setup.controller.decideTurn(actor, world);
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(2);

@@ -85,7 +85,9 @@ describe('items:drop_wielded_item action integration', () => {
 
       expect(testFixture.events).toDispatchEvent('items:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
-      expect(testFixture.events).toHaveActionSuccess('Fighter drops Iron Sword.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Fighter drops Iron Sword.'
+      );
     });
 
     it('drops wielded item when actor has no free grabbing appendage (two-handed weapon)', async () => {
@@ -138,7 +140,9 @@ describe('items:drop_wielded_item action integration', () => {
       // Verify success
       expect(testFixture.events).toDispatchEvent('items:item_dropped');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
-      expect(testFixture.events).toHaveActionSuccess('Warrior drops Greatsword.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Warrior drops Greatsword.'
+      );
     });
 
     it('drops one wielded item when dual wielding', async () => {
@@ -285,7 +289,9 @@ describe('items:drop_wielded_item action integration', () => {
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent?.payload.descriptionText).toContain('Hunter');
       expect(perceptibleEvent?.payload.descriptionText).toContain('drops');
-      expect(perceptibleEvent?.payload.descriptionText).toContain('Hunting Rifle');
+      expect(perceptibleEvent?.payload.descriptionText).toContain(
+        'Hunting Rifle'
+      );
     });
   });
 
@@ -345,7 +351,9 @@ describe('items:drop_wielded_item action integration', () => {
         (c) => c.condition_ref
       );
       expect(conditionRefs).toContain('items:event-is-action-drop-item');
-      expect(conditionRefs).toContain('items:event-is-action-drop-wielded-item');
+      expect(conditionRefs).toContain(
+        'items:event-is-action-drop-wielded-item'
+      );
     });
   });
 });

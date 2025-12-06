@@ -33,9 +33,9 @@ describe('SaveGameService integration with dependencyUtils', () => {
       const logger = createEnhancedMockLogger();
       validateLoggerMock(logger, 'SaveGameService dependency rejection');
 
-      expect(
-        () => new SaveGameService({ logger, userPrompt: {} })
-      ).toThrow(/IUserPrompt/);
+      expect(() => new SaveGameService({ logger, userPrompt: {} })).toThrow(
+        /IUserPrompt/
+      );
     });
   });
 

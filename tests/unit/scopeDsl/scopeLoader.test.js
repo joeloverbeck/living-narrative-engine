@@ -200,12 +200,8 @@ describe('ScopeLoader', () => {
           ast: { type: 'ast2' },
         },
       };
-      jest
-        .spyOn(loader, 'parseScopeFile')
-        .mockReturnValue(parsedMap);
-      jest
-        .spyOn(loader, 'transformContent')
-        .mockReturnValue(transformedScopes);
+      jest.spyOn(loader, 'parseScopeFile').mockReturnValue(parsedMap);
+      jest.spyOn(loader, 'transformContent').mockReturnValue(transformedScopes);
 
       const storeSpy = jest
         .spyOn(loader, '_storeItemInRegistry')
@@ -255,11 +251,11 @@ describe('ScopeLoader', () => {
     });
 
     test('should return default result when no scopes are produced', async () => {
-      jest.spyOn(loader, 'parseScopeFile').mockReturnValue(
-        new Map([
-          ['core:orphan_scope', { expr: 'noop', ast: {} }],
-        ])
-      );
+      jest
+        .spyOn(loader, 'parseScopeFile')
+        .mockReturnValue(
+          new Map([['core:orphan_scope', { expr: 'noop', ast: {} }]])
+        );
       jest.spyOn(loader, 'transformContent').mockReturnValue({});
       const storeSpy = jest.spyOn(loader, '_storeItemInRegistry');
 
@@ -277,11 +273,9 @@ describe('ScopeLoader', () => {
 
     test('should log and rethrow errors encountered during processing', async () => {
       const failure = new Error('Parsing failure');
-      jest
-        .spyOn(loader, 'parseScopeFile')
-        .mockImplementation(() => {
-          throw failure;
-        });
+      jest.spyOn(loader, 'parseScopeFile').mockImplementation(() => {
+        throw failure;
+      });
 
       await expect(
         loader._processFetchedItem(

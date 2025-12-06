@@ -364,7 +364,9 @@ describe('HasOtherActorsAtLocationOperator', () => {
         new HasOtherActorsAtLocationOperator({
           logger: mockLogger,
         });
-      }).toThrow('HasOtherActorsAtLocationOperator: Missing required dependencies');
+      }).toThrow(
+        'HasOtherActorsAtLocationOperator: Missing required dependencies'
+      );
     });
 
     it('should throw error when logger is not provided', () => {
@@ -372,13 +374,17 @@ describe('HasOtherActorsAtLocationOperator', () => {
         new HasOtherActorsAtLocationOperator({
           entityManager: mockEntityManager,
         });
-      }).toThrow('HasOtherActorsAtLocationOperator: Missing required dependencies');
+      }).toThrow(
+        'HasOtherActorsAtLocationOperator: Missing required dependencies'
+      );
     });
 
     it('should throw error when both dependencies are missing', () => {
       expect(() => {
         new HasOtherActorsAtLocationOperator({});
-      }).toThrow('HasOtherActorsAtLocationOperator: Missing required dependencies');
+      }).toThrow(
+        'HasOtherActorsAtLocationOperator: Missing required dependencies'
+      );
     });
   });
 

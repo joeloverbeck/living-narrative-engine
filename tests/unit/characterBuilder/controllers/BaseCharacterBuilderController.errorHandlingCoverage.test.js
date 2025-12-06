@@ -73,15 +73,18 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
     new TestController({ ...testBase.mockDependencies, ...overrides });
 
   it('tracks UI state through currentState helper', async () => {
-    ['emptyState', 'loadingState', 'resultsState', 'errorState'].forEach((id) => {
-      const element = document.createElement('div');
-      element.id = id;
-      document.body.appendChild(element);
-    });
+    ['emptyState', 'loadingState', 'resultsState', 'errorState'].forEach(
+      (id) => {
+        const element = document.createElement('div');
+        element.id = id;
+        document.body.appendChild(element);
+      }
+    );
 
-    testBase.mocks.domElementManager.getElement.mockImplementation((key) =>
-      document.getElementById(key) ||
-      document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase())
+    testBase.mocks.domElementManager.getElement.mockImplementation(
+      (key) =>
+        document.getElementById(key) ||
+        document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase())
     );
 
     const controller = buildController();
@@ -90,9 +93,10 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
     expect(controller.currentState).toBeNull();
     controller._showState(UI_STATES.LOADING);
 
-    expect(controller.currentState === UI_STATES.LOADING || controller.currentState === null).toBe(
-      true
-    );
+    expect(
+      controller.currentState === UI_STATES.LOADING ||
+        controller.currentState === null
+    ).toBe(true);
     expect(controller._isInState(UI_STATES.LOADING)).toBe(
       controller.currentState === UI_STATES.LOADING
     );
@@ -121,14 +125,19 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
     jest.useFakeTimers();
     const controller = buildController();
     const configureCall =
-      testBase.mocks.errorHandlingStrategy.configureContext.mock.calls.at(-1)[0];
+      testBase.mocks.errorHandlingStrategy.configureContext.mock.calls.at(
+        -1
+      )[0];
     const recoveryHandlers = configureCall.recoveryHandlers;
 
     const networkDetails = { category: ERROR_CATEGORIES.NETWORK };
     recoveryHandlers[ERROR_CATEGORIES.NETWORK](networkDetails);
     jest.runOnlyPendingTimers();
 
-    const systemDetails = { category: ERROR_CATEGORIES.SYSTEM, operation: 'initialization' };
+    const systemDetails = {
+      category: ERROR_CATEGORIES.SYSTEM,
+      operation: 'initialization',
+    };
     recoveryHandlers[ERROR_CATEGORIES.SYSTEM](systemDetails);
     jest.runOnlyPendingTimers();
 
@@ -147,27 +156,26 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
     controller._generateUserMessage(error, context);
     controller._logError({ message: 'm' });
     controller._showErrorToUser({ message: 'm' });
-    expect(() => controller._handleServiceError(error, 'operate', 'msg')).toThrow(
-      'oops'
-    );
+    expect(() =>
+      controller._handleServiceError(error, 'operate', 'msg')
+    ).toThrow('oops');
 
-    expect(testBase.mocks.errorHandlingStrategy.handleError).toHaveBeenCalledWith(
-      error,
-      context
-    );
-    expect(testBase.mocks.errorHandlingStrategy.buildErrorDetails).toHaveBeenCalledWith(
-      error,
-      context
-    );
-    expect(testBase.mocks.errorHandlingStrategy.categorizeError).toHaveBeenCalledWith(
-      error
-    );
-    expect(testBase.mocks.errorHandlingStrategy.generateUserMessage).toHaveBeenCalledWith(
-      error,
-      context
-    );
+    expect(
+      testBase.mocks.errorHandlingStrategy.handleError
+    ).toHaveBeenCalledWith(error, context);
+    expect(
+      testBase.mocks.errorHandlingStrategy.buildErrorDetails
+    ).toHaveBeenCalledWith(error, context);
+    expect(
+      testBase.mocks.errorHandlingStrategy.categorizeError
+    ).toHaveBeenCalledWith(error);
+    expect(
+      testBase.mocks.errorHandlingStrategy.generateUserMessage
+    ).toHaveBeenCalledWith(error, context);
     expect(testBase.mocks.errorHandlingStrategy.logError).toHaveBeenCalled();
-    expect(testBase.mocks.errorHandlingStrategy.showErrorToUser).toHaveBeenCalled();
+    expect(
+      testBase.mocks.errorHandlingStrategy.showErrorToUser
+    ).toHaveBeenCalled();
   });
 
   it('passes validation context with controller name', () => {
@@ -194,7 +202,9 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
 
     controller._cancelPendingOperations();
 
-    expect(testBase.mocks.asyncUtilitiesToolkit.clearAllTimers).toHaveBeenCalled();
+    expect(
+      testBase.mocks.asyncUtilitiesToolkit.clearAllTimers
+    ).toHaveBeenCalled();
     expect(controller.cancelCustomOperations).toHaveBeenCalled();
     expect(testBase.mocks.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Cancelled 1 pending timers')
@@ -213,8 +223,12 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
     expect(controller.additionalServices).toEqual({});
     expect(controller.cleanupAdditionalServices).toHaveBeenCalled();
     expect(controller.cleanupCoreServices).toHaveBeenCalled();
-    expect(testBase.mocks.errorHandlingStrategy.resetLastError).toHaveBeenCalled();
-    expect(testBase.mocks.errorHandlingStrategy.configureContext).toHaveBeenCalledWith({
+    expect(
+      testBase.mocks.errorHandlingStrategy.resetLastError
+    ).toHaveBeenCalled();
+    expect(
+      testBase.mocks.errorHandlingStrategy.configureContext
+    ).toHaveBeenCalledWith({
       uiStateManager: null,
       showError: null,
       showState: null,
@@ -222,7 +236,9 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
       recoveryHandlers: {},
     });
     expect(testBase.mocks.eventListenerRegistry.destroy).toHaveBeenCalled();
-    expect(testBase.mocks.asyncUtilitiesToolkit.clearAllTimers).toHaveBeenCalled();
+    expect(
+      testBase.mocks.asyncUtilitiesToolkit.clearAllTimers
+    ).toHaveBeenCalled();
     expect(testBase.mocks.performanceMonitor.clearData).toHaveBeenCalled();
     expect(testBase.mocks.memoryManager.clear).toHaveBeenCalled();
   });
@@ -230,13 +246,19 @@ describe('BaseCharacterBuilderController error handling coverage', () => {
   it('guards cleanup registration and destruction helpers', () => {
     const controller = buildController();
 
-    expect(() => controller._registerCleanupTask('not-a-function')).toThrow(TypeError);
+    expect(() => controller._registerCleanupTask('not-a-function')).toThrow(
+      TypeError
+    );
 
     const wrapped = controller._makeDestructionSafe(() => 'ok', 'safeMethod');
-    expect(testBase.mocks.controllerLifecycleOrchestrator.makeDestructionSafe).toHaveBeenCalled();
+    expect(
+      testBase.mocks.controllerLifecycleOrchestrator.makeDestructionSafe
+    ).toHaveBeenCalled();
     expect(wrapped()).toBe('ok');
 
-    testBase.mocks.controllerLifecycleOrchestrator.checkDestroyed.mockReturnValueOnce(true);
+    testBase.mocks.controllerLifecycleOrchestrator.checkDestroyed.mockReturnValueOnce(
+      true
+    );
     expect(controller._checkDestroyed('operation')).toBe(true);
     expect(controller.isDestroyed).toBe(false);
     expect(controller.isDestroying).toBe(false);

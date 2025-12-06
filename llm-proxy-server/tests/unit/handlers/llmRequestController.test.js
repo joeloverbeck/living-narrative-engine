@@ -623,11 +623,17 @@ describe('LlmRequestController', () => {
       );
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Successful LLM response could not be sent'),
-        expect.objectContaining({ requestId: req.requestId, llmId: req.body.llmId })
+        expect.objectContaining({
+          requestId: req.requestId,
+          llmId: req.body.llmId,
+        })
       );
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining('Response salvaged successfully'),
-        expect.objectContaining({ requestId: req.requestId, llmId: req.body.llmId })
+        expect.objectContaining({
+          requestId: req.requestId,
+          llmId: req.body.llmId,
+        })
       );
       expect(sendProxyError).not.toHaveBeenCalled();
     });
@@ -726,7 +732,9 @@ describe('LlmRequestController', () => {
 
       expect(sendProxyError).not.toHaveBeenCalled();
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL - LlmRequestService threw an unexpected exception'),
+        expect.stringContaining(
+          'CRITICAL - LlmRequestService threw an unexpected exception'
+        ),
         expect.objectContaining({
           details: expect.objectContaining({
             llmId: req.body.llmId,
@@ -736,8 +744,13 @@ describe('LlmRequestController', () => {
         })
       );
       expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot send error response - headers already sent'),
-        expect.objectContaining({ llmId: req.body.llmId, errorMessage: error.message })
+        expect.stringContaining(
+          'Cannot send error response - headers already sent'
+        ),
+        expect.objectContaining({
+          llmId: req.body.llmId,
+          errorMessage: error.message,
+        })
       );
     });
   });

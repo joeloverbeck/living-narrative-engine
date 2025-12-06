@@ -96,7 +96,7 @@ describe('Traits Generator E2E Memory Tests', () => {
                   }
                 },
               },
-              configurable: true
+              configurable: true,
             });
           }
         } else {
@@ -118,7 +118,7 @@ describe('Traits Generator E2E Memory Tests', () => {
                 },
               },
             },
-            configurable: true
+            configurable: true,
           });
         }
 
@@ -165,7 +165,9 @@ describe('Traits Generator E2E Memory Tests', () => {
         validateElement: jest.fn(),
         validateElementCache: jest.fn(() => ({ valid: true, missing: [] })),
         normalizeElementConfig: jest.fn((config) =>
-          typeof config === 'string' ? { selector: config, required: true } : config
+          typeof config === 'string'
+            ? { selector: config, required: true }
+            : config
         ),
         setElementEnabled: jest.fn(),
       },

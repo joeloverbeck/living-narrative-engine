@@ -26,7 +26,10 @@ describe('Music Mod Components - Schema Validation', () => {
       '../../../../../data/schemas/common.schema.json'
     );
     const commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
-    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+    ajv.addSchema(
+      commonSchema,
+      'schema://living-narrative-engine/common.schema.json'
+    );
 
     // Load the component schema
     const componentSchemaPath = path.resolve(
@@ -34,7 +37,10 @@ describe('Music Mod Components - Schema Validation', () => {
       '../../../../../data/schemas/component.schema.json'
     );
     componentSchema = JSON.parse(readFileSync(componentSchemaPath, 'utf8'));
-    ajv.addSchema(componentSchema, 'schema://living-narrative-engine/component.schema.json');
+    ajv.addSchema(
+      componentSchema,
+      'schema://living-narrative-engine/component.schema.json'
+    );
   });
 
   describe('is_musician.component.json', () => {
@@ -49,7 +55,9 @@ describe('Music Mod Components - Schema Validation', () => {
     });
 
     it('should be a valid component schema', () => {
-      const validate = ajv.getSchema('schema://living-narrative-engine/component.schema.json');
+      const validate = ajv.getSchema(
+        'schema://living-narrative-engine/component.schema.json'
+      );
       const valid = validate(component);
       expect(valid).toBe(true);
     });
@@ -83,7 +91,9 @@ describe('Music Mod Components - Schema Validation', () => {
     });
 
     it('should be a valid component schema', () => {
-      const validate = ajv.getSchema('schema://living-narrative-engine/component.schema.json');
+      const validate = ajv.getSchema(
+        'schema://living-narrative-engine/component.schema.json'
+      );
       const valid = validate(component);
       expect(valid).toBe(true);
     });
@@ -119,7 +129,9 @@ describe('Music Mod Components - Schema Validation', () => {
     });
 
     it('should be a valid component schema', () => {
-      const validate = ajv.getSchema('schema://living-narrative-engine/component.schema.json');
+      const validate = ajv.getSchema(
+        'schema://living-narrative-engine/component.schema.json'
+      );
       const valid = validate(component);
       expect(valid).toBe(true);
     });
@@ -170,11 +182,14 @@ describe('Music Mod Components - Schema Validation', () => {
 
     it('should have activityMetadata property', () => {
       expect(component.dataSchema.properties.activityMetadata).toBeDefined();
-      expect(component.dataSchema.properties.activityMetadata.type).toBe('object');
+      expect(component.dataSchema.properties.activityMetadata.type).toBe(
+        'object'
+      );
     });
 
     it('should have correct activityMetadata structure', () => {
-      const metadata = component.dataSchema.properties.activityMetadata.properties;
+      const metadata =
+        component.dataSchema.properties.activityMetadata.properties;
       expect(metadata.shouldDescribeInActivity).toBeDefined();
       expect(metadata.template).toBeDefined();
       expect(metadata.targetRole).toBeDefined();
@@ -182,7 +197,8 @@ describe('Music Mod Components - Schema Validation', () => {
     });
 
     it('should have priority value of 70', () => {
-      const priority = component.dataSchema.properties.activityMetadata.properties.priority;
+      const priority =
+        component.dataSchema.properties.activityMetadata.properties.priority;
       expect(priority.default).toBe(70);
       expect(priority.minimum).toBe(0);
       expect(priority.maximum).toBe(100);
@@ -226,7 +242,9 @@ describe('Music Mod Components - Schema Validation', () => {
     });
 
     it('should be a valid component schema', () => {
-      const validate = ajv.getSchema('schema://living-narrative-engine/component.schema.json');
+      const validate = ajv.getSchema(
+        'schema://living-narrative-engine/component.schema.json'
+      );
       const valid = validate(component);
       expect(valid).toBe(true);
     });
@@ -288,18 +306,22 @@ describe('Music Mod Components - Schema Validation', () => {
 
     it('should have activityMetadata property', () => {
       expect(component.dataSchema.properties.activityMetadata).toBeDefined();
-      expect(component.dataSchema.properties.activityMetadata.type).toBe('object');
+      expect(component.dataSchema.properties.activityMetadata.type).toBe(
+        'object'
+      );
     });
 
     it('should have correct activityMetadata structure', () => {
-      const metadata = component.dataSchema.properties.activityMetadata.properties;
+      const metadata =
+        component.dataSchema.properties.activityMetadata.properties;
       expect(metadata.shouldDescribeInActivity).toBeDefined();
       expect(metadata.template).toBeDefined();
       expect(metadata.priority).toBeDefined();
     });
 
     it('should have priority value of 65', () => {
-      const priority = component.dataSchema.properties.activityMetadata.properties.priority;
+      const priority =
+        component.dataSchema.properties.activityMetadata.properties.priority;
       expect(priority.default).toBe(65);
       expect(priority.minimum).toBe(0);
       expect(priority.maximum).toBe(100);

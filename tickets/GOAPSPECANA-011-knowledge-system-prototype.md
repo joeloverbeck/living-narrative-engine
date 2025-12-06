@@ -9,6 +9,7 @@
 ## Problem Statement
 
 Lines 139-142 propose `core:known_to` component without analyzing feasibility. Concerns:
+
 - Performance: Potentially updating hundreds of entities each turn
 - Memory: O(actors × entities) knowledge graph
 - Scalability: 50 actors × 500 entities = 25,000 potential edges
@@ -31,6 +32,7 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
 ## Tasks
 
 ### 1. Design Knowledge System Architecture
+
 - [ ] Define `core:known_to` component structure:
   ```json
   {
@@ -49,7 +51,9 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
   - Configurable forgetting threshold
 
 ### 2. Build Prototype Implementation
+
 - [ ] Create `KnowledgeManager` service:
+
   ```javascript
   class KnowledgeManager {
     updateVisibility(actorId, visibleEntityIds) {
@@ -65,11 +69,13 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
     }
   }
   ```
+
 - [ ] Integrate with turn system
 - [ ] Integrate with visibility system
 - [ ] Add instrumentation for performance measurement
 
 ### 3. Create Test Scenarios
+
 - [ ] Scenario 1: Small world
   - 10 actors, 100 entities
   - Measure baseline performance
@@ -88,34 +94,41 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
   - Identify breaking point
 
 ### 4. Performance Benchmarking
+
 - [ ] Measure update performance:
+
   ```javascript
   const startTime = performance.now();
   knowledgeManager.updateVisibility(actorId, visibleEntities);
   const updateTime = performance.now() - startTime;
   ```
+
   - Target: <10ms per actor per turn
   - Measure: Mean, median, p95, p99, max
 
 - [ ] Measure memory overhead:
+
   ```javascript
   const before = process.memoryUsage().heapUsed;
   // Build full knowledge graph
   const after = process.memoryUsage().heapUsed;
   const overhead = after - before;
   ```
+
   - Target: <50MB for 50 actors × 500 entities
   - Measure: Per-actor average, total overhead
 
 - [ ] Measure query performance:
+
   ```javascript
   // Scope resolution with knowledge filter
   const start = performance.now();
   const knownItems = scope.resolve({
-    filter: (entity) => knowledgeManager.isKnownTo(entity.id, actorId)
+    filter: (entity) => knowledgeManager.isKnownTo(entity.id, actorId),
   });
   const queryTime = performance.now() - start;
   ```
+
   - Target: <50ms per scope resolution
   - Measure: Query complexity impact
 
@@ -125,6 +138,7 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
   - Ensure no memory leaks
 
 ### 5. Identify Bottlenecks
+
 - [ ] Profile with Node.js profiler
 - [ ] Identify hot paths:
   - Array operations (includes checks)
@@ -134,6 +148,7 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
 - [ ] Document optimization opportunities
 
 ### 6. Optimization Strategies
+
 - [ ] Strategy A: Incremental updates
   - Only update changed visibility
   - Track visibility deltas
@@ -161,6 +176,7 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
 - [ ] Test each strategy, measure impact
 
 ### 7. Feasibility Determination
+
 - [ ] Compare results to targets:
   - Update performance: <10ms per actor ✓/✗
   - Memory overhead: <50MB total ✓/✗
@@ -173,6 +189,7 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
   - **If targets not met**: Design alternative approach
 
 ### 8. Alternative Approach (if needed)
+
 - [ ] Simplified knowledge model:
   - Track only last-seen location
   - Binary known/unknown (no full graph)
@@ -189,6 +206,7 @@ Build performance spike to measure feasibility, identify bottlenecks, and specif
   - Reduces memory overhead
 
 ### 9. Complete Specification
+
 - [ ] Document chosen approach:
   - Architecture (component structure, update mechanism)
   - Performance characteristics (measured data)

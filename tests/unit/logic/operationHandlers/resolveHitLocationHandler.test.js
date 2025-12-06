@@ -30,7 +30,7 @@ describe('ResolveHitLocationHandler', () => {
       evaluationContext: {
         context: {},
         actor: { id: 'entity1' }, // Default actor
-        target: { id: 'target1' } // Default target
+        target: { id: 'target1' }, // Default target
       },
     };
 
@@ -53,7 +53,7 @@ describe('ResolveHitLocationHandler', () => {
 
   it('should handle missing anatomy:body', () => {
     mockEntityManager.getComponentData.mockReturnValue(null); // No body component
-    
+
     const params = { entity_ref: 'actor', result_variable: 'hit_location' };
 
     handler.execute(params, executionContext);
@@ -128,23 +128,27 @@ describe('ResolveHitLocationHandler', () => {
 
   it('should handle missing anatomy:part components gracefully', () => {
     const bodyComponent = { root: 'torso' };
-    
+
     mockEntityManager.getComponentData.mockImplementation(
-        (entityId, componentType) => {
-          if (entityId === 'target1' && componentType === 'anatomy:body') return bodyComponent;
-          if (entityId === 'torso' && componentType === 'anatomy:part') return { hit_probability_weight: 100 };
-          // 'missing' part has no anatomy:part component (returns null/undefined)
-          return null;
-        }
+      (entityId, componentType) => {
+        if (entityId === 'target1' && componentType === 'anatomy:body')
+          return bodyComponent;
+        if (entityId === 'torso' && componentType === 'anatomy:part')
+          return { hit_probability_weight: 100 };
+        // 'missing' part has no anatomy:part component (returns null/undefined)
+        return null;
+      }
     );
-    
+
     mockBodyGraphService.getAllParts.mockReturnValue(['torso', 'missing']);
-    
+
     const params = { entity_ref: 'target', result_variable: 'hit_location' };
-    
+
     handler.execute(params, executionContext);
-    
+
     // Should always pick torso
-    expect(executionContext.evaluationContext.context.hit_location).toBe('torso');
+    expect(executionContext.evaluationContext.context.hit_location).toBe(
+      'torso'
+    );
   });
 });

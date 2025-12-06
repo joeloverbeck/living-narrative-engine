@@ -77,7 +77,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -135,7 +136,9 @@ async function createBodyGraphFixture({
     structure: { rootPartId: partIds.torso },
   });
 
-  entityManager.addComponent(partIds.torso, 'anatomy:part', { subType: 'torso' });
+  entityManager.addComponent(partIds.torso, 'anatomy:part', {
+    subType: 'torso',
+  });
   entityManager.addComponent(partIds.torso, 'anatomy:joint', {
     parentId: actorId,
     socketId: 'core',
@@ -148,7 +151,9 @@ async function createBodyGraphFixture({
     socketId: 'neck',
   });
 
-  entityManager.addComponent(partIds.leftArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partIds.leftArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partIds.leftArm, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'left-shoulder',
@@ -157,7 +162,9 @@ async function createBodyGraphFixture({
     posture: { state: 'raised' },
   });
 
-  entityManager.addComponent(partIds.leftHand, 'anatomy:part', { subType: 'hand' });
+  entityManager.addComponent(partIds.leftHand, 'anatomy:part', {
+    subType: 'hand',
+  });
   entityManager.addComponent(partIds.leftHand, 'anatomy:joint', {
     parentId: partIds.leftArm,
     socketId: 'left-wrist',
@@ -175,7 +182,9 @@ async function createBodyGraphFixture({
     socketId: 'index',
   });
 
-  entityManager.addComponent(partIds.rightArm, 'anatomy:part', { subType: 'arm' });
+  entityManager.addComponent(partIds.rightArm, 'anatomy:part', {
+    subType: 'arm',
+  });
   entityManager.addComponent(partIds.rightArm, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'right-shoulder',
@@ -189,7 +198,9 @@ async function createBodyGraphFixture({
     socketId: 'right-wrist',
   });
 
-  entityManager.addComponent(partIds.heart, 'anatomy:part', { subType: 'heart' });
+  entityManager.addComponent(partIds.heart, 'anatomy:part', {
+    subType: 'heart',
+  });
   entityManager.addComponent(partIds.heart, 'anatomy:joint', {
     parentId: partIds.torso,
     socketId: 'chest',
@@ -240,7 +251,7 @@ describe('BodyGraphService cache workflow integration', () => {
         partIds.rightHand,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     const fromActor = service.getAllParts(bodyComponent, actorId);
@@ -255,7 +266,7 @@ describe('BodyGraphService cache workflow integration', () => {
         partIds.rightHand,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     const cachedFromActor = service.getAllParts(bodyComponent, actorId);
@@ -264,14 +275,11 @@ describe('BodyGraphService cache workflow integration', () => {
     const fallbackRoot = service.getAllParts(bodyComponent, 'unknown-actor');
     expect(fallbackRoot).toEqual(blueprintResult);
 
-    const algorithmSpy = jest.spyOn(
-      AnatomyGraphAlgorithms,
-      'findPartsByType',
-    );
+    const algorithmSpy = jest.spyOn(AnatomyGraphAlgorithms, 'findPartsByType');
 
     const firstArms = service.findPartsByType(actorId, 'arm');
     expect(firstArms).toEqual(
-      expect.arrayContaining([partIds.leftArm, partIds.rightArm]),
+      expect.arrayContaining([partIds.leftArm, partIds.rightArm])
     );
 
     const cachedArms = service.findPartsByType(actorId, 'arm');
@@ -291,7 +299,7 @@ describe('BodyGraphService cache workflow integration', () => {
     ]);
 
     expect(service.getChildren(partIds.leftArm)).toEqual(
-      expect.arrayContaining([partIds.leftHand]),
+      expect.arrayContaining([partIds.leftHand])
     );
     expect(service.getChildren('missing-node')).toEqual([]);
     expect(service.getParent(partIds.leftHand)).toBe(partIds.leftArm);
@@ -312,14 +320,14 @@ describe('BodyGraphService cache workflow integration', () => {
         partIds.rightHand,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     expect(service.hasPartWithComponent(bodyComponent, 'equipment:grip')).toBe(
-      true,
+      true
     );
     expect(
-      service.hasPartWithComponent(bodyComponent, 'equipment:placeholder'),
+      service.hasPartWithComponent(bodyComponent, 'equipment:placeholder')
     ).toBe(false);
 
     expect(
@@ -327,16 +335,16 @@ describe('BodyGraphService cache workflow integration', () => {
         bodyComponent,
         'anatomy:status',
         'posture.state',
-        'raised',
-      ),
+        'raised'
+      )
     ).toEqual({ found: true, partId: partIds.leftArm });
     expect(
       service.hasPartWithComponentValue(
         bodyComponent,
         'anatomy:status',
         'posture.intent',
-        'combat',
-      ),
+        'combat'
+      )
     ).toEqual({ found: false });
 
     const validation = service.validateCache();
@@ -346,7 +354,7 @@ describe('BodyGraphService cache workflow integration', () => {
     expect(service.hasCache('ghost-root')).toBe(false);
 
     expect(
-      entityManager.getComponentData(partIds.leftHand, 'equipment:grip'),
+      entityManager.getComponentData(partIds.leftHand, 'equipment:grip')
     ).toEqual({ itemId: 'sword-1', quality: 'legendary' });
   });
 
@@ -355,13 +363,10 @@ describe('BodyGraphService cache workflow integration', () => {
 
     const initialArms = service.findPartsByType(actorId, 'arm');
     expect(initialArms).toEqual(
-      expect.arrayContaining([partIds.leftArm, partIds.rightArm]),
+      expect.arrayContaining([partIds.leftArm, partIds.rightArm])
     );
 
-    const algorithmSpy = jest.spyOn(
-      AnatomyGraphAlgorithms,
-      'findPartsByType',
-    );
+    const algorithmSpy = jest.spyOn(AnatomyGraphAlgorithms, 'findPartsByType');
 
     await service.detachPart(partIds.leftArm, {
       cascade: true,
@@ -397,9 +402,9 @@ describe('BodyGraphService cache workflow integration', () => {
       subType: 'mystery',
     });
 
-    await expect(
-      service.detachPart('floating-part'),
-    ).rejects.toThrow(InvalidArgumentError);
+    await expect(service.detachPart('floating-part')).rejects.toThrow(
+      InvalidArgumentError
+    );
 
     const result = await service.detachPart(partIds.rightHand, {
       cascade: false,
@@ -420,7 +425,7 @@ describe('BodyGraphService cache workflow integration', () => {
 
     await service.buildAdjacencyCache(actorId);
     expect(service.getChildren(partIds.rightArm)).not.toContain(
-      partIds.rightHand,
+      partIds.rightHand
     );
   });
 
@@ -437,11 +442,11 @@ describe('BodyGraphService cache workflow integration', () => {
     });
 
     await expect(service.getBodyGraph(123)).rejects.toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
 
     await expect(service.getBodyGraph('mysterious-actor')).rejects.toThrow(
-      /has no anatomy:body component/,
+      /has no anatomy:body component/
     );
 
     const bodyGraph = await service.getBodyGraph(actorId);
@@ -457,7 +462,7 @@ describe('BodyGraphService cache workflow integration', () => {
         partIds.rightHand,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
     expect(bodyGraph.getConnectedParts(partIds.leftHand)).toEqual([
       partIds.leftFinger,
@@ -471,7 +476,7 @@ describe('BodyGraphService cache workflow integration', () => {
 
     await expect(service.getAnatomyData('ghost')).resolves.toBeNull();
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("Entity 'ghost' has no anatomy:body component"),
+      expect.stringContaining("Entity 'ghost' has no anatomy:body component")
     );
 
     expect(service.hasCache(actorId)).toBe(true);

@@ -7,14 +7,17 @@
 ## Working Tests
 
 ✅ **Unit Tests** (38 tests passing):
+
 - `tests/unit/logic/operators/isRemovalBlockedOperator.test.js` - Operator logic
 - `tests/unit/mods/clothing/components/blocksRemoval.test.js` - Component validation
 
 ✅ **Integration Tests** (18 tests passing):
+
 - `tests/integration/clothing/topmostClothingBlocking.integration.test.js` - ClothingAccessibilityService integration
 - `tests/integration/clothing/beltBlockingEntities.integration.test.js` - Entity definitions
 
 ✅ **E2E Tests** (5 tests passing):
+
 - `tests/e2e/clothing/completeRemovalWorkflow.e2e.test.js` - Complete clothing removal workflow with blocking
 
 ## Solution: Full DI Container Approach
@@ -64,6 +67,7 @@ it('should enforce blocking', async () => {
 ### ModTestFixture Limitations
 
 ModTestFixture does not auto-configure clothing scopes:
+
 - `autoRegisterScopes` only supports: `positioning`, `inventory`, `items`, `anatomy`
 - Clothing category not yet supported
 
@@ -74,18 +78,21 @@ Use full DI container approach for E2E clothing tests (as shown above)
 ## Alternative Test Approaches
 
 ### Approach 1: Direct Service Testing
+
 Test ClothingAccessibilityService directly (like `topmostClothingBlocking.integration.test.js`)
 
 **Pros**: Works with current infrastructure
 **Cons**: Doesn't test full action discovery pipeline
 
 ### Approach 2: Custom Test Bed
+
 Create specialized test bed like `EnhancedAnatomyTestBed` for clothing
 
 **Pros**: Full control, complete integration
 **Cons**: Significant development effort
 
 ### Approach 3: Manual Scope Registration
+
 Register clothing scopes manually in test setup
 
 **Pros**: Uses ModTestFixture, tests more of the pipeline
@@ -107,6 +114,7 @@ Register clothing scopes manually in test setup
 ## Next Steps
 
 To make these tests pass:
+
 1. Add clothing scope category support to ModTestFixture
 2. Integrate ClothingAccessibilityService into test environment
 3. Register clothing-specific scope resolvers

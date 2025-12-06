@@ -46,7 +46,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
       const message = controller
         ._getElement('deleteModalMessage')
         .innerHTML.replace(/<br>/g, '\n');
-      expect(message).toContain('Are you sure you want to delete this character concept?');
+      expect(message).toContain(
+        'Are you sure you want to delete this character concept?'
+      );
       expect(message).toContain('⚠️');
 
       const confirmBtn = controller._getElement('confirmDeleteBtn');
@@ -116,9 +118,8 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       controller._showDeleteError('Failed to delete concept.');
 
-      const errorElement = deleteModalMessage.parentElement?.querySelector(
-        '.delete-error'
-      );
+      const errorElement =
+        deleteModalMessage.parentElement?.querySelector('.delete-error');
       expect(errorElement).not.toBeNull();
       expect(errorElement.textContent).toBe('Failed to delete concept.');
       expect(errorElement.style.display).toBe('block');
@@ -136,11 +137,15 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
       const card = document.createElement('div');
       card.className = 'concept-card';
       card.dataset.conceptId = 'concept-delete';
-      card.appendChild(document.createElement('span')).className = 'concept-text';
+      card.appendChild(document.createElement('span')).className =
+        'concept-text';
       conceptsResults.appendChild(card);
 
       controller._testExports.conceptsData = [
-        { concept: { id: 'concept-delete', concept: 'To remove' }, directionCount: 0 },
+        {
+          concept: { id: 'concept-delete', concept: 'To remove' },
+          directionCount: 0,
+        },
       ];
 
       const showStateSpy = jest.spyOn(controller, '_showState');
@@ -149,9 +154,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       await controller._deleteConcept('concept-delete', 0);
 
-      expect(controller.characterBuilderService.deleteCharacterConcept).toHaveBeenCalledWith(
-        'concept-delete'
-      );
+      expect(
+        controller.characterBuilderService.deleteCharacterConcept
+      ).toHaveBeenCalledWith('concept-delete');
       expect(removeSpy).toHaveBeenCalledWith('concept-delete');
       expect(statsSpy).toHaveBeenCalled();
       expect(showStateSpy).toHaveBeenCalledWith('empty');
@@ -164,11 +169,15 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
       const card = document.createElement('div');
       card.className = 'concept-card';
       card.dataset.conceptId = 'concept-fail';
-      card.appendChild(document.createElement('span')).className = 'concept-text';
+      card.appendChild(document.createElement('span')).className =
+        'concept-text';
       conceptsResults.appendChild(card);
 
       controller._testExports.conceptsData = [
-        { concept: { id: 'concept-fail', concept: 'To fail' }, directionCount: 0 },
+        {
+          concept: { id: 'concept-fail', concept: 'To fail' },
+          directionCount: 0,
+        },
       ];
 
       const revertSpy = jest.spyOn(controller, '_revertOptimisticDelete');
@@ -176,7 +185,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         new Error('fatal error')
       );
 
-      await expect(controller._deleteConcept('concept-fail', 0)).rejects.toThrow('fatal error');
+      await expect(
+        controller._deleteConcept('concept-fail', 0)
+      ).rejects.toThrow('fatal error');
       expect(revertSpy).toHaveBeenCalled();
       expect(controller.logger.error).toHaveBeenCalledWith(
         'Failed to delete concept',
@@ -195,16 +206,22 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         'Viewing thematic directions',
         { conceptId: 'concept-42' }
       );
-      expect(window.location.href === originalHref || window.location.href.endsWith('concept-42')).toBe(true);
+      expect(
+        window.location.href === originalHref ||
+          window.location.href.endsWith('concept-42')
+      ).toBe(true);
     });
 
     it('should log when showing concept menu', () => {
       const button = document.createElement('button');
       controller._showConceptMenu({ id: 'concept-menu' }, button);
 
-      expect(controller.logger.info).toHaveBeenCalledWith('Showing concept menu', {
-        conceptId: 'concept-menu',
-      });
+      expect(controller.logger.info).toHaveBeenCalledWith(
+        'Showing concept menu',
+        {
+          conceptId: 'concept-menu',
+        }
+      );
     });
   });
 
@@ -234,15 +251,21 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
       controller._testExports.editingConceptId = null;
       controller._setSaveButtonLoading(true);
       expect(controller._getElement('saveConceptBtn').disabled).toBe(true);
-      expect(controller._getElement('saveConceptBtn').textContent).toBe('Saving...');
+      expect(controller._getElement('saveConceptBtn').textContent).toBe(
+        'Saving...'
+      );
 
       controller._setSaveButtonLoading(false);
-      expect(controller._getElement('saveConceptBtn').textContent).toBe('Create Concept');
+      expect(controller._getElement('saveConceptBtn').textContent).toBe(
+        'Create Concept'
+      );
       expect(validateSpy).toHaveBeenCalled();
 
       controller._testExports.editingConceptId = 'concept-99';
       controller._setSaveButtonLoading(false);
-      expect(controller._getElement('saveConceptBtn').textContent).toBe('Update Concept');
+      expect(controller._getElement('saveConceptBtn').textContent).toBe(
+        'Update Concept'
+      );
     });
 
     it('should show form errors through FormValidationHelper', () => {
@@ -262,19 +285,26 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
   describe('Concept creation and saving', () => {
     it('should create concept and show success notification', async () => {
       const notifySpy = jest.spyOn(controller, '_showSuccessNotification');
-      controller.characterBuilderService.createCharacterConcept.mockResolvedValueOnce({
-        id: 'new-concept',
-      });
+      controller.characterBuilderService.createCharacterConcept.mockResolvedValueOnce(
+        {
+          id: 'new-concept',
+        }
+      );
 
       await controller._createConcept('A fresh idea');
 
-      expect(controller.characterBuilderService.createCharacterConcept).toHaveBeenCalledWith(
-        'A fresh idea'
+      expect(
+        controller.characterBuilderService.createCharacterConcept
+      ).toHaveBeenCalledWith('A fresh idea');
+      expect(controller.logger.info).toHaveBeenCalledWith(
+        'Concept created successfully',
+        {
+          id: 'new-concept',
+        }
       );
-      expect(controller.logger.info).toHaveBeenCalledWith('Concept created successfully', {
-        id: 'new-concept',
-      });
-      expect(notifySpy).toHaveBeenCalledWith('Character concept created successfully!');
+      expect(notifySpy).toHaveBeenCalledWith(
+        'Character concept created successfully!'
+      );
     });
 
     it('should propagate errors when concept creation fails', async () => {
@@ -282,7 +312,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         new Error('creation failed')
       );
 
-      await expect(controller._createConcept('Broken')).rejects.toThrow('creation failed');
+      await expect(controller._createConcept('Broken')).rejects.toThrow(
+        'creation failed'
+      );
       expect(controller.logger.error).toHaveBeenCalledWith(
         'Failed to create concept',
         expect.any(Error)
@@ -294,7 +326,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       await controller._handleConceptSave();
 
-      expect(controller.logger.warn).toHaveBeenCalledWith('Form validation failed');
+      expect(controller.logger.warn).toHaveBeenCalledWith(
+        'Form validation failed'
+      );
       expect(controller._getElement('saveConceptBtn').disabled).toBe(false);
     });
 
@@ -303,9 +337,7 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         .spyOn(controller, '_executeWithErrorHandling')
         .mockImplementation((operation) => operation());
       const closeSpy = jest.spyOn(controller, '_closeConceptModal');
-      jest
-        .spyOn(controller, '_validateConceptForm')
-        .mockReturnValue(true);
+      jest.spyOn(controller, '_validateConceptForm').mockReturnValue(true);
       controller._getElement('conceptText').value = 'Brand new concept';
 
       await controller._handleConceptSave();
@@ -327,14 +359,16 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         .spyOn(controller, '_executeWithErrorHandling')
         .mockImplementation((operation) => operation());
       const closeSpy = jest.spyOn(controller, '_closeConceptModal');
-      jest
-        .spyOn(controller, '_validateConceptForm')
-        .mockReturnValue(true);
+      jest.spyOn(controller, '_validateConceptForm').mockReturnValue(true);
 
       controller._testExports.editingConceptId = 'concept-edit';
       controller._testExports.conceptsData = [
         {
-          concept: { id: 'concept-edit', concept: 'Original text', updatedAt: Date.now() },
+          concept: {
+            id: 'concept-edit',
+            concept: 'Original text',
+            updatedAt: Date.now(),
+          },
           directionCount: 1,
         },
       ];
@@ -361,10 +395,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         expect.objectContaining({ loadingMessage: 'Updating concept...' })
       );
       expect(closeSpy).toHaveBeenCalled();
-      expect(controller.characterBuilderService.updateCharacterConcept).toHaveBeenCalledWith(
-        'concept-edit',
-        { concept: 'Updated text' }
-      );
+      expect(
+        controller.characterBuilderService.updateCharacterConcept
+      ).toHaveBeenCalledWith('concept-edit', { concept: 'Updated text' });
 
       jest.runAllTimers();
       expect(card.classList.contains('concept-updated')).toBe(false);
@@ -382,10 +415,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       await controller._updateConcept('concept-static', 'Same text');
 
-      expect(controller.characterBuilderService.updateCharacterConcept).not.toHaveBeenCalledWith(
-        'concept-static',
-        expect.any(Object)
-      );
+      expect(
+        controller.characterBuilderService.updateCharacterConcept
+      ).not.toHaveBeenCalledWith('concept-static', expect.any(Object));
       expect(controller.logger.info).toHaveBeenCalledWith(
         'No changes detected, skipping update'
       );
@@ -423,11 +455,13 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         return originalQuerySelector ? originalQuerySelector(selector) : null;
       });
 
-      controller.characterBuilderService.updateCharacterConcept.mockResolvedValueOnce({
-        id: 'concept-update',
-        concept: 'After',
-        updatedAt: new Date('2024-02-02').toISOString(),
-      });
+      controller.characterBuilderService.updateCharacterConcept.mockResolvedValueOnce(
+        {
+          id: 'concept-update',
+          concept: 'After',
+          updatedAt: new Date('2024-02-02').toISOString(),
+        }
+      );
 
       await controller._updateConcept('concept-update', 'After');
 
@@ -456,7 +490,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         updatedAt: null,
       });
 
-      expect(controller._testExports.conceptsData[0].concept.concept).toBe('New text');
+      expect(controller._testExports.conceptsData[0].concept.concept).toBe(
+        'New text'
+      );
       expect(updateCardSpy).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'concept-cache' }),
         5
@@ -514,7 +550,10 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
         return originalQuerySelector ? originalQuerySelector(selector) : null;
       });
 
-      controller._applyOptimisticUpdate('concept-optimistic', 'Optimistic text');
+      controller._applyOptimisticUpdate(
+        'concept-optimistic',
+        'Optimistic text'
+      );
 
       expect(textSpan.textContent).toContain('Optimistic text');
       expect(card.classList.contains('concept-updating')).toBe(true);
@@ -537,7 +576,11 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       controller._testExports.conceptsData = [
         {
-          concept: { id: 'concept-revert', concept: 'Cached text', updatedAt: null },
+          concept: {
+            id: 'concept-revert',
+            concept: 'Cached text',
+            updatedAt: null,
+          },
           directionCount: 2,
         },
       ];
@@ -561,7 +604,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       expect(controller._testExports.hasUnsavedChanges).toBe(true);
       expect(
-        controller._getElement('saveConceptBtn').classList.contains('has-changes')
+        controller
+          ._getElement('saveConceptBtn')
+          .classList.contains('has-changes')
       ).toBe(true);
 
       controller._getElement('conceptText').value = 'original';
@@ -569,7 +614,9 @@ describe('CharacterConceptsManagerController - Deletion and Save flows', () => {
 
       expect(controller._testExports.hasUnsavedChanges).toBe(false);
       expect(
-        controller._getElement('saveConceptBtn').classList.contains('has-changes')
+        controller
+          ._getElement('saveConceptBtn')
+          .classList.contains('has-changes')
       ).toBe(false);
     });
 

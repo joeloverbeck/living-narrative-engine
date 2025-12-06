@@ -18,7 +18,10 @@ import path from 'node:path';
 import os from 'node:os';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 
-import { createReadinessCheck, createLivenessCheck } from '../../src/middleware/healthCheck.js';
+import {
+  createReadinessCheck,
+  createLivenessCheck,
+} from '../../src/middleware/healthCheck.js';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import { NodeFileSystemReader } from '../../src/nodeFileSystemReader.js';
 import {
@@ -97,7 +100,10 @@ async function buildHealthCheckApp(
     envManager.set('LLM_CONFIG_PATH', filePath);
     cleanupTasks.push(cleanup);
   } else {
-    envManager.set('LLM_CONFIG_PATH', path.join(os.tmpdir(), 'non-existent-config.json'));
+    envManager.set(
+      'LLM_CONFIG_PATH',
+      path.join(os.tmpdir(), 'non-existent-config.json')
+    );
   }
 
   // Keep environment deterministic for cache behaviour
@@ -150,7 +156,10 @@ async function buildHealthCheckApp(
         await task();
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error('Cleanup task failed during health check integration tests:', error);
+        console.error(
+          'Cleanup task failed during health check integration tests:',
+          error
+        );
       }
     }
     resetAppConfigServiceInstance();

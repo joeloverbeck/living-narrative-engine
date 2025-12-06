@@ -4,14 +4,7 @@
  * together with validation and rate limiting middleware.
  */
 
-import {
-  describe,
-  it,
-  beforeAll,
-  afterAll,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeAll, afterAll, expect, jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -88,9 +81,7 @@ const buildApp = () => {
       }
 
       if (!skipExtendedChecks) {
-        responsePayload.normalizedInvalid = normalizeIPv6Address(
-          'not-an-ipv6'
-        );
+        responsePayload.normalizedInvalid = normalizeIPv6Address('not-an-ipv6');
         responsePayload.normalizedFromNumber = normalizeIPv6Address(42);
       }
 
@@ -127,9 +118,8 @@ const buildApp = () => {
       responsePayload.summary = getIPv6ValidationSummary(validations);
 
       if (!skipExtendedChecks) {
-        responsePayload.invalidSummary = getIPv6ValidationSummary(
-          'not-an-array'
-        );
+        responsePayload.invalidSummary =
+          getIPv6ValidationSummary('not-an-array');
         responsePayload.multiValidationFallback =
           validateMultipleIPv6Addresses('not-an-array');
       }

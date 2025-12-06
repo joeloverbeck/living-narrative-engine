@@ -77,9 +77,9 @@ describe('blueprintLoader', () => {
         'anatomyBlueprints',
         'test:humanoid'
       );
-      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(
-        rawBlueprint
-      );
+      expect(
+        mockBlueprintProcessorService.processBlueprint
+      ).toHaveBeenCalledWith(rawBlueprint);
       expect(result).toBe(processedBlueprint);
     });
 
@@ -102,9 +102,9 @@ describe('blueprintLoader', () => {
         blueprintProcessorService: mockBlueprintProcessorService,
       });
 
-      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(
-        v1Blueprint
-      );
+      expect(
+        mockBlueprintProcessorService.processBlueprint
+      ).toHaveBeenCalledWith(v1Blueprint);
       expect(result).toBe(processedBlueprint);
     });
   });

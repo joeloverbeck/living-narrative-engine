@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import IAnatomySystemFacade from '../../../src/anatomy/facades/IAnatomySystemFacade.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
 import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
@@ -42,35 +49,56 @@ function seedAnatomy(entityManager) {
   const leftHandId = 'left-hand-1';
   const heartId = 'heart-1';
 
-  entityManager.addComponent(actorId, 'core:name', { text: 'Integration Actor' });
-  entityManager.addComponent(actorId, 'core:description', { text: 'Base actor description' });
+  entityManager.addComponent(actorId, 'core:name', {
+    text: 'Integration Actor',
+  });
+  entityManager.addComponent(actorId, 'core:description', {
+    text: 'Base actor description',
+  });
 
-  entityManager.addComponent(torsoId, 'anatomy:part', { partType: 'torso', subType: 'torso' });
+  entityManager.addComponent(torsoId, 'anatomy:part', {
+    partType: 'torso',
+    subType: 'torso',
+  });
   entityManager.addComponent(torsoId, 'core:name', { text: 'Torso' });
-  entityManager.addComponent(torsoId, 'core:description', { text: 'central torso' });
+  entityManager.addComponent(torsoId, 'core:description', {
+    text: 'central torso',
+  });
 
-  entityManager.addComponent(leftArmId, 'anatomy:part', { partType: 'limb', subType: 'arm' });
+  entityManager.addComponent(leftArmId, 'anatomy:part', {
+    partType: 'limb',
+    subType: 'arm',
+  });
   entityManager.addComponent(leftArmId, 'anatomy:joint', {
     parentId: torsoId,
     socketId: 'left_shoulder',
   });
   entityManager.addComponent(leftArmId, 'core:name', { text: 'Left Arm' });
 
-  entityManager.addComponent(rightArmId, 'anatomy:part', { partType: 'limb', subType: 'arm' });
+  entityManager.addComponent(rightArmId, 'anatomy:part', {
+    partType: 'limb',
+    subType: 'arm',
+  });
   entityManager.addComponent(rightArmId, 'anatomy:joint', {
     parentId: torsoId,
     socketId: 'right_shoulder',
   });
   entityManager.addComponent(rightArmId, 'core:name', { text: 'Right Arm' });
 
-  entityManager.addComponent(leftHandId, 'anatomy:part', { partType: 'extremity', subType: 'hand' });
+  entityManager.addComponent(leftHandId, 'anatomy:part', {
+    partType: 'extremity',
+    subType: 'hand',
+  });
   entityManager.addComponent(leftHandId, 'anatomy:joint', {
     parentId: leftArmId,
     socketId: 'left_wrist',
   });
   entityManager.addComponent(leftHandId, 'core:name', { text: 'Left Hand' });
 
-  entityManager.addComponent(heartId, 'anatomy:part', { partType: 'organ', subType: 'heart' });
+  entityManager.addComponent(heartId, 'anatomy:part', {
+    partType: 'organ',
+    subType: 'heart',
+  });
   entityManager.addComponent(heartId, 'anatomy:joint', {
     parentId: torsoId,
     socketId: 'chest_cavity',
@@ -124,7 +152,10 @@ function createBodyPartDescriptionBuilder(entityManager) {
 function createBodyDescriptionComposer(entityManager) {
   return {
     async composeDescription(entity) {
-      const bodyComponent = entityManager.getComponentData(entity.id, 'anatomy:body');
+      const bodyComponent = entityManager.getComponentData(
+        entity.id,
+        'anatomy:body'
+      );
       if (!bodyComponent?.body) {
         return 'No anatomy available';
       }
@@ -143,9 +174,15 @@ function createBodyDescriptionComposer(entityManager) {
  * @param entityManager
  * @param descriptionPersistenceService
  */
-function createPartDescriptionGenerator(entityManager, descriptionPersistenceService) {
+function createPartDescriptionGenerator(
+  entityManager,
+  descriptionPersistenceService
+) {
   const generate = (partId) => {
-    const partComponent = entityManager.getComponentData(partId, 'anatomy:part');
+    const partComponent = entityManager.getComponentData(
+      partId,
+      'anatomy:part'
+    );
     const nameComponent = entityManager.getComponentData(partId, 'core:name');
     const subType = partComponent?.subType || 'part';
     const label = nameComponent?.text || partId;
@@ -206,7 +243,10 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
     const bodyComponent = ensureBodyComponent(entityId);
     const parts = { ...(bodyComponent.body?.parts || {}) };
     if (!Object.values(parts).includes(partId)) {
-      const key = keyHint || Object.keys(parts).find((existingKey) => !parts[existingKey]) || `auto_${partId}`;
+      const key =
+        keyHint ||
+        Object.keys(parts).find((existingKey) => !parts[existingKey]) ||
+        `auto_${partId}`;
       parts[key] = partId;
       entityManager.addComponent(entityId, 'anatomy:body', {
         ...bodyComponent,
@@ -220,7 +260,10 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
   };
 
   const removePartFromBody = (entityId, partId) => {
-    const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+    const bodyComponent = entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
     if (!bodyComponent?.body?.parts) {
       return;
     }
@@ -240,7 +283,10 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
   };
 
   const findBodyKeyForPart = (entityId, partId) => {
-    const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+    const bodyComponent = entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
     if (!bodyComponent?.body?.parts) {
       return null;
     }
@@ -259,8 +305,10 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
     );
 
     const nodes = partIds.map((partId) => {
-      const partData = entityManager.getComponentData(partId, 'anatomy:part') || {};
-      const nameData = entityManager.getComponentData(partId, 'core:name') || {};
+      const partData =
+        entityManager.getComponentData(partId, 'anatomy:part') || {};
+      const nameData =
+        entityManager.getComponentData(partId, 'core:name') || {};
       return {
         id: partId,
         type: partData.subType || partData.partType || 'unknown',
@@ -385,7 +433,9 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
         parentId: parentPartId,
         socketId,
       });
-      logger.debug?.(`Adapter: Attached ${partId} to ${parentPartId} via ${socketId}`);
+      logger.debug?.(
+        `Adapter: Attached ${partId} to ${parentPartId} via ${socketId}`
+      );
       return { partId, parentPartId, socketId };
     },
 
@@ -403,7 +453,8 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
 
     async replacePart(entityId, oldPartId, newPartId) {
       const joint = entityManager.getComponentData(oldPartId, 'anatomy:joint');
-      const key = findBodyKeyForPart(entityId, oldPartId) || `replaced_${oldPartId}`;
+      const key =
+        findBodyKeyForPart(entityId, oldPartId) || `replaced_${oldPartId}`;
       removePartFromBody(entityId, oldPartId);
       ensurePartInBody(entityId, newPartId, key);
       if (joint?.parentId) {
@@ -422,7 +473,8 @@ function createBodyGraphAdapter(bodyGraphService, entityManager, { logger }) {
 
     async modifyPart(entityId, partId, modifications) {
       ensurePartInBody(entityId, partId);
-      const existing = entityManager.getComponentData(partId, 'anatomy:part') || {};
+      const existing =
+        entityManager.getComponentData(partId, 'anatomy:part') || {};
       const updated = { ...existing, ...modifications };
       entityManager.addComponent(partId, 'anatomy:part', updated);
       logger.debug?.(`Adapter: Modified ${partId}`);
@@ -445,19 +497,28 @@ function createGraphValidator(entityManager) {
         return {
           valid: true,
           errors: [],
-          warnings: [`No existing joint found for ${partId}; will attach to ${parentPartId}`],
+          warnings: [
+            `No existing joint found for ${partId}; will attach to ${parentPartId}`,
+          ],
         };
       }
       const valid = joint.parentId === parentPartId;
       return {
         valid,
-        errors: valid ? [] : [`Expected parent ${parentPartId} but found ${joint.parentId || 'none'}`],
+        errors: valid
+          ? []
+          : [
+              `Expected parent ${parentPartId} but found ${joint.parentId || 'none'}`,
+            ],
         warnings: [],
       };
     },
 
     async validateEntityGraph(entityId) {
-      const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+      const bodyComponent = entityManager.getComponentData(
+        entityId,
+        'anatomy:body'
+      );
       const errors = [];
       const warnings = [];
       if (!bodyComponent?.body) {
@@ -521,7 +582,10 @@ function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
       }
 
       const rootPart = parts.find((part) => !part.parentId) || parts[0];
-      const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body') || {
+      const bodyComponent = entityManager.getComponentData(
+        entityId,
+        'anatomy:body'
+      ) || {
         recipeId: blueprint?.recipeId || 'integration_recipe',
         body: { root: rootPart.id, parts: {} },
       };
@@ -534,7 +598,8 @@ function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
 
       entityManager.addComponent(entityId, 'anatomy:body', {
         ...bodyComponent,
-        recipeId: blueprint?.recipeId || bodyComponent.recipeId || 'integration_recipe',
+        recipeId:
+          blueprint?.recipeId || bodyComponent.recipeId || 'integration_recipe',
         body: {
           root: blueprint?.rootId || rootPart.id,
           parts: partsMapping,
@@ -547,7 +612,9 @@ function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
           subType: part.subType,
           orientation: part.orientation,
         });
-        entityManager.addComponent(part.id, 'core:name', { text: part.name || part.id });
+        entityManager.addComponent(part.id, 'core:name', {
+          text: part.name || part.id,
+        });
         if (part.parentId) {
           await bodyGraphAdapter.attachPart(entityId, part.id, part.parentId, {
             socketId: part.socketId,
@@ -566,7 +633,10 @@ function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
     },
 
     async clearEntityAnatomy(entityId) {
-      const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+      const bodyComponent = entityManager.getComponentData(
+        entityId,
+        'anatomy:body'
+      );
       if (!bodyComponent?.body) {
         return { cleared: false };
       }
@@ -584,7 +654,10 @@ function createAnatomyGenerationService(entityManager, bodyGraphAdapter) {
     },
 
     async generateAnatomyIfNeeded(entityId) {
-      const bodyComponent = entityManager.getComponentData(entityId, 'anatomy:body');
+      const bodyComponent = entityManager.getComponentData(
+        entityId,
+        'anatomy:body'
+      );
       return {
         generated: !bodyComponent,
         entityId,
@@ -600,12 +673,17 @@ function createBlueprintFactory() {
   return {
     async validateBlueprint(blueprint) {
       if (!blueprint || typeof blueprint !== 'object') {
-        return { valid: false, errors: ['Blueprint must be an object'], warnings: [] };
+        return {
+          valid: false,
+          errors: ['Blueprint must be an object'],
+          warnings: [],
+        };
       }
       const parts = Array.isArray(blueprint.parts) ? blueprint.parts : [];
       const ids = new Set(parts.map((part) => part.id));
       const errors = [];
-      const rootId = blueprint.rootId || parts.find((part) => !part.parentId)?.id;
+      const rootId =
+        blueprint.rootId || parts.find((part) => !part.parentId)?.id;
       if (!rootId || !ids.has(rootId)) {
         errors.push('Root part must be defined in blueprint');
       }
@@ -643,11 +721,12 @@ async function createIntegrationContext() {
     entityManager,
   });
 
-  const bodyPartDescriptionBuilder = createBodyPartDescriptionBuilder(entityManager);
+  const bodyPartDescriptionBuilder =
+    createBodyPartDescriptionBuilder(entityManager);
   const bodyDescriptionComposer = createBodyDescriptionComposer(entityManager);
   const partDescriptionGenerator = createPartDescriptionGenerator(
     entityManager,
-    descriptionPersistenceService,
+    descriptionPersistenceService
   );
   const componentManager = createComponentManager(entityManager);
 
@@ -673,7 +752,10 @@ async function createIntegrationContext() {
         };
       }
       await anatomyDescriptionService.generateAllDescriptions(entity);
-      const descriptionComponent = entityManager.getComponentData(entityId, 'core:description');
+      const descriptionComponent = entityManager.getComponentData(
+        entityId,
+        'core:description'
+      );
       const text = descriptionComponent?.text || '';
       return {
         text,
@@ -687,7 +769,10 @@ async function createIntegrationContext() {
 
     async generatePartDescription(_entityId, partId) {
       anatomyDescriptionService.generatePartDescription(partId);
-      const descriptionComponent = entityManager.getComponentData(partId, 'core:description');
+      const descriptionComponent = entityManager.getComponentData(
+        partId,
+        'core:description'
+      );
       const text = descriptionComponent?.text || '';
       return {
         text,
@@ -701,9 +786,16 @@ async function createIntegrationContext() {
     },
   };
 
-  const bodyGraphAdapter = createBodyGraphAdapter(bodyGraphService, entityManager, { logger });
+  const bodyGraphAdapter = createBodyGraphAdapter(
+    bodyGraphService,
+    entityManager,
+    { logger }
+  );
   const graphValidator = createGraphValidator(entityManager);
-  const anatomyGenerationService = createAnatomyGenerationService(entityManager, bodyGraphAdapter);
+  const anatomyGenerationService = createAnatomyGenerationService(
+    entityManager,
+    bodyGraphAdapter
+  );
   const bodyBlueprintFactory = createBlueprintFactory();
 
   const unifiedCache = new UnifiedCache({ logger });
@@ -759,7 +851,9 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     const targetType =
       allParts.find((candidate, _index, array) =>
-        array.some((other) => other !== candidate && other.type === candidate.type),
+        array.some(
+          (other) => other !== candidate && other.type === candidate.type
+        )
       )?.type || allParts[0].type;
 
     const sortedNamesForType = allParts
@@ -777,8 +871,12 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     });
 
     expect(firstResponse.success).toBe(true);
-    expect(firstResponse.data.map((part) => part.name)).toEqual(sortedNamesForType.slice(0, 2));
-    expect(firstResponse.pagination.total).toBeGreaterThanOrEqual(sortedNamesForType.length);
+    expect(firstResponse.data.map((part) => part.name)).toEqual(
+      sortedNamesForType.slice(0, 2)
+    );
+    expect(firstResponse.pagination.total).toBeGreaterThanOrEqual(
+      sortedNamesForType.length
+    );
 
     const metricsAfterFirst = unifiedCache.getMetrics().stats;
     expect(metricsAfterFirst.misses).toBeGreaterThan(0);
@@ -793,7 +891,9 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     });
 
     expect(secondResponse.success).toBe(true);
-    expect(secondResponse.data.map((part) => part.name)).toEqual(sortedNamesForType.slice(0, 2));
+    expect(secondResponse.data.map((part) => part.name)).toEqual(
+      sortedNamesForType.slice(0, 2)
+    );
 
     const metricsAfterSecond = unifiedCache.getMetrics().stats;
     expect(metricsAfterSecond.hits).toBeGreaterThan(0);
@@ -809,14 +909,23 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     const constraintsResponse = await facade.getGraphConstraints(actorId);
     expect(constraintsResponse.success).toBe(true);
-    expect(constraintsResponse.data.limits.nodeCount).toBe(graphResponse.data.nodes.length);
+    expect(constraintsResponse.data.limits.nodeCount).toBe(
+      graphResponse.data.nodes.length
+    );
 
-    const sampleNode = graphResponse.data.nodes.find((node) => node.type !== 'unknown') || graphResponse.data.nodes[0];
+    const sampleNode =
+      graphResponse.data.nodes.find((node) => node.type !== 'unknown') ||
+      graphResponse.data.nodes[0];
     const byTypeResponse = await facade.getPartByType(actorId, sampleNode.type);
     expect(byTypeResponse.success).toBe(true);
-    expect(byTypeResponse.data.every((part) => part.type === sampleNode.type)).toBe(true);
+    expect(
+      byTypeResponse.data.every((part) => part.type === sampleNode.type)
+    ).toBe(true);
 
-    const connectedResponse = await facade.getConnectedParts(actorId, sampleNode.id);
+    const connectedResponse = await facade.getConnectedParts(
+      actorId,
+      sampleNode.id
+    );
     expect(connectedResponse.success).toBe(true);
     expect(Array.isArray(connectedResponse.data)).toBe(true);
   });
@@ -825,23 +934,36 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     const { facade, actorId, entityManager, eventBus, ids } = context;
 
     const newHandId = 'cyber-hand-1';
-    entityManager.addComponent(newHandId, 'anatomy:part', { partType: 'extremity', subType: 'hand' });
+    entityManager.addComponent(newHandId, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'hand',
+    });
     entityManager.addComponent(newHandId, 'core:name', { text: 'Cyber Hand' });
 
-    const attachResponse = await facade.attachPart(actorId, newHandId, ids.leftArmId, {
-      validate: true,
-      notifyOnChange: true,
-      socketId: 'cyber_socket',
-      requestId: 'attach-cyber-hand',
-    });
+    const attachResponse = await facade.attachPart(
+      actorId,
+      newHandId,
+      ids.leftArmId,
+      {
+        validate: true,
+        notifyOnChange: true,
+        socketId: 'cyber_socket',
+        requestId: 'attach-cyber-hand',
+      }
+    );
 
     expect(attachResponse.success).toBe(true);
     expect(attachResponse.data.partId).toBe(newHandId);
 
-    const invalidAttachment = await facade.attachPart(actorId, newHandId, ids.rightArmId, {
-      validate: true,
-      notifyOnChange: false,
-    });
+    const invalidAttachment = await facade.attachPart(
+      actorId,
+      newHandId,
+      ids.rightArmId,
+      {
+        validate: true,
+        notifyOnChange: false,
+      }
+    );
     expect(invalidAttachment.success).toBe(false);
     expect(invalidAttachment.error.message).toContain('Invalid attachment');
 
@@ -849,10 +971,12 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
       actorId,
       newHandId,
       { orientation: 'forward', material: 'alloy' },
-      { notifyOnChange: true },
+      { notifyOnChange: true }
     );
     expect(modifyResponse.success).toBe(true);
-    expect(modifyResponse.changes.modified[0].modifications).toContain('orientation');
+    expect(modifyResponse.changes.modified[0].modifications).toContain(
+      'orientation'
+    );
 
     const replacementId = 'sleek-hand-1';
     entityManager.addComponent(replacementId, 'anatomy:part', {
@@ -860,11 +984,18 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
       subType: 'hand',
       orientation: 'forward',
     });
-    entityManager.addComponent(replacementId, 'core:name', { text: 'Sleek Hand' });
-
-    const replaceResponse = await facade.replacePart(actorId, newHandId, replacementId, {
-      notifyOnChange: true,
+    entityManager.addComponent(replacementId, 'core:name', {
+      text: 'Sleek Hand',
     });
+
+    const replaceResponse = await facade.replacePart(
+      actorId,
+      newHandId,
+      replacementId,
+      {
+        notifyOnChange: true,
+      }
+    );
     expect(replaceResponse.success).toBe(true);
     expect(replaceResponse.changes.removed[0].partId).toBe(newHandId);
 
@@ -876,8 +1007,13 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     const bulkFingerIds = ['finger-1', 'finger-2'];
     for (const fingerId of bulkFingerIds) {
-      entityManager.addComponent(fingerId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
-      entityManager.addComponent(fingerId, 'core:name', { text: `Finger ${fingerId}` });
+      entityManager.addComponent(fingerId, 'anatomy:part', {
+        partType: 'extremity',
+        subType: 'finger',
+      });
+      entityManager.addComponent(fingerId, 'core:name', {
+        text: `Finger ${fingerId}`,
+      });
     }
 
     const progressSpy = jest.fn();
@@ -889,16 +1025,20 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
         returnResults: true,
         onProgress: progressSpy,
         notifyOnChange: true,
-      },
+      }
     );
     expect(bulkAttachResponse.success).toBe(true);
     expect(progressSpy).toHaveBeenCalled();
 
-    const bulkDetachResponse = await facade.detachMultipleParts(actorId, bulkFingerIds, {
-      batchSize: 2,
-      returnResults: true,
-      notifyOnChange: true,
-    });
+    const bulkDetachResponse = await facade.detachMultipleParts(
+      actorId,
+      bulkFingerIds,
+      {
+        batchSize: 2,
+        returnResults: true,
+        notifyOnChange: true,
+      }
+    );
     expect(bulkDetachResponse.success).toBe(true);
 
     expect(eventBus.dispatch).toHaveBeenCalled();
@@ -955,10 +1095,14 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
       ],
     };
 
-    const rebuildResponse = await facade.rebuildFromBlueprint(actorId, secondBlueprint, {
-      cascade: true,
-      notifyOnChange: true,
-    });
+    const rebuildResponse = await facade.rebuildFromBlueprint(
+      actorId,
+      secondBlueprint,
+      {
+        cascade: true,
+        notifyOnChange: true,
+      }
+    );
 
     expect(rebuildResponse.success).toBe(true);
     expect(rebuildResponse.data.blueprint.type).toBe('replacement-upgrade');
@@ -967,8 +1111,12 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     const graphAfterRebuild = await facade.getBodyGraph(actorId);
     const partIdsAfter = graphAfterRebuild.data.nodes.map((node) => node.id);
-    expect(partIdsAfter).toEqual(expect.arrayContaining(['torso-1', 'exo-arm-2', 'exo-hand-2']));
-    expect(entityManager.getComponentData('exo-hand-2', 'anatomy:joint')?.parentId).toBe('exo-arm-2');
+    expect(partIdsAfter).toEqual(
+      expect.arrayContaining(['torso-1', 'exo-arm-2', 'exo-hand-2'])
+    );
+    expect(
+      entityManager.getComponentData('exo-hand-2', 'anatomy:joint')?.parentId
+    ).toBe('exo-arm-2');
   });
 
   it('produces entity and part descriptions through the assembled pipeline', async () => {
@@ -982,20 +1130,28 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     });
 
     expect(bodyDescriptionResponse.success).toBe(true);
-    expect(bodyDescriptionResponse.data.description).toEqual(expect.any(String));
+    expect(bodyDescriptionResponse.data.description).toEqual(
+      expect.any(String)
+    );
     expect(bodyDescriptionResponse.data.description.length).toBeGreaterThan(0);
 
     const parts = await bodyGraphAdapter.getBodyParts(actorId);
     const focusPart = parts.find((part) => part.type !== 'unknown') || parts[0];
 
-    const partDescriptionResponse = await facade.getPartDescription(actorId, focusPart.id, {
-      style: 'narrative',
-      perspective: 'second',
-      requestId: 'facade-part-description-integration',
-    });
+    const partDescriptionResponse = await facade.getPartDescription(
+      actorId,
+      focusPart.id,
+      {
+        style: 'narrative',
+        perspective: 'second',
+        requestId: 'facade-part-description-integration',
+      }
+    );
 
     expect(partDescriptionResponse.success).toBe(true);
-    expect(partDescriptionResponse.data.description).toEqual(expect.any(String));
+    expect(partDescriptionResponse.data.description).toEqual(
+      expect.any(String)
+    );
     expect(partDescriptionResponse.data.partId).toBe(focusPart.id);
   });
 
@@ -1022,7 +1178,9 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     unifiedCache.clear();
 
-    jest.spyOn(bodyGraphAdapter, 'getBodyParts').mockRejectedValueOnce(new Error('parts failure'));
+    jest
+      .spyOn(bodyGraphAdapter, 'getBodyParts')
+      .mockRejectedValueOnce(new Error('parts failure'));
     const partsResponse = await facade.getBodyParts(actorId, {
       requestId: 'fallback-parts',
     });
@@ -1030,8 +1188,12 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     expect(partsResponse.data).toEqual([]);
     expect(partsResponse.pagination.total).toBe(0);
 
-    jest.spyOn(bodyGraphAdapter, 'buildGraph').mockRejectedValueOnce(new Error('graph failure'));
-    jest.spyOn(bodyGraphAdapter, 'analyzeGraph').mockRejectedValueOnce(new Error('analysis failure'));
+    jest
+      .spyOn(bodyGraphAdapter, 'buildGraph')
+      .mockRejectedValueOnce(new Error('graph failure'));
+    jest
+      .spyOn(bodyGraphAdapter, 'analyzeGraph')
+      .mockRejectedValueOnce(new Error('analysis failure'));
     const graphResponse = await facade.getBodyGraph(actorId);
     expect(graphResponse.success).toBe(true);
     expect(graphResponse.data.nodes).toEqual([]);
@@ -1048,7 +1210,10 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     jest
       .spyOn(bodyGraphAdapter, 'getConnectedParts')
       .mockRejectedValueOnce(new Error('connected failure'));
-    const connectedResponse = await facade.getConnectedParts(actorId, ids.leftArmId);
+    const connectedResponse = await facade.getConnectedParts(
+      actorId,
+      ids.leftArmId
+    );
     expect(connectedResponse.success).toBe(true);
     expect(connectedResponse.data).toEqual([]);
 
@@ -1060,9 +1225,13 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     });
     expect(validationFallback.success).toBe(true);
     expect(validationFallback.data.valid).toBe(false);
-    expect(validationFallback.data.errors[0].message).toBe('Graph validation service unavailable');
+    expect(validationFallback.data.errors[0].message).toBe(
+      'Graph validation service unavailable'
+    );
 
-    jest.spyOn(bodyGraphAdapter, 'getConstraints').mockRejectedValueOnce(new Error('constraints failure'));
+    jest
+      .spyOn(bodyGraphAdapter, 'getConstraints')
+      .mockRejectedValueOnce(new Error('constraints failure'));
     const constraintsResponse = await facade.getGraphConstraints(actorId);
     expect(constraintsResponse.success).toBe(true);
     expect(constraintsResponse.data.rules).toEqual([]);
@@ -1078,19 +1247,27 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
       ttl: 5,
     });
     expect(descriptionResponse.success).toBe(true);
-    expect(descriptionResponse.data.description).toBe('Description unavailable');
+    expect(descriptionResponse.data.description).toBe(
+      'Description unavailable'
+    );
 
     jest
       .spyOn(descriptionAdapter, 'generatePartDescription')
       .mockRejectedValueOnce(new Error('part description failure'));
-    const partDescriptionResponse = await facade.getPartDescription(actorId, ids.leftArmId, {
-      style: 'fallback',
-      perspective: 'first',
-      requestId: 'fallback-part-description',
-      ttl: 5,
-    });
+    const partDescriptionResponse = await facade.getPartDescription(
+      actorId,
+      ids.leftArmId,
+      {
+        style: 'fallback',
+        perspective: 'first',
+        requestId: 'fallback-part-description',
+        ttl: 5,
+      }
+    );
     expect(partDescriptionResponse.success).toBe(true);
-    expect(partDescriptionResponse.data.description).toBe('Part description unavailable');
+    expect(partDescriptionResponse.data.description).toBe(
+      'Part description unavailable'
+    );
   });
 
   it('validates input payloads and blueprints before performing operations', async () => {
@@ -1098,11 +1275,15 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     const invalidModify = await facade.modifyPart(actorId, ids.leftArmId, null);
     expect(invalidModify.success).toBe(false);
-    expect(invalidModify.error.message).toContain('Modifications must be an object');
+    expect(invalidModify.error.message).toContain(
+      'Modifications must be an object'
+    );
 
     const invalidBlueprint = await facade.buildBodyGraph(actorId, null);
     expect(invalidBlueprint.success).toBe(false);
-    expect(invalidBlueprint.error.message).toContain('Blueprint must be an object');
+    expect(invalidBlueprint.error.message).toContain(
+      'Blueprint must be an object'
+    );
 
     const invalidValidatedBlueprint = await facade.buildBodyGraph(
       actorId,
@@ -1117,32 +1298,48 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
           },
         ],
       },
-      { validate: true },
+      { validate: true }
     );
     expect(invalidValidatedBlueprint.success).toBe(false);
-    expect(invalidValidatedBlueprint.error.message).toContain('Invalid blueprint');
+    expect(invalidValidatedBlueprint.error.message).toContain(
+      'Invalid blueprint'
+    );
 
-    const invalidBulkAttach = await facade.attachMultipleParts(actorId, { invalid: 'payload' });
+    const invalidBulkAttach = await facade.attachMultipleParts(actorId, {
+      invalid: 'payload',
+    });
     expect(invalidBulkAttach.success).toBe(false);
     expect(invalidBulkAttach.error.message).toContain('Parts must be an array');
 
-    const invalidBulkDetach = await facade.detachMultipleParts(actorId, 'invalid payload');
+    const invalidBulkDetach = await facade.detachMultipleParts(
+      actorId,
+      'invalid payload'
+    );
     expect(invalidBulkDetach.success).toBe(false);
-    expect(invalidBulkDetach.error.message).toContain('Part IDs must be an array');
+    expect(invalidBulkDetach.error.message).toContain(
+      'Part IDs must be an array'
+    );
 
     const invalidRebuild = await facade.rebuildFromBlueprint(actorId, null);
     expect(invalidRebuild.success).toBe(false);
-    expect(invalidRebuild.error.message).toContain('Blueprint must be an object');
+    expect(invalidRebuild.error.message).toContain(
+      'Blueprint must be an object'
+    );
   });
 
   it('sorts body parts in descending order while handling duplicate keys', async () => {
     const { facade, actorId, entityManager, ids } = context;
 
     const duplicateId = 'duplicate-arm';
-    entityManager.addComponent(duplicateId, 'anatomy:part', { partType: 'limb', subType: 'arm' });
+    entityManager.addComponent(duplicateId, 'anatomy:part', {
+      partType: 'limb',
+      subType: 'arm',
+    });
     entityManager.addComponent(duplicateId, 'core:name', { text: 'Left Arm' });
 
-    await facade.attachPart(actorId, duplicateId, ids.leftArmId, { notifyOnChange: false });
+    await facade.attachPart(actorId, duplicateId, ids.leftArmId, {
+      notifyOnChange: false,
+    });
 
     const response = await facade.getBodyParts(actorId, {
       sortBy: 'name',
@@ -1154,23 +1351,33 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     const names = response.data.map((part) => part.name);
     const expected = [...names].sort((a, b) => b.localeCompare(a));
     expect(names).toEqual(expected);
-    expect(names.filter((name) => name === 'Left Arm').length).toBeGreaterThanOrEqual(2);
+    expect(
+      names.filter((name) => name === 'Left Arm').length
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it('supports parallel bulk attachments with partial failures and progress updates', async () => {
     const { facade, actorId, entityManager, ids } = context;
 
     const validId = 'bulk-valid-finger';
-    entityManager.addComponent(validId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(validId, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'finger',
+    });
     entityManager.addComponent(validId, 'core:name', { text: 'Valid Finger' });
 
     const invalidId = 'bulk-invalid-finger';
-    entityManager.addComponent(invalidId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(invalidId, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'finger',
+    });
     entityManager.addComponent(invalidId, 'anatomy:joint', {
       parentId: ids.rightArmId,
       socketId: 'mismatched-socket',
     });
-    entityManager.addComponent(invalidId, 'core:name', { text: 'Miswired Finger' });
+    entityManager.addComponent(invalidId, 'core:name', {
+      text: 'Miswired Finger',
+    });
 
     const progressSpy = jest.fn();
 
@@ -1195,7 +1402,7 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
         returnResults: true,
         onProgress: progressSpy,
         stopOnError: false,
-      },
+      }
     );
 
     expect(response.success).toBe(true);
@@ -1210,7 +1417,10 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     const { facade, actorId, entityManager, ids } = context;
 
     const invalidId = 'bulk-stop-finger';
-    entityManager.addComponent(invalidId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(invalidId, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'finger',
+    });
     entityManager.addComponent(invalidId, 'anatomy:joint', {
       parentId: ids.rightArmId,
       socketId: 'occupied-socket',
@@ -1231,7 +1441,7 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
         validate: true,
         notifyOnChange: false,
         stopOnError: true,
-      },
+      }
     );
 
     expect(response.success).toBe(false);
@@ -1243,13 +1453,23 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
 
     const partA = 'bulk-detach-part-a';
     const partB = 'bulk-detach-part-b';
-    entityManager.addComponent(partA, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(partA, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'finger',
+    });
     entityManager.addComponent(partA, 'core:name', { text: 'Detach Finger A' });
-    entityManager.addComponent(partB, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
+    entityManager.addComponent(partB, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'finger',
+    });
     entityManager.addComponent(partB, 'core:name', { text: 'Detach Finger B' });
 
-    await facade.attachPart(actorId, partA, ids.leftArmId, { notifyOnChange: false });
-    await facade.attachPart(actorId, partB, ids.leftArmId, { notifyOnChange: false });
+    await facade.attachPart(actorId, partA, ids.leftArmId, {
+      notifyOnChange: false,
+    });
+    await facade.attachPart(actorId, partB, ids.leftArmId, {
+      notifyOnChange: false,
+    });
 
     const originalDetach = facade.detachPart.bind(facade);
     const detachSpy = jest.spyOn(facade, 'detachPart');
@@ -1259,18 +1479,14 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     detachSpy.mockImplementation(originalDetach);
 
     const progressSpy = jest.fn();
-    const response = await facade.detachMultipleParts(
-      actorId,
-      [partA, partB],
-      {
-        notifyOnChange: false,
-        batchSize: 1,
-        parallel: true,
-        returnResults: true,
-        onProgress: progressSpy,
-        stopOnError: false,
-      },
-    );
+    const response = await facade.detachMultipleParts(actorId, [partA, partB], {
+      notifyOnChange: false,
+      batchSize: 1,
+      parallel: true,
+      returnResults: true,
+      onProgress: progressSpy,
+      stopOnError: false,
+    });
 
     expect(response.success).toBe(true);
     expect(response.data.failed).toBe(1);
@@ -1284,10 +1500,17 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     const { facade, actorId, entityManager, ids } = context;
 
     const partId = 'bulk-stop-detach';
-    entityManager.addComponent(partId, 'anatomy:part', { partType: 'extremity', subType: 'finger' });
-    entityManager.addComponent(partId, 'core:name', { text: 'Stop Detach Finger' });
+    entityManager.addComponent(partId, 'anatomy:part', {
+      partType: 'extremity',
+      subType: 'finger',
+    });
+    entityManager.addComponent(partId, 'core:name', {
+      text: 'Stop Detach Finger',
+    });
 
-    await facade.attachPart(actorId, partId, ids.leftArmId, { notifyOnChange: false });
+    await facade.attachPart(actorId, partId, ids.leftArmId, {
+      notifyOnChange: false,
+    });
 
     const originalDetach = facade.detachPart.bind(facade);
     const detachSpy = jest.spyOn(facade, 'detachPart');
@@ -1296,14 +1519,10 @@ describe('IAnatomySystemFacade integration (manual production wiring)', () => {
     });
     detachSpy.mockImplementation(originalDetach);
 
-    const response = await facade.detachMultipleParts(
-      actorId,
-      [partId],
-      {
-        notifyOnChange: false,
-        stopOnError: true,
-      },
-    );
+    const response = await facade.detachMultipleParts(actorId, [partId], {
+      notifyOnChange: false,
+      stopOnError: true,
+    });
 
     expect(response.success).toBe(false);
     expect(response.error.message).toBe('forced stop detach');

@@ -15,19 +15,19 @@ describe('ActionTargetContext', () => {
 
   it('throws when constructed with an unknown type', () => {
     expect(() => new ActionTargetContext('invalid')).toThrow(
-      "ActionTargetContext: Invalid type specified: invalid",
+      'ActionTargetContext: Invalid type specified: invalid'
     );
   });
 
   it('enforces that entity targets provide a non-empty string identifier', () => {
     expect(() => new ActionTargetContext('entity')).toThrow(
-      "ActionTargetContext: entityId (non-empty string) is required for type 'entity'.",
+      "ActionTargetContext: entityId (non-empty string) is required for type 'entity'."
     );
 
     expect(
-      () => new ActionTargetContext('entity', { entityId: '   ' }),
+      () => new ActionTargetContext('entity', { entityId: '   ' })
     ).toThrow(
-      "ActionTargetContext: entityId (non-empty string) is required for type 'entity'.",
+      "ActionTargetContext: entityId (non-empty string) is required for type 'entity'."
     );
   });
 
@@ -51,7 +51,7 @@ describe('ActionTargetContext', () => {
 
   it('validates identifiers supplied to the entity factory', () => {
     expect(() => ActionTargetContext.forEntity('')).toThrow(
-      "ActionTargetContext: entityId (non-empty string) is required for type 'entity'.",
+      "ActionTargetContext: entityId (non-empty string) is required for type 'entity'."
     );
   });
 

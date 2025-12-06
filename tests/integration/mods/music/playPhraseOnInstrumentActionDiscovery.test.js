@@ -32,7 +32,9 @@ describe('music:play_phrase_on_instrument - Action Discovery', () => {
       expect(playPhraseAction).toBeDefined();
       expect(playPhraseAction.id).toBe('music:play_phrase_on_instrument');
       expect(playPhraseAction.name).toBe('Play Phrase on Instrument');
-      expect(playPhraseAction.description).toContain('expressive musical phrase');
+      expect(playPhraseAction.description).toContain(
+        'expressive musical phrase'
+      );
       expect(playPhraseAction.template).toBe('play phrase on {instrument}');
     });
 
@@ -81,7 +83,10 @@ describe('music:play_phrase_on_instrument - Action Discovery', () => {
   describe('Discovery scenarios', () => {
     describe('When musician is actively playing with a mood', () => {
       it('should discover play_phrase_on_instrument action', () => {
-        const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+        const room = ModEntityScenarios.createRoom(
+          'concert_hall',
+          'Concert Hall'
+        );
 
         const musician = new ModEntityBuilder('musician1')
           .withName('Lyra')

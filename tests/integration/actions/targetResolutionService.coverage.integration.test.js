@@ -97,7 +97,9 @@ describe('TargetResolutionService integration coverage', () => {
       'chair-1',
       'chair-2',
     ]);
-    expect(result.value.every((context) => context.type === 'entity')).toBe(true);
+    expect(result.value.every((context) => context.type === 'entity')).toBe(
+      true
+    );
 
     expect(validateDependency).toHaveBeenCalledTimes(1);
     expect(validateDependency).toHaveBeenCalledWith(

@@ -12,11 +12,11 @@ This ticket defines the peck attack action following the established patterns fr
 
 ## Files to Touch
 
-| File | Change Type |
-|------|-------------|
-| `data/mods/violence/actions/peck_target.action.json` | **Create** |
-| `data/mods/violence/conditions/event-is-action-peck-target.condition.json` | **Create** |
-| `data/mods/violence/conditions/actor-has-beak.condition.json` | **Create** |
+| File                                                                       | Change Type |
+| -------------------------------------------------------------------------- | ----------- |
+| `data/mods/violence/actions/peck_target.action.json`                       | **Create**  |
+| `data/mods/violence/conditions/event-is-action-peck-target.condition.json` | **Create**  |
+| `data/mods/violence/conditions/actor-has-beak.condition.json`              | **Create**  |
 
 ## Out of Scope
 
@@ -113,6 +113,7 @@ This ticket defines the peck attack action following the established patterns fr
 ```
 
 **Key Design Decisions**:
+
 - Uses `skills:melee_skill` as fallback (no dedicated beak skill yet)
 - Same visual scheme as other violence actions (dark red)
 - Requires `damage-types:damage_capabilities` on primary (the beak)
@@ -131,10 +132,7 @@ This ticket defines the peck attack action following the established patterns fr
   "id": "violence:event-is-action-peck-target",
   "description": "Checks if the event is a peck_target action attempt",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "violence:peck_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "violence:peck_target"]
   }
 }
 ```
@@ -163,6 +161,7 @@ This ticket defines the peck attack action following the established patterns fr
 ### Tests That Must Pass
 
 1. **Schema Validation**:
+
    ```bash
    npm run validate:mod:violence
    ```
@@ -236,17 +235,17 @@ The action uses existing skill components (`skills:melee_skill`, `skills:defense
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
-| `data/mods/violence/actions/peck_target.action.json` | Peck attack action for creatures with beaks |
-| `data/mods/violence/conditions/event-is-action-peck-target.condition.json` | Event matching condition for rule triggers |
-| `data/mods/violence/conditions/actor-has-beak.condition.json` | Prerequisite condition using hasPartSubTypeContaining operator |
-| `tests/integration/mods/violence/peck_target_prerequisites.test.js` | 26 test cases for action prerequisites |
+| File                                                                       | Purpose                                                        |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `data/mods/violence/actions/peck_target.action.json`                       | Peck attack action for creatures with beaks                    |
+| `data/mods/violence/conditions/event-is-action-peck-target.condition.json` | Event matching condition for rule triggers                     |
+| `data/mods/violence/conditions/actor-has-beak.condition.json`              | Prerequisite condition using hasPartSubTypeContaining operator |
+| `tests/integration/mods/violence/peck_target_prerequisites.test.js`        | 26 test cases for action prerequisites                         |
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                   | Change                                                              |
+| -------------------------------------- | ------------------------------------------------------------------- |
 | `data/mods/violence/mod-manifest.json` | Added damage-types dependency, registered new action and conditions |
 
 ### Ticket Corrections Applied

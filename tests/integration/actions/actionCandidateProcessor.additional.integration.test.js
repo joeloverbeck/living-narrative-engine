@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ActionCandidateProcessor } from '../../../src/actions/actionCandidateProcessor.js';
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
@@ -39,7 +33,9 @@ const createProcessor = (overrides = {}) => {
       format: jest.fn().mockReturnValue({ ok: true, value: 'do-something' }),
     },
     safeEventDispatcher: { dispatch: jest.fn() },
-    getEntityDisplayNameFn: jest.fn((entity) => entity?.name ?? entity?.id ?? 'Unknown'),
+    getEntityDisplayNameFn: jest.fn(
+      (entity) => entity?.name ?? entity?.id ?? 'Unknown'
+    ),
     logger,
     actionErrorContextBuilder: {
       buildErrorContext: jest.fn(
@@ -280,7 +276,9 @@ describe('ActionCandidateProcessor integration coverage', () => {
     expect(result.value.errors[0]).toEqual(
       expect.objectContaining({ actionId: actionDef.id })
     );
-    expect(deps.actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+    expect(
+      deps.actionErrorContextBuilder.buildErrorContext
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         error: rawError,
         additionalContext: { scope: actionDef.scope },
@@ -348,17 +346,20 @@ describe('ActionCandidateProcessor integration coverage', () => {
     const formatError = new Error('bad formatting');
     const { processor, deps } = createProcessor({
       targetResolutionService: {
-        resolveTargets: jest.fn().mockReturnValue(
-          ActionResult.success([
-            { entityId: 't-1' },
-            { entityId: 't-2' },
-          ])
-        ),
+        resolveTargets: jest
+          .fn()
+          .mockReturnValue(
+            ActionResult.success([{ entityId: 't-1' }, { entityId: 't-2' }])
+          ),
       },
       actionCommandFormatter: {
         format: jest
           .fn()
-          .mockReturnValueOnce({ ok: false, error: formatError, details: { reason: 'invalid' } })
+          .mockReturnValueOnce({
+            ok: false,
+            error: formatError,
+            details: { reason: 'invalid' },
+          })
           .mockReturnValueOnce({ ok: true, value: 'follow t-2' }),
       },
     });
@@ -382,7 +383,9 @@ describe('ActionCandidateProcessor integration coverage', () => {
         targetId: 't-1',
       })
     );
-    expect(deps.actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledWith(
+    expect(
+      deps.actionErrorContextBuilder.buildErrorContext
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         additionalContext: { formatDetails: { reason: 'invalid' } },
       })

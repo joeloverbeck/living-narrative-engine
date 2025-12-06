@@ -823,7 +823,9 @@ describe('LoadGameUI', () => {
     });
 
     it('_performDelete should fall back to default message', async () => {
-      mockSaveLoadService.deleteManualSave.mockResolvedValue({ success: false });
+      mockSaveLoadService.deleteManualSave.mockResolvedValue({
+        success: false,
+      });
 
       const result = await instance._performDelete(aGoodSlot);
 
@@ -884,7 +886,10 @@ describe('LoadGameUI', () => {
       listContainer.appendChild(slotElement);
       instance.currentSlotsDisplayData = [];
 
-      await instance._refreshAfterDelete({ success: true, message: '' }, aGoodSlot);
+      await instance._refreshAfterDelete(
+        { success: true, message: '' },
+        aGoodSlot
+      );
 
       expect(populateSpy).toHaveBeenCalled();
       expect(slotElement.focus).toHaveBeenCalled();
@@ -907,7 +912,10 @@ describe('LoadGameUI', () => {
       listContainer.innerHTML = '';
       instance.currentSlotsDisplayData = [];
 
-      await instance._refreshAfterDelete({ success: true, message: '' }, aGoodSlot);
+      await instance._refreshAfterDelete(
+        { success: true, message: '' },
+        aGoodSlot
+      );
 
       expect(populateSpy).toHaveBeenCalled();
       expect(onItemSelectedSpy).toHaveBeenCalledWith(null, null);

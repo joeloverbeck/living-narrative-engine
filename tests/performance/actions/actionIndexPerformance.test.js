@@ -216,7 +216,7 @@ describe('ActionIndex Performance Tests', () => {
         console.warn(`⚠️  Performance anomaly detected:
   Build time ratio: ${buildTimeRatio.toFixed(1)}x (threshold: ${(sizeRatio * 20).toFixed(1)}x)
   Expected linear scaling: ~${sizeRatio.toFixed(1)}x
-  Individual build times: ${results.map(r => `${r.size}=${r.buildTime.toFixed(2)}ms`).join(', ')}
+  Individual build times: ${results.map((r) => `${r.size}=${r.buildTime.toFixed(2)}ms`).join(', ')}
   Possible causes: GC pause, CPU throttling, memory pressure, JIT deoptimization`);
       }
 

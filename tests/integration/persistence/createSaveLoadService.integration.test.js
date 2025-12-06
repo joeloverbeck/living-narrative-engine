@@ -27,7 +27,9 @@ const createStorageProvider = () => {
   return {
     async writeFileAtomically(path, data) {
       const buffer =
-        data instanceof Uint8Array ? new Uint8Array(data) : new Uint8Array(data);
+        data instanceof Uint8Array
+          ? new Uint8Array(data)
+          : new Uint8Array(data);
       files.set(path, buffer);
       return { success: true };
     },

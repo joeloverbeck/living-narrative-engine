@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, beforeEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  jest,
+} from '@jest/globals';
 
 jest.mock('../../../../src/utils/serviceInitializerUtils.js', () => ({
   initHandlerLogger: jest.fn(),
@@ -6,11 +13,8 @@ jest.mock('../../../../src/utils/serviceInitializerUtils.js', () => ({
   resolveExecutionLogger: jest.fn(),
 }));
 
-const {
-  initHandlerLogger,
-  validateServiceDeps,
-  resolveExecutionLogger,
-} = jest.requireMock('../../../../src/utils/serviceInitializerUtils.js');
+const { initHandlerLogger, validateServiceDeps, resolveExecutionLogger } =
+  jest.requireMock('../../../../src/utils/serviceInitializerUtils.js');
 
 let BaseOperationHandler;
 
@@ -51,8 +55,16 @@ describe('BaseOperationHandler dependency wiring', () => {
 
     const handler = new BaseOperationHandler('InventoryHandler', deps);
 
-    expect(initHandlerLogger).toHaveBeenCalledWith('InventoryHandler', rawLogger, deps);
-    expect(validateServiceDeps).toHaveBeenCalledWith('InventoryHandler', scopedLogger, deps);
+    expect(initHandlerLogger).toHaveBeenCalledWith(
+      'InventoryHandler',
+      rawLogger,
+      deps
+    );
+    expect(validateServiceDeps).toHaveBeenCalledWith(
+      'InventoryHandler',
+      scopedLogger,
+      deps
+    );
     expect(handler.logger).toBe(scopedLogger);
     expect(handler.deps).toEqual({
       logger: rawLogger,
@@ -76,12 +88,19 @@ describe('BaseOperationHandler dependency wiring', () => {
       .mockReturnValueOnce({ context: 'logger' });
 
     const defaultResult = handler.getLogger();
-    expect(resolveExecutionLogger).toHaveBeenNthCalledWith(1, scopedLogger, undefined);
+    expect(resolveExecutionLogger).toHaveBeenNthCalledWith(
+      1,
+      scopedLogger,
+      undefined
+    );
     expect(defaultResult).toBe(scopedLogger);
 
     const executionContext = { logger: { debug: jest.fn() } };
     const contextualResult = handler.getLogger(executionContext);
-    expect(resolveExecutionLogger).toHaveBeenLastCalledWith(scopedLogger, executionContext);
+    expect(resolveExecutionLogger).toHaveBeenLastCalledWith(
+      scopedLogger,
+      executionContext
+    );
     expect(contextualResult).toEqual({ context: 'logger' });
 
     expect(handler.deps).toEqual({ logger: rawLogger, other: 42 });
@@ -92,8 +111,16 @@ describe('BaseOperationHandler dependency wiring', () => {
 
     const handler = new BaseOperationHandler('MinimalHandler');
 
-    expect(initHandlerLogger).toHaveBeenCalledWith('MinimalHandler', undefined, undefined);
-    expect(validateServiceDeps).toHaveBeenCalledWith('MinimalHandler', 'scoped-logger', undefined);
+    expect(initHandlerLogger).toHaveBeenCalledWith(
+      'MinimalHandler',
+      undefined,
+      undefined
+    );
+    expect(validateServiceDeps).toHaveBeenCalledWith(
+      'MinimalHandler',
+      'scoped-logger',
+      undefined
+    );
     expect(handler.deps).toEqual({});
     expect(handler.logger).toBe('scoped-logger');
   });

@@ -4,7 +4,14 @@
  * and validates that the event is properly registered and dispatches with correct payload.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
@@ -39,9 +46,7 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
 
   it('should NOT produce validation warnings when dispatching components_batch_added event', async () => {
     // Arrange: Setup entities for drop
-    const room = new ModEntityBuilder('location1')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('location1').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('actor1')
       .withName('Test Actor')
@@ -67,10 +72,11 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
 
     // Assert: No validation warnings should be logged
     const validationWarnings = capturedWarnings.filter((args) =>
-      args.some((arg) =>
-        typeof arg === 'string' &&
-        arg.includes('EventDefinition not found') &&
-        arg.includes('components_batch_added')
+      args.some(
+        (arg) =>
+          typeof arg === 'string' &&
+          arg.includes('EventDefinition not found') &&
+          arg.includes('components_batch_added')
       )
     );
 
@@ -79,9 +85,7 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
 
   it('should not have timestamp in payload (should have updateCount instead)', async () => {
     // Arrange: Setup entities
-    const room = new ModEntityBuilder('location1')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('location1').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('actor1')
       .withName('Test Actor')
@@ -104,9 +108,12 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
 
     // Listen for the batch event
     let eventPayload = null;
-    const unsubscribe = testFixture.eventBus.subscribe('core:components_batch_added', (payload) => {
-      eventPayload = payload;
-    });
+    const unsubscribe = testFixture.eventBus.subscribe(
+      'core:components_batch_added',
+      (payload) => {
+        eventPayload = payload;
+      }
+    );
 
     // Act: Execute drop which triggers batch event
     await testFixture.executeAction('actor1', 'item1');
@@ -134,6 +141,8 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
     const manifestContent = await readFile(manifestPath, 'utf-8');
     const manifest = JSON.parse(manifestContent);
 
-    expect(manifest.content.events).toContain('components_batch_added.event.json');
+    expect(manifest.content.events).toContain(
+      'components_batch_added.event.json'
+    );
   });
 });

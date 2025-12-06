@@ -14,7 +14,7 @@ import { ModValidationError } from './modValidationError.js';
 export class ModCorruptionError extends ModValidationError {
   /**
    * Creates a new ModCorruptionError instance
-   * 
+   *
    * @param {string} message - The error message describing the corruption
    * @param {string} filePath - Path to the corrupted file
    * @param {object} context - Additional context about the corruption
@@ -24,13 +24,13 @@ export class ModCorruptionError extends ModValidationError {
     super(message, 'FILE_CORRUPTION', context, false);
     this.name = 'ModCorruptionError';
     this.filePath = filePath;
-    
+
     // Store enhanced context for corruption tracking
     this._enhancedContext = {
       ...context,
       filePath,
       corruptionType: this._detectCorruptionType(message, context),
-      canPartiallyRecover: this._checkPartialRecovery(context)
+      canPartiallyRecover: this._checkPartialRecovery(context),
     };
   }
 
@@ -51,23 +51,29 @@ export class ModCorruptionError extends ModValidationError {
    */
   _detectCorruptionType(message, context) {
     const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('unexpected token') || lowerMessage.includes('json')) {
+
+    if (
+      lowerMessage.includes('unexpected token') ||
+      lowerMessage.includes('json')
+    ) {
       return 'MALFORMED_JSON';
     }
     if (lowerMessage.includes('encoding') || lowerMessage.includes('utf')) {
       return 'ENCODING_ERROR';
     }
-    if (lowerMessage.includes('truncated') || lowerMessage.includes('incomplete')) {
+    if (
+      lowerMessage.includes('truncated') ||
+      lowerMessage.includes('incomplete')
+    ) {
       return 'TRUNCATED_FILE';
     }
     if (context.parseError) {
       return 'PARSE_ERROR';
     }
-    
+
     return 'UNKNOWN_CORRUPTION';
   }
-  
+
   /**
    * Checks if partial recovery is possible
    *
@@ -80,15 +86,15 @@ export class ModCorruptionError extends ModValidationError {
     if (context.partialData) {
       return true;
     }
-    
+
     // JSON with minor syntax errors might be fixable
     if (context.parseError && context.parseError.includes('trailing comma')) {
       return true;
     }
-    
+
     return false;
   }
-  
+
   /**
    * Generates a corruption report for debugging
    *
@@ -101,10 +107,10 @@ export class ModCorruptionError extends ModValidationError {
       timestamp: this.timestamp,
       message: this.message,
       canPartiallyRecover: this.context.canPartiallyRecover,
-      suggestedActions: this._getSuggestedActions()
+      suggestedActions: this._getSuggestedActions(),
     };
   }
-  
+
   /**
    * Gets suggested actions for handling the corruption
    *
@@ -113,7 +119,7 @@ export class ModCorruptionError extends ModValidationError {
    */
   _getSuggestedActions() {
     const actions = [];
-    
+
     switch (this.context.corruptionType) {
       case 'MALFORMED_JSON':
         actions.push('Validate JSON syntax');
@@ -133,11 +139,11 @@ export class ModCorruptionError extends ModValidationError {
         actions.push('Restore file from backup');
         actions.push('Re-create file from template');
     }
-    
+
     if (this.context.canPartiallyRecover) {
       actions.push('Attempt partial data recovery');
     }
-    
+
     return actions;
   }
 

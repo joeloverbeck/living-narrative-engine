@@ -27,7 +27,8 @@ const defaultMotivations = [
     coreDesire: 'To inspire communities to rebuild together',
     internalContradiction:
       'Leads boldly but quietly fears the sacrifices that leadership demands',
-    centralQuestion: 'How much of themselves must they give to heal their world?',
+    centralQuestion:
+      'How much of themselves must they give to heal their world?',
   },
 ];
 
@@ -49,10 +50,17 @@ const comprehensiveTraits = {
     { name: 'Alden', justification: 'Echoes their relentless warmth' },
     { name: 'Lyra', justification: 'Guides others like a constellation' },
   ],
-  physicalDescription: 'Tall, ink-stained hands, and observant eyes that rarely miss detail.',
+  physicalDescription:
+    'Tall, ink-stained hands, and observant eyes that rarely miss detail.',
   personality: [
-    { trait: 'Curious', explanation: 'Collects stories from every traveler met.' },
-    { trait: 'Resilient', explanation: 'Continues planning even after setbacks.' },
+    {
+      trait: 'Curious',
+      explanation: 'Collects stories from every traveler met.',
+    },
+    {
+      trait: 'Resilient',
+      explanation: 'Continues planning even after setbacks.',
+    },
   ],
   strengths: ['Strategic empathy', 'Creative problem solving'],
   weaknesses: ['Sleepless planning', 'Reluctance to delegate'],
@@ -63,9 +71,15 @@ const comprehensiveTraits = {
     shortTerm: ['Secure safe shelters', 'Organize mutual aid circles'],
     longTerm: 'Ignite a sustainable renaissance for their city.',
   },
-  notes: ['Keeps sketches of every settlement visited', 'Hums ancestral lullabies'],
+  notes: [
+    'Keeps sketches of every settlement visited',
+    'Hums ancestral lullabies',
+  ],
   profile: 'A wandering strategist rebuilding hope through collaboration.',
-  secrets: ['Smuggled archives out of hostile territory', 'Masked true heritage for safety'],
+  secrets: [
+    'Smuggled archives out of hostile territory',
+    'Masked true heritage for safety',
+  ],
 };
 
 class TestLogger {
@@ -114,7 +128,12 @@ class TestSchemaValidator {
 }
 
 class TestCharacterBuilderService {
-  constructor({ directions, clichesByDirection, motivationsByDirection, traitsResolver }) {
+  constructor({
+    directions,
+    clichesByDirection,
+    motivationsByDirection,
+    traitsResolver,
+  }) {
     this.directions = directions;
     this.clichesByDirection = clichesByDirection;
     this.motivationsByDirection = motivationsByDirection;
@@ -244,7 +263,9 @@ function createTraitsGeneratorDOM({ includeResultsContainer = true } = {}) {
  */
 function createControllerSetup({
   directions = [defaultDirectionItem],
-  motivations = new Map([[defaultDirectionItem.direction.id, defaultMotivations]]),
+  motivations = new Map([
+    [defaultDirectionItem.direction.id, defaultMotivations],
+  ]),
   cliches = new Map([[defaultDirectionItem.direction.id, defaultCliche]]),
   traitsResolver = async () => comprehensiveTraits,
   includeResultsContainer = true,
@@ -264,7 +285,7 @@ function createControllerSetup({
     typeof traitsDisplayEnhancerFactory === 'function'
       ? traitsDisplayEnhancerFactory({ logger })
       : new TraitsDisplayEnhancer({ logger });
-  
+
   // Create required service mocks (added after refactoring)
   const lifecycleState = {
     isInitialized: false,
@@ -281,7 +302,15 @@ function createControllerSetup({
       lifecycleState.isInitializing = true;
 
       // Execute all registered hooks in order
-      const phases = ['preInit', 'cacheElements', 'initServices', 'setupEventListeners', 'loadData', 'initUI', 'postInit'];
+      const phases = [
+        'preInit',
+        'cacheElements',
+        'initServices',
+        'setupEventListeners',
+        'loadData',
+        'initUI',
+        'postInit',
+      ];
       for (const phase of phases) {
         const phaseHooks = registeredHooks.get(phase);
         if (phaseHooks && phaseHooks.length > 0) {
@@ -304,29 +333,40 @@ function createControllerSetup({
       }
       registeredHooks.get(phase).push(hook);
     }),
-    createControllerMethodHook: jest.fn((controller, methodName) => async () => {
-      if (typeof controller[methodName] === 'function') {
-        await controller[methodName]();
+    createControllerMethodHook: jest.fn(
+      (controller, methodName) => async () => {
+        if (typeof controller[methodName] === 'function') {
+          await controller[methodName]();
+        }
       }
-    }),
+    ),
     registerCleanupTask: jest.fn(),
     checkDestroyed: jest.fn().mockReturnValue(false),
     makeDestructionSafe: jest.fn((fn) => fn),
-    get isInitialized() { return lifecycleState.isInitialized; },
-    get isDestroyed() { return lifecycleState.isDestroyed; },
-    get isInitializing() { return lifecycleState.isInitializing; },
-    get isDestroying() { return lifecycleState.isDestroying; },
+    get isInitialized() {
+      return lifecycleState.isInitialized;
+    },
+    get isDestroyed() {
+      return lifecycleState.isDestroyed;
+    },
+    get isInitializing() {
+      return lifecycleState.isInitializing;
+    },
+    get isDestroying() {
+      return lifecycleState.isDestroying;
+    },
   };
-  
+
   // DOM element manager with actual caching functionality
   const cachedElements = new Map();
 
   const domElementManager = {
     configure: jest.fn(),
     cacheElement: jest.fn((key, selector, required = true) => {
-      const element = typeof selector === 'string'
-        ? document.querySelector(selector)
-        : selector;
+      const element =
+        typeof selector === 'string'
+          ? document.querySelector(selector)
+          : selector;
       if (element) {
         cachedElements.set(key, element);
       }
@@ -357,7 +397,8 @@ function createControllerSetup({
     cacheElementsFromMap: jest.fn((elementMap, options = {}) => {
       Object.entries(elementMap).forEach(([key, config]) => {
         const selector = typeof config === 'string' ? config : config.selector;
-        const required = typeof config === 'object' ? config.required !== false : true;
+        const required =
+          typeof config === 'object' ? config.required !== false : true;
         const element = document.querySelector(selector);
         if (element) {
           cachedElements.set(key, element);
@@ -403,7 +444,7 @@ function createControllerSetup({
       }
     }),
   };
-  
+
   // Event listener registry that actually registers events
   const eventListenerRegistry = {
     setContextName: jest.fn(),
@@ -415,54 +456,62 @@ function createControllerSetup({
     detachEventBusListeners: jest.fn(),
     destroy: jest.fn(),
   };
-  
+
   const asyncUtilitiesToolkit = {
     setTimeout: jest.fn((cb, delay) => setTimeout(cb, delay)),
     clearTimeout: jest.fn((id) => clearTimeout(id)),
-    getTimerStats: jest.fn().mockReturnValue({ timeouts: { count: 0 }, intervals: { count: 0 }, animationFrames: { count: 0 } }),
+    getTimerStats: jest
+      .fn()
+      .mockReturnValue({
+        timeouts: { count: 0 },
+        intervals: { count: 0 },
+        animationFrames: { count: 0 },
+      }),
     clearAllTimers: jest.fn(),
   };
-  
+
   const performanceMonitor = {
     configure: jest.fn(),
     clearData: jest.fn(),
   };
-  
+
   const memoryManager = {
     setContextName: jest.fn(),
     clear: jest.fn(),
   };
-  
+
   const errorHandlingStrategy = {
     configureContext: jest.fn(),
     handleError: jest.fn(),
     resetLastError: jest.fn(),
-    executeWithErrorHandling: jest.fn(async (operation, operationName, options = {}) => {
-      const { retries = 0 } = options;
-      let lastError;
+    executeWithErrorHandling: jest.fn(
+      async (operation, operationName, options = {}) => {
+        const { retries = 0 } = options;
+        let lastError;
 
-      for (let attempt = 0; attempt <= retries; attempt++) {
-        try {
-          return await operation();
-        } catch (error) {
-          lastError = error;
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            return await operation();
+          } catch (error) {
+            lastError = error;
+          }
         }
-      }
 
-      throw lastError;
-    }),
+        throw lastError;
+      }
+    ),
     handleServiceError: jest.fn((error, operation, userMessage) => {
       console.error(`Service error in ${operation}:`, error);
       throw error;
     }),
     isRetryableError: jest.fn(() => false),
   };
-  
+
   const validationService = {
     configure: jest.fn(),
     validateData: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
   };
-  
+
   const controller = new TraitsGeneratorController({
     logger,
     characterBuilderService: service,

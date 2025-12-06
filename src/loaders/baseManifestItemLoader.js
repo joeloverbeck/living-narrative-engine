@@ -378,15 +378,24 @@ export class BaseManifestItemLoader extends AbstractLoader {
 
       // DIAGNOSTIC LOGGING: Log raw file content for handle_drop_item debugging
       if (filename === 'handle_drop_item.rule.json') {
-        this._logger.debug('🔍 DEBUG: Raw file content loaded for handle_drop_item.rule.json:', {
-          path,
-          dataType: typeof data,
-          isObject: typeof data === 'object' && data !== null,
-          hasActions: data?.actions !== undefined,
-          actionsType: data?.actions ? (Array.isArray(data.actions) ? 'array' : typeof data.actions) : 'undefined',
-          actionsLength: Array.isArray(data?.actions) ? data.actions.length : 'N/A',
-          dataSnapshot: JSON.stringify(data, null, 2).substring(0, 500)
-        });
+        this._logger.debug(
+          '🔍 DEBUG: Raw file content loaded for handle_drop_item.rule.json:',
+          {
+            path,
+            dataType: typeof data,
+            isObject: typeof data === 'object' && data !== null,
+            hasActions: data?.actions !== undefined,
+            actionsType: data?.actions
+              ? Array.isArray(data.actions)
+                ? 'array'
+                : typeof data.actions
+              : 'undefined',
+            actionsLength: Array.isArray(data?.actions)
+              ? data.actions.length
+              : 'N/A',
+            dataSnapshot: JSON.stringify(data, null, 2).substring(0, 500),
+          }
+        );
       }
 
       return data;

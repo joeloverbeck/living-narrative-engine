@@ -137,7 +137,8 @@ describe('GOAP Performance Benchmarks - Integration', () => {
         const task = createTestTask({
           id: `test:task_${i}`,
           cost: 10 + i,
-          preconditions: i > 1 ? [{ has_component: ['actor', `test:state_${i - 1}`] }] : [],
+          preconditions:
+            i > 1 ? [{ has_component: ['actor', `test:state_${i - 1}`] }] : [],
           effects: [
             {
               type: 'ADD_COMPONENT',
@@ -164,7 +165,9 @@ describe('GOAP Performance Benchmarks - Integration', () => {
         return null;
       });
 
-      setup.gameDataRepository.getTask = jest.fn((taskId) => tasksMap[taskId] || null);
+      setup.gameDataRepository.getTask = jest.fn(
+        (taskId) => tasksMap[taskId] || null
+      );
 
       const world = { state: {}, entities: {} };
 
@@ -369,7 +372,8 @@ describe('GOAP Performance Benchmarks - Integration', () => {
       }
 
       const totalDuration = Date.now() - totalStart;
-      const averageTurnTime = turnTimes.reduce((a, b) => a + b, 0) / turnTimes.length;
+      const averageTurnTime =
+        turnTimes.reduce((a, b) => a + b, 0) / turnTimes.length;
 
       console.log(`Replanning Performance:
         Total Duration: ${totalDuration}ms
@@ -420,7 +424,9 @@ describe('GOAP Performance Benchmarks - Integration', () => {
       // Future tests can compare against these baselines
       // If performance degrades significantly, tests will fail
       expect(performanceBaselines.simple_planning.average_ms).toBeLessThan(150);
-      expect(performanceBaselines.complex_planning.average_ms).toBeLessThan(750);
+      expect(performanceBaselines.complex_planning.average_ms).toBeLessThan(
+        750
+      );
     });
   });
 });

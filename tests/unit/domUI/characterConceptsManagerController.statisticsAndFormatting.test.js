@@ -44,7 +44,9 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
     setConceptsData([createConceptEntry({ concept: 'Adventurer legend' })]);
     controller._testExports.searchFilter = 'advenur';
 
-    const results = controller._filterConcepts(controller._testExports.conceptsData);
+    const results = controller._filterConcepts(
+      controller._testExports.conceptsData
+    );
 
     expect(results).toHaveLength(1);
   });
@@ -94,12 +96,14 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
     ]);
 
     const originalQuerySelector = document.querySelector.bind(document);
-    const querySpy = jest.spyOn(document, 'querySelector').mockImplementation((selector) => {
-      if (selector === '.progress-fill') return progressFill;
-      if (selector === '.concepts-complete') return conceptsComplete;
-      if (selector === '.concepts-total') return conceptsTotal;
-      return originalQuerySelector(selector);
-    });
+    const querySpy = jest
+      .spyOn(document, 'querySelector')
+      .mockImplementation((selector) => {
+        if (selector === '.progress-fill') return progressFill;
+        if (selector === '.concepts-complete') return conceptsComplete;
+        if (selector === '.concepts-total') return conceptsTotal;
+        return originalQuerySelector(selector);
+      });
 
     controller._updateCompletionProgress(80);
 
@@ -125,7 +129,10 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
     milestoneSpy.mockClear();
     setConceptsData(
       Array.from({ length: 10 }, (_, index) =>
-        createConceptEntry({ id: `concept-${index}`, directionCount: index % 2 })
+        createConceptEntry({
+          id: `concept-${index}`,
+          directionCount: index % 2,
+        })
       )
     );
     controller._celebrateCreation();
@@ -137,7 +144,9 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
       createConceptEntry({ id: 'beta', directionCount: 1 }),
     ]);
     controller._celebrateCreation();
-    expect(milestoneSpy).toHaveBeenCalledWith('⭐ All Concepts Have Directions!');
+    expect(milestoneSpy).toHaveBeenCalledWith(
+      '⭐ All Concepts Have Directions!'
+    );
   });
 
   it('shows milestone notification lifecycle with animations and removal', () => {
@@ -182,13 +191,15 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
 
     const originalCreateElement = document.createElement.bind(document);
     const anchorClick = jest.fn();
-    jest.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
-      const element = originalCreateElement(tagName, options);
-      if (tagName === 'a') {
-        element.click = anchorClick;
-      }
-      return element;
-    });
+    jest
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName, options) => {
+        const element = originalCreateElement(tagName, options);
+        if (tagName === 'a') {
+          element.click = anchorClick;
+        }
+        return element;
+      });
 
     const loggerSpy = jest.spyOn(controller.logger, 'info');
 
@@ -240,23 +251,30 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
 
     const originalCreateElement = document.createElement.bind(document);
     const anchorClick = jest.fn();
-    jest.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
-      const element = originalCreateElement(tagName, options);
-      if (tagName === 'a') {
-        element.click = anchorClick;
-      }
-      return element;
-    });
+    jest
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName, options) => {
+        const element = originalCreateElement(tagName, options);
+        if (tagName === 'a') {
+          element.click = anchorClick;
+        }
+        return element;
+      });
 
     setConceptsData([
-      createConceptEntry({ id: 'csv', concept: 'Mystic ranger', directionCount: 1 }),
+      createConceptEntry({
+        id: 'csv',
+        concept: 'Mystic ranger',
+        directionCount: 1,
+      }),
     ]);
 
     controller._exportStatistics('csv');
 
-    expect(blobMock).toHaveBeenCalledWith([
-      expect.stringContaining('Metric,Value'),
-    ], { type: 'text/csv' });
+    expect(blobMock).toHaveBeenCalledWith(
+      [expect.stringContaining('Metric,Value')],
+      { type: 'text/csv' }
+    );
     expect(createObjectURLSpy).toHaveBeenCalled();
     expect(anchorClick).toHaveBeenCalled();
     expect(revokeObjectURLSpy).toHaveBeenCalled();
@@ -306,7 +324,9 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2024-01-02T00:00:00Z'));
 
-    expect(controller._formatRelativeDate('2024-01-02T00:00:30Z')).toBe('just now');
+    expect(controller._formatRelativeDate('2024-01-02T00:00:30Z')).toBe(
+      'just now'
+    );
     expect(controller._formatRelativeDate('2024-01-01T23:10:00Z')).toBe(
       '50 minutes ago'
     );
@@ -316,9 +336,13 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
     expect(controller._formatRelativeDate('2023-12-30T00:00:00Z')).toBe(
       '3 days ago'
     );
-    expect(controller._formatRelativeDate('2023-12-20T00:00:00Z')).toMatch(/2023/);
+    expect(controller._formatRelativeDate('2023-12-20T00:00:00Z')).toMatch(
+      /2023/
+    );
 
-    expect(controller._formatFullDate('2024-01-01T12:34:56Z')).toContain('2024');
+    expect(controller._formatFullDate('2024-01-01T12:34:56Z')).toContain(
+      '2024'
+    );
 
     jest.useRealTimers();
   });
@@ -343,7 +367,9 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
   it('shows search empty state with clear action handler', () => {
     const uiStateManager = testBase.getUIStateManager();
     uiStateManager.getCurrentState.mockReturnValue('results');
-    const displaySpy = jest.spyOn(controller, '_displayConcepts').mockImplementation(() => {});
+    const displaySpy = jest
+      .spyOn(controller, '_displayConcepts')
+      .mockImplementation(() => {});
 
     controller._testExports.searchFilter = 'mystic';
     setConceptsData([
@@ -360,7 +386,9 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
     clearButton.dispatchEvent(new Event('click'));
 
     expect(controller._testExports.searchFilter).toBe('');
-    expect(displaySpy).toHaveBeenCalledWith(controller._testExports.conceptsData);
+    expect(displaySpy).toHaveBeenCalledWith(
+      controller._testExports.conceptsData
+    );
   });
 
   it('queues empty UI state when UIStateManager not ready', () => {
@@ -381,9 +409,13 @@ describe('CharacterConceptsManagerController statistics and formatting coverage'
       ]);
 
       const trackSpy = jest.spyOn(controller, '_trackFormChanges');
-      jest.spyOn(controller, '_animateModalEntrance').mockImplementation(() => {});
+      jest
+        .spyOn(controller, '_animateModalEntrance')
+        .mockImplementation(() => {});
 
-      jest.spyOn(controller, '_setupConceptFormValidation').mockImplementation(() => {});
+      jest
+        .spyOn(controller, '_setupConceptFormValidation')
+        .mockImplementation(() => {});
 
       const conceptText = controller._getElement('conceptText');
       const addEventSpy = jest.spyOn(conceptText, 'addEventListener');

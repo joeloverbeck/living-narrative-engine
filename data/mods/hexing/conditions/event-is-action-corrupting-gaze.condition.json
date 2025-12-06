@@ -3,9 +3,6 @@
   "id": "hexing:event-is-action-corrupting-gaze",
   "description": "True when the event attempts the corrupting gaze action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "hexing:corrupting_gaze"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "hexing:corrupting_gaze"]
   }
 }

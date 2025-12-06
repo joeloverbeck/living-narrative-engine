@@ -112,9 +112,7 @@ export function buildPressAgainstChestScenario(options = {}) {
   const actorTorso = new ModEntityBuilder(actorTorsoId)
     .asBodyPart({
       parent: null,
-      children: actorHasBreasts
-        ? [actorLeftBreastId, actorRightBreastId]
-        : [],
+      children: actorHasBreasts ? [actorLeftBreastId, actorRightBreastId] : [],
       subType: 'torso',
     })
     .build();

@@ -66,9 +66,15 @@ describe('ValidationPhase', () => {
     );
     expect(logger.warn).toHaveBeenCalledWith('  - Deprecated action reference');
     expect(logger.warn).toHaveBeenCalledWith('  - Unoptimized asset');
-    expect(logger.info).toHaveBeenCalledWith('ValidationPhase recommendations:');
-    expect(logger.info).toHaveBeenCalledWith('  - Consider pruning optional mods');
-    expect(logger.info).toHaveBeenCalledWith('— ValidationPhase completed successfully —');
+    expect(logger.info).toHaveBeenCalledWith(
+      'ValidationPhase recommendations:'
+    );
+    expect(logger.info).toHaveBeenCalledWith(
+      '  - Consider pruning optional mods'
+    );
+    expect(logger.info).toHaveBeenCalledWith(
+      '— ValidationPhase completed successfully —'
+    );
   });
 
   it('throws ModsLoaderPhaseError when validation fails and logs details', async () => {
@@ -82,7 +88,11 @@ describe('ValidationPhase', () => {
       warnings: ['Optional asset mismatch'],
     });
     const validationOrchestrator = { validateForLoading };
-    const phase = new ValidationPhase({ validationOrchestrator, logger, options: {} });
+    const phase = new ValidationPhase({
+      validationOrchestrator,
+      logger,
+      options: {},
+    });
     const ctx = { requestedMods: ['storyteller:core'] };
 
     await expect(phase.execute(ctx)).rejects.toMatchObject({
@@ -94,11 +104,12 @@ describe('ValidationPhase', () => {
       strictMode: false,
       allowWarnings: true,
     });
-    expect(logger.error).toHaveBeenCalledWith(
-      'Dependency validation errors:',
-      ['Missing dependency: storyteller:core']
+    expect(logger.error).toHaveBeenCalledWith('Dependency validation errors:', [
+      'Missing dependency: storyteller:core',
+    ]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Validation warning: Optional asset mismatch'
     );
-    expect(logger.warn).toHaveBeenCalledWith('Validation warning: Optional asset mismatch');
   });
 
   it('re-throws ModsLoaderPhaseError raised by orchestrator', async () => {
