@@ -665,12 +665,14 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
 
     const resolvedMetadata = this.#resolveMetadata(
-      metadata,
+      metadata !== undefined ? metadata : resolvedDamageEntry?.metadata,
       executionContext,
       log
     );
     const resolvedDamageTags = this.#resolveDamageTags(
-      damage_tags,
+      damage_tags !== undefined
+        ? damage_tags
+        : resolvedDamageEntry?.damage_tags || resolvedDamageEntry?.damageTags,
       executionContext,
       log
     );
