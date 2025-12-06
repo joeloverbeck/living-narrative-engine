@@ -1361,7 +1361,7 @@ describe('ApplyDamageHandler', () => {
             partId: 'part1',
             partType: 'arm',
             orientation: null,
-            damageEntry: damageEntry,
+            damageEntry: expect.objectContaining({ ...damageEntry, metadata: {}, damageTags: [] }),
             maxHealth: 100,
             currentHealth: 70
           })
@@ -1550,7 +1550,7 @@ describe('ApplyDamageHandler', () => {
 
         expect(damageTypeEffectsService.applyEffectsForDamage).toHaveBeenCalledWith(
           expect.objectContaining({
-            damageEntry: resolvedDamageEntry
+            damageEntry: expect.objectContaining({ ...resolvedDamageEntry, metadata: {}, damageTags: [] })
           })
         );
       });
@@ -1642,7 +1642,7 @@ describe('ApplyDamageHandler', () => {
             partId: 'part1',
             partType: 'torso',
             orientation: null,
-            damageEntry: fullDamageEntry,
+            damageEntry: expect.objectContaining({ ...fullDamageEntry, metadata: {}, damageTags: [] }),
             maxHealth: 100,
             currentHealth: 50
           })
@@ -2032,6 +2032,131 @@ describe('ApplyDamageHandler', () => {
           expect.stringContaining("Skipping excluded damage type 'piercing'"),
           expect.anything()
         );
+      });
+    });
+
+    describe('extended parameters', () => {
+      test('threads metadata and damage_tags into recorded damage and events', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          part_ref: 'part1',
+          amount: 8,
+          damage_type: 'blunt',
+          metadata: { weaponId: 'sword-1' },
+          damage_tags: ['fire', 'ranged'],
+        };
+
+        const healthComponent = {
+          currentHealth: 20,
+          maxHealth: 20,
+          state: 'healthy',
+          turnsInState: 0,
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
+        em.getComponentData.mockReturnValue(healthComponent);
+
+        await handler.execute(params, executionContext);
+
+        expect(damageAccumulator.recordDamage).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            metadata: { weaponId: 'sword-1' },
+            damageTags: ['fire', 'ranged'],
+          })
+        );
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({
+            metadata: { weaponId: 'sword-1' },
+            damageTags: ['fire', 'ranged'],
+          })
+        );
+      });
+
+      test('uses hit_strategy.hint_part and skips cache reuse when reuse_cached is false', async () => {
+        const params = {
+          entity_ref: 'entity1',
+          amount: 5,
+          damage_type: 'piercing',
+          hit_strategy: { reuse_cached: false, hint_part: 'hinted-part' },
+        };
+
+        executionContext.hitLocationCache = { entity1: 'cached-part' };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === 'hinted-part' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'hinted-part' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'hinted-part' && comp === PART_HEALTH_COMPONENT_ID) {
+            return { currentHealth: 10, maxHealth: 10, state: 'healthy', turnsInState: 0 };
+          }
+          if (id === 'hinted-part' && comp === PART_COMPONENT_ID) {
+            return { subType: 'arm', ownerEntityId: 'entity1' };
+          }
+          return null;
+        });
+
+        await handler.execute(params, executionContext);
+
+        expect(dispatcher.dispatch).toHaveBeenCalledWith(
+          DAMAGE_APPLIED_EVENT,
+          expect.objectContaining({ partId: 'hinted-part' })
+        );
+        // Cache should remain unchanged because reuse_cached is false
+        expect(executionContext.hitLocationCache.entity1).toBe('cached-part');
+      });
+
+      test('selects named RNG from rng_ref for hit resolution', async () => {
+        const rngSpy = jest.fn().mockReturnValue(0.99);
+        const params = {
+          entity_ref: 'entity1',
+          amount: 10,
+          damage_type: 'blunt',
+          rng_ref: 'seeded',
+        };
+
+        executionContext = {
+          evaluationContext: { context: {} },
+          logger: log,
+          rngRefs: { seeded: rngSpy },
+        };
+
+        em.hasComponent.mockImplementation((id, comp) => {
+          if (id === 'entity1' && comp === BODY_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return true;
+          if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) return true;
+          if (id === 'part2' && comp === PART_COMPONENT_ID) return true;
+          return false;
+        });
+
+        em.getComponentData.mockImplementation((id, comp) => {
+          if (id === 'entity1' && comp === BODY_COMPONENT_ID) return { bodyId: 'body1' };
+          if (id === 'part1' && comp === PART_HEALTH_COMPONENT_ID) {
+            return { currentHealth: 10, maxHealth: 10, state: 'healthy', turnsInState: 0 };
+          }
+          if (id === 'part2' && comp === PART_HEALTH_COMPONENT_ID) {
+            return { currentHealth: 10, maxHealth: 10, state: 'healthy', turnsInState: 0 };
+          }
+          if (id === 'part1' && comp === PART_COMPONENT_ID) return { subType: 'torso', hit_probability_weight: 1 };
+          if (id === 'part2' && comp === PART_COMPONENT_ID) return { subType: 'arm', hit_probability_weight: 1 };
+          return null;
+        });
+
+        bodyGraphService.getAllParts.mockReturnValue(['part1', 'part2']);
+        const mathRandomSpy = jest.spyOn(Math, 'random');
+
+        await handler.execute(params, executionContext);
+
+        expect(rngSpy).toHaveBeenCalled();
+        expect(mathRandomSpy).not.toHaveBeenCalled();
+        const damageAppliedCall = dispatcher.dispatch.mock.calls.find(
+          ([eventType]) => eventType === DAMAGE_APPLIED_EVENT
+        );
+        expect(damageAppliedCall?.[1]?.partId).toBe('part2');
       });
     });
 
