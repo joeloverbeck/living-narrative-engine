@@ -95,3 +95,16 @@ NODE_ENV=test npx jest tests/e2e/actions/hitResolutionControls.e2e.test.js --no-
 ## Estimated Size
 
 Medium - Single test file with ~6-8 test cases, requires multi-part entity setup
+
+## Outcome
+
+- Created `tests/e2e/actions/hitResolutionControls.e2e.test.js` with comprehensive coverage.
+- Implemented `setupScenario` that correctly initializes `ModTestFixture` and installs real operation handlers on the active environment.
+- Created a multi-part target using `ModEntityBuilder`, ensuring `anatomy:joint` components and `ownerEntityId` are properly set to allow `BodyGraphService` traversal.
+- Implemented 5 tests covering:
+    - Cache reuse (default behavior).
+    - Cache bypass (`reuse_cached: false`) verifying different hit locations.
+    - Hint part targeting.
+    - Deterministic RNG (`rng_ref`) verifying consistent results.
+    - RNG variance verifying different results with different seeds (while bypassing cache).
+- Verified all tests pass.
