@@ -67,9 +67,9 @@ describe('BodyGraphService integration – dependency validation', () => {
       () => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })
     ).toThrow(new InvalidArgumentError('logger is required'));
 
-    expect(
-      () => new BodyGraphService({ entityManager, logger })
-    ).toThrow(new InvalidArgumentError('eventDispatcher is required'));
+    expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
+      new InvalidArgumentError('eventDispatcher is required')
+    );
   });
 });
 
@@ -98,7 +98,9 @@ describe('BodyGraphService integration – cache fallbacks and guards', () => {
       body: { root: torsoId },
     });
 
-    await entityManager.addComponent(torsoId, 'anatomy:part', { subType: 'torso' });
+    await entityManager.addComponent(torsoId, 'anatomy:part', {
+      subType: 'torso',
+    });
     await entityManager.addComponent(torsoId, 'anatomy:joint', {
       parentId: actorId,
       socketId: 'core',
@@ -148,13 +150,18 @@ describe('BodyGraphService integration – cache fallbacks and guards', () => {
   it('provides safe fallbacks for cache lookups and missing metadata', async () => {
     expect(service.getChildren('unknown-node')).toEqual([]);
 
-    await entityManager.addComponent(looseRootId, 'anatomy:part', { subType: 'phantom' });
+    await entityManager.addComponent(looseRootId, 'anatomy:part', {
+      subType: 'phantom',
+    });
     await entityManager.addComponent('actor-no-recipe', 'anatomy:body', {
       body: { root: looseRootId },
     });
 
     const anatomyData = await service.getAnatomyData('actor-no-recipe');
-    expect(anatomyData).toEqual({ recipeId: null, rootEntityId: 'actor-no-recipe' });
+    expect(anatomyData).toEqual({
+      recipeId: null,
+      rootEntityId: 'actor-no-recipe',
+    });
 
     await service.buildAdjacencyCache(torsoId);
     await service.buildAdjacencyCache(actorId);
@@ -163,14 +170,20 @@ describe('BodyGraphService integration – cache fallbacks and guards', () => {
     expect(service.getParent('unknown-node')).toBeNull();
     expect(service.getAncestors('unknown-node')).toEqual([]);
 
-    await service.detachPart(torsoId, { cascade: true, reason: 'invalidate-cache' });
+    await service.detachPart(torsoId, {
+      cascade: true,
+      reason: 'invalidate-cache',
+    });
     expect(service.hasCache(actorId)).toBe(false);
     expect(service.getChildren(actorId)).toEqual([]);
   });
 
   it('handles missing nested component values when traversing anatomy parts', async () => {
     await service.buildAdjacencyCache(torsoId);
-    const bodyComponent = await entityManager.getComponentData(actorId, 'anatomy:body');
+    const bodyComponent = await entityManager.getComponentData(
+      actorId,
+      'anatomy:body'
+    );
 
     const result = service.hasPartWithComponentValue(
       bodyComponent,

@@ -169,7 +169,10 @@ const populateAnatomy = (entityManager) => {
 
   entityManager.createEntity('blueprint-arm', {
     'anatomy:part': { subType: 'arm' },
-    'anatomy:joint': { parentId: 'blueprint-torso', socketId: 'template-shoulder' },
+    'anatomy:joint': {
+      parentId: 'blueprint-torso',
+      socketId: 'template-shoulder',
+    },
   });
 
   entityManager.createEntity('blueprint-hand', {
@@ -273,7 +276,10 @@ describe('BodyGraphService integration – full graph coverage', () => {
     ]);
 
     await service.buildAdjacencyCache('blueprint-actor');
-    const blueprintParts = service.getAllParts(blueprintBodyComponent, 'no-cache-root');
+    const blueprintParts = service.getAllParts(
+      blueprintBodyComponent,
+      'no-cache-root'
+    );
     expectArrayToContainAll(blueprintParts, [
       'blueprint-torso',
       'blueprint-arm',
@@ -317,7 +323,9 @@ describe('BodyGraphService integration – full graph coverage', () => {
 
     const armParts = service.findPartsByType('actor-1', 'arm');
     expect(armParts.sort()).toEqual(['arm-left', 'arm-right']);
-    entityManager.setComponent('arm-right', 'anatomy:part', { subType: 'wing' });
+    entityManager.setComponent('arm-right', 'anatomy:part', {
+      subType: 'wing',
+    });
     const cachedArmParts = service.findPartsByType('actor-1', 'arm');
     expect(cachedArmParts).toEqual(armParts);
 
@@ -330,14 +338,17 @@ describe('BodyGraphService integration – full graph coverage', () => {
       socketId: 'shoulder-left',
     });
     expect(service.hasCache('actor-1')).toBe(false);
-    expect(entityManager.getComponentData('arm-left', 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData('arm-left', 'anatomy:joint')
+    ).toBeNull();
     expect(dispatcher.events).toHaveLength(1);
     expect(dispatcher.events[0].eventId).toBe(LIMB_DETACHED_EVENT_ID);
     expect(dispatcher.events[0].payload.detachedCount).toBe(2);
     expect(dispatcher.events[0].payload.reason).toBe('injury');
     expect(
-      logger.infoEntries.some(([message]) =>
-        typeof message === 'string' && message.includes('Detached 2 entities')
+      logger.infoEntries.some(
+        ([message]) =>
+          typeof message === 'string' && message.includes('Detached 2 entities')
       )
     ).toBe(true);
 
@@ -359,7 +370,9 @@ describe('BodyGraphService integration – full graph coverage', () => {
     });
     expect(fallbackService.getAnatomyRoot('hand-left')).toBe('actor-1');
 
-    await expect(service.getBodyGraph('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph('')).rejects.toThrow(
+      InvalidArgumentError
+    );
 
     await service.buildAdjacencyCache('actor-1');
     await expect(service.getBodyGraph('floating')).rejects.toThrow(
@@ -385,13 +398,16 @@ describe('BodyGraphService integration – full graph coverage', () => {
       'head-1',
     ]);
 
-    await expect(service.getAnatomyData('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData('')).rejects.toThrow(
+      InvalidArgumentError
+    );
     const missingData = await service.getAnatomyData('floating');
     expect(missingData).toBeNull();
     expect(
-      logger.debugEntries.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes("has no anatomy:body component")
+      logger.debugEntries.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes('has no anatomy:body component')
       )
     ).toBe(true);
     await service.buildAdjacencyCache('blueprint-actor');
@@ -406,7 +422,11 @@ describe('BodyGraphService integration – full graph coverage', () => {
     );
 
     expect(service.getAllParts({ root: 'blueprint-torso' })).toEqual(
-      expect.arrayContaining(['blueprint-torso', 'blueprint-arm', 'blueprint-hand'])
+      expect.arrayContaining([
+        'blueprint-torso',
+        'blueprint-arm',
+        'blueprint-hand',
+      ])
     );
     expect(service.getAllParts({ root: 'torso-1' })).toEqual(
       expect.arrayContaining([
@@ -433,6 +453,8 @@ describe('BodyGraphService integration – full graph coverage', () => {
     expect(
       entityManager.getComponentData('hand-right', 'anatomy:joint')
     ).not.toBeNull();
-    expect(dispatcher.events[dispatcher.events.length - 1].payload.detachedCount).toBe(1);
+    expect(
+      dispatcher.events[dispatcher.events.length - 1].payload.detachedCount
+    ).toBe(1);
   });
 });

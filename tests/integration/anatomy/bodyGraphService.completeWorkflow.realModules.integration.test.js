@@ -82,12 +82,14 @@ const createLogger = () => {
     error: [],
   };
 
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg)))
+        .join(' ');
+      messages[level].push(rendered);
+    };
 
   return {
     messages,
@@ -107,7 +109,14 @@ const buildActorBody = () => ({
     rootPartId: 'torso',
     parts: {
       torso: {
-        children: ['leftArm', 'rightArm', 'head', 'cyberArm', 'floatingWing', 'droneDock'],
+        children: [
+          'leftArm',
+          'rightArm',
+          'head',
+          'cyberArm',
+          'floatingWing',
+          'droneDock',
+        ],
         partType: 'torso',
       },
       leftArm: {
@@ -248,7 +257,10 @@ describe('BodyGraphService complete workflow with real cache + query modules', (
       },
       spectatorHead: {
         'anatomy:part': { subType: 'head' },
-        'anatomy:joint': { parentId: 'spectatorTorso', socketId: 'spectator-neck' },
+        'anatomy:joint': {
+          parentId: 'spectatorTorso',
+          socketId: 'spectator-neck',
+        },
       },
     });
 
@@ -316,7 +328,11 @@ describe('BodyGraphService complete workflow with real cache + query modules', (
     expect(service.getAllParts({ body: {} })).toEqual([]);
 
     const spectatorParts = service.getAllParts(spectatorBody, 'spectator');
-    expectSameMembers(spectatorParts, ['spectator', 'spectatorTorso', 'spectatorHead']);
+    expectSameMembers(spectatorParts, [
+      'spectator',
+      'spectatorTorso',
+      'spectatorHead',
+    ]);
 
     const firstArms = service.findPartsByType('actor', 'arm');
     expectSameMembers(firstArms, ['leftArm', 'rightArm', 'cyberArm']);
@@ -342,7 +358,11 @@ describe('BodyGraphService complete workflow with real cache + query modules', (
       ])
     );
     expect(service.getParent('leftHand')).toBe('leftArm');
-    expect(service.getAncestors('leftHand')).toEqual(['leftArm', 'torso', 'actor']);
+    expect(service.getAncestors('leftHand')).toEqual([
+      'leftArm',
+      'torso',
+      'actor',
+    ]);
     expect(service.getAllDescendants('torso')).toEqual(
       expect.arrayContaining([
         'leftArm',
@@ -375,7 +395,9 @@ describe('BodyGraphService complete workflow with real cache + query modules', (
     ).toEqual({ found: false });
 
     expect(service.hasPartWithComponent(actorBody, 'sensors:touch')).toBe(true);
-    expect(service.hasPartWithComponent(actorBody, 'inventory:slot')).toBe(false);
+    expect(service.hasPartWithComponent(actorBody, 'inventory:slot')).toBe(
+      false
+    );
 
     const graph = await service.getBodyGraph('actor');
     expectSameMembers(graph.getAllPartIds(), actorPartsFirst);
@@ -450,7 +472,9 @@ describe('BodyGraphService complete workflow with real cache + query modules', (
 
     expect(service.hasCache('actor')).toBe(false);
     expect(
-      dispatcher.events.filter((event) => event.eventId === LIMB_DETACHED_EVENT_ID)
+      dispatcher.events.filter(
+        (event) => event.eventId === LIMB_DETACHED_EVENT_ID
+      )
     ).toHaveLength(2);
 
     expect(

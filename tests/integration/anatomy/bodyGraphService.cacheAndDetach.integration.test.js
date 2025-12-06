@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import BodyGraphService, {
   LIMB_DETACHED_EVENT_ID,
 } from '../../../src/anatomy/bodyGraphService.js';
@@ -83,7 +90,10 @@ const buildEntityManager = () =>
       id: PART_IDS.leftArm,
       components: {
         'anatomy:part': { subType: 'arm', side: 'left' },
-        'anatomy:joint': { parentId: PART_IDS.torso, socketId: 'left_shoulder' },
+        'anatomy:joint': {
+          parentId: PART_IDS.torso,
+          socketId: 'left_shoulder',
+        },
       },
     },
     {
@@ -98,7 +108,10 @@ const buildEntityManager = () =>
       id: PART_IDS.rightArm,
       components: {
         'anatomy:part': { subType: 'arm', side: 'right' },
-        'anatomy:joint': { parentId: PART_IDS.torso, socketId: 'right_shoulder' },
+        'anatomy:joint': {
+          parentId: PART_IDS.torso,
+          socketId: 'right_shoulder',
+        },
         'equipment:grip': {},
       },
     },
@@ -106,7 +119,10 @@ const buildEntityManager = () =>
       id: PART_IDS.rightHand,
       components: {
         'anatomy:part': { subType: 'hand', side: 'right' },
-        'anatomy:joint': { parentId: PART_IDS.rightArm, socketId: 'right_wrist' },
+        'anatomy:joint': {
+          parentId: PART_IDS.rightArm,
+          socketId: 'right_wrist',
+        },
         'equipment:ring': { style: { material: 'gold', engraved: true } },
       },
     },
@@ -164,7 +180,9 @@ describe('BodyGraphService integration: cache coordination and detachment', () =
     expect(service.getAnatomyRoot(null)).toBeNull();
     expect(service.getAnatomyRoot(PART_IDS.leftHand)).toBe(ACTOR_ID);
 
-    const blueprintBeforeCache = service.getAllParts({ body: { root: PART_IDS.torso } });
+    const blueprintBeforeCache = service.getAllParts({
+      body: { root: PART_IDS.torso },
+    });
     expect(new Set(blueprintBeforeCache)).toEqual(
       new Set([
         PART_IDS.torso,
@@ -211,7 +229,9 @@ describe('BodyGraphService integration: cache coordination and detachment', () =
     expect(new Set(actorRootOnly)).toEqual(new Set(allParts));
 
     const arms = service.findPartsByType(ACTOR_ID, 'arm');
-    expect(new Set(arms)).toEqual(new Set([PART_IDS.leftArm, PART_IDS.rightArm]));
+    expect(new Set(arms)).toEqual(
+      new Set([PART_IDS.leftArm, PART_IDS.rightArm])
+    );
     expect(service.findPartsByType(ACTOR_ID, 'arm')).toBe(arms);
     expect(service.findPartsByType('missing', 'arm')).toEqual([]);
 
@@ -256,9 +276,9 @@ describe('BodyGraphService integration: cache coordination and detachment', () =
     ]);
     expect(service.getPath(PART_IDS.leftHand, 'ghost:entity')).toBeNull();
 
-    expect(
-      service.hasPartWithComponent(actorBody, 'equipment:ring')
-    ).toBe(true);
+    expect(service.hasPartWithComponent(actorBody, 'equipment:ring')).toBe(
+      true
+    );
     expect(
       service.hasPartWithComponent(actorBody, 'equipment:nonexistent')
     ).toBe(false);
@@ -290,9 +310,7 @@ describe('BodyGraphService integration: cache coordination and detachment', () =
 
     const bodyGraph = await service.getBodyGraph(ACTOR_ID);
     expect(new Set(bodyGraph.getAllPartIds())).toEqual(new Set(allParts));
-    expect(
-      bodyGraph.getConnectedParts(PART_IDS.torso)
-    ).toEqual(
+    expect(bodyGraph.getConnectedParts(PART_IDS.torso)).toEqual(
       expect.arrayContaining([
         PART_IDS.head,
         PART_IDS.leftArm,
@@ -329,7 +347,9 @@ describe('BodyGraphService integration: cache coordination and detachment', () =
       detachedCount: 1,
       reason: 'manual-check',
     });
-    expect(entityManager.getComponentData(PART_IDS.rightHand, 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData(PART_IDS.rightHand, 'anatomy:joint')
+    ).toBeNull();
     expect(service.hasCache(ACTOR_ID)).toBe(false);
 
     await entityManager.addComponent(PART_IDS.rightHand, 'anatomy:joint', {
@@ -364,25 +384,28 @@ describe('BodyGraphService integration: cache coordination and detachment', () =
   });
 
   it('enforces invariants and error handling paths', async () => {
-    expect(() =>
-      new BodyGraphService({
-        logger,
-        eventDispatcher: safeDispatcher,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          logger,
+          eventDispatcher: safeDispatcher,
+        })
     ).toThrow('entityManager is required');
 
-    expect(() =>
-      new BodyGraphService({
-        entityManager,
-        eventDispatcher: safeDispatcher,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          entityManager,
+          eventDispatcher: safeDispatcher,
+        })
     ).toThrow('logger is required');
 
-    expect(() =>
-      new BodyGraphService({
-        entityManager,
-        logger,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          entityManager,
+          logger,
+        })
     ).toThrow('eventDispatcher is required');
 
     await expect(service.getBodyGraph(123)).rejects.toThrow(

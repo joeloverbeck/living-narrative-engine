@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { BodyGraphService, LIMB_DETACHED_EVENT_ID } from '../../../src/anatomy/bodyGraphService.js';
+import {
+  BodyGraphService,
+  LIMB_DETACHED_EVENT_ID,
+} from '../../../src/anatomy/bodyGraphService.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { AnatomyCacheManager } from '../../../src/anatomy/anatomyCacheManager.js';
 import { AnatomyGraphAlgorithms } from '../../../src/anatomy/anatomyGraphAlgorithms.js';
@@ -288,9 +291,7 @@ describe('BodyGraphService targeted coverage integration', () => {
           reason: 'testing',
         })
       );
-      expect(
-        entityManager.getComponentData('arm', 'anatomy:joint')
-      ).toBeNull();
+      expect(entityManager.getComponentData('arm', 'anatomy:joint')).toBeNull();
       expect(invalidateQuerySpy).toHaveBeenCalledWith('actor-1');
     });
 
@@ -319,10 +320,12 @@ describe('BodyGraphService targeted coverage integration', () => {
       await bodyGraphService.buildAdjacencyCache('actor-1');
       const initialDispatches = eventDispatcher.dispatch.mock.calls.length;
 
-      await expect(
-        bodyGraphService.detachPart('floating')
-      ).rejects.toThrow(InvalidArgumentError);
-      expect(eventDispatcher.dispatch.mock.calls.length).toBe(initialDispatches);
+      await expect(bodyGraphService.detachPart('floating')).rejects.toThrow(
+        InvalidArgumentError
+      );
+      expect(eventDispatcher.dispatch.mock.calls.length).toBe(
+        initialDispatches
+      );
     });
   });
 
@@ -364,7 +367,10 @@ describe('BodyGraphService targeted coverage integration', () => {
       expect(blueprintResult).not.toContain('actor-1');
       expect(getAllPartsSpy.mock.calls[1][0]).toBe('torso');
 
-      const cachedAgain = bodyGraphService.getAllParts(bodyComponent, 'actor-1');
+      const cachedAgain = bodyGraphService.getAllParts(
+        bodyComponent,
+        'actor-1'
+      );
       expect(cachedAgain).toEqual(nestedResult);
       expect(getAllPartsSpy).toHaveBeenCalledTimes(2);
 
@@ -377,10 +383,16 @@ describe('BodyGraphService targeted coverage integration', () => {
       await bodyGraphService.buildAdjacencyCache('actor-1');
 
       expect(
-        bodyGraphService.hasPartWithComponent(bodyComponent.body, 'anatomy:part')
+        bodyGraphService.hasPartWithComponent(
+          bodyComponent.body,
+          'anatomy:part'
+        )
       ).toBe(true);
       expect(
-        bodyGraphService.hasPartWithComponent(bodyComponent.body, 'missing:component')
+        bodyGraphService.hasPartWithComponent(
+          bodyComponent.body,
+          'missing:component'
+        )
       ).toBe(false);
 
       const hand = entityManager.getEntityInstance('hand');
@@ -480,7 +492,10 @@ describe('BodyGraphService targeted coverage integration', () => {
       expect(await bodyGraphService.getAnatomyData('no-body')).toBeNull();
 
       const data = await bodyGraphService.getAnatomyData('actor-1');
-      expect(data).toEqual({ recipeId: 'test:recipe', rootEntityId: 'actor-1' });
+      expect(data).toEqual({
+        recipeId: 'test:recipe',
+        rootEntityId: 'actor-1',
+      });
 
       const noRecipe = await bodyGraphService.getAnatomyData('no-recipe');
       expect(noRecipe).toEqual({ recipeId: null, rootEntityId: 'no-recipe' });

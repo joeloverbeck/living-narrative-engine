@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   BodyGraphService,
   LIMB_DETACHED_EVENT_ID,
@@ -68,7 +75,8 @@ class IntegrationEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -106,7 +114,10 @@ describe('BodyGraphService integration – edge branch coverage', () => {
       AnatomyCacheManager.prototype,
       'invalidateCacheForRoot'
     );
-    queryInvalidateSpy = jest.spyOn(AnatomyQueryCache.prototype, 'invalidateRoot');
+    queryInvalidateSpy = jest.spyOn(
+      AnatomyQueryCache.prototype,
+      'invalidateRoot'
+    );
 
     entityManager = new IntegrationEntityManager();
     logger = createLogger();
@@ -133,7 +144,9 @@ describe('BodyGraphService integration – edge branch coverage', () => {
       structure: { rootPartId: partIds.torso },
     });
 
-    entityManager.addComponent(partIds.torso, 'anatomy:part', { subType: 'torso' });
+    entityManager.addComponent(partIds.torso, 'anatomy:part', {
+      subType: 'torso',
+    });
     entityManager.addComponent(partIds.torso, 'anatomy:joint', {
       parentId: actorId,
       socketId: 'core',
@@ -166,7 +179,10 @@ describe('BodyGraphService integration – edge branch coverage', () => {
 
     await service.buildAdjacencyCache(actorId);
 
-    actorBodyComponent = entityManager.getComponentData(actorId, 'anatomy:body');
+    actorBodyComponent = entityManager.getComponentData(
+      actorId,
+      'anatomy:body'
+    );
 
     // Warm caches so the branch that returns cached values is exercised
     service.getAllParts(actorBodyComponent, actorId);
@@ -214,11 +230,15 @@ describe('BodyGraphService integration – edge branch coverage', () => {
     const cachedAfterDetach = service.getAllParts(actorBodyComponent, actorId);
     expect(cachedAfterDetach).toBe(cachedBeforeDetach);
     expect(service.hasCache(actorId)).toBe(true);
-    expect(entityManager.getComponentData(partIds.rootless, 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData(partIds.rootless, 'anatomy:joint')
+    ).toBeNull();
   });
 
   it('handles nested component lookups and empty component data gracefully', () => {
-    expect(service.hasPartWithComponent(actorBodyComponent, 'custom:empty')).toBe(false);
+    expect(
+      service.hasPartWithComponent(actorBodyComponent, 'custom:empty')
+    ).toBe(false);
 
     const nestedFound = service.hasPartWithComponentValue(
       actorBodyComponent,

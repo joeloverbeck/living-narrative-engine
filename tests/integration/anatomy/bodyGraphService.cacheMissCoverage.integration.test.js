@@ -147,9 +147,7 @@ describe('BodyGraphService cache miss coverage integration', () => {
       'arm'
     );
     expect(Array.isArray(arms)).toBe(true);
-    expect(arms).toEqual(
-      expect.arrayContaining([ids.leftArm, ids.rightArm])
-    );
+    expect(arms).toEqual(expect.arrayContaining([ids.leftArm, ids.rightArm]));
     expect(queryCache.cacheFindPartsByType).toHaveBeenCalledWith(
       ids.actor,
       'arm',

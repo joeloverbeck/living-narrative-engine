@@ -91,7 +91,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
       hasComponent: (componentId) =>
         this.getComponentData(entityId, componentId) !== null,
     };
@@ -108,7 +109,8 @@ class InMemoryEntityManager {
       if (Object.prototype.hasOwnProperty.call(components, componentId)) {
         matches.push({
           id,
-          getComponentData: (requestedId) => this.getComponentData(id, requestedId),
+          getComponentData: (requestedId) =>
+            this.getComponentData(id, requestedId),
         });
       }
     }
@@ -171,15 +173,15 @@ describe('BodyGraphService integration error handling', () => {
   });
 
   it('validates constructor dependencies with real collaborators', () => {
-    expect(
-      () => new BodyGraphService({ logger, eventDispatcher })
-    ).toThrow(InvalidArgumentError);
+    expect(() => new BodyGraphService({ logger, eventDispatcher })).toThrow(
+      InvalidArgumentError
+    );
     expect(
       () => new BodyGraphService({ entityManager, eventDispatcher })
     ).toThrow(InvalidArgumentError);
-    expect(
-      () => new BodyGraphService({ entityManager, logger })
-    ).toThrow(InvalidArgumentError);
+    expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
+      InvalidArgumentError
+    );
   });
 
   it('throws informative errors when requesting body graphs with invalid input', async () => {
@@ -205,7 +207,8 @@ describe('BodyGraphService integration error handling', () => {
   });
 
   it('covers branch scenarios for cached traversals and orphan detachments', async () => {
-    const { actorId, bodyComponent, partIds } = seedMinimalAnatomy(entityManager);
+    const { actorId, bodyComponent, partIds } =
+      seedMinimalAnatomy(entityManager);
 
     await service.buildAdjacencyCache(actorId);
 

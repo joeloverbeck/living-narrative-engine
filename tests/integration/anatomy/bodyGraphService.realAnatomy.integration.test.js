@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import BodyGraphService, {
   LIMB_DETACHED_EVENT_ID,
@@ -115,7 +109,7 @@ describe('BodyGraphService real anatomy integration', () => {
 
     const fallbackParts = service.getAllParts(bodyComponent, 'ghost-actor');
     expect(fallbackParts).toEqual(blueprintParts);
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Using blueprint root')
     );
 
@@ -131,9 +125,7 @@ describe('BodyGraphService real anatomy integration', () => {
 
     expect(service.getAnatomyRoot(leftHandId)).toBe(actor.id);
     expect(service.getAnatomyRoot(null)).toBeNull();
-    expect(service.getAnatomyRoot('nonexistent-part')).toBe(
-      'nonexistent-part'
-    );
+    expect(service.getAnatomyRoot('nonexistent-part')).toBe('nonexistent-part');
 
     expect(service.getChildren(torsoId)).toEqual(
       expect.arrayContaining([leftArmId, rightArmId, headId])
@@ -168,9 +160,9 @@ describe('BodyGraphService real anatomy integration', () => {
     );
     expect(descendantsFromLeftArm).not.toContain(leftArmId);
 
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'anatomy:joint')
-    ).toBe(true);
+    expect(service.hasPartWithComponent(bodyComponent, 'anatomy:joint')).toBe(
+      true
+    );
     expect(
       service.hasPartWithComponent(bodyComponent, 'nonexistent:component')
     ).toBe(false);
@@ -181,7 +173,10 @@ describe('BodyGraphService real anatomy integration', () => {
       'orientation',
       'left'
     );
-    expect(orientationMatch).toEqual({ found: true, partId: orientationMatch.partId });
+    expect(orientationMatch).toEqual({
+      found: true,
+      partId: orientationMatch.partId,
+    });
     expect(Object.values(parts)).toContain(orientationMatch.partId);
 
     const orientationMiss = service.hasPartWithComponentValue(

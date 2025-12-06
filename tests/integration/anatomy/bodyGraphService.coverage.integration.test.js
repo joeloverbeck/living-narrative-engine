@@ -20,8 +20,8 @@ class MockCacheManager {
       this.invalidated.push(rootId);
     });
     this.get = jest.fn((entityId) => this.nodes.get(entityId));
-    this.has = jest.fn((entityId) =>
-      this.cacheRoots.has(entityId) || this.nodes.has(entityId)
+    this.has = jest.fn(
+      (entityId) => this.cacheRoots.has(entityId) || this.nodes.has(entityId)
     );
     this.size = jest.fn(() => this.cacheRoots.size);
     this.validateCache = jest.fn(() => true);
@@ -93,10 +93,12 @@ jest.mock('../../../src/anatomy/anatomyGraphAlgorithms.js', () => {
         ? mockGraphState.subgraphs.get(partId)
         : [partId]
     ),
-    findPartsByType: jest.fn((rootId, type) =>
-      mockGraphState.types.get(`${rootId}|${type}`) || []
+    findPartsByType: jest.fn(
+      (rootId, type) => mockGraphState.types.get(`${rootId}|${type}`) || []
     ),
-    getAnatomyRoot: jest.fn((partId) => mockGraphState.roots.get(partId) || null),
+    getAnatomyRoot: jest.fn(
+      (partId) => mockGraphState.roots.get(partId) || null
+    ),
     getPath: jest.fn(
       (fromId, toId) => mockGraphState.paths.get(`${fromId}|${toId}`) || []
     ),
@@ -201,8 +203,8 @@ describe('BodyGraphService integration coverage enhancement', () => {
         ? mockGraphState.subgraphs.get(partId)
         : [partId]
     );
-    mockAlgorithms.findPartsByType.mockImplementation((rootId, type) =>
-      mockGraphState.types.get(`${rootId}|${type}`) || []
+    mockAlgorithms.findPartsByType.mockImplementation(
+      (rootId, type) => mockGraphState.types.get(`${rootId}|${type}`) || []
     );
     mockAlgorithms.getAnatomyRoot.mockImplementation(
       (partId) => mockGraphState.roots.get(partId) || null
@@ -220,17 +222,21 @@ describe('BodyGraphService integration coverage enhancement', () => {
     const logger = createLogger();
     const dispatcher = createDispatcher();
 
-    expect(() => new BodyGraphService({ logger, eventDispatcher: dispatcher })).toThrow(
-      'entityManager is required'
-    );
-    expect(() =>
-      new BodyGraphService({ entityManager, eventDispatcher: dispatcher })
+    expect(
+      () => new BodyGraphService({ logger, eventDispatcher: dispatcher })
+    ).toThrow('entityManager is required');
+    expect(
+      () => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })
     ).toThrow('logger is required');
     expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
       'eventDispatcher is required'
     );
 
-    const { cacheManager, queryCache } = createService({ entityManager, logger, eventDispatcher: dispatcher });
+    const { cacheManager, queryCache } = createService({
+      entityManager,
+      logger,
+      eventDispatcher: dispatcher,
+    });
     expect(cacheManager).toBeInstanceOf(MockCacheManager);
     expect(queryCache).toBeInstanceOf(MockQueryCache);
     expect(LIMB_DETACHED_EVENT_ID).toBe(TEST_EVENT_ID);
@@ -245,12 +251,21 @@ describe('BodyGraphService integration coverage enhancement', () => {
     await service.buildAdjacencyCache('root-A');
 
     expect(cacheManager.buildCache).toHaveBeenCalledTimes(1);
-    expect(cacheManager.buildCache).toHaveBeenCalledWith('root-A', entityManager);
+    expect(cacheManager.buildCache).toHaveBeenCalledWith(
+      'root-A',
+      entityManager
+    );
   });
 
   it('detaches cascading limbs and invalidates caches', async () => {
-    const { service, entityManager, cacheManager, queryCache, eventDispatcher, logger } =
-      createService();
+    const {
+      service,
+      entityManager,
+      cacheManager,
+      queryCache,
+      eventDispatcher,
+      logger,
+    } = createService();
     entityManager.setComponent('limb-1', 'anatomy:joint', {
       parentId: 'torso-1',
       socketId: 'socket-7',
@@ -264,7 +279,9 @@ describe('BodyGraphService integration coverage enhancement', () => {
       'limb-1',
       'anatomy:joint'
     );
-    expect(cacheManager.invalidateCacheForRoot).toHaveBeenCalledWith('root-entity');
+    expect(cacheManager.invalidateCacheForRoot).toHaveBeenCalledWith(
+      'root-entity'
+    );
     expect(queryCache.invalidateRoot).toHaveBeenCalledWith('root-entity');
     expect(eventDispatcher.dispatch).toHaveBeenCalledWith(
       TEST_EVENT_ID,
@@ -288,15 +305,23 @@ describe('BodyGraphService integration coverage enhancement', () => {
   });
 
   it('supports non-cascading detach operations', async () => {
-    const { service, entityManager, cacheManager, queryCache, eventDispatcher } =
-      createService();
+    const {
+      service,
+      entityManager,
+      cacheManager,
+      queryCache,
+      eventDispatcher,
+    } = createService();
     entityManager.setComponent('limb-2', 'anatomy:joint', {
       parentId: 'torso-2',
       socketId: 'socket-2',
     });
     mockAlgorithms.getAnatomyRoot.mockReturnValueOnce(null);
 
-    const result = await service.detachPart('limb-2', { cascade: false, reason: 'manual' });
+    const result = await service.detachPart('limb-2', {
+      cascade: false,
+      reason: 'manual',
+    });
 
     expect(mockAlgorithms.getSubgraph).not.toHaveBeenCalled();
     expect(cacheManager.invalidateCacheForRoot).not.toHaveBeenCalled();
@@ -348,7 +373,11 @@ describe('BodyGraphService integration coverage enhancement', () => {
     );
 
     expect(service.getPath('from', 'to')).toEqual(['a', 'b']);
-    expect(mockAlgorithms.getPath).toHaveBeenCalledWith('from', 'to', cacheManager);
+    expect(mockAlgorithms.getPath).toHaveBeenCalledWith(
+      'from',
+      'to',
+      cacheManager
+    );
   });
 
   it('returns empty lists for missing body information', () => {
@@ -367,11 +396,23 @@ describe('BodyGraphService integration coverage enhancement', () => {
   });
 
   it('collects parts and caches results based on blueprint root', () => {
-    const { service, cacheManager, entityManager, queryCache, logger } = createService();
-    const largeResult = ['torso', 'arm', 'hand', 'leg', 'foot', 'finger', 'toe'];
+    const { service, cacheManager, entityManager, queryCache, logger } =
+      createService();
+    const largeResult = [
+      'torso',
+      'arm',
+      'hand',
+      'leg',
+      'foot',
+      'finger',
+      'toe',
+    ];
     mockAlgorithms.getAllParts.mockReturnValueOnce(largeResult);
 
-    const result = service.getAllParts({ body: { root: 'root-blueprint' } }, 'actor-missing');
+    const result = service.getAllParts(
+      { body: { root: 'root-blueprint' } },
+      'actor-missing'
+    );
 
     expect(mockAlgorithms.getAllParts).toHaveBeenCalledWith(
       'root-blueprint',
@@ -383,13 +424,22 @@ describe('BodyGraphService integration coverage enhancement', () => {
       largeResult
     );
     expect(result).toEqual(largeResult);
-    const infoMessages = logger.info.mock.calls.flat().filter((m) => typeof m === 'string');
-    expect(infoMessages.some((msg) => msg.includes('Using blueprint root'))).toBe(true);
-    expect(infoMessages.some((msg) => msg.includes('AnatomyGraphAlgorithms returned'))).toBe(true);
+    const debugMessages = logger.debug.mock.calls
+      .flat()
+      .filter((m) => typeof m === 'string');
+    expect(
+      debugMessages.some((msg) => msg.includes('Using blueprint root'))
+    ).toBe(true);
+    expect(
+      debugMessages.some((msg) =>
+        msg.includes('AnatomyGraphAlgorithms returned')
+      )
+    ).toBe(true);
   });
 
   it('supports direct root usage and actor cache preference', () => {
-    const { service, cacheManager, entityManager, queryCache, logger } = createService();
+    const { service, cacheManager, entityManager, queryCache, logger } =
+      createService();
     mockAlgorithms.getAllParts.mockReturnValueOnce(['direct']);
     const direct = service.getAllParts({ root: 'direct-root' });
     expect(direct).toEqual(['direct']);
@@ -397,18 +447,20 @@ describe('BodyGraphService integration coverage enhancement', () => {
     cacheManager.has.mockImplementation((id) => id === 'actor-1');
     cacheManager.size.mockReturnValueOnce(3);
     mockAlgorithms.getAllParts.mockReturnValueOnce(['actor-root']);
-    const viaActor = service.getAllParts({ body: { root: 'bp-root' } }, 'actor-1');
+    const viaActor = service.getAllParts(
+      { body: { root: 'bp-root' } },
+      'actor-1'
+    );
     expect(mockAlgorithms.getAllParts).toHaveBeenCalledWith(
       'actor-1',
       cacheManager,
       entityManager
     );
-    expect(queryCache.cacheGetAllParts).toHaveBeenLastCalledWith(
-      'actor-1',
-      ['actor-root']
-    );
+    expect(queryCache.cacheGetAllParts).toHaveBeenLastCalledWith('actor-1', [
+      'actor-root',
+    ]);
     expect(viaActor).toEqual(['actor-root']);
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining("Actor 'actor-1' -> Using actor as cache root")
     );
   });
@@ -430,10 +482,14 @@ describe('BodyGraphService integration coverage enhancement', () => {
     entityManager.setComponent('hand', 'anatomy:tag', { strength: 10 });
     entityManager.setComponent('arm', 'anatomy:tag', {});
 
-    expect(service.hasPartWithComponent({ body: { root: 'ignored' } }, 'anatomy:tag')).toBe(true);
+    expect(
+      service.hasPartWithComponent({ body: { root: 'ignored' } }, 'anatomy:tag')
+    ).toBe(true);
 
     getAllPartsSpy.mockReturnValue(['arm']);
-    expect(service.hasPartWithComponent({ body: { root: 'ignored' } }, 'anatomy:tag')).toBe(false);
+    expect(
+      service.hasPartWithComponent({ body: { root: 'ignored' } }, 'anatomy:tag')
+    ).toBe(false);
 
     getAllPartsSpy.mockReturnValue(['torso', 'leg']);
     entityManager.setComponent('leg', 'anatomy:sensors', {
@@ -464,8 +520,12 @@ describe('BodyGraphService integration coverage enhancement', () => {
   it('validates input for body graph retrieval and builds cache', async () => {
     const { service, entityManager, cacheManager } = createService();
 
-    await expect(service.getBodyGraph('')).rejects.toThrow(InvalidArgumentError);
-    await expect(service.getBodyGraph(null)).rejects.toThrow('Entity ID is required');
+    await expect(service.getBodyGraph('')).rejects.toThrow(
+      InvalidArgumentError
+    );
+    await expect(service.getBodyGraph(null)).rejects.toThrow(
+      'Entity ID is required'
+    );
 
     await expect(service.getBodyGraph('actor-1')).rejects.toThrow(
       'Entity actor-1 has no anatomy:body component'
@@ -474,11 +534,16 @@ describe('BodyGraphService integration coverage enhancement', () => {
     entityManager.setComponent('actor-1', 'anatomy:body', {
       body: { root: 'bp-root' },
     });
-    const getAllPartsSpy = jest.spyOn(service, 'getAllParts').mockReturnValue(['torso']);
+    const getAllPartsSpy = jest
+      .spyOn(service, 'getAllParts')
+      .mockReturnValue(['torso']);
     cacheManager.get.mockReturnValue({ children: ['arm'] });
 
     const graph = await service.getBodyGraph('actor-1');
-    expect(cacheManager.buildCache).toHaveBeenCalledWith('actor-1', entityManager);
+    expect(cacheManager.buildCache).toHaveBeenCalledWith(
+      'actor-1',
+      entityManager
+    );
     expect(graph.getAllPartIds()).toEqual(['torso']);
     expect(graph.getConnectedParts('actor-1')).toEqual(['arm']);
 
@@ -488,7 +553,9 @@ describe('BodyGraphService integration coverage enhancement', () => {
   it('retrieves anatomy data and validates identifiers', async () => {
     const { service, entityManager, logger } = createService();
 
-    await expect(service.getAnatomyData('')).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getAnatomyData('')).rejects.toThrow(
+      InvalidArgumentError
+    );
 
     const missing = await service.getAnatomyData('actor-2');
     expect(missing).toBeNull();

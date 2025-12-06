@@ -170,7 +170,13 @@ describe('BodyGraphService direct root coverage (integration)', () => {
     // Without an actor cache we should fall back to the blueprint root branch.
     const initialParts = service.getAllParts(directBodyComponent);
     expect(initialParts).toEqual(
-      expect.arrayContaining(['torso', 'arm-left', 'hand-left', 'leg-left', 'foot-left'])
+      expect.arrayContaining([
+        'torso',
+        'arm-left',
+        'hand-left',
+        'leg-left',
+        'foot-left',
+      ])
     );
     expect(queryCache.cachedAllParts.get('torso')).toEqual(initialParts);
 
@@ -181,7 +187,14 @@ describe('BodyGraphService direct root coverage (integration)', () => {
       'actor-1'
     );
     expect(actorAware).toEqual(
-      expect.arrayContaining(['actor-1', 'torso', 'arm-left', 'hand-left', 'leg-left', 'foot-left'])
+      expect.arrayContaining([
+        'actor-1',
+        'torso',
+        'arm-left',
+        'hand-left',
+        'leg-left',
+        'foot-left',
+      ])
     );
     expect(queryCache.cachedAllParts.get('actor-1')).toEqual(actorAware);
 
@@ -204,7 +217,9 @@ describe('BodyGraphService direct root coverage (integration)', () => {
     expect(afterDetach).not.toContain('hand-left');
     expect(queryCache.cachedAllParts.get('actor-1')).toEqual(afterDetach);
     expect(eventDispatcher.events.at(-1).payload.detachedCount).toBe(2);
-    expect(logger.infoCalls.some(({ message }) => message.includes('Detached'))).toBe(true);
+    expect(
+      logger.infoCalls.some(({ message }) => message.includes('Detached'))
+    ).toBe(true);
   });
 
   it('logs and returns empty results when no root id is available', () => {

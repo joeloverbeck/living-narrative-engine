@@ -99,7 +99,8 @@ class InMemoryEntityManager {
     }
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -269,9 +270,20 @@ describe('BodyGraphService real module interactions', () => {
 
     expect(service.getParent('leftHand')).toBe('leftArm');
     expect(service.getChildren('torso').sort()).toEqual(
-      ['leftArm', 'rightArm', 'head', 'cyberArm', 'floatingWing', 'droneDock'].sort()
+      [
+        'leftArm',
+        'rightArm',
+        'head',
+        'cyberArm',
+        'floatingWing',
+        'droneDock',
+      ].sort()
     );
-    expect(service.getAncestors('leftHand')).toEqual(['leftArm', 'torso', 'actor']);
+    expect(service.getAncestors('leftHand')).toEqual([
+      'leftArm',
+      'torso',
+      'actor',
+    ]);
     expect(service.getAllDescendants('leftHand')).toEqual([]);
     expect(service.getAllDescendants('torso').sort()).toEqual(
       [
@@ -286,8 +298,12 @@ describe('BodyGraphService real module interactions', () => {
       ].sort()
     );
 
-    expect(service.hasPartWithComponent(bodyComponent, 'appearance:color')).toBe(true);
-    expect(service.hasPartWithComponent(bodyComponent, 'unknown:component')).toBe(false);
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'appearance:color')
+    ).toBe(true);
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'unknown:component')
+    ).toBe(false);
 
     expect(
       service.hasPartWithComponentValue(
@@ -306,7 +322,9 @@ describe('BodyGraphService real module interactions', () => {
       )
     ).toEqual({ found: false });
 
-    await expect(service.getBodyGraph(123)).rejects.toBeInstanceOf(InvalidArgumentError);
+    await expect(service.getBodyGraph(123)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('torso')).rejects.toThrow(
       'has no anatomy:body component'
     );
@@ -324,7 +342,9 @@ describe('BodyGraphService real module interactions', () => {
     expectSameMembers(cachedPartsBeforeDetach, allPartsFirst);
 
     const subgraphSpy = jest.spyOn(AnatomyGraphAlgorithms, 'getSubgraph');
-    const detachResult = await service.detachPart('leftArm', { reason: 'injury' });
+    const detachResult = await service.detachPart('leftArm', {
+      reason: 'injury',
+    });
     expect(subgraphSpy).toHaveBeenCalledWith('leftArm', expect.anything());
     expect(detachResult.parentId).toBe('torso');
     expect(detachResult.socketId).toBe('left_shoulder');
@@ -361,8 +381,12 @@ describe('BodyGraphService real module interactions', () => {
 
     expect(service.validateCache()).toEqual({ valid: true, issues: [] });
 
-    await expect(service.detachPart('actor')).rejects.toBeInstanceOf(InvalidArgumentError);
-    await expect(service.detachPart('missing')).rejects.toBeInstanceOf(InvalidArgumentError);
+    await expect(service.detachPart('actor')).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
+    await expect(service.detachPart('missing')).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
   });
 
   it('supports non-cascade detachment and anatomy data lookups', async () => {
@@ -382,7 +406,9 @@ describe('BodyGraphService real module interactions', () => {
 
     await service.buildAdjacencyCache('actor');
 
-    await expect(service.getAnatomyData(42)).rejects.toBeInstanceOf(InvalidArgumentError);
+    await expect(service.getAnatomyData(42)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
     expect(await service.getAnatomyData('unknown')).toBeNull();
     expect(await service.getAnatomyData('torso')).toBeNull();
     expect(await service.getAnatomyData('actor')).toEqual({
@@ -404,7 +430,10 @@ describe('BodyGraphService real module interactions', () => {
     expect(latestEvent.payload.reason).toBe('maintenance');
 
     await service.buildAdjacencyCache('actor');
-    const partsAfterDetachingRightArm = service.getAllParts(bodyComponent, 'actor');
+    const partsAfterDetachingRightArm = service.getAllParts(
+      bodyComponent,
+      'actor'
+    );
     expectSameMembers(partsAfterDetachingRightArm, [
       'actor',
       'torso',

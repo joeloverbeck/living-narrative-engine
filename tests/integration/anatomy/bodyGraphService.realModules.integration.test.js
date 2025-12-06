@@ -90,14 +90,16 @@ const createLogger = () => {
     warn: [],
     error: [],
   };
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((value) =>
-        typeof value === 'string' ? value : JSON.stringify(value)
-      )
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((value) =>
+          typeof value === 'string' ? value : JSON.stringify(value)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
   return {
     messages,
     debug: capture('debug'),
@@ -222,7 +224,7 @@ describe('BodyGraphService integration with real cache + query modules', () => {
     const secondCall = service.getAllParts(bodyComponent, 'actor');
     expectArrayToContainSameMembers(secondCall, allFromActor);
     expect(
-      logger.messages.info.some((message) =>
+      logger.messages.debug.some((message) =>
         message.includes('CACHE HIT for cache root')
       )
     ).toBe(true);
@@ -287,12 +289,12 @@ describe('BodyGraphService integration with real cache + query modules', () => {
       )
     ).toEqual({ found: false });
 
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'sensors:touch')
-    ).toBe(true);
-    expect(
-      service.hasPartWithComponent(bodyComponent, 'inventory:slot')
-    ).toBe(false);
+    expect(service.hasPartWithComponent(bodyComponent, 'sensors:touch')).toBe(
+      true
+    );
+    expect(service.hasPartWithComponent(bodyComponent, 'inventory:slot')).toBe(
+      false
+    );
   });
 
   it('detaches cascading parts and invalidates caches', async () => {

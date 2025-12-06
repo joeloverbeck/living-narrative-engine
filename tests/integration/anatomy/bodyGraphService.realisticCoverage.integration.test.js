@@ -93,12 +93,16 @@ const createLogger = () => {
     error: [],
   };
 
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((value) =>
+          typeof value === 'string' ? value : JSON.stringify(value)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
 
   return {
     messages,
@@ -116,7 +120,10 @@ const createBodyComponent = () => ({
   structure: {
     rootPartId: 'torso',
     parts: {
-      torso: { children: ['leftArm', 'rightArm', 'head', 'heart'], partType: 'torso' },
+      torso: {
+        children: ['leftArm', 'rightArm', 'head', 'heart'],
+        partType: 'torso',
+      },
       leftArm: { children: ['leftHand'], partType: 'arm' },
       rightArm: { children: [], partType: 'arm' },
       leftHand: { children: [], partType: 'hand' },
@@ -190,14 +197,14 @@ describe('BodyGraphService integration – realistic coverage', () => {
   });
 
   it('validates required constructor dependencies', () => {
-    expect(() => new BodyGraphService({ logger, eventDispatcher: dispatcher })).toThrow(
-      'entityManager is required',
-    );
-    expect(() => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })).toThrow(
-      'logger is required',
-    );
+    expect(
+      () => new BodyGraphService({ logger, eventDispatcher: dispatcher })
+    ).toThrow('entityManager is required');
+    expect(
+      () => new BodyGraphService({ entityManager, eventDispatcher: dispatcher })
+    ).toThrow('logger is required');
     expect(() => new BodyGraphService({ entityManager, logger })).toThrow(
-      'eventDispatcher is required',
+      'eventDispatcher is required'
     );
   });
 
@@ -208,20 +215,30 @@ describe('BodyGraphService integration – realistic coverage', () => {
 
     const blueprintParts = service.getAllParts({ root: 'torso' });
     expect([...blueprintParts].sort()).toEqual(
-      ['torso', 'leftArm', 'leftHand', 'rightArm', 'head', 'heart'].sort(),
+      ['torso', 'leftArm', 'leftHand', 'rightArm', 'head', 'heart'].sort()
     );
 
     const actorParts = service.getAllParts(bodyComponent, actorId);
     expect([...actorParts].sort()).toEqual(
-      ['actor', 'torso', 'leftArm', 'leftHand', 'rightArm', 'head', 'heart'].sort(),
+      [
+        'actor',
+        'torso',
+        'leftArm',
+        'leftHand',
+        'rightArm',
+        'head',
+        'heart',
+      ].sort()
     );
 
     const repeatCall = service.getAllParts(bodyComponent, actorId);
     expect([...repeatCall].sort()).toEqual([...actorParts].sort());
     expect(
-      logger.messages.info.some((message) =>
-        message.includes('BodyGraphService.getAllParts: CACHE HIT for cache root'),
-      ),
+      logger.messages.debug.some((message) =>
+        message.includes(
+          'BodyGraphService.getAllParts: CACHE HIT for cache root'
+        )
+      )
     ).toBe(true);
 
     const arms = service.findPartsByType(actorId, 'arm');
@@ -231,20 +248,26 @@ describe('BodyGraphService integration – realistic coverage', () => {
     expect(cachedArms.sort()).toEqual(['leftArm', 'rightArm'].sort());
     expect(
       logger.messages.debug.some((message) =>
-        message.includes("AnatomyQueryCache: Cache hit for key 'findPartsByType"),
-      ),
+        message.includes(
+          "AnatomyQueryCache: Cache hit for key 'findPartsByType"
+        )
+      )
     ).toBe(true);
 
     expect(service.getChildren('torso').sort()).toEqual(
-      ['leftArm', 'rightArm', 'head', 'heart'].sort(),
+      ['leftArm', 'rightArm', 'head', 'heart'].sort()
     );
     expect(service.getChildren('missing')).toEqual([]);
     expect(service.getParent('leftHand')).toBe('leftArm');
     expect(service.getParent('actor')).toBeNull();
-    expect(service.getAncestors('leftHand')).toEqual(['leftArm', 'torso', 'actor']);
+    expect(service.getAncestors('leftHand')).toEqual([
+      'leftArm',
+      'torso',
+      'actor',
+    ]);
     expect(service.getAncestors('actor')).toEqual([]);
     expect(service.getAllDescendants('torso').sort()).toEqual(
-      ['leftArm', 'leftHand', 'rightArm', 'head', 'heart'].sort(),
+      ['leftArm', 'leftHand', 'rightArm', 'head', 'heart'].sort()
     );
     expect(service.getAllDescendants('head')).toEqual([]);
 
@@ -254,25 +277,30 @@ describe('BodyGraphService integration – realistic coverage', () => {
     const path = service.getPath('leftHand', 'heart');
     expect(path).toEqual(['leftHand', 'leftArm', 'torso', 'heart']);
 
-    const sensorsResult = service.hasPartWithComponent(bodyComponent, 'sensors:touch');
+    const sensorsResult = service.hasPartWithComponent(
+      bodyComponent,
+      'sensors:touch'
+    );
     expect(sensorsResult).toBe(true);
-    expect(service.hasPartWithComponent(bodyComponent, 'inventory:slot')).toBe(false);
+    expect(service.hasPartWithComponent(bodyComponent, 'inventory:slot')).toBe(
+      false
+    );
 
     expect(
       service.hasPartWithComponentValue(
         bodyComponent,
         'custom:decor',
         'details.color',
-        'blue',
-      ),
+        'blue'
+      )
     ).toEqual({ found: true, partId: 'leftArm' });
     expect(
       service.hasPartWithComponentValue(
         bodyComponent,
         'custom:decor',
         'details.color',
-        'green',
-      ),
+        'green'
+      )
     ).toEqual({ found: false });
 
     expect(service.getAllParts(null)).toEqual([]);
@@ -295,9 +323,11 @@ describe('BodyGraphService integration – realistic coverage', () => {
 
     expect(service.hasCache(actorId)).toBe(false);
     expect(
-      dispatcher.events.some((event) =>
-        event.eventId === LIMB_DETACHED_EVENT_ID && event.payload.detachedCount === 2,
-      ),
+      dispatcher.events.some(
+        (event) =>
+          event.eventId === LIMB_DETACHED_EVENT_ID &&
+          event.payload.detachedCount === 2
+      )
     ).toBe(true);
 
     const nonCascade = await service.detachPart('rightArm', {
@@ -308,24 +338,36 @@ describe('BodyGraphService integration – realistic coverage', () => {
     expect(dispatcher.events.at(-1).payload.reason).toBe('surgical');
 
     await expect(service.detachPart('ornament')).rejects.toThrow(
-      "Entity 'ornament' has no joint component - cannot detach",
+      "Entity 'ornament' has no joint component - cannot detach"
     );
   });
 
   it('provides body graph helpers and anatomy metadata', async () => {
     const graph = await service.getBodyGraph(actorId);
     expect(graph.getAllPartIds().sort()).toEqual(
-      ['actor', 'torso', 'leftArm', 'leftHand', 'rightArm', 'head', 'heart'].sort(),
+      [
+        'actor',
+        'torso',
+        'leftArm',
+        'leftHand',
+        'rightArm',
+        'head',
+        'heart',
+      ].sort()
     );
     expect(graph.getConnectedParts('actor')).toEqual(['torso']);
     expect(graph.getConnectedParts('torso').sort()).toEqual(
-      ['leftArm', 'rightArm', 'head', 'heart'].sort(),
+      ['leftArm', 'rightArm', 'head', 'heart'].sort()
     );
 
-    await expect(service.getBodyGraph(null)).rejects.toBeInstanceOf(InvalidArgumentError);
-    await expect(service.getBodyGraph(42)).rejects.toBeInstanceOf(InvalidArgumentError);
+    await expect(service.getBodyGraph(null)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
+    await expect(service.getBodyGraph(42)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('spectator')).rejects.toThrow(
-      'has no anatomy:body component',
+      'has no anatomy:body component'
     );
 
     await expect(service.getAnatomyData(actorId)).resolves.toEqual({
@@ -333,7 +375,9 @@ describe('BodyGraphService integration – realistic coverage', () => {
       rootEntityId: actorId,
     });
     await expect(service.getAnatomyData('spectator')).resolves.toBeNull();
-    await expect(service.getAnatomyData(0)).rejects.toBeInstanceOf(InvalidArgumentError);
+    await expect(service.getAnatomyData(0)).rejects.toBeInstanceOf(
+      InvalidArgumentError
+    );
   });
 
   it('detects cache integrity problems', () => {
@@ -346,13 +390,17 @@ describe('BodyGraphService integration – realistic coverage', () => {
     });
     result = service.validateCache();
     expect(result.valid).toBe(false);
-    expect(result.issues.some((issue) => issue.includes('Parent mismatch'))).toBe(true);
+    expect(
+      result.issues.some((issue) => issue.includes('Parent mismatch'))
+    ).toBe(true);
 
     entityManager.removeEntity('leftArm');
     result = service.validateCache();
     expect(result.valid).toBe(false);
     expect(
-      result.issues.some((issue) => issue.includes("Cached entity 'leftArm' no longer exists")),
+      result.issues.some((issue) =>
+        issue.includes("Cached entity 'leftArm' no longer exists")
+      )
     ).toBe(true);
   });
 });

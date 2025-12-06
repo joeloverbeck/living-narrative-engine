@@ -24,12 +24,16 @@ const createLogger = () => {
     error: [],
   };
 
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((value) =>
+          typeof value === 'string' ? value : JSON.stringify(value)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
 
   return {
     messages,
@@ -284,7 +288,9 @@ describe('BodyGraphService dependency validation and cache integrity', () => {
     const postDetachValidation = service.validateCache();
     expect(postDetachValidation).toEqual({ valid: true, issues: [] });
 
-    entityManager.setComponent('actor', 'anatomy:body', { body: { root: 'actor' } });
+    entityManager.setComponent('actor', 'anatomy:body', {
+      body: { root: 'actor' },
+    });
     await expect(service.getAnatomyData('actor')).resolves.toEqual({
       recipeId: null,
       rootEntityId: 'actor',

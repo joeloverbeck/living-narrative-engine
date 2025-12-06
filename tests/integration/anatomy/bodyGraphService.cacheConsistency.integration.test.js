@@ -192,7 +192,10 @@ const populateAnatomy = (entityManager) => {
 
   entityManager.createEntity('blueprint-arm', {
     'anatomy:part': { subType: 'arm' },
-    'anatomy:joint': { parentId: 'blueprint-torso', socketId: 'template-shoulder' },
+    'anatomy:joint': {
+      parentId: 'blueprint-torso',
+      socketId: 'template-shoulder',
+    },
   });
 
   entityManager.createEntity('blueprint-hand', {
@@ -289,9 +292,16 @@ describe('BodyGraphService integration – cache consistency and workflows', () 
       expect.arrayContaining(['torso', 'leftArm', 'rightArm', 'heart'])
     );
 
-    const blueprintParts = service.getAllParts(blueprintBodyComponent, 'nobody');
+    const blueprintParts = service.getAllParts(
+      blueprintBodyComponent,
+      'nobody'
+    );
     expect(blueprintParts).toEqual(
-      expect.arrayContaining(['blueprint-torso', 'blueprint-arm', 'blueprint-hand'])
+      expect.arrayContaining([
+        'blueprint-torso',
+        'blueprint-arm',
+        'blueprint-hand',
+      ])
     );
 
     const armParts = service.findPartsByType('actor', 'arm').sort();
@@ -303,16 +313,18 @@ describe('BodyGraphService integration – cache consistency and workflows', () 
     const cachedArmParts = service.findPartsByType('actor', 'arm');
     expect(cachedArmParts).toEqual(armParts);
 
-    expect(queryCache.getCachedFindPartsByType('actor', 'arm')).toEqual(armParts);
+    expect(queryCache.getCachedFindPartsByType('actor', 'arm')).toEqual(
+      armParts
+    );
     expect(queryCache.getCachedGetAllParts('actor')).toEqual(actorParts);
 
-    expect(
-      service.hasPartWithComponent({ root: 'torso' }, 'anatomy:tag')
-    ).toBe(true);
+    expect(service.hasPartWithComponent({ root: 'torso' }, 'anatomy:tag')).toBe(
+      true
+    );
     entityManager.setComponent('leftArm', 'anatomy:tag', {});
-    expect(
-      service.hasPartWithComponent({ root: 'torso' }, 'anatomy:tag')
-    ).toBe(false);
+    expect(service.hasPartWithComponent({ root: 'torso' }, 'anatomy:tag')).toBe(
+      false
+    );
 
     expect(
       service.hasPartWithComponentValue(
@@ -347,7 +359,9 @@ describe('BodyGraphService integration – cache consistency and workflows', () 
     ]);
     expect(bodyGraph.getConnectedParts('unknown')).toEqual([]);
 
-    await expect(service.getBodyGraph(42)).rejects.toThrow(InvalidArgumentError);
+    await expect(service.getBodyGraph(42)).rejects.toThrow(
+      InvalidArgumentError
+    );
     await expect(service.getBodyGraph('floating')).rejects.toThrow(
       'Entity floating has no anatomy:body component'
     );
@@ -385,7 +399,9 @@ describe('BodyGraphService integration – cache consistency and workflows', () 
     expect(dispatcher.events).toHaveLength(1);
     expect(dispatcher.events[0].eventId).toBe(LIMB_DETACHED_EVENT_ID);
     expect(service.hasCache('actor')).toBe(false);
-    expect(entityManager.getComponentData('leftArm', 'anatomy:joint')).toBeNull();
+    expect(
+      entityManager.getComponentData('leftArm', 'anatomy:joint')
+    ).toBeNull();
 
     entityManager.setComponent('leftArm', 'anatomy:joint', {
       parentId: 'torso',

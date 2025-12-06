@@ -17,7 +17,9 @@ class RecordingLogger {
 
   #capture(level, args) {
     const rendered = args
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
+      .map((value) =>
+        typeof value === 'string' ? value : JSON.stringify(value)
+      )
       .join(' ');
     this.messages[level].push(rendered);
   }
@@ -130,7 +132,8 @@ class InMemoryEntityManager {
 
     return {
       id: entityId,
-      getComponentData: (componentId) => this.getComponentData(entityId, componentId),
+      getComponentData: (componentId) =>
+        this.getComponentData(entityId, componentId),
     };
   }
 }
@@ -210,7 +213,9 @@ describe('BodyGraphService integration - graph traversal and cache coordination'
       socketId: 'socket-right-shoulder',
     });
 
-    entityManager.addComponent(rightHandId, 'anatomy:part', { subType: 'hand' });
+    entityManager.addComponent(rightHandId, 'anatomy:part', {
+      subType: 'hand',
+    });
     entityManager.addComponent(rightHandId, 'anatomy:joint', {
       parentId: rightArmId,
       socketId: 'socket-right-wrist',
@@ -266,9 +271,9 @@ describe('BodyGraphService integration - graph traversal and cache coordination'
     expect(service.getAllParts(null)).toEqual([]);
     expect(service.getAllParts({})).toEqual([]);
 
-    expect(service.hasPartWithComponent(bodyComponent, 'equipment:weapon')).toBe(
-      true
-    );
+    expect(
+      service.hasPartWithComponent(bodyComponent, 'equipment:weapon')
+    ).toBe(true);
     expect(
       service.hasPartWithComponent(bodyComponent, 'perception:scanner')
     ).toBe(true);
@@ -413,9 +418,7 @@ describe('BodyGraphService integration - graph traversal and cache coordination'
     });
     expect(service.hasCache(actorId)).toBe(false);
     expect(service.getChildren(torsoId)).toEqual([]);
-    expect(
-      dispatcher.events[dispatcher.events.length - 1]
-    ).toMatchObject({
+    expect(dispatcher.events[dispatcher.events.length - 1]).toMatchObject({
       eventId: LIMB_DETACHED_EVENT_ID,
       payload: expect.objectContaining({
         detachedEntityId: leftArmId,
@@ -455,7 +458,9 @@ describe('BodyGraphService integration - graph traversal and cache coordination'
     );
 
     const danglingId = 'part-dangling';
-    entityManager.addComponent(danglingId, 'anatomy:part', { subType: 'tether' });
+    entityManager.addComponent(danglingId, 'anatomy:part', {
+      subType: 'tether',
+    });
     entityManager.addComponent(danglingId, 'anatomy:joint', {
       parentId: null,
       socketId: 'socket-dangling',
@@ -477,9 +482,7 @@ describe('BodyGraphService integration - graph traversal and cache coordination'
       bodyComponent,
       actorId
     );
-    expect(internalCacheParts).toEqual(
-      expect.arrayContaining(rebuiltAllParts)
-    );
+    expect(internalCacheParts).toEqual(expect.arrayContaining(rebuiltAllParts));
 
     await expect(service.getBodyGraph('missing-actor')).rejects.toThrow(
       'has no anatomy:body component'
@@ -502,14 +505,19 @@ describe('BodyGraphService integration - graph traversal and cache coordination'
         },
       },
     });
-    entityManager.addComponent(blankRootId, 'anatomy:part', { subType: 'core' });
+    entityManager.addComponent(blankRootId, 'anatomy:part', {
+      subType: 'core',
+    });
     entityManager.addComponent(blankRootId, 'anatomy:joint', {
       parentId: blankActorId,
       socketId: 'socket-blank-root',
     });
     await service.buildAdjacencyCache(blankActorId);
     const blankAnatomy = await service.getAnatomyData(blankActorId);
-    expect(blankAnatomy).toEqual({ recipeId: null, rootEntityId: blankActorId });
+    expect(blankAnatomy).toEqual({
+      recipeId: null,
+      rootEntityId: blankActorId,
+    });
     await expect(service.detachPart(actorId)).rejects.toThrow(
       "Entity 'actor-root' has no joint component - cannot detach"
     );

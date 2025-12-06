@@ -85,12 +85,16 @@ const createLogger = () => {
     error: [],
   };
 
-  const capture = (level) => (...args) => {
-    const rendered = args
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
-      .join(' ');
-    messages[level].push(rendered);
-  };
+  const capture =
+    (level) =>
+    (...args) => {
+      const rendered = args
+        .map((value) =>
+          typeof value === 'string' ? value : JSON.stringify(value)
+        )
+        .join(' ');
+      messages[level].push(rendered);
+    };
 
   return {
     messages,
@@ -143,12 +147,18 @@ const createBodySet = (actorId, label) => {
     },
     [leftArmId]: {
       'anatomy:part': { subType: 'arm' },
-      'anatomy:joint': { parentId: torsoId, socketId: `${label}-shoulder-left` },
+      'anatomy:joint': {
+        parentId: torsoId,
+        socketId: `${label}-shoulder-left`,
+      },
       'custom:decor': {},
     },
     [rightArmId]: {
       'anatomy:part': { subType: 'arm' },
-      'anatomy:joint': { parentId: torsoId, socketId: `${label}-shoulder-right` },
+      'anatomy:joint': {
+        parentId: torsoId,
+        socketId: `${label}-shoulder-right`,
+      },
     },
     [leftHandId]: {
       'anatomy:part': { subType: 'hand' },
@@ -157,7 +167,10 @@ const createBodySet = (actorId, label) => {
     },
     [rightHandId]: {
       'anatomy:part': { subType: 'hand' },
-      'anatomy:joint': { parentId: rightArmId, socketId: `${label}-wrist-right` },
+      'anatomy:joint': {
+        parentId: rightArmId,
+        socketId: `${label}-wrist-right`,
+      },
     },
     [headId]: {
       'anatomy:part': { subType: 'head' },
@@ -234,20 +247,26 @@ describe('BodyGraphService integration – multi-root cache coordination', () =>
     const minimalLogger = createLogger();
     const minimalDispatcher = new RecordingDispatcher();
 
-    expect(() =>
-      new BodyGraphService({
-        logger: minimalLogger,
-        eventDispatcher: minimalDispatcher,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          logger: minimalLogger,
+          eventDispatcher: minimalDispatcher,
+        })
     ).toThrow(InvalidArgumentError);
-    expect(() =>
-      new BodyGraphService({
-        entityManager: minimalManager,
-        eventDispatcher: minimalDispatcher,
-      })
+    expect(
+      () =>
+        new BodyGraphService({
+          entityManager: minimalManager,
+          eventDispatcher: minimalDispatcher,
+        })
     ).toThrow(InvalidArgumentError);
-    expect(() =>
-      new BodyGraphService({ entityManager: minimalManager, logger: minimalLogger })
+    expect(
+      () =>
+        new BodyGraphService({
+          entityManager: minimalManager,
+          logger: minimalLogger,
+        })
     ).toThrow(InvalidArgumentError);
 
     const defaultCacheService = new BodyGraphService({
@@ -346,7 +365,10 @@ describe('BodyGraphService integration – multi-root cache coordination', () =>
         actorA.ids.rightArmId,
       ])
     );
-    const ghostLookup = service.getAllParts(actorA.bodyComponent, 'ghost-actor');
+    const ghostLookup = service.getAllParts(
+      actorA.bodyComponent,
+      'ghost-actor'
+    );
     expect(ghostLookup).toEqual(expect.arrayContaining(armsFirst));
     const allParts = service.getAllParts(actorA.bodyComponent, actorA.actorId);
     expect(allParts).toEqual(expect.arrayContaining(armsFirst));
@@ -358,15 +380,15 @@ describe('BodyGraphService integration – multi-root cache coordination', () =>
     ]);
     queryCache.invalidateRoot(actorA.actorId);
 
-    expect(service.hasPartWithComponent(actorA.bodyComponent, 'custom:decor')).toBe(
-      false
-    );
+    expect(
+      service.hasPartWithComponent(actorA.bodyComponent, 'custom:decor')
+    ).toBe(false);
     entityManager.setComponent(actorA.ids.leftArmId, 'custom:decor', {
       details: { color: 'blue' },
     });
-    expect(service.hasPartWithComponent(actorA.bodyComponent, 'custom:decor')).toBe(
-      true
-    );
+    expect(
+      service.hasPartWithComponent(actorA.bodyComponent, 'custom:decor')
+    ).toBe(true);
     expect(
       service.hasPartWithComponent(actorA.bodyComponent, 'missing:component')
     ).toBe(false);
@@ -389,11 +411,13 @@ describe('BodyGraphService integration – multi-root cache coordination', () =>
     expect(service.getAnatomyRoot(actorA.ids.leftHandId)).toBe(actorA.actorId);
     expect(service.getAnatomyRoot('spectator')).toBe('spectator');
 
-    expect(service.getPath(actorA.ids.leftHandId, actorA.ids.leftHandId)).toEqual([
-      actorA.ids.leftHandId,
-    ]);
+    expect(
+      service.getPath(actorA.ids.leftHandId, actorA.ids.leftHandId)
+    ).toEqual([actorA.ids.leftHandId]);
     expect(service.getPath(actorA.ids.leftHandId, 'loose:trinket')).toBeNull();
-    expect(service.getPath(actorA.ids.leftHandId, actorA.ids.rightHandId)).toEqual([
+    expect(
+      service.getPath(actorA.ids.leftHandId, actorA.ids.rightHandId)
+    ).toEqual([
       actorA.ids.leftHandId,
       actorA.ids.leftArmId,
       actorA.ids.torsoId,

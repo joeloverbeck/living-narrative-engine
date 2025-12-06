@@ -150,7 +150,11 @@ describe('BodyGraphService integration with real EntityManager', () => {
 
     registerEntityDefinition(registry, 'core:actor', {
       'core:name': { text: 'Actor template' },
-      'anatomy:body': { recipeId: 'test:humanoid', body: null, structure: null },
+      'anatomy:body': {
+        recipeId: 'test:humanoid',
+        body: null,
+        structure: null,
+      },
     });
 
     const makePartDefinition = (id, subType, sockets = []) => {
@@ -308,7 +312,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
         partIds.head,
         partIds.mouth,
         partIds.heart,
-      ]),
+      ])
     );
 
     const fromBlueprint = service.getAllParts(bodyComponent);
@@ -322,7 +326,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
         partIds.head,
         partIds.mouth,
         partIds.heart,
-      ]),
+      ])
     );
 
     const directRoot = service.getAllParts({ root: partIds.torso });
@@ -333,7 +337,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
 
     const armsFirst = service.findPartsByType(actorId, 'arm');
     expect(armsFirst).toEqual(
-      expect.arrayContaining([partIds.leftArm, partIds.rightArm]),
+      expect.arrayContaining([partIds.leftArm, partIds.rightArm])
     );
     const armsSecond = service.findPartsByType(actorId, 'arm');
     expect(armsSecond).toBe(armsFirst);
@@ -355,7 +359,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
     expect(service.getChildren('ghost')).toEqual([]);
 
@@ -378,14 +382,14 @@ describe('BodyGraphService integration with real EntityManager', () => {
         partIds.head,
         partIds.mouth,
         partIds.heart,
-      ]),
+      ])
     );
 
     expect(service.hasPartWithComponent(bodyComponent, 'equipment:grip')).toBe(
-      true,
+      true
     );
     expect(
-      service.hasPartWithComponent(bodyComponent, 'nonexistent:component'),
+      service.hasPartWithComponent(bodyComponent, 'nonexistent:component')
     ).toBe(false);
 
     expect(
@@ -393,8 +397,8 @@ describe('BodyGraphService integration with real EntityManager', () => {
         bodyComponent,
         'anatomy:status',
         'posture.state',
-        'raised',
-      ),
+        'raised'
+      )
     ).toEqual({ found: true, partId: partIds.leftArm });
 
     expect(
@@ -402,8 +406,8 @@ describe('BodyGraphService integration with real EntityManager', () => {
         bodyComponent,
         'anatomy:status',
         'posture.state',
-        'lowered',
-      ),
+        'lowered'
+      )
     ).toEqual({ found: false });
 
     const bodyGraph = await service.getBodyGraph(actorId);
@@ -414,7 +418,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
         partIds.rightArm,
         partIds.head,
         partIds.heart,
-      ]),
+      ])
     );
 
     const validation = service.validateCache();
@@ -422,17 +426,19 @@ describe('BodyGraphService integration with real EntityManager', () => {
     expect(validation.issues).toEqual([]);
 
     await expect(service.getBodyGraph(null)).rejects.toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
-    await expect(
-      service.getBodyGraph('npc-without-anatomy'),
-    ).rejects.toThrow('has no anatomy:body component');
+    await expect(service.getBodyGraph('npc-without-anatomy')).rejects.toThrow(
+      'has no anatomy:body component'
+    );
 
     await expect(service.getAnatomyData(actorId)).resolves.toEqual({
       recipeId: 'test:humanoid',
       rootEntityId: actorId,
     });
-    await expect(service.getAnatomyData('npc-without-anatomy')).resolves.toBeNull();
+    await expect(
+      service.getAnatomyData('npc-without-anatomy')
+    ).resolves.toBeNull();
   });
 
   it('detaches parts and invalidates real caches', async () => {
@@ -452,7 +458,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
         parentEntityId: partIds.torso,
         detachedCount: 2,
         reason: 'manual',
-      }),
+      })
     );
 
     expect(service.hasCache(actorId)).toBe(false);
@@ -482,7 +488,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
         detachedEntityId: partIds.head,
         detachedCount: 1,
         reason: 'surgery',
-      }),
+      })
     );
 
     await service.buildAdjacencyCache(actorId);
@@ -494,7 +500,7 @@ describe('BodyGraphService integration with real EntityManager', () => {
       instanceId: 'floating-arm',
     });
     await expect(service.detachPart(floatingArm.id)).rejects.toThrow(
-      InvalidArgumentError,
+      InvalidArgumentError
     );
   });
 });
