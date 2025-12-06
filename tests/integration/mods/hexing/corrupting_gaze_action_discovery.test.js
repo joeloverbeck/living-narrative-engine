@@ -99,6 +99,7 @@ describe('hexing:corrupting_gaze action discovery', () => {
       .withLocationComponent('room1')
       .asActor()
       .withComponent('hexing:is_hexer', {})
+      .withComponent('warding:corrupted', {})
       .withComponent('skills:resolve_skill', { value: 25 });
 
     const actor = actorBuilder.build();
@@ -123,6 +124,13 @@ describe('hexing:corrupting_gaze action discovery', () => {
   };
 
   describe('Action structure', () => {
+    it('requires actor to be a corrupted hexer', () => {
+      expect(corruptingGazeAction.required_components.actor).toEqual([
+        'hexing:is_hexer',
+        'warding:corrupted',
+      ]);
+    });
+
     it('uses opposed resolve vs resolve ratio contest with bounds and modifiers', () => {
       expect(corruptingGazeAction.chanceBased.enabled).toBe(true);
       expect(corruptingGazeAction.chanceBased.contestType).toBe('opposed');
@@ -179,6 +187,20 @@ describe('hexing:corrupting_gaze action discovery', () => {
         actorComponents: { 'hexing:is_hexer': undefined },
       });
       delete actor.components['hexing:is_hexer'];
+      configureActionDiscovery();
+
+      const ids = testFixture.testEnv
+        .getAvailableActions(actor.id)
+        .map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
+
+    it('is not available when actor is no longer corrupted', () => {
+      const { actor } = setupScenario({
+        actorComponents: { 'warding:corrupted': undefined },
+      });
+      delete actor.components['warding:corrupted'];
       configureActionDiscovery();
 
       const ids = testFixture.testEnv

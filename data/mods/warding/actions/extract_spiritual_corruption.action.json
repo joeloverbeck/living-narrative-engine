@@ -95,10 +95,10 @@
           }
         },
         "type": "flat",
-        "value": 5,
+        "value": -5,
         "tag": "target downed",
         "targetRole": "primary",
-        "description": "Bonus for extracting corruption from a downed target"
+        "description": "Penalty for extracting corruption from a downed target"
       }
     ]
   },

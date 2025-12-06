@@ -19,6 +19,7 @@ const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const JOINT_COMPONENT_ID = 'anatomy:joint';
 const BODY_COMPONENT_ID = 'anatomy:body';
 const DAMAGE_PROPAGATION_COMPONENT_ID = 'anatomy:damage_propagation';
+const INTERNAL_DAMAGE_PROPAGATED_EVENT = 'anatomy:internal_damage_propagated';
 
 const DAMAGE_APPLIED_EVENT = 'anatomy:damage_applied';
 const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
@@ -320,6 +321,29 @@ describe('Damage Application Mechanics', () => {
     });
   });
 
+  test('skips processing when damage amount resolves to zero', async () => {
+    await handler.execute(
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.torso,
+        damage_entry: { name: 'piercing', amount: 0 },
+      },
+      executionContext
+    );
+
+    expect(entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(
+      100
+    );
+    expect(getEventPayloads(DAMAGE_APPLIED_EVENT)).toHaveLength(0);
+    expect(getEventPayloads(PART_HEALTH_CHANGED_EVENT)).toHaveLength(0);
+    expect(getEventPayloads(INTERNAL_DAMAGE_PROPAGATED_EVENT)).toHaveLength(0);
+
+    const perceptibleEvents = dispatcher.dispatch.mock.calls.filter(
+      ([id]) => id === 'core:perceptible_event'
+    );
+    expect(perceptibleEvents).toHaveLength(0);
+  });
+
   test('lethal damage marks part destroyed and emits destruction event', async () => {
     await handler.execute(
       {
@@ -405,6 +429,34 @@ describe('Damage Application Mechanics', () => {
     expect(entityManager.getComponentData(ids.head, PART_HEALTH_COMPONENT_ID).state).toBe(
       'destroyed'
     );
+  });
+
+  test('does not propagate when parent part is already destroyed', async () => {
+    await entityManager.addComponent(ids.torso, PART_HEALTH_COMPONENT_ID, {
+      currentHealth: 0,
+      maxHealth: 100,
+      state: 'destroyed',
+      turnsInState: 0,
+    });
+
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+
+    await handler.execute(
+      {
+        entity_ref: ids.actor,
+        part_ref: ids.torso,
+        amount: 10,
+        damage_type: 'piercing',
+      },
+      executionContext
+    );
+
+    randomSpy.mockRestore();
+
+    expect(entityManager.getComponentData(ids.torso, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(0);
+    expect(entityManager.getComponentData(ids.heart, PART_HEALTH_COMPONENT_ID).currentHealth).toBe(50);
+    expect(getEventPayloads(DAMAGE_APPLIED_EVENT)).toHaveLength(0);
+    expect(getEventPayloads(INTERNAL_DAMAGE_PROPAGATED_EVENT)).toHaveLength(0);
   });
 
   test('turnsInState increments when state stays the same', async () => {

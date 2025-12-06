@@ -368,6 +368,28 @@ describe('DamageTypeEffectsService', () => {
         );
       });
 
+      it('should prefer per-call rng override when provided', async () => {
+        mockRngProvider.mockReturnValue(0.9); // Would fail stun
+        const overrideRng = jest.fn().mockReturnValue(0.1);
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'blunt',
+            amount: 55,
+            fracture: { enabled: true, thresholdFraction: 0.5, stunChance: 0.5 },
+          },
+          rng: overrideRng,
+        });
+
+        expect(overrideRng).toHaveBeenCalled();
+        expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+          'entity:player',
+          'anatomy:stunned',
+          expect.objectContaining({ sourcePartId: 'part:arm' })
+        );
+      });
+
       it('should not apply fracture when damage below threshold', async () => {
         await service.applyEffectsForDamage({
           ...baseParams,

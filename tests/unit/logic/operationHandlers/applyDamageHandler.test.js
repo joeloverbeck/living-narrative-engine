@@ -397,7 +397,8 @@ describe('ApplyDamageHandler', () => {
           10,             // damageAmount
           'blunt',        // damageType
           'entity1',      // ownerEntityId
-          propagationRules
+          propagationRules,
+          expect.any(Function) // rng
         );
       });
 
@@ -966,22 +967,23 @@ describe('ApplyDamageHandler', () => {
     });
 
     test('calculates wounded and critical states correctly', async () => {
-        const params = { entity_ref: 'e', part_ref: 'p', amount: 0, damage_type: 'd' };
+        // applyDamageHandler skips non-positive damage, so use a minimal positive amount
+        const params = { entity_ref: 'e', part_ref: 'p', amount: 1, damage_type: 'd' };
         em.hasComponent.mockImplementation((id, comp) => comp === PART_HEALTH_COMPONENT_ID);
 
         // Test Wounded (41-60%)
-        // Max 100, current 60 -> 60%
-        em.getComponentData.mockReturnValue({ currentHealth: 60, maxHealth: 100, state: 'healthy' });
-        await handler.execute({ ...params, amount: 0 }, executionContext);
+        // Max 100, current 61 -> 60% after 1 damage
+        em.getComponentData.mockReturnValue({ currentHealth: 61, maxHealth: 100, state: 'healthy' });
+        await handler.execute(params, executionContext);
         // 60% health is in the wounded range (41-60%)
         expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'wounded' }));
 
         em.addComponent.mockClear();
 
         // Test Critical (1-20%)
-        // Max 100, current 10 -> 10%
-        em.getComponentData.mockReturnValue({ currentHealth: 10, maxHealth: 100, state: 'healthy' });
-        await handler.execute({ ...params, amount: 0 }, executionContext);
+        // Max 100, current 21 -> 20% after 1 damage
+        em.getComponentData.mockReturnValue({ currentHealth: 21, maxHealth: 100, state: 'healthy' });
+        await handler.execute(params, executionContext);
         expect(em.addComponent).toHaveBeenCalledWith('p', PART_HEALTH_COMPONENT_ID, expect.objectContaining({ state: 'critical' }));
     });
 

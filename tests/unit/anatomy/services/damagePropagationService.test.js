@@ -836,6 +836,62 @@ describe('DamagePropagationService', () => {
 
         expect(result).toEqual([]);
       });
+
+      it('should use provided rngProvider for deterministic propagation success', () => {
+        mockEntityManager.getComponentData.mockReturnValue({
+          parentId: 'parent-part-1',
+        });
+
+        const deterministicRng = jest.fn().mockReturnValue(0.1);
+
+        const rules = [
+          {
+            childPartId: 'child-part-1',
+            baseProbability: 0.2,
+            damageFraction: 0.5,
+          },
+        ];
+
+        const result = service.propagateDamage(
+          'parent-part-1',
+          10,
+          'slashing',
+          'entity-1',
+          rules,
+          deterministicRng
+        );
+
+        expect(deterministicRng).toHaveBeenCalled();
+        expect(result.length).toBe(1);
+      });
+
+      it('should use provided rngProvider to skip propagation when roll is above probability', () => {
+        mockEntityManager.getComponentData.mockReturnValue({
+          parentId: 'parent-part-1',
+        });
+
+        const deterministicRng = jest.fn().mockReturnValue(0.9);
+
+        const rules = [
+          {
+            childPartId: 'child-part-1',
+            baseProbability: 0.2,
+            damageFraction: 0.5,
+          },
+        ];
+
+        const result = service.propagateDamage(
+          'parent-part-1',
+          10,
+          'slashing',
+          'entity-1',
+          rules,
+          deterministicRng
+        );
+
+        expect(deterministicRng).toHaveBeenCalled();
+        expect(result).toEqual([]);
+      });
     });
 
     describe('damageTypeModifiers probability calculation', () => {

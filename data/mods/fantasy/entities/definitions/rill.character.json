@@ -298,14 +298,20 @@
           "subjectType": "entity"
         },
         {
+          "text": "Aldous—potter at 12 Kiln Lane. Pale, clay-stained, procedural. Built a vessel to contain the entity in his chickens: something from buried ceramic, not simple possession. Keeps the coop key around his neck. Had a kiln explosion in his past. This is his extraction, his procedure.",
+          "subject": "Aldous (potter, 12 Kiln Lane)",
+          "subjectType": "entity",
+          "context": "Met at 12 Kiln Lane for the poultry extraction job"
+        },
+        {
           "text": "When asked who I was, Melissa said I'm the girl from the north road—watches her train—not her friend. I follow. It hit because it's true, and because it means I'm still outside whatever line she draws for \"hers.\"",
           "subject": "How Melissa frames me",
           "subjectType": "state"
         },
         {
-          "text": "The job is Vespera's contract: possessed/demonic chickens at 12 Kiln Lane on the north road. Melissa's going as backup, Bertram's tagging along, and I said I'm coming. My role is clear: stay back, don't interfere, and watch the whole picture.",
-          "subject": "Possessed poultry job (12 Kiln Lane)",
-          "subjectType": "plan"
+          "text": "We're at 12 Kiln Lane. Aldous' chickens are infected with an entity from buried ceramic—not just 'possessed.' He's got a vessel and an extraction procedure. This is containment work, not killing. Vespera agreed to his terms. When Aldous opened the coop, Melissa went in first. I stayed back like I'm supposed to—watched the briefing, hovered near Melissa. This is what 'watch the whole picture' actually looks like.",
+          "subject": "12 Kiln Lane job (in progress)",
+          "subjectType": "event"
         }
       ]
     },
@@ -322,7 +328,7 @@
       "value": 41
     },
     "skills:resolve_skill": {
-        "value": 75
+      "value": 75
     }
   }
 }

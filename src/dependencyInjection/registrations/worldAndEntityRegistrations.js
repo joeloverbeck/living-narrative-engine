@@ -82,6 +82,7 @@ import DamageAccumulator from '../../anatomy/services/damageAccumulator.js';
 import DamageNarrativeComposer from '../../anatomy/services/damageNarrativeComposer.js';
 import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../anatomy/services/damagePropagationService.js';
+import DamageResolutionService from '../../logic/services/damageResolutionService.js';
 import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
 import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
@@ -971,6 +972,25 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.DeathCheckService
+    )}.`
+  );
+
+  // Register DamageResolutionService
+  registrar.singletonFactory(tokens.DamageResolutionService, (c) => {
+    return new DamageResolutionService({
+      logger: c.resolve(tokens.ILogger),
+      entityManager: c.resolve(tokens.IEntityManager),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      damageTypeEffectsService: c.resolve(tokens.DamageTypeEffectsService),
+      damagePropagationService: c.resolve(tokens.DamagePropagationService),
+      deathCheckService: c.resolve(tokens.DeathCheckService),
+      damageAccumulator: c.resolve(tokens.DamageAccumulator),
+      damageNarrativeComposer: c.resolve(tokens.DamageNarrativeComposer),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.DamageResolutionService
     )}.`
   );
 

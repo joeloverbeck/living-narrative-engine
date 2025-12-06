@@ -82,9 +82,10 @@ describe('violence:handleBeakFumble macro', () => {
       const dispatchOp = handleBeakFumble.actions.find(
         (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
-      const description = dispatchOp.parameters.description_text.toLowerCase();
-      expect(description).toContain('losing balance');
-      expect(description).toContain('falling');
+      const description = dispatchOp.parameters.description_text;
+      const descriptionLower = description.toLowerCase();
+      expect(descriptionLower).toContain('losing balance');
+      expect(descriptionLower).toContain('falling');
     });
 
     it('should include beak reference in narrative text', () => {
@@ -93,6 +94,15 @@ describe('violence:handleBeakFumble macro', () => {
       );
       const description = dispatchOp.parameters.description_text.toLowerCase();
       expect(description).toContain('beak');
+    });
+
+    it('should mention the target in narrative text', () => {
+      const dispatchOp = handleBeakFumble.actions.find(
+        (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      const description = dispatchOp.parameters.description_text;
+      expect(description).toContain('{context.targetName}');
+      expect(description.toLowerCase()).toContain('attack');
     });
 
     it('should use action_target_general perception type', () => {
@@ -119,9 +129,11 @@ describe('violence:handleBeakFumble macro', () => {
           op.type === 'SET_VARIABLE' &&
           op.parameters.variable_name === 'logMessage'
       );
-      const message = setVarOp.parameters.value.toLowerCase();
-      expect(message).toContain('losing balance');
-      expect(message).toContain('falling');
+      const message = setVarOp.parameters.value;
+      const messageLower = message.toLowerCase();
+      expect(messageLower).toContain('losing balance');
+      expect(messageLower).toContain('falling');
+      expect(message).toContain('{context.targetName}');
     });
   });
 

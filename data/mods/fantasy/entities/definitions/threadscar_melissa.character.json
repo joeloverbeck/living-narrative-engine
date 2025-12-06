@@ -350,7 +350,7 @@
           "subjectType": "entity"
         },
         {
-          "text": "Rill. Seventeen. Family runs waystation on north road. Six months watching me train, copying with a wrapped broom handle she made after seeing me train alone at dawn. Said capability looked like freedom. She's trapped in tasks: fifth-priority for food, future mapped as marry-and-disappear. Thin, persistent, smart enough to wrap the broom handle properly but knows it'll snap under real use. Today she asked for foundation training—no romance, just function. I pulled her close (protective, rare) and offered: observe the chicken job, see real stakes, decide after if you want instruction. She said yes. Chain of responsibility: active. Mine to train if she survives the first lesson with eyes open.",
+          "text": "Rill. Seventeen. Family runs waystation, north road. Six months watching me train. Asked for foundation training—function, not romance. I said observe first: see real stakes, then decide. She's at the chicken job now, following close, absorbing Aldous' procedure briefing. Quiet intensity. First lesson in progress. Chain of responsibility active if she doesn't panic when this turns real.",
           "subject": "Rill, the unasked-for apprentice",
           "subjectType": "entity"
         },
@@ -370,28 +370,33 @@
           "subjectType": "knowledge"
         },
         {
-          "text": "Vespera Nightwhisper. Cat-folk bard, mid-twenties, heterochromatic eyes, dual weapons worn casually, instrument case on back. Took Aldous' possessed-chicken contract; I accepted backup role. Confident, sharp-tongued, reads people while they read her—respects directness, patronizes Rill just enough to test her, disengaged when I pulled the kid close. Gear says she's trained. Unknowns: whether she's fought real stakes, how she handles pain, if her confidence is earned or performed. Walking to the job together will answer some of that.",
+          "text": "Vespera Nightwhisper. Cat-folk bard, mid-twenties, heterochromatic eyes, dual weapons, instrument case. Lead on Aldous' chicken contract; I'm backup. On-site, asked procedural questions: hand positioning, timing, entity network structure. Good questions—execution-focused, not performance. Accepted restraint terms without argument. Unknowns: whether she's fought real stakes, whether confidence is earned or performed. Coop's open. About to see.",
           "subject": "Vespera Nightwhisper",
           "subjectType": "entity"
         },
         {
-          "text": "Aldous' possessed-chickens contract: Active. En route to 12 Kiln Lane. Vespera's lead, I'm backup. Terms: seventeen birds, one allegedly possessed by vengeful mother-in-law, one silver pay or claim the chickens. Low pay suggests low stakes—often a lie. Aldous used \"corrupted,\" not \"sick\" or \"cursed.\" Been uneasy for weeks per Bertram. Treat as real threat until proven otherwise. Procedure: verify behavior, isolate suspect bird(s), identify cause (supernatural vs mundane wearing a mask), solve the actual problem. No theatrics.",
+          "text": "Aldous' chicken job: Active, on-site. Five infected birds in coop (entity from buried ceramic, biologically anchored), twelve quarantined outside. Primary vector: large speckled hen. Extraction procedure briefed—Vespera restrains, Aldous uses geometry-etched vessel to pull entity into ceramic via spiritual gradient. Expect violent resistance. Don't break salt boundary. Coop opened. Entering to back Vespera's restraint work.",
           "subject": "Aldous' possessed-chickens contract (Active job)",
           "subjectType": "plan"
         },
         {
-          "text": "Aldous: reported as an honest tradesman by Bertram. That matters. Honest people still misread fear, but they don't usually invent it for leverage. If he's been uneasy for weeks, something changed in his environment or his flock. Get specifics on timeline: when it started, what exactly he saw/heard, what he's already tried, and whether anyone else is feeding/handling the birds. Words matter. He chose \"corrupted.\" Ask what he means by it, without steering him.",
-          "subject": "Aldous (client reliability + language choice: \"corrupted\")",
+          "text": "Aldous. Potter, 12 Kiln Lane. Slim, pale, clay-dusted, hazel eyes, scarred hands. Procedural. Precise. Specialist in ceramic magic—geometric containment, entity anchoring, extraction methodology. Built containment vessel for this job. Controls access: coop key around neck, misrepresented Registry request to avoid advertising ward breach. Bertram mentioned kiln explosion changed him—Aldous didn't explain. Assessment: competent in his domain, not delusional, reliable for this work.",
+          "subject": "Aldous (client and ceramic magic specialist)",
           "subjectType": "entity"
         },
         {
-          "text": "Bertram wants to witness the job. Civilian. Noncombatant. He's personally invested in Aldous and tends to insert himself when he thinks it helps. Parameters: he stays back, no interference, hands empty unless I say otherwise, leaves immediately if I tell him to. If this turns real, he becomes a liability fast. If he can't follow simple constraints, I send him home. Friendship doesn't outrank survival.",
-          "subject": "Bertram observing the chicken job (risk controls + permitted actions)",
-          "subjectType": "plan"
+          "text": "Bertram at chicken job. Introduced us as \"posse of killers\"—worried Aldous (extraction, not culling). Questioned Aldous' post-kiln-explosion sanity, skeptical about entities in pottery. Asked me if it feels off; I said yes. Civilian, noncombatant, liability if escalates. Aldous trusts him enough to explain anyway. I'll evacuate him if it goes violent.",
+          "subject": "Bertram observing the chicken job (risk controls)",
+          "subjectType": "event"
         },
         {
-          "text": "Teaching method with Rill: experiential, not theoretical. Handed her my longsword to feel the difference from her broom handle—she understood instantly. Show the contrast, make the problem visible, let her close the gap herself. Don't explain what can be discovered. She wrapped that broom handle competently without instruction; she'll figure out the rest if I make functional examples clear. Not hand-holding. Just making the target visible.",
+          "text": "Teaching method: experiential. Rill's observing chicken job as first lesson—watching procedure briefing, restraint requirements, how competent people handle constraints. Quiet intensity. Absorbing. No hand-holding. Show the work, let her process. Real test: does she panic or focus when the hen starts thrashing.",
           "subject": "Teaching methodology (experiential learning)",
+          "subjectType": "knowledge"
+        },
+        {
+          "text": "Geometric containment for biologically-anchored entities: Aldous demonstrated ceramic vessel method. Cobalt oxide glaze, salt-fired stoneware, geometry-etched rim creates spiritual gradient—pressure differential pulls entity from host into ceramic matrix. Position vessel near host's head, expect violent resistance, seal immediately. Primary vector extracts first; secondary hosts stabilize once anchor severs. Requires precision, intact salt boundaries. Transferable knowledge for pastoral weird.",
+          "subject": "Geometric containment (entity extraction)",
           "subjectType": "knowledge"
         }
       ]
@@ -409,7 +414,7 @@
       "value": 79
     },
     "skills:resolve_skill": {
-        "value": 78
+      "value": 78
     }
   }
 }

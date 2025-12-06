@@ -91,7 +91,8 @@ class DamagePropagationService extends BaseService {
     damageAmount,
     damageTypeId,
     ownerEntityId,
-    propagationRules
+    propagationRules,
+    rngProvider = Math.random
   ) {
     if (!propagationRules) {
       return [];
@@ -115,6 +116,7 @@ class DamagePropagationService extends BaseService {
         damageAmount,
         damageTypeId,
         ownerEntityId,
+        rngProvider,
       });
 
       if (propagationResult) {
@@ -185,6 +187,7 @@ class DamagePropagationService extends BaseService {
     damageAmount,
     damageTypeId,
     ownerEntityId,
+    rngProvider,
   }) {
     // Skip invalid rules or self-reference
     if (
@@ -224,7 +227,7 @@ class DamagePropagationService extends BaseService {
     }
 
     // Roll against probability (including damage type modifiers)
-    if (!this.#passesProbabilityCheck(rule, damageTypeId)) {
+    if (!this.#passesProbabilityCheck(rule, damageTypeId, rngProvider)) {
       return null;
     }
 
@@ -304,7 +307,7 @@ class DamagePropagationService extends BaseService {
    * @returns {boolean} True if the probability check passes
    * @private
    */
-  #passesProbabilityCheck(rule, damageTypeId) {
+  #passesProbabilityCheck(rule, damageTypeId, rngProvider) {
     // Support both field names: baseProbability (new) or probability (legacy)
     let baseProbability;
     if (typeof rule.baseProbability === 'number') {
@@ -331,7 +334,8 @@ class DamagePropagationService extends BaseService {
       Math.max(0, baseProbability * typeModifier)
     );
 
-    return Math.random() <= effectiveProbability;
+    const roll = typeof rngProvider === 'function' ? rngProvider() : Math.random();
+    return roll <= effectiveProbability;
   }
 
   /**
